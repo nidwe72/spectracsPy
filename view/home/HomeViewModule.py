@@ -27,6 +27,7 @@ class HomeViewModule(QWidget):
         createSpectralJobButton = QPushButton()
         createSpectralJobButton.setText("New measurement")
         layout.addWidget(createSpectralJobButton, 1, 0, 1, 1)
+        createSpectralJobButton.clicked.connect(self.onClickedCreateSpectralJobButton)
 
         settingsButton = QPushButton()
         settingsButton.setText("Settings")
@@ -34,23 +35,16 @@ class HomeViewModule(QWidget):
 
         settingsButton.clicked.connect(self.onClickedSettingsButton)
 
-
     def onClickedSettingsButton(self):
-
-        #ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(self.test)
-
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
-
-
-
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("Settings")
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
+    def onClickedCreateSpectralJobButton(self):
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        someNavigationSignal = NavigationSignal(None)
+        someNavigationSignal.setTarget("SpectralJob")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
 
-
-    def test(self, navigationSignal):
-        print("test")
-        target = navigationSignal.getTarget()
-        print(target)
