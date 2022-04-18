@@ -3,6 +3,9 @@ from view.home.HomeViewModule import HomeViewModule
 
 from view.spectral.spectralJob.SpectralJobViewModule import SpectralJobViewModule
 
+
+from view.spectral.spectralJob.importSpectrum.SpectralJobImportViewModule import SpectralJobImportViewModule
+
 class MainViewModule(QStackedWidget):
 
     homeViewModule=None
@@ -16,4 +19,5 @@ class MainViewModule(QStackedWidget):
         spectralJobViewModule = SpectralJobViewModule()
         self.addWidget(spectralJobViewModule)
 
-
+        spectralJobImportViewModule=SpectralJobImportViewModule()
+        self.addWidget(spectralJobImportViewModule)

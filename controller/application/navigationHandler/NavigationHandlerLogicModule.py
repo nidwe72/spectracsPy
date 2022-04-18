@@ -10,13 +10,19 @@ class NavigationHandlerLogicModule(QObject):
         print(NavigationHandlerLogicModule)
 
     def handleNavigationSignal(self,navigationSignal):
-        print("handleNavigationSignal")
         target=navigationSignal.getTarget()
-        print("target")
-        print(target)
 
+        if target=="Home":
+            self.mainViewModule.setWindowTitle("Spectracs")
+            self.mainViewModule.setCurrentIndex(0)
         if target=="SpectralJob":
+            self.mainViewModule.setWindowTitle("Spectracs > Spectrum")
             self.mainViewModule.setCurrentIndex(1)
+
+        if target=="SpectralJobImport":
+            self.mainViewModule.setWindowTitle("Spectracs > Import spectrum")
+            self.mainViewModule.setCurrentIndex(2)
+
 
 
 
