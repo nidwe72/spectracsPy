@@ -5,6 +5,8 @@ from PyQt6.QtWidgets import QWidget
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
+from view.application.widgets.video.VideoViewModule import VideoViewModule
+
 
 class SpectralJobViewModule(QWidget):
 
@@ -14,14 +16,17 @@ class SpectralJobViewModule(QWidget):
         layout=QGridLayout()
         self.setLayout(layout)
 
+        videoViewModule = VideoViewModule()
+        layout.addWidget(videoViewModule, 0, 0, 1, 2)
+
         importButton=QPushButton()
         importButton.setText("Import Spectrum")
-        layout.addWidget(importButton,0,0,1,1)
+        layout.addWidget(importButton,1,0,1,1)
         importButton.clicked.connect(self.onClickedImportButtonButton)
 
         backButton=QPushButton()
         backButton.setText("Back")
-        layout.addWidget(backButton,0,1,1,1)
+        layout.addWidget(backButton,1,1,1,1)
         backButton.clicked.connect(self.onClickedBackButton)
 
 

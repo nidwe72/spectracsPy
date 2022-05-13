@@ -1,6 +1,6 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtCore import QThread
-from view.widgets.video.VideoSignal import VideoSignal
+from model.application.video.VideoSignal import VideoSignal
 from PyQt6.QtGui import QImage
 import cv2
 

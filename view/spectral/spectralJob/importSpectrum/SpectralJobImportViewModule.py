@@ -1,6 +1,4 @@
-import sys
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtWidgets import QLabel
 from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QFileDialog
@@ -21,8 +19,7 @@ from model.application.navigation.NavigationSignal import NavigationSignal
 from logic.spectral.importSpectrum.ImportSpectrumLogicModuleParameters import ImportSpectrumLogicModuleParameters
 from logic.spectral.importSpectrum.ImportSpectrumLogicModule import ImportSpectrumLogicModule
 
-from view.widgets.video.VideoThread import VideoThread
-from view.widgets.video.VideoSignal import VideoSignal
+from view.application.widgets.video.VideoViewModule import VideoViewModule
 
 class SpectralJobImportViewModule(QWidget):
 
@@ -54,22 +51,6 @@ class SpectralJobImportViewModule(QWidget):
 
         chartView = QChartView(chart)
         #layout.addWidget(chartView, 0, 0, 1, 2)
-
-        self.videoWidget=QGraphicsView()
-        layout.addWidget(self.videoWidget, 0, 0, 1, 2)
-
-        someImage=QImage("/home/nidwe/testPhilips.png");
-        scene = QGraphicsScene();
-
-        # imageItem=QGraphicsPixmapItem(QPixmap.fromImage(someImage))
-        imageItem = QGraphicsPixmapItem()
-        scene.addItem(imageItem)
-
-        self.videoWidget.setScene(scene)
-
-        self.videoThread=VideoThread()
-        self.videoThread.start()
-        self.videoThread.videoSignal.connect(self.handleVideoSignal)
 
         importButton = QPushButton()
         importButton.setText("Open file")
@@ -109,24 +90,6 @@ class SpectralJobImportViewModule(QWidget):
             filenames = dlg.selectedFiles()
             result = filenames[0]
         return result
-
-    def handleVideoSignal(self,videoSignal:VideoSignal):
-        image = videoSignal.image
-        print("gotta image with")
-        # pixmap = QPixmap()
-        # self.videoWidget.setPixmap(QPixmap.fromImage(image))
-        scene=self.videoWidget.scene()
-
-        someImage = QImage("/home/nidwe/testPhilips.png");
-        somePixmap = QPixmap.fromImage(someImage)
-
-        somePixmap2 = QPixmap.fromImage(image)
-
-        item=scene.items()[0]
-        item.setPixmap(somePixmap2)
-
-        #scene.addItem(QGraphicsPixmapItem(somePixmap))
-        #scene.addText("hmmm")
 
 
 
