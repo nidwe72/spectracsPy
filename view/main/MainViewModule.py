@@ -13,6 +13,7 @@ class MainViewModule(QStackedWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
         homeViewModule = HomeViewModule()
         self.addWidget(homeViewModule)
 

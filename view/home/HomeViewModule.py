@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtWidgets import QGroupBox
 
 from PyQt6.QtCore import pyqtSignal
 
@@ -22,18 +23,12 @@ class HomeViewModule(QWidget):
         self.setLayout(layout)
 
         spectralJobsOverviewViewModule = SpectralJobsOverviewViewModule()
+        spectralJobsOverviewViewModule.resize(600,600)
         layout.addWidget(spectralJobsOverviewViewModule, 0, 0, 1, 1)
+        layout.setRowStretch(0,100)
 
-        createSpectralJobButton = QPushButton()
-        createSpectralJobButton.setText("New measurement")
-        layout.addWidget(createSpectralJobButton, 1, 0, 1, 1)
-        createSpectralJobButton.clicked.connect(self.onClickedCreateSpectralJobButton)
-
-        settingsButton = QPushButton()
-        settingsButton.setText("Settings")
-        layout.addWidget(settingsButton, 1, 1, 1, 1)
-
-        settingsButton.clicked.connect(self.onClickedSettingsButton)
+        navigationGroupBox = self.createNavigationGroupBox()
+        layout.addWidget(navigationGroupBox, 1, 0, 1, 1)
 
     def onClickedSettingsButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
@@ -46,5 +41,24 @@ class HomeViewModule(QWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SpectralJob")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def createNavigationGroupBox(self):
+        result = QGroupBox("")
+
+        layout = QGridLayout()
+        result.setLayout(layout);
+
+        createSpectralJobButton = QPushButton()
+        createSpectralJobButton.setText("New measurement")
+        layout.addWidget(createSpectralJobButton, 0, 0, 1, 1)
+        createSpectralJobButton.clicked.connect(self.onClickedCreateSpectralJobButton)
+
+        settingsButton = QPushButton()
+        settingsButton.setText("Settings")
+        layout.addWidget(settingsButton, 0, 1, 1, 1)
+        settingsButton.clicked.connect(self.onClickedSettingsButton)
+
+        return result
+
 
 
