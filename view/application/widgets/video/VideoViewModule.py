@@ -43,6 +43,7 @@ class VideoViewModule(QWidget):
         somePixmap = QPixmap.fromImage(image)
         item=scene.items()[0]
         item.setPixmap(somePixmap)
+        self.videoWidget.fitInView(item, Qt.AspectRatioMode.KeepAspectRatio)
 
     def resizeEvent(self, resizeEvent: QtGui.QResizeEvent) -> None:
         super().resizeEvent(resizeEvent)
