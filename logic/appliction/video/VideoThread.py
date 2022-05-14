@@ -48,8 +48,8 @@ class VideoThread(QThread):
         # print(bar)
 
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE,1)
-        self.cap.set(cv2.CAP_PROP_EXPOSURE, 150)
-        #self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
+        #self.cap.set(cv2.CAP_PROP_EXPOSURE, 150)
+        self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
         # foo=""
         # foo=self.cap.get(cv2.CAP_PROP_EXPOSURE)
         # print(foo)

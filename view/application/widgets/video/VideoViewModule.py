@@ -1,3 +1,4 @@
+from PyQt6 import QtGui
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QGraphicsView
 from PyQt6.QtWidgets import QGraphicsScene
@@ -5,6 +6,8 @@ from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtWidgets import QGraphicsPixmapItem
 from PyQt6.QtGui import QImage
 from PyQt6.QtGui import QPixmap
+
+from PyQt6.QtCore import Qt
 
 from logic.appliction.video.VideoThread import VideoThread
 
@@ -40,6 +43,16 @@ class VideoViewModule(QWidget):
         somePixmap = QPixmap.fromImage(image)
         item=scene.items()[0]
         item.setPixmap(somePixmap)
+
+    def resizeEvent(self, resizeEvent: QtGui.QResizeEvent) -> None:
+        super().resizeEvent(resizeEvent)
+        self.videoWidget.resizeEvent(resizeEvent)
+        scene=self.videoWidget.scene()
+        item = scene.items()[0]
+        self.videoWidget.fitInView(item,Qt.AspectRatioMode.KeepAspectRatio)
+
+
+
 
 
 
