@@ -9,7 +9,7 @@ from model.application.navigation.NavigationSignal import NavigationSignal
 from view.application.widgets.video.VideoViewModule import VideoViewModule
 from model.application.video.VideoSignal import VideoSignal
 
-from model.spectral.SpectralJobSignal import SpectralJobSignal
+from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 
 class SpectralJobViewModule(QWidget):
 
@@ -37,7 +37,7 @@ class SpectralJobViewModule(QWidget):
         navigationGroupBox=self.createNavigationGroupBox()
         layout.addWidget(navigationGroupBox, 3, 0, 1, 1)
 
-        self.videoThread.spectralJobSignal.connect(self.handleSpectralJobSignal)
+        self.videoThread.spectralVideoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
 
     def createSampleButtonsGroupBox(self):
         lightGroupBox = QGroupBox("Oil")
@@ -104,10 +104,10 @@ class SpectralJobViewModule(QWidget):
         someNavigationSignal.setTarget("Home")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
-    def handleSpectralJobSignal(self,spectralJobSignal:SpectralJobSignal):
-        if isinstance(spectralJobSignal,SpectralJobSignal):
+    def handleSpectralVideoThreadSignal(self, spectralVideoThreadSignal:SpectralVideoThreadSignal):
+        if isinstance(spectralVideoThreadSignal, SpectralVideoThreadSignal):
             videoSignal=VideoSignal()
-            videoSignal.image=spectralJobSignal.image
+            videoSignal.image=spectralVideoThreadSignal.image
             self.videoViewModule.handleVideoSignal(videoSignal)
 
 
