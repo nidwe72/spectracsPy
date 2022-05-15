@@ -1,12 +1,17 @@
+from logic.appliction.video.VideoThread import VideoThread
+from PyQt6.QtCore import pyqtSignal
+from model.spectral.SpectralJob import SpectralJob
+from model.spectral.SpectralJobSignal import SpectralJobSignal
+
 import cv2
 from PyQt6.QtCore import QThread
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QImage
 from model.application.video.VideoSignal import VideoSignal
 
+class SpectrumVideoThread(QThread):
 
-class VideoThread(QThread):
-    videoSignal = pyqtSignal(VideoSignal)
+    spectralJobSignal = pyqtSignal(SpectralJobSignal)
     qImage: QImage
 
     def __init__(self):
@@ -17,6 +22,9 @@ class VideoThread(QThread):
 
         self._frameCount = 0
         self._currentFrameCount = 0
+        self.cap=None
+        self.spectralJob=None
+
 
     def setFrameCount(self, spectraCount: int):
         self._frameCount = spectraCount
@@ -31,6 +39,8 @@ class VideoThread(QThread):
         return self._currentFrameCount
 
     def run(self):
+
+        self.spectralJob = SpectralJob()
 
         # camera = QCamera()
         # videoInputs = QMediaDevices.videoInputs()
@@ -84,11 +94,12 @@ class VideoThread(QThread):
                 # self.onCapturedFrame(qImage)
 
                 self.afterCapture()
+                self.spectralJob.title = "title"
 
-                if self.doesEmitVideoSignal():
-                    videoSignal = VideoSignal()
-                    videoSignal.image = self.qImage
-                    self.videoSignal.emit(videoSignal)
+                spectralJobSignalModel = SpectralJobSignal()
+                spectralJobSignalModel.image=self.qImage
+                spectralJobSignalModel.spectralJob = self.spectralJob
+                self.spectralJobSignal.emit(spectralJobSignalModel)
 
         self.cap.release()
 
@@ -108,5 +119,8 @@ class VideoThread(QThread):
                 self._runFlag = False
                 self.__setCurrentFrameCount(0)
 
-    def doesEmitVideoSignal(self):
-        return True
+
+
+
+
+

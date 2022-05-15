@@ -15,6 +15,8 @@ from model.application.video.VideoSignal import VideoSignal
 
 class VideoViewModule(QWidget):
 
+    videoThread:VideoThread
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -33,8 +35,8 @@ class VideoViewModule(QWidget):
 
         self.videoWidget.setScene(scene)
 
-        self.videoThread=VideoThread()
-        self.videoThread.start()
+    def setVideoThread(self,videoThread:VideoThread):
+        self.videoThread=videoThread
         self.videoThread.videoSignal.connect(self.handleVideoSignal)
 
     def handleVideoSignal(self,videoSignal:VideoSignal):

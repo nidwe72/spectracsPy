@@ -1,17 +1,19 @@
 from PyQt6.QtWidgets import QGridLayout
+from PyQt6.QtWidgets import QGroupBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtWidgets import QGroupBox
-
-from PyQt6.QtWidgets import QLabel
-
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from model.application.navigation.NavigationSignal import NavigationSignal
 from view.application.widgets.video.VideoViewModule import VideoViewModule
+from model.application.video.VideoSignal import VideoSignal
 
+from model.spectral.SpectralJobSignal import SpectralJobSignal
 
 class SpectralJobViewModule(QWidget):
+
+    videoThread:SpectrumVideoThread
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,8 +21,12 @@ class SpectralJobViewModule(QWidget):
         layout=QGridLayout()
         self.setLayout(layout)
 
-        videoViewModule = VideoViewModule()
-        layout.addWidget(videoViewModule, 0, 0, 1, 1)
+        self.videoViewModule = VideoViewModule()
+        layout.addWidget(self.videoViewModule, 0, 0, 1, 1)
+
+        self.videoThread = SpectrumVideoThread()
+        self.videoThread.setFrameCount(30)
+        self.videoThread.start()
 
         sampleButtonsGroupBox=self.createSampleButtonsGroupBox()
         layout.addWidget(sampleButtonsGroupBox, 1, 0, 1, 1)
@@ -30,6 +36,8 @@ class SpectralJobViewModule(QWidget):
 
         navigationGroupBox=self.createNavigationGroupBox()
         layout.addWidget(navigationGroupBox, 3, 0, 1, 1)
+
+        self.videoThread.spectralJobSignal.connect(self.handleSpectralJobSignal)
 
     def createSampleButtonsGroupBox(self):
         lightGroupBox = QGroupBox("Oil")
@@ -96,7 +104,11 @@ class SpectralJobViewModule(QWidget):
         someNavigationSignal.setTarget("Home")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
-
+    def handleSpectralJobSignal(self,spectralJobSignal:SpectralJobSignal):
+        if isinstance(spectralJobSignal,SpectralJobSignal):
+            videoSignal=VideoSignal()
+            videoSignal.image=spectralJobSignal.image
+            self.videoViewModule.handleVideoSignal(videoSignal)
 
 
 
