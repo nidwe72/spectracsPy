@@ -1,5 +1,4 @@
-from logic.appliction.video.VideoThread import VideoThread
-from PyQt6.QtCore import pyqtSignal
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from model.spectral.SpectralJob import SpectralJob
 from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 
@@ -7,7 +6,8 @@ import cv2
 from PyQt6.QtCore import QThread
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QImage
-from model.application.video.VideoSignal import VideoSignal
+from model.spectral.SpectrumSampleType import SpectrumSampleType
+
 
 class SpectrumVideoThread(QThread):
 
@@ -101,6 +101,15 @@ class SpectrumVideoThread(QThread):
                 spectralVideoThreadSignalModel.spectralJob = self.spectralJob
                 spectralVideoThreadSignalModel.framesCount=self.getFrameCount()
                 spectralVideoThreadSignalModel.currentFrameIndex=self.__getCurrentFrameIndex()
+
+                imageToSpectrumLogicModule=ImageSpectrumAcquisitionLogicModule()
+                spectrum=imageToSpectrumLogicModule.acquire(self.qImage)
+                spectrum.setSampleType(SpectrumSampleType.UNSPECIFIED)
+                self.spectralJob.addSpectrum(spectrum)
+
+                # print("spectrum.valuesByNanometers")
+                # print(spectrum.valuesByNanometers)
+
                 self.spectralVideoThreadSignal.emit(spectralVideoThreadSignalModel)
 
         self.cap.release()

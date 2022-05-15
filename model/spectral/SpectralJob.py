@@ -13,7 +13,7 @@ class SpectralJob(QObject):
 
     def addSpectrum(self, spectrum: Spectrum):
         spectrumSampleType = spectrum.getSampleType()
-        spectraOfSampleType = self.spectraBySampleTypes[spectrumSampleType]
+        spectraOfSampleType = self.spectraBySampleTypes.get(spectrumSampleType)
         if spectraOfSampleType is None:
             spectraOfSampleType = []
         spectraOfSampleType.append(spectrum)
@@ -25,3 +25,9 @@ class SpectralJob(QObject):
         if isinstance(spectraOfSampleType,list):
             result=spectraOfSampleType[0]
         return result
+
+    def getSpectra(self,spectrumSampleType):
+        result=None
+        result = self.spectraBySampleTypes.get(spectrumSampleType)
+        return result
+

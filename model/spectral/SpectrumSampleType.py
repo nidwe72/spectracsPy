@@ -6,4 +6,5 @@ class SpectrumSampleType(Enum):
     SAMPLE='SAMPLE'
     DARK='DARK'
     BLANK='BLANK'
+    UNSPECIFIED = 'UNSPECIFIED'
 

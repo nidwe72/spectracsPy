@@ -15,3 +15,5 @@ class Spectrum:
 
     def setSampleType(self,sampleType):
         self.sampleType=sampleType
+
+
