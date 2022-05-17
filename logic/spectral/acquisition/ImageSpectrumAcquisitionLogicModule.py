@@ -6,7 +6,7 @@ from model.spectral.Spectrum import Spectrum
 class ImageSpectrumAcquisitionLogicModule:
 
     def acquire(self,image:QImage):
-        y=135
+        y=392
         imageWidth=image.width()
 
         spectrum=Spectrum()

@@ -6,38 +6,31 @@ from PyQt6.QtWidgets import QWidget
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from model.application.navigation.NavigationSignal import NavigationSignal
-from view.application.widgets.video.VideoViewModule import VideoViewModule
-from model.application.video.VideoSignal import VideoSignal
+from view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule
 
-from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 
 class SpectralJobViewModule(QWidget):
-
-    videoThread:SpectrumVideoThread
+    videoThread: SpectrumVideoThread
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        layout=QGridLayout()
+        layout = QGridLayout()
         self.setLayout(layout)
+        self.spectralJobWidgetViewModule = SpectralJobWidgetViewModule(self)
+        layout.addWidget(self.spectralJobWidgetViewModule, 0, 0, 1, 1)
 
-        self.videoViewModule = VideoViewModule()
-        layout.addWidget(self.videoViewModule, 0, 0, 1, 1)
 
-        self.videoThread = SpectrumVideoThread()
-        self.videoThread.setFrameCount(30)
-        self.videoThread.start()
-
-        sampleButtonsGroupBox=self.createSampleButtonsGroupBox()
+        sampleButtonsGroupBox = self.createSampleButtonsGroupBox()
         layout.addWidget(sampleButtonsGroupBox, 1, 0, 1, 1)
 
-        lightGroupBox=self.createLightButtonsGroupBox()
+        lightGroupBox = self.createLightButtonsGroupBox()
         layout.addWidget(lightGroupBox, 2, 0, 1, 1)
 
-        navigationGroupBox=self.createNavigationGroupBox()
+        navigationGroupBox = self.createNavigationGroupBox()
         layout.addWidget(navigationGroupBox, 3, 0, 1, 1)
 
-        self.videoThread.spectralVideoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
+
 
     def createSampleButtonsGroupBox(self):
         lightGroupBox = QGroupBox("Oil")
@@ -93,24 +86,16 @@ class SpectralJobViewModule(QWidget):
         return lightGroupBox
 
     def onClickedImportButtonButton(self):
-        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SpectralJobImport")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def onClickedBackButton(self):
-        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("Home")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
-
-    def handleSpectralVideoThreadSignal(self, spectralVideoThreadSignal:SpectralVideoThreadSignal):
-        if isinstance(spectralVideoThreadSignal, SpectralVideoThreadSignal):
-            videoSignal=VideoSignal()
-            videoSignal.image=spectralVideoThreadSignal.image
-            self.videoViewModule.handleVideoSignal(videoSignal)
-
-
-
-
 

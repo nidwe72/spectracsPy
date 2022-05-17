@@ -6,6 +6,9 @@ from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtWidgets import QGraphicsPixmapItem
 from PyQt6.QtGui import QImage
 from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPen
+from PyQt6.QtGui import QBrush
+from PyQt6.QtGui import QColor
 
 from PyQt6.QtCore import Qt
 
@@ -31,7 +34,11 @@ class VideoViewModule(QWidget):
         scene = QGraphicsScene();
 
         imageItem = QGraphicsPixmapItem()
+
         scene.addItem(imageItem)
+
+        pen = QPen(QBrush(QColor(200, 200, 200, 255)), 1)
+        scene.addLine(0, 392, 1920, 392,pen)
 
         self.videoWidget.setScene(scene)
 
@@ -43,7 +50,7 @@ class VideoViewModule(QWidget):
         image = videoSignal.image
         scene=self.videoWidget.scene()
         somePixmap = QPixmap.fromImage(image)
-        item=scene.items()[0]
+        item=scene.items()[1]
         item.setPixmap(somePixmap)
         self.videoWidget.fitInView(item, Qt.AspectRatioMode.KeepAspectRatio)
 
@@ -51,7 +58,7 @@ class VideoViewModule(QWidget):
         super().resizeEvent(resizeEvent)
         self.videoWidget.resizeEvent(resizeEvent)
         scene=self.videoWidget.scene()
-        item = scene.items()[0]
+        item = scene.items()[1]
         self.videoWidget.fitInView(item,Qt.AspectRatioMode.KeepAspectRatio)
 
 
