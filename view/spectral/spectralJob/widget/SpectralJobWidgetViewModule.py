@@ -3,6 +3,9 @@ from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QGridLayout
 
 from model.spectral.SpectrumSampleType import SpectrumSampleType
+from view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
+from view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import \
+    SpectralJobWidgetViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModule import SpectralJobGraphViewModule
 from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from model.application.video.VideoSignal import VideoSignal
@@ -21,18 +24,24 @@ class SpectralJobWidgetViewModule(QWidget):
         layout.addWidget(self.tabWidget)
 
         self.spectralJobGraphViewModule = SpectralJobGraphViewModule()
-        self.tabWidget.addTab(self.spectralJobGraphViewModule, "Absorption")
+        self.spectralJobGraphViewModule.chart.setTitle("Intensities: burst mode of 50 measurements holding the raw intensities")
+        self.tabWidget.addTab(self.spectralJobGraphViewModule, "Intensities (raw)")
 
         self.videoViewModule = VideoViewModule()
 
-        self.tabWidget.addTab(self.videoViewModule, "Spectrum image")
-
+        self.tabWidget.addTab(self.videoViewModule, "Spectrum image (last captured)")
 
         self.videoThread = SpectrumVideoThread()
-        self.videoThread.setFrameCount(30)
-        self.videoThread.start()
-
         self.videoThread.spectralVideoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
+
+    def startVideoThread(self):
+        spectralJobGraphViewModuleParameters=SpectralJobGraphViewModuleParameters()
+        spectralJobGraphViewModuleParameters.setSpectrumSampleType(self.getModuleParameters().getSpectrumSampleType())
+        self.spectralJobGraphViewModule.setModuleParameters(spectralJobGraphViewModuleParameters)
+
+        self.videoThread.setFrameCount(30)
+        self.videoThread.setSpectrumSampleType(self.getModuleParameters().getSpectrumSampleType())
+        self.videoThread.start()
 
     def handleSpectralVideoThreadSignal(self, spectralVideoThreadSignal: SpectralVideoThreadSignal):
         if isinstance(spectralVideoThreadSignal, SpectralVideoThreadSignal):
@@ -42,5 +51,11 @@ class SpectralJobWidgetViewModule(QWidget):
             videoSignal = VideoSignal()
             videoSignal.image = spectralVideoThreadSignal.image
             self.videoViewModule.handleVideoSignal(videoSignal)
+
+    def setModuleParameters(self,moduleParameters:SpectralJobWidgetViewModuleParameters):
+        self.__moduleParameters=moduleParameters
+
+    def getModuleParameters(self)->SpectralJobWidgetViewModuleParameters:
+        return self.__moduleParameters
 
 

@@ -104,7 +104,8 @@ class SpectrumVideoThread(QThread):
 
                 imageToSpectrumLogicModule=ImageSpectrumAcquisitionLogicModule()
                 spectrum=imageToSpectrumLogicModule.acquire(self.qImage)
-                spectrum.setSampleType(SpectrumSampleType.UNSPECIFIED)
+
+                spectrum.setSampleType(self.getSpectrumSampleType())
                 self.spectralJob.addSpectrum(spectrum)
 
                 # print("spectrum.valuesByNanometers")
@@ -130,7 +131,11 @@ class SpectrumVideoThread(QThread):
                 self._runFlag = False
                 self.__setCurrentFrameIndex(0)
 
+    def setSpectrumSampleType(self,spectrumSampleType:SpectrumSampleType):
+        self.spectrumSampleType=spectrumSampleType
 
+    def getSpectrumSampleType(self):
+        return self.spectrumSampleType
 
 
 

@@ -6,7 +6,10 @@ from PyQt6.QtWidgets import QWidget
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from model.application.navigation.NavigationSignal import NavigationSignal
+from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule
+from view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import SpectralJobWidgetViewModuleParameters
+from view.spectral.spectralJob.widget.SpectralJobsWidgetViewModule import SpectralJobsWidgetViewModule
 
 
 class SpectralJobViewModule(QWidget):
@@ -17,9 +20,9 @@ class SpectralJobViewModule(QWidget):
 
         layout = QGridLayout()
         self.setLayout(layout)
-        self.spectralJobWidgetViewModule = SpectralJobWidgetViewModule(self)
-        layout.addWidget(self.spectralJobWidgetViewModule, 0, 0, 1, 1)
 
+        self.spectralJobsWidgetViewModule = SpectralJobsWidgetViewModule(self)
+        layout.addWidget(self.spectralJobsWidgetViewModule, 0, 0, 1, 1)
 
         sampleButtonsGroupBox = self.createSampleButtonsGroupBox()
         layout.addWidget(sampleButtonsGroupBox, 1, 0, 1, 1)
@@ -83,7 +86,12 @@ class SpectralJobViewModule(QWidget):
         importLightButton.setText("Import")
         lightGroupBoxLayout.addWidget(importLightButton, 0, 2, 1, 1)
 
+        measureLightButton.clicked.connect(self.onClickedMeasureLightButton)
+
         return lightGroupBox
+
+    def onClickedMeasureLightButton(self):
+        self.spectralJobsWidgetViewModule.referenceWidget.startVideoThread()
 
     def onClickedImportButtonButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
