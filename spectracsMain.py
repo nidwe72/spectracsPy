@@ -222,11 +222,13 @@ QTabBar {
 QTabBar::tab {
 	border-radius: 0px;
 	padding: 4px;
-	margin: 4px;
+	margin: 4px;	
+	background: #353535;
 }
 
 QTabBar::tab:selected {
-	background: #353535;
+	background: #33663d;
+	
 }
 
 QComboBox::down-arrow {
