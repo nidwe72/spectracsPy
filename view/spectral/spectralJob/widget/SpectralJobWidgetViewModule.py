@@ -2,6 +2,8 @@ from PyQt6.QtWidgets import QTabWidget
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QGridLayout
 
+import threading
+
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
@@ -52,11 +54,11 @@ class SpectralJobWidgetViewModule(QWidget):
         plotSpectraMeanViewModuleParameters.setPolicy(SpectralJobGraphViewModulePolicyParameter.PLOT_SPECTRA_MEAN)
         self.plotSpectraMeanViewModule.setModuleParameters(plotSpectraMeanViewModuleParameters)
 
-        self.videoThread.setFrameCount(30)
+        self.videoThread.setFrameCount(50)
         self.videoThread.setSpectrumSampleType(self.getModuleParameters().getSpectrumSampleType())
         self.videoThread.start()
 
-    def handleSpectralVideoThreadSignal(self, spectralVideoThreadSignal: SpectralVideoThreadSignal):
+    def handleSpectralVideoThreadSignal(self, event:threading.Event,spectralVideoThreadSignal: SpectralVideoThreadSignal):
         if isinstance(spectralVideoThreadSignal, SpectralVideoThreadSignal):
 
             self.spectralJobGraphViewModule.updateGraph(spectralVideoThreadSignal.spectralJob)
@@ -65,6 +67,8 @@ class SpectralJobWidgetViewModule(QWidget):
             videoSignal = VideoSignal()
             videoSignal.image = spectralVideoThreadSignal.image
             self.videoViewModule.handleVideoSignal(videoSignal)
+
+            event.set()
 
     def setModuleParameters(self,moduleParameters:SpectralJobWidgetViewModuleParameters):
         self.__moduleParameters=moduleParameters

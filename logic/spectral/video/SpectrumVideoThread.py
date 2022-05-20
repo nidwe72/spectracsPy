@@ -3,6 +3,7 @@ from model.spectral.SpectralJob import SpectralJob
 from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 
 import cv2
+import threading
 from PyQt6.QtCore import QThread
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QImage
@@ -11,7 +12,9 @@ from model.spectral.SpectrumSampleType import SpectrumSampleType
 
 class SpectrumVideoThread(QThread):
 
-    spectralVideoThreadSignal = pyqtSignal(SpectralVideoThreadSignal)
+    #spectralVideoThreadSignal = pyqtSignal(SpectralVideoThreadSignal)
+    spectralVideoThreadSignal = pyqtSignal(threading.Event, SpectralVideoThreadSignal)
+
     qImage: QImage
 
     def __init__(self):
@@ -111,7 +114,14 @@ class SpectrumVideoThread(QThread):
                 # print("spectrum.valuesByNanometers")
                 # print(spectrum.valuesByNanometers)
 
-                self.spectralVideoThreadSignal.emit(spectralVideoThreadSignalModel)
+                # self.spectralVideoThreadSignal.emit(spectralVideoThreadSignalModel)
+
+                event = threading.Event()
+                self.spectralVideoThreadSignal.emit(event,spectralVideoThreadSignalModel)
+                event.wait()
+
+
+
 
         self.cap.release()
 
