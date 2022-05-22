@@ -46,7 +46,7 @@ class SpectralJobGraphViewModule(QChartView):
             for nanometer in valuesByNanometers:
                 series.append(nanometer, valuesByNanometers[nanometer])
             self.chart.addSeries(series)
-            print("plotting")
+
 
         elif policy == SpectralJobGraphViewModulePolicyParameter.PLOT_SPECTRA_MEAN:
             spectra = spectralJob.getSpectra(self.getModuleParameters().getSpectrumSampleType())
@@ -61,7 +61,6 @@ class SpectralJobGraphViewModule(QChartView):
             else:
                 self.allSpectraValues=np.vstack((self.allSpectraValues, np.array(values)))
 
-            print("allSpectraValues")
             if isinstance(self.allSpectraValues,numpy.ndarray) and self.allSpectraValues.size != 0:
                 # print(type(self.allSpectraValues))
                 # print(self.allSpectraValues)
@@ -81,7 +80,7 @@ class SpectralJobGraphViewModule(QChartView):
                     series.append(nanometer, valuesByNanometers[nanometer])
                 self.chart.addSeries(series)
 
-                print("meanSpectrumValues")
+                # print("meanSpectrumValues")
                 # print(meanSpectrumValues)
 
             else:

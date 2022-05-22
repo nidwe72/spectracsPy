@@ -111,18 +111,11 @@ class SpectrumVideoThread(QThread):
                 spectrum.setSampleType(self.getSpectrumSampleType())
                 self.spectralJob.addSpectrum(spectrum)
 
-                # print("spectrum.valuesByNanometers")
-                # print(spectrum.valuesByNanometers)
-
-                # self.spectralVideoThreadSignal.emit(spectralVideoThreadSignalModel)
-
                 event = threading.Event()
                 self.spectralVideoThreadSignal.emit(event,spectralVideoThreadSignalModel)
                 event.wait()
 
-
-
-
+        self.__setCurrentFrameIndex(0)
         self.cap.release()
 
     def stop(self):
@@ -139,7 +132,7 @@ class SpectrumVideoThread(QThread):
             currentCount = self.__getCurrentFrameIndex()
             if currentCount == frameCount:
                 self._runFlag = False
-                self.__setCurrentFrameIndex(0)
+
 
     def setSpectrumSampleType(self,spectrumSampleType:SpectrumSampleType):
         self.spectrumSampleType=spectrumSampleType

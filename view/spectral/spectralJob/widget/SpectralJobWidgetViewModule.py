@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QGridLayout
 
 import threading
 
+from logic.spectral.video.SpectralImageLogicModule import SpectralImageLogicModule
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
@@ -66,6 +67,12 @@ class SpectralJobWidgetViewModule(QWidget):
 
             videoSignal = VideoSignal()
             videoSignal.image = spectralVideoThreadSignal.image
+
+            if spectralVideoThreadSignal.currentFrameIndex==spectralVideoThreadSignal.framesCount:
+                spectralImageLogicModule=SpectralImageLogicModule()
+                colorizedImage=spectralImageLogicModule.colorizeQImage(spectralVideoThreadSignal.image,132)
+                videoSignal.image = colorizedImage
+
             self.videoViewModule.handleVideoSignal(videoSignal)
 
             event.set()
