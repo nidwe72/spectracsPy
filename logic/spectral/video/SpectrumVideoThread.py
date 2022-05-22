@@ -134,6 +134,7 @@ class SpectrumVideoThread(QThread):
                 self._runFlag = False
 
 
+
     def setSpectrumSampleType(self,spectrumSampleType:SpectrumSampleType):
         self.spectrumSampleType=spectrumSampleType
 

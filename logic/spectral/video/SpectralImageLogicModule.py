@@ -26,21 +26,24 @@ class SpectralImageLogicModule:
     def colorizeQImage(self,image:QImage, hue):
         width = image.width()
         height = image.height()
+
         result=QImage(width, height, image.format())
 
-        npArray=self.convertQImageToNumpyArray(image)
-        npArray2=self.colorizeNumpyArray(npArray,hue)
+        # npArray=self.convertQImageToNumpyArray(image)
+        # npArray2=self.colorizeNumpyArray(npArray,hue)
 
-        # for x in range(0,width):
-        #     for y in range(0,height):
-        #         pixelColor=image.pixelColor(x,y)
-        #         gray=qGray(pixelColor.red(),pixelColor.green(),pixelColor.blue())
-        #         newPixelColor=QColor()
-        #         newPixelColor.setHsv(hue,255,gray)
-        #         result.setPixelColor(x,y,newPixelColor)
+        for x in range(0,width):
+            for y in range(0,height):
+                pixelColor=image.pixelColor(x,y)
+                gray=qGray(pixelColor.red(),pixelColor.green(),pixelColor.blue())
+                newPixelColor=QColor()
+                newPixelColor.setHsv(hue,255,gray)
+                result.setPixelColor(x,y,newPixelColor)
 
-        result2=self.convertNumpyArrayToQImage(npArray2)
-        return result2
+        # result2=self.convertNumpyArrayToQImage(npArray2)
+        # return result2
+
+        return result
 
     def convertQImageToNumpyArray(self,qtimg):
 
