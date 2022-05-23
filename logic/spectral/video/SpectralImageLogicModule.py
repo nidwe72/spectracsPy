@@ -3,9 +3,19 @@ from PyQt6.QtGui import QImage
 from PyQt6.QtGui import qGray
 from PyQt6.QtGui import QColor
 import numpy as np
+import cv2
 from skimage import color
 
 class SpectralImageLogicModule:
+
+    def calculateFocalMeasureOfNumpyImage(self,img:numpy.ndarray):
+        """Return measure how sharp the image is, the higher the return the sharper"""
+        """Put otherwise: a blur detection functionality"""
+        # convert RGB image to Gray scale image
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # Measure focal measure score (laplacian approach)
+        fm = cv2.Laplacian(gray, cv2.CV_64F).var()
+        return fm
 
     def colorizeNumpyArray(self,image:numpy.ndarray, hue):
         """Return image tinted by the given hue based on a grayscale image."""
