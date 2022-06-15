@@ -1,3 +1,4 @@
+import os
 from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtWidgets import QGroupBox
 from PyQt6.QtWidgets import QPushButton
@@ -6,11 +7,20 @@ from PyQt6.QtWidgets import QWidget
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from model.application.navigation.NavigationSignal import NavigationSignal
+from model.databaseEntity.DbBase import session_factory
+from model.databaseEntity.spectral.device.DbSpectralDevice import DbSpectralDevice
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import SpectralJobWidgetViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobsWidgetViewModule import SpectralJobsWidgetViewModule
 
+from sqlalchemy.engine import create_engine
+from sqlalchemy.orm.session import Session
+
+from sqlalchemy.orm import sessionmaker
+
+from sqlalchemy.orm import registry
+from sqlalchemy import MetaData
 
 class SpectralJobViewModule(QWidget):
     videoThread: SpectrumVideoThread
@@ -92,6 +102,7 @@ class SpectralJobViewModule(QWidget):
 
     def onClickedMeasureLightButton(self):
         self.spectralJobsWidgetViewModule.referenceWidget.startVideoThread()
+        self.foo()
 
     def onClickedImportButtonButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
@@ -106,4 +117,42 @@ class SpectralJobViewModule(QWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("Home")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def foo(self):
+        #todo:continue should have some LogicModule for actually persisting entities
+        session=session_factory()
+
+        DATABASE_DIR = os.path.dirname(os.path.abspath(__file__)) + '\\test.db'
+        # engine = create_engine('sqlite:///' + DATABASE_DIR, echo=True)
+        # engine = create_engine('sqlite:///./test.db')
+        # spectralDevice = DbSpectralDevice()
+
+        # mapper_registry = registry()
+        # metadata_obj=mapper_registry.metadata
+
+        # metadata_obj=MetaData()
+        # metadata_obj.create_all(bind=engine)
+        #
+        # metadata_obj.create_all()
+        #
+        # session=sessionmaker()
+        # session.configure(bind=engine)
+        #
+        # # session=Session(engine)
+        # so=session.object_session()
+        # session.ad
+
+        spectralDevice = DbSpectralDevice()
+        spectralDevice.horizontalDigitalResolution=1024
+        spectralDevice.verticalDigitalResolution = 768
+        session.add(spectralDevice)
+
+        session.commit()
+
+
+        #session.flush()
+
+
+        pass
+
 

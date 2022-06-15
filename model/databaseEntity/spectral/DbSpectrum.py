@@ -1,0 +1,3 @@
+
+class DbSpectrum():
+    pass
