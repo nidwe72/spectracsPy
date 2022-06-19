@@ -15,13 +15,19 @@ class NavigationHandlerLogicModule(QObject):
         if target=="Home":
             self.mainViewModule.setWindowTitle("Spectracs")
             self.mainViewModule.setCurrentIndex(0)
-        if target=="SpectralJob":
+        elif target=="SpectralJob":
             self.mainViewModule.setWindowTitle("Spectracs > Spectrum")
             self.mainViewModule.setCurrentIndex(1)
-
-        if target=="SpectralJobImport":
+        elif target=="SpectralJobImport":
             self.mainViewModule.setWindowTitle("Spectracs > Import spectrum")
             self.mainViewModule.setCurrentIndex(2)
+        elif target=="SettingsViewModule":
+            self.mainViewModule.setWindowTitle("Spectracs > Settings")
+            self.mainViewModule.setCurrentIndex(3)
+        elif target=="CameraSelectionViewModule":
+            self.mainViewModule.setWindowTitle("Spectracs > Camera selection")
+            self.mainViewModule.setCurrentIndex(4)
+
 
 
 

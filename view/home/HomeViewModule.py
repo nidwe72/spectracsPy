@@ -33,7 +33,7 @@ class HomeViewModule(QWidget):
     def onClickedSettingsButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
-        someNavigationSignal.setTarget("Settings")
+        someNavigationSignal.setTarget("SettingsViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def onClickedCreateSpectralJobButton(self):

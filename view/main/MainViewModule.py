@@ -1,5 +1,7 @@
 from PyQt6.QtWidgets import QStackedWidget
 from view.home.HomeViewModule import HomeViewModule
+from view.settings.SettingsViewModule import SettingsViewModule
+from view.settings.spectral.spectrometer.acquisition.camera.CameraSelectionViewModule import CameraSelectionViewModule
 
 from view.spectral.spectralJob.SpectralJobViewModule import SpectralJobViewModule
 
@@ -22,3 +24,9 @@ class MainViewModule(QStackedWidget):
 
         spectralJobImportViewModule=SpectralJobImportViewModule()
         self.addWidget(spectralJobImportViewModule)
+
+        settingsViewModule = SettingsViewModule()
+        self.addWidget(settingsViewModule)
+
+        cameraSelectionViewModule=CameraSelectionViewModule()
+        self.addWidget(cameraSelectionViewModule)

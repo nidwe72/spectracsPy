@@ -45,24 +45,6 @@ class SpectrumVideoThread(QThread):
 
         self.spectralJob = SpectralJob()
 
-        # camera = QCamera()
-        # videoInputs = QMediaDevices.videoInputs()
-        # for cameraDevice in videoInputs:
-        #     cameraName=cameraDevice.description()
-        #     print(cameraName)
-        #     cameraId=cameraDevice.id()
-        #     print("cameraDevice.position()")
-        #     print(cameraDevice.position())
-        #
-        #     print("cameraDevice.photoResolutions()")
-        #     print(cameraDevice.photoResolutions())
-        #
-        #     print(cameraId)
-        #     cameraDeviceFormats=cameraDevice.videoFormats()
-        #     print(cameraDeviceFormats)
-        #     for cameraDeviceFormat in cameraDeviceFormats:
-        #         print(cameraDeviceFormat.resolution())
-        #         print(cameraDeviceFormat.pixelFormat())
 
         # self.cap = cv2.VideoCapture(4)
         self.cap = cv2.VideoCapture(0)
