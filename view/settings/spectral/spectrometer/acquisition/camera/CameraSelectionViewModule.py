@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import QComboBox
 from PyQt6.QtWidgets import QGridLayout
@@ -6,11 +7,15 @@ from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QWidget
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.settings.SettingsLogicModule import SettingsLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
+
+import usb.core
+
+from model.databaseEntity.spectral.device.DbSpectralDevice import DbSpectralDevice
 
 
 class CameraSelectionViewModule(QWidget):
-
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -27,32 +32,40 @@ class CameraSelectionViewModule(QWidget):
         navigationGroupBox = self.createNavigationGroupBox()
         layout.addWidget(navigationGroupBox, 1, 0, 1, 1)
 
+        self.camerasComboBox.currentIndexChanged.connect(self.onSelectedSpectralDevice)
+
+    def onSelectedSpectralDevice(self, index):
+        model = self.camerasComboBox.model()
+        if isinstance(model, QStandardItemModel):
+            item = model.item(index)
+            spectralDevice = item.data()
+            if isinstance(spectralDevice, DbSpectralDevice):
+                print('vendor')
+                print(spectralDevice.vendorId)
 
     def updateCamerasComboBox(self):
 
-        videoInputs = QMediaDevices.videoInputs()
-        for cameraDevice in videoInputs:
-            cameraName = cameraDevice.description()
-            # cameraId =str(cameraDevice.id())
-            self.camerasComboBox.addItem(cameraName)
+        settingsLogicModule = SettingsLogicModule()
+        supportedSpectralDevices = settingsLogicModule.getSupportedSpectralDevices()
 
+        # videoInputs = QMediaDevices.videoInputs()
 
-            continue
+        model = QStandardItemModel()
 
-            # print(cameraName)
+        for spectralDeviceName, spectralDevice in supportedSpectralDevices.items():
+            item = QStandardItem()
+            item.setText(spectralDevice.name + ' (' + spectralDevice.description + ')')
+            item.setData(spectralDevice)
+            dev = usb.core.find(idVendor=int('0x' + spectralDevice.vendorId, base=16),
+                                idProduct=int('0x' + spectralDevice.modelId, base=16))
 
-            # print("cameraDevice.position()")
-            # print(cameraDevice.position())
-            #
-            # print("cameraDevice.photoResolutions()")
-            # print(cameraDevice.photoResolutions())
-            #
-            # print(cameraId)
-            # cameraDeviceFormats=cameraDevice.videoFormats()
-            # print(cameraDeviceFormats)
-            # for cameraDeviceFormat in cameraDeviceFormats:
-            #     print(cameraDeviceFormat.resolution())
-            #     print(cameraDeviceFormat.pixelFormat())
+            if dev is None:
+                item.setEnabled(False)
+                item.setText(item.text() + ' [not available]')
+
+            model.appendRow(item)
+
+        self.camerasComboBox.setModel(model)
 
     def createCameraGroupBox(self):
         result = QGroupBox("Camera")
