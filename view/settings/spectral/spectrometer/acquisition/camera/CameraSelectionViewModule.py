@@ -84,7 +84,7 @@ class CameraSelectionViewModule(PageWidget):
     def getMainContainerWidgets(self):
         result= super().getMainContainerWidgets()
 
-        camerasComboBox = self.createLabeledComponent('camerasComboBox', self.createCamerasComboBox())
+        camerasComboBox = self.createLabeledComponent('cameras', self.createCamerasComboBox())
         result['camerasComboBox'] =camerasComboBox
 
         serial=self.createLabeledComponent('serial', QLineEdit())
