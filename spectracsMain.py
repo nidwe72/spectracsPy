@@ -6,25 +6,10 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QImage
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from view.main.MainContainerViewModule import MainContainerViewModule
 from view.main.MainViewModule import MainViewModule
 
 app = QtWidgets.QApplication(sys.argv)
-app.setStyleSheet("""
-QMainWindow {
-    background-color: "#222";
-    color: "#eee"
-}
-QWidget {
-    background-color: "#333";
-    color: "#eee";
-    padding: 0px
-}
-QPushButton{
-    background-color: #1B3409;
-    color: white;    
-}
-""")
-
 
 app.setStyleSheet("""
 /*
@@ -56,6 +41,28 @@ app.setStyleSheet("""
 	color: #DDDDDD;
 	border: 1px solid #5A5A5A;
 }
+
+/*
+QGroupBox{
+    border: 1px solid #5A5A5A;
+}
+
+QTabWidget{
+    border: 1px solid #5A5A5A;
+}
+
+QTab{
+    border: 1px solid #5A5A5A;
+}
+
+QLineEdit{
+    border: 1px solid #5A5A5A;
+}
+
+QComboBox{
+    border: 1px solid #5A5A5A;
+}
+*/
 
 QWidget::item:selected {
 	background: #3D7848;
@@ -297,11 +304,11 @@ QSlider::add-page:vertical, QSlider::sub-page:horizontal {
 }
 
 QSlider::sub-page:vertical, QSlider::add-page:horizontal {
-	background: #353535;
+	background: #35353  5;
 }
 
 QLabel {
-	border: none;
+	border: none;	
 }
 
 QProgressBar {
@@ -317,12 +324,25 @@ QMenu::separator {
 	background: #353535;
 }
 
+
+PageLabel {
+	border: none;	
+	background: #404040;
+	padding-left:10px;
+}
+s
+PageWidget{
+    border: 1px solid #5A5A5A;
+    background:red;
+}
+
+
 """)
 
-mainViewModule = MainViewModule();
-mainViewModule.resize(480 * 1.5, 640 * 1.5)
-mainViewModule.setWindowTitle("Spectracs")
+mainContainerViewModule = MainContainerViewModule()
+mainContainerViewModule.resize(int(480 * 1.5), int(640 * 1.5))
+mainContainerViewModule.setWindowTitle("Spectracs")
 
-ApplicationContextLogicModule().getNavigationHandler().mainViewModule = mainViewModule
-mainViewModule.show()
+ApplicationContextLogicModule().getNavigationHandler().mainViewModule = mainContainerViewModule.mainViewModule
+mainContainerViewModule.show()
 sys.exit(app.exec())

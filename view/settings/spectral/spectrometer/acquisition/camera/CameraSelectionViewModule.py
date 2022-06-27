@@ -1,6 +1,6 @@
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 from PyQt6.QtMultimedia import QMediaDevices
-from PyQt6.QtWidgets import QComboBox
+from PyQt6.QtWidgets import QComboBox, QLabel, QLineEdit
 from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtWidgets import QGroupBox
 from PyQt6.QtWidgets import QPushButton
@@ -13,24 +13,13 @@ from model.application.navigation.NavigationSignal import NavigationSignal
 import usb.core
 
 from model.databaseEntity.spectral.device.DbSpectralDevice import DbSpectralDevice
+from view.application.widgets.page.PageWidget import PageWidget
 
 
-class CameraSelectionViewModule(QWidget):
+class CameraSelectionViewModule(PageWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.camerasComboBox = QComboBox()
-
-        layout = QGridLayout()
-        self.setLayout(layout)
-
-        cameraGroupBox = self.createCameraGroupBox()
-        layout.addWidget(cameraGroupBox, 0, 0, 1, 1)
-        layout.setRowStretch(0, 100)
-
-        navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 1, 0, 1, 1)
 
         self.camerasComboBox.currentIndexChanged.connect(self.onSelectedSpectralDevice)
 
@@ -67,16 +56,10 @@ class CameraSelectionViewModule(QWidget):
 
         self.camerasComboBox.setModel(model)
 
-    def createCameraGroupBox(self):
-        result = QGroupBox("Camera")
-
-        layout = QGridLayout()
-        result.setLayout(layout);
-
+    def createCamerasComboBox(self):
+        self.camerasComboBox=QComboBox()
         self.updateCamerasComboBox()
-        layout.addWidget(self.camerasComboBox, 0, 0, 1, 1)
-
-        return result
+        return self.camerasComboBox
 
     def createNavigationGroupBox(self):
         result = QGroupBox("")
@@ -97,3 +80,14 @@ class CameraSelectionViewModule(QWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SettingsViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def getMainContainerWidgets(self):
+        result= super().getMainContainerWidgets()
+
+        camerasComboBox = self.createLabeledComponent('camerasComboBox', self.createCamerasComboBox())
+        result['camerasComboBox'] =camerasComboBox
+
+        serial=self.createLabeledComponent('serial', QLineEdit())
+        result['serial']=serial
+
+        return result
