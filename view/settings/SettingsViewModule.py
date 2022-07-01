@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QComboBox
 from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtWidgets import QGroupBox
 from PyQt6.QtWidgets import QPushButton
@@ -6,10 +6,10 @@ from PyQt6.QtWidgets import QPushButton
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
+from view.application.widgets.page.PageLabel import PageLabel
 
 
 class SettingsViewModule(QWidget):
-
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,10 +19,26 @@ class SettingsViewModule(QWidget):
 
         acquisitionSettingsGroupBox = self.createAcquisitionSettingsGroupBox()
         layout.addWidget(acquisitionSettingsGroupBox, 0, 0, 1, 1)
-        layout.setRowStretch(0, 100)
+        layout.setRowStretch(0, 15)
+
+        evaluationProfilesGroupBox = self.createEvaluationProfilesGroupBox()
+        layout.addWidget(evaluationProfilesGroupBox, 1, 0, 1, 1)
+        layout.setRowStretch(1, 15)
+
+        downloadsGroupBoxGroupBox = self.createDownloadsGroupBox()
+        layout.addWidget(downloadsGroupBoxGroupBox, 2, 0, 1, 1)
+        layout.setRowStretch(2, 15)
+
+        uploadsGroupBoxGroupBox = self.createUploadsGroupBox()
+        layout.addWidget(uploadsGroupBoxGroupBox, 3, 0, 1, 1)
+        layout.setRowStretch(3, 15)
+
+        serviceLoginGroupBox = self.createServiceLoginGroupBox()
+        layout.addWidget(serviceLoginGroupBox, 4, 0, 1, 1)
+        layout.setRowStretch(4, 15)
 
         navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 1, 0, 1, 1)
+        layout.addWidget(navigationGroupBox, 5, 0, 1, 1)
 
 
     def createAcquisitionSettingsGroupBox(self):
@@ -31,28 +47,75 @@ class SettingsViewModule(QWidget):
         layout = QGridLayout()
         result.setLayout(layout)
 
-        cameraSelectionButton = QPushButton()
-        cameraSelectionButton.setText("Camera selection")
-        layout.addWidget(cameraSelectionButton, 0, 0, 1, 1)
-        cameraSelectionButton.clicked.connect(self.onClickedCameraSelectionButton)
+        comboBox=self.createLabeledComponent('Measurement profile',QComboBox())
+        layout.addWidget(comboBox, 0, 0, 1, 1)
 
-        wavelengthCalibrationButton = QPushButton()
-        wavelengthCalibrationButton.setText("Wavelength calibration")
-        layout.addWidget(wavelengthCalibrationButton, 1, 0, 1, 1)
+        openSpectrometerProfileListViewModuleButton = QPushButton()
+        openSpectrometerProfileListViewModuleButton.setText("Spectrometer profiles")
+        layout.addWidget(openSpectrometerProfileListViewModuleButton, 1, 0, 1, 1)
+        openSpectrometerProfileListViewModuleButton.clicked.connect(self.onClickedCameraSelectionButton)
 
-        # wavelengthCalibrationButton.clicked.connect(self.onClickedWavelengthCalibrationButton)
-
-        regionOfInterestButton = QPushButton()
-        regionOfInterestButton.setText("ROI (region of interest)")
-        layout.addWidget(regionOfInterestButton, 2, 0, 1, 1)
+        openMeasurementProfilesListViewModuleButton = QPushButton()
+        openMeasurementProfilesListViewModuleButton.setText("Measurement profiles")
+        layout.addWidget(openMeasurementProfilesListViewModuleButton, 2, 0, 1, 1)
 
         return result
+
+    def createServiceLoginGroupBox(self):
+        result = QGroupBox("Service Login")
+
+        layout = QGridLayout()
+        result.setLayout(layout)
+
+        openServiceLoginViewModuleButton = QPushButton()
+        openServiceLoginViewModuleButton.setText("Login")
+        layout.addWidget(openServiceLoginViewModuleButton, 0, 0, 1, 1)
+
+        return result
+
+    def createEvaluationProfilesGroupBox(self):
+        result = QGroupBox("Evaluation profiles")
+
+        layout = QGridLayout()
+        result.setLayout(layout)
+
+        openEvaluationProfileListViewModuleButton = QPushButton()
+        openEvaluationProfileListViewModuleButton.setText("Evaluation profiles")
+        layout.addWidget(openEvaluationProfileListViewModuleButton, 0, 0, 1, 1)
+
+        return result
+
+
+    def createDownloadsGroupBox(self):
+        result = QGroupBox("Downloads")
+
+        layout = QGridLayout()
+        result.setLayout(layout)
+
+        openRepositoryProfileListViewModuleButton = QPushButton()
+        openRepositoryProfileListViewModuleButton.setText("Repository profiles")
+        layout.addWidget(openRepositoryProfileListViewModuleButton, 0, 0, 1, 1)
+
+        return result
+
+    def createUploadsGroupBox(self):
+        result = QGroupBox("Uploads")
+
+        layout = QGridLayout()
+        result.setLayout(layout)
+
+        openUploadProfileListViewModuleButton = QPushButton()
+        openUploadProfileListViewModuleButton.setText("Upload profiles")
+        layout.addWidget(openUploadProfileListViewModuleButton, 0, 0, 1, 1)
+
+        return result
+
 
     def createNavigationGroupBox(self):
         result = QGroupBox("")
 
         layout = QGridLayout()
-        result.setLayout(layout);
+        result.setLayout(layout)
 
         backButton = QPushButton()
         backButton.setText("Back")
@@ -73,7 +136,21 @@ class SettingsViewModule(QWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
-        someNavigationSignal.setTarget("CameraSelectionViewModule")
+        someNavigationSignal.setTarget("SpectrometerProfileListViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def createLabeledComponent(self,label:str,component:QWidget):
+        container=QWidget()
+
+        layout=QGridLayout()
+        container.setLayout(layout)
+        labelComponent=PageLabel(label)
+        layout.addWidget(labelComponent,0,0,1,1)
+        layout.setColumnStretch(0,30)
+
+        layout.addWidget(component, 0, 1, 1, 1)
+        layout.setColumnStretch(1, 70)
+
+        return container
 
 

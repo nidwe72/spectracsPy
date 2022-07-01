@@ -304,7 +304,7 @@ QSlider::add-page:vertical, QSlider::sub-page:horizontal {
 }
 
 QSlider::sub-page:vertical, QSlider::add-page:horizontal {
-	background: #35353  5;
+	background: #353535;
 }
 
 QLabel {
@@ -343,6 +343,6 @@ mainContainerViewModule = MainContainerViewModule()
 mainContainerViewModule.resize(int(480 * 1.5), int(640 * 1.5))
 mainContainerViewModule.setWindowTitle("Spectracs")
 
-ApplicationContextLogicModule().getNavigationHandler().mainViewModule = mainContainerViewModule.mainViewModule
+ApplicationContextLogicModule().getNavigationHandler().mainContainerViewModule = mainContainerViewModule
 mainContainerViewModule.show()
 sys.exit(app.exec())

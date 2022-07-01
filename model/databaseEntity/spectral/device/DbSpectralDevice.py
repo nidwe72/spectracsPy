@@ -11,6 +11,7 @@ class DbSpectralDevice(DbBaseEntity,DbBaseEntityMixin):
     modelId = Column(String)
     name=Column(String)
     description = Column(String)
+    serial = Column(String)
 
     horizontalDigitalResolution = Column(Integer)
     verticalDigitalResolution = Column(Integer)

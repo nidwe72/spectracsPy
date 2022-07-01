@@ -2,7 +2,7 @@ from PyQt6.QtCore import QObject
 
 class NavigationHandlerLogicModule(QObject):
 
-    mainViewModule=None
+    mainContainerViewModule=None
 
     def __init__(self,parent):
         super().__init__()
@@ -12,20 +12,25 @@ class NavigationHandlerLogicModule(QObject):
         target=navigationSignal.getTarget()
 
         if target=="Home":
-            self.mainViewModule.setWindowTitle("Spectracs")
-            self.mainViewModule.setCurrentIndex(0)
+            self.mainContainerViewModule.setWindowTitle("Spectracs")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(0)
         elif target=="SpectralJob":
-            self.mainViewModule.setWindowTitle("Spectracs > Spectrum")
-            self.mainViewModule.setCurrentIndex(1)
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrum")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(1)
         elif target=="SpectralJobImport":
-            self.mainViewModule.setWindowTitle("Spectracs > Import spectrum")
-            self.mainViewModule.setCurrentIndex(2)
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Import spectrum")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(2)
         elif target=="SettingsViewModule":
-            self.mainViewModule.setWindowTitle("Spectracs > Settings")
-            self.mainViewModule.setCurrentIndex(3)
-        elif target=="CameraSelectionViewModule":
-            self.mainViewModule.setWindowTitle("Spectracs > Camera selection")
-            self.mainViewModule.setCurrentIndex(4)
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(3)
+        elif target=="SpectrometerProfileListViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometers")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(4)
+        elif target=="SpectrometerProfileViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometer profile")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(5)
+
+
 
 
 

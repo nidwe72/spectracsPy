@@ -5,9 +5,12 @@ from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtWidgets import QGroupBox
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QWidget
+from sqlalchemy.sql.functions import mode
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.settings.SettingsLogicModule import SettingsLogicModule
+from logic.settings.spectral.spectrometer.acquisition.camera.CameraSelectionLogicModule import \
+    CameraSelectionLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
 
 import usb.core
@@ -16,7 +19,9 @@ from model.databaseEntity.spectral.device.DbSpectralDevice import DbSpectralDevi
 from view.application.widgets.page.PageWidget import PageWidget
 
 
-class CameraSelectionViewModule(PageWidget):
+class SpectrometerProfileViewModule(PageWidget):
+
+    model: DbSpectralDevice =None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,7 +77,36 @@ class CameraSelectionViewModule(PageWidget):
         layout.addWidget(backButton, 0, 0, 1, 1)
         backButton.clicked.connect(self.onClickedBackButton)
 
+        saveButton = QPushButton()
+        saveButton.setText("Save")
+        layout.addWidget(saveButton, 0, 1, 1, 1)
+        saveButton.clicked.connect(self.onClickedSaveButton)
+
         return result
+
+    def onClickedSaveButton(self):
+
+        print("Save")
+
+        model=self.getModel()
+        model.serial=self.serial.text()
+
+        currentIndex=self.camerasComboBox.currentIndex()
+        print(currentIndex)
+
+        comboBoxModel=self.camerasComboBox.model()
+        if isinstance(comboBoxModel,QStandardItemModel):
+            comboBoxModelItem=comboBoxModel.item(currentIndex)
+            selectedSpectralDevice=comboBoxModelItem.data()
+
+        if isinstance(selectedSpectralDevice,DbSpectralDevice):
+            model.modelId=selectedSpectralDevice.modelId
+            model.vendorId = selectedSpectralDevice.vendorId
+
+        cameraSelectionLogicModule=CameraSelectionLogicModule()
+        cameraSelectionLogicModule.saveSpectralDevice(model)
+
+        pass
 
     def onClickedBackButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
@@ -86,8 +120,14 @@ class CameraSelectionViewModule(PageWidget):
 
         camerasComboBox = self.createLabeledComponent('camera', self.createCamerasComboBox())
         result['camerasComboBox'] =camerasComboBox
-
-        serial=self.createLabeledComponent('serial', QLineEdit())
+        self.serial=QLineEdit()
+        serial=self.createLabeledComponent('serial', self.serial)
         result['serial']=serial
 
         return result
+
+    def getModel(self) -> DbSpectralDevice:
+
+        if self.model is None:
+            self.model=DbSpectralDevice()
+        return self.model
