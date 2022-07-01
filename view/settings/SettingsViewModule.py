@@ -37,8 +37,12 @@ class SettingsViewModule(QWidget):
         layout.addWidget(serviceLoginGroupBox, 4, 0, 1, 1)
         layout.setRowStretch(4, 15)
 
+        infosGroupBox = self.createInfosGroupBox()
+        layout.addWidget(infosGroupBox, 5, 0, 1, 1)
+        layout.setRowStretch(5, 15)
+
         navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 5, 0, 1, 1)
+        layout.addWidget(navigationGroupBox, 6, 0, 1, 1)
 
 
     def createAcquisitionSettingsGroupBox(self):
@@ -72,6 +76,23 @@ class SettingsViewModule(QWidget):
         layout.addWidget(openServiceLoginViewModuleButton, 0, 0, 1, 1)
 
         return result
+
+    def createInfosGroupBox(self):
+        result = QGroupBox("Infos")
+
+        layout = QGridLayout()
+        result.setLayout(layout)
+
+        openApplicationAboutViewModuleButton = QPushButton()
+        openApplicationAboutViewModuleButton.setText("About")
+        layout.addWidget(openApplicationAboutViewModuleButton, 0, 0, 1, 1)
+
+        openApplicationHelpViewModuleButton = QPushButton()
+        openApplicationHelpViewModuleButton.setText("Help")
+        layout.addWidget(openApplicationHelpViewModuleButton, 1, 0, 1, 1)
+
+        return result
+
 
     def createEvaluationProfilesGroupBox(self):
         result = QGroupBox("Evaluation profiles")
