@@ -15,13 +15,13 @@ from model.application.navigation.NavigationSignal import NavigationSignal
 
 import usb.core
 
-from model.databaseEntity.spectral.device.DbSpectralDevice import DbSpectralDevice
+from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from view.application.widgets.page.PageWidget import PageWidget
 
 
 class SpectrometerProfileViewModule(PageWidget):
 
-    model: DbSpectralDevice =None
+    model: SpectrometerProfile =None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -33,14 +33,14 @@ class SpectrometerProfileViewModule(PageWidget):
         if isinstance(model, QStandardItemModel):
             item = model.item(index)
             spectralDevice = item.data()
-            if isinstance(spectralDevice, DbSpectralDevice):
+            if isinstance(spectralDevice, SpectrometerProfile):
                 print('vendor')
                 print(spectralDevice.vendorId)
 
     def updateCamerasComboBox(self):
 
         settingsLogicModule = SettingsLogicModule()
-        supportedSpectralDevices = settingsLogicModule.getSupportedSpectralDevices()
+        supportedSpectralDevices = settingsLogicModule.getSupportedSpectrometerSensors()
 
         # videoInputs = QMediaDevices.videoInputs()
 
@@ -99,7 +99,7 @@ class SpectrometerProfileViewModule(PageWidget):
             comboBoxModelItem=comboBoxModel.item(currentIndex)
             selectedSpectralDevice=comboBoxModelItem.data()
 
-        if isinstance(selectedSpectralDevice,DbSpectralDevice):
+        if isinstance(selectedSpectralDevice, SpectrometerProfile):
             model.modelId=selectedSpectralDevice.modelId
             model.vendorId = selectedSpectralDevice.vendorId
 
@@ -126,8 +126,8 @@ class SpectrometerProfileViewModule(PageWidget):
 
         return result
 
-    def getModel(self) -> DbSpectralDevice:
+    def getModel(self) -> SpectrometerProfile:
 
         if self.model is None:
-            self.model=DbSpectralDevice()
+            self.model=SpectrometerProfile()
         return self.model

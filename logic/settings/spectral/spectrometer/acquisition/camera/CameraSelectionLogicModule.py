@@ -1,9 +1,9 @@
-from model.databaseEntity.spectral.device.DbSpectralDevice import DbSpectralDevice
+from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 
 
 class CameraSelectionLogicModule:
     pass
 
-    def saveSpectralDevice(self,spectralDevice:DbSpectralDevice):
+    def saveSpectralDevice(self, spectralDevice:SpectrometerProfile):
         print(spectralDevice)
         pass

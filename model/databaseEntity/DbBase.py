@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from appdata import AppDataPaths
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm import declarative_mixin
@@ -17,7 +17,8 @@ engine = create_engine(dbFilepath)
 _SessionFactory = sessionmaker(bind=engine)
 
 DbBaseEntity = declarative_base()
-def session_factory():
+
+def session_factory()->Session:
     DbBaseEntity.metadata.create_all(engine)
     return _SessionFactory()
 

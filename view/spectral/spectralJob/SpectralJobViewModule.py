@@ -8,7 +8,7 @@ from controller.application.ApplicationContextLogicModule import ApplicationCont
 from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.DbBase import session_factory
-from model.databaseEntity.spectral.device.DbSpectralDevice import DbSpectralDevice
+from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import SpectralJobWidgetViewModuleParameters
@@ -142,7 +142,7 @@ class SpectralJobViewModule(QWidget):
         # so=session.object_session()
         # session.ad
 
-        spectralDevice = DbSpectralDevice()
+        spectralDevice = SpectrometerProfile()
         spectralDevice.horizontalDigitalResolution=1024
         spectralDevice.verticalDigitalResolution = 768
         session.add(spectralDevice)
