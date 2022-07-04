@@ -1,20 +1,14 @@
+import usb
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
-from PyQt6.QtMultimedia import QMediaDevices
-from PyQt6.QtWidgets import QComboBox, QLabel, QLineEdit
-from PyQt6.QtWidgets import QGridLayout
+from PyQt6.QtWidgets import QGridLayout, QLineEdit, QComboBox
 from PyQt6.QtWidgets import QGroupBox
 from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtWidgets import QWidget
-from sqlalchemy.sql.functions import mode
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.settings.SettingsLogicModule import SettingsLogicModule
 from logic.settings.spectral.spectrometer.acquisition.camera.CameraSelectionLogicModule import \
     CameraSelectionLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
-
-import usb.core
-
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from view.application.widgets.page.PageWidget import PageWidget
 
@@ -131,3 +125,4 @@ class SpectrometerProfileViewModule(PageWidget):
         if self.model is None:
             self.model=SpectrometerProfile()
         return self.model
+

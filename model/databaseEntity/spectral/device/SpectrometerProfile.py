@@ -8,12 +8,13 @@ from model.databaseEntity.DbBase import DbBaseEntity, DbBaseEntityMixin
 
 class SpectrometerProfile(DbBaseEntity, DbBaseEntityMixin):
 
-    spectrometerSensorId = Column(Integer, ForeignKey("parent.id"))
     serial = Column(String)
 
     spectrometerSensorId = Column(Integer, ForeignKey("spectrometer_sensor.id"))
+    parent = relationship("spectrometer_sensor", back_populates="children")
+    spectrometerSensor=parent = relationship("SpectrometerSensor", back_populates="spectrometerProfiles")
 
-spectrometerSensor = relationship("spectrometer_sensor", back_populates="child")
+
 
 
 
