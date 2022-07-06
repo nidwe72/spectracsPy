@@ -48,7 +48,7 @@ class SpectrometerProfileListViewModule(PageWidget):
         editSpectrometerProfileButton.clicked.connect(self.onClickedEditSpectrometerProfileButton)
 
         addSpectrometerProfileButton = QPushButton()
-        addSpectrometerProfileButton.setText("Add spectrometer")
+        addSpectrometerProfileButton.setText("Add")
         layout.addWidget(addSpectrometerProfileButton, 0, 2, 1, 1)
         addSpectrometerProfileButton.clicked.connect(self.onClickedAddSpectrometerProfileButton)
 

@@ -100,9 +100,14 @@ QGroupBox {
 	margin-top: 6px;
 }
 
+
 QGroupBox::title {
 	top: -7px;
-	left: 7px;
+	left: 7px;	
+}
+
+QGroupBox#PageWidget_mainContainer::title {	
+	color: #3D7848;	
 }
 
 QScrollBar {
@@ -330,11 +335,12 @@ PageLabel {
 	background: #404040;
 	padding-left:10px;
 }
-s
+
 PageWidget{
     border: 1px solid #5A5A5A;
     background:red;
 }
+
 
 
 """)

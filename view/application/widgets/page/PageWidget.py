@@ -1,5 +1,8 @@
 from PyQt6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel
 
+
+from PyQt6.QtCore import Qt
+
 from view.application.widgets.page.PageLabel import PageLabel
 
 class PageWidget(QWidget):
@@ -32,6 +35,10 @@ class PageWidget(QWidget):
 
     def createMainContainer(self):
         result=QGroupBox("PageWidget")
+        result.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        result.setObjectName('PageWidget_mainContainer')
+        #result.setFlat(True)
+
         layout=QGridLayout()
         result.setLayout(layout)
         row=0
