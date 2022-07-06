@@ -1,8 +1,11 @@
+import typing
 from typing import List
-from PyQt6.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt, QSize
+
+from PyQt6 import QtCore
+from PyQt6.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt, QSize, QItemSelectionModel, QItemSelection
 from PyQt6.QtGui import QTextDocument, QAbstractTextDocumentLayout, QPalette
 from PyQt6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QListView, QItemDelegate, QStyledItemDelegate, \
-    QStyleOptionViewItem, QApplication, QWidget
+    QStyleOptionViewItem, QApplication, QWidget, QAbstractItemView, QTextEdit
 
 from PyQt6.QtWidgets import QStyle
 
@@ -11,6 +14,8 @@ from controller.application.ApplicationContextLogicModule import ApplicationCont
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from view.application.widgets.page.PageWidget import PageWidget
+from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerProfileViewModule import \
+    SpectrometerProfileViewModule
 
 
 class SpectrometerProfileListViewModule(PageWidget):
@@ -19,6 +24,12 @@ class SpectrometerProfileListViewModule(PageWidget):
         super().__init__(*args, **kwargs)
 
     listView:QListView=None
+    spectrometerProfilesListModel=None
+
+    def createMainContainer(self):
+        result=super().createMainContainer()
+        result.setTitle("Settings > Spectrometer profiles")
+        return result
 
     def createNavigationGroupBox(self):
         result = QGroupBox("")
@@ -31,9 +42,14 @@ class SpectrometerProfileListViewModule(PageWidget):
         layout.addWidget(backButton, 0, 0, 1, 1)
         backButton.clicked.connect(self.onClickedBackButton)
 
+        editSpectrometerProfileButton = QPushButton()
+        editSpectrometerProfileButton.setText("Edit")
+        layout.addWidget(editSpectrometerProfileButton, 0, 1, 1, 1)
+        editSpectrometerProfileButton.clicked.connect(self.onClickedEditSpectrometerProfileButton)
+
         addSpectrometerProfileButton = QPushButton()
         addSpectrometerProfileButton.setText("Add spectrometer")
-        layout.addWidget(addSpectrometerProfileButton, 0, 1, 1, 1)
+        layout.addWidget(addSpectrometerProfileButton, 0, 2, 1, 1)
         addSpectrometerProfileButton.clicked.connect(self.onClickedAddSpectrometerProfileButton)
 
         return result
@@ -52,10 +68,35 @@ class SpectrometerProfileListViewModule(PageWidget):
         someNavigationSignal.setTarget("SpectrometerProfileViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
+    def onClickedEditSpectrometerProfileButton(self):
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        someNavigationSignal = NavigationSignal(None)
+        someNavigationSignal.setTarget("SpectrometerProfileViewModule")
+
+        targetViewModule=ApplicationContextLogicModule().getNavigationHandler().getViewModule(someNavigationSignal)
+        if isinstance(targetViewModule,SpectrometerProfileViewModule):
+            currentIndex=self.listView.currentIndex()
+            if isinstance(currentIndex,QModelIndex):
+                spectrometerProfile=currentIndex.data()
+                # row=currentIndex.row()
+
+                #spectrometerProfile=self.spectrometerProfilesListModel.data(currentIndex,Qt.ItemDataRole.DisplayRole)
+
+                bar=spectrometerProfile.serial
+
+                foo=type(SpectrometerProfile)
+                if isinstance(spectrometerProfile,SpectrometerProfile):
+                    targetViewModule.loadView(spectrometerProfile)
+
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
     def getMainContainerWidgets(self):
         result= super().getMainContainerWidgets()
-        if self.listView==None:
+        if self.listView is None:
             self.listView=QListView()
+
+        #self.listView.setEditTriggers(QAbstractItemView.EditTrigger.AllEditTriggers)
 
         self.spectrometerProfilesListModel=SpectrometerProfilesListModel()
 
@@ -64,11 +105,17 @@ class SpectrometerProfileListViewModule(PageWidget):
         self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfile)
 
         spectrometerProfile2=SpectrometerProfile()
-        spectrometerProfile2.serial='1234'
+        spectrometerProfile2.serial='7890'
         self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfile2)
 
 
         self.listView.setModel(self.spectrometerProfilesListModel)
+
+        # sm=SelectionModel()
+        # sm.setModel(self.spectrometerProfilesListModel)
+        # self.listView.setSelectionModel(sm)
+
+
 
         self.delegate=HTMLDelegate()
 
@@ -77,10 +124,29 @@ class SpectrometerProfileListViewModule(PageWidget):
         result['lisView']=self.listView
         return result
 
+class SelectionModel(QItemSelectionModel):
+
+    def select(self, index: QModelIndex, command: 'QItemSelectionModel.SelectionFlag') -> None:
+        commandToUse=QItemSelectionModel.SelectionFlag.ClearAndSelect
+
+        if isinstance(index,QItemSelection):
+            indices=index.indexes()
+            super().select(index, command)
+
+
+
+
 class HTMLDelegate(QStyledItemDelegate):
     """QStyledItemDelegate implementation. Draws HTML
     http://stackoverflow.com/questions/1956542/how-to-make-item-view-render-rich-html-text-in-qt/1956781#1956781
     """
+
+    def editorEvent(self, event: QtCore.QEvent, model: QtCore.QAbstractItemModel, option: 'QStyleOptionViewItem',
+                    index: QtCore.QModelIndex) -> bool:
+        return super().editorEvent(event, model, option, index)
+
+    def eventFilter(self, object: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        return super().eventFilter(object, event)
 
     def __init__(self, parent=None):
         if isinstance(parent, QWidget):
@@ -211,15 +277,73 @@ class HTMLDelegate(QStyledItemDelegate):
         result = QSize(doc.idealWidth(), doc.size().height())
         return result
 
+    def createEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> QWidget:
+        #result=super().createEditor(parent, option, index)
+
+        result=QWidget(parent)
+
+        layout=QGridLayout()
+        layout.setContentsMargins(0,0,0,0)
+        layout.setHorizontalSpacing(0)
+        layout.setVerticalSpacing(0)
+        result.setLayout(layout)
+
+        textEdit=QTextEdit()
+        textEdit.setContentsMargins(0,0,0,0)
+
+        html = \
+            '''            
+            <style type="text/css">
+            
+                body{
+                    background-color:gray;
+                }                
+                table {
+                    color: white;
+                    border-width: 0px;
+                    border-collapse: collapse;                    
+                }               
+            </style>            
+            <body width=100% border=1>
+            <table width=100% border=1>
+            <tr>
+                <td width=33%>Spectral profile</td>
+                <td width=34%>axggshjs:jhsah</td>
+                <td width=33% >hkashh</td>
+            </tr>
+            </table>
+            </body>
+            '''
+
+
+        textDocument=QTextDocument()
+        textDocument.setHtml(html)
+        textDocument.setDocumentMargin(0)
+        textEdit.setDocument(textDocument)
+
+        layout.addWidget(textEdit, 0, 0, 1, 1)
+
+        button=QPushButton(parent)
+        button.setText("Edit")
+        layout.addWidget(button,0,1,1,1)
+
+
+        #result.setFixedHeight(100)
+
+        return result
+
+
 class SpectrometerProfilesListModel(QAbstractListModel):
-    __spectrometerProfiles:List[SpectrometerProfile]=[]
+    #__spectrometerProfiles:List[SpectrometerProfile]=[]
+    __spectrometerProfiles = []
 
     def __init__(self, parent=None):
         self.__spectrometerProfiles=[]
         QAbstractListModel.__init__(self, parent)
 
     def addSpectrometerProfile(self,spectrometerProfile:SpectrometerProfile):
-        self.__spectrometerProfiles.append(SpectrometerProfile)
+        self.__spectrometerProfiles.append(spectrometerProfile)
+        return
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.__spectrometerProfiles)
@@ -232,9 +356,29 @@ class SpectrometerProfilesListModel(QAbstractListModel):
             return QVariant()
 
         if role == Qt.ItemDataRole.DisplayRole:
+            result=self.__spectrometerProfiles[index.row()]
+            return result
+        elif role ==Qt.ItemDataRole.EditRole:
             return self.__spectrometerProfiles[index.row()]
         else:
             return QVariant()
+
+    def flags(self, index):
+        flags = super(self.__class__, self).flags(index)
+        flags |= Qt.ItemFlag.ItemIsEditable
+        #flags |= Qt.ItemFlag.ItemIsSelectable
+        flags |= Qt.ItemFlag.ItemIsEnabled
+        #flags |= Qt.ItemFlag.ItemIsDragEnabled
+        #flags |= Qt.ItemFlag.ItemIsDropEnabled
+
+        # Always editable with ReadOnlyDelegate:
+        flags =  Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsEditable|Qt.ItemFlag.ItemIsSelectable
+
+
+        return flags
+
+
+        return flags
 
 
 

@@ -19,6 +19,9 @@ class PageWidget(QWidget):
         navigationGroupBox = self.createNavigationGroupBox()
         layout.addWidget(navigationGroupBox,1,0,1,1)
 
+
+
+
     def createNavigationGroupBox(self):
         result = QGroupBox("")
 
@@ -28,7 +31,7 @@ class PageWidget(QWidget):
         return result
 
     def createMainContainer(self):
-        result=QWidget()
+        result=QGroupBox("PageWidget")
         layout=QGridLayout()
         result.setLayout(layout)
         row=0

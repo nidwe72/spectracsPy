@@ -52,7 +52,7 @@ class SettingsViewModule(QWidget):
         result.setLayout(layout)
 
         comboBox=self.createLabeledComponent('Measurement profile',QComboBox())
-        layout.addWidget(comboBox, 0, 0, 1, 1)
+        layout.addWidget(comboBox, 0, 0, 1, 2)
 
         openSpectrometerProfileListViewModuleButton = QPushButton()
         openSpectrometerProfileListViewModuleButton.setText("Spectrometer profiles")
@@ -61,7 +61,7 @@ class SettingsViewModule(QWidget):
 
         openMeasurementProfilesListViewModuleButton = QPushButton()
         openMeasurementProfilesListViewModuleButton.setText("Measurement profiles")
-        layout.addWidget(openMeasurementProfilesListViewModuleButton, 2, 0, 1, 1)
+        layout.addWidget(openMeasurementProfilesListViewModuleButton, 1, 1, 1, 1)
 
         return result
 
@@ -89,7 +89,7 @@ class SettingsViewModule(QWidget):
 
         openApplicationHelpViewModuleButton = QPushButton()
         openApplicationHelpViewModuleButton.setText("Help")
-        layout.addWidget(openApplicationHelpViewModuleButton, 1, 0, 1, 1)
+        layout.addWidget(openApplicationHelpViewModuleButton, 0, 1, 1, 1)
 
         return result
 

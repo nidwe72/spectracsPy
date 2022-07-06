@@ -106,7 +106,7 @@ class SpectrometerProfileViewModule(PageWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
-        someNavigationSignal.setTarget("SettingsViewModule")
+        someNavigationSignal.setTarget("SpectrometerProfileListViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def getMainContainerWidgets(self):
@@ -126,3 +126,10 @@ class SpectrometerProfileViewModule(PageWidget):
             self.model=SpectrometerProfile()
         return self.model
 
+    def setModel(self,model:SpectrometerProfile):
+        self.model=model
+
+    def loadView(self,model:SpectrometerProfile):
+        self.setModel(model)
+        self.serial.setText(model.serial)
+        return
