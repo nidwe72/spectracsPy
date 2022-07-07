@@ -20,16 +20,20 @@ class SettingsLogicModule:
         result={}
 
         microdiaDevice=SpectrometerSensor()
+        microdiaDevice.codeName = "ThunderOptics"
         microdiaDevice.name = "Microdia 0c45:6366"
         microdiaDevice.description = "Thunder optics"
         microdiaDevice.vendorId="0c45"
+        microdiaDevice.vendorName = "Microdia"
         microdiaDevice.modelId = "6366"
         result[microdiaDevice.name]=microdiaDevice
 
         sonixDevice=SpectrometerSensor()
         sonixDevice.name = "Sonix 0c45:6366"
+        sonixDevice.codeName = "Spectracs InVision Mars"
         sonixDevice.description = "Waveshare"
         sonixDevice.vendorId="0c45"
+        sonixDevice.vendorName = "Sonix"
         sonixDevice.modelId = "7777"
         result[sonixDevice.name]=sonixDevice
 

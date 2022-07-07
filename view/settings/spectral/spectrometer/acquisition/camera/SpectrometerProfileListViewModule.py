@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QStyle
 
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.settings.SettingsLogicModule import SettingsLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from view.application.widgets.page.PageWidget import PageWidget
@@ -100,12 +101,17 @@ class SpectrometerProfileListViewModule(PageWidget):
 
         self.spectrometerProfilesListModel=SpectrometerProfilesListModel()
 
+        settingsLogicModule = SettingsLogicModule()
+        supportedSpectrometerSensors=settingsLogicModule.getSupportedSpectrometerSensors()
+
         spectrometerProfile=SpectrometerProfile()
         spectrometerProfile.serial='1234'
+        spectrometerProfile.spectrometerSensor=supportedSpectrometerSensors['Microdia 0c45:6366'];
         self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfile)
 
         spectrometerProfile2=SpectrometerProfile()
         spectrometerProfile2.serial='7890'
+        spectrometerProfile2.spectrometerSensor = supportedSpectrometerSensors['Sonix 0c45:6366'];
         self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfile2)
 
 
@@ -157,10 +163,6 @@ class HTMLDelegate(QStyledItemDelegate):
         QStyledItemDelegate.__init__(self, parent)
 
     def paint(self, painter, option, index):
-        """QStyledItemDelegate.paint implementation
-        """
-
-
 
         option.state &= ~QStyle.StateFlag.State_HasFocus  # never draw focus rect
 
@@ -181,30 +183,7 @@ class HTMLDelegate(QStyledItemDelegate):
         doc.setDocumentMargin(1)
         #doc.setHtml(options.text)
 
-        html = \
-            '''            
-            <style type="text/css">                
-                body {
-	                color: black;
-	                background: blue;
-                }                
-                table {
-                    color: white;
-                    border-width: 0px;
-                    border-collapse: collapse;                    
-                }               
-            </style>            
-            <body width=100% border=1>
-            <table width=100% border=1>
-            <tr>
-                <td width=33%>Spectral profile</td>
-                <td width=34%>axggshjs:jhsah</td>
-                <td width=33% >hkashh</td>
-            </tr>
-            </table>
-            </body>
-            '''
-
+        html=self.getMarkup(index)
 
         doc.setHtml(html)
         #doc.setHtml("<Hello><br/><center>world</center><br/>foo")
@@ -232,17 +211,10 @@ class HTMLDelegate(QStyledItemDelegate):
 
         painter.restore()
 
-    def sizeHint(self, option, index):
-        """QStyledItemDelegate.sizeHint implementation
-        """
-        options = QStyleOptionViewItem(option)
-        self.initStyleOption(options, index)
+    def getMarkup(self,index:QModelIndex):
+        spectrometerProfile = index.data()
 
-        doc = QTextDocument()
-        if self._font is not None:
-            doc.setDefaultFont(self._font)
-        doc.setDocumentMargin(1)
-        #  bad long (multiline) strings processing doc.setTextWidth(options.rect.width())
+        serial = spectrometerProfile.serial
 
         html = \
             '''            
@@ -260,15 +232,45 @@ class HTMLDelegate(QStyledItemDelegate):
             <body width=100% border=1>
             <table width=100% border=1>
             <tr>
-                <td width=33%>Spectral profile</td>
-                <td width=34%>axggshjs:jhsah</td>
-                <td width=33% >hkashh</td>
+                <td colspan="4" style="font-weight:bold;text-align: center;background-color:#404040;">%codeName% (%serial%)</td>
+            </tr>
+            <tr>
+                <td width=25%>Vendor</td>
+                <td width=25%>Vendor id</td>
+                <td width=25%>Model id</td>
+                <td width=25%>Serial</td>
+            </tr>                        
+            <tr>
+                <td width=25%>%vendorName%</td>
+                <td width=25%>%vendorId%</td>
+                <td width=25%>%modelId%</td>
+                <td width=25%>%serial%</td>
             </tr>
             </table>
             </body>
             '''
 
-        #doc.setHtml(options.text)
+        html = html.replace('%serial%', serial)
+        html = html.replace('%vendorId%', spectrometerProfile.spectrometerSensor.vendorId)
+        html = html.replace('%modelId%', spectrometerProfile.spectrometerSensor.modelId)
+        html = html.replace('%vendorName%', spectrometerProfile.spectrometerSensor.vendorName)
+        html = html.replace('%codeName%', spectrometerProfile.spectrometerSensor.codeName)
+
+        return html
+
+    def sizeHint(self, option, index):
+        """QStyledItemDelegate.sizeHint implementation
+        """
+        options = QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+
+        doc = QTextDocument()
+        if self._font is not None:
+            doc.setDefaultFont(self._font)
+        doc.setDocumentMargin(1)
+        #  bad long (multiline) strings processing doc.setTextWidth(options.rect.width())
+
+        html =self.getMarkup(index)
         doc.setHtml(html)
 
 

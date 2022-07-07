@@ -204,7 +204,7 @@ QAbstractButton:pressed {
 
 QAbstractItemView {
 	show-decoration-selected: 1;
-	selection-background-color: #3D7848;
+	selection-background-color: gray;
 	selection-color: #DDDDDD;
 	alternate-background-color: #353535;
 }
