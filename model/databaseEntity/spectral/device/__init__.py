@@ -1,0 +1,3 @@
+from model.databaseEntity.spectral.device.Spectrometer import Spectrometer
+from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
+from model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor

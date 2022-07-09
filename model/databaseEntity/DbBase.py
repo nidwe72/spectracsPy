@@ -1,11 +1,11 @@
+from appdata import AppDataPaths
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from appdata import AppDataPaths
-from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm import declarative_mixin
-from sqlalchemy.sql.sqltypes import Integer
+from sqlalchemy.orm import declared_attr
+from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.schema import Column
+from sqlalchemy.sql.sqltypes import Integer
 
 app_paths = AppDataPaths()
 app_paths.setup()

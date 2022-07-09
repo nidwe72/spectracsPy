@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QStyle
 
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from logic.settings.SettingsLogicModule import SettingsLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
@@ -102,17 +103,24 @@ class SpectrometerProfileListViewModule(PageWidget):
         self.spectrometerProfilesListModel=SpectrometerProfilesListModel()
 
         settingsLogicModule = SettingsLogicModule()
-        supportedSpectrometerSensors=settingsLogicModule.getSupportedSpectrometerSensors()
 
-        spectrometerProfile=SpectrometerProfile()
-        spectrometerProfile.serial='1234'
-        spectrometerProfile.spectrometerSensor=supportedSpectrometerSensors['Microdia 0c45:6366'];
-        self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfile)
+        supportedSpectrometerSensors=SpectrometerSensorUtil.getSupportedSpectrometerSensors()
 
-        spectrometerProfile2=SpectrometerProfile()
-        spectrometerProfile2.serial='7890'
-        spectrometerProfile2.spectrometerSensor = supportedSpectrometerSensors['Sonix 0c45:6366'];
-        self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfile2)
+        spectrometers = settingsLogicModule.getSpectrometers();
+
+        spectrometerProfileSpectracsInLightAUTOMATGreenGold=SpectrometerProfile()
+        spectrometerProfileSpectracsInLightAUTOMATGreenGold.serial='1234'
+        spectrometerProfileSpectracsInLightAUTOMATGreenGold.spectrometer=spectrometers['Spectracs:InLight-AUTOMAT-GreenGold'];
+        self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfileSpectracsInLightAUTOMATGreenGold)
+
+        spectrometerProfileSpectracsInVisionEXAKTAGreenGold=SpectrometerProfile()
+        spectrometerProfileSpectracsInVisionEXAKTAGreenGold.serial='5678'
+        spectrometerProfileSpectracsInVisionEXAKTAGreenGold.spectrometer=spectrometers['Spectracs:InVision-EXAKTA-GreenGold'];
+        self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfileSpectracsInVisionEXAKTAGreenGold)
+
+
+        #
+        # InVision - EXAKTA - GreenGold
 
 
         self.listView.setModel(self.spectrometerProfilesListModel)
@@ -212,7 +220,7 @@ class HTMLDelegate(QStyledItemDelegate):
         painter.restore()
 
     def getMarkup(self,index:QModelIndex):
-        spectrometerProfile = index.data()
+        spectrometerProfile:SpectrometerProfile = index.data()
 
         serial = spectrometerProfile.serial
 
@@ -232,29 +240,44 @@ class HTMLDelegate(QStyledItemDelegate):
             <body width=100% border=1>
             <table width=100% border=1>
             <tr>
-                <td colspan="4" style="font-weight:bold;text-align: center;background-color:#404040;">%codeName% (%serial%)</td>
+                <td colspan="5" style="font-weight:bold;text-align: center;background-color:#404040;">
+                    %vendorName%
+                    %modelName%
+                    %spectrometerSensorCodeName%
+                    %codeName%                     
+                    (%serial%)
+                </td>
             </tr>
             <tr>
-                <td width=25%>Vendor</td>
-                <td width=25%>Vendor id</td>
-                <td width=25%>Model id</td>
-                <td width=25%>Serial</td>
+                <td width=20%>Vendor</td>
+                <td width=20%>Model</td>
+                <td width=20%>Sensor</td>
+                <td width=20%>Version</td>                
+                <td width=20%>Serial</td>
             </tr>                        
             <tr>
                 <td width=25%>%vendorName%</td>
-                <td width=25%>%vendorId%</td>
-                <td width=25%>%modelId%</td>
+                <td width=25%>%modelName%</td>
+                <td width=25%>%spectrometerSensorCodeName%</td>
+                <td width=25%>%codeName%</td>
                 <td width=25%>%serial%</td>
             </tr>
             </table>
             </body>
             '''
 
+
+
+        # spectrometerSpectracsInvisionExaktaGreenGold.vendorId + ':' + spectrometerSpectracsInvisionExaktaGreenGold.produceId]= \
+        #         spectrometerSpectracsInvisionExaktaGreenGold
+
         html = html.replace('%serial%', serial)
-        html = html.replace('%vendorId%', spectrometerProfile.spectrometerSensor.vendorId)
-        html = html.replace('%modelId%', spectrometerProfile.spectrometerSensor.modelId)
-        html = html.replace('%vendorName%', spectrometerProfile.spectrometerSensor.vendorName)
-        html = html.replace('%codeName%', spectrometerProfile.spectrometerSensor.codeName)
+        html = html.replace('%vendorName%', spectrometerProfile.spectrometer.vendorName)
+        html = html.replace('%modelName%', spectrometerProfile.spectrometer.modelName)
+        html = html.replace('%codeName%', spectrometerProfile.spectrometer.codeName)
+        html = html.replace('%spectrometerSensorCodeName%', spectrometerProfile.spectrometer.spectrometerSensorCodeName)
+
+
 
         return html
 

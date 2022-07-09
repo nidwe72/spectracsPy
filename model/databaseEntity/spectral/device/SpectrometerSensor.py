@@ -7,8 +7,10 @@ from model.databaseEntity.DbBase import DbBaseEntity, DbBaseEntityMixin
 
 
 class SpectrometerSensor(DbBaseEntity, DbBaseEntityMixin):
+
     vendorId = Column(String)
     vendorName = Column(String)
+    sellerName = Column(String)
     modelId = Column(String)
     name=Column(String)
     description = Column(String)
@@ -17,7 +19,10 @@ class SpectrometerSensor(DbBaseEntity, DbBaseEntityMixin):
     horizontalDigitalResolution = Column(Integer)
     verticalDigitalResolution = Column(Integer)
 
-    spectrometerProfiles = relationship("SpectrometerProfile")
+    sensorProductName = Column(String)
+    sensorVendorName=Column(String)
+
+    spectrometers = relationship("Spectrometer")
 
     
 
