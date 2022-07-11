@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QStyle
 
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.model.util.SpectrometerUtil import SpectrometerUtil
 from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from logic.settings.SettingsLogicModule import SettingsLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
@@ -102,11 +103,11 @@ class SpectrometerProfileListViewModule(PageWidget):
 
         self.spectrometerProfilesListModel=SpectrometerProfilesListModel()
 
-        settingsLogicModule = SettingsLogicModule()
+
 
         supportedSpectrometerSensors=SpectrometerSensorUtil.getSupportedSpectrometerSensors()
 
-        spectrometers = settingsLogicModule.getSpectrometers();
+        spectrometers = SpectrometerUtil.getSpectrometers()
 
         spectrometerProfileSpectracsInLightAUTOMATGreenGold=SpectrometerProfile()
         spectrometerProfileSpectracsInLightAUTOMATGreenGold.serial='1234'

@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QGroupBox
 from PyQt6.QtWidgets import QPushButton
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.model.util.SpectrometerUtil import SpectrometerUtil
 from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from logic.settings.SettingsLogicModule import SettingsLogicModule
 from logic.settings.spectral.spectrometer.acquisition.camera.CameraSelectionLogicModule import \
@@ -45,8 +46,7 @@ class SpectrometerProfileViewModule(PageWidget):
 
     def updateSpectrometersComboBox(self):
 
-        settingsLogicModule = SettingsLogicModule()
-        spectrometers = settingsLogicModule.getSpectrometers()
+        spectrometers=SpectrometerUtil.getSpectrometers()
 
         # videoInputs = QMediaDevices.videoInputs()
 

@@ -1,6 +1,10 @@
 import usb
 import typing
 
+from logic.persistence.database.spectrometerSensor.PersistSpectrometerSensorLogicModule import \
+    PersistSpectrometerSensorLogicModule
+from logic.persistence.database.spectrometerSensor.PersistenceParametersGetSpectrometerSensors import \
+    PersistenceParametersGetSpectrometerSensors
 from model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
 from model.databaseEntity.spectral.device.SpectrometerSensorCodeName import SpectrometerSensorCodeName
 
@@ -26,9 +30,9 @@ class SpectrometerSensorUtil:
     @staticmethod
     def getSupportedSpectrometerSensors()->typing.Dict[str, SpectrometerSensor]:
 
-        # persistSpectrometerSensorLogicModule=PersistSpectrometerSensorLogicModule()
-        # persistenceParametersGetSpectrometerSensors=PersistenceParametersGetSpectrometerSensors()
-        # persistedSpectrometerSensors=persistSpectrometerSensorLogicModule.getSpectrometerSensors(persistenceParametersGetSpectrometerSensors)
+        persistSpectrometerSensorLogicModule=PersistSpectrometerSensorLogicModule()
+        persistenceParametersGetSpectrometerSensors=PersistenceParametersGetSpectrometerSensors()
+        persistedSpectrometerSensors=persistSpectrometerSensorLogicModule.getSpectrometerSensors(persistenceParametersGetSpectrometerSensors)
 
         result={}
 
