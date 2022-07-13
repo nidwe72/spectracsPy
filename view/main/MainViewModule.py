@@ -30,7 +30,9 @@ class MainViewModule(QStackedWidget):
         self.addWidget(settingsViewModule)
 
         spectrometerProfileListViewModule=SpectrometerProfileListViewModule()
+        spectrometerProfileListViewModule.initialize()
         self.addWidget(spectrometerProfileListViewModule)
 
         spectrometerProfileViewModule=SpectrometerProfileViewModule()
+        spectrometerProfileViewModule.initialize()
         self.addWidget(spectrometerProfileViewModule)

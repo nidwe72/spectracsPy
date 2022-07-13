@@ -6,23 +6,27 @@ from PyQt6.QtCore import Qt
 from view.application.widgets.page.PageLabel import PageLabel
 
 class PageWidget(QWidget):
-
-    mainContainerWidgets=None
+    mainContainerWidgets = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def initialize(self):
+
         layout=QGridLayout()
         self.setLayout(layout)
+
+        if not self.__isTopMostPageWidget():
+            layout.setContentsMargins(0,0,0,0)
+            self.setContentsMargins(0,0,0,0)
 
         mainContainer = self.createMainContainer()
         layout.addWidget(mainContainer, 0, 0, 1, 1)
         layout.setRowStretch(0,90)
 
-        navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox,1,0,1,1)
-
-
+        if self.__isTopMostPageWidget():
+            navigationGroupBox = self.createNavigationGroupBox()
+            layout.addWidget(navigationGroupBox,1,0,1,1)
 
 
     def createNavigationGroupBox(self):
@@ -34,9 +38,12 @@ class PageWidget(QWidget):
         return result
 
     def createMainContainer(self):
-        result=QGroupBox("PageWidget")
-        result.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        result.setObjectName('PageWidget_mainContainer')
+        result=QGroupBox(self._getPageTitle())
+
+        if self.__isTopMostPageWidget():
+            result.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+            result.setObjectName('PageWidget_topMost')
+
         #result.setFlat(True)
 
         layout=QGridLayout()
@@ -48,6 +55,9 @@ class PageWidget(QWidget):
             row=row+1
 
         return result
+
+    def _getPageTitle(self):
+        return '';
 
     def getMainContainerWidgets(self):
         if self.mainContainerWidgets is None:
@@ -68,5 +78,9 @@ class PageWidget(QWidget):
 
         return container
 
+    def __isTopMostPageWidget(self):
+        parent=self.parent()
+        result=not isinstance(parent,PageWidget)
+        return result
 
 

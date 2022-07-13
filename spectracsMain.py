@@ -106,7 +106,7 @@ QGroupBox::title {
 	left: 7px;	
 }
 
-QGroupBox#PageWidget_mainContainer::title {	
+QGroupBox#PageWidget_topMost::title {	
 	color: #3D7848;	
 }
 

@@ -14,39 +14,36 @@ from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device import Spectrometer
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from view.application.widgets.page.PageWidget import PageWidget
+from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerViewModule import SpectrometerViewModule
+
 
 class SpectrometerProfileViewModule(PageWidget):
-
-    model: SpectrometerProfile =None
-    spectrometerSensorTextEdit = None
+    model: SpectrometerProfile = None
+    spectrometerViewModule: SpectrometerViewModule = None
+    spectrometersComboBox:QComboBox = None
+    serial:QLineEdit = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def initialize(self):
+        super().initialize()
         self.spectrometersComboBox.currentIndexChanged.connect(self.onSelectedSpectrometer)
 
     def onSelectedSpectrometer(self, index):
 
         model = self.spectrometersComboBox.model()
-        spectrometers=SpectrometerSensorUtil.getSupportedSpectrometerSensors()
+        spectrometers = SpectrometerSensorUtil.getSupportedSpectrometerSensors()
 
         if isinstance(model, QStandardItemModel):
-
             spectrometer = model.item(index.row()).data()
 
             if isinstance(spectrometer, Spectrometer):
-                spectrometerSensor=SpectrometerSensorUtil.getSensorByCodeName(spectrometer.spectrometerSensorCodeName)
-                markup=None
-                if spectrometerSensor is not None:
-                    markup=SpectrometerSensorUtil.getSensorMarkup(spectrometerSensor)
-
-                    markupDocument=QTextDocument()
-                    markupDocument.setHtml(markup)
-
-                    self.spectrometerSensorTextEdit.setDocument(markupDocument)
+                self.spectrometerViewModule.setModel(spectrometer)
 
     def updateSpectrometersComboBox(self):
 
-        spectrometers=SpectrometerUtil.getSpectrometers()
+        spectrometers = SpectrometerUtil.getSpectrometers()
 
         # videoInputs = QMediaDevices.videoInputs()
 
@@ -54,16 +51,17 @@ class SpectrometerProfileViewModule(PageWidget):
 
         for spectrometerId, spectrometer in spectrometers.items():
             item = QStandardItem()
-            item.setText(spectrometer.vendorName+' '+spectrometer.modelName+' '+spectrometer.codeName+' '+spectrometer.spectrometerSensorCodeName)
+            item.setText(
+                spectrometer.vendorName + ' ' + spectrometer.modelName + ' ' + spectrometer.codeName + ' ' + spectrometer.spectrometerSensorCodeName)
 
-            spectrometerSensor=SpectrometerSensorUtil.getSensorByCodeName(spectrometer.spectrometerSensorCodeName)
+            spectrometerSensor = SpectrometerSensorUtil.getSensorByCodeName(spectrometer.spectrometerSensorCodeName)
 
             if spectrometerSensor is None:
                 item.setText(item.text() + ' (no such sensor)')
                 item.setEnabled(False)
             else:
                 if not SpectrometerSensorUtil.isSensorConnected(spectrometerSensor):
-                    item.setText(item.text()+' (not connected)')
+                    item.setText(item.text() + ' (not connected)')
                     item.setEnabled(False)
 
             item.setData(spectrometer)
@@ -71,12 +69,10 @@ class SpectrometerProfileViewModule(PageWidget):
 
         self.spectrometersComboBox.setModel(model)
 
-
         return
 
-
     def createSpectrometersComboBox(self):
-        self.spectrometersComboBox=QComboBox()
+        self.spectrometersComboBox = QComboBox()
         self.updateSpectrometersComboBox()
         return self.spectrometersComboBox
 
@@ -100,24 +96,22 @@ class SpectrometerProfileViewModule(PageWidget):
 
     def onClickedSaveButton(self):
 
-        print("Save")
+        model = self.getModel()
+        model.serial = self.serial.text()
 
-        model=self.getModel()
-        model.serial=self.serial.text()
-
-        currentIndex=self.camerasComboBox.currentIndex()
+        currentIndex = self.camerasComboBox.currentIndex()
         print(currentIndex)
 
-        comboBoxModel=self.camerasComboBox.model()
-        if isinstance(comboBoxModel,QStandardItemModel):
-            comboBoxModelItem=comboBoxModel.item(currentIndex)
-            selectedSpectralDevice=comboBoxModelItem.data()
+        comboBoxModel = self.camerasComboBox.model()
+        if isinstance(comboBoxModel, QStandardItemModel):
+            comboBoxModelItem = comboBoxModel.item(currentIndex)
+            selectedSpectralDevice = comboBoxModelItem.data()
 
         if isinstance(selectedSpectralDevice, SpectrometerProfile):
-            model.modelId=selectedSpectralDevice.modelId
+            model.modelId = selectedSpectralDevice.modelId
             model.vendorId = selectedSpectralDevice.vendorId
 
-        cameraSelectionLogicModule=CameraSelectionLogicModule()
+        cameraSelectionLogicModule = CameraSelectionLogicModule()
         cameraSelectionLogicModule.saveSpectralDevice(model)
 
         pass
@@ -130,48 +124,37 @@ class SpectrometerProfileViewModule(PageWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def getMainContainerWidgets(self):
-        result= super().getMainContainerWidgets()
+        result = super().getMainContainerWidgets()
 
         spectrometersComboBox = self.createLabeledComponent('Spectrometer', self.createSpectrometersComboBox())
-        result['spectrometersComboBox'] =spectrometersComboBox
+        result['spectrometersComboBox'] = spectrometersComboBox
 
-        self.serial=QLineEdit()
-        serial=self.createLabeledComponent('serial', self.serial)
-        result['serial']=serial
+        self.serial = QLineEdit()
+        serial = self.createLabeledComponent('serial', self.serial)
+        result['serial'] = serial
 
-        result['spectrometerSensorGroupBox'] =self.createSpectrometerSensorGroupBox()
+        self.spectrometerViewModule = SpectrometerViewModule(self)
+        self.spectrometerViewModule.initialize()
+        result['spectrometerViewModule'] = self.spectrometerViewModule
 
         self.onSelectedSpectrometer(
             self.spectrometersComboBox.model().index(self.spectrometersComboBox.currentIndex(), 0))
 
         return result
 
-    def createMainContainer(self):
-        result=super().createMainContainer()
-        result.setTitle("Settings > Spectrometer profiles > Spectrometer profile")
-        return result
-
-    def createSpectrometerSensorGroupBox(self):
-        result=QGroupBox('Sensor')
-
-        layout=QGridLayout()
-        result.setLayout(layout)
-
-        self.spectrometerSensorTextEdit=QTextEdit()
-        layout.addWidget(self.spectrometerSensorTextEdit,0,0,1,1)
-
-        return result
+    def _getPageTitle(self):
+        return "Settings > Spectrometer profiles > Spectrometer profile"
 
     def getModel(self) -> SpectrometerProfile:
 
         if self.model is None:
-            self.model=SpectrometerProfile()
+            self.model = SpectrometerProfile()
         return self.model
 
-    def setModel(self,model:SpectrometerProfile):
-        self.model=model
+    def setModel(self, model: SpectrometerProfile):
+        self.model = model
 
-    def loadView(self,model:SpectrometerProfile):
+    def loadView(self, model: SpectrometerProfile):
         self.setModel(model)
         self.serial.setText(model.serial)
         return
