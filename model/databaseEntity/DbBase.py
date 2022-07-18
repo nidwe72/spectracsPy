@@ -14,7 +14,7 @@ dbFilepath='sqlite:///'+app_paths.app_data_path+'/spectracsPy.db'
 engine = create_engine(dbFilepath)
 
 # use session_factory() to get a new Session
-_SessionFactory = sessionmaker(bind=engine)
+_SessionFactory = sessionmaker(bind=engine,expire_on_commit=False)
 
 DbBaseEntity = declarative_base()
 

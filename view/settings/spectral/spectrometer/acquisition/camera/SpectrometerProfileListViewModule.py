@@ -103,11 +103,7 @@ class SpectrometerProfileListViewModule(PageWidget):
 
         self.spectrometerProfilesListModel=SpectrometerProfilesListModel()
 
-
-
-        supportedSpectrometerSensors=SpectrometerSensorUtil.getSupportedSpectrometerSensors()
-
-        spectrometers = SpectrometerUtil.getSpectrometers()
+        spectrometers = SpectrometerUtil().getSpectrometers()
 
         spectrometerProfileSpectracsInLightAUTOMATGreenGold=SpectrometerProfile()
         spectrometerProfileSpectracsInLightAUTOMATGreenGold.serial='1234'

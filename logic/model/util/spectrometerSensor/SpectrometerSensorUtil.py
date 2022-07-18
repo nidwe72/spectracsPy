@@ -1,6 +1,7 @@
 import usb
 import typing
 
+from base.Singleton import Singleton
 from logic.persistence.database.spectrometerSensor.PersistSpectrometerSensorLogicModule import \
     PersistSpectrometerSensorLogicModule
 from logic.persistence.database.spectrometerSensor.PersistenceParametersGetSpectrometerSensors import \
@@ -9,44 +10,41 @@ from model.databaseEntity.spectral.device.SpectrometerSensor import Spectrometer
 from model.databaseEntity.spectral.device.SpectrometerSensorCodeName import SpectrometerSensorCodeName
 
 
-class SpectrometerSensorUtil:
+class SpectrometerSensorUtil(Singleton):
 
-    @staticmethod
-    def getHardwareId(spectrometerSensor:SpectrometerSensor):
-        result=spectrometerSensor.vendorId+'_'+spectrometerSensor.modelId
+    def getHardwareId(self, spectrometerSensor: SpectrometerSensor):
+        result = spectrometerSensor.vendorId + '_' + spectrometerSensor.modelId
         return result
 
-    @staticmethod
-    def isSensorConnected(spectrometerSensor:SpectrometerSensor):
+    def isSensorConnected(self, spectrometerSensor: SpectrometerSensor):
         result = True
         dev = usb.core.find(idVendor=int('0x' + spectrometerSensor.vendorId, base=16),
                             idProduct=int('0x' + spectrometerSensor.modelId, base=16))
 
         if dev is None:
-            result=False
+            result = False
 
         return result
 
-    @staticmethod
-    def getSupportedSpectrometerSensors()->typing.Dict[str, SpectrometerSensor]:
+    def getSupportedSpectrometerSensors(self) -> typing.Dict[str, SpectrometerSensor]:
+        persistSpectrometerSensorLogicModule = PersistSpectrometerSensorLogicModule()
+        persistenceParametersGetSpectrometerSensors = PersistenceParametersGetSpectrometerSensors()
+        persistedSpectrometerSensors = persistSpectrometerSensorLogicModule.getSpectrometerSensors(
+            persistenceParametersGetSpectrometerSensors)
 
-        persistSpectrometerSensorLogicModule=PersistSpectrometerSensorLogicModule()
-        persistenceParametersGetSpectrometerSensors=PersistenceParametersGetSpectrometerSensors()
-        persistedSpectrometerSensors=persistSpectrometerSensorLogicModule.getSpectrometerSensors(persistenceParametersGetSpectrometerSensors)
+        result = {}
 
-        result={}
-
-        microdiaDevice=SpectrometerSensor()
+        microdiaDevice = SpectrometerSensor()
         microdiaDevice.codeName = SpectrometerSensorCodeName.AUTOMAT
         microdiaDevice.name = "Microdia 0c45:6366"
         microdiaDevice.description = "Thunder optics"
-        microdiaDevice.vendorId="0c45"
+        microdiaDevice.vendorId = "0c45"
         microdiaDevice.sellerName = "ThunderOptics"
         microdiaDevice.vendorName = "Microdia"
         microdiaDevice.modelId = "6366"
         microdiaDevice.sensorProductName = "IMXXXX"
         microdiaDevice.sensorVendorName = "Sony"
-        result[microdiaDevice.codeName]=microdiaDevice
+        result[microdiaDevice.codeName] = microdiaDevice
 
         # elp8KDevice=SpectrometerSensor()
         # elp8KDevice.name = "Sonix 0c45:6366"
@@ -62,16 +60,12 @@ class SpectrometerSensorUtil:
 
         return result
 
-
-    @staticmethod
-    def getSensorByCodeName(spectrometerSensorCodenName)->SpectrometerSensor:
-        spectrometerSensors=SpectrometerSensorUtil.getSupportedSpectrometerSensors()
-        result=spectrometerSensors.get(spectrometerSensorCodenName)
+    def getSensorByCodeName(self, spectrometerSensorCodenName) -> SpectrometerSensor:
+        spectrometerSensors = self.getSupportedSpectrometerSensors()
+        result = spectrometerSensors.get(spectrometerSensorCodenName)
         return result
 
-    @staticmethod
-    def getSensorMarkup(spectrometerSensor: SpectrometerSensor):
-
+    def getSensorMarkup(self, spectrometerSensor: SpectrometerSensor):
         html = \
             '''            
             <style type="text/css">                
@@ -103,7 +97,6 @@ class SpectrometerSensorUtil:
             </table>
             </body>
             '''
-
 
         html = html.replace('%vendorId%', spectrometerSensor.vendorId)
         html = html.replace('%vendorName%', spectrometerSensor.vendorName)

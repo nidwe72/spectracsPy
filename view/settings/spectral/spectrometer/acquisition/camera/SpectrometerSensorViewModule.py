@@ -22,7 +22,7 @@ class SpectrometerSensorViewModule(PageWidget):
         self.model = model
 
         if model is not None:
-            markup = SpectrometerSensorUtil.getSensorMarkup(model)
+            markup = SpectrometerSensorUtil().getSensorMarkup(model)
 
             markupDocument = QTextDocument()
             markupDocument.setHtml(markup)

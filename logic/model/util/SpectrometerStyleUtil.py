@@ -1,14 +1,14 @@
 from typing import Dict
 
+from base.Singleton import Singleton
 from model.databaseEntity.spectral.device import SpectrometerStyle
 from model.databaseEntity.spectral.device.SpectrometerStyleId import SpectrometerStyleId
 from model.databaseEntity.spectral.device.SpectrometerStyleName import SpectrometerStyleName
 
 
-class SpectrometerStyleUtil:
+class SpectrometerStyleUtil(Singleton):
 
-    @staticmethod
-    def getSpectrometerStyles() -> Dict[str,SpectrometerStyle]:
+    def getSpectrometerStyles(self) -> Dict[str,SpectrometerStyle]:
         result = {}
 
         styleGreenGold = SpectrometerStyle()
@@ -18,8 +18,7 @@ class SpectrometerStyleUtil:
 
         return result
 
-    @staticmethod
-    def getSpectrometerStyleWithId(spectrometerStyleId) -> SpectrometerStyle:
-        spectrometerStyles = SpectrometerStyleUtil.getSpectrometerStyles()
+    def getSpectrometerStyleWithId(self,spectrometerStyleId) -> SpectrometerStyle:
+        spectrometerStyles = SpectrometerStyleUtil().getSpectrometerStyles()
         result = spectrometerStyles.get(spectrometerStyleId)
         return result

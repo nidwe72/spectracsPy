@@ -33,7 +33,7 @@ class SpectrometerProfileViewModule(PageWidget):
     def onSelectedSpectrometer(self, index):
 
         model = self.spectrometersComboBox.model()
-        spectrometers = SpectrometerSensorUtil.getSupportedSpectrometerSensors()
+        spectrometers = SpectrometerSensorUtil().getSupportedSpectrometerSensors()
 
         if isinstance(model, QStandardItemModel):
             spectrometer = model.item(index.row()).data()
@@ -43,7 +43,7 @@ class SpectrometerProfileViewModule(PageWidget):
 
     def updateSpectrometersComboBox(self):
 
-        spectrometers = SpectrometerUtil.getSpectrometers()
+        spectrometers = SpectrometerUtil().getSpectrometers()
 
         # videoInputs = QMediaDevices.videoInputs()
 
@@ -54,13 +54,13 @@ class SpectrometerProfileViewModule(PageWidget):
             item.setText(
                 spectrometer.vendorName + ' ' + spectrometer.modelName + ' ' + spectrometer.codeName + ' ' + spectrometer.spectrometerSensorCodeName)
 
-            spectrometerSensor = SpectrometerSensorUtil.getSensorByCodeName(spectrometer.spectrometerSensorCodeName)
+            spectrometerSensor = SpectrometerSensorUtil().getSensorByCodeName(spectrometer.spectrometerSensorCodeName)
 
             if spectrometerSensor is None:
                 item.setText(item.text() + ' (no such sensor)')
                 item.setEnabled(False)
             else:
-                if not SpectrometerSensorUtil.isSensorConnected(spectrometerSensor):
+                if not SpectrometerSensorUtil().isSensorConnected(spectrometerSensor):
                     item.setText(item.text() + ' (not connected)')
                     item.setEnabled(False)
 
