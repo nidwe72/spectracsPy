@@ -23,6 +23,7 @@ class Spectrometer(DbBaseEntity, DbBaseEntityMixin):
     spectrometerVendor = relationship("SpectrometerVendor", back_populates="spectrometers")
 
     spectrometerStyleId = Column(Integer, ForeignKey("spectrometer_style.id"))
-    spectrometerStyle = relationship("SpectrometerStyle", back_populates="spectrometers")
+    #spectrometerStyle = relationship("SpectrometerStyle", back_populates="spectrometers")
+    spectrometerStyle = relationship("SpectrometerStyle")
 
 

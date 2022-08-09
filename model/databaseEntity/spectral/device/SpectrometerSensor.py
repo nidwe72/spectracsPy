@@ -1,4 +1,4 @@
-from sqlalchemy import Column
+from sqlalchemy import Column, ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.orm import relationship
@@ -19,11 +19,13 @@ class SpectrometerSensor(DbBaseEntity, DbBaseEntityMixin):
     horizontalDigitalResolution = Column(Integer)
     verticalDigitalResolution = Column(Integer)
 
-    sensorProductName = Column(String)
-    sensorVendorName=Column(String)
+    # sensorProductName = Column(String)
+    # sensorVendorName=Column(String)
 
     spectrometers = relationship("Spectrometer")
 
-    
+    spectrometerSensorChipId = Column(Integer, ForeignKey("spectrometer_sensor_chip.id"))
+    spectrometerSensorChip = relationship("SpectrometerSensorChip", back_populates="spectrometerSensors")
+
 
 

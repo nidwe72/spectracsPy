@@ -13,7 +13,7 @@ class PersistSpectrometerVendorLogicModule:
         session.commit()
         # session.refresh()
         # session.expire_all()
-        # session.close()
+        # session.close()!
 
     def getSpectrometerVendors(self,
                                persistenceParametersGetSpectrometerVendors: PersistenceParametersGetSpectrometerVendors) -> \

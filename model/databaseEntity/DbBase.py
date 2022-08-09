@@ -7,6 +7,8 @@ from sqlalchemy.orm import sessionmaker, Session, relationship
 from sqlalchemy.schema import Column
 from sqlalchemy.sql.sqltypes import Integer
 
+from base.Singleton import Singleton
+
 app_paths = AppDataPaths()
 app_paths.setup()
 
@@ -20,7 +22,8 @@ DbBaseEntity = declarative_base()
 
 def session_factory()->Session:
     DbBaseEntity.metadata.create_all(engine)
-    return _SessionFactory()
+    return SessionProvider().getSession()
+    #return _SessionFactory()
 
 def to_underscore(name):
     import re
@@ -40,3 +43,13 @@ class DbBaseEntityMixin:
     # __mapper_args__ = {"always_refresh": True}
 
     id = Column(Integer, primary_key=True,autoincrement=True)
+
+
+class SessionProvider(Singleton):
+    session=None
+
+    def getSession(self):
+        if self.session is None:
+            self.session=_SessionFactory()
+        return self.session
+

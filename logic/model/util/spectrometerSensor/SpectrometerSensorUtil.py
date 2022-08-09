@@ -2,6 +2,7 @@ import usb
 import typing
 
 from base.Singleton import Singleton
+from logic.model.util.SpectrometerSensorChipUtil import SpectrometerSensorChipUtil
 from logic.persistence.database.spectrometerSensor.PersistSpectrometerSensorLogicModule import \
     PersistSpectrometerSensorLogicModule
 from logic.persistence.database.spectrometerSensor.PersistenceParametersGetSpectrometerSensors import \
@@ -32,6 +33,8 @@ class SpectrometerSensorUtil(Singleton):
         persistedSpectrometerSensors = persistSpectrometerSensorLogicModule.getSpectrometerSensors(
             persistenceParametersGetSpectrometerSensors)
 
+        sensorChips = SpectrometerSensorChipUtil().getSupportedSpectrometerSensorChips()
+
         result = {}
 
         microdiaDevice = SpectrometerSensor()
@@ -42,8 +45,10 @@ class SpectrometerSensorUtil(Singleton):
         microdiaDevice.sellerName = "ThunderOptics"
         microdiaDevice.vendorName = "Microdia"
         microdiaDevice.modelId = "6366"
-        microdiaDevice.sensorProductName = "IMXXXX"
-        microdiaDevice.sensorVendorName = "Sony"
+        # microdiaDevice.sensorProductName = "IMXXXX"
+        # microdiaDevice.sensorVendorName = "Sony"
+        microdiaDevice.spectrometerSensorChip=sensorChips['Sonix_6366']
+
         result[microdiaDevice.codeName] = microdiaDevice
 
         # elp8KDevice=SpectrometerSensor()
@@ -78,23 +83,35 @@ class SpectrometerSensorUtil(Singleton):
             <body width=100% border=1>
             <table width=100% border=1>
             <tr>
-                <td colspan="5" style="font-weight:bold;text-align: center;background-color:#404040;">%codeName%</td>
+                <td colspan="4" style="font-weight:bold;text-align: center;background-color:#404040;padding:5px;">%codeName%</td>
             </tr>
             <tr>
-                <td width=20%>Code name</td>
-                <td width=20%>Vendor</td>
-                <td width=20%>Vendor id</td>
-                <td width=20%>Model id</td>
-                <td width=20%>Sensor</td>                
+                <td width=25%>Code name</td>
+                <td width=25%>Vendor</td>
+                <td width=25%>Vendor id</td>
+                <td width=25%>Model id</td>
+                               
             </tr>                        
             <tr>
-                <td width=20%>%codeName%</td>
-                <td width=20%>%vendorName%</td>
-                <td width=20%>%vendorId%</td>
-                <td width=20%>%modelId%</td>
-                <td width=20%>%sensorVendorName% %sensorProductName%</td>                
+                <td width=25%>%codeName%</td>
+                <td width=25%>%vendorName%</td>
+                <td width=25%>%vendorId%</td>
+                <td width=25%>%modelId%</td>                                
             </tr>
             </table>
+            
+            
+            <table width=100% border=1>
+            <tr>
+                <td width=25% style="font-weight:bold;text-align: center;background-color:#404040;padding:5px;">Sensor</td>
+                <td width=19%>Vendor</td>
+                <td width=19%>%sensorVendorName%</td>
+                <td width=19%>Model id</td>
+                <td width=19%>%sensorProductName%</td>                                
+            </tr>                        
+            </table>
+            
+            
             </body>
             '''
 
@@ -102,7 +119,7 @@ class SpectrometerSensorUtil(Singleton):
         html = html.replace('%vendorName%', spectrometerSensor.vendorName)
         html = html.replace('%modelId%', spectrometerSensor.modelId)
         html = html.replace('%codeName%', spectrometerSensor.codeName)
-        html = html.replace('%sensorVendorName%', spectrometerSensor.sensorVendorName)
-        html = html.replace('%sensorProductName%', spectrometerSensor.sensorProductName)
+        html = html.replace('%sensorVendorName%', spectrometerSensor.spectrometerSensorChip.vendorName)
+        html = html.replace('%sensorProductName%', spectrometerSensor.spectrometerSensorChip.productName)
 
         return html

@@ -25,6 +25,7 @@ class SpectrometerUtil(Singleton):
         spectrometerSpectracsInvisionExaktaGreenGold.productId = 'InVision-EXAKTA-GreenGold'
         spectrometerSpectracsInvisionExaktaGreenGold.modelName = 'InVision'
         spectrometerSpectracsInvisionExaktaGreenGold.codeName = 'GreenGold'
+
         spectrometerSpectracsInvisionExaktaGreenGold.spectrometerStyle=\
             SpectrometerStyleUtil().getSpectrometerStyleWithId(SpectrometerStyleId.GREEN_GOLD)
         spectrometerSpectracsInvisionExaktaGreenGold.spectrometerSensorCodeName = SpectrometerSensorCodeName.EXAKTA
@@ -35,6 +36,7 @@ class SpectrometerUtil(Singleton):
             spectrometerSpectracsInvisionExaktaGreenGold.vendorId + ':' + spectrometerSpectracsInvisionExaktaGreenGold.productId] = \
             spectrometerSpectracsInvisionExaktaGreenGold
 
+
         spectrometerSpectracsInLightAutomatGreenGold = Spectrometer()
         spectrometerSpectracsInLightAutomatGreenGold.spectrometerVendor = \
             SpectrometerVendorUtil().getSpectrometerVendorWithId(SpectrometerVendorId.SPECTRACS)
@@ -43,7 +45,7 @@ class SpectrometerUtil(Singleton):
         spectrometerSpectracsInLightAutomatGreenGold.productId = 'InLight-AUTOMAT-GreenGold'
         spectrometerSpectracsInLightAutomatGreenGold.modelName = 'InLight'
         spectrometerSpectracsInLightAutomatGreenGold.codeName = 'GreenGold'
-        spectrometerSpectracsInLightAutomatGreenGold.spectrometerStyle=\
+        spectrometerSpectracsInLightAutomatGreenGold.spectrometerStyle= \
             SpectrometerStyleUtil().getSpectrometerStyleWithId(SpectrometerStyleId.GREEN_GOLD)
         spectrometerSpectracsInLightAutomatGreenGold.spectrometerSensorCodeName = SpectrometerSensorCodeName.AUTOMAT
         spectrometerSpectracsInLightAutomatGreenGold.spectrometerSensor = \
