@@ -6,21 +6,19 @@ from sqlalchemy.orm import relationship
 from model.databaseEntity.DbBase import DbBaseEntity, DbBaseEntityMixin
 
 class Spectrometer(DbBaseEntity, DbBaseEntityMixin):
-    productId = Column(String)
-    vendorId = Column(String)
-    vendorName = Column(String) #Spectracs
-    modelName=Column(String) #InVision
-    codeName = Column(String)  #GreenGold
-    spectrometerSensorCodeName=Column(String) #Exakta
 
-    spectrometerProfileId = Column(Integer, ForeignKey("spectrometer_profile.id"))
-    spectrometerProfile = relationship("SpectrometerProfile", back_populates="spectrometer")
+    modelName=Column(String) #InVision
+    #pectrometerProfileId = Column(Integer, ForeignKey("spectrometer_profile.id"))
+    #spectrometerProfile = relationship("SpectrometerProfile", back_populates="spectrometer")
+    #spectrometerProfile = relationship("SpectrometerProfile")
 
     spectrometerSensorId = Column(Integer, ForeignKey("spectrometer_sensor.id"))
-    spectrometerSensor = relationship("SpectrometerSensor", back_populates="spectrometers")
+    #spectrometerSensor = relationship("SpectrometerSensor", back_populates="spectrometers")
+    spectrometerSensor = relationship("SpectrometerSensor")
 
     spectrometerVendorId = Column(Integer, ForeignKey("spectrometer_vendor.id"))
-    spectrometerVendor = relationship("SpectrometerVendor", back_populates="spectrometers")
+    #spectrometerVendor = relationship("SpectrometerVendor", back_populates="spectrometers")
+    spectrometerVendor = relationship("SpectrometerVendor")
 
     spectrometerStyleId = Column(Integer, ForeignKey("spectrometer_style.id"))
     #spectrometerStyle = relationship("SpectrometerStyle", back_populates="spectrometers")

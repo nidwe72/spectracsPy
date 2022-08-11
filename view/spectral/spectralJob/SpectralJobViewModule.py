@@ -102,7 +102,6 @@ class SpectralJobViewModule(QWidget):
 
     def onClickedMeasureLightButton(self):
         self.spectralJobsWidgetViewModule.referenceWidget.startVideoThread()
-        self.foo()
 
     def onClickedImportButtonButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
@@ -117,42 +116,5 @@ class SpectralJobViewModule(QWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("Home")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
-
-    def foo(self):
-        #todo:continue should have some LogicModule for actually persisting entities
-        session=session_factory()
-
-        DATABASE_DIR = os.path.dirname(os.path.abspath(__file__)) + '\\test.db'
-        # engine = create_engine('sqlite:///' + DATABASE_DIR, echo=True)
-        # engine = create_engine('sqlite:///./test.db')
-        # spectralDevice = DbSpectralDevice()
-
-        # mapper_registry = registry()
-        # metadata_obj=mapper_registry.metadata
-
-        # metadata_obj=MetaData()
-        # metadata_obj.create_all(bind=engine)
-        #
-        # metadata_obj.create_all()
-        #
-        # session=sessionmaker()
-        # session.configure(bind=engine)
-        #
-        # # session=Session(engine)
-        # so=session.object_session()
-        # session.ad
-
-        spectralDevice = SpectrometerProfile()
-        spectralDevice.horizontalDigitalResolution=1024
-        spectralDevice.verticalDigitalResolution = 768
-        session.add(spectralDevice)
-
-        session.commit()
-
-
-        #session.flush()
-
-
-        pass
 
 

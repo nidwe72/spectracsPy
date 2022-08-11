@@ -1,8 +1,8 @@
 from typing import Dict
 
 from base.Singleton import Singleton
-from logic.persistence.database.PersistSpectrometerVendorLogicModule import PersistSpectrometerVendorLogicModule
-from logic.persistence.database.PersistenceParametersGetSpectrometerVendors import \
+from logic.persistence.database.spectrometerVendor.PersistSpectrometerVendorLogicModule import PersistSpectrometerVendorLogicModule
+from logic.persistence.database.spectrometerVendor.PersistenceParametersGetSpectrometerVendors import \
     PersistenceParametersGetSpectrometerVendors
 from model.databaseEntity.spectral.device import SpectrometerVendor
 from model.databaseEntity.spectral.device.SpectrometerVendorId import SpectrometerVendorId
@@ -38,11 +38,10 @@ class SpectrometerVendorUtil(Singleton):
             if persistedSpectrometerVendor is None:
                 persistSpectrometerVendorLogicModule.saveSpectrometerVendor(spectrometerVendor)
                 spectrometerVendorId=spectrometerVendor.id
-                result[spectrometerVendor.id] = spectrometerVendor
-                print(spectrometerVendorId)
+                result[spectrometerVendor.vendorId] = spectrometerVendor
                 continue
             else:
-                result[spectrometerVendor.id]=persistedSpectrometerVendor
+                result[spectrometerVendor.vendorId]=persistedSpectrometerVendor
 
         return result
 

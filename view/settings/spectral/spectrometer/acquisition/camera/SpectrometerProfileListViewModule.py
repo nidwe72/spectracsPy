@@ -107,17 +107,13 @@ class SpectrometerProfileListViewModule(PageWidget):
 
         spectrometerProfileSpectracsInLightAUTOMATGreenGold=SpectrometerProfile()
         spectrometerProfileSpectracsInLightAUTOMATGreenGold.serial='1234'
-        spectrometerProfileSpectracsInLightAUTOMATGreenGold.spectrometer=spectrometers['Spectracs:InLight-AUTOMAT-GreenGold'];
+        spectrometerProfileSpectracsInLightAUTOMATGreenGold.spectrometer=spectrometers['SPECTRACS InLight Automat GREEN_GOLD'];
         self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfileSpectracsInLightAUTOMATGreenGold)
 
         spectrometerProfileSpectracsInVisionEXAKTAGreenGold=SpectrometerProfile()
         spectrometerProfileSpectracsInVisionEXAKTAGreenGold.serial='5678'
-        spectrometerProfileSpectracsInVisionEXAKTAGreenGold.spectrometer=spectrometers['Spectracs:InVision-EXAKTA-GreenGold'];
+        spectrometerProfileSpectracsInVisionEXAKTAGreenGold.spectrometer=spectrometers['SPECTRACS InVision Exakta GREEN_GOLD'];
         self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfileSpectracsInVisionEXAKTAGreenGold)
-
-
-        #
-        # InVision - EXAKTA - GreenGold
 
 
         self.listView.setModel(self.spectrometerProfilesListModel)
@@ -239,9 +235,9 @@ class HTMLDelegate(QStyledItemDelegate):
             <tr>
                 <td colspan="5" style="font-weight:bold;text-align: center;background-color:#404040;">
                     %vendorName%
-                    %modelName%
-                    %spectrometerSensorCodeName%
-                    %codeName%                     
+                    %modelName%                    
+                    %codeName%
+                    %styleName%                                         
                     (%serial%)
                 </td>
             </tr>
@@ -249,31 +245,26 @@ class HTMLDelegate(QStyledItemDelegate):
                 <td width=20%>Vendor</td>
                 <td width=20%>Model</td>
                 <td width=20%>Sensor</td>
-                <td width=20%>Version</td>                
+                <td width=20%>Style</td>                                
                 <td width=20%>Serial</td>
             </tr>                        
             <tr>
-                <td width=25%>%vendorName%</td>
-                <td width=25%>%modelName%</td>
-                <td width=25%>%spectrometerSensorCodeName%</td>
-                <td width=25%>%codeName%</td>
-                <td width=25%>%serial%</td>
+                <td width=20%>%vendorName%</td>
+                <td width=20%>%modelName%</td>                
+                <td width=20%>%codeName%</td>
+                <td width=20%>%styleName%</td>                
+                <td width=20%>%serial%</td>
             </tr>
             </table>
             </body>
             '''
 
 
-
-        # spectrometerSpectracsInvisionExaktaGreenGold.vendorId + ':' + spectrometerSpectracsInvisionExaktaGreenGold.produceId]= \
-        #         spectrometerSpectracsInvisionExaktaGreenGold
-
         html = html.replace('%serial%', serial)
-        html = html.replace('%vendorName%', spectrometerProfile.spectrometer.vendorName)
+        html = html.replace('%vendorName%', spectrometerProfile.spectrometer.spectrometerVendor.vendorName)
         html = html.replace('%modelName%', spectrometerProfile.spectrometer.modelName)
-        html = html.replace('%codeName%', spectrometerProfile.spectrometer.codeName)
-        html = html.replace('%spectrometerSensorCodeName%', spectrometerProfile.spectrometer.spectrometerSensorCodeName)
-
+        html = html.replace('%codeName%', spectrometerProfile.spectrometer.spectrometerSensor.codeName)
+        html = html.replace('%styleName%', spectrometerProfile.spectrometer.spectrometerStyle.styleName)
 
 
         return html

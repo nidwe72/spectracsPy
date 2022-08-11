@@ -10,4 +10,4 @@ class SpectrometerStyle(DbBaseEntity, DbBaseEntityMixin):
     styleName = Column(String)
     description = Column(String)
 
-    #spectrometers = relationship("Spectrometer")
+    spectrometers = relationship("Spectrometer")

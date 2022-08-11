@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from typing import Dict
 
 from logic.persistence.database.spectrometerSensor.PersistenceParametersGetSpectrometerSensors import \
     PersistenceParametersGetSpectrometerSensors
@@ -13,10 +13,12 @@ class PersistSpectrometerSensorLogicModule:
         session.add(spectrometerSensor)
         session.commit()
 
-    def getSpectrometerSensors(self,persistenceParametersGetSpectrometerSensors:PersistenceParametersGetSpectrometerSensors):
+    def getSpectrometerSensors(self,persistenceParametersGetSpectrometerSensors:PersistenceParametersGetSpectrometerSensors) -> Dict[int,SpectrometerSensor]:
+
         ids = persistenceParametersGetSpectrometerSensors.getIds()
         session = session_factory()
-        result=session.query(SpectrometerSensor).all()
+        resultList = session.query(SpectrometerSensor).all()
+        result:Dict[int,SpectrometerSensor] = {}
+        for spectrometerSensor in resultList:
+            result[spectrometerSensor.id]=spectrometerSensor
         return result
-
-

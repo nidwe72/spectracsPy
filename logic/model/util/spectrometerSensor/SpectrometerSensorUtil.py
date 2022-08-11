@@ -1,5 +1,7 @@
+from typing import Dict
+
 import usb
-import typing
+from sqlalchemy import inspect
 
 from base.Singleton import Singleton
 from logic.model.util.SpectrometerSensorChipUtil import SpectrometerSensorChipUtil
@@ -12,6 +14,72 @@ from model.databaseEntity.spectral.device.SpectrometerSensorCodeName import Spec
 
 
 class SpectrometerSensorUtil(Singleton):
+
+    def getSpectrometerSensors(self) -> Dict[str, SpectrometerSensor]:
+        transientEntities = {}
+
+        sensorChips = SpectrometerSensorChipUtil().getSpectrometerSensorChips()
+
+        microdiaDevice = SpectrometerSensor()
+        microdiaDevice.codeName = SpectrometerSensorCodeName.AUTOMAT
+        microdiaDevice.description = "Thunder optics"
+        microdiaDevice.vendorId = "0c45"
+        microdiaDevice.vendorName = "Microdia"
+        microdiaDevice.sellerName = "ThunderOptics"
+
+        microdiaDevice.modelId = "6366"
+        microdiaDevice.spectrometerSensorChip=sensorChips['Sonix_6366']
+        microdiaDevice.spectrometerSensorChipId = sensorChips['Sonix_6366'].id
+
+        transientEntities[microdiaDevice.codeName] = microdiaDevice
+
+        elp4KDevice = SpectrometerSensor()
+        elp4KDevice.codeName = SpectrometerSensorCodeName.EXAKTA
+        elp4KDevice.description = "ELP "
+
+        elp4KDevice.vendorId = "0aaa"
+        elp4KDevice.vendorName = "ELP"
+
+        elp4KDevice.modelId = "1234"
+
+        elp4KDevice.sellerName = "ELP"
+
+        elp4KDevice.spectrometerSensorChip=sensorChips['Sony_IMX1234']
+        elp4KDevice.spectrometerSensorChipId = sensorChips['Sony_IMX1234'].id
+
+        transientEntities[elp4KDevice.codeName]=elp4KDevice
+
+        persistLogicModule = PersistSpectrometerSensorLogicModule()
+
+        # todo:performance
+        # do not load always load all entities
+        persistenceParameters = PersistenceParametersGetSpectrometerSensors()
+
+        entitiesByIds = persistLogicModule.getSpectrometerSensors(
+            persistenceParameters)
+
+        entitiesByCodeNames = self.getEntitiesByCodeNames(entitiesByIds);
+
+        result = {}
+
+        for entityCodeName, entity in transientEntities.items():
+            persistedEntity = entitiesByCodeNames.get(entityCodeName)
+
+            if persistedEntity is None:
+                persistLogicModule.saveSpectrometerSensor(entity)
+                result[entity.codeName ] = entity
+                continue
+            else:
+                result[entity.codeName] = persistedEntity
+
+        return result
+
+    def getEntitiesByCodeNames(self, entitiesByIds:Dict[str, SpectrometerSensor]):
+        result={}
+        for entityId, entity in entitiesByIds.items():
+            result[entity.codeName]=entity
+        return result
+
 
     def getHardwareId(self, spectrometerSensor: SpectrometerSensor):
         result = spectrometerSensor.vendorId + '_' + spectrometerSensor.modelId
@@ -27,46 +95,9 @@ class SpectrometerSensorUtil(Singleton):
 
         return result
 
-    def getSupportedSpectrometerSensors(self) -> typing.Dict[str, SpectrometerSensor]:
-        persistSpectrometerSensorLogicModule = PersistSpectrometerSensorLogicModule()
-        persistenceParametersGetSpectrometerSensors = PersistenceParametersGetSpectrometerSensors()
-        persistedSpectrometerSensors = persistSpectrometerSensorLogicModule.getSpectrometerSensors(
-            persistenceParametersGetSpectrometerSensors)
-
-        sensorChips = SpectrometerSensorChipUtil().getSupportedSpectrometerSensorChips()
-
-        result = {}
-
-        microdiaDevice = SpectrometerSensor()
-        microdiaDevice.codeName = SpectrometerSensorCodeName.AUTOMAT
-        microdiaDevice.name = "Microdia 0c45:6366"
-        microdiaDevice.description = "Thunder optics"
-        microdiaDevice.vendorId = "0c45"
-        microdiaDevice.sellerName = "ThunderOptics"
-        microdiaDevice.vendorName = "Microdia"
-        microdiaDevice.modelId = "6366"
-        # microdiaDevice.sensorProductName = "IMXXXX"
-        # microdiaDevice.sensorVendorName = "Sony"
-        microdiaDevice.spectrometerSensorChip=sensorChips['Sonix_6366']
-
-        result[microdiaDevice.codeName] = microdiaDevice
-
-        # elp8KDevice=SpectrometerSensor()
-        # elp8KDevice.name = "Sonix 0c45:6366"
-        # elp8KDevice.codeName = SpectrometerSensorCodeName.EXAKTA
-        # elp8KDevice.description = "Waveshare"
-        # elp8KDevice.vendorId="0c45"
-        # elp8KDevice.vendorName = "Sonix"
-        # elp8KDevice.modelId = "7777"
-        # result[elp8KDevice.name]=elp8KDevice
-
-        # hardwareId=SpectrometerSensorUtil.getHardwareId(microdiaDevice)
-        # print(hardwareId)
-
-        return result
 
     def getSensorByCodeName(self, spectrometerSensorCodenName) -> SpectrometerSensor:
-        spectrometerSensors = self.getSupportedSpectrometerSensors()
+        spectrometerSensors = self.getSpectrometerSensors()
         result = spectrometerSensors.get(spectrometerSensorCodenName)
         return result
 

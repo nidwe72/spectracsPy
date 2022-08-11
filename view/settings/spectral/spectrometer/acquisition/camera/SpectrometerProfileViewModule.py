@@ -33,7 +33,7 @@ class SpectrometerProfileViewModule(PageWidget):
     def onSelectedSpectrometer(self, index):
 
         model = self.spectrometersComboBox.model()
-        spectrometers = SpectrometerSensorUtil().getSupportedSpectrometerSensors()
+        spectrometers = SpectrometerSensorUtil().getSpectrometerSensors()
 
         if isinstance(model, QStandardItemModel):
             spectrometer = model.item(index.row()).data()
@@ -51,10 +51,11 @@ class SpectrometerProfileViewModule(PageWidget):
 
         for spectrometerId, spectrometer in spectrometers.items():
             item = QStandardItem()
-            item.setText(
-                spectrometer.vendorName + ' ' + spectrometer.modelName + ' ' + spectrometer.codeName + ' ' + spectrometer.spectrometerSensorCodeName)
 
-            spectrometerSensor = SpectrometerSensorUtil().getSensorByCodeName(spectrometer.spectrometerSensorCodeName)
+            spectrometerName = SpectrometerUtil().getName(spectrometer)
+            item.setText(spectrometerName)
+
+            spectrometerSensor = SpectrometerSensorUtil().getSensorByCodeName(spectrometer.spectrometerSensor.codeName)
 
             if spectrometerSensor is None:
                 item.setText(item.text() + ' (no such sensor)')

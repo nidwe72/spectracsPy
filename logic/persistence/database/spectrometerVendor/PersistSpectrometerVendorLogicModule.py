@@ -1,5 +1,6 @@
 from typing import Dict
-from logic.persistence.database.PersistenceParametersGetSpectrometerVendors import \
+
+from logic.persistence.database.spectrometerVendor.PersistenceParametersGetSpectrometerVendors import \
     PersistenceParametersGetSpectrometerVendors
 from model.databaseEntity.DbBase import session_factory
 from model.databaseEntity.spectral.device import SpectrometerVendor
@@ -11,9 +12,6 @@ class PersistSpectrometerVendorLogicModule:
         session = session_factory()
         session.add(spectrometerVendor)
         session.commit()
-        # session.refresh()
-        # session.expire_all()
-        # session.close()!
 
     def getSpectrometerVendors(self,
                                persistenceParametersGetSpectrometerVendors: PersistenceParametersGetSpectrometerVendors) -> \
