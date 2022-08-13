@@ -177,13 +177,15 @@ class SpectrometerProfileViewModule(PageWidget):
 
             comboBoxModel = self.spectrometersComboBox.model()
 
+            spectrometerName = SpectrometerUtil().getName(spectrometer)
+
             for index in range(comboBoxModel.rowCount()):
                 comboBoxModelItem = comboBoxModel.item(index)
                 someSpectrometer = comboBoxModelItem.data()
-                if SpectrometerUtil().getName(someSpectrometer)==SpectrometerUtil().getName(spectrometer):
-                    modelIndex=comboBoxModel.index(index,0)
-                    self.onSelectedSpectrometer(modelIndex)
-                    #self.spectrometersComboBox.setCurrentIndex(index)
+                someSpectrometerName = SpectrometerUtil().getName(someSpectrometer)
+                if someSpectrometerName == spectrometerName:
+                    #modelIndex=comboBoxModel.index(index,0)
+                    self.spectrometersComboBox.setCurrentIndex(index)
                     break
 
         pass
