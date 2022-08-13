@@ -7,9 +7,10 @@ from PyQt6.QtWidgets import QPushButton
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.model.util.SpectrometerUtil import SpectrometerUtil
 from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
-from logic.settings.SettingsLogicModule import SettingsLogicModule
-from logic.settings.spectral.spectrometer.acquisition.camera.CameraSelectionLogicModule import \
-    CameraSelectionLogicModule
+from logic.persistence.database.spectrometer.PersistSpectrometerLogicModule import PersistSpectrometerLogicModule
+from logic.persistence.database.spectrometerProfile.PersistSpectrometerProfileLogicModule import \
+    PersistSpectrometerProfileLogicModule
+
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device import Spectrometer
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
@@ -52,7 +53,7 @@ class SpectrometerProfileViewModule(PageWidget):
         for spectrometerId, spectrometer in spectrometers.items():
             item = QStandardItem()
 
-            spectrometerName = SpectrometerUtil().getName(spectrometer)
+            spectrometerName = SpectrometerUtil().getEntityViewName(spectrometer)
             item.setText(spectrometerName)
 
             spectrometerSensor = SpectrometerSensorUtil().getSensorByCodeName(spectrometer.spectrometerSensor.codeName)
@@ -100,20 +101,24 @@ class SpectrometerProfileViewModule(PageWidget):
         model = self.getModel()
         model.serial = self.serial.text()
 
-        currentIndex = self.camerasComboBox.currentIndex()
+        currentIndex = self.spectrometersComboBox.currentIndex()
         print(currentIndex)
 
-        comboBoxModel = self.camerasComboBox.model()
+        comboBoxModel = self.spectrometersComboBox.model()
         if isinstance(comboBoxModel, QStandardItemModel):
             comboBoxModelItem = comboBoxModel.item(currentIndex)
-            selectedSpectralDevice = comboBoxModelItem.data()
+            selectedSpectrometer = comboBoxModelItem.data()
 
-        if isinstance(selectedSpectralDevice, SpectrometerProfile):
-            model.modelId = selectedSpectralDevice.modelId
-            model.vendorId = selectedSpectralDevice.vendorId
+        if isinstance(selectedSpectrometer, Spectrometer):
+            PersistSpectrometerLogicModule().saveSpectrometer(selectedSpectrometer)
 
-        cameraSelectionLogicModule = CameraSelectionLogicModule()
-        cameraSelectionLogicModule.saveSpectralDevice(model)
+            model.spectrometer=selectedSpectrometer
+
+            print('foo')
+            # model.modelId = selectedSpectralDevice.modelId
+            # model.vendorId = selectedSpectralDevice.vendorId
+
+            PersistSpectrometerProfileLogicModule().saveSpectrometerProfile(model)
 
         pass
 

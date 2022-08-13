@@ -10,6 +10,6 @@ class SpectrometerVendor(DbBaseEntity, DbBaseEntityMixin):
     vendorName = Column(String)
     vendorId = Column(String)
 
-    spectrometers = relationship("Spectrometer")
+    #spectrometers = relationship("Spectrometer")
 
 

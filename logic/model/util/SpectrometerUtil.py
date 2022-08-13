@@ -93,6 +93,18 @@ class SpectrometerUtil(Singleton):
         result+= spectrometer.spectrometerStyle.styleId
         return result
 
+    def getEntityViewName(self,spectrometer:Spectrometer):
+        result=""
+        result+=spectrometer.spectrometerVendor.vendorName
+        result+= " "
+        result+= spectrometer.modelName
+        result+= " "
+        result+= spectrometer.spectrometerSensor.codeName
+        result+= " "
+        result+= spectrometer.spectrometerStyle.styleName
+        return result
+
+
     def getEntitiesByNames(self, entitiesByIds:Dict[str, Spectrometer]):
         result={}
         for entityId, entity in entitiesByIds.items():

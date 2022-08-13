@@ -11,7 +11,6 @@ class SpectrometerProfile(DbBaseEntity, DbBaseEntityMixin):
     serial = Column(String)
 
     spectrometerId = Column(Integer, ForeignKey("spectrometer.id"))
-    #spectrometerSensor = relationship("SpectrometerSensor", back_populates="spectrometers")
     spectrometer = relationship("Spectrometer")
 
     

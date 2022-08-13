@@ -82,13 +82,6 @@ class SpectrometerProfileListViewModule(PageWidget):
             currentIndex=self.listView.currentIndex()
             if isinstance(currentIndex,QModelIndex):
                 spectrometerProfile=currentIndex.data()
-                # row=currentIndex.row()
-
-                #spectrometerProfile=self.spectrometerProfilesListModel.data(currentIndex,Qt.ItemDataRole.DisplayRole)
-
-                bar=spectrometerProfile.serial
-
-                foo=type(SpectrometerProfile)
                 if isinstance(spectrometerProfile,SpectrometerProfile):
                     targetViewModule.loadView(spectrometerProfile)
 
