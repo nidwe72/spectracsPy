@@ -60,11 +60,11 @@ class SpectrometerProfileViewModule(PageWidget):
 
             if spectrometerSensor is None:
                 item.setText(item.text() + ' (no such sensor)')
-                item.setEnabled(False)
+                #item.setEnabled(False)
             else:
                 if not SpectrometerSensorUtil().isSensorConnected(spectrometerSensor):
                     item.setText(item.text() + ' (not connected)')
-                    item.setEnabled(False)
+                    #item.setEnabled(False)
 
             item.setData(spectrometer)
             model.appendRow(item)
@@ -102,7 +102,6 @@ class SpectrometerProfileViewModule(PageWidget):
         model.serial = self.serial.text()
 
         currentIndex = self.spectrometersComboBox.currentIndex()
-        print(currentIndex)
 
         comboBoxModel = self.spectrometersComboBox.model()
         if isinstance(comboBoxModel, QStandardItemModel):
@@ -111,15 +110,8 @@ class SpectrometerProfileViewModule(PageWidget):
 
         if isinstance(selectedSpectrometer, Spectrometer):
             PersistSpectrometerLogicModule().saveSpectrometer(selectedSpectrometer)
-
             model.spectrometer=selectedSpectrometer
-
-            print('foo')
-            # model.modelId = selectedSpectralDevice.modelId
-            # model.vendorId = selectedSpectralDevice.vendorId
-
             PersistSpectrometerProfileLogicModule().saveSpectrometerProfile(model)
-
         pass
 
     def onClickedBackButton(self):
@@ -159,8 +151,27 @@ class SpectrometerProfileViewModule(PageWidget):
 
     def setModel(self, model: SpectrometerProfile):
         self.model = model
+        self.serial.setText(model.serial)
+
+        spectrometer=model.spectrometer
+
+        if isinstance(spectrometer,Spectrometer):
+
+            comboBoxModel = self.spectrometersComboBox.model()
+
+            for index in range(comboBoxModel.rowCount()):
+                comboBoxModelItem = comboBoxModel.item(index)
+                someSpectrometer = comboBoxModelItem.data()
+                if SpectrometerUtil().getName(someSpectrometer)==SpectrometerUtil().getName(spectrometer):
+                    modelIndex=comboBoxModel.index(index,0)
+                    self.onSelectedSpectrometer(modelIndex)
+                    #self.spectrometersComboBox.setCurrentIndex(index)
+                    break
+
+        pass
+
 
     def loadView(self, model: SpectrometerProfile):
         self.setModel(model)
-        self.serial.setText(model.serial)
+
         return

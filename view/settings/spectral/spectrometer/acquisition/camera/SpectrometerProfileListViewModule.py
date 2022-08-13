@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QStyle
 
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
 from logic.model.util.SpectrometerUtil import SpectrometerUtil
 from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from logic.settings.SettingsLogicModule import SettingsLogicModule
@@ -93,29 +94,19 @@ class SpectrometerProfileListViewModule(PageWidget):
             self.listView=QListView()
 
         #self.listView.setEditTriggers(QAbstractItemView.EditTrigger.AllEditTriggers)
+        self.listView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
         self.spectrometerProfilesListModel=SpectrometerProfilesListModel()
 
         spectrometers = SpectrometerUtil().getSpectrometers()
 
-        spectrometerProfileSpectracsInLightAUTOMATGreenGold=SpectrometerProfile()
-        spectrometerProfileSpectracsInLightAUTOMATGreenGold.serial='1234'
-        spectrometerProfileSpectracsInLightAUTOMATGreenGold.spectrometer=spectrometers['SPECTRACS InLight Automat GREEN_GOLD'];
-        self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfileSpectracsInLightAUTOMATGreenGold)
+        spectrometerProfiles = SpectrometerProfileUtil().getSpectrometerProfiles()
 
-        spectrometerProfileSpectracsInVisionEXAKTAGreenGold=SpectrometerProfile()
-        spectrometerProfileSpectracsInVisionEXAKTAGreenGold.serial='5678'
-        spectrometerProfileSpectracsInVisionEXAKTAGreenGold.spectrometer=spectrometers['SPECTRACS InVision Exakta GREEN_GOLD'];
-        self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfileSpectracsInVisionEXAKTAGreenGold)
+        for spectrometerProfileId,spectrometerProfile in spectrometerProfiles.items():
+            self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfile)
 
 
         self.listView.setModel(self.spectrometerProfilesListModel)
-
-        # sm=SelectionModel()
-        # sm.setModel(self.spectrometerProfilesListModel)
-        # self.listView.setSelectionModel(sm)
-
-
 
         self.delegate=HTMLDelegate()
 
@@ -132,9 +123,6 @@ class SelectionModel(QItemSelectionModel):
         if isinstance(index,QItemSelection):
             indices=index.indexes()
             super().select(index, command)
-
-
-
 
 class HTMLDelegate(QStyledItemDelegate):
     """QStyledItemDelegate implementation. Draws HTML
@@ -298,18 +286,18 @@ class HTMLDelegate(QStyledItemDelegate):
         textEdit.setContentsMargins(0,0,0,0)
 
         html = \
-            '''            
+            '''
             <style type="text/css">
-            
+
                 body{
                     background-color:gray;
-                }                
+                }
                 table {
                     color: white;
                     border-width: 0px;
-                    border-collapse: collapse;                    
-                }               
-            </style>            
+                    border-collapse: collapse;
+                }
+            </style>
             <body width=100% border=1>
             <table width=100% border=1>
             <tr>
@@ -332,9 +320,6 @@ class HTMLDelegate(QStyledItemDelegate):
         button=QPushButton(parent)
         button.setText("Edit")
         layout.addWidget(button,0,1,1,1)
-
-
-        #result.setFixedHeight(100)
 
         return result
 
