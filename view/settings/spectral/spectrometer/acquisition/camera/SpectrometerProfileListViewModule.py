@@ -16,7 +16,9 @@ from logic.model.util.SpectrometerUtil import SpectrometerUtil
 from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from logic.settings.SettingsLogicModule import SettingsLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
+from model.databaseEntity.DbEntityCrudOperation import DbEntityCrudOperation
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
+from model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerProfileViewModule import \
     SpectrometerProfileViewModule
@@ -24,11 +26,22 @@ from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerProfileV
 
 class SpectrometerProfileListViewModule(PageWidget):
 
+    listView:QListView=None
+    spectrometerProfilesListModel=None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    listView:QListView=None
-    spectrometerProfilesListModel=None
+        ApplicationContextLogicModule().getApplicationSignalsProvider().spectrometerProfileSignal.connect(
+            self.handleSpectrometerProfileSignal)
+
+    def handleSpectrometerProfileSignal(self,spectrometerProfileSignal:SpectrometerProfileSignal):
+        operation = spectrometerProfileSignal.operation
+        if operation==DbEntityCrudOperation.UPDATE:
+            self.spectrometerProfilesListModel.layoutChanged.emit()
+        elif operation==DbEntityCrudOperation.CREATE:
+            self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfileSignal.entity)
+            self.spectrometerProfilesListModel.layoutChanged.emit()
 
     def createMainContainer(self):
         result=super().createMainContainer()
@@ -71,6 +84,10 @@ class SpectrometerProfileListViewModule(PageWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SpectrometerProfileViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+        targetViewModule = ApplicationContextLogicModule().getNavigationHandler().getViewModule(someNavigationSignal)
+
+        spectrometerProfile=SpectrometerProfile()
+        targetViewModule.loadView(spectrometerProfile)
 
     def onClickedEditSpectrometerProfileButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
@@ -78,6 +95,7 @@ class SpectrometerProfileListViewModule(PageWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SpectrometerProfileViewModule")
 
+        spectrometerProfile=None
         targetViewModule=ApplicationContextLogicModule().getNavigationHandler().getViewModule(someNavigationSignal)
         if isinstance(targetViewModule,SpectrometerProfileViewModule):
             currentIndex=self.listView.currentIndex()
@@ -86,7 +104,8 @@ class SpectrometerProfileListViewModule(PageWidget):
                 if isinstance(spectrometerProfile,SpectrometerProfile):
                     targetViewModule.loadView(spectrometerProfile)
 
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+        if isinstance(spectrometerProfile,SpectrometerProfile):
+            ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def getMainContainerWidgets(self):
         result= super().getMainContainerWidgets()
@@ -364,11 +383,6 @@ class SpectrometerProfilesListModel(QAbstractListModel):
 
         # Always editable with ReadOnlyDelegate:
         flags =  Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsEditable|Qt.ItemFlag.ItemIsSelectable
-
-
-        return flags
-
-
         return flags
 
 

@@ -34,8 +34,7 @@ class NavigationHandlerLogicModule(QObject):
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
 
-
-    def __getWidgetIndex(self,navigationSignal:NavigationSignal):
+    def __getWidgetIndex(self, navigationSignal:NavigationSignal):
         result=None
         target=navigationSignal.getTarget()
 

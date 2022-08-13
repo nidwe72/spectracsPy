@@ -1,8 +1,10 @@
-import usb
-from PyQt6.QtGui import QStandardItemModel, QStandardItem, QTextDocument
-from PyQt6.QtWidgets import QGridLayout, QLineEdit, QComboBox, QTextEdit
+from PyQt6.QtCore import QModelIndex
+from PyQt6.QtGui import QStandardItemModel, QStandardItem
+from PyQt6.QtWidgets import QGridLayout, QLineEdit, QComboBox
 from PyQt6.QtWidgets import QGroupBox
 from PyQt6.QtWidgets import QPushButton
+from sqlalchemy import inspect
+from sqlalchemy.orm import InstanceState
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.model.util.SpectrometerUtil import SpectrometerUtil
@@ -10,10 +12,11 @@ from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import Spectrome
 from logic.persistence.database.spectrometer.PersistSpectrometerLogicModule import PersistSpectrometerLogicModule
 from logic.persistence.database.spectrometerProfile.PersistSpectrometerProfileLogicModule import \
     PersistSpectrometerProfileLogicModule
-
 from model.application.navigation.NavigationSignal import NavigationSignal
+from model.databaseEntity.DbEntityCrudOperation import DbEntityCrudOperation
 from model.databaseEntity.spectral.device import Spectrometer
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
+from model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerViewModule import SpectrometerViewModule
 
@@ -37,7 +40,11 @@ class SpectrometerProfileViewModule(PageWidget):
         spectrometers = SpectrometerSensorUtil().getSpectrometerSensors()
 
         if isinstance(model, QStandardItemModel):
-            spectrometer = model.item(index.row()).data()
+
+            if isinstance(index,QModelIndex):
+                spectrometer = model.item(index.row()).data()
+            else:
+                spectrometer = model.item(index).data()
 
             if isinstance(spectrometer, Spectrometer):
                 self.spectrometerViewModule.setModel(spectrometer)
@@ -111,7 +118,18 @@ class SpectrometerProfileViewModule(PageWidget):
         if isinstance(selectedSpectrometer, Spectrometer):
             PersistSpectrometerLogicModule().saveSpectrometer(selectedSpectrometer)
             model.spectrometer=selectedSpectrometer
+            #isTransient = (inspect(model) == InstanceState.transient)
+            isTransient = model.id is None
+
             PersistSpectrometerProfileLogicModule().saveSpectrometerProfile(model)
+
+            modelSignal = SpectrometerProfileSignal().setEntity(model).setOperation(DbEntityCrudOperation.UPDATE)
+
+            if isTransient:
+                modelSignal.setOperation(DbEntityCrudOperation.CREATE)
+
+            ApplicationContextLogicModule().getApplicationSignalsProvider().emitSpectrometerProfileSignal(modelSignal)
+
         pass
 
     def onClickedBackButton(self):
