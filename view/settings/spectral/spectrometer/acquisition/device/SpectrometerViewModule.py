@@ -2,11 +2,11 @@ from PyQt6.QtWidgets import QLineEdit
 
 from model.databaseEntity.spectral.device import Spectrometer
 from view.application.widgets.page.PageWidget import PageWidget
-from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerSensorViewModule import \
+from view.settings.spectral.spectrometer.acquisition.device.SpectrometerSensorViewModule import \
     SpectrometerSensorViewModule
-from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerStyleViewModule import \
+from view.settings.spectral.spectrometer.acquisition.device.SpectrometerStyleViewModule import \
     SpectrometerStyleViewModule
-from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerVendorViewModule import \
+from view.settings.spectral.spectrometer.acquisition.device.SpectrometerVendorViewModule import \
     SpectrometerVendorViewModule
 
 

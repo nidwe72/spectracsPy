@@ -20,7 +20,7 @@ from model.databaseEntity.DbEntityCrudOperation import DbEntityCrudOperation
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
 from view.application.widgets.page.PageWidget import PageWidget
-from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerProfileViewModule import \
+from view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileViewModule import \
     SpectrometerProfileViewModule
 
 

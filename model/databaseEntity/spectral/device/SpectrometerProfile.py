@@ -13,7 +13,9 @@ class SpectrometerProfile(DbBaseEntity, DbBaseEntityMixin):
     spectrometerId = Column(Integer, ForeignKey("spectrometer.id"))
     spectrometer = relationship("Spectrometer")
 
-    
+    spectrometerCalibrationProfileId = Column(Integer, ForeignKey("spectrometer_calibration_profile.id"))
+    spectrometerCalibrationProfile = relationship("SpectrometerCalibrationProfile")
+
 
 
 

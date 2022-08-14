@@ -32,7 +32,7 @@ class VideoThread(QThread):
 
     def run(self):
 
-        # camera = QCamera()
+        # device = QCamera()
         # videoInputs = QMediaDevices.videoInputs()
         # for cameraDevice in videoInputs:
         #     cameraName=cameraDevice.description()

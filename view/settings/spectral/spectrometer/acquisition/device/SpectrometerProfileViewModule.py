@@ -18,7 +18,9 @@ from model.databaseEntity.spectral.device import Spectrometer
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
 from view.application.widgets.page.PageWidget import PageWidget
-from view.settings.spectral.spectrometer.acquisition.camera.SpectrometerViewModule import SpectrometerViewModule
+from view.settings.spectral.spectrometer.acquisition.device.SpectrometerViewModule import SpectrometerViewModule
+from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileViewModule import \
+    SpectrometerCalibrationProfileViewModule
 
 
 class SpectrometerProfileViewModule(PageWidget):
@@ -149,12 +151,18 @@ class SpectrometerProfileViewModule(PageWidget):
         serial = self.createLabeledComponent('serial', self.serial)
         result['serial'] = serial
 
+        self.spectrometerCalibrationProfileViewModule = SpectrometerCalibrationProfileViewModule(self)
+        self.spectrometerCalibrationProfileViewModule.initialize()
+        result['spectrometerCalibrationProfileViewModule'] = self.spectrometerCalibrationProfileViewModule
+
+
         self.spectrometerViewModule = SpectrometerViewModule(self)
         self.spectrometerViewModule.initialize()
         result['spectrometerViewModule'] = self.spectrometerViewModule
 
         self.onSelectedSpectrometer(
             self.spectrometersComboBox.model().index(self.spectrometersComboBox.currentIndex(), 0))
+
 
         return result
 

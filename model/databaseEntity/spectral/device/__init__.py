@@ -4,3 +4,5 @@ from model.databaseEntity.spectral.device.SpectrometerStyle import SpectrometerS
 from model.databaseEntity.spectral.device.Spectrometer import Spectrometer
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
+
+from model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import SpectrometerCalibrationProfile
