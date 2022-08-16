@@ -16,7 +16,7 @@ class PageWidget(QWidget):
         layout=QGridLayout()
         self.setLayout(layout)
 
-        if not self.__isTopMostPageWidget():
+        if not self._isTopMostPageWidget():
             layout.setContentsMargins(0,0,0,0)
             self.setContentsMargins(0,0,0,0)
 
@@ -24,7 +24,7 @@ class PageWidget(QWidget):
         layout.addWidget(mainContainer, 0, 0, 1, 1)
         layout.setRowStretch(0,90)
 
-        if self.__isTopMostPageWidget():
+        if self._isTopMostPageWidget():
             navigationGroupBox = self.createNavigationGroupBox()
             layout.addWidget(navigationGroupBox,1,0,1,1)
 
@@ -40,7 +40,7 @@ class PageWidget(QWidget):
     def createMainContainer(self):
         result=QGroupBox(self._getPageTitle())
 
-        if self.__isTopMostPageWidget():
+        if self._isTopMostPageWidget():
             result.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             result.setObjectName('PageWidget_topMost')
 
@@ -78,7 +78,7 @@ class PageWidget(QWidget):
 
         return container
 
-    def __isTopMostPageWidget(self):
+    def _isTopMostPageWidget(self):
         parent=self.parent()
         result=not isinstance(parent,PageWidget)
         return result

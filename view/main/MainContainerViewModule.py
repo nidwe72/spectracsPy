@@ -15,7 +15,6 @@ class MainContainerViewModule(QWidget):
         self.mainStatusBarViewModule=MainStatusBarViewModule()
         layout.addWidget(self.mainStatusBarViewModule, 0, 0, 1, 1)
 
-
         self.mainViewModule = MainViewModule()
         layout.addWidget(self.mainViewModule,1,0,1,1)
         layout.setRowStretch(0,100)

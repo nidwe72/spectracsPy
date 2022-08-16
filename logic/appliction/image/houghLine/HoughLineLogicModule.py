@@ -1,0 +1,157 @@
+import cv2
+import cmath
+import scipy as sp
+import numpy as np
+from PyQt6.QtGui import QImage
+
+
+from logic.spectral.video.SpectralImageLogicModule import SpectralImageLogicModule
+
+
+class HoughLineLogicModule:
+
+    def auto_canny(self,image, sigma=0.33):
+        # compute the median of the single channel pixel intensities
+
+        # kernel = np.ones((5, 5), np.float32) / 25
+        # image = cv2.filter2D(image, -1, kernel)
+
+        image = cv2.bilateralFilter(image, 9, 75, 75)
+
+
+        v = np.median(image)
+        # apply automatic Canny edge detection using the computed median
+        lower = int(max(0, (1.0 - sigma) * v))
+        upper = int(min(255, (1.0 + sigma) * v))
+        edged = cv2.Canny(image, lower, upper)
+        # return the edged image
+        return edged
+
+    def getHoughLines(self,image:QImage):
+
+        spectralImageLogicModule = SpectralImageLogicModule()
+        src=spectralImageLogicModule.convertQImageToNumpyArray(image)
+        src = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+        # Check if image is loaded fine
+
+        #src = cv2.Canny(src, 50, 200, None, 3)
+
+
+        src=self.auto_canny(src)
+
+        cv2.imwrite('test.jpg', src)
+
+        # Copy edges to the images that will display the results in BGR
+
+        lines = cv2.HoughLines(src, 1, np.pi / 180, 150, None, 0, 0)
+
+
+        rho = 3
+        theta = np.pi / 180
+        threshold = 15
+        min_line_len = 300
+        max_line_gap = 60
+        lines = cv2.HoughLinesP(src, rho, theta, threshold, None, minLineLength=min_line_len,
+                               maxLineGap=max_line_gap)
+
+        src = spectralImageLogicModule.convertQImageToNumpyArray(image)
+
+        self.draw_lines(src,lines)
+        cv2.imwrite('test2.jpg', src)
+
+        result=[]
+
+        # index = 0
+        #
+        # if lines is not None:
+        #
+        #     for line in lines:
+        #         index = index + 1
+        #         if index == 3:
+        #             break
+        #         for rho, theta in line:
+        #             a = np.cos(theta)
+        #             b = np.sin(theta)
+        #             x0 = a * rho
+        #             y0 = b * rho
+        #             x1 = int(x0 + 2000 * (-b))
+        #             y1 = int(y0 + 2000 * (a))
+        #             x2 = int(x0 - 2000 * (-b))
+        #             y2 = int(y0 - 2000 * (a))
+        #
+        #             # cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        #             cv2.line(src, (x1, y1), (x2, y2), (255, 255, 255), 5)
+        #
+        #             # print((x1, y1))
+        #             print((x0, y0))
+        #
+        #             cv2.imwrite('test2.jpg', src)
+        #
+        #             result.append(y1)
+        #
+        # print(result)
+        return result
+
+    def get_intersect(self,a1, a2, b1, b2):
+        """
+        Returns the point of intersection of the lines passing through a2,a1 and b2,b1.
+        a1: [x, y] a point on the first line
+        a2: [x, y] another point on the first line
+        b1: [x, y] a point on the second line
+        b2: [x, y] another point on the second line
+        """
+        s = np.vstack([a1, a2, b1, b2])  # s for stacked
+        h = np.hstack((s, np.ones((4, 1))))  # h for homogeneous
+        l1 = np.cross(h[0], h[1])  # get first line
+        l2 = np.cross(h[2], h[3])  # get second line
+        x, y, z = np.cross(l1, l2)  # point of intersection
+        if z == 0:  # lines are parallel
+            return (float('inf'), float('inf'))
+        return (x / z, y / z)
+
+    def draw_lines(self,img, lines, color=[255, 0, 0], thickness=2):
+
+        shape=img.shape
+        width = shape[1]
+        height = shape[0]
+
+        lowestMidpoint=height
+        highestMidpoint=0
+
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                midpointX=x1+(x2-x1)/2.0
+
+                intersectLeftBorder = self.get_intersect((x1, y1), (x2, y2), (0, 0), (0, height))
+                intersectRightBorder = self.get_intersect((x1, y1), (x2, y2), (width, 0), (width, height))
+
+                intersectMidpoint = self.get_intersect((midpointX, 0), (midpointX, height), (x1, y1), (x2, y2))
+                intersectMidpointY=intersectMidpoint[1]
+
+                if intersectMidpointY>highestMidpoint:
+                    highestMidpoint=intersectMidpointY
+
+                if intersectMidpointY<lowestMidpoint:
+                    lowestMidpoint=intersectMidpointY
+
+                point1=np.array([intersectLeftBorder[0], intersectLeftBorder[1]], dtype=np.int32)
+                point2 = np.array([intersectRightBorder[0], intersectRightBorder[1]], dtype=np.int32)
+
+                # cv2.line(img,point1,point2, color, thickness)
+                # cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
+
+        point1=np.array([0, lowestMidpoint], dtype=np.int32)
+        point2 = np.array([width, lowestMidpoint], dtype=np.int32)
+        cv2.line(img,point1,point2, color, thickness)
+
+        point1=np.array([0, highestMidpoint], dtype=np.int32)
+        point2 = np.array([width, highestMidpoint], dtype=np.int32)
+        cv2.line(img,point1,point2, color, thickness)
+
+        point1=np.array([0, lowestMidpoint+(highestMidpoint-lowestMidpoint)/2.0], dtype=np.int32)
+        point2 = np.array([width, lowestMidpoint+(highestMidpoint-lowestMidpoint)/2.0], dtype=np.int32)
+        cv2.line(img,point1,point2, [0,0,255], thickness)
+
+
+
+        #cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)

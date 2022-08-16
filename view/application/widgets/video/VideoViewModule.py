@@ -1,5 +1,5 @@
 from PyQt6 import QtGui
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QGraphicsLineItem
 from PyQt6.QtWidgets import QGraphicsView
 from PyQt6.QtWidgets import QGraphicsScene
 from PyQt6.QtWidgets import QGridLayout
@@ -34,11 +34,16 @@ class VideoViewModule(QWidget):
         scene = QGraphicsScene();
 
         imageItem = QGraphicsPixmapItem()
-
+        #todo: pass 'objec name'
+        # imageItem.setData()
         scene.addItem(imageItem)
 
         pen = QPen(QBrush(QColor(200, 200, 200, 255)), 1)
-        scene.addLine(0, 392, 1920, 392,pen)
+
+        lineItem = QGraphicsLineItem()
+        lineItem.setLine(0, 392, 1920, 392)
+        lineItem.setPen(pen)
+        scene.addItem(lineItem)
 
         self.videoWidget.setScene(scene)
 
@@ -52,6 +57,7 @@ class VideoViewModule(QWidget):
         somePixmap = QPixmap.fromImage(image)
         item=scene.items()[1]
         item.setPixmap(somePixmap)
+
         self.videoWidget.fitInView(item, Qt.AspectRatioMode.KeepAspectRatio)
 
     def resizeEvent(self, resizeEvent: QtGui.QResizeEvent) -> None:

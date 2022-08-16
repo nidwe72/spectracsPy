@@ -4,6 +4,8 @@ from view.settings.SettingsViewModule import SettingsViewModule
 from view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileViewModule import SpectrometerProfileViewModule
 from view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileListViewModule import \
     SpectrometerProfileListViewModule
+from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileViewModule import \
+    SpectrometerCalibrationProfileViewModule
 
 from view.spectral.spectralJob.SpectralJobViewModule import SpectralJobViewModule
 
@@ -36,3 +38,8 @@ class MainViewModule(QStackedWidget):
         spectrometerProfileViewModule=SpectrometerProfileViewModule()
         spectrometerProfileViewModule.initialize()
         self.addWidget(spectrometerProfileViewModule)
+
+        spectrometerCalibrationProfileViewModule=SpectrometerCalibrationProfileViewModule()
+        spectrometerCalibrationProfileViewModule.initialize()
+        self.addWidget(spectrometerCalibrationProfileViewModule)
+

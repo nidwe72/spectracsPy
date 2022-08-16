@@ -32,7 +32,9 @@ class NavigationHandlerLogicModule(QObject):
         elif target=="SpectrometerProfileViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometer profile")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
-
+        elif target=="SpectrometerCalibrationProfileViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometer profile > Calibration profile")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
     def __getWidgetIndex(self, navigationSignal:NavigationSignal):
         result=None
@@ -50,6 +52,9 @@ class NavigationHandlerLogicModule(QObject):
             result = 4
         elif target=="SpectrometerProfileViewModule":
             result = 5
+        elif target=="SpectrometerCalibrationProfileViewModule":
+            result = 6
+
         return result
 
     def getViewModule(self,navigationSignal:NavigationSignal):
