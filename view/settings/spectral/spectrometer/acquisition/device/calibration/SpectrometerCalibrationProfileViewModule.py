@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.appliction.image.houghLine.HoughLineLogicModule import HoughLineLogicModule
 from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
+from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.application.video.VideoSignal import VideoSignal
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
@@ -87,8 +88,6 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
                 # colorizedImage=spectralImageLogicModule.colorizeQImage(spectralVideoThreadSignal.image,132)
                 # videoSignal.image = colorizedImage
 
-            print('handleSpectralVideoThreadSignal')
-
             # colorizedImage=spectralVideoThreadSignal.image.convertToFormat(QImage.Format.Format_Grayscale8)
             # videoSignal.image = colorizedImage
 
@@ -98,19 +97,21 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             houghLineLogicModule = HoughLineLogicModule()
             lines = houghLineLogicModule.getHoughLines(videoSignal.image)
 
-            # spectralImageLogicModule=SpectralImageLogicModule()
-            # someImage=QImage()
-            # #someImage.load("/home/nidwe/testPhilipsBlured3.png")
-            # someImage.load("/home/nidwe/testPhilipsSharpened2.png")
-            # #someImage.load("/home/nidwe/testPhilips.png")
-            # foo=spectralImageLogicModule.convertQImageToNumpyArray(someImage)
-            # bar=spectralImageLogicModule.calculateFocalMeasureOfNumpyImage(foo)
-            # print("bar")
-            # print(bar)
-            # videoSignal.image=someImage
+            someNavigationSignal = NavigationSignal(None)
+            someNavigationSignal.setTarget("SpectrometerCalibrationProfileViewModule")
+
+            applicationStatusSignal = ApplicationStatusSignal()
+            applicationStatusSignal.text='retrieving hough lines'
+            applicationStatusSignal.isStatusReset = False
+            applicationStatusSignal.stepsCount=spectralVideoThreadSignal.framesCount
+            applicationStatusSignal.currentStepIndex=spectralVideoThreadSignal.currentFrameIndex
+
+            if applicationStatusSignal.stepsCount==applicationStatusSignal.currentStepIndex:
+                applicationStatusSignal.isStatusReset=True
+
+            ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(applicationStatusSignal)
 
             self.videoViewModule.handleVideoSignal(videoSignal)
-
 
             event.set()
 

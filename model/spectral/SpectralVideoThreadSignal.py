@@ -1,11 +1,10 @@
 from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QImage
+
+from model.application.video.VideoSignal import VideoSignal
 from model.spectral.SpectralJob import SpectralJob
 
 
-class SpectralVideoThreadSignal(QObject):
+class SpectralVideoThreadSignal(VideoSignal):
     spectralJob: SpectralJob
-    image:QImage
-    currentFrameIndex:int
-    framesCount:int
 
