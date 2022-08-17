@@ -42,7 +42,7 @@ class SpectralJobWidgetViewModule(QWidget):
         self.tabWidget.addTab(self.videoViewModule, "Spectrum image (last captured)")
 
         self.videoThread = SpectrumVideoThread()
-        self.videoThread.spectralVideoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
+        self.videoThread.videoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
 
 
     def startVideoThread(self):

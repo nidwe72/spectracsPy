@@ -1,12 +1,14 @@
+from typing import Generic, TypeVar
+
 import cv2
 from PyQt6.QtCore import QThread
-from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QImage
-from model.application.video.VideoSignal import VideoSignal
 
+S = TypeVar('S')
 
-class VideoThread(QThread):
-    videoSignal = pyqtSignal(VideoSignal)
+class VideoThread(QThread,Generic[S]):
+
+    #videoThreadSignal = pyqtSignal(threading.Event, S)
     qImage: QImage
 
     def __init__(self):
@@ -16,7 +18,10 @@ class VideoThread(QThread):
         self.qImage = None
 
         self._frameCount = 0
-        self._currentFrameCount = 0
+        self._currentFrameIndex = 0
+        self.cap=None
+        self.spectralJob=None
+
 
     def setFrameCount(self, spectraCount: int):
         self._frameCount = spectraCount
@@ -24,34 +29,16 @@ class VideoThread(QThread):
     def getFrameCount(self):
         return self._frameCount
 
-    def __setCurrentFrameCount(self, currentCount: int):
-        self._currentFrameCount = currentCount
+    def _setCurrentFrameIndex(self, currentCount: int):
+        self._currentFrameIndex = currentCount
 
-    def __getCurrentFrameCount(self):
-        return self._currentFrameCount
+    def _getCurrentFrameIndex(self):
+        return self._currentFrameIndex
 
     def run(self):
 
-        # device = QCamera()
-        # videoInputs = QMediaDevices.videoInputs()
-        # for cameraDevice in videoInputs:
-        #     cameraName=cameraDevice.description()
-        #     print(cameraName)
-        #     cameraId=cameraDevice.id()
-        #     print("cameraDevice.position()")
-        #     print(cameraDevice.position())
-        #
-        #     print("cameraDevice.photoResolutions()")
-        #     print(cameraDevice.photoResolutions())
-        #
-        #     print(cameraId)
-        #     cameraDeviceFormats=cameraDevice.videoFormats()
-        #     print(cameraDeviceFormats)
-        #     for cameraDeviceFormat in cameraDeviceFormats:
-        #         print(cameraDeviceFormat.resolution())
-        #         print(cameraDeviceFormat.pixelFormat())
+        self.onStart()
 
-        # self.cap = cv2.VideoCapture(4)
         self.cap = cv2.VideoCapture(0)
 
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
@@ -85,16 +72,12 @@ class VideoThread(QThread):
 
                 self.afterCapture()
 
-                if self.doesEmitVideoSignal():
-                    videoSignal = VideoSignal()
-                    videoSignal.image = self.qImage
-                    self.videoSignal.emit(videoSignal)
-
+        self._setCurrentFrameIndex(0)
         self.cap.release()
 
     def stop(self):
         self._runFlag = False
-        self.__setCurrentFrameCount(0)
+        self._setCurrentFrameIndex(0)
 
     def beforeCapture(self):
         pass
@@ -102,11 +85,19 @@ class VideoThread(QThread):
     def afterCapture(self):
         frameCount = self.getFrameCount()
         if frameCount > 0:
-            self.__setCurrentFrameCount(self.__getCurrentFrameCount() + 1)
-            currentCount = self.__getCurrentFrameCount()
+            self._setCurrentFrameIndex(self._getCurrentFrameIndex() + 1)
+            currentCount = self._getCurrentFrameIndex()
             if currentCount == frameCount:
                 self._runFlag = False
-                self.__setCurrentFrameCount(0)
 
-    def doesEmitVideoSignal(self):
-        return True
+    def createSignal(self)->S:
+        return None
+
+    def onStart(self):
+        return None
+
+
+
+
+
+

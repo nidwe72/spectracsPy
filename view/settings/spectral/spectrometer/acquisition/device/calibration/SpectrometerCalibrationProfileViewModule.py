@@ -69,7 +69,7 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
     def onClickedCaptureVideoButton(self):
 
         self.videoThread = SpectrumVideoThread()
-        self.videoThread.spectralVideoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
+        self.videoThread.videoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
         self.videoThread.setFrameCount(50)
 
         self.videoThread.setSpectrumSampleType(SpectrumSampleType.UNSPECIFIED)
