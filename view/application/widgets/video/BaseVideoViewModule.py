@@ -52,8 +52,7 @@ class BaseVideoViewModule(QWidget,Generic[VIDEO_SIGNAL]):
         super().resizeEvent(resizeEvent)
         self.videoWidget.resizeEvent(resizeEvent)
         scene=self.videoWidget.scene()
-        item = scene.items()[1]
-        self.videoWidget.fitInView(item,Qt.AspectRatioMode.KeepAspectRatio)
+        self.videoWidget.fitInView(self.imageItem,Qt.AspectRatioMode.KeepAspectRatio)
 
 
 

@@ -10,17 +10,19 @@ from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModu
 class SpectrometerCalibrationProfileHoughLinesVideoViewModule(
     BaseVideoViewModule[SpectrometerCalibrationProfileHoughLinesVideoSignal]):
 
+    upperHoughLineItem:BaseGraphicsLineItem=None
+    lowerHoughLineItem: BaseGraphicsLineItem = None
+
     def handleVideoSignal(self, videoSignal: SpectrometerCalibrationProfileHoughLinesVideoSignal):
         image = videoSignal.image
         scene = self.videoWidget.scene()
         somePixmap = QPixmap.fromImage(image)
         self.imageItem.setPixmap(somePixmap)
 
-
-        self.upperHoughLineItem.setLine(videoSignal.upperHoughLine.p1().x(),videoSignal.upperHoughLine.p1().y(),
+        self.__getUpperHoughLineItem().setLine(videoSignal.upperHoughLine.p1().x(),videoSignal.upperHoughLine.p1().y(),
                                         videoSignal.upperHoughLine.p2().x(),videoSignal.upperHoughLine.p2().y())
 
-        self.lowerHoughLineItem.setLine(videoSignal.lowerHoughLine.p1().x(),videoSignal.lowerHoughLine.p1().y(),
+        self.__getLowerHoughLineItem().setLine(videoSignal.lowerHoughLine.p1().x(),videoSignal.lowerHoughLine.p1().y(),
                                         videoSignal.lowerHoughLine.p2().x(),videoSignal.lowerHoughLine.p2().y())
 
         self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
@@ -28,16 +30,23 @@ class SpectrometerCalibrationProfileHoughLinesVideoViewModule(
     def initialize(self):
         super().initialize()
 
-        pen = QPen(QBrush(QColor(200, 200, 200, 255)), 1)
+    def __getUpperHoughLineItem(self):
+        if self.upperHoughLineItem is None:
+            pen = QPen(QBrush(QColor(200, 200, 200, 255)), 1)
+            self.upperHoughLineItem = BaseGraphicsLineItem()
+            self.upperHoughLineItem.itemName='upperHoughLine'
+            self.upperHoughLineItem.setPen(pen)
+            self.scene.addItem(self.upperHoughLineItem)
+        return self.upperHoughLineItem
 
-        self.upperHoughLineItem = BaseGraphicsLineItem()
-        self.upperHoughLineItem.itemName='upperHoughLine'
-        self.upperHoughLineItem.setPen(pen)
-        self.scene.addItem(self.upperHoughLineItem)
+    def __getLowerHoughLineItem(self):
+        if self.lowerHoughLineItem is None:
+            pen = QPen(QBrush(QColor(200, 200, 200, 255)), 1)
+            self.lowerHoughLineItem = BaseGraphicsLineItem()
+            self.lowerHoughLineItem.itemName='upperHoughLine'
+            self.lowerHoughLineItem.setPen(pen)
+            self.scene.addItem(self.lowerHoughLineItem)
+        return self.lowerHoughLineItem
 
-        self.lowerHoughLineItem = BaseGraphicsLineItem()
-        self.lowerHoughLineItem.itemName='lowerHoughLine'
-        self.lowerHoughLineItem.setPen(pen)
-        self.scene.addItem(self.lowerHoughLineItem)
 
 

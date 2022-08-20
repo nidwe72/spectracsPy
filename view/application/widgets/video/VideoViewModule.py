@@ -26,10 +26,9 @@ class VideoViewModule(BaseVideoViewModule[VideoSignal]):
         image = videoSignal.image
         scene=self.videoWidget.scene()
         somePixmap = QPixmap.fromImage(image)
-        item=scene.items()[1]
-        item.setPixmap(somePixmap)
+        self.imageItem.setPixmap(somePixmap)
 
-        self.videoWidget.fitInView(item, Qt.AspectRatioMode.KeepAspectRatio)
+        self.videoWidget.fitInView(self.imageItem.setPixmap, Qt.AspectRatioMode.KeepAspectRatio)
 
 
 
