@@ -15,37 +15,12 @@ from PyQt6.QtCore import Qt
 from logic.appliction.video.VideoThread import VideoThread
 
 from model.application.video.VideoSignal import VideoSignal
+from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
+from view.application.widgets.graphicsScene.BaseGraphicsPixmapItem import BaseGraphicsPixmapItem
+from view.application.widgets.graphicsScene.BaseGraphicsScene import BaseGraphicsScene
+from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
 
-class VideoViewModule(QWidget):
-
-
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        layout = QGridLayout()
-        self.setLayout(layout)
-
-        self.graphicsView=QGraphicsView()
-
-        self.videoWidget=QGraphicsView()
-        layout.addWidget(self.videoWidget, 0, 0, 1, 2)
-
-        scene = QGraphicsScene();
-
-        imageItem = QGraphicsPixmapItem()
-        #todo: pass 'objec name'
-        # imageItem.setData()
-        scene.addItem(imageItem)
-
-        pen = QPen(QBrush(QColor(200, 200, 200, 255)), 1)
-
-        lineItem = QGraphicsLineItem()
-        lineItem.setLine(0, 392, 1920, 392)
-        lineItem.setPen(pen)
-        scene.addItem(lineItem)
-
-        self.videoWidget.setScene(scene)
+class VideoViewModule(BaseVideoViewModule[VideoSignal]):
 
     def handleVideoSignal(self,videoSignal:VideoSignal):
         image = videoSignal.image
@@ -56,12 +31,6 @@ class VideoViewModule(QWidget):
 
         self.videoWidget.fitInView(item, Qt.AspectRatioMode.KeepAspectRatio)
 
-    def resizeEvent(self, resizeEvent: QtGui.QResizeEvent) -> None:
-        super().resizeEvent(resizeEvent)
-        self.videoWidget.resizeEvent(resizeEvent)
-        scene=self.videoWidget.scene()
-        item = scene.items()[1]
-        self.videoWidget.fitInView(item,Qt.AspectRatioMode.KeepAspectRatio)
 
 
 

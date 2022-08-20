@@ -1,7 +1,9 @@
+from typing import List
 import cv2
 import cmath
 import scipy as sp
 import numpy as np
+from PyQt6.QtCore import QLine, QPoint
 from PyQt6.QtGui import QImage
 
 
@@ -39,7 +41,7 @@ class HoughLineLogicModule:
 
         src=self.auto_canny(src)
 
-        cv2.imwrite('test.jpg', src)
+        # cv2.imwrite('test.jpg', src)
 
         # Copy edges to the images that will display the results in BGR
 
@@ -56,10 +58,10 @@ class HoughLineLogicModule:
 
         src = spectralImageLogicModule.convertQImageToNumpyArray(image)
 
-        self.draw_lines(src,lines)
-        cv2.imwrite('test2.jpg', src)
+        # self.draw_lines(src,lines)
+        # cv2.imwrite('test2.jpg', src)
 
-        result=[]
+        result=self.getBoundingLines(src,lines)
 
         # index = 0
         #
@@ -140,18 +142,83 @@ class HoughLineLogicModule:
                 # cv2.line(img,point1,point2, color, thickness)
                 # cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
 
+        # point1=np.array([0, lowestMidpoint], dtype=np.int32)
+        # point2 = np.array([width, lowestMidpoint], dtype=np.int32)
+        # cv2.line(img,point1,point2, color, thickness)
+        #
+        # point1=np.array([0, highestMidpoint], dtype=np.int32)
+        # point2 = np.array([width, highestMidpoint], dtype=np.int32)
+        # cv2.line(img,point1,point2, color, thickness)
+
+        boundingLines = self.getBoundingLines(img, lines)
+
+        point1=np.array([boundingLines[0].p1().x(), boundingLines[0].p1().y()], dtype=np.int32)
+        point2 = np.array([boundingLines[0].p2().x(), boundingLines[0].p2().y()], dtype=np.int32)
+        cv2.line(img,point1,point2, color, thickness)
+
+        point1=np.array([boundingLines[1].p1().x(), boundingLines[1].p1().y()], dtype=np.int32)
+        point2 = np.array([boundingLines[1].p2().x(), boundingLines[1].p2().y()], dtype=np.int32)
+        cv2.line(img,point1,point2, color, thickness)
+
+
+        # point1=np.array([0, lowestMidpoint+(highestMidpoint-lowestMidpoint)/2.0], dtype=np.int32)
+        # point2 = np.array([width, lowestMidpoint+(highestMidpoint-lowestMidpoint)/2.0], dtype=np.int32)
+        # cv2.line(img,point1,point2, [0,0,255], thickness)
+
+        #cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
+
+    def getBoundingLines(self,img, lines)->List[QLine]:
+        result=[]
+
+        shape=img.shape
+        width = shape[1]
+        height = shape[0]
+
+        lowestMidpoint=height
+        highestMidpoint=0
+
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                midpointX=x1+(x2-x1)/2.0
+
+                intersectLeftBorder = self.get_intersect((x1, y1), (x2, y2), (0, 0), (0, height))
+                intersectRightBorder = self.get_intersect((x1, y1), (x2, y2), (width, 0), (width, height))
+
+                intersectMidpoint = self.get_intersect((midpointX, 0), (midpointX, height), (x1, y1), (x2, y2))
+                intersectMidpointY=intersectMidpoint[1]
+
+                if intersectMidpointY>highestMidpoint:
+                    highestMidpoint=intersectMidpointY
+
+                if intersectMidpointY<lowestMidpoint:
+                    lowestMidpoint=intersectMidpointY
+
+                point1=np.array([intersectLeftBorder[0], intersectLeftBorder[1]], dtype=np.int32)
+                point2 = np.array([intersectRightBorder[0], intersectRightBorder[1]], dtype=np.int32)
+
+                # cv2.line(img,point1,point2, color, thickness)
+                # cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
+
         point1=np.array([0, lowestMidpoint], dtype=np.int32)
         point2 = np.array([width, lowestMidpoint], dtype=np.int32)
-        cv2.line(img,point1,point2, color, thickness)
+
+        lowerLine = QLine()
+        lowerLine.setP1(QPoint(0, lowestMidpoint))
+        lowerLine.setP2(QPoint(width, lowestMidpoint))
 
         point1=np.array([0, highestMidpoint], dtype=np.int32)
         point2 = np.array([width, highestMidpoint], dtype=np.int32)
-        cv2.line(img,point1,point2, color, thickness)
 
-        point1=np.array([0, lowestMidpoint+(highestMidpoint-lowestMidpoint)/2.0], dtype=np.int32)
-        point2 = np.array([width, lowestMidpoint+(highestMidpoint-lowestMidpoint)/2.0], dtype=np.int32)
-        cv2.line(img,point1,point2, [0,0,255], thickness)
+        upperLine = QLine()
+        upperLine.setP1(QPoint(0, highestMidpoint))
+        upperLine.setP2(QPoint(width, highestMidpoint))
+
+        result.append(upperLine)
+        result.append(lowerLine)
+
+        return result
 
 
 
-        #cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
+
+
