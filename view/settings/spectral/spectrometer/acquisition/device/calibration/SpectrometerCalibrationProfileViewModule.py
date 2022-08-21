@@ -1,26 +1,19 @@
 import threading
-
 from typing import List
 
 from PyQt6.QtCore import QLine
-from PyQt6.QtGui import QImage
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget
+from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget, QLineEdit
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.appliction.image.houghLine.HoughLineLogicModule import HoughLineLogicModule
 from logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
     SpectrometerCalibrationProfileHoughLinesVideoThread
-from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from model.application.navigation.NavigationSignal import NavigationSignal
-from model.application.video.VideoSignal import VideoSignal
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
-from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
-from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.application.widgets.page.PageWidget import PageWidget
-from view.application.widgets.video.VideoViewModule import VideoViewModule
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \
     SpectrometerCalibrationProfileHoughLinesVideoViewModule
 
@@ -60,6 +53,8 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
                 'SpectrometerCalibrationProfileViewModule.videoViewModule')
             result[self.videoViewModule.objectName()] = self.videoViewModule
 
+            result['roi'] = self.createRegionOfInterestNavigationGroupBox()
+
             buttonsPanel=QWidget()
             buttonsPanel.setObjectName(
                 'SpectrometerCalibrationProfileViewModule.buttonsPanel')
@@ -68,11 +63,32 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             layout=QGridLayout()
             buttonsPanel.setLayout(layout)
 
-            self.captureVideoButton=QPushButton('Detect vertical bounds')
+            self.captureVideoButton=QPushButton('Detect horizontal lines')
             self.captureVideoButton.clicked.connect(self.onClickedCaptureVideoButton)
 
             layout.addWidget(self.captureVideoButton,0,0,1,1)
 
+
+        return result
+
+    def createRegionOfInterestNavigationGroupBox(self):
+        result = QGroupBox("Region of interest")
+
+        layout = QGridLayout()
+        result.setLayout(layout);
+
+        self.x1Component = QLineEdit()
+        layout.addWidget(self.createLabeledComponent('x1', self.x1Component), 0, 0, 1, 1)
+
+        self.x2Component = QLineEdit()
+        layout.addWidget(self.createLabeledComponent('x2', self.x2Component), 0, 1, 1, 1)
+
+
+        self.y1Component = QLineEdit()
+        layout.addWidget(self.createLabeledComponent('y1', self.y1Component), 1, 0, 1, 1)
+
+        self.y2Component = QLineEdit()
+        layout.addWidget(self.createLabeledComponent('y2', self.y2Component), 1, 1, 1, 1)
 
         return result
 
@@ -120,12 +136,14 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             someNavigationSignal.setTarget("SpectrometerCalibrationProfileViewModule")
 
             applicationStatusSignal = ApplicationStatusSignal()
-            applicationStatusSignal.text='retrieving hough lines'
+            applicationStatusSignal.text='retrieving Hough lines'
             applicationStatusSignal.isStatusReset = False
             applicationStatusSignal.stepsCount=videoSignal.framesCount
             applicationStatusSignal.currentStepIndex=videoSignal.currentFrameIndex
 
             if applicationStatusSignal.stepsCount==applicationStatusSignal.currentStepIndex:
+                self.y2Component.setText(str(videoSignal.upperHoughLine.p1().y()))
+                self.y1Component.setText(str(videoSignal.lowerHoughLine.p1().y()))
                 applicationStatusSignal.isStatusReset=True
 
             ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(applicationStatusSignal)
