@@ -13,7 +13,10 @@ class BaseGraphicsScene(QGraphicsScene):
         self.__graphicItems[item]=item
 
     def removeItem(self, item: QGraphicsItem) -> None:
-        super().removeItem(item)
+        currentItem=self.__graphicItems.get(item)
+        if currentItem is not None:
+            super().removeItem(item)
+            self.__graphicItems.pop(item)
 
     def getItem(self,item: QGraphicsItem)->QGraphicsItem:
         result=self.__graphicItems[item]

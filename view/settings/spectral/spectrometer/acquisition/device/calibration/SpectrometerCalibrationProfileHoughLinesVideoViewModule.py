@@ -22,10 +22,31 @@ class SpectrometerCalibrationProfileHoughLinesVideoViewModule(
 
 
     def handleVideoThreadSignal(self, videoSignal: SpectrometerCalibrationProfileHoughLinesVideoSignal):
+
+        if videoSignal.currentFrameIndex==1:
+            self.scene.removeItem(self.upperHoughLineItem)
+            self.upperHoughLineItem=None
+
+            self.scene.removeItem(self.lowerHoughLineItem)
+            self.lowerHoughLineItem=None
+
+            self.scene.removeItem(self.centerHoughLineItem)
+            self.centerHoughLineItem=None
+
+            self.scene.removeItem(self.calibrationStepUpperHoughLineItem)
+            self.calibrationStepUpperHoughLineItem=None
+
+            self.scene.removeItem(self.calibrationStepLowerHoughLineItem)
+            self.calibrationStepLowerHoughLineItem=None
+
+            self.scene.removeItem(self.calibrationStepCenterHoughLineItem)
+            self.calibrationStepLowerHoughLineItem=None
+
         image = videoSignal.image
         scene = self.videoWidget.scene()
         somePixmap = QPixmap.fromImage(image)
         self.imageItem.setPixmap(somePixmap)
+
 
         self.__getCalibrationStepUpperHoughLineItem().setLine(videoSignal.calibrationStepUpperHoughLine.p1().x(),
                                                               videoSignal.calibrationStepUpperHoughLine.p1().y(),
@@ -57,10 +78,11 @@ class SpectrometerCalibrationProfileHoughLinesVideoViewModule(
                                                               videoSignal.centerHoughLine.p2().x(),
                                                               videoSignal.centerHoughLine.p2().y())
 
-        if videoSignal.currentFrameIndex==videoSignal.framesCount:
-            self.__getCalibrationStepLowerHoughLineItem().setVisible(False)
-            self.__getCalibrationStepLowerHoughLineItem().setVisible(False)
-            self.__getCalibrationStepCenterHoughLineItem().setVisible(False)
+        if videoSignal.currentFrameIndex>videoSignal.framesCount-1:
+
+            self.scene.removeItem(self.calibrationStepUpperHoughLineItem)
+            self.scene.removeItem(self.calibrationStepLowerHoughLineItem)
+            self.scene.removeItem(self.calibrationStepCenterHoughLineItem)
 
         self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
 
