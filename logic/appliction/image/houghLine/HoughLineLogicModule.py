@@ -29,7 +29,7 @@ class HoughLineLogicModule:
         # return the edged image
         return edged
 
-    def getHoughLines(self,image:QImage):
+    def getHoughLines(self,image:QImage)->List[QLine]:
 
         spectralImageLogicModule = SpectralImageLogicModule()
         src=spectralImageLogicModule.convertQImageToNumpyArray(image)

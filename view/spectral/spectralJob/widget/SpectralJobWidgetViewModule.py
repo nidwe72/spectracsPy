@@ -88,7 +88,7 @@ class SpectralJobWidgetViewModule(QWidget):
             # print(bar)
             # videoSignal.image=someImage
 
-            self.videoViewModule.handleVideoSignal(videoSignal)
+            self.videoViewModule.handleVideoThreadSignal(videoSignal)
 
             event.set()
 

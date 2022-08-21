@@ -13,7 +13,7 @@ VIDEO_SIGNAL = TypeVar('VIDEO_SIGNAL')
 
 class BaseVideoViewModule(QWidget,Generic[VIDEO_SIGNAL]):
 
-    def handleVideoSignal(self,videoSignal:VIDEO_SIGNAL):
+    def handleVideoThreadSignal(self, videoSignal:VIDEO_SIGNAL):
         pass
 
     def __init__(self, *args, **kwargs):

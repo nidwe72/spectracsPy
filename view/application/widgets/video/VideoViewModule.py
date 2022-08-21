@@ -22,7 +22,7 @@ from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModu
 
 class VideoViewModule(BaseVideoViewModule[VideoSignal]):
 
-    def handleVideoSignal(self,videoSignal:VideoSignal):
+    def handleVideoThreadSignal(self, videoSignal:VideoSignal):
         image = videoSignal.image
         scene=self.videoWidget.scene()
         somePixmap = QPixmap.fromImage(image)

@@ -1,5 +1,8 @@
 import threading
 
+from typing import List
+
+from PyQt6.QtCore import QLine
 from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget
 
@@ -25,6 +28,7 @@ from view.settings.spectral.spectrometer.acquisition.device.calibration.Spectrom
 class SpectrometerCalibrationProfileViewModule(PageWidget):
 
     model: SpectrometerCalibrationProfile = None
+    allHoughLines:List[List[QLine]]=None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -77,25 +81,40 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
         self.allHoughLines=[]
 
         self.videoThread = SpectrometerCalibrationProfileHoughLinesVideoThread()
-        self.videoThread.videoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
+        self.videoThread.videoThreadSignal.connect(self.handleVideoThreadSignal)
         self.videoThread.setFrameCount(50)
 
         self.videoThread.start()
 
-    def handleSpectralVideoThreadSignal(self, event:threading.Event, videoThreadSignal: SpectrometerCalibrationProfileHoughLinesVideoSignal):
-        if isinstance(videoThreadSignal, SpectrometerCalibrationProfileHoughLinesVideoSignal):
+    def handleVideoThreadSignal(self, event:threading.Event, videoSignal: SpectrometerCalibrationProfileHoughLinesVideoSignal):
+        if isinstance(videoSignal, SpectrometerCalibrationProfileHoughLinesVideoSignal):
 
-            if videoThreadSignal.currentFrameIndex==videoThreadSignal.framesCount:
-                pass
-
+            # if videoSignal.currentFrameIndex==videoSignal.framesCount:
+            #     pass
 
             houghLineLogicModule = HoughLineLogicModule()
-            houghLines = houghLineLogicModule.getHoughLines(videoThreadSignal.image)
-
-            videoThreadSignal.upperHoughLine=houghLines[0]
-            videoThreadSignal.lowerHoughLine = houghLines[1]
-
+            houghLines = houghLineLogicModule.getHoughLines(videoSignal.image)
             self.allHoughLines.append(houghLines)
+
+            videoSignal.calibrationStepUpperHoughLine=houghLines[0]
+            videoSignal.calibrationStepLowerHoughLine = houghLines[1]
+
+            centerY = videoSignal.calibrationStepUpperHoughLine.p1().y() + (
+                        videoSignal.calibrationStepLowerHoughLine.p1().y() - videoSignal.calibrationStepUpperHoughLine.p1().y()) / 2.0
+
+            videoSignal.calibrationStepCenterHoughLine = QLine(videoSignal.calibrationStepUpperHoughLine.p1().x(), centerY,
+                                                videoSignal.calibrationStepUpperHoughLine.p2().x(), centerY)
+
+            boundingHoughLines = self.__getBoundingHoughLines()
+
+            videoSignal.upperHoughLine=boundingHoughLines[0]
+            videoSignal.lowerHoughLine = boundingHoughLines[1]
+
+            centerY = videoSignal.upperHoughLine.p1().y() + (
+                        videoSignal.lowerHoughLine.p1().y() - videoSignal.upperHoughLine.p1().y()) / 2.0
+
+            videoSignal.centerHoughLine = QLine(videoSignal.upperHoughLine.p1().x(), centerY,
+                                                videoSignal.upperHoughLine.p2().x(), centerY)
 
             someNavigationSignal = NavigationSignal(None)
             someNavigationSignal.setTarget("SpectrometerCalibrationProfileViewModule")
@@ -103,18 +122,42 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             applicationStatusSignal = ApplicationStatusSignal()
             applicationStatusSignal.text='retrieving hough lines'
             applicationStatusSignal.isStatusReset = False
-            applicationStatusSignal.stepsCount=videoThreadSignal.framesCount
-            applicationStatusSignal.currentStepIndex=videoThreadSignal.currentFrameIndex
+            applicationStatusSignal.stepsCount=videoSignal.framesCount
+            applicationStatusSignal.currentStepIndex=videoSignal.currentFrameIndex
 
             if applicationStatusSignal.stepsCount==applicationStatusSignal.currentStepIndex:
                 applicationStatusSignal.isStatusReset=True
 
             ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(applicationStatusSignal)
 
-            self.videoViewModule.handleVideoSignal(videoThreadSignal)
+            self.videoViewModule.handleVideoThreadSignal(videoSignal)
 
             event.set()
 
+    def __getBoundingHoughLines(self)->List[QLine]:
+
+        result = []
+
+        resultUpperHoughLine:QLine=None
+        resultLowerHoughLine:QLine = None
+
+        for someHoughLines in self.allHoughLines:
+            upperHoughLine=someHoughLines[0]
+            lowerHoughLine = someHoughLines[1]
+
+            if resultUpperHoughLine is None:
+                resultUpperHoughLine=upperHoughLine
+            elif upperHoughLine.p1().y()>resultUpperHoughLine.p1().y():
+                resultUpperHoughLine = upperHoughLine
+
+            if resultLowerHoughLine is None:
+                resultLowerHoughLine=lowerHoughLine
+            elif lowerHoughLine.p1().y()<resultLowerHoughLine.p1().y():
+                resultLowerHoughLine=lowerHoughLine
+
+        result.append(resultUpperHoughLine)
+        result.append(resultLowerHoughLine)
+        return result
 
     def onClickedEditButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
