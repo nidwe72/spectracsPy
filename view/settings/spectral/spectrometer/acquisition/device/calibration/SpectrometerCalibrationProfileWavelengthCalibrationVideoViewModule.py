@@ -4,6 +4,8 @@ from PyQt6.QtGui import QPixmap, QPen, QBrush
 from typing import Dict
 from typing import List
 
+from scipy import signal
+
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
@@ -14,6 +16,9 @@ from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGrap
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
 
 from scipy.signal import find_peaks
+from scipy.signal import peak_prominences
+
+from scipy.signal import find_peaks_cwt
 
 
 import peakutils
@@ -43,12 +48,30 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
         #spectrum = electrocardiogram()[2000:4000]
 
-        peaks, _ = find_peaks(spectrumValuesNpArray, prominence = 1, width = 20)
+        #peaks, _ = find_peaks(spectrumValuesNpArray, prominence = 1, width = 20)
+
+        #,plateau_size=3
+
+
+        peaks, _ = find_peaks(spectrumValuesNpArray, distance=20, height=10, width=3, rel_height=1,prominence=20)
+
+        #peaks, _ = find_peaks(spectrumValuesNpArray, distance=20,height=10,width=5,threshold=1)
+
+        prominences = peak_prominences(spectrumValuesNpArray, peaks)[0]
+
+        foo=spectrumValuesNpArray[peaks]-prominences
+
+        bar=spectrumValuesNpArray[peaks]
+
         peaksList=peaks.tolist()
+
+
 
         #peaksList = peakutils.indexes(spectrumValuesNpArray, thres=0.5, min_dist=30)
 
-        peaksList = peakutils.indexes(spectrumValuesNpArray, thres=0.1, min_dist=30)
+        #peaksList = peakutils.indexes(spectrumValuesNpArray, thres=0.1, min_dist=30)
+
+        #peaksList = peakutils.indexes(spectrumValuesNpArray, thres=0.8, min_dist=30)
 
         print(peaksList)
 
@@ -66,10 +89,18 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
                     self.scene.removeItem(item)
 
             #yellow//10//593
-            for peak in self.getPeaks():
+
+            distances = self.getDistancesBetweenNeighboursByPeakIndices()
+            threeDistances = dict(list(distances)[:3])
+
+            for peak in list(self.getPeaks().values()):
                 lineItem = BaseGraphicsLineItem()
                 lineItem.setLine(peak, 0, peak, image.height())
                 pen = QPen(QBrush(ApplicationStyleLogicModule().getPrimaryColor()), 1)
+
+                if threeDistances.get(peak) is not None:
+                    pen = QPen(QBrush(ApplicationStyleLogicModule().getPrimaryTextColor()), 1)
+
                 pen.setStyle(Qt.PenStyle.DotLine)
                 lineItem.setPen(pen)
 
@@ -109,10 +140,34 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         for custerIndexToRemove in custerIndicesToRemove:
             self.peaksClusters.pop(custerIndexToRemove)
 
-    def getPeaks(self):
-        result=[]
+    def getPeaks(self)->Dict[int,int]:
+        result= {}
         for someClusterIndex,cluster in self.peaksClusters.items():
-            result.append(np.array(cluster).mean())
+            mean = int(np.array(cluster).mean())
+            result[mean]=mean
+
+        result=dict(sorted(result.items()))
+        return result
+
+    def getDistancesBetweenNeighboursByPeakIndices(self):
+        peaks=list(self.getPeaks().values())
+
+        distancesMap={}
+
+        for iterateIndex, peakIndex in enumerate(peaks):
+
+            distance = 999
+            if iterateIndex==0 or iterateIndex==len(peaks)-1 :
+                distance=999
+            else:
+                leftPeakIndex=peaks[iterateIndex-1]
+                rightPeakIndex=peaks[iterateIndex+1]
+                distance=rightPeakIndex-leftPeakIndex
+
+            distancesMap[peakIndex]=distance
+
+        result = sorted(distancesMap.items(), key=lambda x: x[1])
+
         return result
 
     def initialize(self):
