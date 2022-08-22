@@ -2,20 +2,26 @@ import threading
 from typing import List
 
 from PyQt6.QtCore import QLine
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget, QLineEdit
+from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget, QLineEdit, QStackedWidget
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.appliction.image.houghLine.HoughLineLogicModule import HoughLineLogicModule
 from logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
     SpectrometerCalibrationProfileHoughLinesVideoThread
+from logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
+    SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
+from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
+    SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \
     SpectrometerCalibrationProfileHoughLinesVideoViewModule
+from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule import \
+    SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule
 
 
 class SpectrometerCalibrationProfileViewModule(PageWidget):
@@ -47,29 +53,43 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
         else:
 
-            #self.videoViewModule = VideoViewModule()
+            self.videoViewModulesStackedWidget=QStackedWidget()
+            result['videoViewModulesStackedWidget'] = self.videoViewModulesStackedWidget
+
             self.videoViewModule = SpectrometerCalibrationProfileHoughLinesVideoViewModule()
             self.videoViewModule.setObjectName(
                 'SpectrometerCalibrationProfileViewModule.videoViewModule')
-            result[self.videoViewModule.objectName()] = self.videoViewModule
+            # result[self.videoViewModule.objectName()] = self.videoViewModule
+
+            self.videoViewModulesStackedWidget.addWidget(self.videoViewModule)
+
+            self.wavelengthCalibrationVideoViewModule = SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule()
+            self.videoViewModulesStackedWidget.addWidget(self.wavelengthCalibrationVideoViewModule)
 
             result['roi'] = self.createRegionOfInterestNavigationGroupBox()
 
-            buttonsPanel=QWidget()
-            buttonsPanel.setObjectName(
-                'SpectrometerCalibrationProfileViewModule.buttonsPanel')
+            buttonsPanel=self.createButtonsPanel()
             result[buttonsPanel.objectName()] = buttonsPanel
 
-            layout=QGridLayout()
-            buttonsPanel.setLayout(layout)
-
-            self.captureVideoButton=QPushButton('Detect horizontal lines')
-            self.captureVideoButton.clicked.connect(self.onClickedCaptureVideoButton)
-
-            layout.addWidget(self.captureVideoButton,0,0,1,1)
-
-
         return result
+
+    def createButtonsPanel(self):
+        buttonsPanel = QWidget()
+        buttonsPanel.setObjectName(
+            'SpectrometerCalibrationProfileViewModule.buttonsPanel')
+
+        layout = QGridLayout()
+        buttonsPanel.setLayout(layout)
+
+        self.captureVideoButton = QPushButton('Detect horizontal lines')
+        self.captureVideoButton.clicked.connect(self.onClickedCaptureVideoButton)
+        layout.addWidget(self.captureVideoButton, 0, 0, 1, 1)
+
+        self.detectPeaksButton = QPushButton('Detect peaks')
+        self.detectPeaksButton.clicked.connect(self.onClickedDetectPeaksButton)
+        layout.addWidget(self.detectPeaksButton, 0, 1, 1, 1)
+
+        return buttonsPanel
 
     def createRegionOfInterestNavigationGroupBox(self):
         result = QGroupBox("Region of interest")
@@ -94,6 +114,8 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
     def onClickedCaptureVideoButton(self):
 
+        self.videoViewModulesStackedWidget.setCurrentIndex(0)
+
         self.allHoughLines=[]
 
         self.videoThread = SpectrometerCalibrationProfileHoughLinesVideoThread()
@@ -101,6 +123,35 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
         self.videoThread.setFrameCount(50)
 
         self.videoThread.start()
+
+    def onClickedDetectPeaksButton(self):
+
+        self.videoViewModulesStackedWidget.setCurrentIndex(1)
+
+        self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
+        self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
+        self.wavelengthCalibrationVideoThread.setFrameCount(50)
+
+        self.wavelengthCalibrationVideoThread.start()
+
+    def handleWavelengthCalibrationVideoSignal(self, event: threading.Event,
+                                videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
+
+        applicationStatusSignal = ApplicationStatusSignal()
+        applicationStatusSignal.text = 'detecting peaks'
+        applicationStatusSignal.isStatusReset = False
+        applicationStatusSignal.stepsCount = videoSignal.framesCount
+        applicationStatusSignal.currentStepIndex = videoSignal.currentFrameIndex
+
+        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
+            applicationStatusSignal.isStatusReset = True
+
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
+            applicationStatusSignal)
+
+        self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
+
+        event.set()
 
     def handleVideoThreadSignal(self, event:threading.Event, videoSignal: SpectrometerCalibrationProfileHoughLinesVideoSignal):
         if isinstance(videoSignal, SpectrometerCalibrationProfileHoughLinesVideoSignal):

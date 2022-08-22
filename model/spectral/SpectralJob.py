@@ -1,10 +1,11 @@
-import typing
+from typing import List
+from typing import Dict
 from PyQt6.QtCore import QObject
 from model.spectral.Spectrum import Spectrum
 
 
 class SpectralJob(QObject):
-    spectraBySampleTypes: typing.Dict[str, typing.List[Spectrum]]
+    spectraBySampleTypes: Dict[str, List[Spectrum]]
 
     title:str
 
@@ -26,7 +27,7 @@ class SpectralJob(QObject):
             result=spectraOfSampleType[0]
         return result
 
-    def getSpectra(self,spectrumSampleType):
+    def getSpectra(self,spectrumSampleType)->List[Spectrum]:
         result=None
         result = self.spectraBySampleTypes.get(spectrumSampleType)
         return result
