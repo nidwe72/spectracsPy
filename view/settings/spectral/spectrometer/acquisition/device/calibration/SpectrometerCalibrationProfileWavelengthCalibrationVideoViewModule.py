@@ -11,6 +11,7 @@ from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
+from model.spectral.SpectralLine import SpectralLine
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
@@ -93,6 +94,8 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             distances = self.getDistancesBetweenNeighboursByPeakIndices()
             threeDistances = dict(list(distances)[:3])
 
+            self.getSpectralLinesByPixelIndices()
+
             for peak in list(self.getPeaks().values()):
                 lineItem = BaseGraphicsLineItem()
                 lineItem.setLine(peak, 0, peak, image.height())
@@ -149,6 +152,50 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         result=dict(sorted(result.items()))
         return result
 
+    def getSpectralLinesByPixelIndices(self)->Dict[int,SpectralLine]:
+
+        #https: // www.johndcook.com / wavelength_to_RGB.html
+        #https://www.color-name.com/hex/00f6ff
+
+        result={}
+
+        #405.4//mercuryPurple//8200c9//French Violet(violet)
+        #436.6//mercury//1a00ff//Blue(blue)
+        #487.7//#00f6ff//terbium//aqua (cyan)//Aquamarin
+
+        #xxx#542.4//8aff00//Chartreuse (Web) (green)//Kräuterlikör-Grün
+        #546.5//mercury//97ff00//Mango Green (green)
+        #587.6//europium//Middle Yellow(yellow)
+        #593.4//europium//Cyber Yellow(yellow)
+        #599.7//europium//ffbf00//Amber(yellow)//Bernstein//
+        #611.6//ff9600//Vivid Gamboge(orange)//Lebendiges Gelb-Orange
+        #631.1//International Orange (Aerospace)//orange
+        #650.8//Red
+
+        peaks = self.getPeaks()
+
+        distances = self.getDistancesBetweenNeighboursByPeakIndices()
+        threeDistances = dict(list(distances)[:3])
+        threeDistancesPixelIndices = list(dict(list(distances)[:3]).keys())
+
+        spectralLineMercuryMiddleYellow=SpectralLine()
+        spectralLineMercuryMiddleYellow.colorName='middle yellow'
+        spectralLineMercuryMiddleYellow.mainColorName = 'yellow'
+        spectralLineMercuryMiddleYellow.nanometer =587.6
+        spectralLineMercuryMiddleYellow.pixelIndex = threeDistancesPixelIndices[0]
+        result[spectralLineMercuryMiddleYellow.pixelIndex]=spectralLineMercuryMiddleYellow
+
+
+        spectralLineMercuryFrenchViolet=SpectralLine()
+        spectralLineMercuryFrenchViolet.colorName='french violet'
+        spectralLineMercuryFrenchViolet.mainColorName = 'violet'
+
+
+
+
+
+        return result
+
     def getDistancesBetweenNeighboursByPeakIndices(self):
         peaks=list(self.getPeaks().values())
 
@@ -172,4 +219,6 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
     def initialize(self):
         super().initialize()
+
+
 
