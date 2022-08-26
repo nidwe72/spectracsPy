@@ -130,7 +130,7 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
         self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
         self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
-        self.wavelengthCalibrationVideoThread.setFrameCount(50)
+        self.wavelengthCalibrationVideoThread.setFrameCount(100)
 
         self.wavelengthCalibrationVideoThread.start()
 

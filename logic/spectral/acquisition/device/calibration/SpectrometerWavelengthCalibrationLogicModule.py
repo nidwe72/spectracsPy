@@ -1,0 +1,190 @@
+from typing import Dict
+from PyQt6.QtGui import QImage, QColor
+
+from base.Singleton import Singleton
+from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
+from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
+class SpectrometerWavelengthCalibrationLogicModule(Singleton):
+
+    spectralLinesByNames:Dict[str,SpectralLine]=None
+    __peaks:Dict[int,int]=None
+    __image:QImage=None
+
+    __spectralLinesByPixelIndices:Dict[int,SpectralLine]=None
+
+    def getSpectralLinesByNames(self):
+
+        #https: // www.johndcook.com / wavelength_to_RGB.html
+        #https://www.color-name.com/hex/00f6ff
+
+        if self.spectralLinesByNames is None:
+
+            self.spectralLinesByNames={}
+
+            spectralLineMercuryFrenchViolet=SpectralLine()
+            spectralLineMercuryFrenchViolet.name = 'MercuryFrenchViolet'
+            spectralLineMercuryFrenchViolet.colorName='french violet'
+            spectralLineMercuryFrenchViolet.mainColorName = 'violet'
+            spectralLineMercuryFrenchViolet.nanometer =405.4
+            spectralLineMercuryFrenchViolet.color = SpectralColorUtil().wavelengthToColor(
+                spectralLineMercuryFrenchViolet.nanometer)
+            self.spectralLinesByNames[spectralLineMercuryFrenchViolet.name]=spectralLineMercuryFrenchViolet
+
+            spectralLineMercuryBlue=SpectralLine()
+            spectralLineMercuryBlue.name = 'MercuryBlue'
+            spectralLineMercuryBlue.colorName='blue'
+            spectralLineMercuryBlue.mainColorName = 'blue'
+            spectralLineMercuryBlue.nanometer =436.6
+            spectralLineMercuryBlue.color = SpectralColorUtil().wavelengthToColor(
+                spectralLineMercuryBlue.nanometer)
+            self.spectralLinesByNames[spectralLineMercuryBlue.name]=spectralLineMercuryBlue
+
+            spectralLineTerbiumAqua=SpectralLine()
+            spectralLineTerbiumAqua.name = 'TerbiumAqua'
+            spectralLineTerbiumAqua.colorName='aqua'
+            spectralLineTerbiumAqua.mainColorName = 'cyan'
+            spectralLineTerbiumAqua.nanometer =487.7
+            spectralLineTerbiumAqua.color = SpectralColorUtil().wavelengthToColor(
+                spectralLineTerbiumAqua.nanometer)
+            spectralLineTerbiumAqua.color = SpectralColorUtil().wavelengthToColor(spectralLineTerbiumAqua.nanometer)
+            self.spectralLinesByNames[spectralLineTerbiumAqua.name]=spectralLineTerbiumAqua
+
+            spectralLinEuropiumMiddleYellow=SpectralLine()
+            spectralLinEuropiumMiddleYellow.name = 'EuropiumMiddleYellow'
+            spectralLinEuropiumMiddleYellow.colorName='middle yellow'
+            spectralLinEuropiumMiddleYellow.mainColorName = 'yellow'
+            spectralLinEuropiumMiddleYellow.nanometer =587.6
+            spectralLinEuropiumMiddleYellow.color = SpectralColorUtil().wavelengthToColor(spectralLinEuropiumMiddleYellow.nanometer)
+            self.spectralLinesByNames[spectralLinEuropiumMiddleYellow.name]=spectralLinEuropiumMiddleYellow
+
+            spectralLinEuropiumCyberYellow=SpectralLine()
+            spectralLinEuropiumCyberYellow.name = 'EuropiumCyberYellow'
+            spectralLinEuropiumCyberYellow.colorName='cyber yellow'
+            spectralLinEuropiumCyberYellow.mainColorName = 'yellow'
+            spectralLinEuropiumCyberYellow.nanometer =593.4
+            spectralLinEuropiumCyberYellow.color = SpectralColorUtil().wavelengthToColor(spectralLinEuropiumCyberYellow.nanometer)
+            self.spectralLinesByNames[spectralLinEuropiumCyberYellow.name]=spectralLinEuropiumCyberYellow
+
+            spectralLinEuropiumAmber=SpectralLine()
+            spectralLinEuropiumAmber.name = 'EuropiumAmber'
+            spectralLinEuropiumAmber.colorName='amber'
+            spectralLinEuropiumAmber.mainColorName = 'yellow'
+            spectralLinEuropiumAmber.nanometer =599.7
+            spectralLinEuropiumAmber.color = SpectralColorUtil().wavelengthToColor(
+                spectralLinEuropiumAmber.nanometer)
+            self.spectralLinesByNames[spectralLinEuropiumAmber.name]=spectralLinEuropiumAmber
+
+            spectralLinEuropiumVividGamboge=SpectralLine()
+            spectralLinEuropiumVividGamboge.name = 'EuropiumVividGamboge'
+            spectralLinEuropiumVividGamboge.colorName='vivid gamboge'
+            spectralLinEuropiumVividGamboge.mainColorName = 'orange'
+            spectralLinEuropiumVividGamboge.nanometer =611.6
+            spectralLinEuropiumVividGamboge.color = SpectralColorUtil().wavelengthToColor(
+                spectralLinEuropiumVividGamboge.nanometer)
+            self.spectralLinesByNames[spectralLinEuropiumVividGamboge.name]=spectralLinEuropiumVividGamboge
+
+            spectralLinEuropiumInternationalOrange=SpectralLine()
+            spectralLinEuropiumInternationalOrange.name = 'EuropiumInternationalOrange'
+            spectralLinEuropiumInternationalOrange.colorName='International Orange'
+            spectralLinEuropiumInternationalOrange.mainColorName = 'orange'
+            spectralLinEuropiumInternationalOrange.nanometer =631.1
+            spectralLinEuropiumInternationalOrange.color = SpectralColorUtil().wavelengthToColor(
+                spectralLinEuropiumInternationalOrange.nanometer)
+            self.spectralLinesByNames[spectralLinEuropiumInternationalOrange.name]=spectralLinEuropiumInternationalOrange
+
+            spectralLinEuropiumRed=SpectralLine()
+            spectralLinEuropiumRed.name = 'EuropiumRed'
+            spectralLinEuropiumRed.colorName='red'
+            spectralLinEuropiumRed.mainColorName = 'red'
+            spectralLinEuropiumRed.nanometer =650.8
+            spectralLinEuropiumRed.color = SpectralColorUtil().wavelengthToColor(
+                spectralLinEuropiumRed.nanometer)
+            self.spectralLinesByNames[spectralLinEuropiumRed.name]=spectralLinEuropiumRed
+
+        return self.spectralLinesByNames
+
+    def getSpectralLinesByPixelIndicesPhaseOne(self)->Dict[int, SpectralLine]:
+        self.__spectralLinesByPixelIndices={}
+        self.__getSpectralLinesByPixelIndices_processSpectralLineEuropiumVividGamboge()
+
+        return self.__spectralLinesByPixelIndices
+
+    def getSpectralLinesByPixelIndicesPhaseTwo(self)->Dict[int, SpectralLine]:
+
+        peakVales = list(self.__spectralLinesByPixelIndices.keys())
+        for peak in peakVales:
+            self.__removePeak(peak)
+
+        self.__getSpectralLinesByPixelIndices_processSpectralLineMercuryBlue()
+        self.__getSpectralLinesByPixelIndices_processSpectralLineMercuryFrenchViolet()
+        self.__getSpectralLinesByPixelIndices_processSpectralLineTerbiumAqua()
+
+        #self.__getSpectralLinesByPixelIndices_processSpectralLineEuropiumRed();
+        return self.__spectralLinesByPixelIndices
+
+    def __getSpectralLinesByPixelIndices_processSpectralLineTerbiumAqua(self):
+        spectralLinesByNames = self.getSpectralLinesByNames();
+        spectralLine= spectralLinesByNames['TerbiumAqua']
+        self.__getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(spectralLine)
+        self.__removePeak(spectralLine.pixelIndex)
+
+    def __getSpectralLinesByPixelIndices_processSpectralLineMercuryFrenchViolet(self):
+        spectralLinesByNames = self.getSpectralLinesByNames();
+        spectralLine= spectralLinesByNames['MercuryFrenchViolet']
+        pixelIndex=list(self.__peaks.keys())[0]
+        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine,pixelIndex)
+
+    def __getSpectralLinesByPixelIndices_processSpectralLineMercuryBlue(self):
+        spectralLinesByNames = self.getSpectralLinesByNames();
+        spectralLine= spectralLinesByNames['MercuryBlue']
+        pixelIndex=list(self.__peaks.keys())[1]
+        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine,pixelIndex)
+
+    def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumVividGamboge(self):
+        spectralLinesByNames = self.getSpectralLinesByNames();
+        spectralLine= spectralLinesByNames['EuropiumVividGamboge']
+        self.__getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(spectralLine)
+
+    def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumRed(self):
+        spectralLinesByNames = self.getSpectralLinesByNames();
+        spectralLine= spectralLinesByNames['EuropiumRed']
+        self.__getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(spectralLine)
+
+
+    def __getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(self,spectralLine:SpectralLine,pixelIndex:int):
+        spectralLine.pixelIndex=pixelIndex
+        self.__spectralLinesByPixelIndices[pixelIndex] = spectralLine
+        self.__removePeak(spectralLine.pixelIndex)
+
+    def __getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(self,spectralLine:SpectralLine):
+        spectralLine.color=SpectralColorUtil().wavelengthToColor(spectralLine.nanometer)
+        spectralLine.pixelIndex=self.getPeakMatchingSuppliedColorBest(spectralLine.nanometer)
+        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine,spectralLine.pixelIndex);
+
+    def setPeaks(self,peaks:Dict[int,int]):
+        self.__peaks=peaks
+
+    def setImage(self,image:QImage):
+        self.__image=image
+
+    def getPeakMatchingSuppliedColorBest(self,wavelength):
+        suppliedColor=SpectralColorUtil().wavelengthToColor(wavelength)
+        distancesByPixelIndices={}
+        for peak in self.__peaks:
+            #todo:hard-coded
+            pixelColor=self.__image.pixelColor(peak,392)
+            colorDifference=SpectralColorUtil().getColorDifference(suppliedColor,pixelColor)
+            distancesByPixelIndices[peak]=colorDifference
+            continue
+        foo= sorted(distancesByPixelIndices.items(), key=lambda x: x[1])
+        result=foo[0][0]
+        return result
+
+    def __removePeak(self,peak:int):
+        try:
+            self.__peaks.pop(peak)
+        except KeyError:
+            pass
+
+
+
