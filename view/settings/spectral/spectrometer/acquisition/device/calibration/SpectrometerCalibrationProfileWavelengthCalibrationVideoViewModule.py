@@ -3,6 +3,7 @@ from PyQt6.QtGui import QPixmap, QPen, QBrush, QColor, QImage
 
 from typing import Dict
 from typing import List
+from typing import Tuple
 
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
@@ -12,6 +13,7 @@ from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
+from model.spectral.SpectralPeak import SpectralPeak
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
@@ -22,10 +24,11 @@ from scipy.signal import peak_prominences
 
 import numpy as np
 
+
 class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
     BaseVideoViewModule[SpectrometerCalibrationProfileHoughLinesVideoSignal]):
 
-    peaksClusters:Dict[int,List[int]]=None
+    peaksClusters:Dict[int,List[SpectralPeak]]=None
 
     prominence:int=0
     prominenceStart:int=200
@@ -50,10 +53,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             self.phaseZeroInExecution = True
             self.phaseOneInExecution = False
             self.phaseTwoInExecution = False
-            self.peaksClusters={}
             self.prominence=self.prominenceStart
             self.spectralLinesByPixelIndices = {}
-            self.peaksClusters={}
+            self.peaksClusters:Dict[int,List[SpectralPeak]]={}
             self.phaseOneCurrentStep = 0
 
             for item in self.scene.items():
@@ -66,19 +68,14 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         somePixmap = QPixmap.fromImage(image)
         self.imageItem.setPixmap(somePixmap)
 
-        spectra = videoSignal.spectralJob.getSpectra(SpectrumSampleType.UNSPECIFIED)
-        spectrum=spectra[-1]
 
-        spectrumValuesNpArray=np.array(list(spectrum.valuesByNanometers.values()))
-
-        if self.phaseZeroInExecution==True:
+        if self.phaseZeroInExecution:
             self.prominence=self.prominence-self.prominenceStep
 
-        peaks, _ = find_peaks(spectrumValuesNpArray, distance=10, height=10, width=3, rel_height=1,prominence=self.prominence)
-        prominences = peak_prominences(spectrumValuesNpArray, peaks)[0]
-        peaksList=peaks.tolist()
 
-        if len(peaksList)>=3 and self.phaseZeroInExecution:
+        spectralPeaks=self.__getSpectralPeaks(videoSignal)
+
+        if len(spectralPeaks)>=3 and self.phaseZeroInExecution:
             self.phaseZeroInExecution = False
             self.phaseOneInExecution = True
 
@@ -87,9 +84,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         # print(peaksList)
         # print(prominences)
 
-        for peakIndex in peaksList:
+        for peakIndex,spectralPeak in spectralPeaks.items():
             if self.phaseOneInExecution or self.phaseTwoInExecution:
-                self.assignToPeakCuster(peakIndex)
+                self.__assignToPeakCluster(spectralPeak)
 
             lineItem = BaseGraphicsLineItem()
             lineItem.setLine(peakIndex,0,peakIndex,image.height())
@@ -153,20 +150,39 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
         self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
 
-    def assignToPeakCuster(self,peakIndex):
+
+    def __getSpectralPeaks(self,videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal)->Dict[int,SpectralPeak]:
+        result= {}
+        spectra = videoSignal.spectralJob.getSpectra(SpectrumSampleType.UNSPECIFIED)
+        spectrum=spectra[-1]
+        spectrumValuesNpArray=np.array(list(spectrum.valuesByNanometers.values()))
+        peaks, _ = find_peaks(spectrumValuesNpArray, distance=10, height=10, width=3, rel_height=1,prominence=self.prominence)
+        prominences = peak_prominences(spectrumValuesNpArray, peaks)[0]
+        peaksList=peaks.tolist()
+
+        for somePeak, someProminence in zip(peaks, prominences):
+            spectralPeak=SpectralPeak()
+            spectralPeak.pixelIndex=somePeak.item()
+            spectralPeak.prominence = someProminence.item()
+            result[spectralPeak.pixelIndex]=spectralPeak
+
+        return result
+
+
+    def __assignToPeakCluster(self, spectralPeak:SpectralPeak):
         minimalPeakGap=15
         clusterPeakIndex=None
-        for somePeakIndex in list(self.peaksClusters.keys()):
-            if abs(somePeakIndex-peakIndex)<minimalPeakGap:
+        for somePeakIndex,someSpectralPeak in self.peaksClusters.items():
+            if abs(somePeakIndex-spectralPeak.pixelIndex)<minimalPeakGap:
                 clusterPeakIndex=somePeakIndex
                 break
 
         if clusterPeakIndex is None:
-            clusterPeakIndex=peakIndex
+            clusterPeakIndex=spectralPeak.pixelIndex
             self.peaksClusters[clusterPeakIndex] = []
 
         cluster=self.peaksClusters[clusterPeakIndex]
-        cluster.append(peakIndex)
+        cluster.append(spectralPeak)
         self.peaksClusters[clusterPeakIndex] = cluster
 
     def removeNotSeparatedPeakClusters(self):
@@ -182,11 +198,24 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         for custerIndexToRemove in custerIndicesToRemove:
             self.peaksClusters.pop(custerIndexToRemove)
 
-    def getPeaks(self)->Dict[int,int]:
+    def getPeaks(self)->Dict[int,SpectralPeak]:
         result= {}
-        for someClusterIndex,cluster in self.peaksClusters.items():
-            mean = int(np.array(cluster).mean())
-            result[mean]=mean
+        for someClusterIndex,spectralPeaksOfCluster in self.peaksClusters.items():
+            pixelIndicesOfCluster=[]
+            prominencesOfCluster=[]
+            for spectralPeak in spectralPeaksOfCluster:
+                pixelIndicesOfCluster.append(spectralPeak.pixelIndex)
+                prominencesOfCluster.append(spectralPeak.prominence)
+
+            meanPixelIndex = int(np.array(pixelIndicesOfCluster).mean())
+            meanProminence=float(np.array(prominencesOfCluster).mean())
+
+            meanSpectralPeak=SpectralPeak()
+            meanSpectralPeak.pixelIndex=meanPixelIndex
+            meanSpectralPeak.prominence = meanProminence
+
+            result[meanPixelIndex]=meanSpectralPeak
+
         result = dict(sorted(result.items()))
 
         return result

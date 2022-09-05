@@ -5,6 +5,9 @@ from PyQt6.QtGui import QImage, QColor
 from base.Singleton import Singleton
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
+from model.spectral.SpectralPeak import SpectralPeak
+
+
 class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
     spectralLinesByNames:Dict[str,SpectralLine]=None
@@ -197,7 +200,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         #   the SpectralLine with the highest pixel index is taken
         #       attention: this only works if there is no peak right to 'MercuryMangoGreen'.
         #       For now this assumption seems to hold. Probably it would make sense to take into account
-        #       also green line prominences.
+        #       also green line prominences (these are already available below in variable matchingSpectralPeaks).
 
         spectralLinesByNames = self.getSpectralLinesByNames();
         spectralLine= spectralLinesByNames['MercuryMangoGreen']
@@ -214,13 +217,16 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         endSpectralLinePixelIndex = rightSpectralLinePixelIndex - offsetWidth
 
         matchingPixelIndices = []
-        for index in range(len(list(self.__peaks.keys()))):
-            somePixelIndex = self.getPeakMatchingSuppliedColorBest(spectralLine.nanometer)
-            if somePixelIndex > startSpectralLinePixelIndex and somePixelIndex < endSpectralLinePixelIndex:
-                matchingPixelIndices.append(somePixelIndex)
-                self.__removePeak(somePixelIndex)
-            elif somePixelIndex > leftSpectralLinePixelIndex and somePixelIndex < rightSpectralLinePixelIndex:
-                self.__removePeak(somePixelIndex)
+        matchingSpectralPeaks:Dict[int,SpectralPeak]= {}
+
+        for someIndex in range(len(list(self.__peaks.keys()))):
+            someColorPixelIndex = self.getPeakMatchingSuppliedColorBest(spectralLine.nanometer)
+            if someColorPixelIndex > startSpectralLinePixelIndex and someColorPixelIndex < endSpectralLinePixelIndex:
+                matchingPixelIndices.append(someColorPixelIndex)
+                matchingSpectralPeaks[someColorPixelIndex]=self.__peaks[someColorPixelIndex]
+                self.__removePeak(someColorPixelIndex)
+            elif someColorPixelIndex > leftSpectralLinePixelIndex and someColorPixelIndex < rightSpectralLinePixelIndex:
+                self.__removePeak(someColorPixelIndex)
 
         lastMatchingPixelIndex=max(matchingPixelIndices)
         spectralLine.pixelIndex = lastMatchingPixelIndex
