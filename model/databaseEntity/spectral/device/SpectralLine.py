@@ -11,8 +11,10 @@ class SpectralLine(DbBaseEntity, DbBaseEntityMixin):
     colorName = Column(String)
     mainColorName = Column(String)
     nanometer = Column(Float)
+    prominence = Column(Float)
 
     color:QColor=None
     pixelIndex:int=None
+
 
 

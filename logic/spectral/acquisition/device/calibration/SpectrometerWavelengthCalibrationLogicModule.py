@@ -4,8 +4,9 @@ from PyQt6.QtGui import QImage, QColor
 
 from base.Singleton import Singleton
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
+from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
-from model.spectral.SpectralPeak import SpectralPeak
+
 
 
 class SpectrometerWavelengthCalibrationLogicModule(Singleton):
@@ -190,17 +191,13 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(resultSpectralLine,
                                                                                                                 referenceSpectralLine,-1)
 
-
     def __getSpectralLinesByPixelIndices_processSpectralLineMercuryMangoGreen(self):
 
         #The following heuristic strategy seems to work
-        #   limit the search to the area between 'TerbiumAqua' and 'EuropiumMiddleYellow'
-        #   limit this area to some middle region of this interval
-        #   collect the spectral lines matching 'MercuryMangoGreen' by color
-        #   the SpectralLine with the highest pixel index is taken
-        #       attention: this only works if there is no peak right to 'MercuryMangoGreen'.
-        #       For now this assumption seems to hold. Probably it would make sense to take into account
-        #       also green line prominences (these are already available below in variable matchingSpectralPeaks).
+        #   * limit the search to the area between 'TerbiumAqua' and 'EuropiumMiddleYellow'
+        #   * limit this area to some middle region of this interval
+        #   * collect the spectral lines matching 'MercuryMangoGreen' by color and sort by prominence
+        #   * take the two SpectralLine/s with the highest prominences and take the right one
 
         spectralLinesByNames = self.getSpectralLinesByNames();
         spectralLine= spectralLinesByNames['MercuryMangoGreen']
@@ -217,20 +214,28 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         endSpectralLinePixelIndex = rightSpectralLinePixelIndex - offsetWidth
 
         matchingPixelIndices = []
-        matchingSpectralPeaks:Dict[int,SpectralPeak]= {}
+        matchingSpectralLines:Dict[int,SpectralLine]= {}
 
         for someIndex in range(len(list(self.__peaks.keys()))):
             someColorPixelIndex = self.getPeakMatchingSuppliedColorBest(spectralLine.nanometer)
             if someColorPixelIndex > startSpectralLinePixelIndex and someColorPixelIndex < endSpectralLinePixelIndex:
                 matchingPixelIndices.append(someColorPixelIndex)
-                matchingSpectralPeaks[someColorPixelIndex]=self.__peaks[someColorPixelIndex]
+                matchingSpectralLines[someColorPixelIndex]=self.__peaks[someColorPixelIndex]
                 self.__removePeak(someColorPixelIndex)
             elif someColorPixelIndex > leftSpectralLinePixelIndex and someColorPixelIndex < rightSpectralLinePixelIndex:
                 self.__removePeak(someColorPixelIndex)
 
-        lastMatchingPixelIndex=max(matchingPixelIndices)
-        spectralLine.pixelIndex = lastMatchingPixelIndex
-        self.__spectralLinesByPixelIndices[lastMatchingPixelIndex] = spectralLine
+        matchingSpectralLines=SpectralLineUtil().sortSpectralLinesByProminences(list(matchingSpectralLines.values()))
+
+        resultSpectralLine=matchingSpectralLines[0];
+
+        if len(matchingSpectralLines)>=2:
+            additionalCandidateSpectralLine = matchingSpectralLines[1];
+            if additionalCandidateSpectralLine.pixelIndex>resultSpectralLine.pixelIndex:
+                resultSpectralLine=additionalCandidateSpectralLine
+
+        spectralLine.pixelIndex = resultSpectralLine.pixelIndex
+        self.__spectralLinesByPixelIndices[spectralLine.pixelIndex] = spectralLine
 
     def __getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(self,
                                                                                                         resultSpectralLine: SpectralLine,
