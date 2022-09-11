@@ -29,6 +29,17 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
     model: SpectrometerCalibrationProfile = None
     allHoughLines:List[List[QLine]]=None
 
+    x1Component:QLineEdit = None
+    y1Component: QLineEdit = None
+
+    x2Component:QLineEdit = None
+    y2Component: QLineEdit = None
+
+    coefficientAComponent:QLineEdit = None
+    coefficientBComponent: QLineEdit = None
+    coefficientCComponent: QLineEdit = None
+    coefficientDComponent: QLineEdit = None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -66,7 +77,7 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             self.wavelengthCalibrationVideoViewModule = SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule()
             self.videoViewModulesStackedWidget.addWidget(self.wavelengthCalibrationVideoViewModule)
 
-            result['roi'] = self.createRegionOfInterestNavigationGroupBox()
+            result['mainWidget']=self.createMainWidget()
 
             buttonsPanel=self.createButtonsPanel()
             result[buttonsPanel.objectName()] = buttonsPanel
@@ -112,6 +123,50 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
         return result
 
+    def createMainWidget(self):
+        result=QWidget()
+        resultLayout = QGridLayout()
+        result.setLayout(resultLayout)
+
+        leftPanel=QWidget()
+        leftPanelLayout=QGridLayout()
+        leftPanel.setLayout(leftPanelLayout)
+        leftPanelLayout.addWidget(self.createRegionOfInterestNavigationGroupBox(), 0, 0, 1, 1)
+        leftPanelLayout.addWidget(self.createPolynomialCoefficientsGroupBox(),1,0,1,1)
+        resultLayout.addWidget(leftPanel,0,0,1,1)
+
+        rightPanel=QWidget()
+        rightPanelLayout=QGridLayout()
+        rightPanel.setLayout(rightPanelLayout)
+        rightPanelLayout.addWidget(self.createSpectralLinesNavigationGroupBox(), 0, 0, 1, 1)
+        resultLayout.addWidget(rightPanel,0,1,1,1)
+
+        return result
+
+    def createPolynomialCoefficientsGroupBox(self):
+        result = QGroupBox("Polynomial coefficients")
+
+        layout = QGridLayout()
+        result.setLayout(layout);
+
+        self.coefficientAComponent = QLineEdit()
+        layout.addWidget(self.createLabeledComponent('A', self.coefficientAComponent), 0, 0, 1, 1)
+
+        self.coefficientBComponent = QLineEdit()
+        layout.addWidget(self.createLabeledComponent('B', self.coefficientBComponent), 0, 1, 1, 1)
+
+        self.coefficientCComponent = QLineEdit()
+        layout.addWidget(self.createLabeledComponent('C', self.coefficientCComponent), 1, 0, 1, 1)
+
+        self.coefficientDComponent = QLineEdit()
+        layout.addWidget(self.createLabeledComponent('D', self.coefficientDComponent), 1, 1, 1, 1)
+
+        return result
+
+    def createSpectralLinesNavigationGroupBox(self):
+        result = QGroupBox("Spectral lines")
+        return result
+
     def onClickedCaptureVideoButton(self):
 
         self.videoViewModulesStackedWidget.setCurrentIndex(0)
@@ -150,6 +205,19 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             applicationStatusSignal)
 
         self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
+
+        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
+
+            interpolationPolynomialCoefficients=videoSignal.interpolationPolynomial.coefficients
+
+            self.coefficientAComponent.setText(str(interpolationPolynomialCoefficients[0].item()))
+            self.coefficientBComponent.setText(str(interpolationPolynomialCoefficients[1].item()))
+            self.coefficientCComponent.setText(str(interpolationPolynomialCoefficients[2].item()))
+            self.coefficientDComponent.setText(str(interpolationPolynomialCoefficients[3].item()))
+
+            # self.y2Component.setText(str(videoSignal.upperHoughLine.p1().y()))
+            # self.y1Component.setText(str(videoSignal.lowerHoughLine.p1().y()))
+            # applicationStatusSignal.isStatusReset = True
 
         event.set()
 

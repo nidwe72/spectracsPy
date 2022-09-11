@@ -123,3 +123,23 @@ class SpectralLineUtil(Singleton):
         spectralLinesCollection.sort(key=attrgetter('prominence'), reverse=True)
         return spectralLinesCollection
 
+    def sortSpectralLinesByPixelIndices(self,spectralLinesCollection: List[SpectralLine] )->Dict[int,SpectralLine]:
+        spectralLinesCollection.sort(key=attrgetter('pixelIndex'), reverse=False)
+        result={}
+        for spectralLine in spectralLinesCollection:
+            result[spectralLine.pixelIndex]=spectralLine
+        return result
+
+    def getPixelIndices(self,spectralLinesCollection: List[SpectralLine])->List[int]:
+        result=[]
+        for spectralLine in spectralLinesCollection:
+            result.append(spectralLine.pixelIndex)
+        return result
+
+    def getNanometers(self,spectralLinesCollection: List[SpectralLine])->List[float]:
+        result=[]
+        for spectralLine in spectralLinesCollection:
+            result.append(spectralLine.nanometer)
+        return result
+
+

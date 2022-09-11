@@ -140,6 +140,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
                 lineItem.setPen(pen)
                 self.scene.addItem(lineItem)
 
+            polynomial=self.spectrometerWavelengthCalibrationLogicModule.interpolate()
+            videoSignal.interpolationPolynomial=polynomial
+
         self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
 
 

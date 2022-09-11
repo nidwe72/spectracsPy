@@ -1,6 +1,9 @@
 from typing import Dict
-from PyQt6.QtGui import QImage, QColor
 
+import numpy as np
+
+from PyQt6.QtGui import QImage, QColor
+from numpy import poly1d
 
 from base.Singleton import Singleton
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
@@ -9,30 +12,29 @@ from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 
 
-
 class SpectrometerWavelengthCalibrationLogicModule(Singleton):
-
-
-    __peaks:Dict[int,int]=None
+    __peaks: Dict[int, int] = None
     __originalPeaks: Dict[int, int] = None
-    __image:QImage=None
+    __image: QImage = None
 
-    __spectralLinesByPixelIndices:Dict[int,SpectralLine]=None
+    __spectralLinesByPixelIndices: Dict[int, SpectralLine] = None
 
-    def setPeaks(self,peaks:Dict[int,int]):
-        self.__peaks=peaks.copy()
+    def setPeaks(self, peaks: Dict[int, int]):
+        self.__peaks = peaks.copy()
         self.__originalPeaks = peaks.copy()
 
-    def setImage(self,image:QImage):
-        self.__image=image
+    def setImage(self, image: QImage):
+        self.__image = image
 
-    def getSpectralLinesByPixelIndicesPhaseOne(self)->Dict[int, SpectralLine]:
-        self.__spectralLinesByPixelIndices={}
-        self.__getSpectralLinesByPixelIndices_processSpectralLineEuropiumVividGamboge()
-
+    def getSpectralLinesByPixelIndices(self):
         return self.__spectralLinesByPixelIndices
 
-    def getSpectralLinesByPixelIndicesPhaseTwo(self)->Dict[int, SpectralLine]:
+    def getSpectralLinesByPixelIndicesPhaseOne(self) -> Dict[int, SpectralLine]:
+        self.__spectralLinesByPixelIndices = {}
+        self.__getSpectralLinesByPixelIndices_processSpectralLineEuropiumVividGamboge()
+        return self.__spectralLinesByPixelIndices
+
+    def getSpectralLinesByPixelIndicesPhaseTwo(self) -> Dict[int, SpectralLine]:
 
         peakVales = list(self.__spectralLinesByPixelIndices.keys())
         for peak in peakVales:
@@ -51,49 +53,65 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         self.__getSpectralLinesByPixelIndices_processSpectralLineEuropiumRed()
         self.__getSpectralLinesByPixelIndices_processSpectralLineEuropiumInternationalOrange()
 
+        self.__spectralLinesByPixelIndices = SpectralLineUtil().sortSpectralLinesByPixelIndices(list(self.__spectralLinesByPixelIndices.values()))
+
+        self.interpolate()
+
         return self.__spectralLinesByPixelIndices
+
+    def interpolate(self)->poly1d:
+        pixelIndices = SpectralLineUtil().getPixelIndices(list(self.__spectralLinesByPixelIndices.values()))
+        nanometers = SpectralLineUtil().getNanometers(list(self.__spectralLinesByPixelIndices.values()))
+        polynomialCoefficients=np.polyfit(np.array(pixelIndices),np.array(nanometers),4)
+        result = np.poly1d(polynomialCoefficients)
+        return result
 
     def __getSpectralLinesByPixelIndices_processSpectralLineTerbiumAqua(self):
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine= spectralLinesByNames['TerbiumAqua']
+        spectralLine = spectralLinesByNames['TerbiumAqua']
         self.__getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(spectralLine)
         self.__removePeak(spectralLine.pixelIndex)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineMercuryFrenchViolet(self):
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine= spectralLinesByNames['MercuryFrenchViolet']
-        pixelIndex=list(self.__peaks.keys())[0]
-        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine,pixelIndex)
+        spectralLine = spectralLinesByNames['MercuryFrenchViolet']
+        pixelIndex = list(self.__peaks.keys())[0]
+        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine, pixelIndex)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineMercuryBlue(self):
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine= spectralLinesByNames['MercuryBlue']
-        pixelIndex=list(self.__peaks.keys())[1]
-        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine,pixelIndex)
+        spectralLine = spectralLinesByNames['MercuryBlue']
+        pixelIndex = list(self.__peaks.keys())[1]
+        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine, pixelIndex)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumVividGamboge(self):
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine= spectralLinesByNames['EuropiumVividGamboge']
+        spectralLine = spectralLinesByNames['EuropiumVividGamboge']
         self.__getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(spectralLine)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumAmber(self):
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        resultSpectralLine= spectralLinesByNames['EuropiumAmber']
-        referenceSpectralLine=self.__getDetectedSpectralLineOfName('EuropiumVividGamboge')
-        self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(resultSpectralLine,
-                                                                                                                referenceSpectralLine,-1)
+        resultSpectralLine = spectralLinesByNames['EuropiumAmber']
+        referenceSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumVividGamboge')
+        self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(
+            resultSpectralLine,
+            referenceSpectralLine, -1)
+
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumCyberYellow(self):
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        resultSpectralLine= spectralLinesByNames['EuropiumCyberYellow']
-        referenceSpectralLine=self.__getDetectedSpectralLineOfName('EuropiumAmber')
-        self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(resultSpectralLine,
-                                                                                                                referenceSpectralLine,-1)
+        resultSpectralLine = spectralLinesByNames['EuropiumCyberYellow']
+        referenceSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumAmber')
+        self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(
+            resultSpectralLine,
+            referenceSpectralLine, -1)
+
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumMiddleYellow(self):
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        resultSpectralLine= spectralLinesByNames['EuropiumMiddleYellow']
-        referenceSpectralLine=self.__getDetectedSpectralLineOfName('EuropiumCyberYellow')
-        self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(resultSpectralLine,
-                                                                                                                referenceSpectralLine,-1)
+        resultSpectralLine = spectralLinesByNames['EuropiumMiddleYellow']
+        referenceSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumCyberYellow')
+        self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(
+            resultSpectralLine,
+            referenceSpectralLine, -1)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineMercuryMangoGreen(self):
 
@@ -104,9 +122,9 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         #   * take the two SpectralLine/s with the highest prominences and take the right one
 
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine= spectralLinesByNames['MercuryMangoGreen']
+        spectralLine = spectralLinesByNames['MercuryMangoGreen']
 
-        leftSpectralLine=self.__getDetectedSpectralLineOfName('TerbiumAqua')
+        leftSpectralLine = self.__getDetectedSpectralLineOfName('TerbiumAqua')
         rightSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumMiddleYellow')
 
         leftSpectralLinePixelIndex = leftSpectralLine.pixelIndex
@@ -118,25 +136,25 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         endSpectralLinePixelIndex = rightSpectralLinePixelIndex - offsetWidth
 
         matchingPixelIndices = []
-        matchingSpectralLines:Dict[int,SpectralLine]= {}
+        matchingSpectralLines: Dict[int, SpectralLine] = {}
 
         for someIndex in range(len(list(self.__peaks.keys()))):
             someColorPixelIndex = self.__getPeakMatchingSuppliedColorBest(spectralLine.nanometer)
             if someColorPixelIndex > startSpectralLinePixelIndex and someColorPixelIndex < endSpectralLinePixelIndex:
                 matchingPixelIndices.append(someColorPixelIndex)
-                matchingSpectralLines[someColorPixelIndex]=self.__peaks[someColorPixelIndex]
+                matchingSpectralLines[someColorPixelIndex] = self.__peaks[someColorPixelIndex]
                 self.__removePeak(someColorPixelIndex)
             elif someColorPixelIndex > leftSpectralLinePixelIndex and someColorPixelIndex < rightSpectralLinePixelIndex:
                 self.__removePeak(someColorPixelIndex)
 
-        matchingSpectralLines=SpectralLineUtil().sortSpectralLinesByProminences(list(matchingSpectralLines.values()))
+        matchingSpectralLines = SpectralLineUtil().sortSpectralLinesByProminences(list(matchingSpectralLines.values()))
 
-        resultSpectralLine=matchingSpectralLines[0];
+        resultSpectralLine = matchingSpectralLines[0];
 
-        if len(matchingSpectralLines)>=2:
+        if len(matchingSpectralLines) >= 2:
             additionalCandidateSpectralLine = matchingSpectralLines[1];
-            if additionalCandidateSpectralLine.pixelIndex>resultSpectralLine.pixelIndex:
-                resultSpectralLine=additionalCandidateSpectralLine
+            if additionalCandidateSpectralLine.pixelIndex > resultSpectralLine.pixelIndex:
+                resultSpectralLine = additionalCandidateSpectralLine
 
         spectralLine.pixelIndex = resultSpectralLine.pixelIndex
         self.__spectralLinesByPixelIndices[spectralLine.pixelIndex] = spectralLine
@@ -155,7 +173,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         #   * take the two SpectralLine/s with the highest prominences and take the left one
 
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine= spectralLinesByNames['EuropiumRed']
+        spectralLine = spectralLinesByNames['EuropiumRed']
 
         spectralLineEuropiumVividGamboge = self.__getDetectedSpectralLineOfName('EuropiumVividGamboge')
         spectralLineEuropiumMiddleYellow = self.__getDetectedSpectralLineOfName('EuropiumMiddleYellow')
@@ -165,11 +183,11 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         leftSpectralLine.pixelIndex = spectralLineEuropiumVividGamboge.pixelIndex \
                                       + offsetWidth
         leftSpectralLine.color = ApplicationStyleLogicModule().getPrimaryColor()
-        leftSpectralLine.name='leftSpectralLine'
+        leftSpectralLine.name = 'leftSpectralLine'
 
-        rightSpectralLine=SpectralLine()
-        rightSpectralLine.pixelIndex=leftSpectralLine.pixelIndex+offsetWidth
-        rightSpectralLine.color=ApplicationStyleLogicModule().getPrimaryColor()
+        rightSpectralLine = SpectralLine()
+        rightSpectralLine.pixelIndex = leftSpectralLine.pixelIndex + offsetWidth
+        rightSpectralLine.color = ApplicationStyleLogicModule().getPrimaryColor()
         rightSpectralLine.name = 'rightSpectralLine'
 
         # self.__spectralLinesByPixelIndices[leftSpectralLine.pixelIndex] = leftSpectralLine
@@ -179,24 +197,26 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         endSpectralLinePixelIndex = rightSpectralLine.pixelIndex
 
         matchingPixelIndices = []
-        matchingSpectralLines:Dict[int,SpectralLine]= {}
+        matchingSpectralLines: Dict[int, SpectralLine] = {}
 
-        #for someIndex in range(len(list(self.__peaks.keys()))):
+        # for someIndex in range(len(list(self.__peaks.keys()))):
         for somePixelIndex in list(self.__peaks.keys()):
-            someColorPixelIndex = self.__getPeakMatchingSuppliedColorBest(spectralLine.nanometer, startSpectralLinePixelIndex, endSpectralLinePixelIndex)
+            someColorPixelIndex = self.__getPeakMatchingSuppliedColorBest(spectralLine.nanometer,
+                                                                          startSpectralLinePixelIndex,
+                                                                          endSpectralLinePixelIndex)
             if someColorPixelIndex is not None:
                 matchingPixelIndices.append(someColorPixelIndex)
-                matchingSpectralLines[someColorPixelIndex]=self.__peaks[someColorPixelIndex]
+                matchingSpectralLines[someColorPixelIndex] = self.__peaks[someColorPixelIndex]
                 self.__removePeak(someColorPixelIndex)
 
-        matchingSpectralLines=SpectralLineUtil().sortSpectralLinesByProminences(list(matchingSpectralLines.values()))
+        matchingSpectralLines = SpectralLineUtil().sortSpectralLinesByProminences(list(matchingSpectralLines.values()))
 
-        resultSpectralLine=matchingSpectralLines[0];
+        resultSpectralLine = matchingSpectralLines[0];
 
-        if len(matchingSpectralLines)>=2:
+        if len(matchingSpectralLines) >= 2:
             additionalCandidateSpectralLine = matchingSpectralLines[1];
-            if additionalCandidateSpectralLine.pixelIndex<resultSpectralLine.pixelIndex:
-                resultSpectralLine=additionalCandidateSpectralLine
+            if additionalCandidateSpectralLine.pixelIndex < resultSpectralLine.pixelIndex:
+                resultSpectralLine = additionalCandidateSpectralLine
 
         spectralLine.pixelIndex = resultSpectralLine.pixelIndex
         self.__spectralLinesByPixelIndices[spectralLine.pixelIndex] = spectralLine
@@ -205,44 +225,44 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumInternationalOrange(self):
 
-
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine= spectralLinesByNames['EuropiumInternationalOrange']
+        spectralLine = spectralLinesByNames['EuropiumInternationalOrange']
 
         spectralLineEuropiumVividGamboge = self.__getDetectedSpectralLineOfName('EuropiumVividGamboge')
         spectralLineEuropiumMiddleYellow = self.__getDetectedSpectralLineOfName('EuropiumMiddleYellow')
 
         leftSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumVividGamboge')
-        rightSpectralLine=self.__getDetectedSpectralLineOfName('EuropiumRed')
+        rightSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumRed')
 
         startSpectralLinePixelIndex = leftSpectralLine.pixelIndex
         endSpectralLinePixelIndex = rightSpectralLine.pixelIndex
 
         matchingPixelIndices = []
-        matchingSpectralLines:Dict[int,SpectralLine]= {}
+        matchingSpectralLines: Dict[int, SpectralLine] = {}
 
-        #for someIndex in range(len(list(self.__peaks.keys()))):
+        # for someIndex in range(len(list(self.__peaks.keys()))):
         for somePixelIndex in list(self.__peaks.keys()):
-            someColorPixelIndex = self.__getPeakMatchingSuppliedColorBest(spectralLine.nanometer, startSpectralLinePixelIndex, endSpectralLinePixelIndex)
+            someColorPixelIndex = self.__getPeakMatchingSuppliedColorBest(spectralLine.nanometer,
+                                                                          startSpectralLinePixelIndex,
+                                                                          endSpectralLinePixelIndex)
             if someColorPixelIndex is not None:
                 matchingPixelIndices.append(someColorPixelIndex)
-                matchingSpectralLines[someColorPixelIndex]=self.__peaks[someColorPixelIndex]
+                matchingSpectralLines[someColorPixelIndex] = self.__peaks[someColorPixelIndex]
                 self.__removePeak(someColorPixelIndex)
 
-        matchingSpectralLines=SpectralLineUtil().sortSpectralLinesByProminences(list(matchingSpectralLines.values()))
+        matchingSpectralLines = SpectralLineUtil().sortSpectralLinesByProminences(list(matchingSpectralLines.values()))
 
-        resultSpectralLine=matchingSpectralLines[0];
+        resultSpectralLine = matchingSpectralLines[0];
 
-        if len(matchingSpectralLines)>=2:
+        if len(matchingSpectralLines) >= 2:
             additionalCandidateSpectralLine = matchingSpectralLines[1];
-            if additionalCandidateSpectralLine.pixelIndex>resultSpectralLine.pixelIndex:
-                resultSpectralLine=additionalCandidateSpectralLine
+            if additionalCandidateSpectralLine.pixelIndex > resultSpectralLine.pixelIndex:
+                resultSpectralLine = additionalCandidateSpectralLine
 
         spectralLine.pixelIndex = resultSpectralLine.pixelIndex
         self.__spectralLinesByPixelIndices[spectralLine.pixelIndex] = spectralLine
 
         pass
-
 
     def __getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(self,
                                                                                                         resultSpectralLine: SpectralLine,
@@ -256,61 +276,58 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(resultSpectralLine,
                                                                                       pixelPixelIndex)
 
-    def __getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(self,spectralLine:SpectralLine,pixelIndex:int):
-        spectralLine.pixelIndex=pixelIndex
+    def __getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(self, spectralLine: SpectralLine,
+                                                                                 pixelIndex: int):
+        spectralLine.pixelIndex = pixelIndex
         self.__spectralLinesByPixelIndices[pixelIndex] = spectralLine
         self.__removePeak(spectralLine.pixelIndex)
 
+    def __getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(self, spectralLine: SpectralLine):
+        spectralLine.color = SpectralColorUtil().wavelengthToColor(spectralLine.nanometer)
+        spectralLine.pixelIndex = self.__getPeakMatchingSuppliedColorBest(spectralLine.nanometer)
+        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine,
+                                                                                      spectralLine.pixelIndex);
 
-    def __getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(self,spectralLine:SpectralLine):
-        spectralLine.color=SpectralColorUtil().wavelengthToColor(spectralLine.nanometer)
-        spectralLine.pixelIndex=self.__getPeakMatchingSuppliedColorBest(spectralLine.nanometer)
-        self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine,spectralLine.pixelIndex);
-
-    def __getDetectedSpectralLineOfName(self,spectralLineName)->SpectralLine:
-        result=None
-        for pixelIndex,spectralLine in self.__spectralLinesByPixelIndices.items():
-            if spectralLine.name==spectralLineName:
-                result=spectralLine
+    def __getDetectedSpectralLineOfName(self, spectralLineName) -> SpectralLine:
+        result = None
+        for pixelIndex, spectralLine in self.__spectralLinesByPixelIndices.items():
+            if spectralLine.name == spectralLineName:
+                result = spectralLine
                 break
         return result
 
-    def __getPeaksBetweenSuppliedSpectralLines(self,leftSpectralLine:SpectralLine,rightSpectralLine:SpectralLine):
-        result=[]
-        leftSpectralLinePixelIndex=leftSpectralLine.pixelIndex
+    def __getPeaksBetweenSuppliedSpectralLines(self, leftSpectralLine: SpectralLine, rightSpectralLine: SpectralLine):
+        result = []
+        leftSpectralLinePixelIndex = leftSpectralLine.pixelIndex
         rightSpectralLinePixelIndex = rightSpectralLine.pixelIndex
         for peak in list(self.__peaks.values()):
-            if peak>leftSpectralLinePixelIndex and peak<rightSpectralLinePixelIndex:
+            if peak > leftSpectralLinePixelIndex and peak < rightSpectralLinePixelIndex:
                 result.append(peak)
         return result
-
 
     def __getPeakMatchingSuppliedColorBest(self, wavelength, startPixelIndex=0, endPixelIndex=0):
         result = None
 
-        suppliedColor=SpectralColorUtil().wavelengthToColor(wavelength)
-        distancesByPixelIndices={}
+        suppliedColor = SpectralColorUtil().wavelengthToColor(wavelength)
+        distancesByPixelIndices = {}
 
         for peak in self.__peaks:
 
-            if startPixelIndex>0 and endPixelIndex>0 and not (startPixelIndex < peak < endPixelIndex):
+            if startPixelIndex > 0 and endPixelIndex > 0 and not (startPixelIndex < peak < endPixelIndex):
                 continue
 
-            #todo:hard-coded
-            pixelColor=self.__image.pixelColor(peak,392)
-            colorDifference=SpectralColorUtil().getColorDifference(suppliedColor,pixelColor)
-            distancesByPixelIndices[peak]=colorDifference
+            # todo:hard-coded
+            pixelColor = self.__image.pixelColor(peak, 392)
+            colorDifference = SpectralColorUtil().getColorDifference(suppliedColor, pixelColor)
+            distancesByPixelIndices[peak] = colorDifference
 
-        if len(distancesByPixelIndices)>0:
-            foo= sorted(distancesByPixelIndices.items(), key=lambda x: x[1])
-            result=foo[0][0]
+        if len(distancesByPixelIndices) > 0:
+            foo = sorted(distancesByPixelIndices.items(), key=lambda x: x[1])
+            result = foo[0][0]
         return result
 
-    def __removePeak(self,peak:int):
+    def __removePeak(self, peak: int):
         try:
             self.__peaks.pop(peak)
         except KeyError:
             pass
-
-
-
