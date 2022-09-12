@@ -1,15 +1,12 @@
 import sys
 
-import cv2
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QImage
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from view.main.MainContainerViewModule import MainContainerViewModule
-from view.main.MainViewModule import MainViewModule
 
 app = QtWidgets.QApplication(sys.argv)
+
 
 app.setStyleSheet("""
 /*

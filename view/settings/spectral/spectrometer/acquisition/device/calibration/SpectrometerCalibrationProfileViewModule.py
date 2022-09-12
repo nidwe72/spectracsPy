@@ -1,50 +1,25 @@
-import threading
-from typing import List
-
-from PyQt6.QtCore import QLine
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget, QLineEdit, QStackedWidget
+from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget, QTabWidget
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.appliction.image.houghLine.HoughLineLogicModule import HoughLineLogicModule
-from logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
-    SpectrometerCalibrationProfileHoughLinesVideoThread
-from logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
-    SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
-from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
-from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
-    SpectrometerCalibrationProfileHoughLinesVideoSignal
-from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
-    SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from view.application.widgets.page.PageWidget import PageWidget
-from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \
-    SpectrometerCalibrationProfileHoughLinesVideoViewModule
-from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule import \
-    SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule
+from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesViewModule import \
+    SpectrometerCalibrationProfileHoughLinesViewModule
+from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationViewModule import \
+    SpectrometerCalibrationProfileWavelengthCalibrationViewModule
 
 
 class SpectrometerCalibrationProfileViewModule(PageWidget):
 
     model: SpectrometerCalibrationProfile = None
-    allHoughLines:List[List[QLine]]=None
 
-    x1Component:QLineEdit = None
-    y1Component: QLineEdit = None
-
-    x2Component:QLineEdit = None
-    y2Component: QLineEdit = None
-
-    coefficientAComponent:QLineEdit = None
-    coefficientBComponent: QLineEdit = None
-    coefficientCComponent: QLineEdit = None
-    coefficientDComponent: QLineEdit = None
+    tabWidget:QTabWidget=None
+    houghLinesViewModule:SpectrometerCalibrationProfileHoughLinesViewModule=None
+    wavelengthCalibrationViewModule:SpectrometerCalibrationProfileWavelengthCalibrationViewModule=None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    def initialize(self):
-        super().initialize()
 
     def _getPageTitle(self):
         if not self._isTopMostPageWidget():
@@ -64,236 +39,18 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
         else:
 
-            self.videoViewModulesStackedWidget=QStackedWidget()
-            result['videoViewModulesStackedWidget'] = self.videoViewModulesStackedWidget
+            self.tabWidget = QTabWidget()
 
-            self.videoViewModule = SpectrometerCalibrationProfileHoughLinesVideoViewModule()
-            self.videoViewModule.setObjectName(
-                'SpectrometerCalibrationProfileViewModule.videoViewModule')
-            # result[self.videoViewModule.objectName()] = self.videoViewModule
+            self.houghLinesViewModule=SpectrometerCalibrationProfileHoughLinesViewModule(self)
+            self.houghLinesViewModule.initialize()
+            self.tabWidget.addTab(self.houghLinesViewModule,'Region of interest')
 
-            self.videoViewModulesStackedWidget.addWidget(self.videoViewModule)
+            self.wavelengthCalibrationViewModule=SpectrometerCalibrationProfileWavelengthCalibrationViewModule(self)
+            self.wavelengthCalibrationViewModule.initialize()
+            self.tabWidget.addTab(self.wavelengthCalibrationViewModule, 'Wavelength calibration')
 
-            self.wavelengthCalibrationVideoViewModule = SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule()
-            self.videoViewModulesStackedWidget.addWidget(self.wavelengthCalibrationVideoViewModule)
+            result['tabWidget']=self.tabWidget
 
-            result['mainWidget']=self.createMainWidget()
-
-            buttonsPanel=self.createButtonsPanel()
-            result[buttonsPanel.objectName()] = buttonsPanel
-
-        return result
-
-    def createButtonsPanel(self):
-        buttonsPanel = QWidget()
-        buttonsPanel.setObjectName(
-            'SpectrometerCalibrationProfileViewModule.buttonsPanel')
-
-        layout = QGridLayout()
-        buttonsPanel.setLayout(layout)
-
-        self.captureVideoButton = QPushButton('Detect horizontal lines')
-        self.captureVideoButton.clicked.connect(self.onClickedCaptureVideoButton)
-        layout.addWidget(self.captureVideoButton, 0, 0, 1, 1)
-
-        self.detectPeaksButton = QPushButton('Detect peaks')
-        self.detectPeaksButton.clicked.connect(self.onClickedDetectPeaksButton)
-        layout.addWidget(self.detectPeaksButton, 0, 1, 1, 1)
-
-        return buttonsPanel
-
-    def createRegionOfInterestNavigationGroupBox(self):
-        result = QGroupBox("Region of interest")
-
-        layout = QGridLayout()
-        result.setLayout(layout);
-
-        self.x1Component = QLineEdit()
-        layout.addWidget(self.createLabeledComponent('x1', self.x1Component), 0, 0, 1, 1)
-
-        self.x2Component = QLineEdit()
-        layout.addWidget(self.createLabeledComponent('x2', self.x2Component), 0, 1, 1, 1)
-
-
-        self.y1Component = QLineEdit()
-        layout.addWidget(self.createLabeledComponent('y1', self.y1Component), 1, 0, 1, 1)
-
-        self.y2Component = QLineEdit()
-        layout.addWidget(self.createLabeledComponent('y2', self.y2Component), 1, 1, 1, 1)
-
-        return result
-
-    def createMainWidget(self):
-        result=QWidget()
-        resultLayout = QGridLayout()
-        result.setLayout(resultLayout)
-
-        leftPanel=QWidget()
-        leftPanelLayout=QGridLayout()
-        leftPanel.setLayout(leftPanelLayout)
-        leftPanelLayout.addWidget(self.createRegionOfInterestNavigationGroupBox(), 0, 0, 1, 1)
-        leftPanelLayout.addWidget(self.createPolynomialCoefficientsGroupBox(),1,0,1,1)
-        resultLayout.addWidget(leftPanel,0,0,1,1)
-
-        rightPanel=QWidget()
-        rightPanelLayout=QGridLayout()
-        rightPanel.setLayout(rightPanelLayout)
-        rightPanelLayout.addWidget(self.createSpectralLinesNavigationGroupBox(), 0, 0, 1, 1)
-        resultLayout.addWidget(rightPanel,0,1,1,1)
-
-        return result
-
-    def createPolynomialCoefficientsGroupBox(self):
-        result = QGroupBox("Polynomial coefficients")
-
-        layout = QGridLayout()
-        result.setLayout(layout);
-
-        self.coefficientAComponent = QLineEdit()
-        layout.addWidget(self.createLabeledComponent('A', self.coefficientAComponent), 0, 0, 1, 1)
-
-        self.coefficientBComponent = QLineEdit()
-        layout.addWidget(self.createLabeledComponent('B', self.coefficientBComponent), 0, 1, 1, 1)
-
-        self.coefficientCComponent = QLineEdit()
-        layout.addWidget(self.createLabeledComponent('C', self.coefficientCComponent), 1, 0, 1, 1)
-
-        self.coefficientDComponent = QLineEdit()
-        layout.addWidget(self.createLabeledComponent('D', self.coefficientDComponent), 1, 1, 1, 1)
-
-        return result
-
-    def createSpectralLinesNavigationGroupBox(self):
-        result = QGroupBox("Spectral lines")
-        return result
-
-    def onClickedCaptureVideoButton(self):
-
-        self.videoViewModulesStackedWidget.setCurrentIndex(0)
-
-        self.allHoughLines=[]
-
-        self.videoThread = SpectrometerCalibrationProfileHoughLinesVideoThread()
-        self.videoThread.videoThreadSignal.connect(self.handleVideoThreadSignal)
-        self.videoThread.setFrameCount(50)
-
-        self.videoThread.start()
-
-    def onClickedDetectPeaksButton(self):
-
-        self.videoViewModulesStackedWidget.setCurrentIndex(1)
-
-        self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
-        self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
-        self.wavelengthCalibrationVideoThread.setFrameCount(100)
-
-        self.wavelengthCalibrationVideoThread.start()
-
-    def handleWavelengthCalibrationVideoSignal(self, event: threading.Event,
-                                videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
-
-        applicationStatusSignal = ApplicationStatusSignal()
-        applicationStatusSignal.text = 'detecting peaks'
-        applicationStatusSignal.isStatusReset = False
-        applicationStatusSignal.stepsCount = videoSignal.framesCount
-        applicationStatusSignal.currentStepIndex = videoSignal.currentFrameIndex
-
-        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
-            applicationStatusSignal.isStatusReset = True
-
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
-            applicationStatusSignal)
-
-        self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
-
-        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
-
-            interpolationPolynomialCoefficients=videoSignal.interpolationPolynomial.coefficients
-
-            self.coefficientAComponent.setText(str(interpolationPolynomialCoefficients[0].item()))
-            self.coefficientBComponent.setText(str(interpolationPolynomialCoefficients[1].item()))
-            self.coefficientCComponent.setText(str(interpolationPolynomialCoefficients[2].item()))
-            self.coefficientDComponent.setText(str(interpolationPolynomialCoefficients[3].item()))
-
-            # self.y2Component.setText(str(videoSignal.upperHoughLine.p1().y()))
-            # self.y1Component.setText(str(videoSignal.lowerHoughLine.p1().y()))
-            # applicationStatusSignal.isStatusReset = True
-
-        event.set()
-
-    def handleVideoThreadSignal(self, event:threading.Event, videoSignal: SpectrometerCalibrationProfileHoughLinesVideoSignal):
-        if isinstance(videoSignal, SpectrometerCalibrationProfileHoughLinesVideoSignal):
-
-            # if videoSignal.currentFrameIndex==videoSignal.framesCount:
-            #     pass
-
-            houghLineLogicModule = HoughLineLogicModule()
-            houghLines = houghLineLogicModule.getHoughLines(videoSignal.image)
-            self.allHoughLines.append(houghLines)
-
-            videoSignal.calibrationStepUpperHoughLine=houghLines[0]
-            videoSignal.calibrationStepLowerHoughLine = houghLines[1]
-
-            centerY = videoSignal.calibrationStepUpperHoughLine.p1().y() + (
-                        videoSignal.calibrationStepLowerHoughLine.p1().y() - videoSignal.calibrationStepUpperHoughLine.p1().y()) / 2.0
-
-            videoSignal.calibrationStepCenterHoughLine = QLine(videoSignal.calibrationStepUpperHoughLine.p1().x(), centerY,
-                                                videoSignal.calibrationStepUpperHoughLine.p2().x(), centerY)
-
-            boundingHoughLines = self.__getBoundingHoughLines()
-
-            videoSignal.upperHoughLine=boundingHoughLines[0]
-            videoSignal.lowerHoughLine = boundingHoughLines[1]
-
-            centerY = videoSignal.upperHoughLine.p1().y() + (
-                        videoSignal.lowerHoughLine.p1().y() - videoSignal.upperHoughLine.p1().y()) / 2.0
-
-            videoSignal.centerHoughLine = QLine(videoSignal.upperHoughLine.p1().x(), centerY,
-                                                videoSignal.upperHoughLine.p2().x(), centerY)
-
-            someNavigationSignal = NavigationSignal(None)
-            someNavigationSignal.setTarget("SpectrometerCalibrationProfileViewModule")
-
-            applicationStatusSignal = ApplicationStatusSignal()
-            applicationStatusSignal.text='retrieving Hough lines'
-            applicationStatusSignal.isStatusReset = False
-            applicationStatusSignal.stepsCount=videoSignal.framesCount
-            applicationStatusSignal.currentStepIndex=videoSignal.currentFrameIndex
-
-            if applicationStatusSignal.stepsCount==applicationStatusSignal.currentStepIndex:
-                self.y2Component.setText(str(videoSignal.upperHoughLine.p1().y()))
-                self.y1Component.setText(str(videoSignal.lowerHoughLine.p1().y()))
-                applicationStatusSignal.isStatusReset=True
-
-            ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(applicationStatusSignal)
-
-            self.videoViewModule.handleVideoThreadSignal(videoSignal)
-
-            event.set()
-
-    def __getBoundingHoughLines(self)->List[QLine]:
-
-        result = []
-
-        resultUpperHoughLine:QLine=None
-        resultLowerHoughLine:QLine = None
-
-        for someHoughLines in self.allHoughLines:
-            upperHoughLine=someHoughLines[0]
-            lowerHoughLine = someHoughLines[1]
-
-            if resultUpperHoughLine is None:
-                resultUpperHoughLine=upperHoughLine
-            elif upperHoughLine.p1().y()>resultUpperHoughLine.p1().y():
-                resultUpperHoughLine = upperHoughLine
-
-            if resultLowerHoughLine is None:
-                resultLowerHoughLine=lowerHoughLine
-            elif lowerHoughLine.p1().y()<resultLowerHoughLine.p1().y():
-                resultLowerHoughLine=lowerHoughLine
-
-        result.append(resultUpperHoughLine)
-        result.append(resultLowerHoughLine)
         return result
 
     def onClickedEditButton(self):
