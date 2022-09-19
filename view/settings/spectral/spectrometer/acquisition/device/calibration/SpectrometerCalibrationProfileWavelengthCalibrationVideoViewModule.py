@@ -141,7 +141,8 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
                 self.scene.addItem(lineItem)
 
             polynomial=self.spectrometerWavelengthCalibrationLogicModule.interpolate()
-            videoSignal.interpolationPolynomial=polynomial
+            videoSignal.interpolationPolynomial = polynomial
+            videoSignal.spectralLinesByPixelIndices=self.spectralLinesByPixelIndices
 
         self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
 

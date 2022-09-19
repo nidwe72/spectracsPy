@@ -178,4 +178,4 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
     def initialize(self):
         super().initialize()
 
-
+5

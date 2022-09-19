@@ -1,7 +1,8 @@
 from PyQt6.QtGui import QColor
-from sqlalchemy import Column, Float
+from sqlalchemy import Column, Float, ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
+from sqlalchemy.orm import relationship
 
 from model.databaseEntity.DbBase import DbBaseEntity, DbBaseEntityMixin
 
@@ -15,6 +16,9 @@ class SpectralLine(DbBaseEntity, DbBaseEntityMixin):
 
     color:QColor=None
     pixelIndex:int=None
+
+    spectrometerCalibrationProfile_id = Column(Integer, ForeignKey("spectrometer_calibration_profile.id"))
+    spectrometerCalibrationProfile = relationship("SpectrometerCalibrationProfile", back_populates="spectralLines")
 
 
 

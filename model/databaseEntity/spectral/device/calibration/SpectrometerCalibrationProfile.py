@@ -1,6 +1,7 @@
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import Integer
+from sqlalchemy.orm import relationship
 
 from model.databaseEntity.DbBase import DbBaseEntity, DbBaseEntityMixin
 
@@ -16,5 +17,7 @@ class SpectrometerCalibrationProfile(DbBaseEntity, DbBaseEntityMixin):
     interpolationCoefficientA = Column(Float)
     interpolationCoefficientB = Column(Float)
     interpolationCoefficientC = Column(Float)
+
+    spectralLines = relationship("SpectralLine", back_populates="spectrometerCalibrationProfile")
 
 

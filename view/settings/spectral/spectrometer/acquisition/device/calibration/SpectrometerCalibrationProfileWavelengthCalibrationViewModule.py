@@ -9,6 +9,8 @@ from model.application.applicationStatus.ApplicationStatusSignal import Applicat
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from view.application.widgets.page.PageWidget import PageWidget
+from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesViewModule import \
+    SpectrometerCalibrationProfileSpectralLinesViewModule
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule
 
@@ -23,6 +25,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
     coefficientBComponent: QLineEdit = None
     coefficientCComponent: QLineEdit = None
     coefficientDComponent: QLineEdit = None
+    spectrometerCalibrationProfileSpectralLinesViewModule:SpectrometerCalibrationProfileSpectralLinesViewModule=None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -82,10 +85,6 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
         return result
 
-    def createSpectralLinesNavigationGroupBox(self):
-        result = QGroupBox("Spectral lines")
-        return result
-
     def handleWavelengthCalibrationVideoSignal(self, event: threading.Event,
                                                videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
@@ -111,9 +110,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
             self.coefficientCComponent.setText(str(interpolationPolynomialCoefficients[2].item()))
             self.coefficientDComponent.setText(str(interpolationPolynomialCoefficients[3].item()))
 
-            # self.y2Component.setText(str(videoSignal.upperHoughLine.p1().y()))
-            # self.y1Component.setText(str(videoSignal.lowerHoughLine.p1().y()))
-            # applicationStatusSignal.isStatusReset = True
+            self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(list(videoSignal.spectralLinesByPixelIndices.values()))
 
         event.set()
 
@@ -122,7 +119,10 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         resultLayout = QGridLayout()
         result.setLayout(resultLayout)
         resultLayout.addWidget(self.createPolynomialCoefficientsGroupBox(), 0, 0, 1, 1)
-        resultLayout.addWidget(self.createSpectralLinesNavigationGroupBox(), 0, 1, 1, 1)
+
+        self.spectrometerCalibrationProfileSpectralLinesViewModule=SpectrometerCalibrationProfileSpectralLinesViewModule(self)
+        self.spectrometerCalibrationProfileSpectralLinesViewModule.initialize()
+        resultLayout.addWidget(self.spectrometerCalibrationProfileSpectralLinesViewModule, 1, 0, 1, 1)
 
         return result
 

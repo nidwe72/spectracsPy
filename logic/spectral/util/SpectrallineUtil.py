@@ -130,6 +130,14 @@ class SpectralLineUtil(Singleton):
             result[spectralLine.pixelIndex]=spectralLine
         return result
 
+    def sortSpectralLinesByNanometers(self,spectralLinesCollection: List[SpectralLine] )->Dict[int,SpectralLine]:
+        spectralLinesCollection.sort(key=attrgetter('nanometer'), reverse=False)
+        result={}
+        for spectralLine in spectralLinesCollection:
+            result[spectralLine.nanometer]=spectralLine
+        return result
+
+
     def getPixelIndices(self,spectralLinesCollection: List[SpectralLine])->List[int]:
         result=[]
         for spectralLine in spectralLinesCollection:
