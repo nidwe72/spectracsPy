@@ -28,6 +28,7 @@ class SpectrometerProfileViewModule(PageWidget):
     spectrometerViewModule: SpectrometerViewModule = None
     spectrometersComboBox:QComboBox = None
     serial:QLineEdit = None
+    spectrometerCalibrationProfileViewModule:SpectrometerCalibrationProfileViewModule=None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -152,6 +153,7 @@ class SpectrometerProfileViewModule(PageWidget):
         result['serial'] = serial
 
         self.spectrometerCalibrationProfileViewModule = SpectrometerCalibrationProfileViewModule(self)
+        self.spectrometerCalibrationProfileViewModule.setModel(self.getModel().spectrometerCalibrationProfile)
         self.spectrometerCalibrationProfileViewModule.initialize()
         result['spectrometerCalibrationProfileViewModule'] = self.spectrometerCalibrationProfileViewModule
 
@@ -177,7 +179,9 @@ class SpectrometerProfileViewModule(PageWidget):
 
     def setModel(self, model: SpectrometerProfile):
         self.model = model
-        self.serial.setText(model.serial)
+
+        if self.serial is not None:
+            self.serial.setText(model.serial)
 
         spectrometer=model.spectrometer
 

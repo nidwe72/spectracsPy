@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout, QLabel
+from PyQt6.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
 
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
+from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 from view.application.widgets.page.PageWidget import PageWidget
 from typing import List, Dict
@@ -8,7 +9,7 @@ from typing import List, Dict
 
 class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
 
-    spectralLines:List[SpectralLine]=None
+    __model:SpectrometerCalibrationProfile=None
     labelsByNanometers:Dict[float,QLabel]=None
 
     def _getPageTitle(self):
@@ -20,7 +21,7 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
         result={}
         self.labelsByNanometers={}
 
-        self.spectralLines=list(SpectralLineUtil().sortSpectralLinesByNanometers(list(SpectralLineUtil().getSpectralLinesByNames().values())).values())
+        spectralLines=self.__getModel().spectralLines
 
         mainWidget=QWidget()
         mainWidgetLayout=QGridLayout()
@@ -29,7 +30,7 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
         loopIndex=1
         columnIndex=0
         rowIndex = 0
-        for spectralLine in self.spectralLines:
+        for spectralLine in spectralLines:
             if loopIndex==6:
                 rowIndex = 1
                 columnIndex=0
@@ -38,10 +39,18 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
             someLabel.setAutoFillBackground(True)
             self.labelsByNanometers[spectralLine.nanometer]=someLabel
 
+            spectralLineWidget=QWidget()
+            spectralLineWidgetLayout=QGridLayout()
+            spectralLineWidget.setLayout(spectralLineWidgetLayout)
+
             someLabel.setText(str(spectralLine.nanometer))
             someLabel.setStyleSheet("QLabel { background-color :" + spectralLine.color.name() + " ; color : black; }");
+            spectralLineWidgetLayout.addWidget(someLabel,0,0,1,1)
 
-            mainWidgetLayout.addWidget(someLabel,rowIndex,columnIndex,1,1)
+            lineEditPixelIndex=QLineEdit()
+            spectralLineWidgetLayout.addWidget(lineEditPixelIndex, 0, 1, 1, 1)
+
+            mainWidgetLayout.addWidget(spectralLineWidget,rowIndex,columnIndex,1,1)
 
             # print('-----')
             # print(rowIndex)
@@ -54,8 +63,10 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
         return result
 
 
-    def setModel(self,spectralLines:List[SpectralLine]):
-        self.spectralLines=spectralLines
+    def setModel(self,model:SpectrometerCalibrationProfile):
+        self.__model=model
 
+    def __getModel(self)->SpectrometerCalibrationProfile:
+        return self.__model
 
 

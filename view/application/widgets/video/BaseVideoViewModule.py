@@ -2,7 +2,7 @@ from typing import TypeVar, Generic
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPen, QBrush, QColor
-from PyQt6.QtWidgets import QWidget, QGridLayout, QGraphicsView
+from PyQt6.QtWidgets import QWidget, QGridLayout, QGraphicsView, QFrame
 from pyqt6_plugins.examplebuttonplugin import QtGui
 
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
@@ -11,7 +11,7 @@ from view.application.widgets.graphicsScene.BaseGraphicsScene import BaseGraphic
 
 VIDEO_SIGNAL = TypeVar('VIDEO_SIGNAL')
 
-class BaseVideoViewModule(QWidget,Generic[VIDEO_SIGNAL]):
+class BaseVideoViewModule(QFrame,Generic[VIDEO_SIGNAL]):
 
     def handleVideoThreadSignal(self, videoSignal:VIDEO_SIGNAL):
         pass

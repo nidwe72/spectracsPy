@@ -21,3 +21,5 @@ class SpectrometerCalibrationProfile(DbBaseEntity, DbBaseEntityMixin):
     spectralLines = relationship("SpectralLine", back_populates="spectrometerCalibrationProfile")
 
 
+
+

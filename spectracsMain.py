@@ -39,17 +39,26 @@ app.setStyleSheet("""
 	border: 1px solid #5A5A5A;
 }
 
+QFrame{
+    background: #191919;
+    border:none;
+}
+
+QStackedWidget{
+    border: 1px solid #5A5A5A;
+}
+
 /*
 QGroupBox{
     border: 1px solid #5A5A5A;
 }
 
 QTabWidget{
-    border: 1px solid #5A5A5A;
+    border: none;
 }
 
 QTab{
-    border: 1px solid #5A5A5A;
+    border: none;
 }
 
 QLineEdit{
@@ -310,7 +319,8 @@ QSlider::sub-page:vertical, QSlider::add-page:horizontal {
 }
 
 QLabel {
-	border: none;	
+	border: none;
+	background: #00000000;	
 }
 
 QProgressBar {
@@ -334,8 +344,8 @@ PageLabel {
 }
 
 PageWidget{
-    border: 1px solid #5A5A5A;
-    background:red;
+    border: 1px solid #00000000;
+    background:#00000000;
 }
 
 

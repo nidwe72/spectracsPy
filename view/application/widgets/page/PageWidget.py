@@ -1,11 +1,12 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel
-
+from PyQt6 import QtGui
+from PyQt6.QtGui import QPainter
+from PyQt6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel, QStyleOption, QFrame
 
 from PyQt6.QtCore import Qt
 
 from view.application.widgets.page.PageLabel import PageLabel
 
-class PageWidget(QWidget):
+class PageWidget(QFrame):
     mainContainerWidgets = None
 
     def __init__(self, *args, **kwargs):
@@ -15,6 +16,7 @@ class PageWidget(QWidget):
 
         layout=QGridLayout()
         self.setLayout(layout)
+
 
         if not self._isTopMostPageWidget():
             layout.setContentsMargins(0,0,0,0)
@@ -82,5 +84,11 @@ class PageWidget(QWidget):
         parent=self.parent()
         result=not isinstance(parent,PageWidget)
         return result
+
+    def setStylesheetOnlySelf(self, stylesheet: str) -> None:
+        objectName = self.objectName() if self.objectName() != "" else str(id(self))
+        self.setObjectName(objectName)
+        self.setStyleSheet("#%s {%s}" % (objectName, stylesheet))
+
 
 

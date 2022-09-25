@@ -9,10 +9,14 @@ from base.Singleton import Singleton
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
+from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 
 
 class SpectrometerWavelengthCalibrationLogicModule(Singleton):
+
+    model:SpectrometerCalibrationProfile=None
+
     __peaks: Dict[int, int] = None
     __originalPeaks: Dict[int, int] = None
     __image: QImage = None
@@ -331,3 +335,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
             self.__peaks.pop(peak)
         except KeyError:
             pass
+
+    def setModel(self,model:SpectrometerCalibrationProfile):
+        self.model=model
+

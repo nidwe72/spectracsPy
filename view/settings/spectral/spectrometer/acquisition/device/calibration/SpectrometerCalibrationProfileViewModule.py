@@ -12,7 +12,7 @@ from view.settings.spectral.spectrometer.acquisition.device.calibration.Spectrom
 
 class SpectrometerCalibrationProfileViewModule(PageWidget):
 
-    model: SpectrometerCalibrationProfile = None
+    __model: SpectrometerCalibrationProfile = None
 
     tabWidget:QTabWidget=None
     houghLinesViewModule:SpectrometerCalibrationProfileHoughLinesViewModule=None
@@ -42,10 +42,14 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             self.tabWidget = QTabWidget()
 
             self.houghLinesViewModule=SpectrometerCalibrationProfileHoughLinesViewModule(self)
+            # self.houghLinesViewModule.setStylesheetOnlySelf("border:1px solid #00000000;")
+
             self.houghLinesViewModule.initialize()
             self.tabWidget.addTab(self.houghLinesViewModule,'Region of interest')
 
             self.wavelengthCalibrationViewModule=SpectrometerCalibrationProfileWavelengthCalibrationViewModule(self)
+            self.wavelengthCalibrationViewModule.setModel(self.__getModel())
+            # self.wavelengthCalibrationViewModule.setStylesheetOnlySelf("border:1px solid #00000000;")
             self.wavelengthCalibrationViewModule.initialize()
             self.tabWidget.addTab(self.wavelengthCalibrationViewModule, 'Wavelength calibration')
 
@@ -59,6 +63,8 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SpectrometerCalibrationProfileViewModule")
 
+        spectrometerCalibrationProfileViewModule = ApplicationContextLogicModule().getNavigationHandler().getViewModule(someNavigationSignal)
+        spectrometerCalibrationProfileViewModule.setModel(self.__getModel())
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def createNavigationGroupBox(self):
@@ -89,7 +95,9 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
         someNavigationSignal.setTarget("SpectrometerProfileViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
+    def setModel(self,model: SpectrometerCalibrationProfile):
+        self.__model=model
 
-
-
+    def __getModel(self)->SpectrometerCalibrationProfile:
+        return self.__model
 

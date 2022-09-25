@@ -6,6 +6,7 @@ from controller.application.ApplicationContextLogicModule import ApplicationCont
 from logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from model.databaseEntity.spectral.device import SpectrometerProfile, SpectrometerCalibrationProfile
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from view.application.widgets.page.PageWidget import PageWidget
@@ -16,6 +17,8 @@ from view.settings.spectral.spectrometer.acquisition.device.calibration.Spectrom
 
 
 class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
+
+    model:SpectrometerCalibrationProfile=None
 
     detectPeaksButton: QPushButton=None
     wavelengthCalibrationVideoThread: SpectrometerCalibrationProfileWavelengthCalibrationVideoThread = None
@@ -34,6 +37,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         result = super().getMainContainerWidgets()
 
         self.wavelengthCalibrationVideoViewModule = SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule()
+        self.wavelengthCalibrationVideoViewModule.setModel(self.getModel())
         result['wavelengthCalibrationVideoViewModule'] = self.wavelengthCalibrationVideoViewModule
 
         mainWidget = self.createMainWidget();
@@ -109,8 +113,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
             self.coefficientBComponent.setText(str(interpolationPolynomialCoefficients[1].item()))
             self.coefficientCComponent.setText(str(interpolationPolynomialCoefficients[2].item()))
             self.coefficientDComponent.setText(str(interpolationPolynomialCoefficients[3].item()))
-
-            self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(list(videoSignal.spectralLinesByPixelIndices.values()))
+            self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(videoSignal.model)
 
         event.set()
 
@@ -121,6 +124,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         resultLayout.addWidget(self.createPolynomialCoefficientsGroupBox(), 0, 0, 1, 1)
 
         self.spectrometerCalibrationProfileSpectralLinesViewModule=SpectrometerCalibrationProfileSpectralLinesViewModule(self)
+        self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(self.getModel())
         self.spectrometerCalibrationProfileSpectralLinesViewModule.initialize()
         resultLayout.addWidget(self.spectrometerCalibrationProfileSpectralLinesViewModule, 1, 0, 1, 1)
 
@@ -129,4 +133,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
     def initialize(self):
         super().initialize()
 
+    def setModel(self,model:SpectrometerCalibrationProfile):
+        self.model=model
+
+    def getModel(self)->SpectrometerCalibrationProfile:
+        return self.model
 

@@ -1,10 +1,10 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout
+from PyQt6.QtWidgets import QWidget, QGridLayout, QFrame
 
 from view.main.MainStatusBarViewModule import MainStatusBarViewModule
 from view.main.MainViewModule import MainViewModule
 
 
-class MainContainerViewModule(QWidget):
+class MainContainerViewModule(QFrame):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

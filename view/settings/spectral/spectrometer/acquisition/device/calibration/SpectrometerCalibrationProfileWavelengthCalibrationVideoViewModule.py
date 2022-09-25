@@ -10,6 +10,7 @@ from scipy.signal import peak_prominences
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
     SpectrometerWavelengthCalibrationLogicModule
+from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
@@ -22,6 +23,7 @@ from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModu
 
 class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
     BaseVideoViewModule[SpectrometerCalibrationProfileHoughLinesVideoSignal]):
+    __model: SpectrometerCalibrationProfile = None
 
     peaksClusters:Dict[int,List[SpectralLine]]=None
 
@@ -91,6 +93,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             if self.phaseOneInExecution:
                 peaks = self.getPeaks()
                 self.spectrometerWavelengthCalibrationLogicModule = SpectrometerWavelengthCalibrationLogicModule()
+                self.spectrometerWavelengthCalibrationLogicModule.setModel(self.getModel())
                 self.spectrometerWavelengthCalibrationLogicModule.setPeaks(peaks)
                 self.spectrometerWavelengthCalibrationLogicModule.setImage(image)
                 self.spectralLinesByPixelIndices = self.spectrometerWavelengthCalibrationLogicModule.getSpectralLinesByPixelIndicesPhaseOne()
@@ -238,5 +241,11 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
     def initialize(self):
         super().initialize()
+
+    def setModel(self,model: SpectrometerCalibrationProfile):
+        self.__model=model
+
+    def getModel(self)->SpectrometerCalibrationProfile:
+        return self.__model
 
 

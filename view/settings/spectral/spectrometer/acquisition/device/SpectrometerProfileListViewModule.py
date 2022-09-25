@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import QStyle
 
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
 from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
 from logic.model.util.SpectrometerUtil import SpectrometerUtil
 from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
@@ -102,6 +103,7 @@ class SpectrometerProfileListViewModule(PageWidget):
             if isinstance(currentIndex,QModelIndex):
                 spectrometerProfile=currentIndex.data()
                 if isinstance(spectrometerProfile,SpectrometerProfile):
+                    SpectrometerProfileUtil().initializeSpectrometerProfile(spectrometerProfile)
                     targetViewModule.loadView(spectrometerProfile)
 
         if isinstance(spectrometerProfile,SpectrometerProfile):
