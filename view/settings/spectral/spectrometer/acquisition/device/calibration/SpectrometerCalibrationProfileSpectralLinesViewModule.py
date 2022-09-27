@@ -12,11 +12,13 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
     __model:SpectrometerCalibrationProfile=None
     labelsByNanometers:Dict[float,QLabel]=None
 
+    __pixelIndexComponentsByNanometers:Dict[float,QLineEdit]=None
+
     def _getPageTitle(self):
         return "Spectral lines"
 
     def getMainContainerWidgets(self):
-
+        self.__pixelIndexComponentsByNanometers={}
 
         result={}
         self.labelsByNanometers={}
@@ -50,6 +52,8 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
             lineEditPixelIndex=QLineEdit()
             spectralLineWidgetLayout.addWidget(lineEditPixelIndex, 0, 1, 1, 1)
 
+            self.__pixelIndexComponentsByNanometers[spectralLine.nanometer]=lineEditPixelIndex
+
             mainWidgetLayout.addWidget(spectralLineWidget,rowIndex,columnIndex,1,1)
 
             # print('-----')
@@ -65,6 +69,10 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
 
     def setModel(self,model:SpectrometerCalibrationProfile):
         self.__model=model
+        for spectralLine in model.getSpectralLines():
+            if self.__pixelIndexComponentsByNanometers is not None:
+                pixelIndexComponent=self.__pixelIndexComponentsByNanometers[spectralLine.nanometer]
+                pixelIndexComponent.setText(str(spectralLine.pixelIndex))
 
     def __getModel(self)->SpectrometerCalibrationProfile:
         return self.__model

@@ -10,6 +10,7 @@ from scipy.signal import peak_prominences
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
     SpectrometerWavelengthCalibrationLogicModule
+from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
@@ -67,7 +68,6 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         if self.phaseZeroInExecution:
             self.prominence=self.prominence-self.prominenceStep
 
-
         spectralPeaks=self.__getSpectralPeaks(videoSignal)
 
         if len(spectralPeaks)>=3 and self.phaseZeroInExecution:
@@ -91,8 +91,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
         if self.phaseOneCurrentStep>self.phaseOneStepsCount:
             if self.phaseOneInExecution:
-                peaks = self.getPeaks()
-                self.spectrometerWavelengthCalibrationLogicModule = SpectrometerWavelengthCalibrationLogicModule()
+                peaks = self.getPeaks(3)
+                if self.spectrometerWavelengthCalibrationLogicModule is None:
+                    self.spectrometerWavelengthCalibrationLogicModule = SpectrometerWavelengthCalibrationLogicModule()
                 self.spectrometerWavelengthCalibrationLogicModule.setModel(self.getModel())
                 self.spectrometerWavelengthCalibrationLogicModule.setPeaks(peaks)
                 self.spectrometerWavelengthCalibrationLogicModule.setImage(image)
@@ -143,9 +144,11 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
                 lineItem.setPen(pen)
                 self.scene.addItem(lineItem)
 
-            polynomial=self.spectrometerWavelengthCalibrationLogicModule.interpolate()
-            videoSignal.interpolationPolynomial = polynomial
-            videoSignal.spectralLinesByPixelIndices=self.spectralLinesByPixelIndices
+
+            # polynomial=self.spectrometerWavelengthCalibrationLogicModule.interpolate()
+            #videoSignal.interpolationPolynomial = polynomial
+            #videoSignal.spectralLinesByPixelIndices=self.spectralLinesByPixelIndices
+            videoSignal.model=self.spectrometerWavelengthCalibrationLogicModule.getModel()
 
         self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
 
@@ -196,8 +199,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         for custerIndexToRemove in custerIndicesToRemove:
             self.peaksClusters.pop(custerIndexToRemove)
 
-    def getPeaks(self)->Dict[int,SpectralLine]:
+    def getPeaks(self,prominencesCount=0)->Dict[int,SpectralLine]:
         result= {}
+
         for someClusterIndex,spectralPeaksOfCluster in self.peaksClusters.items():
             pixelIndicesOfCluster=[]
             prominencesOfCluster=[]
@@ -214,7 +218,19 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
             result[meanPixelIndex]=meanSpectralPeak
 
-        result = dict(sorted(result.items()))
+        meanResult = dict(sorted(result.items()))
+
+        if prominencesCount==0:
+            result=meanResult
+        else:
+            result={}
+            spectralLinesByProminences=SpectralLineUtil().sortSpectralLinesByProminences(list(meanResult.values()));
+            index=0
+            for spectralLine in spectralLinesByProminences:
+                if index>=prominencesCount:
+                    break
+                result[spectralLine.pixelIndex]=spectralLine
+                index=index+1
 
         return result
 
@@ -244,6 +260,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
     def setModel(self,model: SpectrometerCalibrationProfile):
         self.__model=model
+        if self.spectrometerWavelengthCalibrationLogicModule is None:
+            self.spectrometerWavelengthCalibrationLogicModule = SpectrometerWavelengthCalibrationLogicModule()
+        self.spectrometerWavelengthCalibrationLogicModule.setModel(model)
 
     def getModel(self)->SpectrometerCalibrationProfile:
         return self.__model

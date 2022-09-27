@@ -18,6 +18,7 @@ from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import Spectrome
 from logic.settings.SettingsLogicModule import SettingsLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.DbEntityCrudOperation import DbEntityCrudOperation
+from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
 from view.application.widgets.page.PageWidget import PageWidget
@@ -96,7 +97,7 @@ class SpectrometerProfileListViewModule(PageWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SpectrometerProfileViewModule")
 
-        spectrometerProfile=None
+        spectrometerProfile:SpectrometerProfile=None
         targetViewModule=ApplicationContextLogicModule().getNavigationHandler().getViewModule(someNavigationSignal)
         if isinstance(targetViewModule,SpectrometerProfileViewModule):
             currentIndex=self.listView.currentIndex()
@@ -104,6 +105,7 @@ class SpectrometerProfileListViewModule(PageWidget):
                 spectrometerProfile=currentIndex.data()
                 if isinstance(spectrometerProfile,SpectrometerProfile):
                     SpectrometerProfileUtil().initializeSpectrometerProfile(spectrometerProfile)
+                    targetViewModule.initialize()
                     targetViewModule.loadView(spectrometerProfile)
 
         if isinstance(spectrometerProfile,SpectrometerProfile):

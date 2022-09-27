@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget, QTabWidget
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from view.application.widgets.page.PageWidget import PageWidget
@@ -41,13 +42,14 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
             self.tabWidget = QTabWidget()
 
-            self.houghLinesViewModule=SpectrometerCalibrationProfileHoughLinesViewModule(self)
+            if self.houghLinesViewModule is None:
+                self.houghLinesViewModule=SpectrometerCalibrationProfileHoughLinesViewModule(self)
             # self.houghLinesViewModule.setStylesheetOnlySelf("border:1px solid #00000000;")
-
             self.houghLinesViewModule.initialize()
             self.tabWidget.addTab(self.houghLinesViewModule,'Region of interest')
 
-            self.wavelengthCalibrationViewModule=SpectrometerCalibrationProfileWavelengthCalibrationViewModule(self)
+            if self.wavelengthCalibrationViewModule is None:
+                self.wavelengthCalibrationViewModule=SpectrometerCalibrationProfileWavelengthCalibrationViewModule(self)
             self.wavelengthCalibrationViewModule.setModel(self.__getModel())
             # self.wavelengthCalibrationViewModule.setStylesheetOnlySelf("border:1px solid #00000000;")
             self.wavelengthCalibrationViewModule.initialize()
@@ -86,6 +88,7 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
         return result
 
     def onClickedSaveButton(self):
+        model = self.__getModel()
         pass
 
     def onClickedBackButton(self):
@@ -97,6 +100,13 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
     def setModel(self,model: SpectrometerCalibrationProfile):
         self.__model=model
+
+        SpectrometerCalibrationProfileUtil().initializeSpectrometerCalibrationProfile(model)
+
+        if self.wavelengthCalibrationViewModule is None:
+            self.wavelengthCalibrationViewModule = SpectrometerCalibrationProfileWavelengthCalibrationViewModule(self)
+
+        self.wavelengthCalibrationViewModule.setModel(model)
 
     def __getModel(self)->SpectrometerCalibrationProfile:
         return self.__model

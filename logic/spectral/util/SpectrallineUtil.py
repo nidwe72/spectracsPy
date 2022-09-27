@@ -119,7 +119,7 @@ class SpectralLineUtil(Singleton):
             result[spectralLine.prominence]=spectralLine
         return result
 
-    def sortSpectralLinesByProminences(self,spectralLinesCollection: List[SpectralLine] )->Dict[float,SpectralLine]:
+    def sortSpectralLinesByProminences(self,spectralLinesCollection: List[SpectralLine] )->List[SpectralLine]:
         spectralLinesCollection.sort(key=attrgetter('prominence'), reverse=True)
         return spectralLinesCollection
 

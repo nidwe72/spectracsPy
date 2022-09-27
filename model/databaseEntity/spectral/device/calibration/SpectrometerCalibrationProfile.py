@@ -17,8 +17,17 @@ class SpectrometerCalibrationProfile(DbBaseEntity, DbBaseEntityMixin):
     interpolationCoefficientA = Column(Float)
     interpolationCoefficientB = Column(Float)
     interpolationCoefficientC = Column(Float)
+    interpolationCoefficientD = Column(Float)
 
     spectralLines = relationship("SpectralLine", back_populates="spectrometerCalibrationProfile")
+
+    def getSpectralLines(self):
+        return self.spectralLines
+
+    def setSpectralLines(self,spectralLines):
+        self.spectralLines=spectralLines
+
+
 
 
 

@@ -1,6 +1,7 @@
 from base.Singleton import Singleton
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
+from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 
 
 class SpectrometerCalibrationProfileUtil(Singleton):
@@ -11,3 +12,7 @@ class SpectrometerCalibrationProfileUtil(Singleton):
                 list(SpectralLineUtil().getSpectralLinesByNames().values())).values())
             spectrometerCalibrationProfile.spectralLines=spectralLines
         return
+
+    def getMatchingSpectralLine(self,spectrometerCalibrationProfile:SpectrometerCalibrationProfile, spectralLine:SpectralLine)->SpectralLine:
+        result=SpectralLineUtil().sortSpectralLinesByNanometers(spectrometerCalibrationProfile.getSpectralLines())[spectralLine.nanometer]
+        return result

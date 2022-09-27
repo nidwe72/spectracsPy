@@ -7,6 +7,7 @@ from numpy import poly1d
 
 from base.Singleton import Singleton
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
@@ -61,14 +62,25 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
         self.interpolate()
 
+        model = self.getModel()
+        for spectralLine in list(self.__spectralLinesByPixelIndices.values()):
+            modelSpectraLine = SpectrometerCalibrationProfileUtil().getMatchingSpectralLine(model,spectralLine)
+            modelSpectraLine.pixelIndex=spectralLine.pixelIndex
+
         return self.__spectralLinesByPixelIndices
 
     def interpolate(self)->poly1d:
         pixelIndices = SpectralLineUtil().getPixelIndices(list(self.__spectralLinesByPixelIndices.values()))
         nanometers = SpectralLineUtil().getNanometers(list(self.__spectralLinesByPixelIndices.values()))
         polynomialCoefficients=np.polyfit(np.array(pixelIndices),np.array(nanometers),4)
-        result = np.poly1d(polynomialCoefficients)
-        return result
+
+        model = self.getModel()
+        model.interpolationCoefficientA=polynomialCoefficients[0]
+        model.interpolationCoefficientB = polynomialCoefficients[1]
+        model.interpolationCoefficientC = polynomialCoefficients[2]
+        model.interpolationCoefficientD = polynomialCoefficients[3]
+
+        return
 
     def __getSpectralLinesByPixelIndices_processSpectralLineTerbiumAqua(self):
         spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
@@ -338,4 +350,8 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
     def setModel(self,model:SpectrometerCalibrationProfile):
         self.model=model
+
+    def getModel(self):
+        return self.model
+
 

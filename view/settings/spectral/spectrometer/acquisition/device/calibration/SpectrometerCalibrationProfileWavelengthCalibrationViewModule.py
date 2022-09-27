@@ -36,7 +36,8 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
     def getMainContainerWidgets(self):
         result = super().getMainContainerWidgets()
 
-        self.wavelengthCalibrationVideoViewModule = SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule()
+        if self.wavelengthCalibrationVideoViewModule is None:
+            self.wavelengthCalibrationVideoViewModule = SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule()
         self.wavelengthCalibrationVideoViewModule.setModel(self.getModel())
         result['wavelengthCalibrationVideoViewModule'] = self.wavelengthCalibrationVideoViewModule
 
@@ -107,12 +108,12 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
 
         if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
-            interpolationPolynomialCoefficients = videoSignal.interpolationPolynomial.coefficients
 
-            self.coefficientAComponent.setText(str(interpolationPolynomialCoefficients[0].item()))
-            self.coefficientBComponent.setText(str(interpolationPolynomialCoefficients[1].item()))
-            self.coefficientCComponent.setText(str(interpolationPolynomialCoefficients[2].item()))
-            self.coefficientDComponent.setText(str(interpolationPolynomialCoefficients[3].item()))
+            self.coefficientAComponent.setText(str(videoSignal.model.interpolationCoefficientA))
+            self.coefficientBComponent.setText(str(videoSignal.model.interpolationCoefficientB))
+            self.coefficientCComponent.setText(str(videoSignal.model.interpolationCoefficientC))
+            self.coefficientDComponent.setText(str(videoSignal.model.interpolationCoefficientD))
+
             self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(videoSignal.model)
 
         event.set()
@@ -135,6 +136,10 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
     def setModel(self,model:SpectrometerCalibrationProfile):
         self.model=model
+        if self.wavelengthCalibrationVideoViewModule is None:
+            self.wavelengthCalibrationVideoViewModule = SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule()
+
+        self.wavelengthCalibrationVideoViewModule.setModel(model)
 
     def getModel(self)->SpectrometerCalibrationProfile:
         return self.model

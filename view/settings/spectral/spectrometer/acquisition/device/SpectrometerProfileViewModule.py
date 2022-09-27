@@ -205,5 +205,8 @@ class SpectrometerProfileViewModule(PageWidget):
 
     def loadView(self, model: SpectrometerProfile):
         self.setModel(model)
+        if self.spectrometerCalibrationProfileViewModule is None:
+            self.spectrometerCalibrationProfileViewModule = SpectrometerCalibrationProfileViewModule(self)
+        self.spectrometerCalibrationProfileViewModule.setModel(model.spectrometerCalibrationProfile)
 
         return
