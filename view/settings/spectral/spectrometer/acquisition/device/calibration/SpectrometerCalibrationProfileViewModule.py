@@ -2,6 +2,8 @@ from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget, QTabWi
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
+from logic.persistence.database.spectrometerCalibrationProfile.PersistSpectrometerCalibrationProfileLogicModule import \
+    PersistSpectrometerCalibrationProfileLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from view.application.widgets.page.PageWidget import PageWidget
@@ -89,7 +91,7 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
     def onClickedSaveButton(self):
         model = self.__getModel()
-        pass
+        PersistSpectrometerCalibrationProfileLogicModule().saveSpectrometerCalibrationProfile(model)
 
     def onClickedBackButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(

@@ -6,7 +6,7 @@ from controller.application.ApplicationContextLogicModule import ApplicationCont
 from logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
-from model.databaseEntity.spectral.device import SpectrometerProfile, SpectrometerCalibrationProfile
+from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from view.application.widgets.page.PageWidget import PageWidget
@@ -41,7 +41,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         self.wavelengthCalibrationVideoViewModule.setModel(self.getModel())
         result['wavelengthCalibrationVideoViewModule'] = self.wavelengthCalibrationVideoViewModule
 
-        mainWidget = self.createMainWidget();
+        mainWidget = self.createMainWidget()
         result['mainWidget'] = mainWidget
 
         buttonsPanel = self.createButtonsPanel()
@@ -74,18 +74,22 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         result = QGroupBox("Polynomial coefficients")
 
         layout = QGridLayout()
-        result.setLayout(layout);
+        result.setLayout(layout)
 
         self.coefficientAComponent = QLineEdit()
+        self.coefficientAComponent.setReadOnly(True)
         layout.addWidget(self.createLabeledComponent('A', self.coefficientAComponent), 0, 0, 1, 1)
 
         self.coefficientBComponent = QLineEdit()
+        self.coefficientBComponent.setReadOnly(True)
         layout.addWidget(self.createLabeledComponent('B', self.coefficientBComponent), 0, 1, 1, 1)
 
         self.coefficientCComponent = QLineEdit()
+        self.coefficientCComponent.setReadOnly(True)
         layout.addWidget(self.createLabeledComponent('C', self.coefficientCComponent), 1, 0, 1, 1)
 
         self.coefficientDComponent = QLineEdit()
+        self.coefficientDComponent.setReadOnly(True)
         layout.addWidget(self.createLabeledComponent('D', self.coefficientDComponent), 1, 1, 1, 1)
 
         return result
@@ -136,10 +140,41 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
     def setModel(self,model:SpectrometerCalibrationProfile):
         self.model=model
+
+        if self.coefficientAComponent is None:
+            self.coefficientAComponent=QLineEdit()
+            self.coefficientAComponent.setReadOnly(True)
+        if model.interpolationCoefficientA is not None:
+            self.coefficientAComponent.setText(str(model.interpolationCoefficientA))
+
+        if self.coefficientBComponent is None:
+            self.coefficientBComponent=QLineEdit()
+            self.coefficientBComponent.setReadOnly(True)
+        if model.interpolationCoefficientB is not None:
+            self.coefficientBComponent.setText(str(model.interpolationCoefficientB))
+
+        if self.coefficientCComponent is None:
+            self.coefficientCComponent=QLineEdit()
+            self.coefficientCComponent.setReadOnly(True)
+        if model.interpolationCoefficientC is not None:
+            self.coefficientCComponent.setText(str(model.interpolationCoefficientC))
+
+        if self.coefficientDComponent is None:
+            self.coefficientDComponent=QLineEdit()
+            self.coefficientDComponent.setReadOnly(True)
+        if model.interpolationCoefficientD is not None:
+            self.coefficientDComponent.setText(str(model.interpolationCoefficientD))
+
+
         if self.wavelengthCalibrationVideoViewModule is None:
             self.wavelengthCalibrationVideoViewModule = SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule()
-
         self.wavelengthCalibrationVideoViewModule.setModel(model)
+
+        if self.spectrometerCalibrationProfileSpectralLinesViewModule is None:
+            self.spectrometerCalibrationProfileSpectralLinesViewModule=SpectrometerCalibrationProfileSpectralLinesViewModule(self)
+        self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(model)
+
+
 
     def getModel(self)->SpectrometerCalibrationProfile:
         return self.model

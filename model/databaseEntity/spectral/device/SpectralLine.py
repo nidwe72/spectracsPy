@@ -13,9 +13,10 @@ class SpectralLine(DbBaseEntity, DbBaseEntityMixin):
     mainColorName = Column(String)
     nanometer = Column(Float)
     prominence = Column(Float)
+    pixelIndex=Column(Integer)
 
     color:QColor=None
-    pixelIndex:int=None
+
 
     spectrometerCalibrationProfile_id = Column(Integer, ForeignKey("spectrometer_calibration_profile.id"))
     spectrometerCalibrationProfile = relationship("SpectrometerCalibrationProfile", back_populates="spectralLines")

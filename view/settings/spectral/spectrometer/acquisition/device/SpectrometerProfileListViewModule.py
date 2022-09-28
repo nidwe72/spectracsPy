@@ -89,6 +89,7 @@ class SpectrometerProfileListViewModule(PageWidget):
         targetViewModule = ApplicationContextLogicModule().getNavigationHandler().getViewModule(someNavigationSignal)
 
         spectrometerProfile=SpectrometerProfile()
+        SpectrometerProfileUtil().initializeSpectrometerProfile(spectrometerProfile)
         targetViewModule.loadView(spectrometerProfile)
 
     def onClickedEditSpectrometerProfileButton(self):
@@ -105,7 +106,6 @@ class SpectrometerProfileListViewModule(PageWidget):
                 spectrometerProfile=currentIndex.data()
                 if isinstance(spectrometerProfile,SpectrometerProfile):
                     SpectrometerProfileUtil().initializeSpectrometerProfile(spectrometerProfile)
-                    targetViewModule.initialize()
                     targetViewModule.loadView(spectrometerProfile)
 
         if isinstance(spectrometerProfile,SpectrometerProfile):

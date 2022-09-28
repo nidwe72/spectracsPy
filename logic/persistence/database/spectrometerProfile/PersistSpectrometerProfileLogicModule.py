@@ -8,9 +8,9 @@ from model.databaseEntity.spectral.device import SpectrometerProfile
 
 class PersistSpectrometerProfileLogicModule:
 
-    def saveSpectrometerProfile(self, spectrometer: SpectrometerProfile):
+    def saveSpectrometerProfile(self, spectrometerProfile: SpectrometerProfile):
         session = session_factory()
-        session.add(spectrometer)
+        session.add(spectrometerProfile)
         session.commit()
 
     def getSpectrometerProfile(self,
