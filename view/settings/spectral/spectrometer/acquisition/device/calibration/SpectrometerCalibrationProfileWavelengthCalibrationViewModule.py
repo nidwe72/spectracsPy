@@ -144,25 +144,33 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         if self.coefficientAComponent is None:
             self.coefficientAComponent=QLineEdit()
             self.coefficientAComponent.setReadOnly(True)
-        if model.interpolationCoefficientA is not None:
+        if model.interpolationCoefficientA is None:
+            self.coefficientAComponent.setText('')
+        else:
             self.coefficientAComponent.setText(str(model.interpolationCoefficientA))
 
         if self.coefficientBComponent is None:
             self.coefficientBComponent=QLineEdit()
             self.coefficientBComponent.setReadOnly(True)
-        if model.interpolationCoefficientB is not None:
+        if model.interpolationCoefficientB is None:
+            self.coefficientBComponent.setText('')
+        else:
             self.coefficientBComponent.setText(str(model.interpolationCoefficientB))
 
         if self.coefficientCComponent is None:
             self.coefficientCComponent=QLineEdit()
             self.coefficientCComponent.setReadOnly(True)
-        if model.interpolationCoefficientC is not None:
+        if model.interpolationCoefficientC is None:
+            self.coefficientCComponent.setText('')
+        else:
             self.coefficientCComponent.setText(str(model.interpolationCoefficientC))
 
         if self.coefficientDComponent is None:
             self.coefficientDComponent=QLineEdit()
             self.coefficientDComponent.setReadOnly(True)
-        if model.interpolationCoefficientD is not None:
+        if model.interpolationCoefficientD is None:
+            self.coefficientDComponent.setText('')
+        else:
             self.coefficientDComponent.setText(str(model.interpolationCoefficientD))
 
 

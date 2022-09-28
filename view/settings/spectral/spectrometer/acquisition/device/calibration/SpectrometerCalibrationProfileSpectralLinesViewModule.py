@@ -73,7 +73,9 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
         for spectralLine in model.getSpectralLines():
             if self.__pixelIndexComponentsByNanometers is not None:
                 pixelIndexComponent=self.__pixelIndexComponentsByNanometers[spectralLine.nanometer]
-                if spectralLine.pixelIndex is not None:
+                if spectralLine.pixelIndex is None:
+                    pixelIndexComponent.setText('')
+                else:
                     pixelIndexComponent.setText(str(spectralLine.pixelIndex))
 
     def __getModel(self)->SpectrometerCalibrationProfile:
