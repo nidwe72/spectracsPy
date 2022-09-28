@@ -83,47 +83,40 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         return
 
     def __getSpectralLinesByPixelIndices_processSpectralLineTerbiumAqua(self):
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine = spectralLinesByNames['TerbiumAqua']
+        spectralLine =self.__getSpectralLineWithName('TerbiumAqua')
         self.__getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(spectralLine)
         self.__removePeak(spectralLine.pixelIndex)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineMercuryFrenchViolet(self):
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine = spectralLinesByNames['MercuryFrenchViolet']
+        spectralLine = self.__getSpectralLineWithName('MercuryFrenchViolet')
         pixelIndex = list(self.__peaks.keys())[0]
         self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine, pixelIndex)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineMercuryBlue(self):
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine = spectralLinesByNames['MercuryBlue']
+        spectralLine = self.__getSpectralLineWithName('MercuryBlue')
         pixelIndex = list(self.__peaks.keys())[1]
         self.__getSpectralLinesByPixelIndices_processSpectralLineBySuppliedPixelIndex(spectralLine, pixelIndex)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumVividGamboge(self):
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine = spectralLinesByNames['EuropiumVividGamboge']
+        spectralLine = self.__getSpectralLineWithName('EuropiumVividGamboge')
         self.__getSpectralLinesByPixelIndices_processSpectralLineByFindingBestColorMatch(spectralLine)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumAmber(self):
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        resultSpectralLine = spectralLinesByNames['EuropiumAmber']
+        resultSpectralLine = self.__getSpectralLineWithName('EuropiumAmber')
         referenceSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumVividGamboge')
         self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(
             resultSpectralLine,
             referenceSpectralLine, -1)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumCyberYellow(self):
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        resultSpectralLine = spectralLinesByNames['EuropiumCyberYellow']
+        resultSpectralLine = self.__getSpectralLineWithName('EuropiumCyberYellow')
         referenceSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumAmber')
         self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(
             resultSpectralLine,
             referenceSpectralLine, -1)
 
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumMiddleYellow(self):
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        resultSpectralLine = spectralLinesByNames['EuropiumMiddleYellow']
+        resultSpectralLine = self.__getSpectralLineWithName('EuropiumMiddleYellow')
         referenceSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumCyberYellow')
         self.__getSpectralLinesByPixelIndices_processSpectralLineGetSpectraLineOffsetToReferenceSpectralLine(
             resultSpectralLine,
@@ -137,8 +130,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         #   * collect the spectral lines matching 'MercuryMangoGreen' by color and sort by prominence
         #   * take the two SpectralLine/s with the highest prominences and take the right one
 
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine = spectralLinesByNames['MercuryMangoGreen']
+        spectralLine = self.__getSpectralLineWithName('MercuryMangoGreen')
 
         leftSpectralLine = self.__getDetectedSpectralLineOfName('TerbiumAqua')
         rightSpectralLine = self.__getDetectedSpectralLineOfName('EuropiumMiddleYellow')
@@ -188,8 +180,8 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         #   * collect the spectral lines matching 'EuropiumRed' by color and sort by prominence
         #   * take the two SpectralLine/s with the highest prominences and take the left one
 
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine = spectralLinesByNames['EuropiumRed']
+
+        spectralLine = self.__getSpectralLineWithName('EuropiumRed')
 
         spectralLineEuropiumVividGamboge = self.__getDetectedSpectralLineOfName('EuropiumVividGamboge')
         spectralLineEuropiumMiddleYellow = self.__getDetectedSpectralLineOfName('EuropiumMiddleYellow')
@@ -240,9 +232,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         pass
 
     def __getSpectralLinesByPixelIndices_processSpectralLineEuropiumInternationalOrange(self):
-
-        spectralLinesByNames = SpectralLineUtil().getSpectralLinesByNames()
-        spectralLine = spectralLinesByNames['EuropiumInternationalOrange']
+        spectralLine = self.__getSpectralLineWithName('EuropiumInternationalOrange')
 
         spectralLineEuropiumVividGamboge = self.__getDetectedSpectralLineOfName('EuropiumVividGamboge')
         spectralLineEuropiumMiddleYellow = self.__getDetectedSpectralLineOfName('EuropiumMiddleYellow')
@@ -354,4 +344,13 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
     def getModel(self):
         return self.model
 
+    def __getSpectralLineWithName(self,name):
+        result=SpectrometerCalibrationProfileUtil().getSpectralLineWithName(self.getModel(),name)
+        return result
+
+
+    def __getSpectralLinesByNames(self):
+        spectralLines = self.getModel().getSpectralLines()
+        result=SpectralLineUtil.sortSpectralLinesByNames(spectralLines)
+        return result
 
