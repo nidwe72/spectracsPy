@@ -2,7 +2,7 @@ from typing import Dict
 from typing import List
 
 import numpy as np
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QRectF, QPointF
 from PyQt6.QtGui import QPixmap, QPen, QBrush
 from scipy.signal import find_peaks
 from scipy.signal import peak_prominences
@@ -10,6 +10,7 @@ from scipy.signal import peak_prominences
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
     SpectrometerWavelengthCalibrationLogicModule
+from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
@@ -139,19 +140,29 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             for peakPixelIndex,spectralLine in self.spectralLinesByPixelIndices.items():
                 lineItem = BaseGraphicsLineItem()
                 lineItem.setLine(peakPixelIndex, 0, peakPixelIndex, image.height())
-                pen = QPen(QBrush(spectralLine.color), 3)
+                pen = QPen(QBrush(SpectralColorUtil().wavelengthToColor(spectralLine.nanometer)), 3)
                 pen.setStyle(Qt.PenStyle.DotLine)
                 lineItem.setPen(pen)
                 self.scene.addItem(lineItem)
 
-
-            # polynomial=self.spectrometerWavelengthCalibrationLogicModule.interpolate()
-            #videoSignal.interpolationPolynomial = polynomial
-            #videoSignal.spectralLinesByPixelIndices=self.spectralLinesByPixelIndices
             videoSignal.model=self.spectrometerWavelengthCalibrationLogicModule.getModel()
 
-        self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
+        self._fitInView()
 
+    def _fitInView(self):
+        topLeft=QPointF(0,self.getModel().regionOfInterestY2)
+
+        imageWidth = self.imageItem.pixmap().width()
+        if imageWidth>0:
+            bottomRight = QPointF(imageWidth, self.getModel().regionOfInterestY1)
+            fitRectangle = QRectF()
+            fitRectangle.setBottomLeft(topLeft)
+            fitRectangle.setBottomRight(bottomRight)
+            self.videoWidget.fitInView(fitRectangle, Qt.AspectRatioMode.KeepAspectRatio)
+            self.videoWidget.centerOn(topLeft)
+            self.videoWidget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        else:
+            super()._fitInView()
 
     def __getSpectralPeaks(self,videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal)->Dict[int,SpectralLine]:
         result= {}

@@ -322,14 +322,14 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
             if startPixelIndex > 0 and endPixelIndex > 0 and not (startPixelIndex < peak < endPixelIndex):
                 continue
 
-            # todo:hard-coded
-            pixelColor = self.__image.pixelColor(peak, 392)
+            measurementPixel=round(self.getModel().regionOfInterestY2-(self.getModel().regionOfInterestY2-self.getModel().regionOfInterestY1)/2.0);
+            pixelColor = self.__image.pixelColor(peak, measurementPixel)
             colorDifference = SpectralColorUtil().getColorDifference(suppliedColor, pixelColor)
             distancesByPixelIndices[peak] = colorDifference
 
         if len(distancesByPixelIndices) > 0:
-            foo = sorted(distancesByPixelIndices.items(), key=lambda x: x[1])
-            result = foo[0][0]
+            distancesByPixelIndicesSorted = sorted(distancesByPixelIndices.items(), key=lambda x: x[1])
+            result = distancesByPixelIndicesSorted[0][0]
         return result
 
     def __removePeak(self, peak: int):

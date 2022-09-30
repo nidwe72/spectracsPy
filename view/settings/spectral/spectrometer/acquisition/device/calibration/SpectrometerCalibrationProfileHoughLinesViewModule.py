@@ -10,6 +10,7 @@ from logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread im
     SpectrometerCalibrationProfileHoughLinesVideoThread
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from model.application.navigation.NavigationSignal import NavigationSignal
+from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
 from view.application.widgets.page.PageWidget import PageWidget
@@ -17,6 +18,8 @@ from view.settings.spectral.spectrometer.acquisition.device.calibration.Spectrom
     SpectrometerCalibrationProfileHoughLinesVideoViewModule
 
 class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
+
+    __model:SpectrometerCalibrationProfile=None
 
     videoThread: SpectrometerCalibrationProfileHoughLinesVideoThread = None
     videoViewModule: SpectrometerCalibrationProfileHoughLinesVideoViewModule = None
@@ -73,7 +76,7 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         result = QGroupBox("Region of interest")
 
         layout = QGridLayout()
-        result.setLayout(layout);
+        result.setLayout(layout)
 
         self.x1Component = QLineEdit()
         layout.addWidget(self.createLabeledComponent('x1', self.x1Component), 0, 0, 1, 1)
@@ -109,7 +112,6 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
                                                                centerY)
 
             boundingHoughLines = self.__getBoundingHoughLines()
-
             videoSignal.upperHoughLine = boundingHoughLines[0]
             videoSignal.lowerHoughLine = boundingHoughLines[1]
 
@@ -131,6 +133,10 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
             if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
                 self.y2Component.setText(str(videoSignal.upperHoughLine.p1().y()))
                 self.y1Component.setText(str(videoSignal.lowerHoughLine.p1().y()))
+
+                self.__getModel().regionOfInterestY1=videoSignal.lowerHoughLine.p1().y()
+                self.__getModel().regionOfInterestY2 = videoSignal.upperHoughLine.p1().y()
+
                 applicationStatusSignal.isStatusReset = True
 
             ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
@@ -178,4 +184,25 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
     def initialize(self):
         super().initialize()
 
-5
+    def setModel(self,model:SpectrometerCalibrationProfile):
+        self.__model=model
+
+        if self.y1Component is None:
+            self.y1Component = QLineEdit()
+        if model.regionOfInterestY1 is None:
+            self.y1Component.setText('')
+        else:
+            self.y1Component.setText(str(model.regionOfInterestY1))
+
+        if self.y2Component is None:
+            self.y2Component = QLineEdit()
+        if model.regionOfInterestY2 is None:
+            self.y2Component.setText('')
+        else:
+            self.y2Component.setText(str(model.regionOfInterestY2))
+
+    def __getModel(self):
+        return self.__model
+
+
+

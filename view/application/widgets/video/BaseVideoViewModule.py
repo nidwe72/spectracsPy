@@ -25,7 +25,7 @@ class BaseVideoViewModule(QFrame,Generic[VIDEO_SIGNAL]):
         self.graphicsView=QGraphicsView()
 
         self.videoWidget=QGraphicsView()
-        layout.addWidget(self.videoWidget, 0, 0, 1, 2)
+        layout.addWidget(self.videoWidget, 0, 0, 1, 1)
 
         #scene = QGraphicsScene();
         self.scene = BaseGraphicsScene()
@@ -51,8 +51,13 @@ class BaseVideoViewModule(QFrame,Generic[VIDEO_SIGNAL]):
     def resizeEvent(self, resizeEvent: QtGui.QResizeEvent) -> None:
         super().resizeEvent(resizeEvent)
         self.videoWidget.resizeEvent(resizeEvent)
-        scene=self.videoWidget.scene()
+        self._fitInView()
+
+    def _fitInView(self):
         self.videoWidget.fitInView(self.imageItem,Qt.AspectRatioMode.KeepAspectRatio)
+
+
+
 
 
 

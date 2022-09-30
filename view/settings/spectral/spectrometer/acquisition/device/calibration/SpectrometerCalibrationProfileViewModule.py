@@ -107,8 +107,11 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
         if self.wavelengthCalibrationViewModule is None:
             self.wavelengthCalibrationViewModule = SpectrometerCalibrationProfileWavelengthCalibrationViewModule(self)
-
         self.wavelengthCalibrationViewModule.setModel(model)
+
+        if self.houghLinesViewModule is None:
+            self.houghLinesViewModule = SpectrometerCalibrationProfileHoughLinesViewModule(self)
+        self.houghLinesViewModule.setModel(model)
 
     def __getModel(self)->SpectrometerCalibrationProfile:
         return self.__model
