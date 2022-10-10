@@ -25,6 +25,7 @@ class SpectrometerViewModule(PageWidget):
         result['spectrometerModelNameComponent'] =self.createLabeledComponent("Product name", self.spectrometerModelNameComponent)
 
         self.spectrometerSensorViewModule=SpectrometerSensorViewModule(self)
+        self.spectrometerSensorViewModule.setMaximumHeight(120)
         self.spectrometerSensorViewModule.initialize()
         result['spectrometerSensorViewModule']=self.spectrometerSensorViewModule
 

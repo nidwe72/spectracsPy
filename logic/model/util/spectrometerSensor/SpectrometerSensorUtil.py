@@ -120,14 +120,14 @@ class SpectrometerSensorUtil(Singleton):
                 <td width=25%>Code name</td>
                 <td width=25%>Vendor</td>
                 <td width=25%>Vendor id</td>
-                <td width=25%>Model id</td>
+                <td width=24.8%>Model id</td>
                                
             </tr>                        
             <tr>
                 <td width=25%>%codeName%</td>
                 <td width=25%>%vendorName%</td>
                 <td width=25%>%vendorId%</td>
-                <td width=25%>%modelId%</td>                                
+                <td width=24.8%>%modelId%</td>                                
             </tr>
             </table>
             
@@ -136,9 +136,9 @@ class SpectrometerSensorUtil(Singleton):
             <tr>
                 <td width=25% style="font-weight:bold;text-align: center;background-color:#404040;padding:5px;">Sensor</td>
                 <td width=19%>Vendor</td>
-                <td width=19%>%sensorVendorName%</td>
+                <td width=18.5%>%sensorVendorName%</td>
                 <td width=19%>Model id</td>
-                <td width=19%>%sensorProductName%</td>                                
+                <td width=18.3%>%sensorProductName%</td>                                
             </tr>                        
             </table>
             

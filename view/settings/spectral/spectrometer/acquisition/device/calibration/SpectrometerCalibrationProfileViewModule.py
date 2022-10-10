@@ -1,4 +1,7 @@
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QWidget, QTabWidget
+from PyQt6.QtCharts import QLineSeries, QChart, QChartView
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QBrush, QColor, QPen
+from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QTabWidget, QTextEdit
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
@@ -23,10 +26,11 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.verticalLayout=False
 
     def _getPageTitle(self):
         if not self._isTopMostPageWidget():
-            return "Calibration Profile"
+            return "Calibration Profile (pixel/nanometer)"
         else:
             return "Settings > Spectrometer profiles > Spectrometer profile > Calibration Profile"
 
@@ -35,10 +39,56 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
         if not self._isTopMostPageWidget():
 
+            edit = QTextEdit()
+            edit.setText('foo')
+            # item = graphicsScene.addWidget(edit)
+            # graphicsLayout.addItem(item,0,0,1,1, Qt.AlignmentFlag.AlignVCenter)
+
+            series = QLineSeries()
+
+            series.append(0, 6)
+            series.append(3, 5)
+            series.append(3, 8)
+            series.append(7, 3)
+            series.append(12, 7)
+
+
+
+            chart = QChart()
+            chart.addSeries(series)
+            # chart.setTitle("Spectrum")
+            chart.legend().hide()
+
+
+            pen = series.pen();
+            pen.setWidth(2);
+            pen.setBrush(QBrush(QColor("#33663d")))
+            series.setPen(pen)
+
+
+
+            chart.createDefaultAxes();
+
+            q_pen = QPen(QBrush(QColor(50, 50, 50, 50)), 1)
+            chart.axes(Qt.Orientation.Horizontal)[0].setGridLinePen(q_pen);
+            chart.axes(Qt.Orientation.Vertical)[0].setGridLinePen(q_pen);
+
+            chartView = QChartView(chart)
+            chartView.setContentsMargins(-20,0,0,0)
+            chart.setContentsMargins(-20,-10,-10,-10)
+
+
+            chart.setBackgroundBrush(QBrush(QColor("transparent")))
+            chart.setTitleBrush(QBrush(QColor("white")));
+
+            result['chartView'] = chartView
+
             editCalibrationProfileButton=QPushButton('Edit')
+            editCalibrationProfileButton.setMinimumWidth(100)
             editCalibrationProfileButton.setObjectName('SpectrometerCalibrationProfileViewModule.editCalibrationProfileButton')
             result[editCalibrationProfileButton.objectName()]=editCalibrationProfileButton
             editCalibrationProfileButton.clicked.connect(self.onClickedEditButton)
+
 
         else:
 

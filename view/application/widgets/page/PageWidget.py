@@ -8,6 +8,7 @@ from view.application.widgets.page.PageLabel import PageLabel
 
 class PageWidget(QFrame):
     mainContainerWidgets = None
+    verticalLayout:bool=True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,11 +50,16 @@ class PageWidget(QFrame):
         #result.setFlat(True)
 
         layout=QGridLayout()
+        layout.setContentsMargins
         result.setLayout(layout)
         row=0
         mainContainerWidgets = self.getMainContainerWidgets()
         for mainContainerWidgetName,mainContainerWidget in mainContainerWidgets.items():
-            layout.addWidget(mainContainerWidget,row,0,1,1)
+            if self.verticalLayout:
+                layout.setContentsMargins(0, 5, 5, 5)
+                layout.addWidget(mainContainerWidget,row,0,1,1)
+            else:
+                layout.addWidget(mainContainerWidget, 0, row, 1, 1)
             row=row+1
 
         return result
