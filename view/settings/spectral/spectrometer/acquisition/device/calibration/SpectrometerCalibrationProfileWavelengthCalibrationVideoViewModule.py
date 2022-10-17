@@ -150,17 +150,21 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         self._fitInView()
 
     def _fitInView(self):
-        topLeft=QPointF(0,self.getModel().regionOfInterestY2)
+        regionOfInterestY2 = self.getModel().regionOfInterestY2
+        if regionOfInterestY2 is not None:
 
-        imageWidth = self.imageItem.pixmap().width()
-        if imageWidth>0:
-            bottomRight = QPointF(imageWidth, self.getModel().regionOfInterestY1)
-            fitRectangle = QRectF()
-            fitRectangle.setBottomLeft(topLeft)
-            fitRectangle.setBottomRight(bottomRight)
-            self.videoWidget.fitInView(fitRectangle, Qt.AspectRatioMode.KeepAspectRatio)
-            self.videoWidget.centerOn(topLeft)
-            self.videoWidget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            topLeft=QPointF(0, regionOfInterestY2)
+            if topLeft is not None:
+
+                imageWidth = self.imageItem.pixmap().width()
+                if imageWidth>0:
+                    bottomRight = QPointF(imageWidth, self.getModel().regionOfInterestY1)
+                    fitRectangle = QRectF()
+                    fitRectangle.setBottomLeft(topLeft)
+                    fitRectangle.setBottomRight(bottomRight)
+                    self.videoWidget.fitInView(fitRectangle, Qt.AspectRatioMode.KeepAspectRatio)
+                    self.videoWidget.centerOn(topLeft)
+                    self.videoWidget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         else:
             super()._fitInView()
 

@@ -36,13 +36,15 @@ class SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule(PageWid
         scatterSeries=self.__getScatterSeries()
         scatterSeries.clear()
 
-
+        hasPoints=False
         for spectralLine in self.getModel().getSpectralLines():
             if spectralLine.pixelIndex is not None:
                 scatterSeries.append(int(spectralLine.pixelIndex),int(spectralLine.nanometer))
-                continue
+                hasPoints=True
 
-        if scatterSeries.chart() is not None:
+        if scatterSeries.chart() is not None and hasPoints:
+
+
             scatterSeries.chart().createDefaultAxes()
 
             ax = scatterSeries.chart().axes(Qt.Orientation.Horizontal, scatterSeries)[0]
