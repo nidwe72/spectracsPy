@@ -155,3 +155,5 @@ class SpectralLineUtil(Singleton):
         for spectralLine in spectralLinesCollection:
             result.append(spectralLine.nanometer)
         return result
+
+

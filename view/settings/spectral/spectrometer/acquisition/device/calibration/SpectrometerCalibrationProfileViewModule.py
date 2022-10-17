@@ -12,6 +12,8 @@ from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesViewModule import \
     SpectrometerCalibrationProfileHoughLinesViewModule
+from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule import \
+    SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationViewModule
 
@@ -24,13 +26,15 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
     houghLinesViewModule:SpectrometerCalibrationProfileHoughLinesViewModule=None
     wavelengthCalibrationViewModule:SpectrometerCalibrationProfileWavelengthCalibrationViewModule=None
 
+    __spectralLinesInterpolationViewModule:SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule=None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.verticalLayout=False
 
     def _getPageTitle(self):
         if not self._isTopMostPageWidget():
-            return "Calibration Profile (pixel/nanometer)"
+            return "Calibration Profile (nanometer/pixel)"
         else:
             return "Settings > Spectrometer profiles > Spectrometer profile > Calibration Profile"
 
@@ -39,49 +43,10 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
         if not self._isTopMostPageWidget():
 
-            edit = QTextEdit()
-            edit.setText('foo')
-            # item = graphicsScene.addWidget(edit)
-            # graphicsLayout.addItem(item,0,0,1,1, Qt.AlignmentFlag.AlignVCenter)
+            spectralLinesInterpolationViewModule = self.__getSpectralLinesInterpolationViewModule()
+            spectralLinesInterpolationViewModule.initialize()
+            result['spectralLinesInterpolationViewModule'] = spectralLinesInterpolationViewModule
 
-            series = QLineSeries()
-
-            series.append(0, 6)
-            series.append(3, 5)
-            series.append(3, 8)
-            series.append(7, 3)
-            series.append(12, 7)
-
-
-
-            chart = QChart()
-            chart.addSeries(series)
-            # chart.setTitle("Spectrum")
-            chart.legend().hide()
-
-
-            pen = series.pen();
-            pen.setWidth(2);
-            pen.setBrush(QBrush(QColor("#33663d")))
-            series.setPen(pen)
-
-
-
-            chart.createDefaultAxes();
-
-            q_pen = QPen(QBrush(QColor(50, 50, 50, 50)), 1)
-            chart.axes(Qt.Orientation.Horizontal)[0].setGridLinePen(q_pen);
-            chart.axes(Qt.Orientation.Vertical)[0].setGridLinePen(q_pen);
-
-            chartView = QChartView(chart)
-            chartView.setContentsMargins(-20,0,0,0)
-            chart.setContentsMargins(-20,-10,-10,-10)
-
-
-            chart.setBackgroundBrush(QBrush(QColor("transparent")))
-            chart.setTitleBrush(QBrush(QColor("white")));
-
-            result['chartView'] = chartView
 
             editCalibrationProfileButton=QPushButton('Edit')
             editCalibrationProfileButton.setMinimumWidth(100)
@@ -163,6 +128,12 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             self.houghLinesViewModule = SpectrometerCalibrationProfileHoughLinesViewModule(self)
         self.houghLinesViewModule.setModel(model)
 
+        self.__getSpectralLinesInterpolationViewModule().setModel(model)
+
     def __getModel(self)->SpectrometerCalibrationProfile:
         return self.__model
 
+    def __getSpectralLinesInterpolationViewModule(self)->SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule:
+        if self.__spectralLinesInterpolationViewModule is None:
+            self.__spectralLinesInterpolationViewModule=SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule(self)
+        return self.__spectralLinesInterpolationViewModule
