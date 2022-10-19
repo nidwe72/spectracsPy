@@ -72,7 +72,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
     def interpolate(self)->poly1d:
         pixelIndices = SpectralLineUtil().getPixelIndices(list(self.__spectralLinesByPixelIndices.values()))
         nanometers = SpectralLineUtil().getNanometers(list(self.__spectralLinesByPixelIndices.values()))
-        polynomialCoefficients=np.polyfit(np.array(pixelIndices),np.array(nanometers),4)
+        polynomialCoefficients=np.polyfit(np.array(pixelIndices),np.array(nanometers),3)
 
         model = self.getModel()
         model.interpolationCoefficientA=polynomialCoefficients[0]
