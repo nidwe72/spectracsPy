@@ -39,13 +39,13 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
 
             someLabel=QLabel()
             someLabel.setAutoFillBackground(True)
-            self.labelsByNanometers[spectralLine.nanometer]=someLabel
+            self.labelsByNanometers[spectralLine.spectralLineMasterData.nanometer]=someLabel
 
             spectralLineWidget=QWidget()
             spectralLineWidgetLayout=QGridLayout()
             spectralLineWidget.setLayout(spectralLineWidgetLayout)
 
-            someLabel.setText(str(spectralLine.nanometer))
+            someLabel.setText(str(spectralLine.spectralLineMasterData.nanometer))
             someLabel.setStyleSheet("QLabel { background-color :" + spectralLine.color.name() + " ; color : black; }");
             spectralLineWidgetLayout.addWidget(someLabel,0,0,1,1)
 
@@ -53,7 +53,7 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
             lineEditPixelIndex.setReadOnly(True)
             spectralLineWidgetLayout.addWidget(lineEditPixelIndex, 0, 1, 1, 1)
 
-            self.__pixelIndexComponentsByNanometers[spectralLine.nanometer]=lineEditPixelIndex
+            self.__pixelIndexComponentsByNanometers[spectralLine.spectralLineMasterData.nanometer]=lineEditPixelIndex
 
             mainWidgetLayout.addWidget(spectralLineWidget,rowIndex,columnIndex,1,1)
 
@@ -72,7 +72,7 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
         self.__model=model
         for spectralLine in model.getSpectralLines():
             if self.__pixelIndexComponentsByNanometers is not None:
-                pixelIndexComponent=self.__pixelIndexComponentsByNanometers[spectralLine.nanometer]
+                pixelIndexComponent=self.__pixelIndexComponentsByNanometers[spectralLine.spectralLineMasterData.nanometer]
                 if spectralLine.pixelIndex is None:
                     pixelIndexComponent.setText('')
                 else:

@@ -4,7 +4,9 @@ from typing import List
 
 from base.Singleton import Singleton
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
+from logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
+from model.databaseEntity.spectral.device.SpectralLineMasterDataColorName import SpectralLineMasterDataColorName
 
 
 class SpectralLineUtil(Singleton):
@@ -14,103 +16,69 @@ class SpectralLineUtil(Singleton):
         # https: // www.johndcook.com / wavelength_to_RGB.html
         # https://www.color-name.com/hex/00f6ff
 
-        spectralLinesByNames = {}
+        spectralLineMasterDatas=SpectralLineMasterDataUtil().createSpectralLineMasterDatasByNames()
+
+        result = {}
 
         spectralLineMercuryFrenchViolet = SpectralLine()
-        spectralLineMercuryFrenchViolet.name = 'MercuryFrenchViolet'
-        spectralLineMercuryFrenchViolet.colorName = 'french violet'
-        spectralLineMercuryFrenchViolet.mainColorName = 'violet'
-        spectralLineMercuryFrenchViolet.nanometer = 405.4
-        spectralLineMercuryFrenchViolet.color = SpectralColorUtil().wavelengthToColor(
-            spectralLineMercuryFrenchViolet.nanometer)
-        spectralLinesByNames[
-            spectralLineMercuryFrenchViolet.name] = spectralLineMercuryFrenchViolet
+        spectralLineMercuryFrenchViolet.spectralLineMasterData=spectralLineMasterDatas[SpectralLineMasterDataColorName.MERCURY_FRENCH_VIOLET];
+        spectralLineMercuryFrenchViolet.color = SpectralColorUtil().wavelengthToColor(spectralLineMercuryFrenchViolet.spectralLineMasterData.nanometer)
+        result[spectralLineMercuryFrenchViolet.spectralLineMasterData.name] = spectralLineMercuryFrenchViolet
 
         spectralLineMercuryBlue = SpectralLine()
-        spectralLineMercuryBlue.name = 'MercuryBlue'
-        spectralLineMercuryBlue.colorName = 'blue'
-        spectralLineMercuryBlue.mainColorName = 'blue'
-        spectralLineMercuryBlue.nanometer = 436.6
+        spectralLineMercuryBlue.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.MERCURY_BLUE];
         spectralLineMercuryBlue.color = SpectralColorUtil().wavelengthToColor(
-            spectralLineMercuryBlue.nanometer)
-        spectralLinesByNames[spectralLineMercuryBlue.name] = spectralLineMercuryBlue
+            spectralLineMercuryBlue.spectralLineMasterData.nanometer)
+        result[spectralLineMercuryBlue.spectralLineMasterData.name] = spectralLineMercuryBlue
 
         spectralLineTerbiumAqua = SpectralLine()
-        spectralLineTerbiumAqua.name = 'TerbiumAqua'
-        spectralLineTerbiumAqua.colorName = 'aqua'
-        spectralLineTerbiumAqua.mainColorName = 'cyan'
-        spectralLineTerbiumAqua.nanometer = 487.7
-        spectralLineTerbiumAqua.color = SpectralColorUtil().wavelengthToColor(
-            spectralLineTerbiumAqua.nanometer)
-        spectralLineTerbiumAqua.color = SpectralColorUtil().wavelengthToColor(spectralLineTerbiumAqua.nanometer)
-        spectralLinesByNames[spectralLineTerbiumAqua.name] = spectralLineTerbiumAqua
+        spectralLineTerbiumAqua.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.TERBIUM_AQUA];
+        spectralLineTerbiumAqua.color = SpectralColorUtil().wavelengthToColor(spectralLineTerbiumAqua.spectralLineMasterData.nanometer)
+        result[spectralLineTerbiumAqua.spectralLineMasterData.name] = spectralLineTerbiumAqua
 
         spectralLineMercuryMangoGreen = SpectralLine()
-        spectralLineMercuryMangoGreen.name = 'MercuryMangoGreen'
-        spectralLineMercuryMangoGreen.colorName = 'mango green'
-        spectralLineMercuryMangoGreen.mainColorName = 'green'
-        spectralLineMercuryMangoGreen.nanometer = 546.5
+        spectralLineMercuryMangoGreen.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN];
         spectralLineMercuryMangoGreen.color = SpectralColorUtil().wavelengthToColor(
-            spectralLineMercuryMangoGreen.nanometer)
-        spectralLineMercuryMangoGreen.color = SpectralColorUtil().wavelengthToColor(
-            spectralLineMercuryMangoGreen.nanometer)
-        spectralLinesByNames[spectralLineMercuryMangoGreen.name] = spectralLineMercuryMangoGreen
+            spectralLineMercuryMangoGreen.spectralLineMasterData.nanometer)
+        result[spectralLineMercuryMangoGreen.spectralLineMasterData.name] = spectralLineMercuryMangoGreen
 
         spectralLinEuropiumMiddleYellow = SpectralLine()
-        spectralLinEuropiumMiddleYellow.name = 'EuropiumMiddleYellow'
-        spectralLinEuropiumMiddleYellow.colorName = 'middle yellow'
-        spectralLinEuropiumMiddleYellow.mainColorName = 'yellow'
-        spectralLinEuropiumMiddleYellow.nanometer = 587.6
+        spectralLinEuropiumMiddleYellow.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.EUROPIUM_MIDDLE_YELLOW];
         spectralLinEuropiumMiddleYellow.color = SpectralColorUtil().wavelengthToColor(
-            spectralLinEuropiumMiddleYellow.nanometer)
-        spectralLinesByNames[spectralLinEuropiumMiddleYellow.name] = spectralLinEuropiumMiddleYellow
+            spectralLinEuropiumMiddleYellow.spectralLineMasterData.nanometer)
+        result[spectralLinEuropiumMiddleYellow.spectralLineMasterData.name] = spectralLinEuropiumMiddleYellow
 
         spectralLinEuropiumCyberYellow = SpectralLine()
-        spectralLinEuropiumCyberYellow.name = 'EuropiumCyberYellow'
-        spectralLinEuropiumCyberYellow.colorName = 'cyber yellow'
-        spectralLinEuropiumCyberYellow.mainColorName = 'yellow'
-        spectralLinEuropiumCyberYellow.nanometer = 593.4
+        spectralLinEuropiumCyberYellow.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.EUROPIUM_CYBER_YELLOW];
         spectralLinEuropiumCyberYellow.color = SpectralColorUtil().wavelengthToColor(
-            spectralLinEuropiumCyberYellow.nanometer)
-        spectralLinesByNames[spectralLinEuropiumCyberYellow.name] = spectralLinEuropiumCyberYellow
+            spectralLinEuropiumCyberYellow.spectralLineMasterData.nanometer)
+        result[spectralLinEuropiumCyberYellow.spectralLineMasterData.name] = spectralLinEuropiumCyberYellow
 
         spectralLinEuropiumAmber = SpectralLine()
-        spectralLinEuropiumAmber.name = 'EuropiumAmber'
-        spectralLinEuropiumAmber.colorName = 'amber'
-        spectralLinEuropiumAmber.mainColorName = 'yellow'
-        spectralLinEuropiumAmber.nanometer = 599.7
+        spectralLinEuropiumAmber.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.EUROPIUM_AMBER];
         spectralLinEuropiumAmber.color = SpectralColorUtil().wavelengthToColor(
-            spectralLinEuropiumAmber.nanometer)
-        spectralLinesByNames[spectralLinEuropiumAmber.name] = spectralLinEuropiumAmber
+            spectralLinEuropiumAmber.spectralLineMasterData.nanometer)
+        result[spectralLinEuropiumAmber.spectralLineMasterData.name] = spectralLinEuropiumAmber
 
         spectralLinEuropiumVividGamboge = SpectralLine()
-        spectralLinEuropiumVividGamboge.name = 'EuropiumVividGamboge'
-        spectralLinEuropiumVividGamboge.colorName = 'vivid gamboge'
-        spectralLinEuropiumVividGamboge.mainColorName = 'orange'
-        spectralLinEuropiumVividGamboge.nanometer = 611.6
+        spectralLinEuropiumVividGamboge.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE];
         spectralLinEuropiumVividGamboge.color = SpectralColorUtil().wavelengthToColor(
-            spectralLinEuropiumVividGamboge.nanometer)
-        spectralLinesByNames[spectralLinEuropiumVividGamboge.name] = spectralLinEuropiumVividGamboge
+            spectralLinEuropiumVividGamboge.spectralLineMasterData.nanometer)
+        result[spectralLinEuropiumVividGamboge.spectralLineMasterData.name] = spectralLinEuropiumVividGamboge
 
         spectralLinEuropiumInternationalOrange = SpectralLine()
-        spectralLinEuropiumInternationalOrange.name = 'EuropiumInternationalOrange'
-        spectralLinEuropiumInternationalOrange.colorName = 'International Orange'
-        spectralLinEuropiumInternationalOrange.mainColorName = 'orange'
-        spectralLinEuropiumInternationalOrange.nanometer = 631.1
+        spectralLinEuropiumInternationalOrange.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.EUROPIUM_INTERNATIONAL_ORANGE];
         spectralLinEuropiumInternationalOrange.color = SpectralColorUtil().wavelengthToColor(
-            spectralLinEuropiumInternationalOrange.nanometer)
-        spectralLinesByNames[spectralLinEuropiumInternationalOrange.name] = spectralLinEuropiumInternationalOrange
+            spectralLinEuropiumInternationalOrange.spectralLineMasterData.nanometer)
+        result[spectralLinEuropiumInternationalOrange.spectralLineMasterData.name] = spectralLinEuropiumInternationalOrange
 
         spectralLinEuropiumRed = SpectralLine()
-        spectralLinEuropiumRed.name = 'EuropiumRed'
-        spectralLinEuropiumRed.colorName = 'red'
-        spectralLinEuropiumRed.mainColorName = 'red'
-        spectralLinEuropiumRed.nanometer = 650.8
+        spectralLinEuropiumRed.spectralLineMasterData = spectralLineMasterDatas[SpectralLineMasterDataColorName.EUROPIUM_RED];
         spectralLinEuropiumRed.color = SpectralColorUtil().wavelengthToColor(
-            spectralLinEuropiumRed.nanometer)
-        spectralLinesByNames[spectralLinEuropiumRed.name] = spectralLinEuropiumRed
+            spectralLinEuropiumRed.spectralLineMasterData.nanometer)
+        result[spectralLinEuropiumRed.spectralLineMasterData.name] = spectralLinEuropiumRed
 
-        return spectralLinesByNames
+        return result
 
     def getSpectralLinesByProminences(self, spectralLinesCollection: List[SpectralLine]) -> Dict[float, SpectralLine]:
 
@@ -131,17 +99,17 @@ class SpectralLineUtil(Singleton):
         return result
 
     def sortSpectralLinesByNanometers(self, spectralLinesCollection: List[SpectralLine]) -> Dict[int, SpectralLine]:
-        spectralLinesCollection.sort(key=attrgetter('nanometer'), reverse=False)
+        spectralLinesCollection.sort(key=attrgetter('spectralLineMasterData.nanometer'), reverse=False)
         result = {}
         for spectralLine in spectralLinesCollection:
-            result[spectralLine.nanometer] = spectralLine
+            result[spectralLine.spectralLineMasterData.nanometer] = spectralLine
         return result
 
     def sortSpectralLinesByNames(self, spectralLinesCollection: List[SpectralLine]) -> Dict[int, SpectralLine]:
-        spectralLinesCollection.sort(key=attrgetter('name'), reverse=False)
+        spectralLinesCollection.sort(key=attrgetter('spectralLineMasterData.name'), reverse=False)
         result = {}
         for spectralLine in spectralLinesCollection:
-            result[spectralLine.name] = spectralLine
+            result[spectralLine.spectralLineMasterData.name] = spectralLine
         return result
 
     def getPixelIndices(self, spectralLinesCollection: List[SpectralLine]) -> List[int]:
@@ -153,7 +121,7 @@ class SpectralLineUtil(Singleton):
     def getNanometers(self, spectralLinesCollection: List[SpectralLine]) -> List[float]:
         result = []
         for spectralLine in spectralLinesCollection:
-            result.append(spectralLine.nanometer)
+            result.append(spectralLine.spectralLineMasterData.nanometer)
         return result
 
 

@@ -140,7 +140,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             for peakPixelIndex,spectralLine in self.spectralLinesByPixelIndices.items():
                 lineItem = BaseGraphicsLineItem()
                 lineItem.setLine(peakPixelIndex, 0, peakPixelIndex, image.height())
-                pen = QPen(QBrush(SpectralColorUtil().wavelengthToColor(spectralLine.nanometer)), 3)
+                pen = QPen(QBrush(SpectralColorUtil().wavelengthToColor(spectralLine.spectralLineMasterData.nanometer)), 3)
                 pen.setStyle(Qt.PenStyle.DotLine)
                 lineItem.setPen(pen)
                 self.scene.addItem(lineItem)

@@ -14,12 +14,12 @@ class SpectrometerCalibrationProfileUtil(Singleton):
         return
 
     def getMatchingSpectralLine(self,spectrometerCalibrationProfile:SpectrometerCalibrationProfile, spectralLine:SpectralLine)->SpectralLine:
-        result=SpectralLineUtil().sortSpectralLinesByNanometers(spectrometerCalibrationProfile.getSpectralLines())[spectralLine.nanometer]
+        result=SpectralLineUtil().sortSpectralLinesByNanometers(spectrometerCalibrationProfile.getSpectralLines())[spectralLine.spectralLineMasterData.nanometer]
         return result
 
     def getSpectralLineWithName(self,spectrometerCalibrationProfile:SpectrometerCalibrationProfile,name:str)->SpectralLine:
         for spectralLine in spectrometerCalibrationProfile.getSpectralLines():
-            if spectralLine.name==name:
+            if spectralLine.spectralLineMasterData.name==name:
                 result=spectralLine
                 break
         return result

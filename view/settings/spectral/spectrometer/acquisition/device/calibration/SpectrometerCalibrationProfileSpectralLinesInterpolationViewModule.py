@@ -43,7 +43,7 @@ class SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule(PageWid
 
         for spectralLine in self.getModel().getSpectralLines():
             if spectralLine.pixelIndex is not None:
-                scatterSeries.append(int(spectralLine.pixelIndex),int(spectralLine.nanometer))
+                scatterSeries.append(int(spectralLine.pixelIndex),int(spectralLine.spectralLineMasterData.nanometer))
 
         if scatterSeries.chart() is not None and hasPoints:
 
