@@ -12,8 +12,6 @@ class SpectralLineMasterData(DbBaseEntity, DbBaseEntityMixin):
     colorName = Column(String)
     mainColorName = Column(String)
     nanometer = Column(Float)
-    prominence = Column(Float)
-    pixelIndex = Column(Integer)
 
 
 
