@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QLineEdit
 
 from model.databaseEntity.spectral.device import Spectrometer
+from view.application.widgets.page.PageLineEdit import PageLineEdit
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.SpectrometerSensorViewModule import \
     SpectrometerSensorViewModule
@@ -13,7 +14,7 @@ from view.settings.spectral.spectrometer.acquisition.device.SpectrometerVendorVi
 class SpectrometerViewModule(PageWidget):
 
     model:Spectrometer=None
-    spectrometerModelNameComponent:QLineEdit = None
+    spectrometerModelNameComponent:PageLineEdit = None
     spectrometerSensorViewModule:SpectrometerSensorViewModule = None
     spectrometerVendorViewModule:SpectrometerVendorViewModule = None
     spectrometerStyleViewModule:SpectrometerStyleViewModule = None
@@ -21,7 +22,8 @@ class SpectrometerViewModule(PageWidget):
     def getMainContainerWidgets(self):
         result= super().getMainContainerWidgets()
 
-        self.spectrometerModelNameComponent=QLineEdit()
+        self.spectrometerModelNameComponent=PageLineEdit()
+        self.spectrometerModelNameComponent.setReadOnly(True)
         result['spectrometerModelNameComponent'] =self.createLabeledComponent("Product name", self.spectrometerModelNameComponent)
 
         self.spectrometerSensorViewModule=SpectrometerSensorViewModule(self)

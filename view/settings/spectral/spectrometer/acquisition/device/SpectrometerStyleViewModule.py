@@ -1,17 +1,19 @@
 from PyQt6.QtWidgets import QLineEdit
 
 from model.databaseEntity.spectral.device import SpectrometerStyle
+from view.application.widgets.page.PageLineEdit import PageLineEdit
 from view.application.widgets.page.PageWidget import PageWidget
 
 
 class SpectrometerStyleViewModule(PageWidget):
     model: SpectrometerStyle = None
-    spectrometerStyleNameComponent: QLineEdit = None
+    spectrometerStyleNameComponent: PageLineEdit = None
 
     def getMainContainerWidgets(self):
         result = super().getMainContainerWidgets()
 
-        self.spectrometerStyleNameComponent=QLineEdit()
+        self.spectrometerStyleNameComponent=PageLineEdit()
+        self.spectrometerStyleNameComponent.setReadOnly(True)
         result['spectrometerStyleNameComponent']=self.createLabeledComponent("Style name", self.spectrometerStyleNameComponent)
 
         return result

@@ -106,7 +106,8 @@ class SpectrometerSensorUtil(Singleton):
             '''            
             <style type="text/css">                
                 table {
-                    color: white;
+                    color: gray;
+                    border: 1px solid red;
                     border-width: 0px;
                     border-collapse: collapse;                    
                 }               

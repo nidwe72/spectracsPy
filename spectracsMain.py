@@ -318,8 +318,8 @@ QSlider::sub-page:vertical, QSlider::add-page:horizontal {
 	background: #353535;
 }
 
-QLabel {
-	border: none;
+QLabel {	
+	border: none;;
 	background: #00000000;	
 }
 
@@ -346,6 +346,11 @@ PageLabel {
 PageWidget{
     border: 1px solid #00000000;
     background:#00000000;
+}
+
+QLineEdit[readOnly="true"]{
+    border: 1px solid gray;
+    color:gray;
 }
 
 

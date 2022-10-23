@@ -108,7 +108,6 @@ class SpectralLineMasterDataUtil(Singleton):
             if persistedSpectralLineMasterData is None:
                 persistSpectralLineMasterDataLogicModule.saveSpectralLineMasterData(spectralLineMasterData)
                 result[spectralLineMasterData.name] = spectralLineMasterData
-                continue
             else:
                 result[spectralLineMasterData.name] = persistedSpectralLineMasterData
 
