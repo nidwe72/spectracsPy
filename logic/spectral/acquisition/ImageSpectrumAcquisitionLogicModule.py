@@ -1,5 +1,5 @@
-from PyQt6.QtGui import QImage
-from PyQt6.QtGui import qGray
+from PySide6.QtGui import QImage
+from PySide6.QtGui import qGray
 
 from model.spectral.Spectrum import Spectrum
 

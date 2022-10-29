@@ -1,8 +1,6 @@
+from controller.application.ApplicationSignalsProviderLogicModule import ApplicationSignalsProviderLogicModule
 from controller.application.navigationHandler.NavigationHandlerLogicModule import NavigationHandlerLogicModule
 
-from controller.application.ApplicationSignalsProviderLogicModule import ApplicationSignalsProviderLogicModule
-from model.application.navigation.NavigationSignal import NavigationSignal
-from PyQt6.QtCore import pyqtSignal
 
 class ApplicationContextLogicModule:
 

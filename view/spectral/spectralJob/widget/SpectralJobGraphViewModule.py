@@ -1,13 +1,13 @@
 import numpy as np
 import random
 import numpy.typing
-from PyQt6.QtCharts import QChart
-from PyQt6.QtCharts import QChartView
-from PyQt6.QtCharts import QLineSeries
+from PySide6.QtCharts import QChart
+from PySide6.QtCharts import QChartView
+from PySide6.QtCharts import QLineSeries
 
-from PyQt6.QtGui import QBrush
-from PyQt6.QtGui import QColor
-from PyQt6.QtGui import QPen
+from PySide6.QtGui import QBrush
+from PySide6.QtGui import QColor
+from PySide6.QtGui import QPen
 
 from model.spectral.SpectralJob import SpectralJob
 from model.spectral.SpectrumSampleType import SpectrumSampleType

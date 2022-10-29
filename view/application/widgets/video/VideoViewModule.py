@@ -1,16 +1,16 @@
-from PyQt6 import QtGui
-from PyQt6.QtWidgets import QWidget, QGraphicsLineItem
-from PyQt6.QtWidgets import QGraphicsView
-from PyQt6.QtWidgets import QGraphicsScene
-from PyQt6.QtWidgets import QGridLayout
-from PyQt6.QtWidgets import QGraphicsPixmapItem
-from PyQt6.QtGui import QImage
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtGui import QPen
-from PyQt6.QtGui import QBrush
-from PyQt6.QtGui import QColor
+from PySide6 import QtGui
+from PySide6.QtWidgets import QWidget, QGraphicsLineItem
+from PySide6.QtWidgets import QGraphicsView
+from PySide6.QtWidgets import QGraphicsScene
+from PySide6.QtWidgets import QGridLayout
+from PySide6.QtWidgets import QGraphicsPixmapItem
+from PySide6.QtGui import QImage
+from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPen
+from PySide6.QtGui import QBrush
+from PySide6.QtGui import QColor
 
-from PyQt6.QtCore import Qt
+from PySide6.QtCore import Qt
 
 from logic.appliction.video.VideoThread import VideoThread
 

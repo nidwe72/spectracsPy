@@ -1,7 +1,7 @@
-from PyQt6.QtWidgets import QWidget, QComboBox
-from PyQt6.QtWidgets import QGridLayout
-from PyQt6.QtWidgets import QGroupBox
-from PyQt6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QWidget, QComboBox
+from PySide6.QtWidgets import QGridLayout
+from PySide6.QtWidgets import QGroupBox
+from PySide6.QtWidgets import QPushButton
 
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule

@@ -1,5 +1,5 @@
 from typing import Dict
-from PyQt6.QtWidgets import QGraphicsScene, QGraphicsItem
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsItem
 
 from view.application.widgets.graphicsScene.BaseGraphicsItem import BaseGraphicsItem
 

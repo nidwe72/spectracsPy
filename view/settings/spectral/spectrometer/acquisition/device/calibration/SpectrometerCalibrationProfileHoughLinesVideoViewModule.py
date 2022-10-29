@@ -1,5 +1,5 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap, QPen, QBrush, QColor
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap, QPen, QBrush, QColor
 
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \

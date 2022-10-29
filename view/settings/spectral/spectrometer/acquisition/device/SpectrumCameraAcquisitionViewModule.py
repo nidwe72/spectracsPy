@@ -1,5 +1,5 @@
 
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget
 
 class SpectrumCameraAcquisitionViewModule(QWidget):
 

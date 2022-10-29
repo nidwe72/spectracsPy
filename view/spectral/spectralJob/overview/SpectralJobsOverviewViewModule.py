@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QWidget
-from PyQt6.QtWidgets import QGridLayout
-from PyQt6.QtWidgets import QLabel
+from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QGridLayout
+from PySide6.QtWidgets import QLabel
 
 class SpectralJobsOverviewViewModule(QWidget):
 

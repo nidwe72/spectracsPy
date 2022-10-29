@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QLine
+from PySide6.QtCore import QLine
 
 from model.application.video.VideoSignal import VideoSignal
 

@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QTabWidget
-from PyQt6.QtWidgets import QWidget
-from PyQt6.QtWidgets import QGridLayout
+from PySide6.QtWidgets import QTabWidget
+from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QGridLayout
 
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule

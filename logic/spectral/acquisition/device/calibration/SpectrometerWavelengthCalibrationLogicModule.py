@@ -2,7 +2,7 @@ from typing import Dict
 
 import numpy as np
 
-from PyQt6.QtGui import QImage, QColor
+from PySide6.QtGui import QImage, QColor
 from numpy import poly1d
 
 from base.Singleton import Singleton

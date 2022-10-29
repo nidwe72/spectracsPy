@@ -1,18 +1,14 @@
-from PyQt6.QtWidgets import QWidget
-from PyQt6.QtWidgets import QGridLayout
-from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtWidgets import QGroupBox
-
-from PyQt6.QtCore import pyqtSignal
-
-from view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
-from model.application.navigation.NavigationSignal import NavigationSignal
-
-from controller.application.ApplicationSignalsProviderLogicModule import ApplicationSignalsProviderLogicModule
+from PySide6.QtWidgets import QGridLayout
+from PySide6.QtWidgets import QGroupBox
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QWidget
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from model.application.navigation.NavigationSignal import NavigationSignal
+from view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
 
-from controller.application.navigationHandler.NavigationHandlerLogicModule import NavigationHandlerLogicModule
+
+# from PySide6.QtCore import pyqtSignal
 
 class HomeViewModule(QWidget):
 

@@ -1,7 +1,8 @@
 import numpy.typing
-from PyQt6.QtGui import QImage
-from PyQt6.QtGui import qGray
-from PyQt6.QtGui import QColor
+from PySide6 import QtGui
+from PySide6.QtGui import QImage
+from PySide6.QtGui import qGray
+from PySide6.QtGui import QColor
 import numpy as np
 import cv2
 from skimage import color
@@ -55,33 +56,17 @@ class SpectralImageLogicModule:
 
         return result
 
-    def convertQImageToNumpyArray(self,qtimg):
+    def convertQImageToNumpyArray(self,incomingImage:QImage):
+        '''  Converts a QImage into an opencv MAT format  '''
 
-        """
-        Read an image using QT's QImage.load
-        """
-        arrayptr = qtimg.bits()
-        # QT may pad the image, so we need to use bytesPerLine, not width for
-        # the conversion to a numpy array
-        bytesPerPixel = qtimg.depth() // 8
-        pixelsPerLine = qtimg.bytesPerLine() // bytesPerPixel
-        img_size = pixelsPerLine * qtimg.height() * bytesPerPixel
-        arrayptr.setsize(img_size)
-        img = np.array(arrayptr)
-        # Reshape and trim down to correct dimensions
-        if bytesPerPixel > 1:
-            img = img.reshape((qtimg.height(), pixelsPerLine, bytesPerPixel))
-            img = img[:, :qtimg.width(), :]
-        else:
-            img = img.reshape((qtimg.height(), pixelsPerLine))
-            img = img[:, :qtimg.width()]
-        # Strip qt's false alpha channel if needed
-        # and reorder color axes as required
-        if bytesPerPixel == 4 and not qtimg.hasAlphaChannel():
-            img = img[:, :, 2::-1]
-        elif bytesPerPixel == 4:
-            img[:, :, 0:3] = img[:, :, 2::-1]
-        return img
+        incomingImage = incomingImage.convertToFormat(QtGui.QImage.Format.Format_RGB32)
+
+        width = incomingImage.width()
+        height = incomingImage.height()
+
+        ptr = incomingImage.constBits()
+        arr = np.array(ptr).reshape(height, width, 4)  # Copies the data
+        return arr
 
     def convertNumpyArrayToQImage(self,img:numpy.ndarray):
         w,h,ch = img.shape

@@ -1,6 +1,6 @@
 import sys
 
-from PyQt6 import QtWidgets
+from PySide6 import QtWidgets
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from view.main.MainContainerViewModule import MainContainerViewModule

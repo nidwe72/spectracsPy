@@ -1,9 +1,9 @@
 import os
 
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QWidget, QLabel, QGridLayout, QProgressBar
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QWidget, QLabel, QGridLayout, QProgressBar
 
-from PyQt6 import QtCore
+from PySide6 import QtCore
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal

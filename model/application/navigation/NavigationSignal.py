@@ -1,10 +1,10 @@
-from PyQt6.QtCore import QObject
-from PyQt6.QtCore import pyqtSignal
+from PySide6.QtCore import QObject
+
 
 class NavigationSignal(QObject):
     target = ""
 
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
 
     def getTarget(self):

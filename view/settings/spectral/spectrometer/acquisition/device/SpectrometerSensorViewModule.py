@@ -1,5 +1,5 @@
-from PyQt6.QtGui import QTextDocument
-from PyQt6.QtWidgets import QTextEdit
+from PySide6.QtGui import QTextDocument
+from PySide6.QtWidgets import QTextEdit
 
 from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from model.databaseEntity.spectral.device import SpectrometerStyle, SpectrometerSensor

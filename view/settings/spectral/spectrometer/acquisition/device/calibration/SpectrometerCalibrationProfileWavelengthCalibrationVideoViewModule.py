@@ -2,8 +2,8 @@ from typing import Dict
 from typing import List
 
 import numpy as np
-from PyQt6.QtCore import Qt, QRectF, QPointF
-from PyQt6.QtGui import QPixmap, QPen, QBrush
+from PySide6.QtCore import Qt, QRectF, QPointF
+from PySide6.QtGui import QPixmap, QPen, QBrush
 from scipy.signal import find_peaks
 from scipy.signal import peak_prominences
 

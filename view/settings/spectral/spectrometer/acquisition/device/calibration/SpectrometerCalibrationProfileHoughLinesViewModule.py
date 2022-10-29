@@ -1,8 +1,8 @@
 import threading
 from typing import List
 
-from PyQt6.QtCore import QLine
-from PyQt6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
+from PySide6.QtCore import QLine
+from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.appliction.image.houghLine.HoughLineLogicModule import HoughLineLogicModule

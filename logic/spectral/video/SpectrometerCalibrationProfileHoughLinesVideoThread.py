@@ -1,6 +1,6 @@
 import threading
 
-from PyQt6.QtCore import pyqtSignal
+from PySide6.QtCore import Signal
 
 from logic.appliction.video.VideoThread import VideoThread
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
@@ -9,7 +9,7 @@ from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
 
 class SpectrometerCalibrationProfileHoughLinesVideoThread(
     VideoThread[SpectrometerCalibrationProfileHoughLinesVideoSignal]):
-    videoThreadSignal = pyqtSignal(threading.Event, SpectrometerCalibrationProfileHoughLinesVideoSignal)
+    videoThreadSignal = Signal(threading.Event, SpectrometerCalibrationProfileHoughLinesVideoSignal)
 
     def createSignal(self) -> SpectrometerCalibrationProfileHoughLinesVideoSignal:
         super().createSignal()

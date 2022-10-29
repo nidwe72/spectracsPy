@@ -1,9 +1,9 @@
 from typing import TypeVar, Generic
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPen, QBrush, QColor
-from PyQt6.QtWidgets import QWidget, QGridLayout, QGraphicsView, QFrame
-from pyqt6_plugins.examplebuttonplugin import QtGui
+from PySide6 import QtGui
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPen, QBrush, QColor
+from PySide6.QtWidgets import QWidget, QGridLayout, QGraphicsView, QFrame
 
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
 from view.application.widgets.graphicsScene.BaseGraphicsPixmapItem import BaseGraphicsPixmapItem

@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QGraphicsLineItem
+from PySide6.QtWidgets import QGraphicsLineItem
 
 from view.application.widgets.graphicsScene.BaseGraphicsItem import BaseGraphicsItem
 

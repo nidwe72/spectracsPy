@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QObject
+from PySide6.QtCore import QObject
 from typing import TypeVar, Generic
 
 from model.databaseEntity.DbEntityCrudOperation import DbEntityCrudOperation

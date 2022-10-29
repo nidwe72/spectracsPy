@@ -1,6 +1,6 @@
-from PyQt6.QtCharts import QLineSeries, QChart, QChartView, QScatterSeries, QSplineSeries
-from PyQt6.QtCore import Qt, QMargins
-from PyQt6.QtGui import QBrush, QColor, QPen
+from PySide6.QtCharts import QLineSeries, QChart, QChartView, QScatterSeries, QSplineSeries
+from PySide6.QtCore import Qt, QMargins
+from PySide6.QtGui import QBrush, QColor, QPen
 from numpy import poly1d
 
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule

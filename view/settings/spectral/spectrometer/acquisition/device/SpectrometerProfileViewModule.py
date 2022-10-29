@@ -1,8 +1,8 @@
-from PyQt6.QtCore import QModelIndex
-from PyQt6.QtGui import QStandardItemModel, QStandardItem
-from PyQt6.QtWidgets import QGridLayout, QLineEdit, QComboBox
-from PyQt6.QtWidgets import QGroupBox
-from PyQt6.QtWidgets import QPushButton
+from PySide6.QtCore import QModelIndex
+from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtWidgets import QGridLayout, QLineEdit, QComboBox
+from PySide6.QtWidgets import QGroupBox
+from PySide6.QtWidgets import QPushButton
 from sqlalchemy import inspect
 from sqlalchemy.orm import InstanceState
 

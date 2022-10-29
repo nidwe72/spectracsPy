@@ -1,6 +1,6 @@
 from typing import List
 from typing import Dict
-from PyQt6.QtCore import QObject
+from PySide6.QtCore import QObject
 from model.spectral.Spectrum import Spectrum
 
 

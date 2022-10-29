@@ -1,6 +1,6 @@
 import threading
 
-from PyQt6.QtCore import pyqtSignal
+from PySide6.QtCore import Signal
 
 from logic.appliction.video.VideoThread import VideoThread
 from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
@@ -13,7 +13,7 @@ from model.spectral.SpectrumSampleType import SpectrumSampleType
 
 class SpectrometerCalibrationProfileWavelengthCalibrationVideoThread(VideoThread[SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal]):
 
-    videoThreadSignal = pyqtSignal(threading.Event, SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal)
+    videoThreadSignal = Signal(threading.Event, SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal)
 
     def createSignal(self) -> SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal:
         super().createSignal()

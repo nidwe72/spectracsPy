@@ -1,14 +1,13 @@
 from typing import Generic, TypeVar
 
 import cv2
-from PyQt6.QtCore import QThread
-from PyQt6.QtGui import QImage
+from PySide6.QtCore import QThread
+from PySide6.QtGui import QImage
 
 S = TypeVar('S')
 
 class VideoThread(QThread,Generic[S]):
 
-    #videoThreadSignal = pyqtSignal(threading.Event, S)
     qImage: QImage
 
     def __init__(self):

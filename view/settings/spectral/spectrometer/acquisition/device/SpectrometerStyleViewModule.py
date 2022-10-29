@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QLineEdit
 
 from model.databaseEntity.spectral.device import SpectrometerStyle
 from view.application.widgets.page.PageLineEdit import PageLineEdit

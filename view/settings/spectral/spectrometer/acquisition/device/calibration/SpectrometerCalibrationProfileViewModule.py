@@ -1,7 +1,7 @@
-from PyQt6.QtCharts import QLineSeries, QChart, QChartView
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QBrush, QColor, QPen
-from PyQt6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QTabWidget, QTextEdit
+from PySide6.QtCharts import QLineSeries, QChart, QChartView
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QColor, QPen
+from PySide6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QTabWidget, QTextEdit
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil

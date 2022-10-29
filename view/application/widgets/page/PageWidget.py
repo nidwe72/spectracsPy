@@ -1,8 +1,8 @@
-from PyQt6 import QtGui
-from PyQt6.QtGui import QPainter
-from PyQt6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel, QStyleOption, QFrame
+from PySide6 import QtGui
+from PySide6.QtGui import QPainter
+from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel, QStyleOption, QFrame
 
-from PyQt6.QtCore import Qt
+from PySide6.QtCore import Qt
 
 from view.application.widgets.page.PageLabel import PageLabel
 

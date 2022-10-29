@@ -1,13 +1,13 @@
 import typing
 from typing import List
 
-from PyQt6 import QtCore
-from PyQt6.QtCore import QAbstractListModel, QModelIndex, QVariant, Qt, QSize, QItemSelectionModel, QItemSelection
-from PyQt6.QtGui import QTextDocument, QAbstractTextDocumentLayout, QPalette
-from PyQt6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QListView, QItemDelegate, QStyledItemDelegate, \
+from PySide6 import QtCore
+from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, QSize, QItemSelectionModel, QItemSelection
+from PySide6.QtGui import QTextDocument, QAbstractTextDocumentLayout, QPalette
+from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QListView, QItemDelegate, QStyledItemDelegate, \
     QStyleOptionViewItem, QApplication, QWidget, QAbstractItemView, QTextEdit
 
-from PyQt6.QtWidgets import QStyle
+from PySide6.QtWidgets import QStyle
 
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
@@ -364,10 +364,11 @@ class SpectrometerProfilesListModel(QAbstractListModel):
 
     def data(self, index, role):
         if not index.isValid():
-            return QVariant()
+            return None
+            #return QVariant()
 
         if index.row() >= len(self.__spectrometerProfiles):
-            return QVariant()
+            return None
 
         if role == Qt.ItemDataRole.DisplayRole:
             result=self.__spectrometerProfiles[index.row()]
@@ -375,7 +376,8 @@ class SpectrometerProfilesListModel(QAbstractListModel):
         elif role ==Qt.ItemDataRole.EditRole:
             return self.__spectrometerProfiles[index.row()]
         else:
-            return QVariant()
+            #return QVariant()
+            return None
 
     def flags(self, index):
         flags = super(self.__class__, self).flags(index)

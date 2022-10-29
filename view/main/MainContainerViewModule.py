@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout, QFrame
+from PySide6.QtWidgets import QWidget, QGridLayout, QFrame
 
 from view.main.MainStatusBarViewModule import MainStatusBarViewModule
 from view.main.MainViewModule import MainViewModule

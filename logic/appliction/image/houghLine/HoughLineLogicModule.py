@@ -3,8 +3,8 @@ import cv2
 import cmath
 import scipy as sp
 import numpy as np
-from PyQt6.QtCore import QLine, QPoint
-from PyQt6.QtGui import QImage
+from PySide6.QtCore import QLine, QPoint
+from PySide6.QtGui import QImage
 
 
 from logic.spectral.video.SpectralImageLogicModule import SpectralImageLogicModule

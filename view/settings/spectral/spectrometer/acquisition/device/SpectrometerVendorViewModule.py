@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QLineEdit
 
 from logic.appliction.style.Polisher import Polisher
 from model.databaseEntity.spectral.device import SpectrometerVendor

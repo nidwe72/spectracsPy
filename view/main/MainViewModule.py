@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QStackedWidget
+from PySide6.QtWidgets import QStackedWidget
 
 from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
 from model.databaseEntity.spectral.device import SpectrometerProfile

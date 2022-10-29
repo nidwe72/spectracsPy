@@ -1,4 +1,4 @@
-from PyQt6.QtGui import QColor
+from PySide6.QtGui import QColor
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy.orm import relationship

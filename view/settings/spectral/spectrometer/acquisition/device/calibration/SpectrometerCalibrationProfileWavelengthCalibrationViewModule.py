@@ -1,6 +1,6 @@
 import threading
 
-from PyQt6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
+from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \

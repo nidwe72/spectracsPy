@@ -1,6 +1,6 @@
 import threading
 
-from PyQt6.QtCore import pyqtSignal
+from PySide6.QtCore import Signal
 
 from logic.appliction.video.VideoThread import VideoThread
 from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
@@ -9,9 +9,10 @@ from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 
 
+
 class SpectrumVideoThread(VideoThread[SpectralVideoThreadSignal]):
 
-    videoThreadSignal = pyqtSignal(threading.Event, SpectralVideoThreadSignal)
+    videoThreadSignal = Signal(threading.Event, SpectralVideoThreadSignal)
 
     def createSignal(self) -> SpectralVideoThreadSignal:
         super().createSignal()

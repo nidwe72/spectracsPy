@@ -1,5 +1,5 @@
-from PyQt6.QtCore import QObject
-from PyQt6.QtGui import QImage
+from PySide6.QtCore import QObject
+from PySide6.QtGui import QImage
 
 class VideoSignal(QObject):
     image:QImage

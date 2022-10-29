@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QObject
+from PySide6.QtCore import QObject
 
 class SingletonQObject(QObject):
     _instance = None

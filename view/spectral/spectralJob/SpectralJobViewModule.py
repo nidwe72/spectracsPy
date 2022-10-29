@@ -1,8 +1,8 @@
 import os
-from PyQt6.QtWidgets import QGridLayout
-from PyQt6.QtWidgets import QGroupBox
-from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtWidgets import QWidget
+from PySide6.QtWidgets import QGridLayout
+from PySide6.QtWidgets import QGroupBox
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QWidget
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread

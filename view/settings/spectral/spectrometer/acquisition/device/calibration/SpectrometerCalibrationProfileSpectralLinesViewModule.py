@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
+from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
 
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
