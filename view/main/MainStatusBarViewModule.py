@@ -1,4 +1,5 @@
 import os
+import pkgutil
 
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QWidget, QLabel, QGridLayout, QProgressBar
@@ -7,6 +8,7 @@ from PySide6 import QtCore
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from resource.ResourceUtil import ResourceUtil
 
 
 class MainStatusBarViewModule(QWidget):
@@ -21,10 +23,8 @@ class MainStatusBarViewModule(QWidget):
 
         self.label=QLabel()
 
-        path = os.path.dirname(os.path.abspath(__file__))+'/logo.png'
-        print(path)
-
-        pixmap = QPixmap(path)
+        pixmap = QPixmap()
+        pixmap.loadFromData(ResourceUtil().getResourceData('logo.png'), 'png')
         self.label.setPixmap(pixmap)
         self.label.setScaledContents(True)
         self.label.setMinimumWidth(int(480 * 1.5))
