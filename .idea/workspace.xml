@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo">
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resource/ResourceUtil.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resource/logo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/spectracsAppPyInstaller.spec" beforeDir="false" afterPath="$PROJECT_DIR$/spectracsAppPyInstaller.spec" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/main/MainStatusBarViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/main/MainStatusBarViewModule.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" show_ignored="true" />
+  <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="e120a1e4-a022-4ed4-bc4c-6eb624538a3a" />
+        <option name="url" value="https://github.com/nidwe72/spectracsPy.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="NamedScopeManager">
+    <scope name="python" pattern="!file:*/__init__.py" />
+  </component>
+  <component name="ProjectId" id="27zHGKIsv07WuFFV7CJdliGWwyY" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="TODO_SCOPE" value="All Places" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/resource" />
+    <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/resource" />
+      <recent name="$PROJECT_DIR$/resource-data" />
+      <recent name="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/resource" />
+      <recent name="$PROJECT_DIR$/model/databaseEntity/spectral/device" />
+      <recent name="$PROJECT_DIR$/logic/persistence/database/spectrometerVendor" />
+      <recent name="$PROJECT_DIR$/logic/persistence/database/spectrometerSensor" />
+      <recent name="$PROJECT_DIR$/logic/spectral/acquisition" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.spectracsMain">
+    <configuration name="PageWidget" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="spectracsPy" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/view/application/widgets/page" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/view/application/widgets/page/PageWidget.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="spectracsPy" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="SpectrometerCalibrationProfileViewModule" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="spectracsPy" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileViewModule.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="SpectrometerWavelengthCalibrationLogicModule" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="spectracsPy" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration/SpectrometerWavelengthCalibrationLogicModule.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="spectracsMain" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="spectracsPy" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/spectracsMain.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.spectracsMain" />
+        <item itemvalue="Python.SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule" />
+        <item itemvalue="Python.SpectrometerCalibrationProfileViewModule" />
+        <item itemvalue="Python.PageWidget" />
+        <item itemvalue="Python.SpectrometerWavelengthCalibrationLogicModule" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="" />
+      <created>1650315906614</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1650315906614</updated>
+      <workItem from="1650315912021" duration="3694000" />
+      <workItem from="1650319743928" duration="977000" />
+      <workItem from="1650551819183" duration="174000" />
+      <workItem from="1650573000983" duration="6717000" />
+      <workItem from="1650719668612" duration="1220000" />
+      <workItem from="1651083178356" duration="653000" />
+      <workItem from="1651172754633" duration="1334000" />
+      <workItem from="1652116648979" duration="8127000" />
+      <workItem from="1652292936633" duration="6518000" />
+      <workItem from="1652299570670" duration="908000" />
+      <workItem from="1652452419219" duration="18283000" />
+      <workItem from="1652543245375" duration="90000" />
+      <workItem from="1652559219993" duration="20743000" />
+      <workItem from="1652639949089" duration="3713000" />
+      <workItem from="1652810598335" duration="5482000" />
+      <workItem from="1652893945987" duration="4143000" />
+      <workItem from="1653063893881" duration="1291000" />
+      <workItem from="1653065208555" duration="11667000" />
+      <workItem from="1653166537785" duration="14227000" />
+      <workItem from="1653182531944" duration="495000" />
+      <workItem from="1653183557716" duration="2453000" />
+      <workItem from="1653198037159" duration="596000" />
+      <workItem from="1653325610073" duration="9626000" />
+      <workItem from="1653498155195" duration="11824000" />
+      <workItem from="1654022107660" duration="676000" />
+      <workItem from="1655059935649" duration="1431000" />
+      <workItem from="1655132265033" duration="7752000" />
+      <workItem from="1655310599195" duration="14928000" />
+      <workItem from="1655326160658" duration="600000" />
+      <workItem from="1655326791236" duration="972000" />
+      <workItem from="1655640399456" duration="6107000" />
+      <workItem from="1655664152869" duration="3268000" />
+      <workItem from="1655916471099" duration="8504000" />
+      <workItem from="1655925125624" duration="726000" />
+      <workItem from="1656347192496" duration="9141000" />
+      <workItem from="1656696614541" duration="8922000" />
+      <workItem from="1656800419492" duration="295000" />
+      <workItem from="1656855510401" duration="4681000" />
+      <workItem from="1656860254747" duration="334000" />
+      <workItem from="1656860743130" duration="905000" />
+      <workItem from="1656951445079" duration="9265000" />
+      <workItem from="1657044781063" duration="8759000" />
+      <workItem from="1657123234536" duration="9179000" />
+      <workItem from="1657212011821" duration="5561000" />
+      <workItem from="1657385830015" duration="18119000" />
+      <workItem from="1657404266796" duration="605000" />
+      <workItem from="1657478059741" duration="88000" />
+      <workItem from="1657558861381" duration="4949000" />
+      <workItem from="1657727680792" duration="6457000" />
+      <workItem from="1658163657174" duration="7568000" />
+      <workItem from="1659883188595" duration="1282000" />
+      <workItem from="1660030018063" duration="356000" />
+      <workItem from="1660030397701" duration="496000" />
+      <workItem from="1660030918285" duration="316000" />
+      <workItem from="1660031339726" duration="9572000" />
+      <workItem from="1660202880605" duration="19754000" />
+      <workItem from="1660388593457" duration="7692000" />
+      <workItem from="1660417238783" duration="10908000" />
+      <workItem from="1660475146200" duration="5563000" />
+      <workItem from="1660653624584" duration="17683000" />
+      <workItem from="1660737040126" duration="10991000" />
+      <workItem from="1660993464725" duration="11113000" />
+      <workItem from="1661083100624" duration="10108000" />
+      <workItem from="1661166920735" duration="15114000" />
+      <workItem from="1661195557584" duration="11316000" />
+      <workItem from="1661359346854" duration="5939000" />
+      <workItem from="1661523509001" duration="10113000" />
+      <workItem from="1661536515019" duration="17500000" />
+      <workItem from="1661696485630" duration="1243000" />
+      <workItem from="1662234872583" duration="7763000" />
+      <workItem from="1662396313354" duration="6486000" />
+      <workItem from="1662742089363" duration="12395000" />
+      <workItem from="1662899230513" duration="6391000" />
+      <workItem from="1662922051349" duration="645000" />
+      <workItem from="1663000643394" duration="2958000" />
+      <workItem from="1663003639460" duration="3591000" />
+      <workItem from="1663605375934" duration="6520000" />
+      <workItem from="1664119494803" duration="6043000" />
+      <workItem from="1664125582218" duration="8266000" />
+      <workItem from="1664293491605" duration="6753000" />
+      <workItem from="1664300275402" duration="6487000" />
+      <workItem from="1664380606965" duration="8855000" />
+      <workItem from="1664550571528" duration="4205000" />
+      <workItem from="1664554802847" duration="5994000" />
+      <workItem from="1664561042761" duration="1345000" />
+      <workItem from="1665419237944" duration="12749000" />
+      <workItem from="1666023495857" duration="6843000" />
+      <workItem from="1666195962347" duration="4414000" />
+      <workItem from="1666370983160" duration="6436000" />
+      <workItem from="1666521504790" duration="811000" />
+      <workItem from="1666522340863" duration="8669000" />
+      <workItem from="1666785112224" duration="720000" />
+      <workItem from="1666788011566" duration="3216000" />
+      <workItem from="1666896047003" duration="1202000" />
+      <workItem from="1666899760421" duration="2403000" />
+      <workItem from="1666977315472" duration="3258000" />
+      <workItem from="1666987502758" duration="2579000" />
+      <workItem from="1667072695954" duration="1116000" />
+      <workItem from="1667074072623" duration="2754000" />
+      <workItem from="1667078687143" duration="8919000" />
+    </task>
+    <task id="LOCAL-00041" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* object model change: SpectrometerProfile now has a Spectrometer having again as SpectrometerSensor">
+      <created>1657404403697</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1657404403697</updated>
+    </task>
+    <task id="LOCAL-00042" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* object model change: Spectrometer now has a SpectrometerVendor and a SpectrometerStyle">
+      <created>1657563437029</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1657563437029</updated>
+    </task>
+    <task id="LOCAL-00043" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* object model change: reflect in GUI">
+      <created>1657733304440</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1657733304440</updated>
+    </task>
+    <task id="LOCAL-00044" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* SpectrometerVendor/s are persisted">
+      <created>1658171385200</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1658171385201</updated>
+    </task>
+    <task id="LOCAL-00045" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* added SpectrometerSensorChip&#10;* SpectrometerStyle/s are persisted&#10;* Session is retrieved via Singleton (avoiding 'already attached' errors on used entities)">
+      <created>1660040816413</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1660040816413</updated>
+    </task>
+    <task id="LOCAL-00046" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* all master-data related entities are persisted now">
+      <created>1660222043893</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1660222043893</updated>
+    </task>
+    <task id="LOCAL-00047" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* dded/applied PersistSpectrometerProfileLogicModule">
+      <created>1660390934710</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1660390934715</updated>
+    </task>
+    <task id="LOCAL-00048" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: we can add SpectrometerProfile/s now">
+      <created>1660395966953</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1660395966953</updated>
+    </task>
+    <task id="LOCAL-00049" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: adding and editing now works completely&#10;* added 'class SpectrometerProfileSignal(DbEntityChangedSignal[SpectrometerProfile])' using Generic/s (for first time in my python experience)">
+      <created>1660425851349</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1660425851349</updated>
+    </task>
+    <task id="LOCAL-00050" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: adding and editing now works completely&#10;* added 'class SpectrometerProfileSignal(DbEntityChangedSignal[SpectrometerProfile])' using Generic/s (for first time in my python experience)">
+      <created>1660427368350</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1660427368356</updated>
+    </task>
+    <task id="LOCAL-00051" summary="* SpectrometerCalibrationProfile stuff: started">
+      <created>1660478272250</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1660478272250</updated>
+    </task>
+    <task id="LOCAL-00052" summary="* SpectrometerCalibrationProfile stuff: detect vertical bounds using HoughLineLogicModule (called in the background, yet not displayed in the GUI)">
+      <created>1660687982935</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1660687982938</updated>
+    </task>
+    <task id="LOCAL-00053" summary="* SpectrometerCalibrationProfile stuff: detect vertical bounds using HoughLineLogicModule (called in the background, yet not displayed in the GUI)&#10;* MainStatusBarViewModule: added progress bar (and applied to hough lines retrieval as initial use case)">
+      <created>1660741648471</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1660741648474</updated>
+    </task>
+    <task id="LOCAL-00054" summary="* SpectrometerCalibrationProfile stuff: detect vertical bounds using HoughLineLogicModule (called in the background, yet not displayed in the GUI)&#10;* SpectrumVideoThread now extends VideoThread (as we plan to use some other subclass for the Hough lines)">
+      <created>1660747950966</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1660747950966</updated>
+    </task>
+    <task id="LOCAL-00055" summary="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (todo: average them)">
+      <created>1661002827155</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1661002827156</updated>
+    </task>
+    <task id="LOCAL-00056" summary="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (todo: average them)">
+      <created>1661003747787</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1661003747787</updated>
+    </task>
+    <task id="LOCAL-00057" summary="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (current ones and total bounding ones)">
+      <created>1661088704372</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1661088704373</updated>
+    </task>
+    <task id="LOCAL-00058" summary="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (current ones and total bounding ones)">
+      <created>1661091138026</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1661091138026</updated>
+    </task>
+    <task id="LOCAL-00059" summary="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (current ones and total bounding ones)">
+      <created>1661092905392</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1661092905392</updated>
+    </task>
+    <task id="LOCAL-00060" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: initial version">
+      <created>1661170939664</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1661170939665</updated>
+    </task>
+    <task id="LOCAL-00061" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: initial version">
+      <created>1661184044958</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1661184044958</updated>
+    </task>
+    <task id="LOCAL-00062" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: we now have identified the three Europium lines (587,593,598) before 600nm. For this we use the experience that those lines have the lowest distances between their neighbours incidentally">
+      <created>1661206695659</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1661206695672</updated>
+    </task>
+    <task id="LOCAL-00063" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify (and name) the spectral lines (10 lines should be possible probably)">
+      <created>1661365215466</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1661365215471</updated>
+    </task>
+    <task id="LOCAL-00064" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: now uses color information to detect the amber line (as the main line)">
+      <created>1661554188808</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1661554188809</updated>
+    </task>
+    <task id="LOCAL-00065" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: detect further lines (now only 'EuropiumRed' is missing from the lines it makes sense to detect for now)">
+      <created>1662242038453</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1662242038454</updated>
+    </task>
+    <task id="LOCAL-00066" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: detect further lines (now only 'EuropiumRed' is missing from the lines it makes sense to detect for now)&#10;* now we also have access to prominences as attribute of new class SpectralPeak">
+      <created>1662402769324</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1662402769325</updated>
+    </task>
+    <task id="LOCAL-00067" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: 'mango green' is detected using geometric and color information now">
+      <created>1662747883569</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1662747883570</updated>
+    </task>
+    <task id="LOCAL-00068" summary="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: finished detecting all spectral peaks of interest">
+      <created>1662754668865</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1662754668865</updated>
+    </task>
+    <task id="LOCAL-00069" summary="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* minor refactoring">
+      <created>1662899900175</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1662899900176</updated>
+    </task>
+    <task id="LOCAL-00070" summary="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* carry out interpolation">
+      <created>1662904781107</created>
+      <option name="number" value="00070" />
+      <option name="presentableId" value="LOCAL-00070" />
+      <option name="project" value="LOCAL" />
+      <updated>1662904781107</updated>
+    </task>
+    <task id="LOCAL-00071" summary="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* carry out interpolation&#10;* 'region of interest' and 'wavelength calibration' are now in tabs">
+      <created>1663006597844</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1663006597850</updated>
+    </task>
+    <task id="LOCAL-00072" summary="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* SpectrometerCalibrationProfileSpectralLinesViewModule: show SpectralLine/s">
+      <created>1663611828134</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1663611828134</updated>
+    </task>
+    <task id="LOCAL-00073" summary="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* SpectrometerCalibrationProfileSpectralLinesViewModule: show SpectralLine/s&#10;* started passing appropriate models to the diverse widgets">
+      <created>1664133981764</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1664133981766</updated>
+    </task>
+    <task id="LOCAL-00074" summary="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* SpectrometerCalibrationProfileSpectralLinesViewModule: populate pixel values&#10;* started passing appropriate models to the diverse widgets">
+      <created>1664306308553</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1664306308554</updated>
+    </task>
+    <task id="LOCAL-00075" summary="* SpectrometerCalibrationProfile stuff: persisting">
+      <created>1664385194611</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1664385194612</updated>
+    </task>
+    <task id="LOCAL-00076" summary="* SpectrometerCalibrationProfile stuff: persisting">
+      <created>1664386881743</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1664386881743</updated>
+    </task>
+    <task id="LOCAL-00077" summary="* SpectrometerCalibrationProfile stuff: persisting">
+      <created>1664389352731</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1664389352731</updated>
+    </task>
+    <task id="LOCAL-00078" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileWavelengthCalibrationViewModule: spectrum is now shown larger">
+      <created>1664559189315</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1664559189316</updated>
+    </task>
+    <task id="LOCAL-00079" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileWavelengthCalibrationViewModule: added dummy calibration graph">
+      <created>1665431980308</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1665431980308</updated>
+    </task>
+    <task id="LOCAL-00080" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule: added calibration graph (scatter for now)">
+      <created>1666029428106</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1666029428106</updated>
+    </task>
+    <task id="LOCAL-00081" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule: added calibration graph (scatter for now)">
+      <created>1666030303393</created>
+      <option name="number" value="00081" />
+      <option name="presentableId" value="LOCAL-00081" />
+      <option name="project" value="LOCAL" />
+      <updated>1666030303393</updated>
+    </task>
+    <task id="LOCAL-00082" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule: calibration graph">
+      <created>1666199608017</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1666199608018</updated>
+    </task>
+    <task id="LOCAL-00083" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'">
+      <created>1666377280489</created>
+      <option name="number" value="00083" />
+      <option name="presentableId" value="LOCAL-00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1666377280489</updated>
+    </task>
+    <task id="LOCAL-00084" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'">
+      <created>1666377480983</created>
+      <option name="number" value="00084" />
+      <option name="presentableId" value="LOCAL-00084" />
+      <option name="project" value="LOCAL" />
+      <updated>1666377480983</updated>
+    </task>
+    <task id="LOCAL-00085" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'">
+      <created>1666525160802</created>
+      <option name="number" value="00085" />
+      <option name="presentableId" value="LOCAL-00085" />
+      <option name="project" value="LOCAL" />
+      <updated>1666525160803</updated>
+    </task>
+    <task id="LOCAL-00086" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* Polisher: event filter for QWidget/s polishing the style; added PageLineEdit being a QLineEdit setting the Polisher as its event filter; applied to some ViewModule to render read-only fields in a nice way">
+      <created>1666529984837</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1666529984838</updated>
+    </task>
+    <task id="LOCAL-00087" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* Polisher: event filter for QWidget/s polishing the style; added PageLineEdit being a QLineEdit setting the Polisher as its event filter; applied to some ViewModule to render read-only fields in a nice way">
+      <created>1667074806629</created>
+      <option name="number" value="00087" />
+      <option name="presentableId" value="LOCAL-00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1667074806630</updated>
+    </task>
+    <task id="LOCAL-00088" summary="* pyInstaller related stuff">
+      <created>1667080006717</created>
+      <option name="number" value="00088" />
+      <option name="presentableId" value="LOCAL-00088" />
+      <option name="project" value="LOCAL" />
+      <updated>1667080006718</updated>
+    </task>
+    <task id="LOCAL-00089" summary="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo">
+      <created>1667087851345</created>
+      <option name="number" value="00089" />
+      <option name="presentableId" value="LOCAL-00089" />
+      <option name="project" value="LOCAL" />
+      <updated>1667087851345</updated>
+    </task>
+    <option name="localTasksCounter" value="90" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (todo: average them)" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (current ones and total bounding ones)" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: initial version" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: we now have identified the three Europium lines (587,593,598) before 600nm. For this we use the experience that those lines have the lowest distances between their neighbours incidentally" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify (and name) the spectral lines (10 lines should be possible probably)" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: now uses color information to detect the amber line (as the main line)" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: detect further lines (now only 'EuropiumRed' is missing from the lines it makes sense to detect for now)" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: detect further lines (now only 'EuropiumRed' is missing from the lines it makes sense to detect for now)&#10;* now we also have access to prominences as attribute of new class SpectralPeak" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: 'mango green' is detected using geometric and color information now" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: finished detecting all spectral peaks of interest" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* minor refactoring" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* carry out interpolation" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* carry out interpolation&#10;* 'region of interest' and 'wavelength calibration' are now in tabs" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* SpectrometerCalibrationProfileSpectralLinesViewModule: show SpectralLine/s" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* SpectrometerCalibrationProfileSpectralLinesViewModule: show SpectralLine/s&#10;* started passing appropriate models to the diverse widgets" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* SpectrometerCalibrationProfileSpectralLinesViewModule: populate pixel values&#10;* started passing appropriate models to the diverse widgets" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileWavelengthCalibrationViewModule: spectrum is now shown larger" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileWavelengthCalibrationViewModule: added dummy calibration graph" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule: added calibration graph (scatter for now)" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule: calibration graph" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'" />
+    <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting&#10;* Polisher: event filter for QWidget/s polishing the style; added PageLineEdit being a QLineEdit setting the Polisher as its event filter; applied to some ViewModule to render read-only fields in a nice way" />
+    <MESSAGE value="* pyInstaller related stuff" />
+    <MESSAGE value="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo" />
+    <option name="LAST_COMMIT_MESSAGE" value="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsItem.coverage" NAME="BaseGraphicsItem Coverage Results" MODIFIED="1660995012257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
+    <SUITE FILE_PATH="coverage/spectracsPy$VideoViewModule.coverage" NAME="VideoViewModule Coverage Results" MODIFIED="1660994277992" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/video" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileViewModule.coverage" NAME="SpectrometerCalibrationProfileViewModule Coverage Results" MODIFIED="1665421273731" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerProfileListViewModule.coverage" NAME="SpectrometerProfileListViewModule Coverage Results" MODIFIED="1660395356161" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
+    <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
+    <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobViewModule.coverage" NAME="SpectralJobViewModule Coverage Results" MODIFIED="1652455964828" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrumSampleType.coverage" NAME="SpectrumSampleType Coverage Results" MODIFIED="1652564636257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/spectral" />
+    <SUITE FILE_PATH="coverage/spectracsPy$CameraSelectionViewModule.coverage" NAME="CameraSelectionViewModule Coverage Results" MODIFIED="1655925041866" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
+    <SUITE FILE_PATH="coverage/spectracsPy$PageWidget.coverage" NAME="PageWidget Coverage Results" MODIFIED="1664129353257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/page" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerWavelengthCalibrationLogicModule.coverage" NAME="SpectrometerWavelengthCalibrationLogicModule Coverage Results" MODIFIED="1662901841591" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerVendorUtil.coverage" NAME="SpectrometerVendorUtil Coverage Results" MODIFIED="1658165659378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/model/util" />
+    <SUITE FILE_PATH="coverage/spectracsPy$colorconv.coverage" NAME="colorconv Coverage Results" MODIFIED="1653498468384" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/venv/lib/python3.8/site-packages/skimage/color" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.coverage" NAME="SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule Coverage Results" MODIFIED="1662397439593" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1667087307269" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrallineUtil.coverage" NAME="SpectrallineUtil Coverage Results" MODIFIED="1662744947239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/util" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SettingsViewModule.coverage" NAME="SettingsViewModule Coverage Results" MODIFIED="1657132329274" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings" />
+    <SUITE FILE_PATH="coverage/spectracsPy$QGraphicsItem.coverage" NAME="QGraphicsItem Coverage Results" MODIFIED="1660993805617" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/.cache/JetBrains/PyCharm2021.3/python_stubs/882233322/PyQt6/QtWidgets" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobWidgetViewModule.coverage" NAME="SpectralJobWidgetViewModule Coverage Results" MODIFIED="1653065906366" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/widget" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerProfileViewModule.coverage" NAME="SpectrometerProfileViewModule Coverage Results" MODIFIED="1656954965081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
+    <SUITE FILE_PATH="coverage/spectracsPy$match_orb.coverage" NAME="match_orb Coverage Results" MODIFIED="1653508792757" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectrasMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1652124565875" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
