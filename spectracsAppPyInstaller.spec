@@ -8,7 +8,7 @@ a = Analysis(
     ['spectracsMain.py'],
     pathex=[],
     binaries=[],
-    datas=[ ( '/resource/*.png', '/resource' )],
+    datas=[ ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -21,7 +21,7 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 splash = Splash(
-    './view/main/logo.png',
+    './resource/logo.png',
     binaries=a.binaries,
     datas=a.datas,
     text_pos=None,
