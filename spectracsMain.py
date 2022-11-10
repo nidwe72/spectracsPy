@@ -7,7 +7,7 @@ from view.main.MainContainerViewModule import MainContainerViewModule
 
 app = QtWidgets.QApplication(sys.argv)
 
-
+#todo:extract
 app.setStyleSheet("""
 /*
 	Copyright 2013 Emanuel Claesson
