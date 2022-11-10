@@ -4,6 +4,8 @@ import cv2
 from PySide6.QtCore import QThread
 from PySide6.QtGui import QImage
 
+from sys import platform
+
 S = TypeVar('S')
 
 class VideoThread(QThread,Generic[S]):
@@ -49,8 +51,13 @@ class VideoThread(QThread,Generic[S]):
         # print(bar)
 
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
-        # self.cap.set(cv2.CAP_PROP_EXPOSURE, 150)
-        self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
+
+        if platform=='linux':
+            self.cap.set(cv2.CAP_PROP_EXPOSURE, 150)
+        elif platform=='win32':
+            self.cap.set(cv2.CAP_PROP_EXPOSURE, -3)
+
+        #self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
         # foo=""
         # foo=self.cap.get(cv2.CAP_PROP_EXPOSURE)
         # print(foo)
