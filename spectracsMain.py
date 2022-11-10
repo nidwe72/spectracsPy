@@ -70,6 +70,11 @@ QComboBox{
 }
 */
 
+/*https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qtabwidget-and-qtabbar*/
+QTabWidget::pane { /* The tab widget frame */
+    border: none;
+}
+
 QWidget::item:selected {
 	background: #3D7848;
 }
