@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="123.69996mm"
+   height="102.52983mm"
+   viewBox="0 0 123.69996 102.52983"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="splash.svg"
+   inkscape:export-filename="/home/nidwe/development/spectracs/spectracs-hardware/logo/splash.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs2">
+    <clipPath
+       id="clipPath835"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         style="clip-rule:evenodd"
+         inkscape:connector-curvature="0"
+         id="path833"
+         d="M 0,0.028 H 595.275 V 841.889 H 0 Z" />
+    </clipPath>
+    <clipPath
+       id="clipPath901"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         style="clip-rule:evenodd"
+         inkscape:connector-curvature="0"
+         id="path899"
+         d="M 0,0.028 H 595.275 V 841.889 H 0 Z" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="-32.918798"
+     inkscape:cy="150.99116"
+     inkscape:document-units="mm"
+     inkscape:current-layer="text907"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1015"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-50.59794,-76.968716)">
+    <g
+       style="fill:none"
+       id="g903"
+       transform="matrix(0.35277777,0,0,-0.35277777,-0.21201678,347.18298)">
+      <g
+         aria-label="SPECTRACS"
+         transform="matrix(0.96592805,0,-0.25881076,-0.96592805,66.5,730.789)"
+         style="font-variant:normal;font-weight:500;font-size:82.82190704px;font-family:'Anoxic SC';-inkscape-font-specification:AnoxicSC-Medium;writing-mode:lr-tb;fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:2.66666007;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+         id="text907">
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:31.05821419px;line-height:1.25;font-family:'Samyak Tamil';-inkscape-font-specification:'Samyak Tamil';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.07054257"
+           x="120.34422"
+           y="-189.3418"
+           id="text850"
+           transform="skewX(14.999509)"><tspan
+             sodipodi:role="line"
+             id="tspan848"
+             x="120.34422"
+             y="-160.61902"
+             style="stroke-width:2.07054257" /></text>
+        <rect
+           style="opacity:0.98000004;fill:#131313;fill-opacity:1;stroke:#33663d;stroke-width:0.29859439;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+           id="rect876"
+           width="362.71558"
+           height="311.20242"
+           x="80.412239"
+           y="-37.548527"
+           transform="matrix(1,0,0.25881076,0.96592805,0,0)"
+           inkscape:export-xdpi="96"
+           inkscape:export-ydpi="96" />
+        <flowRoot
+           xml:space="preserve"
+           id="flowRoot840"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:74.66666412px;line-height:1.25;font-family:'Samyak Tamil';-inkscape-font-specification:'Samyak Tamil';letter-spacing:0px;word-spacing:0px;fill:#3d7848;fill-opacity:1;stroke:none"
+           transform="matrix(0.77645536,0,0.20804345,0.77645536,-88.554016,-353.24462)"
+           inkscape:export-xdpi="96"
+           inkscape:export-ydpi="96"><flowRegion
+             id="flowRegion842"
+             style="font-size:74.66666412px;fill:#3d7848;fill-opacity:1"><rect
+               id="rect844"
+               width="501.42856"
+               height="310"
+               x="111.42857"
+               y="499.66254"
+               style="font-size:74.66666412px;fill:#3d7848;fill-opacity:1" /></flowRegion><flowPara
+             id="flowPara846"
+             style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:74.66666412px;font-family:'Anoxic SC';-inkscape-font-specification:'Anoxic SC';fill:#3d7848;fill-opacity:1">SPECTRACS</flowPara></flowRoot>        <flowRoot
+           xml:space="preserve"
+           id="flowRoot840-4"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:74.66666412px;line-height:1.25;font-family:'Samyak Tamil';-inkscape-font-specification:'Samyak Tamil';letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.66666007;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
+           transform="matrix(0.97150172,0,0.26030417,0.97150172,-124.48137,-403.90504)"
+           inkscape:export-xdpi="96"
+           inkscape:export-ydpi="96"><flowRegion
+             id="flowRegion842-0"
+             style="font-size:74.66666412px;fill:#ffffff"><rect
+               id="rect844-9"
+               width="501.42856"
+               height="310"
+               x="111.42857"
+               y="499.66254"
+               style="font-size:74.66666412px;fill:#ffffff" /></flowRegion><flowPara
+             id="flowPara846-1"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:74.66666412px;font-family:'Anoxic SC';-inkscape-font-specification:'Anoxic SC';fill:#ffffff">EXPLORE</flowPara></flowRoot>        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.63492966px;line-height:1.25;font-family:'Samyak Tamil';-inkscape-font-specification:'Samyak Tamil';letter-spacing:0px;word-spacing:0px;fill:#b3b3b3;fill-opacity:1;stroke:none;stroke-width:2.07054257"
+           x="165.67308"
+           y="243.39894"
+           id="text918"
+           transform="skewX(14.999509)"><tspan
+             sodipodi:role="line"
+             id="tspan916"
+             x="165.67308"
+             y="243.39894"
+             style="fill:#b3b3b3;stroke-width:2.07054257">loading application ...</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>

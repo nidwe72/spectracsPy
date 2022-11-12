@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource/ResourceUtil.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource/logo.png" beforeDir="false" />
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* pyInstaller related stuff&#10;* added phpstorm's workspace configuration">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/spectracsAppPyInstaller.spec" beforeDir="false" afterPath="$PROJECT_DIR$/spectracsAppPyInstaller.spec" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/view/main/MainStatusBarViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/main/MainStatusBarViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spectracsMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/spectracsMain.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -214,6 +212,9 @@
     </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SvnConfiguration">
+    <configuration>$USER_HOME$/.subversion</configuration>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="" />
@@ -320,14 +321,10 @@
       <workItem from="1666987502758" duration="2579000" />
       <workItem from="1667072695954" duration="1116000" />
       <workItem from="1667074072623" duration="2754000" />
-      <workItem from="1667078687143" duration="8919000" />
-    </task>
-    <task id="LOCAL-00041" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* object model change: SpectrometerProfile now has a Spectrometer having again as SpectrometerSensor">
-      <created>1657404403697</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1657404403697</updated>
+      <workItem from="1667078687143" duration="8966000" />
+      <workItem from="1668103025264" duration="6710000" />
+      <workItem from="1668115031401" duration="518000" />
+      <workItem from="1668282156888" duration="3924000" />
     </task>
     <task id="LOCAL-00042" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* object model change: Spectrometer now has a SpectrometerVendor and a SpectrometerStyle">
       <created>1657563437029</created>
@@ -665,7 +662,14 @@
       <option name="project" value="LOCAL" />
       <updated>1667087851345</updated>
     </task>
-    <option name="localTasksCounter" value="90" />
+    <task id="LOCAL-00090" summary="* pyInstaller related stuff&#10;* added phpstorm's workspace configuration">
+      <created>1667087890354</created>
+      <option name="number" value="00090" />
+      <option name="presentableId" value="LOCAL-00090" />
+      <option name="project" value="LOCAL" />
+      <updated>1667087890355</updated>
+    </task>
+    <option name="localTasksCounter" value="91" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -683,7 +687,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (todo: average them)" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (current ones and total bounding ones)" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: initial version" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: we now have identified the three Europium lines (587,593,598) before 600nm. For this we use the experience that those lines have the lowest distances between their neighbours incidentally" />
@@ -708,7 +711,8 @@
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting&#10;* Polisher: event filter for QWidget/s polishing the style; added PageLineEdit being a QLineEdit setting the Polisher as its event filter; applied to some ViewModule to render read-only fields in a nice way" />
     <MESSAGE value="* pyInstaller related stuff" />
     <MESSAGE value="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo" />
-    <option name="LAST_COMMIT_MESSAGE" value="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo" />
+    <MESSAGE value="* pyInstaller related stuff&#10;* added phpstorm's workspace configuration" />
+    <option name="LAST_COMMIT_MESSAGE" value="* pyInstaller related stuff&#10;* added phpstorm's workspace configuration" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

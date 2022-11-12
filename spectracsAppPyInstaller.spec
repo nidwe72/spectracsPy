@@ -9,7 +9,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[ ],
-    hiddenimports=[],
+    hiddenimports=["pyi_splash"],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -21,7 +21,7 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 splash = Splash(
-    './resource/logo.png',
+    './resource/splash.png',
     binaries=a.binaries,
     datas=a.datas,
     text_pos=None,
