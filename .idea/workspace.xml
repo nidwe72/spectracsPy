@@ -70,12 +70,13 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="TODO_SCOPE" value="All Places" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/resource" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/resource" />
       <recent name="$PROJECT_DIR$/resource-data" />
       <recent name="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
@@ -323,13 +324,7 @@
       <workItem from="1668103025264" duration="6710000" />
       <workItem from="1668115031401" duration="518000" />
       <workItem from="1668282156888" duration="4807000" />
-    </task>
-    <task id="LOCAL-00043" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* object model change: reflect in GUI">
-      <created>1657733304440</created>
-      <option name="number" value="00043" />
-      <option name="presentableId" value="LOCAL-00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1657733304440</updated>
+      <workItem from="1668447707651" duration="2281000" />
     </task>
     <task id="LOCAL-00044" summary="* acquisition continued: additional settings&#10;* SpectrometerProfileListViewModule: continued&#10;* SpectrometerVendor/s are persisted">
       <created>1658171385200</created>
@@ -667,7 +662,14 @@
       <option name="project" value="LOCAL" />
       <updated>1668288314441</updated>
     </task>
-    <option name="localTasksCounter" value="92" />
+    <task id="LOCAL-00092" summary="* pyInstaller related stuff&#10;* splash screen stuff">
+      <created>1668448119342</created>
+      <option name="number" value="00092" />
+      <option name="presentableId" value="LOCAL-00092" />
+      <option name="project" value="LOCAL" />
+      <updated>1668448119343</updated>
+    </task>
+    <option name="localTasksCounter" value="93" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
