@@ -9,6 +9,8 @@ from view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileL
     SpectrometerProfileListViewModule
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileViewModule import \
     SpectrometerCalibrationProfileViewModule
+from view.settings.spectral.spectrometer.acquisition.device.virtualCamera.VirtualCameraViewModule import \
+    VirtualCameraViewModule
 
 from view.spectral.spectralJob.SpectralJobViewModule import SpectralJobViewModule
 
@@ -21,8 +23,6 @@ class MainViewModule(QStackedWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
 
         homeViewModule = HomeViewModule()
         self.addWidget(homeViewModule)
@@ -52,4 +52,9 @@ class MainViewModule(QStackedWidget):
         spectrometerCalibrationProfileViewModule.setModel(spectrometerProfile.spectrometerCalibrationProfile)
         spectrometerCalibrationProfileViewModule.initialize()
         self.addWidget(spectrometerCalibrationProfileViewModule)
+
+        virtualCameraViewModule = VirtualCameraViewModule()
+        virtualCameraViewModule.initialize()
+        self.addWidget(virtualCameraViewModule)
+
 

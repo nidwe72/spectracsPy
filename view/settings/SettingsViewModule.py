@@ -52,7 +52,7 @@ class SettingsViewModule(QWidget):
         result.setLayout(layout)
 
         comboBox=self.createLabeledComponent('Measurement profile',QComboBox())
-        layout.addWidget(comboBox, 0, 0, 1, 2)
+        layout.addWidget(comboBox, 0, 0, 1, 3)
 
         openSpectrometerProfileListViewModuleButton = QPushButton()
         openSpectrometerProfileListViewModuleButton.setText("Spectrometer profiles")
@@ -62,6 +62,13 @@ class SettingsViewModule(QWidget):
         openMeasurementProfilesListViewModuleButton = QPushButton()
         openMeasurementProfilesListViewModuleButton.setText("Measurement profiles")
         layout.addWidget(openMeasurementProfilesListViewModuleButton, 1, 1, 1, 1)
+
+        openVirtualCameraViewModuleButton = QPushButton()
+        openVirtualCameraViewModuleButton.setText("Virtual Camera")
+        layout.addWidget(openVirtualCameraViewModuleButton, 1, 2, 1, 1)
+        openVirtualCameraViewModuleButton.clicked.connect(self.onClickedOpenVirtualCameraViewModuleButton)
+
+
 
         return result
 
@@ -158,6 +165,13 @@ class SettingsViewModule(QWidget):
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SpectrometerProfileListViewModule")
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def onClickedOpenVirtualCameraViewModuleButton(self):
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        someNavigationSignal = NavigationSignal(None)
+        someNavigationSignal.setTarget("VirtualCameraViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def createLabeledComponent(self,label:str,component:QWidget):
