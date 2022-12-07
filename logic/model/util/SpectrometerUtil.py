@@ -47,36 +47,38 @@ class SpectrometerUtil(Singleton):
 
         result = {}
 
-        spectrometerSpectracsInvisionExaktaGreenGold = Spectrometer()
+        spectrometerSpectracsPhantomVirtuaxSlightHaze = Spectrometer()
+        spectrometerSpectracsPhantomVirtuaxSlightHaze.spectrometerVendor = \
+            SpectrometerVendorUtil().getSpectrometerVendorWithId(SpectrometerVendorId.SPECTRACS)
+        spectrometerSpectracsPhantomVirtuaxSlightHaze.spectrometerSensor = \
+            SpectrometerSensorUtil().getSensorByCodeName(SpectrometerSensorCodeName.VIRTUAX)
+        spectrometerSpectracsPhantomVirtuaxSlightHaze.spectrometerStyle = \
+            SpectrometerStyleUtil().getSpectrometerStyleWithId(SpectrometerStyleId.SLIGHT_HAZE)
+        spectrometerSpectracsPhantomVirtuaxSlightHaze.spectrometerSensorCodeName = SpectrometerSensorCodeName.VIRTUAX
+        spectrometerSpectracsPhantomVirtuaxSlightHaze.modelName = 'Phantom'
+        result[self.getName(spectrometerSpectracsPhantomVirtuaxSlightHaze)] = \
+            spectrometerSpectracsPhantomVirtuaxSlightHaze
 
+        spectrometerSpectracsInvisionExaktaGreenGold = Spectrometer()
         spectrometerSpectracsInvisionExaktaGreenGold.spectrometerVendor = \
             SpectrometerVendorUtil().getSpectrometerVendorWithId(SpectrometerVendorId.SPECTRACS)
-
         spectrometerSpectracsInvisionExaktaGreenGold.spectrometerStyle = \
             SpectrometerStyleUtil().getSpectrometerStyleWithId(SpectrometerStyleId.GREEN_GOLD)
-
         spectrometerSpectracsInvisionExaktaGreenGold.spectrometerSensor = \
             SpectrometerSensorUtil().getSensorByCodeName(SpectrometerSensorCodeName.EXAKTA)
-
-        #todo: enum
         spectrometerSpectracsInvisionExaktaGreenGold.modelName = 'InVision'
-
         result[self.getName(spectrometerSpectracsInvisionExaktaGreenGold)] = \
             spectrometerSpectracsInvisionExaktaGreenGold
 
         spectrometerSpectracsInLightAutomatGreenGold = Spectrometer()
         spectrometerSpectracsInLightAutomatGreenGold.spectrometerVendor = \
             SpectrometerVendorUtil().getSpectrometerVendorWithId(SpectrometerVendorId.SPECTRACS)
-
         spectrometerSpectracsInLightAutomatGreenGold.spectrometerSensor = \
             SpectrometerSensorUtil().getSensorByCodeName(SpectrometerSensorCodeName.AUTOMAT)
-
         spectrometerSpectracsInLightAutomatGreenGold.spectrometerStyle = \
             SpectrometerStyleUtil().getSpectrometerStyleWithId(SpectrometerStyleId.GREEN_GOLD)
         spectrometerSpectracsInLightAutomatGreenGold.spectrometerSensorCodeName = SpectrometerSensorCodeName.AUTOMAT
-
         spectrometerSpectracsInLightAutomatGreenGold.modelName = 'InLight'
-
         result[self.getName(spectrometerSpectracsInLightAutomatGreenGold)] = \
             spectrometerSpectracsInLightAutomatGreenGold
 

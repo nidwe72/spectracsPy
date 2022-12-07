@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Column, ForeignKey, Boolean
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.orm import relationship
@@ -15,6 +15,7 @@ class SpectrometerSensor(DbBaseEntity, DbBaseEntityMixin):
     #name=Column(String)
     description = Column(String)
     codeName=Column(String)
+    isVirtual=Column(Boolean)
 
     #spectrometers = relationship("Spectrometer")
 

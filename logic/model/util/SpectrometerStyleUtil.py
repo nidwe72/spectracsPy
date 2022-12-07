@@ -20,6 +20,12 @@ class SpectrometerStyleUtil(Singleton):
         styleGreenGold.styleName = SpectrometerStyleName.GREEN_GOLD
         transientSpectrometerStyles[SpectrometerStyleId.GREEN_GOLD] = styleGreenGold
 
+        styleSlightHaze = SpectrometerStyle()
+        styleSlightHaze.styleId = SpectrometerStyleId.SLIGHT_HAZE
+        styleSlightHaze.styleName = SpectrometerStyleName.SLIGHT_HAZE
+        transientSpectrometerStyles[SpectrometerStyleId.SLIGHT_HAZE] = styleSlightHaze
+
+
         persistSpectrometerStyleLogicModule = PersistSpectrometerStyleLogicModule()
 
         # todo:performace

@@ -20,33 +20,40 @@ class SpectrometerSensorUtil(Singleton):
 
         sensorChips = SpectrometerSensorChipUtil().getSpectrometerSensorChips()
 
+        virtualDevice = SpectrometerSensor()
+        virtualDevice.codeName = SpectrometerSensorCodeName.VIRTUAX
+        virtualDevice.isVirtual=True
+        virtualDevice.description = "virtual camera"
+        virtualDevice.vendorId = "0c99"
+        virtualDevice.vendorName = "Spectracs"
+        virtualDevice.sellerName = "Spectracs"
+        virtualDevice.modelId = "9999"
+        virtualDevice.spectrometerSensorChip=sensorChips['Spectracs_9999']
+        virtualDevice.spectrometerSensorChipId = sensorChips['Spectracs_9999'].id
+        transientEntities[virtualDevice.codeName] = virtualDevice
+
         microdiaDevice = SpectrometerSensor()
         microdiaDevice.codeName = SpectrometerSensorCodeName.AUTOMAT
+        microdiaDevice.isVirtual = False
         microdiaDevice.description = "Thunder optics"
         microdiaDevice.vendorId = "0c45"
         microdiaDevice.vendorName = "Microdia"
         microdiaDevice.sellerName = "ThunderOptics"
-
         microdiaDevice.modelId = "6366"
         microdiaDevice.spectrometerSensorChip=sensorChips['Sonix_6366']
         microdiaDevice.spectrometerSensorChipId = sensorChips['Sonix_6366'].id
-
         transientEntities[microdiaDevice.codeName] = microdiaDevice
 
         elp4KDevice = SpectrometerSensor()
         elp4KDevice.codeName = SpectrometerSensorCodeName.EXAKTA
+        elp4KDevice.isVirtual = False
         elp4KDevice.description = "ELP "
-
         elp4KDevice.vendorId = "0aaa"
         elp4KDevice.vendorName = "ELP"
-
         elp4KDevice.modelId = "1234"
-
         elp4KDevice.sellerName = "ELP"
-
         elp4KDevice.spectrometerSensorChip=sensorChips['Sony_IMX1234']
         elp4KDevice.spectrometerSensorChipId = sensorChips['Sony_IMX1234'].id
-
         transientEntities[elp4KDevice.codeName]=elp4KDevice
 
         persistLogicModule = PersistSpectrometerSensorLogicModule()

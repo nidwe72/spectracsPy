@@ -1,4 +1,8 @@
+import os
 from typing import Generic, TypeVar
+
+
+import tempfile
 
 import cv2
 from PySide6.QtCore import QThread
@@ -6,11 +10,16 @@ from PySide6.QtGui import QImage
 
 from sys import platform
 
+from appdata import AppDataPaths
+
+from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+
 S = TypeVar('S')
 
 class VideoThread(QThread,Generic[S]):
 
     qImage: QImage
+    _isVirtual:bool=False
 
     def __init__(self):
         super().__init__()
@@ -36,6 +45,13 @@ class VideoThread(QThread,Generic[S]):
     def _getCurrentFrameIndex(self):
         return self._currentFrameIndex
 
+    def setIsVirtual(self, isVirtual: int):
+        self._isVirtual = isVirtual
+
+    def getIsVirtual(self):
+        return self._isVirtual
+
+
     def run(self):
 
         self.onStart()
@@ -57,6 +73,8 @@ class VideoThread(QThread,Generic[S]):
         elif platform=='win32':
             self.cap.set(cv2.CAP_PROP_EXPOSURE, -3)
 
+
+
         #self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
         # foo=""
         # foo=self.cap.get(cv2.CAP_PROP_EXPOSURE)
@@ -66,20 +84,54 @@ class VideoThread(QThread,Generic[S]):
         while self._runFlag:
 
             self.beforeCapture()
+            self.__captureFrame()
 
-            ret, frame = self.cap.read()
-            if ret:
-                rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                h, w, ch = rgbImage.shape
-                bytesPerLine = ch * w
-                # needs QImage.Format.Format_RGB888 or crashes for some reason after some frames
-                self.qImage = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format.Format_RGB888)
-                # self.onCapturedFrame(qImage)
-
-                self.afterCapture()
 
         self._setCurrentFrameIndex(0)
         self.cap.release()
+
+    def __captureFrame(self):
+
+        isVirtual = self.getIsVirtual()
+
+        saveFrames = False;
+        #debugPurpose
+        #saveFrames=True
+        temporaryDirectory=None
+        if saveFrames:
+            app_paths = AppDataPaths()
+            app_paths.setup()
+            temporaryDirectory = app_paths.app_data_path+'/tmpImages'
+
+            if not os.path.isdir(temporaryDirectory):
+                os.makedirs(temporaryDirectory)
+
+        if isVirtual:
+            self.__captureVirtualFrame()
+        else:
+            self.__capturePhysicalFrame(temporaryDirectory)
+
+    def __capturePhysicalFrame(self,temporaryDirectory:str):
+        ret, frame = self.cap.read()
+        if ret:
+            rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            h, w, ch = rgbImage.shape
+            bytesPerLine = ch * w
+            # needs QImage.Format.Format_RGB888 or crashes for some reason after some frames
+            self.qImage = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format.Format_RGB888)
+
+            if temporaryDirectory is not None:
+                self.qImage.save(temporaryDirectory+'/test.png','PNG')
+
+            # self.onCapturedFrame(qImage)
+
+        self.afterCapture()
+
+    def __captureVirtualFrame(self):
+
+        self.qImage=ApplicationContextLogicModule().getVirtualCameraImage()
+        self.afterCapture()
+
 
     def stop(self):
         self._runFlag = False

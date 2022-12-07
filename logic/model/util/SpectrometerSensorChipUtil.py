@@ -14,6 +14,11 @@ class SpectrometerSensorChipUtil(Singleton):
     def getSpectrometerSensorChips(self) -> Dict[str, SpectrometerSensorChip]:
         transientEntities = {}
 
+        sensorSpectracspectracs9999=SpectrometerSensorChip()
+        sensorSpectracspectracs9999.vendorName="Spectracs"
+        sensorSpectracspectracs9999.productName = "9999"
+        transientEntities[sensorSpectracspectracs9999.vendorName+'_'+sensorSpectracspectracs9999.productName]=sensorSpectracspectracs9999
+
         sensorSonySonix6366=SpectrometerSensorChip()
         sensorSonySonix6366.vendorName="Sonix"
         sensorSonySonix6366.productName = "6366"
