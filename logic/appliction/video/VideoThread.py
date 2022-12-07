@@ -53,7 +53,7 @@ class VideoThread(QThread,Generic[S]):
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
 
         if platform=='linux':
-            self.cap.set(cv2.CAP_PROP_EXPOSURE, 150)
+            self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
         elif platform=='win32':
             self.cap.set(cv2.CAP_PROP_EXPOSURE, -3)
 
