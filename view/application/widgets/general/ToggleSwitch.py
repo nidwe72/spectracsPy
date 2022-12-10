@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, QSize, QPoint, QRectF, QPointF, Slot, Property
-from PySide6.QtGui import QPen, QBrush, QColor, QPaintEvent, QPainter, QFont
+from PySide6.QtGui import QPen, QBrush, QColor, QPaintEvent, QPainter, QFont, QPainterPath
 from PySide6.QtWidgets import QCheckBox
 
 
@@ -8,14 +8,13 @@ class ToggleSwitch(QCheckBox):
     _light_grey_pen = QPen(Qt.lightGray)
     _black_pen = QPen(Qt.black)
 
+    __checked_color = Qt.white
+
     def __init__(self,
                  parent=None,
                  bar_color=Qt.gray,
-                 checked_color="#00B0FF",
-                 handle_color=Qt.white,
-                 h_scale=1.0,
-                 v_scale=1.0,
-                 fontSize=10):
+                 checked_color=Qt.white,
+                 handle_color=Qt.white):
 
         super().__init__(parent)
 
@@ -29,11 +28,10 @@ class ToggleSwitch(QCheckBox):
 
         # Setup the rest of the widget.
 
-        self.setContentsMargins(8, 0, 8, 0)
+        #self.setContentsMargins(8, 0, 8, 0)
+        self.setContentsMargins(1, 1, 0, 0)
         self._handle_position = 0
-        self._h_scale = h_scale
-        self._v_scale = v_scale
-        self._fontSize = fontSize
+        self._fontSize = 10
 
         self.stateChanged.connect(self.handle_state_change)
 
@@ -45,6 +43,9 @@ class ToggleSwitch(QCheckBox):
 
     def paintEvent(self, e: QPaintEvent):
 
+        self._h_scale=1.0
+        self._v_scale = 1.0
+
         contRect = self.contentsRect()
         width = contRect.width() * self._h_scale
         height = contRect.height() * self._v_scale
@@ -54,35 +55,55 @@ class ToggleSwitch(QCheckBox):
         p.setRenderHint(QPainter.Antialiasing)
 
         p.setPen(self._transparent_pen)
-        barRect = QRectF(0, 0, width - handleRadius, 0.40 * height)
+        #barRect = QRectF(0, 0, width - handleRadius, 0.40 * height)
+        barRect = QRectF(0, 0, width, height)
         barRect.moveCenter(contRect.center())
-        rounding = barRect.height() / 2
 
         # the handle will move along this line
         trailLength = contRect.width() * self._h_scale - 2 * handleRadius
         xLeft = contRect.center().x() - (trailLength + handleRadius) / 2
         xPos = xLeft + handleRadius + trailLength * self._handle_position
 
-        if self.isChecked():
-            p.setBrush(self._bar_checked_brush)
-            p.drawRoundedRect(barRect, rounding, rounding)
-            p.setBrush(self._handle_checked_brush)
+        outerRectanglePainterPath=QPainterPath()
+        outerRectanglePainterPath.addRect(barRect)
 
-            p.setPen(self._black_pen)
-            p.setFont(QFont('Helvetica', self._fontSize, 75))
-            p.drawText(xLeft + handleRadius / 2, contRect.center().y() +
-                       handleRadius / 2, "ON")
+
+        handleRectanglePainterPath=QPainterPath()
+
+
+
+        if self.isChecked():
+            #p.setBrush(self._bar_checked_brush)
+            #p.drawRect(barRect)
+            #p.setBrush(self._handle_checked_brush)
+            p.setPen(self._light_grey_pen)
+            p.drawPath(outerRectanglePainterPath)
+
+            handleRect = QRectF(width-60-10, 10, 60, height-10-10)
+            handleRectanglePainterPath.addRect(handleRect)
+            p.setPen(QPen(self.__checked_color))
+            p.drawPath(handleRectanglePainterPath)
+
+            # p.setFont(QFont('Helvetica', self._fontSize, 75))
+            # p.drawText(xLeft + handleRadius / 2, contRect.center().y() +handleRadius / 2, "ON")
 
         else:
-            p.setBrush(self._bar_brush)
-            p.drawRoundedRect(barRect, rounding, rounding)
-            p.setPen(self._light_grey_pen)
-            p.setBrush(self._handle_brush)
+            #p.setBrush(self._bar_brush)
+            #p.drawRect(barRect)
+            #p.setBrush(self._handle_brush)
 
-        p.setPen(self._light_grey_pen)
-        p.drawEllipse(
-            QPointF(xPos, barRect.center().y()),
-            handleRadius, handleRadius)
+            p.setPen(self._light_grey_pen)
+            p.drawPath(outerRectanglePainterPath)
+
+            handleRect = QRectF(10, 10, 60+10, height-10-10)
+            handleRectanglePainterPath.addRect(handleRect)
+            p.drawPath(handleRectanglePainterPath)
+
+            # p.setFont(QFont('Helvetica', self._fontSize, 75))
+            # p.drawText(xLeft + handleRadius / 2, contRect.center().y() +handleRadius / 2, "OFF")
+
+        # p.setPen(self._light_grey_pen)
+        # p.drawEllipse(QPointF(xPos, barRect.center().y()),handleRadius, handleRadius)
 
         p.end()
 
