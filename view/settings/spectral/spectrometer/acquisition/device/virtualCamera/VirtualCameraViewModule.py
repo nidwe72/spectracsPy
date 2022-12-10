@@ -6,12 +6,14 @@ from controller.application.ApplicationContextLogicModule import ApplicationCont
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
 from view.application.widgets.general.ToggleSwitch import ToggleSwitch
+from view.application.widgets.image.BaseImageViewModule import BaseImageViewModule
 from view.application.widgets.page.PageWidget import PageWidget
 
 class VirtualCameraViewModule(PageWidget):
 
     useVirtualCameraComponent:ToggleSwitch=None
     openPictureButton:QPushButton=None
+    __imageViewModule:BaseImageViewModule=None
 
     def createMainContainer(self):
         result=super().createMainContainer()
@@ -20,6 +22,9 @@ class VirtualCameraViewModule(PageWidget):
 
     def getMainContainerWidgets(self):
         result = super().getMainContainerWidgets()
+
+        imageViewModule = self.__getImageViewModule()
+        result['imageViewModule'] = imageViewModule
 
         self.useVirtualCameraComponent=ToggleSwitch(None,Qt.gray,ApplicationStyleLogicModule().getPrimaryColor())
         #self.useVirtualCameraComponent.setCheckable(True)
@@ -31,6 +36,12 @@ class VirtualCameraViewModule(PageWidget):
 
         return result
 
+    def __getImageViewModule(self):
+        if self.__imageViewModule is None:
+            self.__imageViewModule=BaseImageViewModule()
+            self.__imageViewModule.initialize()
+        return self.__imageViewModule
+
     def _getPageTitle(self):
         return "Virtual camera"
 
@@ -40,6 +51,7 @@ class VirtualCameraViewModule(PageWidget):
         image=QImage(filepath[0])
         #image.load(filepath,QImage.Format.Format_RGB888)
         ApplicationContextLogicModule().setVirtualCameraImage(image)
+        self.__getImageViewModule().setImage(image)
 
     def createNavigationGroupBox(self):
         result = QGroupBox("")
