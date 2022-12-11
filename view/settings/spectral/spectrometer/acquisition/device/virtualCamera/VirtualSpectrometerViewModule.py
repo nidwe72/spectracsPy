@@ -9,7 +9,7 @@ from view.application.widgets.general.ToggleSwitch import ToggleSwitch
 from view.application.widgets.image.BaseImageViewModule import BaseImageViewModule
 from view.application.widgets.page.PageWidget import PageWidget
 
-class VirtualCameraViewModule(PageWidget):
+class VirtualSpectrometerViewModule(PageWidget):
 
     __doSavePhysicallyCapturedImagesComponent:ToggleSwitch=None
     openPictureButton:QPushButton=None
@@ -18,7 +18,7 @@ class VirtualCameraViewModule(PageWidget):
 
     def createMainContainer(self):
         result=super().createMainContainer()
-        result.setTitle("Settings > Virtual Camera")
+        result.setTitle("Settings > Virtual spectrometer")
         return result
 
     def getMainContainerWidgets(self):
@@ -43,7 +43,7 @@ class VirtualCameraViewModule(PageWidget):
     def __createButtonsPanel(self):
         buttonsPanel = QWidget()
         buttonsPanel.setObjectName(
-            'VirtualCameraViewModule.buttonsPanel')
+            'VirtualSpectrometerViewModule.buttonsPanel')
 
         layout = QGridLayout()
         buttonsPanel.setLayout(layout)
@@ -61,7 +61,7 @@ class VirtualCameraViewModule(PageWidget):
         return self.__imageViewModule
 
     def _getPageTitle(self):
-        return "Virtual camera"
+        return "Virtual spectrometer"
 
 
     def onClickedOpenPictureButton(self):

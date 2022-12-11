@@ -63,10 +63,10 @@ class SettingsViewModule(QWidget):
         openMeasurementProfilesListViewModuleButton.setText("Measurement profiles")
         layout.addWidget(openMeasurementProfilesListViewModuleButton, 1, 1, 1, 1)
 
-        openVirtualCameraViewModuleButton = QPushButton()
-        openVirtualCameraViewModuleButton.setText("Virtual Camera")
-        layout.addWidget(openVirtualCameraViewModuleButton, 1, 2, 1, 1)
-        openVirtualCameraViewModuleButton.clicked.connect(self.onClickedOpenVirtualCameraViewModuleButton)
+        openVirtualSpectrometerViewModuleButton = QPushButton()
+        openVirtualSpectrometerViewModuleButton.setText("Virtual Spectrometer")
+        layout.addWidget(openVirtualSpectrometerViewModuleButton, 1, 2, 1, 1)
+        openVirtualSpectrometerViewModuleButton.clicked.connect(self.onClickedOpenVirtualSpectrometerViewModuleButton)
 
 
 
@@ -167,11 +167,11 @@ class SettingsViewModule(QWidget):
         someNavigationSignal.setTarget("SpectrometerProfileListViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
-    def onClickedOpenVirtualCameraViewModuleButton(self):
+    def onClickedOpenVirtualSpectrometerViewModuleButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
-        someNavigationSignal.setTarget("VirtualCameraViewModule")
+        someNavigationSignal.setTarget("VirtualSpectrometerViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def createLabeledComponent(self,label:str,component:QWidget):

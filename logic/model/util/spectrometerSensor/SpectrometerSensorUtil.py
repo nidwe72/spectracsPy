@@ -23,7 +23,7 @@ class SpectrometerSensorUtil(Singleton):
         virtualDevice = SpectrometerSensor()
         virtualDevice.codeName = SpectrometerSensorCodeName.VIRTUAX
         virtualDevice.isVirtual=True
-        virtualDevice.description = "virtual camera"
+        virtualDevice.description = "virtual spectrometer"
         virtualDevice.vendorId = "0c99"
         virtualDevice.vendorName = "Spectracs"
         virtualDevice.sellerName = "Spectracs"

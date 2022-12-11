@@ -35,8 +35,8 @@ class NavigationHandlerLogicModule(QObject):
         elif target=="SpectrometerCalibrationProfileViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometer profile > Calibration profile")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
-        elif target=="VirtualCameraViewModule":
-            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Virtual camera")
+        elif target=="VirtualSpectrometerViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Virtual spectrometer")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
 
@@ -58,7 +58,7 @@ class NavigationHandlerLogicModule(QObject):
             result = 5
         elif target=="SpectrometerCalibrationProfileViewModule":
             result = 6
-        elif target=="VirtualCameraViewModule":
+        elif target=="VirtualSpectrometerViewModule":
             result = 7
 
 

@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* VirtualCameraViewModule: refactored settings access">
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* VirtualCameraViewModule: handle capturing physically captured images to be used in virtual spectrometer">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualCameraViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualCameraViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/navigationHandler/NavigationHandlerLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/controller/application/navigationHandler/NavigationHandlerLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/spectrometerSensor/SpectrometerSensorUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/logic/model/util/spectrometerSensor/SpectrometerSensorUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/main/MainViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/main/MainViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/SettingsViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/SettingsViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualCameraViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualSpectrometerViewModule.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -329,14 +333,7 @@
       <workItem from="1669057114642" duration="3728000" />
       <workItem from="1670435111525" duration="13523000" />
       <workItem from="1670679530151" duration="6078000" />
-      <workItem from="1670767259950" duration="2087000" />
-    </task>
-    <task id="LOCAL-00052" summary="* SpectrometerCalibrationProfile stuff: detect vertical bounds using HoughLineLogicModule (called in the background, yet not displayed in the GUI)">
-      <created>1660687982935</created>
-      <option name="number" value="00052" />
-      <option name="presentableId" value="LOCAL-00052" />
-      <option name="project" value="LOCAL" />
-      <updated>1660687982938</updated>
+      <workItem from="1670767259950" duration="2541000" />
     </task>
     <task id="LOCAL-00053" summary="* SpectrometerCalibrationProfile stuff: detect vertical bounds using HoughLineLogicModule (called in the background, yet not displayed in the GUI)&#10;* MainStatusBarViewModule: added progress bar (and applied to hough lines retrieval as initial use case)">
       <created>1660741648471</created>
@@ -674,7 +671,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670768644509</updated>
     </task>
-    <option name="localTasksCounter" value="101" />
+    <task id="LOCAL-00101" summary="* VirtualCameraViewModule: handle capturing physically captured images to be used in virtual spectrometer">
+      <created>1670769449316</created>
+      <option name="number" value="00101" />
+      <option name="presentableId" value="LOCAL-00101" />
+      <option name="project" value="LOCAL" />
+      <updated>1670769449317</updated>
+    </task>
+    <option name="localTasksCounter" value="102" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -692,7 +696,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: continue to identify the spectral lines&#10;* SpectrometerWavelengthCalibrationLogicModule: 'mango green' is detected using geometric and color information now" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: started with wavelength calibration&#10;* SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule: finished detecting all spectral peaks of interest" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* minor refactoring" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* carry out interpolation" />
@@ -717,7 +720,8 @@
     <MESSAGE value="* VirtualCameraViewModule: selected image is now shown" />
     <MESSAGE value="* VirtualCameraViewModule: update ToggleSwitch to use rectangular design better matching the overall design of the app" />
     <MESSAGE value="* VirtualCameraViewModule: refactored settings access" />
-    <option name="LAST_COMMIT_MESSAGE" value="* VirtualCameraViewModule: refactored settings access" />
+    <MESSAGE value="* VirtualCameraViewModule: handle capturing physically captured images to be used in virtual spectrometer" />
+    <option name="LAST_COMMIT_MESSAGE" value="* VirtualCameraViewModule: handle capturing physically captured images to be used in virtual spectrometer" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -789,7 +793,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerVendorUtil.coverage" NAME="SpectrometerVendorUtil Coverage Results" MODIFIED="1658165659378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/model/util" />
     <SUITE FILE_PATH="coverage/spectracsPy$colorconv.coverage" NAME="colorconv Coverage Results" MODIFIED="1653498468384" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/venv/lib/python3.8/site-packages/skimage/color" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.coverage" NAME="SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule Coverage Results" MODIFIED="1662397439593" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1670769282162" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1670769708594" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrallineUtil.coverage" NAME="SpectrallineUtil Coverage Results" MODIFIED="1662744947239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/util" />
     <SUITE FILE_PATH="coverage/spectracsPy$SettingsViewModule.coverage" NAME="SettingsViewModule Coverage Results" MODIFIED="1657132329274" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings" />
