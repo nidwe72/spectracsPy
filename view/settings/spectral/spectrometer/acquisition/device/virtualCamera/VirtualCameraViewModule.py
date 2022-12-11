@@ -49,8 +49,7 @@ class VirtualCameraViewModule(PageWidget):
     def onClickedOpenPictureButton(self):
         filepath = QFileDialog.getOpenFileName(self, 'Open picture',                                            None, "Image files (*.png *.jpg *.gif)")
         image=QImage(filepath[0])
-        #image.load(filepath,QImage.Format.Format_RGB888)
-        ApplicationContextLogicModule().setVirtualCameraImage(image)
+        ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings().setVirtualCameraImage(image)
         self.__getImageViewModule().setImage(image)
 
     def createNavigationGroupBox(self):

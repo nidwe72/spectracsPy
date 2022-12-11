@@ -129,7 +129,7 @@ class VideoThread(QThread,Generic[S]):
 
     def __captureVirtualFrame(self):
 
-        self.qImage=ApplicationContextLogicModule().getVirtualCameraImage()
+        self.qImage=ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings().getVirtualCameraImage()
         self.afterCapture()
 
 

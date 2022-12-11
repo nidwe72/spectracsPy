@@ -50,7 +50,7 @@ class SpectrometerProfileViewModule(PageWidget):
                 spectrometer = model.item(index).data()
 
             if isinstance(spectrometer, Spectrometer):
-                ApplicationContextLogicModule().setSpectrometer(spectrometer)
+                ApplicationContextLogicModule().getApplicationSettings().setSpectrometer(spectrometer)
                 self.spectrometerViewModule.setModel(spectrometer)
 
 

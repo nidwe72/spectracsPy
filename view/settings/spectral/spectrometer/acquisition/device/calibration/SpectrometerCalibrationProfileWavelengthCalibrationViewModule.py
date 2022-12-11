@@ -65,7 +65,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
     def onClickedDetectPeaksButton(self):
 
         self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
-        spectrometer = ApplicationContextLogicModule().getSpectrometer()
+        spectrometer = ApplicationContextLogicModule().getApplicationSettings().getSpectrometer()
         isVirtual = spectrometer.spectrometerSensor.isVirtual
         self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
 

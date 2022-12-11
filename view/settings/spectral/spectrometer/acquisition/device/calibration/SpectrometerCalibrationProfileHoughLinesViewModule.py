@@ -68,7 +68,7 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 
         self.allHoughLines = []
         self.videoThread = SpectrometerCalibrationProfileHoughLinesVideoThread()
-        spectrometer = ApplicationContextLogicModule().getSpectrometer()
+        spectrometer = ApplicationContextLogicModule().getApplicationSettings().getSpectrometer()
         isVirtual = spectrometer.spectrometerSensor.isVirtual
         self.videoThread.setIsVirtual(isVirtual)
         self.videoThread.videoThreadSignal.connect(self.handleVideoThreadSignal)
