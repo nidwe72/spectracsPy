@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage
-from PySide6.QtWidgets import QCheckBox, QPushButton, QFileDialog, QGroupBox, QGridLayout
+from PySide6.QtWidgets import QCheckBox, QPushButton, QFileDialog, QGroupBox, QGridLayout, QWidget
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
@@ -11,9 +11,10 @@ from view.application.widgets.page.PageWidget import PageWidget
 
 class VirtualCameraViewModule(PageWidget):
 
-    useVirtualCameraComponent:ToggleSwitch=None
+    __doSavePhysicallyCapturedImagesComponent:ToggleSwitch=None
     openPictureButton:QPushButton=None
     __imageViewModule:BaseImageViewModule=None
+    __doSavePhysicallyCapturedImagesComponent:ToggleSwitch=None
 
     def createMainContainer(self):
         result=super().createMainContainer()
@@ -26,15 +27,32 @@ class VirtualCameraViewModule(PageWidget):
         imageViewModule = self.__getImageViewModule()
         result['imageViewModule'] = imageViewModule
 
-        self.useVirtualCameraComponent=ToggleSwitch(None,Qt.gray,ApplicationStyleLogicModule().getPrimaryColor())
-        #self.useVirtualCameraComponent.setCheckable(True)
-        result['useVirtualCameraComponent']=self.createLabeledComponent('use virtual camera',self.useVirtualCameraComponent)
 
-        self.openPictureButton=QPushButton('Set picture')
-        result['openPictureButton'] = self.openPictureButton
-        self.openPictureButton.clicked.connect(self.onClickedOpenPictureButton)
+        result['doSavePhysicallyCapturedImagesComponent']=self.createLabeledComponent('save physically captured images', self.__createDoSavePhysicallyCapturedImagesComponent())
+
+        buttonsPanel = self.__createButtonsPanel()
+        result[buttonsPanel.objectName()] = buttonsPanel
 
         return result
+
+    def __createDoSavePhysicallyCapturedImagesComponent(self):
+        if self.__doSavePhysicallyCapturedImagesComponent is None:
+            self.__doSavePhysicallyCapturedImagesComponent=ToggleSwitch(None, Qt.gray, ApplicationStyleLogicModule().getPrimaryColor())
+        return self.__doSavePhysicallyCapturedImagesComponent
+
+    def __createButtonsPanel(self):
+        buttonsPanel = QWidget()
+        buttonsPanel.setObjectName(
+            'VirtualCameraViewModule.buttonsPanel')
+
+        layout = QGridLayout()
+        buttonsPanel.setLayout(layout)
+
+        self.openPictureButton=QPushButton('Set picture')
+        self.openPictureButton.clicked.connect(self.onClickedOpenPictureButton)
+        layout.addWidget(self.openPictureButton, 0, 0, 1, 1)
+
+        return buttonsPanel
 
     def __getImageViewModule(self):
         if self.__imageViewModule is None:
