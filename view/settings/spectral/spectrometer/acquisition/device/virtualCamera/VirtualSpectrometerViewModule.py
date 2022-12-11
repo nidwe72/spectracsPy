@@ -27,17 +27,18 @@ class VirtualSpectrometerViewModule(PageWidget):
         imageViewModule = self.__getImageViewModule()
         result['imageViewModule'] = imageViewModule
 
-
-        result['doSavePhysicallyCapturedImagesComponent']=self.createLabeledComponent('save physically captured images', self.__createDoSavePhysicallyCapturedImagesComponent())
+        result['doSavePhysicallyCapturedImagesComponent']=self.createLabeledComponent('save physically captured images', self.__getDoSavePhysicallyCapturedImagesComponent())
 
         buttonsPanel = self.__createButtonsPanel()
         result[buttonsPanel.objectName()] = buttonsPanel
 
         return result
 
-    def __createDoSavePhysicallyCapturedImagesComponent(self):
+    def __getDoSavePhysicallyCapturedImagesComponent(self):
         if self.__doSavePhysicallyCapturedImagesComponent is None:
             self.__doSavePhysicallyCapturedImagesComponent=ToggleSwitch(None, Qt.gray, ApplicationStyleLogicModule().getPrimaryColor())
+            self.__doSavePhysicallyCapturedImagesComponent.stateChanged.connect(self.onStateChangedDoSavePhysicallyCapturedImagesComponent)
+
         return self.__doSavePhysicallyCapturedImagesComponent
 
     def __createButtonsPanel(self):
@@ -63,6 +64,13 @@ class VirtualSpectrometerViewModule(PageWidget):
     def _getPageTitle(self):
         return "Virtual spectrometer"
 
+    def onStateChangedDoSavePhysicallyCapturedImagesComponent(self):
+        isChecked = self.__getDoSavePhysicallyCapturedImagesComponent().isChecked()
+        if isChecked:
+            print('checked')
+        else:
+            print('unchecked')
+        ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings().setDoSavePhysicallyCapturedImages(isChecked)
 
     def onClickedOpenPictureButton(self):
         filepath = QFileDialog.getOpenFileName(self, 'Open picture',                                            None, "Image files (*.png *.jpg *.gif)")

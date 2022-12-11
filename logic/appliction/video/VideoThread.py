@@ -94,11 +94,10 @@ class VideoThread(QThread,Generic[S]):
 
         isVirtual = self.getIsVirtual()
 
-        saveFrames = False;
-        #debugPurpose
-        #saveFrames=True
+        doSavePhysicallyCapturedImages = ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings().getDoSavePhysicallyCapturedImages()
+
         temporaryDirectory=None
-        if saveFrames:
+        if doSavePhysicallyCapturedImages:
             app_paths = AppDataPaths()
             app_paths.setup()
             temporaryDirectory = app_paths.app_data_path+'/tmpImages'
