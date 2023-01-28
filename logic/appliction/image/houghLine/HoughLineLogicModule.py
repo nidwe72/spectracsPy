@@ -1,3 +1,5 @@
+import math
+import time
 from typing import List
 import cv2
 import cmath
@@ -18,8 +20,14 @@ class HoughLineLogicModule:
         # kernel = np.ones((5, 5), np.float32) / 25
         # image = cv2.filter2D(image, -1, kernel)
 
-        image = cv2.bilateralFilter(image, 9, 75, 75)
 
+        threshold = 40
+        assignValue = 255  # Value to assign the pixel if the threshold is met
+        threshold_method = cv2.THRESH_BINARY
+        _,image = cv2.threshold(image, threshold, assignValue, threshold_method)
+
+        image = cv2.convertScaleAbs(image, 10, -10)
+        image = cv2.bilateralFilter(image, 9, 75, 75)
 
         v = np.median(image)
         # apply automatic Canny edge detection using the computed median
@@ -28,6 +36,59 @@ class HoughLineLogicModule:
         edged = cv2.Canny(image, lower, upper)
         # return the edged image
         return edged
+
+    def getBoundingLines(self,img, lines)->List[QLine]:
+        result=[]
+
+        shape=img.shape
+        width = shape[1]
+        height = shape[0]
+
+        lowestMidpoint=height
+        highestMidpoint=0
+
+        for line in lines:
+            for x1, y1, x2, y2 in line:
+                midpointX=x1+(x2-x1)/2.0
+
+                angle = math.atan2(y2 - y1, x2 - x1) * 180.0 / math.pi
+
+                if abs(angle)>1:
+                    continue
+
+                intersectMidpoint = self.get_intersect((midpointX, 0), (midpointX, height), (x1, y1), (x2, y2))
+                intersectMidpointY=intersectMidpoint[1]
+
+                if not intersectMidpointY==float('inf'):
+
+                    if intersectMidpointY>highestMidpoint:
+                        highestMidpoint=intersectMidpointY
+
+                    if intersectMidpointY<lowestMidpoint:
+                        lowestMidpoint=intersectMidpointY
+
+                #debugPurpose: show Hough Lines
+                # someLine = QLine()
+                # someLine.setP1(QPoint(x1, y1))
+                # someLine.setP2(QPoint(x2,y2))
+                # result.append(someLine)
+                # time.sleep(2)
+
+        lowerLine = QLine()
+        lowerLine.setP1(QPoint(0, lowestMidpoint))
+        lowerLine.setP2(QPoint(width, lowestMidpoint))
+
+
+        upperLine = QLine()
+        upperLine.setP1(QPoint(0, highestMidpoint))
+        upperLine.setP2(QPoint(width, highestMidpoint))
+
+        result.append(upperLine)
+        result.append(lowerLine)
+
+        return result
+
+
 
     def getHoughLines(self,image:QImage)->List[QLine]:
 
@@ -41,17 +102,21 @@ class HoughLineLogicModule:
 
         src=self.auto_canny(src)
 
-        # cv2.imwrite('test.jpg', src)
+        #debugPurpose
+        #cv2.imwrite('/tmp/autoCanny.jpg', src)
 
         # Copy edges to the images that will display the results in BGR
 
         lines = cv2.HoughLines(src, 1, np.pi / 180, 150, None, 0, 0)
 
+        #lines = cv2.HoughLines(src, 1, np.pi / 180, 150, None, 0, 0)
+
 
         rho = 3
         theta = np.pi / 180
         threshold = 15
-        min_line_len = 300
+        #min_line_len = 300
+        min_line_len = 20
         max_line_gap = 60
         lines = cv2.HoughLinesP(src, rho, theta, threshold, None, minLineLength=min_line_len,
                                maxLineGap=max_line_gap)
@@ -63,35 +128,7 @@ class HoughLineLogicModule:
 
         result=self.getBoundingLines(src,lines)
 
-        # index = 0
-        #
-        # if lines is not None:
-        #
-        #     for line in lines:
-        #         index = index + 1
-        #         if index == 3:
-        #             break
-        #         for rho, theta in line:
-        #             a = np.cos(theta)
-        #             b = np.sin(theta)
-        #             x0 = a * rho
-        #             y0 = b * rho
-        #             x1 = int(x0 + 2000 * (-b))
-        #             y1 = int(y0 + 2000 * (a))
-        #             x2 = int(x0 - 2000 * (-b))
-        #             y2 = int(y0 - 2000 * (a))
-        #
-        #             # cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-        #             cv2.line(src, (x1, y1), (x2, y2), (255, 255, 255), 5)
-        #
-        #             # print((x1, y1))
-        #             print((x0, y0))
-        #
-        #             cv2.imwrite('test2.jpg', src)
-        #
-        #             result.append(y1)
-        #
-        # print(result)
+
         return result
 
     def get_intersect(self,a1, a2, b1, b2):
@@ -136,11 +173,11 @@ class HoughLineLogicModule:
                 if intersectMidpointY<lowestMidpoint:
                     lowestMidpoint=intersectMidpointY
 
-                point1=np.array([intersectLeftBorder[0], intersectLeftBorder[1]], dtype=np.int32)
-                point2 = np.array([intersectRightBorder[0], intersectRightBorder[1]], dtype=np.int32)
-
-                # cv2.line(img,point1,point2, color, thickness)
-                # cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
+                # point1=np.array([intersectLeftBorder[0], intersectLeftBorder[1]], dtype=np.int32)
+                # point2 = np.array([intersectRightBorder[0], intersectRightBorder[1]], dtype=np.int32)
+                #
+                # # cv2.line(img,point1,point2, color, thickness)
+                # # cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
 
         # point1=np.array([0, lowestMidpoint], dtype=np.int32)
         # point2 = np.array([width, lowestMidpoint], dtype=np.int32)
@@ -166,57 +203,6 @@ class HoughLineLogicModule:
         # cv2.line(img,point1,point2, [0,0,255], thickness)
 
         #cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
-
-    def getBoundingLines(self,img, lines)->List[QLine]:
-        result=[]
-
-        shape=img.shape
-        width = shape[1]
-        height = shape[0]
-
-        lowestMidpoint=height
-        highestMidpoint=0
-
-        for line in lines:
-            for x1, y1, x2, y2 in line:
-                midpointX=x1+(x2-x1)/2.0
-
-                intersectLeftBorder = self.get_intersect((x1, y1), (x2, y2), (0, 0), (0, height))
-                intersectRightBorder = self.get_intersect((x1, y1), (x2, y2), (width, 0), (width, height))
-
-                intersectMidpoint = self.get_intersect((midpointX, 0), (midpointX, height), (x1, y1), (x2, y2))
-                intersectMidpointY=intersectMidpoint[1]
-
-                if intersectMidpointY>highestMidpoint:
-                    highestMidpoint=intersectMidpointY
-
-                if intersectMidpointY<lowestMidpoint:
-                    lowestMidpoint=intersectMidpointY
-
-                point1=np.array([intersectLeftBorder[0], intersectLeftBorder[1]], dtype=np.int32)
-                point2 = np.array([intersectRightBorder[0], intersectRightBorder[1]], dtype=np.int32)
-
-                # cv2.line(img,point1,point2, color, thickness)
-                # cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
-
-        point1=np.array([0, lowestMidpoint], dtype=np.int32)
-        point2 = np.array([width, lowestMidpoint], dtype=np.int32)
-
-        lowerLine = QLine()
-        lowerLine.setP1(QPoint(0, lowestMidpoint))
-        lowerLine.setP2(QPoint(width, lowestMidpoint))
-
-        point1=np.array([0, highestMidpoint], dtype=np.int32)
-        point2 = np.array([width, highestMidpoint], dtype=np.int32)
-
-        upperLine = QLine()
-        upperLine.setP1(QPoint(0, highestMidpoint))
-        upperLine.setP2(QPoint(width, highestMidpoint))
-
-        result.append(upperLine)
-        result.append(lowerLine)
-
-        return result
 
 
 

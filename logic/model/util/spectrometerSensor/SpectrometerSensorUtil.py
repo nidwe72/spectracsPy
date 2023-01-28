@@ -48,9 +48,9 @@ class SpectrometerSensorUtil(Singleton):
         elp4KDevice.codeName = SpectrometerSensorCodeName.EXAKTA
         elp4KDevice.isVirtual = False
         elp4KDevice.description = "ELP "
-        elp4KDevice.vendorId = "0aaa"
+        elp4KDevice.vendorId = "32e4"
         elp4KDevice.vendorName = "ELP"
-        elp4KDevice.modelId = "1234"
+        elp4KDevice.modelId = "8830"
         elp4KDevice.sellerName = "ELP"
         elp4KDevice.spectrometerSensorChip=sensorChips['Sony_IMX1234']
         elp4KDevice.spectrometerSensorChipId = sensorChips['Sony_IMX1234'].id

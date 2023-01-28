@@ -56,7 +56,12 @@ class VideoThread(QThread,Generic[S]):
 
         self.onStart()
 
-        self.cap = cv2.VideoCapture(0)
+        #todo:hardCoded
+        videoDeviceId=0
+        #videoDeviceId = 1
+
+        #self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(videoDeviceId)
 
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         self.cap.set(cv2.CAP_PROP_FOURCC, fourcc)
@@ -69,7 +74,8 @@ class VideoThread(QThread,Generic[S]):
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
 
         if platform=='linux':
-            self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
+            #self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
+            self.cap.set(cv2.CAP_PROP_EXPOSURE, 500)
         elif platform=='win32':
             self.cap.set(cv2.CAP_PROP_EXPOSURE, -3)
 
