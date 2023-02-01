@@ -10,8 +10,6 @@ from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 class SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal(SpectralVideoThreadSignal):
 
     peakValuesByPixels:Dict[int,float]=None
-    #interpolationPolynomial:poly1d=None
-
     model:SpectrometerCalibrationProfile=None
 
 

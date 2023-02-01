@@ -4,6 +4,8 @@ from sqlalchemy import String
 from sqlalchemy.orm import relationship
 
 from model.databaseEntity.DbBase import DbBaseEntity, DbBaseEntityMixin
+from model.databaseEntity.spectral.device import SpectrometerProfile
+
 
 class Spectrometer(DbBaseEntity, DbBaseEntityMixin):
 
@@ -23,5 +25,6 @@ class Spectrometer(DbBaseEntity, DbBaseEntityMixin):
     spectrometerStyleId = Column(Integer, ForeignKey("spectrometer_style.id"))
     #spectrometerStyle = relationship("SpectrometerStyle", back_populates="spectrometers")
     spectrometerStyle = relationship("SpectrometerStyle")
+
 
 

@@ -39,8 +39,9 @@ class SpectrometerProfileViewModule(PageWidget):
 
     def onSelectedSpectrometer(self, index):
 
+        spectrometerProfile=self.getModel()
+
         model = self.spectrometersComboBox.model()
-        spectrometers = SpectrometerSensorUtil().getSpectrometerSensors()
 
         if isinstance(model, QStandardItemModel):
 
@@ -50,10 +51,9 @@ class SpectrometerProfileViewModule(PageWidget):
                 spectrometer = model.item(index).data()
 
             if isinstance(spectrometer, Spectrometer):
-                ApplicationContextLogicModule().getApplicationSettings().setSpectrometer(spectrometer)
+                spectrometerProfile.spectrometer=spectrometer
+                ApplicationContextLogicModule().getApplicationSettings().setSpectrometerProfile(spectrometerProfile)
                 self.spectrometerViewModule.setModel(spectrometer)
-
-
 
     def updateSpectrometersComboBox(self):
 
