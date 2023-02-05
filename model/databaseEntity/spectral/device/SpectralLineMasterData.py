@@ -14,4 +14,10 @@ class SpectralLineMasterData(DbBaseEntity, DbBaseEntityMixin):
     nanometer = Column(Float)
 
 
+    intensity:int=0
+    description:str=''
+    light='CFL'
+
+
+
 

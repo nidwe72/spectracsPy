@@ -3,12 +3,14 @@ import threading
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
+from spectracsTest2 import RascalLogicModule
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesViewModule import \
     SpectrometerCalibrationProfileSpectralLinesViewModule
@@ -63,42 +65,75 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         return buttonsPanel
 
     def onClickedDetectPeaksButton(self):
+        self.onClickedDetectPeaksButtonNew()
+
+    def onClickedDetectPeaksButtonNew(self):
 
         self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
         spectrometerProfile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
         isVirtual = spectrometerProfile.spectrometer.spectrometerSensor.isVirtual
         self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
 
-        self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
+        self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignalNew)
+        self.wavelengthCalibrationVideoThread.setFrameCount(2)
+
+        self.wavelengthCalibrationVideoThread.start()
+
+
+    def handleWavelengthCalibrationVideoSignalNew(self, event: threading.Event,
+                                               videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
+
+        applicationStatusSignal = ApplicationStatusSignal()
+        applicationStatusSignal.text = 'detecting peaks'
+        applicationStatusSignal.isStatusReset = False
+        applicationStatusSignal.stepsCount = videoSignal.framesCount
+        applicationStatusSignal.currentStepIndex = videoSignal.currentFrameIndex
+
+        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
+            applicationStatusSignal.isStatusReset = True
+
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
+            applicationStatusSignal)
+
+        #self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
+
+        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
+
+            self.coefficientAComponent.setText(str(videoSignal.model.interpolationCoefficientA))
+            self.coefficientBComponent.setText(str(videoSignal.model.interpolationCoefficientB))
+            self.coefficientCComponent.setText(str(videoSignal.model.interpolationCoefficientC))
+            self.coefficientDComponent.setText(str(videoSignal.model.interpolationCoefficientD))
+
+            self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(videoSignal.model)
+
+        self.test(videoSignal)
+
+        event.set()
+
+    def test(self,videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
+
+        spectrumAcquisitionLogicModule = ImageSpectrumAcquisitionLogicModule()
+        spectrum=spectrumAcquisitionLogicModule.acquire(videoSignal)
+
+        rascalLogicModule = RascalLogicModule()
+        rascalLogicModule.execute(spectrum)
+        return
+
+
+    def onClickedDetectPeaksButtonOld(self):
+
+        self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
+        spectrometerProfile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
+        isVirtual = spectrometerProfile.spectrometer.spectrometerSensor.isVirtual
+        self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
+
+        self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignalOld)
         self.wavelengthCalibrationVideoThread.setFrameCount(100)
 
         self.wavelengthCalibrationVideoThread.start()
 
-    def createPolynomialCoefficientsGroupBox(self):
-        result = QGroupBox("Polynomial coefficients")
 
-        layout = QGridLayout()
-        result.setLayout(layout)
-
-        self.coefficientAComponent = QLineEdit()
-        self.coefficientAComponent.setReadOnly(True)
-        layout.addWidget(self.createLabeledComponent('A', self.coefficientAComponent), 0, 0, 1, 1)
-
-        self.coefficientBComponent = QLineEdit()
-        self.coefficientBComponent.setReadOnly(True)
-        layout.addWidget(self.createLabeledComponent('B', self.coefficientBComponent), 0, 1, 1, 1)
-
-        self.coefficientCComponent = QLineEdit()
-        self.coefficientCComponent.setReadOnly(True)
-        layout.addWidget(self.createLabeledComponent('C', self.coefficientCComponent), 1, 0, 1, 1)
-
-        self.coefficientDComponent = QLineEdit()
-        self.coefficientDComponent.setReadOnly(True)
-        layout.addWidget(self.createLabeledComponent('D', self.coefficientDComponent), 1, 1, 1, 1)
-
-        return result
-
-    def handleWavelengthCalibrationVideoSignal(self, event: threading.Event,
+    def handleWavelengthCalibrationVideoSignalOld(self, event: threading.Event,
                                                videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
         applicationStatusSignal = ApplicationStatusSignal()
@@ -125,6 +160,32 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
             self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(videoSignal.model)
 
         event.set()
+
+
+    def createPolynomialCoefficientsGroupBox(self):
+        result = QGroupBox("Polynomial coefficients")
+
+        layout = QGridLayout()
+        result.setLayout(layout)
+
+        self.coefficientAComponent = QLineEdit()
+        self.coefficientAComponent.setReadOnly(True)
+        layout.addWidget(self.createLabeledComponent('A', self.coefficientAComponent), 0, 0, 1, 1)
+
+        self.coefficientBComponent = QLineEdit()
+        self.coefficientBComponent.setReadOnly(True)
+        layout.addWidget(self.createLabeledComponent('B', self.coefficientBComponent), 0, 1, 1, 1)
+
+        self.coefficientCComponent = QLineEdit()
+        self.coefficientCComponent.setReadOnly(True)
+        layout.addWidget(self.createLabeledComponent('C', self.coefficientCComponent), 1, 0, 1, 1)
+
+        self.coefficientDComponent = QLineEdit()
+        self.coefficientDComponent.setReadOnly(True)
+        layout.addWidget(self.createLabeledComponent('D', self.coefficientDComponent), 1, 1, 1, 1)
+
+        return result
+
 
     def createMainWidget(self):
         result = QWidget()

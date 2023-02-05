@@ -1,6 +1,7 @@
 import sys
 
 from PySide6 import QtWidgets
+from PySide6.QtGui import QGuiApplication
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from view.main.MainContainerViewModule import MainContainerViewModule
@@ -363,7 +364,9 @@ QLineEdit[readOnly="true"]{
 """)
 
 mainContainerViewModule = MainContainerViewModule()
-mainContainerViewModule.resize(int(480 * 1.5), int(640 * 1.5))
+geometry = QGuiApplication.primaryScreen().availableGeometry()
+mainContainerViewModule.setMinimumWidth(geometry.width()/2)
+mainContainerViewModule.setMinimumHeight(geometry.height()*0.9)
 mainContainerViewModule.setWindowTitle("Spectracs")
 
 ApplicationContextLogicModule().getNavigationHandler().mainContainerViewModule = mainContainerViewModule
@@ -378,3 +381,7 @@ except:
     pass
 
 sys.exit(app.exec())
+
+
+
+

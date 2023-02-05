@@ -30,8 +30,6 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoThread(VideoThread
         videoSignalModel.framesCount=self.getFrameCount()
         videoSignalModel.currentFrameIndex=self._getCurrentFrameIndex()
 
-
-
         imageToSpectrumLogicModule=ImageSpectrumAcquisitionLogicModule()
         spectrum=imageToSpectrumLogicModule.acquire(videoSignalModel)
 
