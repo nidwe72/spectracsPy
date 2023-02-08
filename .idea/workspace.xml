@@ -4,16 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* ImageSpectrumAcquisitionLogicModule.acquire(): removed hard-coded stuff">
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* RascalLogicModule: started evaluating RASCAL algorithm">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logic/appliction/video/VideoThread.py" beforeDir="false" afterPath="$PROJECT_DIR$/logic/appliction/video/VideoThread.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logic/spectral/util/SpectralLineMasterDataUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/logic/spectral/util/SpectralLineMasterDataUtil.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logic/spectral/util/SpectrallineUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/logic/spectral/util/SpectrallineUtil.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logic/spectral/video/SpectrometerCalibrationProfileWavelengthCalibrationVideoThread.py" beforeDir="false" afterPath="$PROJECT_DIR$/logic/spectral/video/SpectrometerCalibrationProfileWavelengthCalibrationVideoThread.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectralLineMasterData.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectralLineMasterData.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectralLineMasterDataColorName.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectralLineMasterDataColorName.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/spectracsMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/spectracsMain.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spectracsTest2.py" beforeDir="false" afterPath="$PROJECT_DIR$/spectracsTest2.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,6 +38,11 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;
+  }
+}</component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
       <filtered-out-file-type name="LOCAL_BRANCH" />
@@ -76,17 +74,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "WebServerToolWindowFactoryState": "false",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "settings.editor.selected.configurable": "reference.idesettings.debugger.python",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.idesettings.debugger.python&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -102,7 +100,7 @@
       <recent name="$PROJECT_DIR$/logic/spectral/acquisition" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.spectracsTest2">
+  <component name="RunManager" selected="Python.spectracsMain">
     <configuration name="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="spectracsPy" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -247,9 +245,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.spectracsMain" />
+        <item itemvalue="Python.spectrasTest" />
         <item itemvalue="Python.spectracsTest2" />
         <item itemvalue="Python.match_orb" />
-        <item itemvalue="Python.spectrasTest" />
         <item itemvalue="Python.SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule" />
       </list>
     </recent_temporary>
@@ -393,14 +391,10 @@
       <workItem from="1675545890453" duration="1032000" />
       <workItem from="1675547046265" duration="4890000" />
       <workItem from="1675551964046" duration="107000" />
-      <workItem from="1675552117889" duration="6479000" />
-    </task>
-    <task id="LOCAL-00058" summary="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (current ones and total bounding ones)">
-      <created>1661091138026</created>
-      <option name="number" value="00058" />
-      <option name="presentableId" value="LOCAL-00058" />
-      <option name="project" value="LOCAL" />
-      <updated>1661091138026</updated>
+      <workItem from="1675552117889" duration="8980000" />
+      <workItem from="1675605167561" duration="5605000" />
+      <workItem from="1675703588007" duration="14651000" />
+      <workItem from="1675877328589" duration="7204000" />
     </task>
     <task id="LOCAL-00059" summary="* SpectrometerCalibrationProfile stuff: Hough lines are shown now (current ones and total bounding ones)">
       <created>1661092905392</created>
@@ -738,7 +732,14 @@
       <option name="project" value="LOCAL" />
       <updated>1675279547214</updated>
     </task>
-    <option name="localTasksCounter" value="107" />
+    <task id="LOCAL-00107" summary="* RascalLogicModule: started evaluating RASCAL algorithm">
+      <created>1675558819969</created>
+      <option name="number" value="00107" />
+      <option name="presentableId" value="LOCAL-00107" />
+      <option name="project" value="LOCAL" />
+      <updated>1675558819970</updated>
+    </task>
+    <option name="localTasksCounter" value="108" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -762,7 +763,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* SpectrometerCalibrationProfileSpectralLinesViewModule: show SpectralLine/s&#10;* started passing appropriate models to the diverse widgets" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: wavelength calibration&#10;* SpectrometerCalibrationProfileSpectralLinesViewModule: populate pixel values&#10;* started passing appropriate models to the diverse widgets" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting" />
     <MESSAGE value="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileWavelengthCalibrationViewModule: spectrum is now shown larger" />
@@ -787,75 +787,156 @@
     <MESSAGE value="* added successful test for getting RGB colors from spectra" />
     <MESSAGE value="* HoughLineLogicModule: created 'canny' picture using some lightness threshold; For the own spectrometer hough lines ate applied successfully now" />
     <MESSAGE value="* ImageSpectrumAcquisitionLogicModule.acquire(): removed hard-coded stuff" />
-    <option name="LAST_COMMIT_MESSAGE" value="* ImageSpectrumAcquisitionLogicModule.acquire(): removed hard-coded stuff" />
+    <MESSAGE value="* RascalLogicModule: started evaluating RASCAL algorithm" />
+    <option name="LAST_COMMIT_MESSAGE" value="* RascalLogicModule: started evaluating RASCAL algorithm" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/logic/spectral/video/SpectrometerCalibrationProfileHoughLinesVideoThread.py</url>
-          <line>14</line>
-          <option name="timeStamp" value="65" />
-        </line-breakpoint>
-        <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
-          <line>101</line>
-          <option name="timeStamp" value="67" />
-        </line-breakpoint>
-        <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
-          <line>147</line>
-          <option name="timeStamp" value="68" />
-        </line-breakpoint>
-        <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
-          <line>73</line>
-          <option name="timeStamp" value="69" />
-        </line-breakpoint>
-        <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
-          <line>124</line>
-          <option name="timeStamp" value="71" />
-        </line-breakpoint>
-        <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
-          <line>129</line>
-          <option name="timeStamp" value="72" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py</url>
-          <line>50</line>
-          <option name="timeStamp" value="76" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/logic/spectral/video/SpectrometerCalibrationProfileWavelengthCalibrationVideoThread.py</url>
-          <line>32</line>
-          <option name="timeStamp" value="77" />
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>256</line>
+          <option name="timeStamp" value="83" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
-          <line>15</line>
-          <option name="timeStamp" value="78" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
-          <line>67</line>
-          <option name="timeStamp" value="79" />
+          <line>68</line>
+          <option name="timeStamp" value="84" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
-          <line>27</line>
-          <option name="timeStamp" value="80" />
+          <line>72</line>
+          <option name="timeStamp" value="85" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
-          <line>118</line>
-          <option name="timeStamp" value="81" />
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>155</line>
+          <option name="timeStamp" value="86" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
-          <line>85</line>
-          <option name="timeStamp" value="82" />
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>194</line>
+          <option name="timeStamp" value="91" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>131</line>
+          <option name="timeStamp" value="92" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>136</line>
+          <option name="timeStamp" value="93" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>193</line>
+          <option name="timeStamp" value="94" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>173</line>
+          <option name="timeStamp" value="95" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>441</line>
+          <option name="timeStamp" value="96" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>1848</line>
+          <option name="timeStamp" value="97" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>397</line>
+          <option name="timeStamp" value="98" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>804</line>
+          <option name="timeStamp" value="99" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>461</line>
+          <option name="timeStamp" value="100" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>486</line>
+          <option name="timeStamp" value="101" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>553</line>
+          <option name="timeStamp" value="104" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>551</line>
+          <option name="timeStamp" value="105" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>474</line>
+          <option name="timeStamp" value="106" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>248</line>
+          <option name="timeStamp" value="108" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>257</line>
+          <option name="timeStamp" value="109" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>140</line>
+          <option name="timeStamp" value="110" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>458</line>
+          <option name="timeStamp" value="111" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>169</line>
+          <option name="timeStamp" value="112" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>720</line>
+          <option name="timeStamp" value="113" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>683</line>
+          <option name="timeStamp" value="115" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/rascal/calibrator.py</url>
+          <line>1835</line>
+          <option name="timeStamp" value="116" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectrasTest.py</url>
+          <line>51</line>
+          <option name="timeStamp" value="119" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>92</line>
+          <option name="timeStamp" value="120" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/spectracsTest2.py</url>
+          <line>115</line>
+          <option name="timeStamp" value="121" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -877,7 +958,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsItem.coverage" NAME="BaseGraphicsItem Coverage Results" MODIFIED="1660995012257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerProfileListViewModule.coverage" NAME="SpectrometerProfileListViewModule Coverage Results" MODIFIED="1660395356161" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrallineUtil.coverage" NAME="SpectrallineUtil Coverage Results" MODIFIED="1662744947239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/util" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectrasTest.coverage" NAME="spectrasTest Coverage Results" MODIFIED="1674399096967" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectrasTest.coverage" NAME="spectrasTest Coverage Results" MODIFIED="1675715819991" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrumSampleType.coverage" NAME="SpectrumSampleType Coverage Results" MODIFIED="1652564636257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/spectral" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectrasMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1652124565875" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileViewModule.coverage" NAME="SpectrometerCalibrationProfileViewModule Coverage Results" MODIFIED="1665421273731" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
@@ -885,7 +966,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest2.coverage" NAME="spectracsTest2 Coverage Results" MODIFIED="1675557332733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1675558539166" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1675884343125" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
     <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />
