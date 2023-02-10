@@ -1,8 +1,12 @@
+from typing import List, Dict
+
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 
 
 class Spectrum:
-    valuesByNanometers: dict = None
+    valuesByNanometers: Dict[int,float] = None
+
+    __capturedValuesByNanometers: List[Dict[int,float]]= []
 
     def __init__(self):
         self.sampleType = SpectrumSampleType.SAMPLE
@@ -15,5 +19,13 @@ class Spectrum:
 
     def setSampleType(self,sampleType):
         self.sampleType=sampleType
+
+    def getCapturedValuesByNanometers(self)->List[Dict[int,float]]:
+        return self.__capturedValuesByNanometers
+
+    def addToCapturedValuesByNanometers(self, capturedValuesByNanometers:Dict[int,float]):
+        self.__capturedValuesByNanometers.append(capturedValuesByNanometers)
+
+
 
 

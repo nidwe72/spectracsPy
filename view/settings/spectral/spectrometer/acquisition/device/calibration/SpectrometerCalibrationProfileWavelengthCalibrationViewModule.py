@@ -4,6 +4,8 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLin
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
+    ImageSpectrumAcquisitionLogicModuleParameters
 from logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
 from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
@@ -75,7 +77,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
 
         self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignalNew)
-        self.wavelengthCalibrationVideoThread.setFrameCount(2)
+        self.wavelengthCalibrationVideoThread.setFrameCount(50)
 
         self.wavelengthCalibrationVideoThread.start()
 
@@ -95,7 +97,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
             applicationStatusSignal)
 
-        #self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
+        self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
 
         if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
 
@@ -106,14 +108,15 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
             self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(videoSignal.model)
 
-        self.test(videoSignal)
+        #self.testRascal(videoSignal)
 
         event.set()
 
-    def test(self,videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
+    def testRascal(self, videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
         spectrumAcquisitionLogicModule = ImageSpectrumAcquisitionLogicModule()
-        spectrum=spectrumAcquisitionLogicModule.acquire(videoSignal)
+        spectrum = spectrumAcquisitionLogicModule.execute(
+            ImageSpectrumAcquisitionLogicModuleParameters().setVideoSignal(videoSignal)).spectrum
 
         rascalLogicModule = RascalLogicModule()
         rascalLogicModule.execute(spectrum)

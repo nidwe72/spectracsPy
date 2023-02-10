@@ -4,6 +4,8 @@ from PySide6.QtCore import Signal
 
 from logic.appliction.video.VideoThread import VideoThread
 from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
+    ImageSpectrumAcquisitionLogicModuleParameters
 from model.spectral.SpectralJob import SpectralJob
 from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 from model.spectral.SpectrumSampleType import SpectrumSampleType
@@ -26,7 +28,9 @@ class SpectrumVideoThread(VideoThread[SpectralVideoThreadSignal]):
         spectralVideoThreadSignalModel.currentFrameIndex=self._getCurrentFrameIndex()
 
         imageToSpectrumLogicModule=ImageSpectrumAcquisitionLogicModule()
-        spectrum=imageToSpectrumLogicModule.acquire(self.qImage)
+
+        spectrum = imageToSpectrumLogicModule.execute(
+            ImageSpectrumAcquisitionLogicModuleParameters().setVideoSignal(spectralVideoThreadSignalModel)).spectrum
 
         spectrum.setSampleType(self.getSpectrumSampleType())
         self.spectralJob.addSpectrum(spectrum)

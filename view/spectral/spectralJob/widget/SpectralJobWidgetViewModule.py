@@ -72,7 +72,7 @@ class SpectralJobWidgetViewModule(QWidget):
             if spectralVideoThreadSignal.currentFrameIndex==spectralVideoThreadSignal.framesCount:
                 pass
                 # colorizedImage=spectralImageLogicModule.colorizeQImage(spectralVideoThreadSignal.image,132)
-                # videoSignal.image = colorizedImage
+                # __videoSignal.image = colorizedImage
 
             colorizedImage=spectralVideoThreadSignal.image.convertToFormat(QImage.Format.Format_Grayscale8)
             videoSignal.image = colorizedImage
@@ -86,7 +86,7 @@ class SpectralJobWidgetViewModule(QWidget):
             # bar=spectralImageLogicModule.calculateFocalMeasureOfNumpyImage(foo)
             # print("bar")
             # print(bar)
-            # videoSignal.image=someImage
+            # __videoSignal.image=someImage
 
             self.videoViewModule.handleVideoThreadSignal(videoSignal)
 

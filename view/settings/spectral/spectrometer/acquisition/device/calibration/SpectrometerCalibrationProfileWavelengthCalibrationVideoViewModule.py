@@ -8,6 +8,9 @@ from scipy.signal import find_peaks
 from scipy.signal import peak_prominences
 
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
+    ImageSpectrumAcquisitionLogicModuleParameters
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
     SpectrometerWavelengthCalibrationLogicModule
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
@@ -18,6 +21,7 @@ from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
+from model.spectral.Spectrum import Spectrum
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
@@ -46,7 +50,39 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
     spectrometerWavelengthCalibrationLogicModule:SpectrometerWavelengthCalibrationLogicModule = None
 
+    __spectrum:Spectrum=None
+
+    @property
+    def spectrum(self):
+        return self.__spectrum
+
+    @spectrum.setter
+    def spectrum(self, spectrum):
+        self.__spectrum=spectrum
+
     def handleVideoThreadSignal(self, videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
+
+        if videoSignal.currentFrameIndex==1:
+            self.spectrum=Spectrum()
+
+        if videoSignal.currentFrameIndex==videoSignal.framesCount:
+            pass
+        else:
+            imageAcquisitionLogicModule = ImageSpectrumAcquisitionLogicModule()
+            logicModuleParameters = ImageSpectrumAcquisitionLogicModuleParameters()
+            logicModuleParameters.setVideoSignal(videoSignal)
+            moduleResult = imageAcquisitionLogicModule.execute(logicModuleParameters)
+            self.spectrum.addToCapturedValuesByNanometers(moduleResult.spectrum.valuesByNanometers)
+
+        image = videoSignal.image
+        somePixmap = QPixmap.fromImage(image)
+        self.imageItem.setPixmap(somePixmap)
+
+        self._fitInView()
+        return
+
+
+    def handleVideoThreadSignalOld(self, videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
         if videoSignal.currentFrameIndex==1:
             self.phaseZeroInExecution = True

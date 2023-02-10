@@ -26,6 +26,14 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
     __spectralLinesByPixelIndices: Dict[int, SpectralLine] = None
 
+    #average the spectrum
+    #detect peaks
+    #plot peaks
+    #run rascal
+    #plot rascal result
+    def execute(self):
+        pass
+
     def setPeaks(self, peaks: Dict[int, int]):
         self.__peaks = peaks.copy()
         self.__originalPeaks = peaks.copy()

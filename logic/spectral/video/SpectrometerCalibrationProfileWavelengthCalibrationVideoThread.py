@@ -5,6 +5,8 @@ from PySide6.QtCore import Signal
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.appliction.video.VideoThread import VideoThread
 from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
+    ImageSpectrumAcquisitionLogicModuleParameters
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from model.spectral.SpectralJob import SpectralJob
@@ -31,7 +33,8 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoThread(VideoThread
         videoSignalModel.currentFrameIndex=self._getCurrentFrameIndex()
 
         imageToSpectrumLogicModule=ImageSpectrumAcquisitionLogicModule()
-        spectrum=imageToSpectrumLogicModule.acquire(videoSignalModel)
+        spectrum = imageToSpectrumLogicModule.execute(
+            ImageSpectrumAcquisitionLogicModuleParameters().setVideoSignal(videoSignalModel)).spectrum
 
         spectrum.setSampleType(SpectrumSampleType.UNSPECIFIED)
         self.spectralJob.addSpectrum(spectrum)

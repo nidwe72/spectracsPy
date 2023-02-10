@@ -1,5 +1,9 @@
 from PySide6.QtGui import qGray
 
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
+    ImageSpectrumAcquisitionLogicModuleParameters
+from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleResult import \
+    ImageSpectrumAcquisitionLogicModuleResult
 from model.application.video.VideoSignal import VideoSignal
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
@@ -8,12 +12,16 @@ from model.spectral.Spectrum import Spectrum
 
 class ImageSpectrumAcquisitionLogicModule:
 
-    def acquire(self,videoSignal:VideoSignal):
+    def execute(self,moduleParameters:ImageSpectrumAcquisitionLogicModuleParameters)->ImageSpectrumAcquisitionLogicModuleResult:
 
-        image=videoSignal.image
+        result=ImageSpectrumAcquisitionLogicModuleResult()
+
+        videoSignal = moduleParameters.getVideoSignal()
+        image= videoSignal.image
         imageWidth=image.width()
 
         spectrum = Spectrum()
+        result.spectrum=spectrum
 
         if isinstance(videoSignal,SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
@@ -28,5 +36,6 @@ class ImageSpectrumAcquisitionLogicModule:
                 valuesByNanometers[x]=qGray(image.pixel(x,y))
 
             spectrum.setValuesByNanometers(valuesByNanometers)
-        return spectrum
+
+        return result
 
