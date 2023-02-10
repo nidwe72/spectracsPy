@@ -16,6 +16,9 @@ class SpectrometerCalibrationProfileHoughLinesVideoViewModule(
     lowerHoughLineItem: BaseGraphicsLineItem = None
     centerHoughLineItem: BaseGraphicsLineItem = None
 
+    leftBoundingLineItem: BaseGraphicsLineItem = None
+    rightBoundingLineItem: BaseGraphicsLineItem = None
+
     calibrationStepUpperHoughLineItem:BaseGraphicsLineItem=None
     calibrationStepLowerHoughLineItem: BaseGraphicsLineItem = None
     calibrationStepCenterHoughLineItem: BaseGraphicsLineItem = None
@@ -41,6 +44,12 @@ class SpectrometerCalibrationProfileHoughLinesVideoViewModule(
 
             self.scene.removeItem(self.calibrationStepCenterHoughLineItem)
             self.calibrationStepLowerHoughLineItem=None
+
+            self.scene.removeItem(self.leftBoundingLineItem)
+            self.leftBoundingLineItem=None
+
+            self.scene.removeItem(self.rightBoundingLineItem)
+            self.rightBoundingLineItem=None
 
         image = videoSignal.image
         scene = self.videoWidget.scene()
@@ -78,8 +87,20 @@ class SpectrometerCalibrationProfileHoughLinesVideoViewModule(
                                                               videoSignal.centerHoughLine.p2().x(),
                                                               videoSignal.centerHoughLine.p2().y())
 
-        if videoSignal.currentFrameIndex>videoSignal.framesCount-1:
+        if videoSignal.leftBoundingLine is not None:
+            self.__getLeftBoundingLineItem().setLine(videoSignal.leftBoundingLine.p1().x(),
+                                                                  videoSignal.leftBoundingLine.p1().y(),
+                                                                  videoSignal.leftBoundingLine.p2().x(),
+                                                                  videoSignal.leftBoundingLine.p2().y())
 
+        if videoSignal.rightBoundingLine is not None:
+            self.__getRightBoundingLineItem().setLine(videoSignal.rightBoundingLine.p1().x(),
+                                                                  videoSignal.rightBoundingLine.p1().y(),
+                                                                  videoSignal.rightBoundingLine.p2().x(),
+                                                                  videoSignal.rightBoundingLine.p2().y())
+
+
+        if videoSignal.currentFrameIndex>videoSignal.framesCount-1:
             self.scene.removeItem(self.calibrationStepUpperHoughLineItem)
             self.scene.removeItem(self.calibrationStepLowerHoughLineItem)
             self.scene.removeItem(self.calibrationStepCenterHoughLineItem)
@@ -147,5 +168,23 @@ class SpectrometerCalibrationProfileHoughLinesVideoViewModule(
             self.scene.addItem(self.calibrationStepCenterHoughLineItem)
         return self.calibrationStepCenterHoughLineItem
 
+    def __getLeftBoundingLineItem(self):
+        if self.leftBoundingLineItem is None:
+            pen = QPen(QBrush(ApplicationStyleLogicModule().getPrimaryColor()), 4)
+            pen.setStyle(Qt.PenStyle.DotLine)
+            self.leftBoundingLineItem = BaseGraphicsLineItem()
+            self.leftBoundingLineItem.itemName='leftBoundingLine'
+            self.leftBoundingLineItem.setPen(pen)
+            self.scene.addItem(self.leftBoundingLineItem)
+        return self.leftBoundingLineItem
 
+    def __getRightBoundingLineItem(self):
+        if self.rightBoundingLineItem is None:
+            pen = QPen(QBrush(ApplicationStyleLogicModule().getPrimaryColor()), 4)
+            pen.setStyle(Qt.PenStyle.DotLine)
+            self.rightBoundingLineItem = BaseGraphicsLineItem()
+            self.rightBoundingLineItem.itemName='rightBoundingLine'
+            self.rightBoundingLineItem.setPen(pen)
+            self.scene.addItem(self.rightBoundingLineItem)
+        return self.rightBoundingLineItem
 

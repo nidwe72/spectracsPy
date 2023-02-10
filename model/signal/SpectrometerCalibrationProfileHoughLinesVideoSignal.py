@@ -13,6 +13,9 @@ class SpectrometerCalibrationProfileHoughLinesVideoSignal(VideoSignal):
     calibrationStepUpperHoughLine: QLine = None
     calibrationStepCenterHoughLine: QLine = None
 
+    leftBoundingLine: QLine = None
+    rightBoundingLine: QLine = None
+
 
 
 

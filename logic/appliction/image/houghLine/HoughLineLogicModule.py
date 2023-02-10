@@ -173,20 +173,6 @@ class HoughLineLogicModule:
                 if intersectMidpointY<lowestMidpoint:
                     lowestMidpoint=intersectMidpointY
 
-                # point1=np.array([intersectLeftBorder[0], intersectLeftBorder[1]], dtype=np.int32)
-                # point2 = np.array([intersectRightBorder[0], intersectRightBorder[1]], dtype=np.int32)
-                #
-                # # cv2.line(img,point1,point2, color, thickness)
-                # # cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
-
-        # point1=np.array([0, lowestMidpoint], dtype=np.int32)
-        # point2 = np.array([width, lowestMidpoint], dtype=np.int32)
-        # cv2.line(img,point1,point2, color, thickness)
-        #
-        # point1=np.array([0, highestMidpoint], dtype=np.int32)
-        # point2 = np.array([width, highestMidpoint], dtype=np.int32)
-        # cv2.line(img,point1,point2, color, thickness)
-
         boundingLines = self.getBoundingLines(img, lines)
 
         point1=np.array([boundingLines[0].p1().x(), boundingLines[0].p1().y()], dtype=np.int32)
@@ -196,14 +182,6 @@ class HoughLineLogicModule:
         point1=np.array([boundingLines[1].p1().x(), boundingLines[1].p1().y()], dtype=np.int32)
         point2 = np.array([boundingLines[1].p2().x(), boundingLines[1].p2().y()], dtype=np.int32)
         cv2.line(img,point1,point2, color, thickness)
-
-
-        # point1=np.array([0, lowestMidpoint+(highestMidpoint-lowestMidpoint)/2.0], dtype=np.int32)
-        # point2 = np.array([width, lowestMidpoint+(highestMidpoint-lowestMidpoint)/2.0], dtype=np.int32)
-        # cv2.line(img,point1,point2, [0,0,255], thickness)
-
-        #cv2.line(img, (x1, y1), (x2, y2), [0, 255, 0], thickness)
-
 
 
 
