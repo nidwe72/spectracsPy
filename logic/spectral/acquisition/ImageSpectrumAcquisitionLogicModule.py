@@ -20,7 +20,10 @@ class ImageSpectrumAcquisitionLogicModule:
         image= videoSignal.image
         imageWidth=image.width()
 
-        spectrum = Spectrum()
+        spectrum = moduleParameters.spectrum
+        if spectrum is None:
+            spectrum=Spectrum()
+
         result.spectrum=spectrum
 
         if isinstance(videoSignal,SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
@@ -36,6 +39,7 @@ class ImageSpectrumAcquisitionLogicModule:
                 valuesByNanometers[x]=qGray(image.pixel(x,y))
 
             spectrum.setValuesByNanometers(valuesByNanometers)
+            spectrum.addToCapturedValuesByNanometers(valuesByNanometers)
 
         return result
 

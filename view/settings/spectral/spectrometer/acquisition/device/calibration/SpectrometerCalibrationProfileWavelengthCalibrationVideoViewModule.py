@@ -4,6 +4,7 @@ from typing import List
 import numpy as np
 from PySide6.QtCore import Qt, QRectF, QPointF
 from PySide6.QtGui import QPixmap, QPen, QBrush
+from matplotlib import pyplot as plt
 from scipy.signal import find_peaks
 from scipy.signal import peak_prominences
 
@@ -15,6 +16,7 @@ from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibra
     SpectrometerWavelengthCalibrationLogicModule
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
+from logic.spectral.util.SpectrumUtil import SpectrumUtil
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
@@ -25,6 +27,9 @@ from model.spectral.Spectrum import Spectrum
 from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
+
+
+from scipy.signal import find_peaks, peak_prominences
 
 
 class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
@@ -62,21 +67,54 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
     def handleVideoThreadSignal(self, videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
+        peaks=None
+
+
         if videoSignal.currentFrameIndex==1:
             self.spectrum=Spectrum()
 
         if videoSignal.currentFrameIndex==videoSignal.framesCount:
             pass
         else:
+
+            for item in self.scene.items():
+                if isinstance(item, BaseGraphicsLineItem):
+                    self.scene.removeItem(item)
+
             imageAcquisitionLogicModule = ImageSpectrumAcquisitionLogicModule()
             logicModuleParameters = ImageSpectrumAcquisitionLogicModuleParameters()
             logicModuleParameters.setVideoSignal(videoSignal)
-            moduleResult = imageAcquisitionLogicModule.execute(logicModuleParameters)
-            self.spectrum.addToCapturedValuesByNanometers(moduleResult.spectrum.valuesByNanometers)
+            logicModuleParameters.spectrum=self.spectrum
+            imageAcquisitionLogicModule.execute(logicModuleParameters)
+
+            SpectrumUtil().mean(self.spectrum)
+            SpectrumUtil().smooth(self.spectrum)
+
+            peaks, _ = find_peaks(list(self.spectrum.valuesByNanometers.values()), distance=3, width=3, rel_height=0.5, prominence=10)
+
+            #debugPurpose
+            # plt.title("spectrum")
+            # plt.xlabel("X axis")
+            # plt.ylabel("Y axis")
+            # plt.plot(list(self.spectrum.valuesByNanometers.keys()), list(self.spectrum.valuesByNanometers.values()), color="blue")
+            # plt.show()
+
 
         image = videoSignal.image
         somePixmap = QPixmap.fromImage(image)
         self.imageItem.setPixmap(somePixmap)
+
+
+        if peaks is not None:
+
+            # debugPurpose
+            # print('peaks')
+            # print(peaks.tolist())
+
+            for peakIndex in peaks.tolist():
+                lineItem = BaseGraphicsLineItem()
+                lineItem.setLine(peakIndex, 0, peakIndex, videoSignal.image.height())
+                self.scene.addItem(lineItem)
 
         self._fitInView()
         return
@@ -93,9 +131,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             self.peaksClusters:Dict[int,List[SpectralLine]]={}
             self.phaseOneCurrentStep = 0
 
-            for item in self.scene.items():
-                if isinstance(item,BaseGraphicsLineItem):
-                    self.scene.removeItem(item)
+        for item in self.scene.items():
+            if isinstance(item,BaseGraphicsLineItem):
+                self.scene.removeItem(item)
 
 
         image = videoSignal.image
