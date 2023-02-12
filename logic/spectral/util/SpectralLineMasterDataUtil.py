@@ -25,7 +25,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLineMercuryFrenchViolet.mainColorName = 'violet'
         spectralLineMercuryFrenchViolet.nanometer = 405.4
         spectralLineMercuryFrenchViolet.light = 'CFL'
-        spectralLineMercuryFrenchViolet.intensity = 80
+        spectralLineMercuryFrenchViolet.intensity = 0
         spectralLineMercuryFrenchViolet.description = 'mercury'
         transientSpectralLineMasterData[
             spectralLineMercuryFrenchViolet.name] = spectralLineMercuryFrenchViolet
@@ -37,7 +37,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLineMercuryBlue.mainColorName = 'blue'
         spectralLineMercuryBlue.nanometer = 436.6
         spectralLineMercuryBlue.light = 'CFL'
-        spectralLineMercuryBlue.intensity = 112
+        spectralLineMercuryBlue.intensity = 0
         spectralLineMercuryBlue.description = 'mercury'
         transientSpectralLineMasterData[spectralLineMercuryBlue.name] = spectralLineMercuryBlue
 
@@ -48,7 +48,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLineTerbiumAqua.mainColorName = 'cyan'
         spectralLineTerbiumAqua.nanometer = 487.7
         spectralLineTerbiumAqua.light = 'CFL'
-        spectralLineTerbiumAqua.intensity = 94
+        spectralLineTerbiumAqua.intensity = 0
         spectralLineTerbiumAqua.description = 'terbium from Tb3+'
         transientSpectralLineMasterData[spectralLineTerbiumAqua.name] = spectralLineTerbiumAqua
 
@@ -59,7 +59,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLineMercuryMangoGreenLeft.mainColorName = 'green'
         spectralLineMercuryMangoGreenLeft.nanometer = 542.4
         spectralLineMercuryMangoGreenLeft.light = 'CFL'
-        spectralLineMercuryMangoGreenLeft.intensity = 130
+        spectralLineMercuryMangoGreenLeft.intensity = 0
         spectralLineMercuryMangoGreenLeft.description = 'terbium from Tb3+'
         transientSpectralLineMasterData[spectralLineMercuryMangoGreenLeft.name] = spectralLineMercuryMangoGreenLeft
 
@@ -69,9 +69,9 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLineMercuryMangoGreen.colorName = 'mango green'
         spectralLineMercuryMangoGreen.mainColorName = 'green'
         spectralLineMercuryMangoGreen.nanometer = 546.5
-        spectralLineMercuryMangoGreenLeft.light = 'CFL'
-        spectralLineMercuryMangoGreenLeft.intensity = 144
-        spectralLineMercuryMangoGreenLeft.description = 'mercury'
+        spectralLineMercuryMangoGreen.light = 'CFL'
+        spectralLineMercuryMangoGreen.intensity = 0
+        spectralLineMercuryMangoGreen.description = 'mercury'
         transientSpectralLineMasterData[spectralLineMercuryMangoGreen.name] = spectralLineMercuryMangoGreen
 
         # [CFL#6]
@@ -81,7 +81,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinMercuryOrTerbiumLemonGlacier.mainColorName = 'yellow'
         spectralLinMercuryOrTerbiumLemonGlacier.nanometer = 577.7
         spectralLinMercuryOrTerbiumLemonGlacier.light = 'CFL'
-        spectralLinMercuryOrTerbiumLemonGlacier.intensity = 57
+        spectralLinMercuryOrTerbiumLemonGlacier.intensity = 0
         spectralLinMercuryOrTerbiumLemonGlacier.description = 'likely terbium from Tb3+ or mercury'
         transientSpectralLineMasterData[spectralLinMercuryOrTerbiumLemonGlacier.name] = spectralLinMercuryOrTerbiumLemonGlacier
 
@@ -92,7 +92,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinMercuryOrTerbiumYellow.mainColorName = 'yellow'
         spectralLinMercuryOrTerbiumYellow.nanometer = 580.2
         spectralLinMercuryOrTerbiumYellow.light = 'CFL'
-        spectralLinMercuryOrTerbiumYellow.intensity = 66
+        spectralLinMercuryOrTerbiumYellow.intensity = 0
         spectralLinMercuryOrTerbiumYellow.description = 'mercury or terbium'
         transientSpectralLineMasterData[spectralLinMercuryOrTerbiumYellow.name] = spectralLinMercuryOrTerbiumYellow
 
@@ -103,7 +103,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinTerbiumOrEuropiumYellowRose.mainColorName = 'yellow'
         spectralLinTerbiumOrEuropiumYellowRose.nanometer = 584.0
         spectralLinTerbiumOrEuropiumYellowRose.light = 'CFL'
-        spectralLinTerbiumOrEuropiumYellowRose.intensity = 72
+        spectralLinTerbiumOrEuropiumYellowRose.intensity = 0
         spectralLinTerbiumOrEuropiumYellowRose.description = 'possibly terbium from Tb3+ or europium in Eu+3:Y2O3'
         transientSpectralLineMasterData[spectralLinTerbiumOrEuropiumYellowRose.name] = spectralLinTerbiumOrEuropiumYellowRose
 
@@ -114,7 +114,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumMiddleYellow.mainColorName = 'yellow'
         spectralLinEuropiumMiddleYellow.nanometer = 587.6
         spectralLinEuropiumMiddleYellow.light = 'CFL'
-        spectralLinEuropiumMiddleYellow.intensity = 96
+        spectralLinEuropiumMiddleYellow.intensity = 0
         spectralLinEuropiumMiddleYellow.description = 'europium in Eu + 3: Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumMiddleYellow.name] = spectralLinEuropiumMiddleYellow
 
@@ -125,7 +125,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumCyberYellow.mainColorName = 'yellow'
         spectralLinEuropiumCyberYellow.nanometer = 593.4
         spectralLinEuropiumCyberYellow.light = 'CFL'
-        spectralLinEuropiumCyberYellow.intensity = 88
+        spectralLinEuropiumCyberYellow.intensity = 0
         spectralLinEuropiumCyberYellow.description = 'europium in Eu + 3: Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumCyberYellow.name] = spectralLinEuropiumCyberYellow
 
@@ -136,7 +136,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumAmber.mainColorName = 'yellow'
         spectralLinEuropiumAmber.nanometer = 599.7
         spectralLinEuropiumAmber.light = 'CFL'
-        spectralLinEuropiumAmber.intensity = 70
+        spectralLinEuropiumAmber.intensity = 0
         spectralLinEuropiumAmber.description = 'europium in Eu + 3: Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumAmber.name] = spectralLinEuropiumAmber
 
@@ -147,7 +147,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumVividGamboge.mainColorName = 'orange'
         spectralLinEuropiumVividGamboge.nanometer = 611.6
         spectralLinEuropiumVividGamboge.light = 'CFL'
-        spectralLinEuropiumVividGamboge.intensity = 180
+        spectralLinEuropiumVividGamboge.intensity = 0
         spectralLinEuropiumVividGamboge.description = 'europium in Eu + 3: Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumVividGamboge.name] = spectralLinEuropiumVividGamboge
 
@@ -158,7 +158,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLineTerbiumVividOrange.mainColorName = 'orange'
         spectralLineTerbiumVividOrange.nanometer = 625.7
         spectralLineTerbiumVividOrange.light = 'CFL'
-        spectralLineTerbiumVividOrange.intensity = 66
+        spectralLineTerbiumVividOrange.intensity = 0
         spectralLineTerbiumVividOrange.description = 'likely terbium from Tb3+'
         transientSpectralLineMasterData[spectralLineTerbiumVividOrange.name] = spectralLineTerbiumVividOrange
 
@@ -168,9 +168,9 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumInternationalOrange.colorName = 'International Orange'
         spectralLinEuropiumInternationalOrange.mainColorName = 'orange'
         spectralLinEuropiumInternationalOrange.nanometer = 631.1
-        spectralLineTerbiumVividOrange.light = 'CFL'
-        spectralLineTerbiumVividOrange.intensity = 82
-        spectralLineTerbiumVividOrange.description = 'europium in Eu + 3: Y2O3'
+        spectralLinEuropiumInternationalOrange.light = 'CFL'
+        spectralLinEuropiumInternationalOrange.intensity = 0
+        spectralLinEuropiumInternationalOrange.description = 'europium in Eu + 3: Y2O3'
         transientSpectralLineMasterData[
             spectralLinEuropiumInternationalOrange.name] = spectralLinEuropiumInternationalOrange
 
@@ -181,7 +181,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumRed.mainColorName = 'red'
         spectralLinEuropiumRed.nanometer = 650.8
         spectralLinEuropiumRed.light = 'CFL'
-        spectralLinEuropiumRed.intensity = 41
+        spectralLinEuropiumRed.intensity = 0
         spectralLinEuropiumRed.description = 'europium in Eu + 3: Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumRed.name] = spectralLinEuropiumRed
 
@@ -192,7 +192,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumRedFar660.mainColorName = 'red'
         spectralLinEuropiumRedFar660.nanometer = 662.6
         spectralLinEuropiumRedFar660.light = 'CFL'
-        spectralLinEuropiumRedFar660.intensity = 31
+        spectralLinEuropiumRedFar660.intensity = 0
         spectralLinEuropiumRedFar660.description = 'europium in Eu + 3: Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumRedFar660.name] = spectralLinEuropiumRedFar660
 
@@ -203,7 +203,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumRedFar680.mainColorName = 'red'
         spectralLinEuropiumRedFar680.nanometer = 687.7
         spectralLinEuropiumRedFar680.light = 'CFL'
-        spectralLinEuropiumRedFar680.intensity = 29
+        spectralLinEuropiumRedFar680.intensity = 0
         spectralLinEuropiumRedFar680.description = 'likely europium in Eu + 3: Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumRedFar680.name] = spectralLinEuropiumRedFar680
 
@@ -214,7 +214,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumRedFar690.mainColorName = 'red'
         spectralLinEuropiumRedFar690.nanometer = 693.7
         spectralLinEuropiumRedFar690.light = 'CFL'
-        spectralLinEuropiumRedFar690.intensity = 26
+        spectralLinEuropiumRedFar690.intensity = 0
         spectralLinEuropiumRedFar690.description = 'likely europium in Eu+3:Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumRedFar690.name] = spectralLinEuropiumRedFar690
 
@@ -225,7 +225,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumRedFar700.mainColorName = 'red'
         spectralLinEuropiumRedFar700.nanometer = 707
         spectralLinEuropiumRedFar700.light = 'CFL'
-        spectralLinEuropiumRedFar700.intensity = 50
+        spectralLinEuropiumRedFar700.intensity = 0
         spectralLinEuropiumRedFar700.description = 'likely europium in Eu+3:Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumRedFar700.name] = spectralLinEuropiumRedFar700
 
@@ -236,7 +236,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLinEuropiumRedFar710.mainColorName = 'red'
         spectralLinEuropiumRedFar710.nanometer = 712.3
         spectralLinEuropiumRedFar710.light = 'CFL'
-        spectralLinEuropiumRedFar710.intensity = 44
+        spectralLinEuropiumRedFar710.intensity = 0
         spectralLinEuropiumRedFar710.description = 'likely europium in Eu+3:Y2O3'
         transientSpectralLineMasterData[spectralLinEuropiumRedFar710.name] = spectralLinEuropiumRedFar710
 
@@ -247,7 +247,7 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLineArgonRedFar760.mainColorName = 'red'
         spectralLineArgonRedFar760.nanometer = 760.0
         spectralLineArgonRedFar760.light = 'CFL'
-        spectralLineArgonRedFar760.intensity = 18
+        spectralLineArgonRedFar760.intensity = 0
         spectralLineArgonRedFar760.description = 'likely argon'
         transientSpectralLineMasterData[spectralLineArgonRedFar760.name] = spectralLineArgonRedFar760
 
@@ -258,9 +258,27 @@ class SpectralLineMasterDataUtil(Singleton):
         spectralLineArgonRedFar810.mainColorName = 'red'
         spectralLineArgonRedFar810.nanometer = 811.0
         spectralLineArgonRedFar810.light = 'CFL'
-        spectralLineArgonRedFar810.intensity = 25
+        spectralLineArgonRedFar810.intensity = 0
         spectralLineArgonRedFar810.description = 'likely argon'
         transientSpectralLineMasterData[spectralLineArgonRedFar810.name] = spectralLineArgonRedFar810
+
+        transientSpectralLineMasterData[
+            SpectralLineMasterDataColorName.MERCURY_FRENCH_VIOLET].intensity = 56.75320988323069
+        transientSpectralLineMasterData[SpectralLineMasterDataColorName.MERCURY_BLUE].intensity = 90.29270028910736
+        transientSpectralLineMasterData[SpectralLineMasterDataColorName.TERBIUM_AQUA].intensity = 120.32584679648508
+        transientSpectralLineMasterData[
+            SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN].intensity = 207.62219062846142
+        transientSpectralLineMasterData[
+            SpectralLineMasterDataColorName.MERCURY_OR_TERBIUM_LEMON_GLACIER].intensity = 97.33694045865732
+        transientSpectralLineMasterData[
+            SpectralLineMasterDataColorName.EUROPIUM_MIDDLE_YELLOW].intensity = 113.23782055267287
+        transientSpectralLineMasterData[
+            SpectralLineMasterDataColorName.EUROPIUM_CYBER_YELLOW].intensity = 102.17695614687108
+        transientSpectralLineMasterData[SpectralLineMasterDataColorName.EUROPIUM_AMBER].intensity = 72.30732109981693
+        transientSpectralLineMasterData[
+            SpectralLineMasterDataColorName.EUROPIUM_INTERNATIONAL_ORANGE].intensity = 213.96991040605366
+        transientSpectralLineMasterData[
+            SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE].intensity = 56.689921606840784
 
         return transientSpectralLineMasterData
 

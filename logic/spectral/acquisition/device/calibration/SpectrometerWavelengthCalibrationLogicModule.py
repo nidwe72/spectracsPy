@@ -3,20 +3,35 @@ from typing import Dict
 import numpy as np
 
 from PySide6.QtGui import QImage, QColor
-from numpy import poly1d
+from matplotlib import pyplot as plt
+from numpy import poly1d, float32, float64
+from rascal.atlas import Atlas
+from rascal.calibrator import Calibrator
+from rascal.util import refine_peaks
+from scipy.signal import find_peaks, peak_prominences
 
 from base.Singleton import Singleton
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
+from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleParameters import \
+    SpectrometerWavelengthCalibrationLogicModuleParameters
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
+from logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 from model.databaseEntity.spectral.device.SpectralLineMasterData import SpectralLineMasterData
 from model.databaseEntity.spectral.device.SpectralLineMasterDataColorName import SpectralLineMasterDataColorName
 
-
+# This module procedes as follows:
+# * A fixed number of the most prominent peaks for a device is retrieved
+# * A lookup table with the according spectral lines is looped trough
+#  * The table holds the measured intensities [to_do: use normalized values] captured with some predefined exposure
+#  * If the difference to the measured intensity is too high the module failed
+# * The more generic algorithm RASCAL did ot work (sometime very good results, but also mistakes)
 class SpectrometerWavelengthCalibrationLogicModule(Singleton):
+
+    __moduleParameters:SpectrometerWavelengthCalibrationLogicModuleParameters=None
 
     model:SpectrometerCalibrationProfile=None
 
@@ -26,13 +41,169 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
     __spectralLinesByPixelIndices: Dict[int, SpectralLine] = None
 
+    @property
+    def moduleParameters(self):
+        return self.__moduleParameters
+
+    @moduleParameters.setter
+    def moduleParameters(self, moduleParameters):
+        self.__moduleParameters=moduleParameters
+
     #average the spectrum
     #detect peaks
     #plot peaks
     #run rascal
     #plot rascal result
     def execute(self):
-        pass
+        spectrum = self.moduleParameters.videoSignal.spectrum
+
+        intensities = list(spectrum.valuesByNanometers.values())
+        nanometersArrayFloat = np.asarray(intensities, float32)
+
+        plt.title("spectrum")
+        plt.xlabel("X axis")
+        plt.ylabel("Y axis")
+        plt.plot(list(spectrum.valuesByNanometers.keys()), list(spectrum.valuesByNanometers.values()), color="blue")
+        plt.show()
+
+
+        for prominence in range(1,100):
+            peaks, _ = find_peaks(nanometersArrayFloat, distance=3, width=3, rel_height=0.5, prominence=prominence)
+            if len(peaks)==10:
+                break
+
+        nanometersAtPeaks=nanometersArrayFloat[peaks.flatten().tolist()]
+
+
+        prominences = peak_prominences(nanometersArrayFloat, peaks)[0]
+
+        spectralLineMasterDatasByNames = SpectralLineMasterDataUtil().createTransientSpectralLineMasterDatasByNames()
+
+        spectralLinesToUse = [SpectralLineMasterDataColorName.MERCURY_FRENCH_VIOLET,
+                              SpectralLineMasterDataColorName.MERCURY_BLUE,
+                              SpectralLineMasterDataColorName.TERBIUM_AQUA,
+                              SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN,
+                              SpectralLineMasterDataColorName.MERCURY_OR_TERBIUM_LEMON_GLACIER,
+                              SpectralLineMasterDataColorName.EUROPIUM_MIDDLE_YELLOW,
+                              SpectralLineMasterDataColorName.EUROPIUM_CYBER_YELLOW,
+                              SpectralLineMasterDataColorName.EUROPIUM_AMBER,
+                              SpectralLineMasterDataColorName.EUROPIUM_INTERNATIONAL_ORANGE,
+                              SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE]
+
+        spectralLineMasterDatasByNames = dict(
+            map(lambda key: (key, spectralLineMasterDatasByNames.get(key, None)), spectralLinesToUse))
+
+        peaksBySpectralLineNames=dict(zip(spectralLinesToUse,peaks))
+
+        code=[];
+
+        differences=[]
+
+        spectrumIntensitiesAtPeaks=[]
+        for spectralLineName in spectralLinesToUse:
+            peakPixel=peaksBySpectralLineNames[spectralLineName]
+            spectralLine=spectralLineMasterDatasByNames[spectralLineName]
+            spectralLineIntensity=spectralLine.intensity
+            spectrumIntensity=spectrum.valuesByNanometers.get(peakPixel)
+            spectrumIntensitiesAtPeaks.append(spectrumIntensity)
+            difference=abs(spectralLineIntensity-spectrumIntensity)
+            differences.append(difference)
+
+            code.append(f"transientSpectralLineMasterData[SpectralLineMasterDataColorName.{spectralLineName}].intensity={spectrumIntensity}");
+
+
+
+
+        return
+
+        #
+        # nanometersArrayFloat=nanometersArrayFloat*10
+        #
+        # peaks = refine_peaks(nanometersArrayFloat, peaks, window_width=5)
+        #
+        # atlas=self.createAtlas()
+        #
+        # c = Calibrator(peaks, spectrum=nanometersArrayFloat)
+        # c.plot_arc()
+        # c.set_hough_properties(
+        #     num_slopes=5000,
+        #     range_tolerance=500.0,
+        #     xbins=1000,
+        #     ybins=1000,
+        #     # min_wavelength=405.4*10,
+        #     # max_wavelength=631.1*10,
+        #     min_wavelength=380 * 10,
+        #     max_wavelength=640 * 10,
+        #
+        # )
+        # c.set_ransac_properties(sample_size=5, top_n_candidate=5, filter_close=True)
+        #
+        # c.set_atlas(atlas, candidate_tolerance=5.0)
+        #
+        # c.do_hough_transform()
+        #
+        # # Run the wavelength calibration
+        # (
+        #     best_p,
+        #     matched_peaks,
+        #     matched_atlas,
+        #     rms,
+        #     residual,
+        #     peak_utilisation,
+        #     atlas_utilisation,
+        # ) = c.fit(max_tries=5000)
+        #
+        # # Plot the solution
+        # c.plot_fit(
+        #     best_p, nanometersArrayFloat, plot_atlas=True, log_spectrum=False, tolerance=5.0
+        # )
+        #
+        # pass
+
+    def createAtlas(self):
+
+        result=Atlas()
+
+        spectralLineMasterDatasByNames = SpectralLineMasterDataUtil().createTransientSpectralLineMasterDatasByNames()
+
+        spectralLinesToUse = [SpectralLineMasterDataColorName.MERCURY_FRENCH_VIOLET,
+                              SpectralLineMasterDataColorName.MERCURY_BLUE,
+                              SpectralLineMasterDataColorName.TERBIUM_AQUA,
+                              SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN,
+                              SpectralLineMasterDataColorName.MERCURY_OR_TERBIUM_LEMON_GLACIER,
+                              SpectralLineMasterDataColorName.EUROPIUM_MIDDLE_YELLOW,
+                              SpectralLineMasterDataColorName.EUROPIUM_CYBER_YELLOW,
+                              SpectralLineMasterDataColorName.EUROPIUM_AMBER,
+                              SpectralLineMasterDataColorName.EUROPIUM_INTERNATIONAL_ORANGE,
+                              SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE]
+
+        spectralLineMasterDatasByNames = dict(
+            map(lambda key: (key, spectralLineMasterDatasByNames.get(key, None)), spectralLinesToUse))
+
+
+        elements=[]
+        wavelengths=[]
+        intensities=[]
+
+        maxNanometer = 650
+        # maxNanometer=740
+
+
+
+        for spectralLineMasterData in spectralLineMasterDatasByNames.values():
+            elements.append('Hg')
+            nanometer=spectralLineMasterData.nanometer
+            wavelengths.append(nanometer*10)
+            intensities.append(spectralLineMasterData.intensity)
+
+        elementsArray=np.asarray(elements,str)
+        wavelengthsArray=np.asarray(wavelengths, float64)
+        intensitiesArray = np.asarray(intensities, float64)
+
+        result.add_user_atlas(elementsArray,wavelengthsArray,intensitiesArray)
+
+        return result
+
 
     def setPeaks(self, peaks: Dict[int, int]):
         self.__peaks = peaks.copy()

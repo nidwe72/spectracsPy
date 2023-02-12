@@ -1,0 +1,2 @@
+class SpectrometerWavelengthCalibrationLogicModuleResult:
+    pass

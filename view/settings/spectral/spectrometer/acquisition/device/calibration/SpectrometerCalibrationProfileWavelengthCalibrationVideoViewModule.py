@@ -14,6 +14,8 @@ from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters im
     ImageSpectrumAcquisitionLogicModuleParameters
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
     SpectrometerWavelengthCalibrationLogicModule
+from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleParameters import \
+    SpectrometerWavelengthCalibrationLogicModuleParameters
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from logic.spectral.util.SpectrumUtil import SpectrumUtil
@@ -74,6 +76,15 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             self.spectrum=Spectrum()
 
         if videoSignal.currentFrameIndex==videoSignal.framesCount:
+
+            videoSignal.spectrum=self.spectrum
+
+            spectrometerWavelengthCalibrationLogicModule = SpectrometerWavelengthCalibrationLogicModule()
+            spectrometerWavelengthCalibrationLogicModuleParameters = SpectrometerWavelengthCalibrationLogicModuleParameters()
+            spectrometerWavelengthCalibrationLogicModule.moduleParameters = spectrometerWavelengthCalibrationLogicModuleParameters
+            spectrometerWavelengthCalibrationLogicModuleParameters.videoSignal=videoSignal
+            spectrometerWavelengthCalibrationLogicModule.execute()
+
             pass
         else:
 
@@ -90,7 +101,10 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             SpectrumUtil().mean(self.spectrum)
             SpectrumUtil().smooth(self.spectrum)
 
-            peaks, _ = find_peaks(list(self.spectrum.valuesByNanometers.values()), distance=3, width=3, rel_height=0.5, prominence=10)
+            for prominence in range(1, 100):
+                peaks, _ = find_peaks(list(self.spectrum.valuesByNanometers.values()), distance=3, width=3, rel_height=0.5, prominence=prominence)
+                if len(peaks) == 10:
+                    break
 
             #debugPurpose
             # plt.title("spectrum")
@@ -114,6 +128,11 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             for peakIndex in peaks.tolist():
                 lineItem = BaseGraphicsLineItem()
                 lineItem.setLine(peakIndex, 0, peakIndex, videoSignal.image.height())
+                pen = QPen(QBrush(Qt.white), 1)
+                pen.setStyle(Qt.PenStyle.DotLine)
+                lineItem.setPen(pen)
+
+
                 self.scene.addItem(lineItem)
 
         self._fitInView()

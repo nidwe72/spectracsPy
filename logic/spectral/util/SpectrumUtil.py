@@ -32,6 +32,11 @@ class SpectrumUtil(Singleton):
         smoothedValues = savgol_filter(list(spectrum.valuesByNanometers.values()), 10, 3)
         smoothedValues = savgol_filter(smoothedValues, 10, 3)
         smoothedValues = savgol_filter(smoothedValues, 10, 3)
+        smoothedValues = savgol_filter(smoothedValues, 10, 3)
+        smoothedValues = savgol_filter(smoothedValues, 10, 3)
+        smoothedValues = savgol_filter(smoothedValues, 10, 3)
+        smoothedValues = savgol_filter(smoothedValues, 10, 3)
+
 
         smoothedValues=smoothedValues.flatten().tolist()
 

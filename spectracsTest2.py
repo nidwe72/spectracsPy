@@ -121,11 +121,6 @@ class RascalLogicModule:
         # peaks, _ = find_peaks(nanometersArrayFloat, distance=5, height=5, width=5, prominence=10)
         # prominences = peak_prominences(nanometersArrayFloat, peaks)[0]
 
-
-
-
-
-
         # peaks, _ = find_peaks(nanometersArray, height=300, prominence=200, distance=5)
 
         #height = 50 * 10
