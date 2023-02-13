@@ -19,6 +19,26 @@ class SpectralLine(DbBaseEntity, DbBaseEntityMixin):
     #transient stuff follows
     color:QColor=None
 
+    __prominence:float=None
+
+    __intensity:float=None
+
+    @property
+    def prominence(self):
+        return self.__prominence
+
+    @prominence.setter
+    def prominence(self, prominence):
+        self.__prominence=prominence
+
+    @property
+    def intensity(self):
+        return self.__intensity
+
+    @intensity.setter
+    def intensity(self, intensity):
+        self.__intensity=intensity
+
 
 
 

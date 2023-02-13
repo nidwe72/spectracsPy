@@ -16,6 +16,8 @@ from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibra
     SpectrometerWavelengthCalibrationLogicModule
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleParameters import \
     SpectrometerWavelengthCalibrationLogicModuleParameters
+from logic.spectral.util.PeakSelectionLogicModuleParameters import PeakSelectionLogicModuleParameters
+from logic.spectral.util.PeakSelectrionLogicModule import PeakSelectionLogicModule
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from logic.spectral.util.SpectrumUtil import SpectrumUtil

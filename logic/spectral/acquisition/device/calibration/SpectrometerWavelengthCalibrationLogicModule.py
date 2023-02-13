@@ -15,6 +15,8 @@ from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleL
 from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleParameters import \
     SpectrometerWavelengthCalibrationLogicModuleParameters
+from logic.spectral.util.PeakSelectionLogicModuleParameters import PeakSelectionLogicModuleParameters
+from logic.spectral.util.PeakSelectrionLogicModule import PeakSelectionLogicModule
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
@@ -23,7 +25,7 @@ from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 from model.databaseEntity.spectral.device.SpectralLineMasterData import SpectralLineMasterData
 from model.databaseEntity.spectral.device.SpectralLineMasterDataColorName import SpectralLineMasterDataColorName
 
-# This module procedes as follows:
+# This module proceeds as follows:
 # * A fixed number of the most prominent peaks for a device is retrieved
 # * A lookup table with the according spectral lines is looped trough
 #  * The table holds the measured intensities [to_do: use normalized values] captured with some predefined exposure
@@ -111,6 +113,10 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
             code.append(f"transientSpectralLineMasterData[SpectralLineMasterDataColorName.{spectralLineName}].intensity={spectrumIntensity}");
 
+        peakSelectionLogicModule = PeakSelectionLogicModule()
+        peakSelectionLogicModule.setModuleParameters(PeakSelectionLogicModuleParameters().setSpectrum(
+            spectrum).addSelectByProminence(10))
+        peakSelectionLogicModule.execute()
 
 
 
