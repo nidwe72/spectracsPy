@@ -3,7 +3,7 @@ from typing import List
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 
 
-class SpectrometerWavelengthCalibrationLogicModuleResult:
+class SpectralLinesSelectionLogicModuleResult:
 
     __spectralLines: List[SpectralLine] = None
 

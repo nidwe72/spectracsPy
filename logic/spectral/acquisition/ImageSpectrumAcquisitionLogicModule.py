@@ -1,4 +1,6 @@
-from PySide6.QtGui import qGray
+from typing import Dict
+
+from PySide6.QtGui import qGray, QColor
 
 from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters
@@ -26,6 +28,8 @@ class ImageSpectrumAcquisitionLogicModule:
 
         result.spectrum=spectrum
 
+        colorsByPixelIndices: Dict[int, QColor]={}
+
         if isinstance(videoSignal,SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
             y1 = videoSignal.model.regionOfInterestY1
@@ -37,9 +41,14 @@ class ImageSpectrumAcquisitionLogicModule:
 
             for x in range(1,imageWidth):
                 valuesByNanometers[x]=qGray(image.pixel(x,y))
+                if moduleParameters.getAcquireColors():
+                    colorsByPixelIndices[x]=image.pixelColor(x,y)
 
             spectrum.setValuesByNanometers(valuesByNanometers)
             spectrum.addToCapturedValuesByNanometers(valuesByNanometers)
+
+        if moduleParameters.getAcquireColors():
+            spectrum.setColorsByPixelIndices(colorsByPixelIndices)
 
         return result
 

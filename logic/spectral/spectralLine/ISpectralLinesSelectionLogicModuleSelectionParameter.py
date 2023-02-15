@@ -1,4 +1,3 @@
 class IPeakSelectionLogicModuleSelectionParameter(object):
+    pass
 
-    def foo(self):
-        return

@@ -2,12 +2,10 @@ from typing import Dict
 
 import numpy as np
 
-from PySide6.QtGui import QImage, QColor
+from PySide6.QtGui import QImage
 from matplotlib import pyplot as plt
 from numpy import poly1d, float32, float64
 from rascal.atlas import Atlas
-from rascal.calibrator import Calibrator
-from rascal.util import refine_peaks
 from scipy.signal import find_peaks, peak_prominences
 
 from base.Singleton import Singleton
@@ -15,8 +13,10 @@ from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleL
 from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
 from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleParameters import \
     SpectrometerWavelengthCalibrationLogicModuleParameters
-from logic.spectral.util.PeakSelectionLogicModuleParameters import PeakSelectionLogicModuleParameters
-from logic.spectral.util.PeakSelectrionLogicModule import PeakSelectionLogicModule
+from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleResult import \
+    SpectrometerWavelengthCalibrationLogicModuleResult
+from logic.spectral.spectralLine.SpectralLinesSelectionLogicModuleParameters import SpectralLinesSelectionLogicModuleParameters
+from logic.spectral.spectralLine.SpectralLinesSelectionLogicModule import SpectralLineSelectionLogicModule
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
@@ -56,17 +56,17 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
     #plot peaks
     #run rascal
     #plot rascal result
-    def execute(self):
+    def execute(self)->SpectrometerWavelengthCalibrationLogicModuleResult:
         spectrum = self.moduleParameters.videoSignal.spectrum
 
         intensities = list(spectrum.valuesByNanometers.values())
         nanometersArrayFloat = np.asarray(intensities, float32)
 
-        plt.title("spectrum")
-        plt.xlabel("X axis")
-        plt.ylabel("Y axis")
-        plt.plot(list(spectrum.valuesByNanometers.keys()), list(spectrum.valuesByNanometers.values()), color="blue")
-        plt.show()
+        # plt.title("spectrum")
+        # plt.xlabel("X axis")
+        # plt.ylabel("Y axis")
+        # plt.plot(list(spectrum.valuesByNanometers.keys()), list(spectrum.valuesByNanometers.values()), color="blue")
+        # plt.show()
 
 
         for prominence in range(1,100):
@@ -113,14 +113,30 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
             code.append(f"transientSpectralLineMasterData[SpectralLineMasterDataColorName.{spectralLineName}].intensity={spectrumIntensity}");
 
-        peakSelectionLogicModule = PeakSelectionLogicModule()
-        peakSelectionLogicModule.setModuleParameters(PeakSelectionLogicModuleParameters().setSpectrum(
-            spectrum).addSelectByProminence(10))
-        peakSelectionLogicModule.execute()
+        resultSpectralLines = []
 
+        peakSelectionLogicModule = SpectralLineSelectionLogicModule()
 
+        peakSelectionLogicModuleParametersA = SpectralLinesSelectionLogicModuleParameters()
+        peakSelectionLogicModuleParametersA.setSpectrum(spectrum)\
+            .addSelectByProminence(10)\
+            .addSelectByIntensity(2).addSelectByPixelIndex(1)
+        peakSelectionLogicModule.setModuleParameters(peakSelectionLogicModuleParametersA)
+        spectralLinesA = peakSelectionLogicModule.execute().getSpectralLines()
+        resultSpectralLines.extend(spectralLinesA)
 
-        return
+        peakSelectionLogicModuleParametersB = SpectralLinesSelectionLogicModuleParameters()
+        peakSelectionLogicModuleParametersB.setSpectrum(spectrum)\
+            .addSelectByProminence(10)\
+            .addSelectByIntensity(2).addSelectByPixelIndex(2)
+        peakSelectionLogicModule.setModuleParameters(peakSelectionLogicModuleParametersB)
+        spectralLinesB = peakSelectionLogicModule.execute().getSpectralLines()
+        resultSpectralLines.append(spectralLinesB.pop())
+
+        result=SpectrometerWavelengthCalibrationLogicModuleResult()
+        result.setSpectralLines(resultSpectralLines)
+
+        return result
 
         #
         # nanometersArrayFloat=nanometersArrayFloat*10
