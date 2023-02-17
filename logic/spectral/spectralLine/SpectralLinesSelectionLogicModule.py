@@ -17,7 +17,7 @@ from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 from model.spectral.Spectrum import Spectrum
 
 
-class SpectralLineSelectionLogicModule:
+class SpectralLinesSelectionLogicModule:
 
     __selectedLines:List[SpectralLine]=None
 
@@ -60,6 +60,16 @@ class SpectralLineSelectionLogicModule:
                                    rightSpectralLine: SpectralLine = None, ):
         pass
 
+    def __pixelIndexWithinSpectralLines(self,pixelIndex:int,leftSpectralLine:SpectralLine=None,rightSpectralLine:SpectralLine=None):
+        result=True
+        if leftSpectralLine is not None and rightSpectralLine is not None:
+            result=pixelIndex>leftSpectralLine.pixelIndex and pixelIndex<rightSpectralLine.pixelIndex
+        elif leftSpectralLine is not None and rightSpectralLine is None:
+            result = pixelIndex > leftSpectralLine.pixelIndex
+        elif leftSpectralLine is None and rightSpectralLine is not None:
+            result = pixelIndex < rightSpectralLine.pixelIndex
+        return result
+
     def __selectByProminence(self, selectParameter:PeakSelectionLogicModuleSelectByProminenceParameter):
 
         result = self.__getSelectedLines()
@@ -69,11 +79,15 @@ class SpectralLineSelectionLogicModule:
         for candidateProminence in range(1,255):
             peaks, _ = find_peaks(intensities, distance=3, width=3, rel_height=0.5, prominence=candidateProminence)
 
-            if len(peaks)==selectParameter.count:
-                break;
+            matchingPeaks = [peak for peak in peaks if
+                             self.__pixelIndexWithinSpectralLines(peak, selectParameter.leftSpectralLine,
+                                                                  selectParameter.rightSpectralLine)]
 
-        prominences = peak_prominences(intensities, peaks)[0]
-        peaksByProminences=dict(zip(prominences,peaks))
+            if len(matchingPeaks)<=selectParameter.count:
+                break
+
+        prominences = peak_prominences(intensities, matchingPeaks)[0]
+        peaksByProminences=dict(zip(prominences,matchingPeaks))
         for foundProminence,peak, in peaksByProminences.items():
             spectralLine = SpectralLine()
             spectralLine.pixelIndex=peak
@@ -93,7 +107,7 @@ class SpectralLineSelectionLogicModule:
 
     def __selectByPixelIndex(self, selectParameter: PeakSelectionLogicModuleSelectByPixelIndex):
         selectedLines = self.__getSelectedLines()
-        selectedLines = sorted(selectedLines, key=lambda x: x.pixelIndex, reverse=True)
+        selectedLines = sorted(selectedLines, key=lambda x: x.pixelIndex, reverse=selectParameter.reverse)
         result = selectedLines[0:selectParameter.getCount()]
         self.__setSelectedLines(result)
 

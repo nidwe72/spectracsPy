@@ -3,7 +3,10 @@ from logic.spectral.spectralLine.ISpectralLinesSelectionLogicModuleSelectionPara
 
 
 class PeakSelectionLogicModuleSelectByPixelIndex(IPeakSelectionLogicModuleSelectionParameter):
-    __count: int = 1
+
+    def __init__(self):
+        self.__count:int = 1
+        self.__reverse:bool=False
 
     def getCount(self):
         return self.__count
@@ -11,3 +14,11 @@ class PeakSelectionLogicModuleSelectByPixelIndex(IPeakSelectionLogicModuleSelect
     def setCount(self, count):
         self.__count = count
         return self
+
+    @property
+    def reverse(self):
+        return self.__reverse
+
+    @reverse.setter
+    def reverse(self, reverse):
+        self.__reverse=reverse

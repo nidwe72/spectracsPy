@@ -8,6 +8,7 @@ from logic.spectral.spectralLine.SpectralLinesSelectionLogicModuleSelectByIntens
     PeakSelectionLogicModuleSelectByIntensity
 from logic.spectral.spectralLine.SpectralLinesSelectionLogicModuleSelectByProminenceParameter import \
     PeakSelectionLogicModuleSelectByProminenceParameter
+from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 from model.spectral.Spectrum import Spectrum
 
 
@@ -32,15 +33,18 @@ class SpectralLinesSelectionLogicModuleParameters:
         self.__selectionParameters.append(selectionParameter)
         return self
 
-    def addSelectByProminence(self, count: int):
+    def addSelectByProminence(self, count: int,leftSpectralLine:SpectralLine=None,rightSpectralLine:SpectralLine=None):
         parameter = PeakSelectionLogicModuleSelectByProminenceParameter()
         parameter.count = count
+        parameter.leftSpectralLine = leftSpectralLine
+        parameter.rightSpectralLine = rightSpectralLine
         self.__addToSelectionParameters(parameter)
         return self
 
-    def addSelectByPixelIndex(self, count: int):
+    def addSelectByPixelIndex(self, count: int,reverse:bool=False):
         parameter = PeakSelectionLogicModuleSelectByPixelIndex()
         parameter.setCount(count)
+        parameter.reverse=reverse
         self.__addToSelectionParameters(parameter)
         return self
 

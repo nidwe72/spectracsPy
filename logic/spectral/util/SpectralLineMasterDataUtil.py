@@ -316,3 +316,8 @@ class SpectralLineMasterDataUtil(Singleton):
             result[spectralLineMasterData.name] = spectralLineMasterData
         return result
 
+    def getSpectralLineMasterDataByName(self,spectralLineMasterDataName)->SpectralLineMasterData:
+        spectralLineMasterDatasByNames = self.createSpectralLineMasterDatasByNames()
+        result=spectralLineMasterDataName
+        return result
+

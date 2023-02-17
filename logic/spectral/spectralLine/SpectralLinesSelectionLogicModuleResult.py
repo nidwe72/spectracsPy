@@ -7,7 +7,7 @@ class SpectralLinesSelectionLogicModuleResult:
 
     __spectralLines: List[SpectralLine] = None
 
-    def getSpectralLines(self):
+    def getSpectralLines(self)->List[SpectralLine]:
         return self.__spectralLines
 
     def setSpectralLines(self, spectralLines):
