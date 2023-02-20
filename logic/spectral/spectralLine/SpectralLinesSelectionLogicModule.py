@@ -90,7 +90,7 @@ class SpectralLinesSelectionLogicModule:
         peaksByProminences=dict(zip(prominences,matchingPeaks))
         for foundProminence,peak, in peaksByProminences.items():
             spectralLine = SpectralLine()
-            spectralLine.pixelIndex=peak
+            spectralLine.pixelIndex=int(peak)
             spectralLine.prominence = foundProminence
             spectralLine.intensity = spectrum.valuesByNanometers.get(peak)
             result.append(spectralLine)

@@ -1,3 +1,4 @@
+import string
 from typing import Dict
 from typing import List
 
@@ -35,6 +36,7 @@ from scipy.signal import find_peaks, peak_prominences
 class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
     BaseVideoViewModule[SpectrometerCalibrationProfileHoughLinesVideoSignal]):
     __model: SpectrometerCalibrationProfile = None
+
 
     # peaksClusters:Dict[int,List[SpectralLine]]=None
     #
@@ -81,6 +83,18 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             spectrometerWavelengthCalibrationLogicModuleParameters.videoSignal = videoSignal
             spectrometerWavelengthCalibrationLogicModule.execute()
             spectrometerWavelengthCalibrationLogicModuleResult = spectrometerWavelengthCalibrationLogicModule.getModuleResult()
+
+            polynomial = SpectralLineUtil().polyfit(spectrometerWavelengthCalibrationLogicModuleResult.getSpectralLines())
+            coefficients = polynomial.coefficients.tolist()
+
+            videoSignal.model.interpolationCoefficientA=coefficients[0]
+            videoSignal.model.interpolationCoefficientB = coefficients[1]
+            videoSignal.model.interpolationCoefficientC = coefficients[2]
+            videoSignal.model.interpolationCoefficientD = coefficients[3]
+
+            videoSignal.model.spectralLines=spectrometerWavelengthCalibrationLogicModuleResult.getSpectralLines()
+
+
 
         else:
 

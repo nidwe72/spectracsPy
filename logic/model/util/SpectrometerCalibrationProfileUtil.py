@@ -7,10 +7,10 @@ from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
 class SpectrometerCalibrationProfileUtil(Singleton):
 
     def initializeSpectrometerCalibrationProfile(self,spectrometerCalibrationProfile:SpectrometerCalibrationProfile):
-        if len(spectrometerCalibrationProfile.spectralLines)==0:
-            spectralLines = list(SpectralLineUtil().sortSpectralLinesByNanometers(
-                list(SpectralLineUtil().createSpectralLinesByNames().values())).values())
-            spectrometerCalibrationProfile.spectralLines=spectralLines
+        # if len(spectrometerCalibrationProfile.spectralLines)==0:
+        #     spectralLines = list(SpectralLineUtil().sortSpectralLinesByNanometers(
+        #         list(SpectralLineUtil().createSpectralLinesByNames().values())).values())
+        #     spectrometerCalibrationProfile.spectralLines=spectralLines
         return
 
     def getMatchingSpectralLine(self,spectrometerCalibrationProfile:SpectrometerCalibrationProfile, spectralLine:SpectralLine)->SpectralLine:

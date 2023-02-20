@@ -1,4 +1,5 @@
-from typing import Dict
+import string
+from typing import Dict, List
 
 import numpy as np
 from PySide6.QtGui import QImage
@@ -23,6 +24,12 @@ from model.databaseEntity.spectral.device.SpectralLineMasterDataColorName import
 
 class SpectrometerWavelengthCalibrationLogicModule(Singleton):
     __moduleParameters: SpectrometerWavelengthCalibrationLogicModuleParameters = None
+
+    spectralLineMasterDataColorNamesToProcess: List[str] = [SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE,
+                                                            SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN,
+                                                            SpectralLineMasterDataColorName.MERCURY_FRENCH_VIOLET,
+                                                            SpectralLineMasterDataColorName.MERCURY_BLUE,
+                                                            SpectralLineMasterDataColorName.TERBIUM_AQUA]
 
     model: SpectrometerCalibrationProfile = None
 
@@ -51,46 +58,14 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
     def execute(self) :
         self.setModuleResult(SpectrometerWavelengthCalibrationLogicModuleResult())
 
-        # spectrum = self.moduleParameters.videoSignal.spectrum
-        #
-        # intensities = list(spectrum.valuesByNanometers.values())
-        # nanometersArrayFloat = np.asarray(intensities, float32)
+        for spectralLineMasterDataColorName in self.spectralLineMasterDataColorNamesToProcess:
+            self._processSpectralLine(spectralLineMasterDataColorName)
 
-        # plt.title("spectrum")
-        # plt.xlabel("X axis")
-        # plt.ylabel("Y axis")
-        # plt.plot(list(spectrum.valuesByNanometers.keys()), list(spectrum.valuesByNanometers.values()), color="blue")
-        # plt.show()
+    def _processSpectralLine(self, spectralLineMasterDataColorName):
+        func = getattr(self, f"_processSpectralLine{spectralLineMasterDataColorName}")
+        func()
 
-        # for prominence in range(1, 100):
-        #     peaks, _ = find_peaks(nanometersArrayFloat, distance=3, width=3, rel_height=0.5, prominence=prominence)
-        #     if len(peaks) == 10:
-        #         break
-
-        # spectralLineMasterDatasByNames = SpectralLineMasterDataUtil().createTransientSpectralLineMasterDatasByNames()
-        #
-        # spectralLinesToUse = [SpectralLineMasterDataColorName.MERCURY_FRENCH_VIOLET,
-        #                       SpectralLineMasterDataColorName.MERCURY_BLUE,
-        #                       SpectralLineMasterDataColorName.TERBIUM_AQUA,
-        #                       SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN,
-        #                       SpectralLineMasterDataColorName.MERCURY_OR_TERBIUM_LEMON_GLACIER,
-        #                       SpectralLineMasterDataColorName.EUROPIUM_MIDDLE_YELLOW,
-        #                       SpectralLineMasterDataColorName.EUROPIUM_CYBER_YELLOW,
-        #                       SpectralLineMasterDataColorName.EUROPIUM_AMBER,
-        #                       SpectralLineMasterDataColorName.EUROPIUM_INTERNATIONAL_ORANGE,
-        #                       SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE]
-        #
-        # spectralLineMasterDatasByNames = dict(
-        #     map(lambda key: (key, spectralLineMasterDatasByNames.get(key, None)), spectralLinesToUse))
-
-        self.__processSpectralLineEUROPIUM_VIVID_GAMBOGE()
-        self.__processSpectralLineMERCURY_MANGO_GREEN()
-        self.__processSpectralLineMERCURY_FRENCH_VIOLET()
-        self.__processSpectralLineMERCURY_BLUE()
-        self.__processSpectralLineTERBIUM_AQUA()
-
-
-    def __processSpectralLineEUROPIUM_VIVID_GAMBOGE(self) -> SpectralLine:
+    def _processSpectralLineEUROPIUM_VIVID_GAMBOGE(self) -> SpectralLine:
 
         spectrum = self.moduleParameters.videoSignal.spectrum
         logicModule = SpectralLinesSelectionLogicModule()
@@ -110,7 +85,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
         return;
 
-    def __processSpectralLineMERCURY_MANGO_GREEN(self) -> SpectralLine:
+    def _processSpectralLineMERCURY_MANGO_GREEN(self) -> SpectralLine:
         spectrum = self.moduleParameters.videoSignal.spectrum
         logicModule = SpectralLinesSelectionLogicModule()
 
@@ -131,7 +106,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         self.getModuleResult().getSpectralLines().append(spectralLine)
 
 
-    def __processSpectralLineMERCURY_FRENCH_VIOLET(self) -> SpectralLine:
+    def _processSpectralLineMERCURY_FRENCH_VIOLET(self) -> SpectralLine:
         spectrum = self.moduleParameters.videoSignal.spectrum
         logicModule = SpectralLinesSelectionLogicModule()
 
@@ -152,7 +127,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         self.getModuleResult().getSpectralLines().append(spectralLine)
 
 
-    def __processSpectralLineMERCURY_BLUE(self) -> SpectralLine:
+    def _processSpectralLineMERCURY_BLUE(self) -> SpectralLine:
         spectrum = self.moduleParameters.videoSignal.spectrum
         logicModule = SpectralLinesSelectionLogicModule()
 
@@ -174,7 +149,7 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         self.getModuleResult().getSpectralLines().append(spectralLine)
 
     #
-    def __processSpectralLineTERBIUM_AQUA(self) -> SpectralLine:
+    def _processSpectralLineTERBIUM_AQUA(self) -> SpectralLine:
         spectrum = self.moduleParameters.videoSignal.spectrum
         logicModule = SpectralLinesSelectionLogicModule()
 

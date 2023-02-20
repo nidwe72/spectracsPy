@@ -1,5 +1,7 @@
 from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
 
+from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
+    SpectrometerWavelengthCalibrationLogicModule
 from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
 from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
@@ -23,15 +25,18 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
         result={}
         self.labelsByNanometers={}
 
-        spectralLines=self.__getModel().spectralLines
-
         mainWidget=QWidget()
+
         mainWidgetLayout=QGridLayout()
         mainWidget.setLayout(mainWidgetLayout)
 
         loopIndex=1
         columnIndex=0
         rowIndex = 0
+
+        spectralLines = [spectralLine for (colorName,spectralLine) in SpectralLineUtil().createSpectralLinesByNames().items() if
+                         colorName in SpectrometerWavelengthCalibrationLogicModule.spectralLineMasterDataColorNamesToProcess]
+
         for spectralLine in spectralLines:
             if loopIndex==6:
                 rowIndex = 1
@@ -67,10 +72,14 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
         result['mainWidget']=mainWidget
         return result
 
+    def __updateMainWidget(self):
+        pass
+
 
     def setModel(self,model:SpectrometerCalibrationProfile):
         self.__model=model
-        for spectralLine in model.getSpectralLines():
+        lines = model.getSpectralLines()
+        for spectralLine in lines:
             if self.__pixelIndexComponentsByNanometers is not None:
                 pixelIndexComponent=self.__pixelIndexComponentsByNanometers[spectralLine.spectralLineMasterData.nanometer]
                 if spectralLine.pixelIndex is None:

@@ -318,6 +318,6 @@ class SpectralLineMasterDataUtil(Singleton):
 
     def getSpectralLineMasterDataByName(self,spectralLineMasterDataName)->SpectralLineMasterData:
         spectralLineMasterDatasByNames = self.createSpectralLineMasterDatasByNames()
-        result=spectralLineMasterDataName
+        result=spectralLineMasterDatasByNames[spectralLineMasterDataName]
         return result
 

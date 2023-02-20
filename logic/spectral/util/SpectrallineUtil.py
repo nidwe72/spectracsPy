@@ -2,6 +2,8 @@ from operator import attrgetter
 from typing import Dict
 from typing import List
 
+import numpy as np
+
 from base.Singleton import Singleton
 from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
@@ -69,6 +71,14 @@ class SpectralLineUtil(Singleton):
         for spectralLine in spectralLinesCollection:
             result.append(spectralLine.spectralLineMasterData.nanometer)
         return result
+
+    def polyfit(self,spectralLinesCollection: List[SpectralLine]):
+        nanometers = self.getNanometers(spectralLinesCollection)
+        pixelIndices = self.getPixelIndices(spectralLinesCollection)
+        coefficients=np.polyfit(pixelIndices, nanometers,3)
+        result = np.poly1d(coefficients)
+        return result
+
 
 
 

@@ -12,7 +12,6 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal(SpectralVid
 
     __spectrum:Spectrum=None
 
-    peakValuesByPixels:Dict[int,float]=None
     model:SpectrometerCalibrationProfile=None
 
     @property
