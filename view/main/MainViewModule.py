@@ -16,6 +16,8 @@ from view.spectral.spectralJob.SpectralJobViewModule import SpectralJobViewModul
 
 
 from view.spectral.spectralJob.importSpectrum.SpectralJobImportViewModule import SpectralJobImportViewModule
+from view.spectrometerConnection.SpectrometerConnectionViewModule import SpectrometerConnectionViewModule
+
 
 class MainViewModule(QStackedWidget):
 
@@ -57,4 +59,8 @@ class MainViewModule(QStackedWidget):
         virtualSpectrometerViewModule.initialize()
         self.addWidget(virtualSpectrometerViewModule)
 
+        spectrometerConnectionViewModule = SpectrometerConnectionViewModule()
+        spectrometerConnectionViewModule.initialize()
+        self.addWidget(spectrometerConnectionViewModule)
 
+        self.setCurrentWidget(spectrometerConnectionViewModule)

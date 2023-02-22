@@ -6,7 +6,7 @@ from controller.application.setting.ApplicationSettings import ApplicationSettin
 
 class ApplicationContextLogicModule(Singleton):
 
-    navigationHandler=None
+
     applicationSignalsProvider=None
 
     def __new__(cls):
@@ -16,10 +16,8 @@ class ApplicationContextLogicModule(Singleton):
             signalsProvider = cls.instance.getApplicationSignalsProvider()
         return cls.instance
 
-    def getNavigationHandler(self):
-        if self.navigationHandler is None:
-            self.navigationHandler=NavigationHandlerLogicModule(None)
-        return self.navigationHandler
+    def getNavigationHandler(self)->NavigationHandlerLogicModule:
+        return NavigationHandlerLogicModule()
 
     def getApplicationSignalsProvider(self):
         if self.applicationSignalsProvider is None:

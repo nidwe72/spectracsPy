@@ -1,15 +1,16 @@
 from PySide6.QtCore import QObject
 
+from base.Singleton import Singleton
+from base.SingletonQObject import SingletonQObject
 from model.application.navigation.NavigationSignal import NavigationSignal
 
 
-class NavigationHandlerLogicModule(QObject):
+class NavigationHandlerLogicModule(Singleton):
 
     mainContainerViewModule=None
 
-    def __init__(self,parent):
-        super().__init__()
-        self.parent = parent
+    def __init__(self):
+        self.__previousNavigationSignal=None
 
     def handleNavigationSignal(self,navigationSignal):
         target=navigationSignal.getTarget()
@@ -38,7 +39,11 @@ class NavigationHandlerLogicModule(QObject):
         elif target=="VirtualSpectrometerViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Virtual spectrometer")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="SpectrometerConnectionViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Connect spectrometer")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
+        self.setPreviousNavigationSignal(navigationSignal)
 
     def __getWidgetIndex(self, navigationSignal:NavigationSignal):
         result=None
@@ -60,6 +65,8 @@ class NavigationHandlerLogicModule(QObject):
             result = 6
         elif target=="VirtualSpectrometerViewModule":
             result = 7
+        elif target=="SpectrometerConnectionViewModule":
+            result = 8
 
 
         return result
@@ -70,6 +77,12 @@ class NavigationHandlerLogicModule(QObject):
         return result
 
 
+    def getPreviousNavigationSignal(self):
+        return self.__previousNavigationSignal
+
+
+    def setPreviousNavigationSignal(self, navigationSignal):
+        self.__previousNavigationSignal=navigationSignal
 
 
 

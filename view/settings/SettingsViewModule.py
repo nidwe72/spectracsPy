@@ -54,21 +54,24 @@ class SettingsViewModule(QWidget):
         comboBox=self.createLabeledComponent('Measurement profile',QComboBox())
         layout.addWidget(comboBox, 0, 0, 1, 3)
 
+        openSpectrometerConnectionViewModuleButton = QPushButton()
+        openSpectrometerConnectionViewModuleButton.setText("Connect spectrometer")
+        layout.addWidget(openSpectrometerConnectionViewModuleButton, 1, 0, 1, 1)
+        openSpectrometerConnectionViewModuleButton.clicked.connect(self.onClickedOpenSpectrometerConnectionViewModuleButton)
+
         openSpectrometerProfileListViewModuleButton = QPushButton()
         openSpectrometerProfileListViewModuleButton.setText("Spectrometer profiles")
-        layout.addWidget(openSpectrometerProfileListViewModuleButton, 1, 0, 1, 1)
+        layout.addWidget(openSpectrometerProfileListViewModuleButton, 1, 1, 1, 1)
         openSpectrometerProfileListViewModuleButton.clicked.connect(self.onClickedCameraSelectionButton)
 
         openMeasurementProfilesListViewModuleButton = QPushButton()
         openMeasurementProfilesListViewModuleButton.setText("Measurement profiles")
-        layout.addWidget(openMeasurementProfilesListViewModuleButton, 1, 1, 1, 1)
+        layout.addWidget(openMeasurementProfilesListViewModuleButton, 1, 2, 1, 1)
 
         openVirtualSpectrometerViewModuleButton = QPushButton()
         openVirtualSpectrometerViewModuleButton.setText("Virtual Spectrometer")
-        layout.addWidget(openVirtualSpectrometerViewModuleButton, 1, 2, 1, 1)
+        layout.addWidget(openVirtualSpectrometerViewModuleButton, 1, 3, 1, 1)
         openVirtualSpectrometerViewModuleButton.clicked.connect(self.onClickedOpenVirtualSpectrometerViewModuleButton)
-
-
 
         return result
 
@@ -165,6 +168,13 @@ class SettingsViewModule(QWidget):
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("SpectrometerProfileListViewModule")
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def onClickedOpenSpectrometerConnectionViewModuleButton(self):
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        someNavigationSignal = NavigationSignal(None)
+        someNavigationSignal.setTarget("SpectrometerConnectionViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def onClickedOpenVirtualSpectrometerViewModuleButton(self):

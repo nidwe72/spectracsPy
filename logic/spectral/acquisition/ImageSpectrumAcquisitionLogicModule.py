@@ -9,6 +9,7 @@ from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleResult import
 from model.application.video.VideoSignal import VideoSignal
 from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
+from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 from model.spectral.Spectrum import Spectrum
 
 
@@ -46,6 +47,9 @@ class ImageSpectrumAcquisitionLogicModule:
 
             spectrum.setValuesByNanometers(valuesByNanometers)
             spectrum.addToCapturedValuesByNanometers(valuesByNanometers)
+
+        elif isinstance(videoSignal,SpectralVideoThreadSignal):
+            pass
 
         if moduleParameters.getAcquireColors():
             spectrum.setColorsByPixelIndices(colorsByPixelIndices)

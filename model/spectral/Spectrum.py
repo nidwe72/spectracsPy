@@ -14,6 +14,7 @@ class Spectrum:
 
     def __init__(self):
         self.sampleType = SpectrumSampleType.SAMPLE
+        self.valuesByNanometers=[]
 
     def setValuesByNanometers(self, valuesByNanometers):
         self.valuesByNanometers = valuesByNanometers

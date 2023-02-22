@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from base.Singleton import Singleton
 from logic.model.util.SpectrometerStyleUtil import SpectrometerStyleUtil
@@ -112,4 +112,19 @@ class SpectrometerUtil(Singleton):
         for entityId, entity in entitiesByIds.items():
             result[self.getName(entity)]=entity
         return result
+
+    def getSpectrometersHavingSensorConnected(self)->List[Spectrometer]:
+        result:List[Spectrometer]=[]
+
+        spectrometers = SpectrometerUtil().getSpectrometers()
+
+        for spectrometerId, spectrometer in spectrometers.items():
+            spectrometerSensor = SpectrometerSensorUtil().getSensorByCodeName(spectrometer.spectrometerSensor.codeName)
+            if spectrometerSensor is not None:
+                isSensorConnected = SpectrometerSensorUtil().isSensorConnected(spectrometerSensor)
+                if isSensorConnected:
+                    result.append(spectrometer)
+        return result
+
+
 

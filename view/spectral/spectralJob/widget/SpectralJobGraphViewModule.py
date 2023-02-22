@@ -43,6 +43,8 @@ class SpectralJobGraphViewModule(QChartView):
             pen.setBrush(QBrush(QColor.fromRgb(randomGray,randomGray,randomGray)))
             series.setPen(pen)
 
+
+
             for nanometer in valuesByNanometers:
                 series.append(nanometer, valuesByNanometers[nanometer])
             self.chart.addSeries(series)
@@ -52,39 +54,36 @@ class SpectralJobGraphViewModule(QChartView):
             spectra = spectralJob.getSpectra(self.getModuleParameters().getSpectrumSampleType())
             spectrum = spectra[-1]
 
-            values = list(spectrum.valuesByNanometers.values())
-            keys = list(spectrum.valuesByNanometers.keys())
+            if len(spectrum.valuesByNanometers)>0:
 
-            if self.allSpectraValues is None:
-                lenValues = len(values)
-                self.allSpectraValues=np.empty([0, lenValues])
-            else:
-                self.allSpectraValues=np.vstack((self.allSpectraValues, np.array(values)))
+                values = list(spectrum.valuesByNanometers.values())
+                keys = list(spectrum.valuesByNanometers.keys())
 
-            if isinstance(self.allSpectraValues,numpy.ndarray) and self.allSpectraValues.size != 0:
-                # print(type(self.allSpectraValues))
-                # print(self.allSpectraValues)
+                if self.allSpectraValues is None:
+                    lenValues = len(values)
+                    self.allSpectraValues=np.empty([0, lenValues])
+                else:
+                    self.allSpectraValues=np.vstack((self.allSpectraValues, np.array(values)))
 
-                meanSpectrumValues=np.mean(self.allSpectraValues,axis=0)
+                if isinstance(self.allSpectraValues,numpy.ndarray) and self.allSpectraValues.size != 0:
+                    meanSpectrumValues=np.mean(self.allSpectraValues,axis=0)
 
-                self.chart.removeAllSeries()
-                series = QLineSeries()
+                    self.chart.removeAllSeries()
+                    series = QLineSeries()
 
-                pen = series.pen();
-                pen.setWidth(2);
-                pen.setBrush(QBrush(QColor("#33663d")))
-                series.setPen(pen)
+                    pen = series.pen();
+                    pen.setWidth(2);
+                    pen.setBrush(QBrush(QColor("#33663d")))
+                    series.setPen(pen)
 
-                valuesByNanometers=dict(zip(keys,meanSpectrumValues.tolist()))
-                for nanometer in valuesByNanometers:
-                    series.append(nanometer, valuesByNanometers[nanometer])
-                self.chart.addSeries(series)
+                    valuesByNanometers=dict(zip(keys,meanSpectrumValues.tolist()))
+                    for nanometer in valuesByNanometers:
+                        series.append(nanometer, valuesByNanometers[nanometer])
+                    self.chart.addSeries(series)
 
-                # print("meanSpectrumValues")
-                # print(meanSpectrumValues)
 
-            else:
-                print("skipped meanSpectrumValues")
+                else:
+                    print("skipped meanSpectrumValues")
 
     def setModuleParameters(self, moduleParameters: SpectralJobGraphViewModuleParameters):
         self.__moduleParameters = moduleParameters
