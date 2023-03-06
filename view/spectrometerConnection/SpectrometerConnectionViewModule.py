@@ -27,6 +27,8 @@ class SpectrometerConnectionViewModule(PageWidget):
         #    * mark entries as read-ony if the sensor is not connected
         #    * offer a select button
         #    * offer a refresh
+        #    * if there are more selectable entries offer a note that it is only possible to have one spectrometer
+        #      connected
         #  * superuser
         #    * offer another text field letting one filter the offered entries as there might be many
         #    * let one pull all profiles
