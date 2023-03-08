@@ -360,6 +360,19 @@ QLineEdit[readOnly="true"]{
 }
 
 
+QLabel[style-primary="true"]{
+    color:#3D7848;
+}
+
+QLabel[style-bold="true"]{
+    font-weight:bold;
+    font-size:20px;
+}
+
+QLabel[style-large="true"]{
+    font-size:20px;
+}
+
 
 """)
 

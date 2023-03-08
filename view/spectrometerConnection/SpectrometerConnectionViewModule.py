@@ -1,12 +1,18 @@
 
-from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton
+from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QLabel, QLineEdit
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
 from view.application.widgets.page.PageWidget import PageWidget
+from view.spectrometerConnection.RegisterSpectrometerProfileViewModule import RegisterSpectrometerProfileViewModule
 
 
 class SpectrometerConnectionViewModule(PageWidget):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__registerSpectrometerProfileViewModule=None
+
 
     def getMainContainerWidgets(self):
         result = super().getMainContainerWidgets()
@@ -36,7 +42,15 @@ class SpectrometerConnectionViewModule(PageWidget):
         #    * offer another text field letting one filter the offered entries as there might be many
         #    * let one pull all profiles
 
+        result['registerSpectrometerProfileViewModule']=self.getRegisterSpectrometerProfileViewModule()
+
         return result
+
+    def getRegisterSpectrometerProfileViewModule(self):
+        if self.__registerSpectrometerProfileViewModule is None:
+            self.__registerSpectrometerProfileViewModule=RegisterSpectrometerProfileViewModule(self)
+            self.__registerSpectrometerProfileViewModule.initialize()
+        return self.__registerSpectrometerProfileViewModule
 
     def createNavigationGroupBox(self):
         result = QGroupBox("")
