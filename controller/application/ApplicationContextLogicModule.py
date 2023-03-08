@@ -2,6 +2,8 @@ from base.Singleton import Singleton
 from controller.application.ApplicationSignalsProviderLogicModule import ApplicationSignalsProviderLogicModule
 from controller.application.navigationHandler.NavigationHandlerLogicModule import NavigationHandlerLogicModule
 from controller.application.setting.ApplicationSettings import ApplicationSettings
+from logic.appliction.util.ApplicationConfigUtil import ApplicationConfigUtil
+from model.databaseEntity.application.ApplicationConfig import ApplicationConfig
 
 
 class ApplicationContextLogicModule(Singleton):
@@ -27,4 +29,7 @@ class ApplicationContextLogicModule(Singleton):
     def getApplicationSettings(self)->ApplicationSettings:
         return ApplicationSettings()
 
+    def getApplicationConfig(self)->ApplicationConfig:
+        result = ApplicationConfigUtil().getApplicationConfig()
+        return result
 

@@ -1,3 +1,4 @@
+
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
@@ -9,6 +10,8 @@ class SpectrometerConnectionViewModule(PageWidget):
 
     def getMainContainerWidgets(self):
         result = super().getMainContainerWidgets()
+
+        applicationConfig = ApplicationContextLogicModule().getApplicationConfig()
 
         #todo:next
 

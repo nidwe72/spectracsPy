@@ -6,6 +6,12 @@ from model.databaseEntity.DbBase import DbBaseEntity, DbBaseEntityMixin
 
 class ApplicationConfig(DbBaseEntity, DbBaseEntityMixin):
 
+    spectrometerProfiles = relationship("SpectrometerProfile", back_populates="applicationConfig")
 
-    spectrometerProfileId = Column(Integer, ForeignKey("spectrometer_profile.id"))
-    spectrometerProfile = relationship("SpectrometerProfile")
+
+    def getSpectrometerProfiles(self):
+        return self.spectrometerProfiles
+
+    def setSpectrometerProfiles(self,spectrometerProfiles):
+        self.spectrometerProfiles=spectrometerProfiles
+
