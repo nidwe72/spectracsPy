@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from PySide6.QtGui import QColor
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy import Integer
@@ -17,11 +19,11 @@ class SpectralLine(DbBaseEntity, DbBaseEntityMixin):
     spectralLineMasterData = relationship("SpectralLineMasterData")
 
     #transient stuff follows
-    color:QColor=None
+    color:ClassVar[QColor]=None
 
-    __prominence:float=None
+    __prominence:ClassVar[float]=None
 
-    __intensity:float=None
+    __intensity:ClassVar[float]=None
 
     @property
     def prominence(self):

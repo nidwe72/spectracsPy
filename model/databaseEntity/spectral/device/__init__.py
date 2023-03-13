@@ -1,3 +1,4 @@
+from model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import ApplicationConfigToSpectrometerProfile
 from model.databaseEntity.application.ApplicationConfig import ApplicationConfig
 from model.databaseEntity.spectral.device.SpectrometerVendor import SpectrometerVendor
 from model.databaseEntity.spectral.device.SpectrometerStyle import SpectrometerStyle

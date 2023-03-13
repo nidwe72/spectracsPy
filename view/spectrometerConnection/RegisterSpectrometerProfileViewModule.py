@@ -46,7 +46,7 @@ class RegisterSpectrometerProfileViewModule(PageWidget):
             self.__registerButton = QPushButton()
             self.__registerButton.setText("Download/Register")
             self.__registerButton.setEnabled(False)
-            # self.__registerButton.clicked.connect(self.onClickedBackButton)
+            self.__registerButton.clicked.connect(self.onClickedRegisterButton)
 
         return self.__registerButton
 
@@ -55,4 +55,7 @@ class RegisterSpectrometerProfileViewModule(PageWidget):
             self.__serialLineEdit = QLineEdit()
             self.__serialLineEdit.textChanged.connect(self.onTextChangeSerialLineEdit)
         return self.__serialLineEdit
+
+    def onClickedRegisterButton(self):
+        print('onClickedRegisterButton')
 
