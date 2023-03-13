@@ -206,6 +206,10 @@ QAbstractButton {
 	font:bold;
 }
 
+QAbstractButton:disabled {
+	background-color:  #506254;
+}
+
 QAbstractButton:hover {
 	background:  #3d7848;
 }

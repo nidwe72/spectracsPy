@@ -1,5 +1,5 @@
-
-from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QLabel, QLineEdit
+from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QLabel, QLineEdit, QComboBox
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
@@ -11,7 +11,10 @@ class SpectrometerConnectionViewModule(PageWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.__selectSpectrometerProfileComboBox:QComboBox=None
         self.__registerSpectrometerProfileViewModule=None
+
 
 
     def getMainContainerWidgets(self):
@@ -42,6 +45,12 @@ class SpectrometerConnectionViewModule(PageWidget):
         #    * offer another text field letting one filter the offered entries as there might be many
         #    * let one pull all profiles
 
+
+
+        selectSpectrometerProfileComboBox = self.getSelectSpectrometerProfileComboBox()
+        result['selectSpectrometerProfileComboBox'] = self.createLabeledComponent('Spectrometer',
+                                                                                      selectSpectrometerProfileComboBox)
+
         result['registerSpectrometerProfileViewModule']=self.getRegisterSpectrometerProfileViewModule()
 
         return result
@@ -51,6 +60,24 @@ class SpectrometerConnectionViewModule(PageWidget):
             self.__registerSpectrometerProfileViewModule=RegisterSpectrometerProfileViewModule(self)
             self.__registerSpectrometerProfileViewModule.initialize()
         return self.__registerSpectrometerProfileViewModule
+
+    def getSelectSpectrometerProfileComboBox(self):
+        if self.__selectSpectrometerProfileComboBox is None:
+            self.__selectSpectrometerProfileComboBox=QComboBox()
+        return self.__selectSpectrometerProfileComboBox
+
+    def updateSelectSpectrometerProfileComboBoxModel(self):
+        model = QStandardItemModel()
+
+        spectrometerProfiles=ApplicationContextLogicModule().getApplicationConfig().getSpectrometerProfiles()
+
+        for spectrometerProfile in spectrometerProfiles:
+            item = QStandardItem()
+            item.setText(spectrometerProfile.serial)
+            item.setData(spectrometerProfile)
+            model.appendRow(item)
+
+        self.getSelectSpectrometerProfileComboBox().setModel(model)
 
     def createNavigationGroupBox(self):
         result = QGroupBox("")
@@ -92,4 +119,5 @@ class SpectrometerConnectionViewModule(PageWidget):
 
     def initialize(self):
         super().initialize()
+
 

@@ -12,3 +12,8 @@ class ApplicationStyleLogicModule(Singleton):
     def getPrimaryTextColor(self):
         result=QColor.fromRgb(255, 255, 255)
         return result
+
+    def getPrimaryColorDisabled(self):
+        result=QColor.fromRgb(80, 98, 84)
+        return result
+        # #506254
