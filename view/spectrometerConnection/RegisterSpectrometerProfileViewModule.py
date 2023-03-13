@@ -1,7 +1,15 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton
+from matplotlib.mlab import specgram
+from setuptools._distutils.py38compat import aix_platform
 
+from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
+from model.databaseEntity.DbBase import session_factory
+from model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
+    ApplicationConfigToSpectrometerProfile
+from model.databaseEntity.spectral.device import SpectrometerProfile
 from view.application.widgets.page.PageWidget import PageWidget
 
 
@@ -57,5 +65,25 @@ class RegisterSpectrometerProfileViewModule(PageWidget):
         return self.__serialLineEdit
 
     def onClickedRegisterButton(self):
+
+        spectrometerProfiles = SpectrometerProfileUtil().getSpectrometerProfiles()
+
+        spectrometerProfilesBySerials=dict((spectrometerProfile.serial,spectrometerProfile) for spectrometerProfile in list(spectrometerProfiles.values()))
+        spectrometerProfile=spectrometerProfilesBySerials.get('1111')
+
+        applicationConfig = ApplicationContextLogicModule().getApplicationConfig()
+
+        applicationConfigToSpectrometerProfile = ApplicationConfigToSpectrometerProfile()
+        applicationConfigToSpectrometerProfile.id=1
+        applicationConfigToSpectrometerProfile.spectrometerProfile=spectrometerProfile
+        applicationConfig.spectrometerProfiles.append(applicationConfigToSpectrometerProfile)
+
+        session = session_factory()
+        session.add(applicationConfig)
+        session.commit()
+
+
+
+
         print('onClickedRegisterButton')
 
