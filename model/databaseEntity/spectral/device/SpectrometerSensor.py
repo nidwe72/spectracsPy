@@ -12,16 +12,11 @@ class SpectrometerSensor(DbBaseEntity, DbBaseEntityMixin):
     vendorName = Column(String)
     sellerName = Column(String)
     modelId = Column(String)
-    #name=Column(String)
     description = Column(String)
     codeName=Column(String)
     isVirtual=Column(Boolean)
 
-    #spectrometers = relationship("Spectrometer")
-
-    spectrometerSensorChipId = Column(Integer, ForeignKey("spectrometer_sensor_chip.id"))
-    #spectrometerSensorChip = relationship("SpectrometerSensorChip", back_populates="spectrometerSensors")
-
+    spectrometerSensorChipId = Column(String, ForeignKey("spectrometer_sensor_chip.id"))
     spectrometerSensorChip = relationship("SpectrometerSensorChip")
 
 

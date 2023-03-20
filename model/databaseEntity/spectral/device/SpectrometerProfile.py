@@ -15,16 +15,12 @@ class SpectrometerProfile(DbBaseEntity, DbBaseEntityMixin):
 
     isDefault=Column('isDefault',Boolean,default=False)
 
-    spectrometerId = Column(Integer, ForeignKey("spectrometer.id"))
+    spectrometerId = Column(String, ForeignKey("spectrometer.id"))
     spectrometer = relationship("Spectrometer")
 
-    spectrometerCalibrationProfileId = Column(Integer, ForeignKey("spectrometer_calibration_profile.id"))
+    spectrometerCalibrationProfileId = Column(String, ForeignKey("spectrometer_calibration_profile.id"))
     spectrometerCalibrationProfile = relationship("SpectrometerCalibrationProfile")
 
-    # applicationConfig_id = Column(Integer, ForeignKey("application_config.id"))
-    # applicationConfig = relationship("ApplicationConfig", back_populates="spectrometerProfiles")
-
-    id: Mapped[int] = mapped_column(primary_key=True)
 
 
 

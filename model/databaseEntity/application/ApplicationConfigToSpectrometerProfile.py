@@ -1,17 +1,13 @@
-from sqlalchemy import ForeignKey, Integer, Column
+from sqlalchemy import ForeignKey, Integer, Column,String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from model.databaseEntity.DbBase import DbBaseEntity, DbBaseEntityMixin
 
-class ApplicationConfigToSpectrometerProfile(DbBaseEntity):
+class ApplicationConfigToSpectrometerProfile(DbBaseEntity,DbBaseEntityMixin):
 
-    __tablename__ = "application_config_to_spectrometer_profile"
+    application_config_id: Mapped[str] = mapped_column(ForeignKey("application_config.id"), primary_key=True)
 
-    id = Column(Integer, primary_key=True, autoincrement=False)
-
-    application_config_id: Mapped[int] = mapped_column(ForeignKey("application_config.id"), primary_key=True)
-
-    spectrometer_profile_id: Mapped[int] = mapped_column(
+    spectrometer_profile_id: Mapped[str] = mapped_column(
         ForeignKey("spectrometer_profile.id"), primary_key=True
     )
 

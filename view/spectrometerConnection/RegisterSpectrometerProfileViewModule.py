@@ -74,7 +74,6 @@ class RegisterSpectrometerProfileViewModule(PageWidget):
         applicationConfig = ApplicationContextLogicModule().getApplicationConfig()
 
         applicationConfigToSpectrometerProfile = ApplicationConfigToSpectrometerProfile()
-        applicationConfigToSpectrometerProfile.id=1
         applicationConfigToSpectrometerProfile.spectrometerProfile=spectrometerProfile
         applicationConfig.spectrometerProfiles.append(applicationConfigToSpectrometerProfile)
 
