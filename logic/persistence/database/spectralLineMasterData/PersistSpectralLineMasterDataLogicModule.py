@@ -17,18 +17,6 @@ class PersistSpectralLineMasterDataLogicModule:
         session.add(spectralLineMasterData)
         session.commit()
 
-    def getSpectralLineMasterDatasOld(self,
-                                      persistenceParametersGetSpectralLineMasterDatas: PersistenceParametersGetSpectralLineMasterDatas) -> \
-            Dict[int, SpectralLineMasterData]:
-        ids = persistenceParametersGetSpectralLineMasterDatas.getIds()
-        session = session_factory()
-        resultList = session.query(SpectralLineMasterData).all()
-
-        result: Dict[int, SpectralLineMasterData] = {}
-        for spectralLineMasterData in resultList:
-            result[spectralLineMasterData.id] = spectralLineMasterData
-
-        return result
 
     def getSpectralLineMasterDatas(self,
                                    moduleParameters: PersistenceParametersGetSpectralLineMasterDatas) -> \

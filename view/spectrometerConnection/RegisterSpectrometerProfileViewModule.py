@@ -1,11 +1,11 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton
-from matplotlib.mlab import specgram
-from setuptools._distutils.py38compat import aix_platform
+from sqlalchemy import inspect
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
+from logic.persistence.database.applicationConfig.PersistGetApplicationConfigToSpectrometerProfilesLogicModule import \
+    PersistGetApplicationConfigToSpectrometerProfilesLogicModule
 from model.databaseEntity.DbBase import session_factory
 from model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
     ApplicationConfigToSpectrometerProfile
@@ -66,23 +66,35 @@ class RegisterSpectrometerProfileViewModule(PageWidget):
 
     def onClickedRegisterButton(self):
 
+        serial = self.getSerialLineEdit().text()
+
         spectrometerProfiles = SpectrometerProfileUtil().getSpectrometerProfiles()
 
         spectrometerProfilesBySerials=dict((spectrometerProfile.serial,spectrometerProfile) for spectrometerProfile in list(spectrometerProfiles.values()))
-        spectrometerProfile=spectrometerProfilesBySerials.get('1111')
+        spectrometerProfile=spectrometerProfilesBySerials.get(serial)
 
         applicationConfig = ApplicationContextLogicModule().getApplicationConfig()
 
         applicationConfigToSpectrometerProfile = ApplicationConfigToSpectrometerProfile()
         applicationConfigToSpectrometerProfile.spectrometerProfile=spectrometerProfile
-        applicationConfig.spectrometerProfiles.append(applicationConfigToSpectrometerProfile)
-
-        session = session_factory()
-        session.add(applicationConfig)
-        session.commit()
 
 
+        persistApplicationConfigToSpectrometerProfileLogicModule = PersistGetApplicationConfigToSpectrometerProfilesLogicModule()
 
+        applicationConfigToSpectrometerProfile.spectrometer_profile_id=spectrometerProfile.id
+        applicationConfigToSpectrometerProfile.application_config_id=applicationConfig.id
+        persistApplicationConfigToSpectrometerProfileLogicModule.getModuleParameters().setBaseEntity(applicationConfigToSpectrometerProfile)
+        applicationConfigToSpectrometerProfiles = persistApplicationConfigToSpectrometerProfileLogicModule.getApplicationConfigToSpectrometerProfiles()
 
-        print('onClickedRegisterButton')
+        if len(applicationConfigToSpectrometerProfiles)==1:
+            applicationConfigToSpectrometerProfile=applicationConfigToSpectrometerProfiles.get(next(iter(applicationConfigToSpectrometerProfiles)))
+
+        entityInspect = inspect(applicationConfigToSpectrometerProfile)
+        if entityInspect.transient:
+            applicationConfig.spectrometerProfiles.append(applicationConfigToSpectrometerProfile)
+            session = session_factory()
+            session.add(applicationConfig)
+            session.commit()
+
+        return
 
