@@ -13,8 +13,6 @@ class SpectrometerProfile(DbBaseEntity, DbBaseEntityMixin):
 
     serial = Column(String)
 
-    isDefault=Column('isDefault',Boolean,default=False)
-
     spectrometerId = Column(String, ForeignKey("spectrometer.id"))
     spectrometer = relationship("Spectrometer")
 
