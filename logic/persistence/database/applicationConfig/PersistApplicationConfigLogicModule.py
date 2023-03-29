@@ -11,7 +11,7 @@ class PersistApplicationConfigLogicModule(Singleton):
         result = next(iter(resultList), None)
         return result
 
-    def saveApplicationConfig(self, applicationConfig: ApplicationConfig):
+    def saveEntity(self, applicationConfig: ApplicationConfig):
         session = session_factory()
         session.add(applicationConfig)
         session.commit()

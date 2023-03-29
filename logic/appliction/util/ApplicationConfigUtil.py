@@ -10,5 +10,5 @@ class ApplicationConfigUtil(Singleton):
         result = PersistApplicationConfigLogicModule().getApplicationConfig()
         if result is None:
             result=ApplicationConfig()
-            PersistApplicationConfigLogicModule().saveApplicationConfig(result)
+            PersistApplicationConfigLogicModule().saveEntity(result)
         return result

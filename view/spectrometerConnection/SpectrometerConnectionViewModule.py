@@ -2,6 +2,7 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QLabel, QLineEdit, QComboBox
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.model.util.SpectrometerUtil import SpectrometerUtil
 from model.application.navigation.NavigationSignal import NavigationSignal
 from view.application.widgets.page.PageWidget import PageWidget
 from view.spectrometerConnection.RegisterSpectrometerProfileViewModule import RegisterSpectrometerProfileViewModule
@@ -50,6 +51,7 @@ class SpectrometerConnectionViewModule(PageWidget):
         selectSpectrometerProfileComboBox = self.getSelectSpectrometerProfileComboBox()
         result['selectSpectrometerProfileComboBox'] = self.createLabeledComponent('Spectrometer',
                                                                                       selectSpectrometerProfileComboBox)
+        self.updateSelectSpectrometerProfileComboBoxModel();
 
         result['registerSpectrometerProfileViewModule']=self.getRegisterSpectrometerProfileViewModule()
 
@@ -69,12 +71,16 @@ class SpectrometerConnectionViewModule(PageWidget):
     def updateSelectSpectrometerProfileComboBoxModel(self):
         model = QStandardItemModel()
 
-        spectrometerProfiles=ApplicationContextLogicModule().getApplicationConfig().getSpectrometerProfiles()
+        spectrometerProfilesMapping=ApplicationContextLogicModule().getApplicationConfig().getSpectrometerProfilesMapping()
 
-        for spectrometerProfile in spectrometerProfiles:
+        for spectrometerProfilesMappingEntry in spectrometerProfilesMapping:
             item = QStandardItem()
-            item.setText(spectrometerProfile.serial)
-            item.setData(spectrometerProfile)
+
+            spectrometerProfile = spectrometerProfilesMappingEntry.spectrometerProfile
+            spectrometerName = SpectrometerUtil().getEntityViewName(spectrometerProfile.spectrometer);
+            text=f"{spectrometerName} ({spectrometerProfile.serial})"
+            item.setText(text)
+            item.setData(spectrometerProfilesMappingEntry)
             model.appendRow(item)
 
         self.getSelectSpectrometerProfileComboBox().setModel(model)

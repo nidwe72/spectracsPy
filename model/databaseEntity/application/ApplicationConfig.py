@@ -11,15 +11,16 @@ from model.databaseEntity.application.ApplicationConfigToSpectrometerProfile imp
 
 class ApplicationConfig(DbBaseEntity, DbBaseEntityMixin):
 
-    # spectrometerProfiles = relationship("SpectrometerProfile", back_populates="applicationConfig")
+    spectrometerProfilesMapping: Mapped[List[ApplicationConfigToSpectrometerProfile]] = relationship()
 
-    # def getSpectrometerProfiles(self):
-    #     return self.spectrometerProfiles
-    #
-    # def setSpectrometerProfiles(self,spectrometerProfiles):
-    #     self.spectrometerProfiles=spectrometerProfiles
+    def getSpectrometerProfilesMapping(self)->Mapped[List[ApplicationConfigToSpectrometerProfile]]:
+        return self.spectrometerProfilesMapping
 
-    #id: Mapped[int] = mapped_column(primary_key=True,default=lambda: str(uuid.uuid4()))
+    def setSpectrometerProfilesMapping(self,spectrometerProfilesMapping):
+        self.spectrometerProfilesMapping=spectrometerProfilesMapping
 
-    spectrometerProfiles: Mapped[List[ApplicationConfigToSpectrometerProfile]] = relationship()
+
+
+
+
 

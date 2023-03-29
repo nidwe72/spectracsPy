@@ -4,6 +4,8 @@ from sqlalchemy import inspect
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
+from logic.persistence.database.applicationConfig.PersistApplicationConfigLogicModule import \
+    PersistApplicationConfigLogicModule
 from logic.persistence.database.applicationConfig.PersistGetApplicationConfigToSpectrometerProfilesLogicModule import \
     PersistGetApplicationConfigToSpectrometerProfilesLogicModule
 from model.databaseEntity.DbBase import session_factory
@@ -84,17 +86,14 @@ class RegisterSpectrometerProfileViewModule(PageWidget):
         applicationConfigToSpectrometerProfile.spectrometer_profile_id=spectrometerProfile.id
         applicationConfigToSpectrometerProfile.application_config_id=applicationConfig.id
         persistApplicationConfigToSpectrometerProfileLogicModule.getModuleParameters().setBaseEntity(applicationConfigToSpectrometerProfile)
-        applicationConfigToSpectrometerProfiles = persistApplicationConfigToSpectrometerProfileLogicModule.getApplicationConfigToSpectrometerProfiles()
+        applicationConfigToSpectrometerProfiles = persistApplicationConfigToSpectrometerProfileLogicModule.getEntities()
 
         if len(applicationConfigToSpectrometerProfiles)==1:
             applicationConfigToSpectrometerProfile=applicationConfigToSpectrometerProfiles.get(next(iter(applicationConfigToSpectrometerProfiles)))
 
         entityInspect = inspect(applicationConfigToSpectrometerProfile)
         if entityInspect.transient:
-            applicationConfig.spectrometerProfiles.append(applicationConfigToSpectrometerProfile)
-            session = session_factory()
-            session.add(applicationConfig)
-            session.commit()
-
+            applicationConfig.spectrometerProfilesMapping.append(applicationConfigToSpectrometerProfile)
+            PersistApplicationConfigLogicModule().saveEntity(applicationConfig);
         return
 

@@ -12,7 +12,7 @@ class PersistGetApplicationConfigToSpectrometerProfilesLogicModule:
     def __init__(self, *args, **kwargs):
         self.__moduleParameters: PersistApplicationConfigToSpectrometerProfileLogicModuleParameters = None
 
-    def getApplicationConfigToSpectrometerProfiles(self) -> \
+    def getEntities(self) -> \
             Dict[str, ApplicationConfigToSpectrometerProfile]:
 
         moduleParameters=self.getModuleParameters()
