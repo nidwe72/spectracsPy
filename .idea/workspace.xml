@@ -4,10 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: combobox of registered SpectrometerProfile/s is now filled">
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: on selecting a SpectrometerProfile it is set as the default one to be used in measurements">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/databaseEntity/application/ApplicationConfigToSpectrometerProfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/databaseEntity/application/ApplicationConfigToSpectrometerProfile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerProfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerProfile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/setting/ApplicationSettings.py" beforeDir="false" afterPath="$PROJECT_DIR$/controller/application/setting/ApplicationSettings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/SpectrometerProfileUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/logic/model/util/SpectrometerProfileUtil.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/view/spectrometerConnection/SpectrometerConnectionViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectrometerConnection/SpectrometerConnectionViewModule.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -420,14 +420,7 @@
       <workItem from="1679508177548" duration="7978000" />
       <workItem from="1679934182858" duration="5727000" />
       <workItem from="1679939933670" duration="1133000" />
-      <workItem from="1680106647897" duration="4793000" />
-    </task>
-    <task id="LOCAL-00078" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileWavelengthCalibrationViewModule: spectrum is now shown larger">
-      <created>1664559189315</created>
-      <option name="number" value="00078" />
-      <option name="presentableId" value="LOCAL-00078" />
-      <option name="project" value="LOCAL" />
-      <updated>1664559189316</updated>
+      <workItem from="1680106647897" duration="6925000" />
     </task>
     <task id="LOCAL-00079" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileWavelengthCalibrationViewModule: added dummy calibration graph">
       <created>1665431980308</created>
@@ -765,7 +758,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680108678713</updated>
     </task>
-    <option name="localTasksCounter" value="127" />
+    <task id="LOCAL-00127" summary="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: on selecting a SpectrometerProfile it is set as the default one to be used in measurements">
+      <created>1680111558240</created>
+      <option name="number" value="00127" />
+      <option name="presentableId" value="LOCAL-00127" />
+      <option name="project" value="LOCAL" />
+      <updated>1680111558240</updated>
+    </task>
+    <option name="localTasksCounter" value="128" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -789,7 +789,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* VirtualSpectrometerViewModule: renamed from VirtualCameraViewModule" />
     <MESSAGE value="* VirtualSpectrometerViewModule: applied flag whether to save physical frames" />
     <MESSAGE value="* added successful test for getting RGB colors from spectra" />
     <MESSAGE value="* HoughLineLogicModule: created 'canny' picture using some lightness threshold; For the own spectrometer hough lines ate applied successfully now" />
@@ -814,20 +813,36 @@
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* now we can provide a persistence logic module, which uses a template entity having some dirty members used to build up the select statement in a generic fashion (using the SqlUtil class)" />
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* RegisterSpectrometerProfileViewModule: now persists ApplicationConfigToSpectrometerProfile/s" />
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: combobox of registered SpectrometerProfile/s is now filled" />
-    <option name="LAST_COMMIT_MESSAGE" value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: combobox of registered SpectrometerProfile/s is now filled" />
+    <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: on selecting a SpectrometerProfile it is set as the default one to be used in measurements" />
+    <option name="LAST_COMMIT_MESSAGE" value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: on selecting a SpectrometerProfile it is set as the default one to be used in measurements" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/view/spectrometerConnection/SpectrometerConnectionViewModule.py</url>
-          <line>78</line>
+          <line>77</line>
           <option name="timeStamp" value="298" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/view/spectrometerConnection/SpectrometerConnectionViewModule.py</url>
-          <line>96</line>
+          <line>97</line>
           <option name="timeStamp" value="299" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/controller/application/setting/ApplicationSettings.py</url>
+          <line>16</line>
+          <option name="timeStamp" value="301" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/logic/model/util/SpectrometerProfileUtil.py</url>
+          <line>24</line>
+          <option name="timeStamp" value="304" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/logic/model/util/SpectrometerProfileUtil.py</url>
+          <line>31</line>
+          <option name="timeStamp" value="305" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -864,7 +879,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest2.coverage" NAME="spectracsTest2 Coverage Results" MODIFIED="1675557332733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1680111258840" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1680113630778" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
     <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />

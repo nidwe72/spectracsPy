@@ -1,5 +1,6 @@
 from typing import Dict
 from base.Singleton import Singleton
+from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
 from logic.persistence.database.spectrometerProfile.PersistSpectrometerProfileLogicModule import \
     PersistSpectrometerProfileLogicModule
@@ -20,5 +21,17 @@ class SpectrometerProfileUtil(Singleton):
             SpectrometerCalibrationProfileUtil().initializeSpectrometerCalibrationProfile(spectrometerCalibrationProfile)
             spectrometerProfile.spectrometerCalibrationProfile=spectrometerCalibrationProfile
 
+    def setConfiguredSpectrometerProfileIntoApplicationSettings(self) :
+        applicationConfig = ApplicationContextLogicModule().getApplicationConfig()
+        spectrometerProfilesMapping=applicationConfig.getSpectrometerProfilesMapping()
+
+        for spectrometerProfilesMappingEntry in spectrometerProfilesMapping:
+            if spectrometerProfilesMappingEntry.isDefault:
+                spectrometerProfile = spectrometerProfilesMappingEntry.spectrometerProfile
+                applicationSettings = ApplicationContextLogicModule().getApplicationSettings()
+                applicationSettings.setSpectrometerProfile(spectrometerProfile)
+                break
+
+        return
 
 

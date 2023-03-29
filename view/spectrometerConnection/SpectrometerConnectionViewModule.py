@@ -2,9 +2,8 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QLabel, QLineEdit, QComboBox
 
 from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
 from logic.model.util.SpectrometerUtil import SpectrometerUtil
-from logic.persistence.database.applicationConfig.PersistGetApplicationConfigToSpectrometerProfilesLogicModule import \
-    PersistGetApplicationConfigToSpectrometerProfilesLogicModule
 from model.application.navigation.NavigationSignal import NavigationSignal
 from model.databaseEntity.DbBase import session_factory
 from model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
@@ -94,6 +93,8 @@ class SpectrometerConnectionViewModule(PageWidget):
                     session.add(someSpectrometerProfilesMappingEntry)
                     session.commit()
 
+        self.setConfiguredSpectrometerProfileIntoApplicationSettings()
+
         return
 
     def onClickedBackButton(self):
@@ -123,3 +124,9 @@ class SpectrometerConnectionViewModule(PageWidget):
 
     def initialize(self):
         super().initialize()
+        self.setConfiguredSpectrometerProfileIntoApplicationSettings()
+
+    def setConfiguredSpectrometerProfileIntoApplicationSettings(self) :
+        SpectrometerProfileUtil().setConfiguredSpectrometerProfileIntoApplicationSettings()
+
+
