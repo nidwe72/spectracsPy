@@ -44,7 +44,6 @@ class SpectralJobWidgetViewModule(QWidget):
         self.videoThread = SpectrumVideoThread()
         self.videoThread.videoThreadSignal.connect(self.handleSpectralVideoThreadSignal)
 
-
     def startVideoThread(self):
         spectralJobGraphViewModuleParameters=SpectralJobGraphViewModuleParameters()
         spectralJobGraphViewModuleParameters.setSpectrumSampleType(self.getModuleParameters().getSpectrumSampleType())
@@ -56,6 +55,9 @@ class SpectralJobWidgetViewModule(QWidget):
         plotSpectraMeanViewModuleParameters.setPolicy(SpectralJobGraphViewModulePolicyParameter.PLOT_SPECTRA_MEAN)
         self.plotSpectraMeanViewModule.setModuleParameters(plotSpectraMeanViewModuleParameters)
 
+        self.spectralJobGraphViewModule.clearGraph()
+
+        #todo:edwin
         self.videoThread.setFrameCount(50)
         self.videoThread.setSpectrumSampleType(self.getModuleParameters().getSpectrumSampleType())
         self.videoThread.start()
@@ -63,32 +65,18 @@ class SpectralJobWidgetViewModule(QWidget):
     def handleSpectralVideoThreadSignal(self, event:threading.Event,spectralVideoThreadSignal: SpectralVideoThreadSignal):
         if isinstance(spectralVideoThreadSignal, SpectralVideoThreadSignal):
 
-            self.spectralJobGraphViewModule.updateGraph(spectralVideoThreadSignal.spectralJob)
-            self.plotSpectraMeanViewModule.updateGraph(spectralVideoThreadSignal.spectralJob)
+            if spectralVideoThreadSignal.currentFrameIndex>3:
 
-            videoSignal = VideoSignal()
-            videoSignal.image = spectralVideoThreadSignal.image
+                self.spectralJobGraphViewModule.updateGraph(spectralVideoThreadSignal.spectralJob)
+                self.plotSpectraMeanViewModule.updateGraph(spectralVideoThreadSignal.spectralJob)
 
-            if spectralVideoThreadSignal.currentFrameIndex==spectralVideoThreadSignal.framesCount:
-                pass
-                # colorizedImage=spectralImageLogicModule.colorizeQImage(spectralVideoThreadSignal.image,132)
-                # __videoSignal.image = colorizedImage
+                videoSignal = VideoSignal()
+                videoSignal.image = spectralVideoThreadSignal.image
 
-            colorizedImage=spectralVideoThreadSignal.image.convertToFormat(QImage.Format.Format_Grayscale8)
-            videoSignal.image = colorizedImage
+                colorizedImage=spectralVideoThreadSignal.image.convertToFormat(QImage.Format.Format_Grayscale8)
+                videoSignal.image = colorizedImage
 
-            # spectralImageLogicModule=SpectralImageLogicModule()
-            # someImage=QImage()
-            # #someImage.load("/home/nidwe/testPhilipsBlured3.png")
-            # someImage.load("/home/nidwe/testPhilipsSharpened2.png")
-            # #someImage.load("/home/nidwe/testPhilips.png")
-            # foo=spectralImageLogicModule.convertQImageToNumpyArray(someImage)
-            # bar=spectralImageLogicModule.calculateFocalMeasureOfNumpyImage(foo)
-            # print("bar")
-            # print(bar)
-            # __videoSignal.image=someImage
-
-            self.videoViewModule.handleVideoThreadSignal(videoSignal)
+                self.videoViewModule.handleVideoThreadSignal(videoSignal)
 
             event.set()
 

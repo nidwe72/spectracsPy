@@ -47,7 +47,6 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
             spectralLinesInterpolationViewModule.initialize()
             result['spectralLinesInterpolationViewModule'] = spectralLinesInterpolationViewModule
 
-
             editCalibrationProfileButton=QPushButton('Edit')
             editCalibrationProfileButton.setMinimumWidth(100)
             editCalibrationProfileButton.setObjectName('SpectrometerCalibrationProfileViewModule.editCalibrationProfileButton')

@@ -37,17 +37,6 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
     BaseVideoViewModule[SpectrometerCalibrationProfileHoughLinesVideoSignal]):
     __model: SpectrometerCalibrationProfile = None
 
-
-    # peaksClusters:Dict[int,List[SpectralLine]]=None
-    #
-    # prominence:int=0
-    # prominenceStart:int=200
-    # prominenceEnd: int = 20
-    # prominenceStep=10
-    #
-    #
-    # spectralLinesByPixelIndices:Dict[int,SpectralLine]=None
-
     __spectrum: Spectrum = None
 
     spectrometerWavelengthCalibrationLogicModule: SpectrometerWavelengthCalibrationLogicModule = None
@@ -84,17 +73,16 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             spectrometerWavelengthCalibrationLogicModule.execute()
             spectrometerWavelengthCalibrationLogicModuleResult = spectrometerWavelengthCalibrationLogicModule.getModuleResult()
 
-            polynomial = SpectralLineUtil().polyfit(spectrometerWavelengthCalibrationLogicModuleResult.getSpectralLines())
+            polynomial = SpectralLineUtil().polyfit(
+                spectrometerWavelengthCalibrationLogicModuleResult.getSpectralLines())
             coefficients = polynomial.coefficients.tolist()
 
-            videoSignal.model.interpolationCoefficientA=coefficients[0]
+            videoSignal.model.interpolationCoefficientA = coefficients[0]
             videoSignal.model.interpolationCoefficientB = coefficients[1]
             videoSignal.model.interpolationCoefficientC = coefficients[2]
             videoSignal.model.interpolationCoefficientD = coefficients[3]
 
-            videoSignal.model.spectralLines=spectrometerWavelengthCalibrationLogicModuleResult.getSpectralLines()
-
-
+            videoSignal.model.spectralLines = spectrometerWavelengthCalibrationLogicModuleResult.getSpectralLines()
 
         else:
 
@@ -168,7 +156,6 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
                     self.videoWidget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         else:
             super()._fitInView()
-
 
     def initialize(self):
         super().initialize()

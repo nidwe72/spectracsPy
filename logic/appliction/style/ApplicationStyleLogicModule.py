@@ -17,3 +17,7 @@ class ApplicationStyleLogicModule(Singleton):
         result=QColor.fromRgb(80, 98, 84)
         return result
         # #506254
+
+    def getSecondaryChartGridColor(self):
+        result=QColor.fromRgb(30, 30, 30)
+        return result

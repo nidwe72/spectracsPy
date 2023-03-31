@@ -54,6 +54,8 @@ class VideoThread(QThread,Generic[S]):
 
     def run(self):
 
+        self._runFlag=True
+
         self.onStart()
 
         #todo:hardCoded
@@ -151,7 +153,7 @@ class VideoThread(QThread,Generic[S]):
         if frameCount > 0:
             self._setCurrentFrameIndex(self._getCurrentFrameIndex() + 1)
             currentCount = self._getCurrentFrameIndex()
-            if currentCount == frameCount:
+            if currentCount == frameCount-1:
                 self._runFlag = False
 
     def createSignal(self)->S:
