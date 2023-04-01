@@ -4,8 +4,203 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* topic: 'extract project' into spectracsPy-model">
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* spectracsPy-model: added SpectrumSampleType.py">
+      <change afterPath="$PROJECT_DIR$/../spectracsPy-model/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/logic/settings/SettingsLogicModule.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerStyle.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerVendor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/calibration/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/signal/SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/signal/SpectrometerProfileSignal.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/signal/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/spectral/SpectralVideoThreadSignal.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chromos/spectracs/model/spectral/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/Singleton.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/base/Singleton.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/SingletonQObject.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/base/SingletonQObject.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/base/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/ApplicationContextLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/controller/application/ApplicationContextLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/ApplicationSignalsProviderLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/controller/application/ApplicationSignalsProviderLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/navigationHandler/NavigationHandlerLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/controller/application/navigationHandler/NavigationHandlerLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/navigationHandler/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/controller/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/setting/ApplicationSettings.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/controller/application/setting/ApplicationSettings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/application/setting/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/controller/application/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/controller/application/navigationHandler/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/controller/application/setting/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/image/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/image/houghLine/HoughLineLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/image/houghLine/HoughLineLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/image/houghLine/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/style/ApplicationStyleLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/style/ApplicationStyleLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/style/Polisher.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/style/Polisher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/style/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/image/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/util/ApplicationConfigUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/util/ApplicationConfigUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/util/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/image/houghLine/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/video/VideoThread.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/video/VideoThread.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/appliction/video/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/style/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/util/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/SpectrometerCalibrationProfileUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/SpectrometerCalibrationProfileUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/SpectrometerProfileUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/SpectrometerProfileUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/SpectrometerSensorChipUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/SpectrometerSensorChipUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/SpectrometerStyleUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/SpectrometerStyleUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/SpectrometerUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/SpectrometerUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/SpectrometerVendorUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/SpectrometerVendorUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/appliction/video/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/databaseEntity/SqlUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/databaseEntity/SqlUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/databaseEntity/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/spectrometerSensor/SpectrometerSensorUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/spectrometerSensor/SpectrometerSensorUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/model/util/spectrometerSensor/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/databaseEntity/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/model/util/spectrometerSensor/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/applicationConfig/PersistApplicationConfigLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/applicationConfig/PersistApplicationConfigLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/applicationConfig/PersistApplicationConfigLogicModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/applicationConfig/PersistApplicationConfigLogicModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/applicationConfig/PersistApplicationConfigToSpectrometerProfileLogicModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/applicationConfig/PersistApplicationConfigToSpectrometerProfileLogicModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/applicationConfig/PersistGetApplicationConfigToSpectrometerProfilesLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/applicationConfig/PersistGetApplicationConfigToSpectrometerProfilesLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/applicationConfig/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectralLineMasterData/PersistSpectralLineMasterDataLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectralLineMasterData/PersistSpectralLineMasterDataLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectralLineMasterData/PersistenceParametersGetSpectralLineMasterDatas.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectralLineMasterData/PersistenceParametersGetSpectralLineMasterDatas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectralLineMasterData/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometer/PersistSpectrometerLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometer/PersistSpectrometerLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometer/PersistenceParametersGetSpectrometers.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometer/PersistenceParametersGetSpectrometers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometer/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/applicationConfig/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerCalibrationProfile/PersistSpectrometerCalibrationProfileLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerCalibrationProfile/PersistSpectrometerCalibrationProfileLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerCalibrationProfile/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectralLineMasterData/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerProfile/PersistSpectrometerProfileLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerProfile/PersistSpectrometerProfileLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerProfile/PersistenceParametersGetSpectrometerProfiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerProfile/PersistenceParametersGetSpectrometerProfiles.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerProfile/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometer/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerSensor/PersistSpectrometerSensorLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerSensor/PersistSpectrometerSensorLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerSensor/PersistenceParametersGetSpectrometerSensors.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerSensor/PersistenceParametersGetSpectrometerSensors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerSensor/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerCalibrationProfile/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerSensorChip/PersistSpectrometerSensorChipLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerSensorChip/PersistSpectrometerSensorChipLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerSensorChip/PersistenceParametersGetSpectrometerSensorChips.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerSensorChip/PersistenceParametersGetSpectrometerSensorChips.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerSensorChip/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerProfile/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerStyle/PersistSpectrometerStyleLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerStyle/PersistSpectrometerStyleLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerStyle/PersistenceParametersGetSpectrometerStyles.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerStyle/PersistenceParametersGetSpectrometerStyles.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerStyle/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerSensor/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerVendor/PersistSpectrometerVendorLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerVendor/PersistSpectrometerVendorLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerVendor/PersistenceParametersGetSpectrometerVendors.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerVendor/PersistenceParametersGetSpectrometerVendors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/persistence/database/spectrometerVendor/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerSensorChip/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/settings/SettingsLogicModule.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/settings/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerStyle/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/settings/spectral/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/persistence/database/spectrometerVendor/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/settings/spectral/spectrometer/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/settings/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/settings/spectral/spectrometer/acquisition/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/settings/spectral/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/settings/spectral/spectrometer/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModuleResult.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModuleResult.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/settings/spectral/spectrometer/acquisition/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/device/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration/SpectrometerRegionOfInterestLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/device/calibration/SpectrometerRegionOfInterestLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration/SpectrometerWavelengthCalibrationLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/device/calibration/SpectrometerWavelengthCalibrationLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration/SpectrometerWavelengthCalibrationLogicModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/device/calibration/SpectrometerWavelengthCalibrationLogicModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration/SpectrometerWavelengthCalibrationLogicModuleResult.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/device/calibration/SpectrometerWavelengthCalibrationLogicModuleResult.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/importSpectrum/ImportSpectrumLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/importSpectrum/ImportSpectrumLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/importSpectrum/ImportSpectrumLogicModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/importSpectrum/ImportSpectrumLogicModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/importSpectrum/ImportSpectrumLogicModuleResult.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/importSpectrum/ImportSpectrumLogicModuleResult.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/importSpectrum/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/device/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/ISpectralLinesSelectionLogicModuleSelectionParameter.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/ISpectralLinesSelectionLogicModuleSelectionParameter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/PeakSelectionLogicModuleSelectByColorParameter.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/PeakSelectionLogicModuleSelectByColorParameter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/PeakSelectionLogicModuleSelectByPixelIndex.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/PeakSelectionLogicModuleSelectByPixelIndex.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/SpectralLinesSelectionLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/SpectralLinesSelectionLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/SpectralLinesSelectionLogicModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/SpectralLinesSelectionLogicModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/SpectralLinesSelectionLogicModuleResult.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/SpectralLinesSelectionLogicModuleResult.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/SpectralLinesSelectionLogicModuleSelectByIntensity.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/SpectralLinesSelectionLogicModuleSelectByIntensity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/SpectralLinesSelectionLogicModuleSelectByProminenceParameter.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/SpectralLinesSelectionLogicModuleSelectByProminenceParameter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/spectralLine/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/device/calibration/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/util/SpectralColorUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/util/SpectralColorUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/util/SpectralLineMasterDataUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/util/SpectralLineMasterDataUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/util/SpectrallineUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/util/SpectrallineUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/util/SpectrumUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/util/SpectrumUtil.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/util/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/importSpectrum/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/video/SpectralImageLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/video/SpectralImageLogicModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/video/SpectrometerCalibrationProfileHoughLinesVideoThread.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/video/SpectrometerCalibrationProfileHoughLinesVideoThread.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/video/SpectrometerCalibrationProfileWavelengthCalibrationVideoThread.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/video/SpectrometerCalibrationProfileWavelengthCalibrationVideoThread.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/video/SpectrumVideoThread.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/video/SpectrumVideoThread.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logic/spectral/video/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/spectralLine/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/util/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/logic/spectral/video/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/applicationStatus/ApplicationStatusSignal.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/applicationStatus/ApplicationStatusSignal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/applicationStatus/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/navigation/NavigationSignal.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/navigation/NavigationSignal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/navigation/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/setting/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/applicationStatus/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/setting/virtualSpectrometer/VirtualSpectrometerSettings.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/setting/virtualSpectrometer/VirtualSpectrometerSettings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/setting/virtualSpectrometer/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/navigation/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/video/VideoSignal.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/video/VideoSignal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/application/video/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/setting/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/DbBase.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/DbBase.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/DbEntityChangedSignal.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/DbEntityChangedSignal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/DbEntityCrudOperation.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/DbEntityCrudOperation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/DbRelations.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/DbRelations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/setting/virtualSpectrometer/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/application/ApplicationConfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/application/ApplicationConfig.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/application/ApplicationConfigToSpectrometerProfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/application/ApplicationConfigToSpectrometerProfile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/application/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/application/video/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/DbSpectrum.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/DbSpectrum.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/MeasurementProfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/MeasurementProfile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectralLine.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectralLine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectralLineMasterData.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectralLineMasterData.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectralLineMasterDataColorName.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectralLineMasterDataColorName.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/Spectrometer.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/Spectrometer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerProfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerProfile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerSensor.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerSensor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerSensorChip.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerSensorChip.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerSensorCodeName.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerSensorCodeName.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerSensorSettings.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerSensorSettings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerStyle.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerStyleId.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerStyleId.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerStyleName.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerStyleName.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerVendor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerVendorId.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerVendorId.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/SpectrometerVendorName.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/SpectrometerVendorName.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/calibration/SpectrometerCalibrationProfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/device/calibration/SpectrometerCalibrationProfile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/databaseEntity/spectral/device/calibration/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/signal/SpectrometerCalibrationProfileHoughLinesVideoSignal.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/signal/SpectrometerCalibrationProfileHoughLinesVideoSignal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/signal/SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/signal/SpectrometerProfileSignal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/signal/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/application/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/spectral/SpectralJob.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/spectral/SpectralJob.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/spectral/SpectralVideoThreadSignal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/spectral/Spectrum.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/spectral/Spectrum.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/spectral/SpectrumSampleType.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/spectral/SpectrumSampleType.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/spectral/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/chromos/spectracs/model/databaseEntity/spectral/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spectracsMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/spectracsMain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spectracsTest2.py" beforeDir="false" afterPath="$PROJECT_DIR$/spectracsTest2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/page/PageLineEdit.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/application/widgets/page/PageLineEdit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/video/VideoViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/application/widgets/video/VideoViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/home/HomeViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/home/HomeViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/main/MainStatusBarViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/main/MainStatusBarViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/main/MainViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/main/MainViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/SettingsViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/SettingsViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileListViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileListViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerSensorViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerSensorViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerStyleViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerStyleViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerVendorViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerVendorViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesVideoViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesVideoViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualSpectrometerViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualSpectrometerViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/SpectralJobViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectral/spectralJob/SpectralJobViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum/SpectralJobImportViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum/SpectralJobImportViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobsWidgetViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobsWidgetViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectrometerConnection/RegisterSpectrometerProfileViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectrometerConnection/RegisterSpectrometerProfileViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectrometerConnection/SpectrometerConnectionViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/spectrometerConnection/SpectrometerConnectionViewModule.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,8 +214,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Python Script" />
         <option value="Setup Script" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -36,7 +231,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../spectracsPy-model" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -74,19 +269,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ToolWindowDatabase.ShowToolbar": "false",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/home/nidwe/development/spectracs/spectracsPy-model/chromos/spectracs/model",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "settings.editor.selected.configurable": "preferences.keymap",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ToolWindowDatabase.ShowToolbar&quot;: &quot;false&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/nidwe/development/spectracs/spectracsPy-model/chromos/spectracs/model&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/../spectracsPy-model/chromos/spectracs/model" />
@@ -96,11 +291,11 @@
       <recent name="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/chromos" />
+      <recent name="$PROJECT_DIR$/chromos/spectracs" />
       <recent name="$PROJECT_DIR$/logic/spectral/spectalLine" />
       <recent name="$PROJECT_DIR$/resource" />
       <recent name="$PROJECT_DIR$/model/databaseEntity/spectral/device" />
-      <recent name="$PROJECT_DIR$/logic/persistence/database/spectrometerVendor" />
-      <recent name="$PROJECT_DIR$/logic/persistence/database/spectrometerSensor" />
     </key>
   </component>
   <component name="RunManager" selected="Python.spectracsMain">
@@ -422,14 +617,8 @@
       <workItem from="1679939933670" duration="1133000" />
       <workItem from="1680106647897" duration="6925000" />
       <workItem from="1680295928509" duration="2567000" />
-      <workItem from="1680380418431" duration="1927000" />
-    </task>
-    <task id="LOCAL-00080" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule: added calibration graph (scatter for now)">
-      <created>1666029428106</created>
-      <option name="number" value="00080" />
-      <option name="presentableId" value="LOCAL-00080" />
-      <option name="project" value="LOCAL" />
-      <updated>1666029428106</updated>
+      <workItem from="1680380418431" duration="3052000" />
+      <workItem from="1680383765495" duration="310000" />
     </task>
     <task id="LOCAL-00081" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule: added calibration graph (scatter for now)">
       <created>1666030303393</created>
@@ -767,7 +956,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680381201197</updated>
     </task>
-    <option name="localTasksCounter" value="129" />
+    <task id="LOCAL-00129" summary="* spectracsPy-model: added SpectrumSampleType.py">
+      <created>1680382439129</created>
+      <option name="number" value="00129" />
+      <option name="presentableId" value="LOCAL-00129" />
+      <option name="project" value="LOCAL" />
+      <updated>1680382439129</updated>
+    </task>
+    <option name="localTasksCounter" value="130" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -791,7 +987,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* added successful test for getting RGB colors from spectra" />
     <MESSAGE value="* HoughLineLogicModule: created 'canny' picture using some lightness threshold; For the own spectrometer hough lines ate applied successfully now" />
     <MESSAGE value="* ImageSpectrumAcquisitionLogicModule.acquire(): removed hard-coded stuff" />
     <MESSAGE value="* RascalLogicModule: started evaluating RASCAL algorithm" />
@@ -816,54 +1011,55 @@
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: combobox of registered SpectrometerProfile/s is now filled" />
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: on selecting a SpectrometerProfile it is set as the default one to be used in measurements" />
     <MESSAGE value="* topic: 'extract project' into spectracsPy-model" />
-    <option name="LAST_COMMIT_MESSAGE" value="* topic: 'extract project' into spectracsPy-model" />
+    <MESSAGE value="* spectracsPy-model: added SpectrumSampleType.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="* spectracsPy-model: added SpectrumSampleType.py" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/logic/spectral/video/SpectrumVideoThread.py</url>
+          <url>file://$PROJECT_DIR$/chromos/spectracs/logic/spectral/video/SpectrumVideoThread.py</url>
           <line>34</line>
           <option name="timeStamp" value="318" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
-          <line>69</line>
+          <line>67</line>
           <option name="timeStamp" value="319" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModule.py</url>
-          <line>93</line>
+          <url>file://$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModule.py</url>
+          <line>92</line>
           <option name="timeStamp" value="320" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModule.py</url>
-          <line>21</line>
+          <url>file://$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModule.py</url>
+          <line>20</line>
           <option name="timeStamp" value="321" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModule.py</url>
-          <line>77</line>
+          <url>file://$PROJECT_DIR$/chromos/spectracs/logic/spectral/acquisition/ImageSpectrumAcquisitionLogicModule.py</url>
+          <line>76</line>
           <option name="timeStamp" value="322" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py</url>
-          <line>91</line>
+          <line>88</line>
           <option name="timeStamp" value="323" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
-          <line>65</line>
+          <line>63</line>
           <option name="timeStamp" value="324" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
-          <line>47</line>
+          <line>45</line>
           <option name="timeStamp" value="325" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py</url>
-          <line>47</line>
+          <line>44</line>
           <option name="timeStamp" value="326" />
         </line-breakpoint>
       </breakpoints>
@@ -901,7 +1097,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest2.coverage" NAME="spectracsTest2 Coverage Results" MODIFIED="1675557332733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1680298529871" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1680383927077" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
     <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />

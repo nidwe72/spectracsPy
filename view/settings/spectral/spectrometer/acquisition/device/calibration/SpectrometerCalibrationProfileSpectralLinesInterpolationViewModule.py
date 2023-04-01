@@ -1,11 +1,12 @@
-from PySide6.QtCharts import QLineSeries, QChart, QChartView, QScatterSeries, QSplineSeries
-from PySide6.QtCore import Qt, QMargins
+from PySide6.QtCharts import QChart, QChartView, QScatterSeries, QSplineSeries
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QPen
 from numpy import poly1d
 
-from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
-from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
-from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
+from chromos.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from chromos.spectracs.logic.spectral.util.SpectrallineUtil import SpectralLineUtil
+from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+    SpectrometerCalibrationProfile
 from view.application.widgets.page.PageWidget import PageWidget
 
 

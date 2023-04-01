@@ -1,26 +1,13 @@
-import os
 from PySide6.QtWidgets import QGridLayout
 from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QPushButton
 from PySide6.QtWidgets import QWidget
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
-from model.application.navigation.NavigationSignal import NavigationSignal
-from model.databaseEntity.DbBase import session_factory
-from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
-from model.spectral.SpectrumSampleType import SpectrumSampleType
-from view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule
-from view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import SpectralJobWidgetViewModuleParameters
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
+from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from view.spectral.spectralJob.widget.SpectralJobsWidgetViewModule import SpectralJobsWidgetViewModule
 
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm.session import Session
-
-from sqlalchemy.orm import sessionmaker
-
-from sqlalchemy.orm import registry
-from sqlalchemy import MetaData
 
 class SpectralJobViewModule(QWidget):
     videoThread: SpectrumVideoThread

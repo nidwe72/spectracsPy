@@ -1,12 +1,12 @@
 from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit
 
-from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
+from chromos.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
     SpectrometerWavelengthCalibrationLogicModule
-from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
-from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
-from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
+from chromos.spectracs.logic.spectral.util.SpectrallineUtil import SpectralLineUtil
+from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+    SpectrometerCalibrationProfile
 from view.application.widgets.page.PageWidget import PageWidget
-from typing import List, Dict
+from typing import Dict
 
 
 class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):

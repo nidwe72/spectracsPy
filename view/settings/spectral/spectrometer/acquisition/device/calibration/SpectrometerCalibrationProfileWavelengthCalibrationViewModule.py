@@ -2,15 +2,16 @@ import threading
 
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
-from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
+from chromos.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters
-from logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
+from chromos.spectracs.logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
-from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
-from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
-from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
+from chromos.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+    SpectrometerCalibrationProfile
+from chromos.spectracs.model.signal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from spectracsTest2 import RascalLogicModule
 from view.application.widgets.page.PageWidget import PageWidget

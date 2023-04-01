@@ -1,15 +1,11 @@
-import os
-import pkgutil
-
-from PySide6.QtCore import QByteArray
-from PySide6.QtGui import QPixmap, QPainter, QIcon
+from PySide6.QtGui import QPixmap, QPainter
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QWidget, QLabel, QGridLayout, QProgressBar
 
 from PySide6 import QtCore
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 
 class MainStatusBarViewModule(QWidget):
 

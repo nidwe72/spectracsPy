@@ -4,16 +4,17 @@ from typing import List
 from PySide6.QtCore import QLine
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.appliction.image.houghLine.HoughLineLogicModule import HoughLineLogicModule
-from logic.spectral.acquisition.device.calibration.SpectrometerRegionOfInterestLogicModule import \
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerRegionOfInterestLogicModule import \
     SpectrometerRegionOfInterestLogicModule
-from logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
+from chromos.spectracs.logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
     SpectrometerCalibrationProfileHoughLinesVideoThread
-from model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
-from model.application.navigation.NavigationSignal import NavigationSignal
-from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
-from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
+from chromos.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+    SpectrometerCalibrationProfile
+
+from chromos.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \

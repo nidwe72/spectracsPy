@@ -1,16 +1,15 @@
 import os
 
-import pandas as pd
 from matplotlib import pyplot as plt
 from numpy import float64, int64, float32
 from pyspectra.transformers.spectral_correction import sav_gol
 from rascal.atlas import Atlas
 from rascal.calibrator import Calibrator
 
-from logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
-from model.spectral.Spectrum import Spectrum
+from chromos.spectracs.logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
+from chromos.spectracs.model.spectral.Spectrum import Spectrum
 
-from scipy.signal import find_peaks, peak_prominences
+from scipy.signal import find_peaks
 
 from rascal.util import refine_peaks
 

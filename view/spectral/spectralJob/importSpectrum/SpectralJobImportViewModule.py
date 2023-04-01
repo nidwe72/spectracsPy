@@ -2,24 +2,18 @@ from PySide6.QtWidgets import QWidget
 from PySide6.QtWidgets import QGridLayout
 from PySide6.QtWidgets import QPushButton
 from PySide6.QtWidgets import QFileDialog
-from PySide6.QtWidgets import QGraphicsScene
-from PySide6.QtWidgets import QGraphicsView
-from PySide6.QtWidgets import QGraphicsPixmapItem
-from PySide6.QtGui import QImage
-from PySide6.QtGui import QPixmap
 
 from PySide6.QtCharts import QChart
 from PySide6.QtCharts import QLineSeries
 from PySide6.QtCore import QPointF
 from PySide6.QtCharts import QChartView
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from model.application.navigation.NavigationSignal import NavigationSignal
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 
-from logic.spectral.importSpectrum.ImportSpectrumLogicModuleParameters import ImportSpectrumLogicModuleParameters
-from logic.spectral.importSpectrum.ImportSpectrumLogicModule import ImportSpectrumLogicModule
+from chromos.spectracs.logic.spectral.importSpectrum.ImportSpectrumLogicModuleParameters import ImportSpectrumLogicModuleParameters
+from chromos.spectracs.logic.spectral.importSpectrum.ImportSpectrumLogicModule import ImportSpectrumLogicModule
 
-from view.application.widgets.video.VideoViewModule import VideoViewModule
 
 class SpectralJobImportViewModule(QWidget):
 

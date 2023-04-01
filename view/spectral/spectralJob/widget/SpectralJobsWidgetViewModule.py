@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QTabWidget
 from PySide6.QtWidgets import QWidget
 from PySide6.QtWidgets import QGridLayout
 
-from model.spectral.SpectrumSampleType import SpectrumSampleType
+from chromos.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import SpectralJobWidgetViewModuleParameters
 

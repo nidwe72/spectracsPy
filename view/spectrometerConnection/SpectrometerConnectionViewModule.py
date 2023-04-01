@@ -1,12 +1,12 @@
 from PySide6.QtGui import QStandardItemModel, QStandardItem
-from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QLabel, QLineEdit, QComboBox
+from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QComboBox
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
-from logic.model.util.SpectrometerUtil import SpectrometerUtil
-from model.application.navigation.NavigationSignal import NavigationSignal
-from model.databaseEntity.DbBase import session_factory
-from model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
+from chromos.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
+from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from chromos.spectracs.model.databaseEntity.DbBase import session_factory
+from chromos.spectracs.model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
     ApplicationConfigToSpectrometerProfile
 from view.application.widgets.page.PageWidget import PageWidget
 from view.spectrometerConnection.RegisterSpectrometerProfileViewModule import RegisterSpectrometerProfileViewModule

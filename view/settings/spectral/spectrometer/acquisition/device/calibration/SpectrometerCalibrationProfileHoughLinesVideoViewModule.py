@@ -1,8 +1,8 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap, QPen, QBrush, QColor
+from PySide6.QtGui import QPixmap, QPen, QBrush
 
-from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
-from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
+from chromos.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from chromos.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule

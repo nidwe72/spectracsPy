@@ -1,4 +1,4 @@
-from model.spectral.SpectrumSampleType import SpectrumSampleType
+from chromos.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
     SpectralJobGraphViewModulePolicyParameter
 

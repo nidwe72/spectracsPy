@@ -5,18 +5,16 @@ from PySide6.QtGui import QImage
 
 import threading
 
-from logic.spectral.video.SpectralImageLogicModule import SpectralImageLogicModule
-from model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
     SpectralJobGraphViewModulePolicyParameter
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import \
     SpectralJobWidgetViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModule import SpectralJobGraphViewModule
-from logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
-from model.application.video.VideoSignal import VideoSignal
+from chromos.spectracs.logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
+from chromos.spectracs.model.application.video.VideoSignal import VideoSignal
 from view.application.widgets.video.VideoViewModule import VideoViewModule
-from model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
+from chromos.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 
 class SpectralJobWidgetViewModule(QWidget):
 

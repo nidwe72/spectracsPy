@@ -1,36 +1,28 @@
-import string
-from typing import Dict
-from typing import List
-
-import numpy as np
 from PySide6.QtCore import Qt, QRectF, QPointF
 from PySide6.QtGui import QPixmap, QPen, QBrush
 
-from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
-from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
-from logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
+from chromos.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
+from chromos.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters
-from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
+from chromos.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModule import \
     SpectrometerWavelengthCalibrationLogicModule
-from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleParameters import \
+from chromos.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleParameters import \
     SpectrometerWavelengthCalibrationLogicModuleParameters
-from logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleResult import \
+from chromos.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleResult import \
     SpectrometerWavelengthCalibrationLogicModuleResult
-from logic.spectral.util.SpectralColorUtil import SpectralColorUtil
-from logic.spectral.util.SpectrallineUtil import SpectralLineUtil
-from logic.spectral.util.SpectrumUtil import SpectrumUtil
-from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
-from model.databaseEntity.spectral.device.SpectralLine import SpectralLine
-from model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
+from chromos.spectracs.logic.spectral.util.SpectrallineUtil import SpectralLineUtil
+from chromos.spectracs.logic.spectral.util.SpectrumUtil import SpectrumUtil
+from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+    SpectrometerCalibrationProfile
+from chromos.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
-from model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
+from chromos.spectracs.model.signal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
-from model.spectral.Spectrum import Spectrum
-from model.spectral.SpectrumSampleType import SpectrumSampleType
+from chromos.spectracs.model.spectral.Spectrum import Spectrum
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
 
-from scipy.signal import find_peaks, peak_prominences
+from scipy.signal import find_peaks
 
 
 class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(

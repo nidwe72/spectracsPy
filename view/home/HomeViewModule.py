@@ -3,8 +3,8 @@ from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QPushButton
 from PySide6.QtWidgets import QWidget
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from model.application.navigation.NavigationSignal import NavigationSignal
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
 
 

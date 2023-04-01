@@ -1,7 +1,4 @@
-from PySide6.QtWidgets import QLineEdit
-
-from logic.appliction.style.Polisher import Polisher
-from model.databaseEntity.spectral.device import SpectrometerVendor
+from chromos.spectracs.model.databaseEntity.spectral.device.SpectrometerVendor import SpectrometerVendor
 from view.application.widgets.page.PageLineEdit import PageLineEdit
 from view.application.widgets.page.PageWidget import PageWidget
 

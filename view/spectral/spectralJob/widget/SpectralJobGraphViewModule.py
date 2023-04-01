@@ -6,14 +6,11 @@ from PySide6.QtCharts import QChart, QValueAxis
 from PySide6.QtCharts import QChartView
 from PySide6.QtCharts import QLineSeries
 
-from PySide6.QtGui import QBrush, Qt
+from PySide6.QtGui import QBrush
 from PySide6.QtGui import QColor
-from PySide6.QtGui import QPen
 
-from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
-from model.spectral.SpectralJob import SpectralJob
-from model.spectral.Spectrum import Spectrum
-from model.spectral.SpectrumSampleType import SpectrumSampleType
+from chromos.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from chromos.spectracs.model.spectral.SpectralJob import SpectralJob
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
     SpectralJobGraphViewModulePolicyParameter

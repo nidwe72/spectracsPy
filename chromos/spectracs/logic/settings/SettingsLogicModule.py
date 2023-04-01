@@ -1,0 +1,2 @@
+class SettingsLogicModule:
+    pass

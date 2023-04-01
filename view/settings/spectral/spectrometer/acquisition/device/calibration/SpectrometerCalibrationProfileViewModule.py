@@ -1,14 +1,12 @@
-from PySide6.QtCharts import QLineSeries, QChart, QChartView
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QBrush, QColor, QPen
-from PySide6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QTabWidget, QTextEdit
+from PySide6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QTabWidget
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
-from logic.persistence.database.spectrometerCalibrationProfile.PersistSpectrometerCalibrationProfileLogicModule import \
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
+from chromos.spectracs.logic.persistence.database.spectrometerCalibrationProfile.PersistSpectrometerCalibrationProfileLogicModule import \
     PersistSpectrometerCalibrationProfileLogicModule
-from model.application.navigation.NavigationSignal import NavigationSignal
-from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
+from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+    SpectrometerCalibrationProfile
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesViewModule import \
     SpectrometerCalibrationProfileHoughLinesViewModule

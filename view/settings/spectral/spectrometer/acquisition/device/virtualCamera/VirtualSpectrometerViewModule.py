@@ -1,10 +1,10 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage
-from PySide6.QtWidgets import QCheckBox, QPushButton, QFileDialog, QGroupBox, QGridLayout, QWidget
+from PySide6.QtWidgets import QPushButton, QFileDialog, QGroupBox, QGridLayout, QWidget
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
-from model.application.navigation.NavigationSignal import NavigationSignal
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from view.application.widgets.general.ToggleSwitch import ToggleSwitch
 from view.application.widgets.image.BaseImageViewModule import BaseImageViewModule
 from view.application.widgets.page.PageWidget import PageWidget

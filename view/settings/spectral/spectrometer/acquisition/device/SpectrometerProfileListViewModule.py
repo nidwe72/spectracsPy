@@ -1,26 +1,19 @@
-import typing
-from typing import List
-
 from PySide6 import QtCore
 from PySide6.QtCore import QAbstractListModel, QModelIndex, Qt, QSize, QItemSelectionModel, QItemSelection
-from PySide6.QtGui import QTextDocument, QAbstractTextDocumentLayout, QPalette
-from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QListView, QItemDelegate, QStyledItemDelegate, \
+from PySide6.QtGui import QTextDocument, QAbstractTextDocumentLayout
+from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QListView, QStyledItemDelegate, \
     QStyleOptionViewItem, QApplication, QWidget, QAbstractItemView, QTextEdit
 
 from PySide6.QtWidgets import QStyle
 
 
-from controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
-from logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
-from logic.model.util.SpectrometerUtil import SpectrometerUtil
-from logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
-from logic.settings.SettingsLogicModule import SettingsLogicModule
-from model.application.navigation.NavigationSignal import NavigationSignal
-from model.databaseEntity.DbEntityCrudOperation import DbEntityCrudOperation
-from model.databaseEntity.spectral.device import SpectrometerCalibrationProfile
-from model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
-from model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
+from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from chromos.spectracs.logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
+from chromos.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
+from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from chromos.spectracs.model.databaseEntity import DbEntityCrudOperation
+from chromos.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
+from chromos.spectracs.model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileViewModule import \
     SpectrometerProfileViewModule
