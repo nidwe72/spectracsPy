@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* topic: let the user carry out a measurement&#10;* SpectralJobWidgetViewModule: we can now do a calibrated measurement [MILESTONE]">
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/README.md" afterDir="false" />
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* topic: 'extract project' into spectracsPy-model">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -21,6 +20,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Script" />
+        <option value="Setup Script" />
       </list>
     </option>
   </component>
@@ -74,21 +74,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ToolWindowDatabase.ShowToolbar&quot;: &quot;false&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/nidwe/development/spectracs/spectracs-model&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ToolWindowDatabase.ShowToolbar": "false",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "/home/nidwe/development/spectracs/spectracsPy-model/chromos/spectracs/model",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "preferences.keymap",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../spectracsPy-model/chromos/spectracs/model" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/resource" />
       <recent name="$PROJECT_DIR$/resource-data" />
@@ -421,14 +422,7 @@
       <workItem from="1679939933670" duration="1133000" />
       <workItem from="1680106647897" duration="6925000" />
       <workItem from="1680295928509" duration="2567000" />
-      <workItem from="1680380418431" duration="590000" />
-    </task>
-    <task id="LOCAL-00079" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileWavelengthCalibrationViewModule: added dummy calibration graph">
-      <created>1665431980308</created>
-      <option name="number" value="00079" />
-      <option name="presentableId" value="LOCAL-00079" />
-      <option name="project" value="LOCAL" />
-      <updated>1665431980308</updated>
+      <workItem from="1680380418431" duration="1927000" />
     </task>
     <task id="LOCAL-00080" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule: added calibration graph (scatter for now)">
       <created>1666029428106</created>
@@ -766,7 +760,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680111558240</updated>
     </task>
-    <option name="localTasksCounter" value="128" />
+    <task id="LOCAL-00128" summary="* topic: 'extract project' into spectracsPy-model">
+      <created>1680381201197</created>
+      <option name="number" value="00128" />
+      <option name="presentableId" value="LOCAL-00128" />
+      <option name="project" value="LOCAL" />
+      <updated>1680381201197</updated>
+    </task>
+    <option name="localTasksCounter" value="129" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -790,7 +791,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* VirtualSpectrometerViewModule: applied flag whether to save physical frames" />
     <MESSAGE value="* added successful test for getting RGB colors from spectra" />
     <MESSAGE value="* HoughLineLogicModule: created 'canny' picture using some lightness threshold; For the own spectrometer hough lines ate applied successfully now" />
     <MESSAGE value="* ImageSpectrumAcquisitionLogicModule.acquire(): removed hard-coded stuff" />
@@ -815,7 +815,8 @@
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* RegisterSpectrometerProfileViewModule: now persists ApplicationConfigToSpectrometerProfile/s" />
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: combobox of registered SpectrometerProfile/s is now filled" />
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: on selecting a SpectrometerProfile it is set as the default one to be used in measurements" />
-    <option name="LAST_COMMIT_MESSAGE" value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* SpectrometerConnectionViewModule: on selecting a SpectrometerProfile it is set as the default one to be used in measurements" />
+    <MESSAGE value="* topic: 'extract project' into spectracsPy-model" />
+    <option name="LAST_COMMIT_MESSAGE" value="* topic: 'extract project' into spectracsPy-model" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
