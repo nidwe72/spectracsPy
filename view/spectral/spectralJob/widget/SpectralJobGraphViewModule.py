@@ -9,8 +9,8 @@ from PySide6.QtCharts import QLineSeries
 from PySide6.QtGui import QBrush
 from PySide6.QtGui import QColor
 
-from chromos.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
-from chromos.spectracs.model.spectral.SpectralJob import SpectralJob
+from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.model.spectral.SpectralJob import SpectralJob
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
     SpectralJobGraphViewModulePolicyParameter

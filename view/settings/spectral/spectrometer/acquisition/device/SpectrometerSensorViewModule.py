@@ -1,8 +1,8 @@
 from PySide6.QtGui import QTextDocument
 from PySide6.QtWidgets import QTextEdit
 
-from chromos.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
-from chromos.spectracs.model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
+from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
+from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
 from view.application.widgets.page.PageWidget import PageWidget
 
 

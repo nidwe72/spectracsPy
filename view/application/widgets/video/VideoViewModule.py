@@ -2,7 +2,7 @@ from PySide6.QtGui import QPixmap
 
 from PySide6.QtCore import Qt
 
-from chromos.spectracs.model.application.video.VideoSignal import VideoSignal
+from sciens.spectracs.model.application.video.VideoSignal import VideoSignal
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
 
 class VideoViewModule(BaseVideoViewModule[VideoSignal]):

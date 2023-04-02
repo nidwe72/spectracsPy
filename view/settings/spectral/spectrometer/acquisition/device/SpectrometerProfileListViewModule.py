@@ -7,13 +7,13 @@ from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QListView, QS
 from PySide6.QtWidgets import QStyle
 
 
-from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from chromos.spectracs.logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
-from chromos.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
-from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from chromos.spectracs.model.databaseEntity import DbEntityCrudOperation
-from chromos.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
-from chromos.spectracs.model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
+from sciens.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
+from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from sciens.spectracs.model.databaseEntity import DbEntityCrudOperation
+from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
+from sciens.spectracs.model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileViewModule import \
     SpectrometerProfileViewModule

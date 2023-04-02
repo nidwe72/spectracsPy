@@ -1,4 +1,4 @@
-from chromos.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
+from sciens.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
 
 
 class SpectralJobWidgetViewModuleParameters:

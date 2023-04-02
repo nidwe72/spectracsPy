@@ -4,17 +4,17 @@ from typing import List
 from PySide6.QtCore import QLine
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
 
-from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from chromos.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerRegionOfInterestLogicModule import \
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerRegionOfInterestLogicModule import \
     SpectrometerRegionOfInterestLogicModule
-from chromos.spectracs.logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
+from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
     SpectrometerCalibrationProfileHoughLinesVideoThread
-from chromos.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
-from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
 
-from chromos.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
+from sciens.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \

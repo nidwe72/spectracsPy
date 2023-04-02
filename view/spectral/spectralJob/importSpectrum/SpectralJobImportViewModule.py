@@ -8,11 +8,11 @@ from PySide6.QtCharts import QLineSeries
 from PySide6.QtCore import QPointF
 from PySide6.QtCharts import QChartView
 
-from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 
-from chromos.spectracs.logic.spectral.importSpectrum.ImportSpectrumLogicModuleParameters import ImportSpectrumLogicModuleParameters
-from chromos.spectracs.logic.spectral.importSpectrum.ImportSpectrumLogicModule import ImportSpectrumLogicModule
+from sciens.spectracs.logic.spectral.importSpectrum.ImportSpectrumLogicModuleParameters import ImportSpectrumLogicModuleParameters
+from sciens.spectracs.logic.spectral.importSpectrum.ImportSpectrumLogicModule import ImportSpectrumLogicModule
 
 
 class SpectralJobImportViewModule(QWidget):

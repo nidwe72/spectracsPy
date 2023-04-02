@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import QPushButton, QGroupBox, QGridLayout, QTabWidget
 
-from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from chromos.spectracs.logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
-from chromos.spectracs.logic.persistence.database.spectrometerCalibrationProfile.PersistSpectrometerCalibrationProfileLogicModule import \
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
+from sciens.spectracs.logic.persistence.database.spectrometerCalibrationProfile.PersistSpectrometerCalibrationProfileLogicModule import \
     PersistSpectrometerCalibrationProfileLogicModule
-from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesViewModule import \

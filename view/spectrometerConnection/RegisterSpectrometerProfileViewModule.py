@@ -2,13 +2,13 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton
 from sqlalchemy import inspect
 
-from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from chromos.spectracs.logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
-from chromos.spectracs.logic.persistence.database.applicationConfig.PersistApplicationConfigLogicModule import \
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
+from sciens.spectracs.logic.persistence.database.applicationConfig.PersistApplicationConfigLogicModule import \
     PersistApplicationConfigLogicModule
-from chromos.spectracs.logic.persistence.database.applicationConfig.PersistGetApplicationConfigToSpectrometerProfilesLogicModule import \
+from sciens.spectracs.logic.persistence.database.applicationConfig.PersistGetApplicationConfigToSpectrometerProfilesLogicModule import \
     PersistGetApplicationConfigToSpectrometerProfilesLogicModule
-from chromos.spectracs.model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
+from sciens.spectracs.model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
     ApplicationConfigToSpectrometerProfile
 from view.application.widgets.page.PageWidget import PageWidget
 

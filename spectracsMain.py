@@ -3,7 +3,7 @@ import sys
 from PySide6 import QtWidgets
 from PySide6.QtGui import QGuiApplication
 
-from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from view.main.MainContainerViewModule import MainContainerViewModule
 
 app = QtWidgets.QApplication(sys.argv)

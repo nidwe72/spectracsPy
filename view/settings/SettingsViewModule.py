@@ -4,8 +4,8 @@ from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QPushButton
 
 
-from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from chromos.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from view.application.widgets.page.PageLabel import PageLabel
 
 

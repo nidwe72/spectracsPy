@@ -6,8 +6,8 @@ from pyspectra.transformers.spectral_correction import sav_gol
 from rascal.atlas import Atlas
 from rascal.calibrator import Calibrator
 
-from chromos.spectracs.logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
-from chromos.spectracs.model.spectral.Spectrum import Spectrum
+from sciens.spectracs.logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
+from sciens.spectracs.model.spectral.Spectrum import Spectrum
 
 from scipy.signal import find_peaks
 

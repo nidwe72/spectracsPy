@@ -3,9 +3,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QPen
 from numpy import poly1d
 
-from chromos.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
-from chromos.spectracs.logic.spectral.util.SpectrallineUtil import SpectralLineUtil
-from chromos.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.spectral.util.SpectrallineUtil import SpectralLineUtil
+from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
 from view.application.widgets.page.PageWidget import PageWidget
 

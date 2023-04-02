@@ -4,8 +4,8 @@ from PySide6.QtWidgets import QWidget, QLabel, QGridLayout, QProgressBar
 
 from PySide6 import QtCore
 
-from chromos.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from chromos.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 
 class MainStatusBarViewModule(QWidget):
 

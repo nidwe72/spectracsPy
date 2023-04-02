@@ -1,4 +1,4 @@
-from chromos.spectracs.model.databaseEntity.spectral.device.SpectrometerVendor import SpectrometerVendor
+from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerVendor import SpectrometerVendor
 from view.application.widgets.page.PageLineEdit import PageLineEdit
 from view.application.widgets.page.PageWidget import PageWidget
 

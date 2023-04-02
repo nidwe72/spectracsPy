@@ -11,10 +11,10 @@ from view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter 
 from view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import \
     SpectralJobWidgetViewModuleParameters
 from view.spectral.spectralJob.widget.SpectralJobGraphViewModule import SpectralJobGraphViewModule
-from chromos.spectracs.logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
-from chromos.spectracs.model.application.video.VideoSignal import VideoSignal
+from sciens.spectracs.logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
+from sciens.spectracs.model.application.video.VideoSignal import VideoSignal
 from view.application.widgets.video.VideoViewModule import VideoViewModule
-from chromos.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
+from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 
 class SpectralJobWidgetViewModule(QWidget):
 
