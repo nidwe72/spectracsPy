@@ -2,6 +2,7 @@ import threading
 
 from PySide6.QtCore import Signal
 
+from companyFoo.test.TestBuzz import TestBuzz
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.video.VideoThread import VideoThread
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
@@ -9,8 +10,9 @@ from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicMo
     ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.model.signal.SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
-from sciens.spectracs.model.spectral.SpectralJob import SpectralJob
 from sciens.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
+
+from sciens.spectracs.model.spectral.SpectralJob import SpectralJob
 
 
 class SpectrometerCalibrationProfileWavelengthCalibrationVideoThread(VideoThread[SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal]):
@@ -19,6 +21,8 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoThread(VideoThread
 
     def createSignal(self) -> SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal:
         super().createSignal()
+
+        TestBuzz()
 
         self.spectralJob.title = "title"
 

@@ -1,4 +1,4 @@
-from sciens.base.Singleton import Singleton
+from base.Singleton import Singleton
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 
 

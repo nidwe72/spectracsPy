@@ -11,8 +11,7 @@ from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileWavelen
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
-from sciens.spectracs.model.signal import \
-    SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
+from sciens.spectracs.model.signal import SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from spectracsTest2 import RascalLogicModule
 from view.application.widgets.page.PageWidget import PageWidget
 from view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesViewModule import \
@@ -84,7 +83,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
 
     def handleWavelengthCalibrationVideoSignalNew(self, event: threading.Event,
-                                               videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
+                                                  videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
         applicationStatusSignal = ApplicationStatusSignal()
         applicationStatusSignal.text = 'detecting peaks'
@@ -138,7 +137,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
 
     def handleWavelengthCalibrationVideoSignalOld(self, event: threading.Event,
-                                               videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
+                                                  videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
         applicationStatusSignal = ApplicationStatusSignal()
         applicationStatusSignal.text = 'detecting peaks'

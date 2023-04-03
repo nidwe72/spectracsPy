@@ -1,4 +1,4 @@
-from sciens.base.Singleton import Singleton
+from base.Singleton import Singleton
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualSpectrometerSettings import VirtualSpectrometerSettings
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 

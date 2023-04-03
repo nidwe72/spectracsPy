@@ -4,7 +4,7 @@ from typing import List
 
 import numpy as np
 
-from sciens.base.Singleton import Singleton
+from base.Singleton import Singleton
 from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from sciens.spectracs.logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectralLine import SpectralLine

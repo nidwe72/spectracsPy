@@ -1,7 +1,7 @@
 from PySide6.QtCore import QLine, QPoint
 from PySide6.QtGui import qGray
 
-from sciens.base.Singleton import Singleton
+from base.Singleton import Singleton
 from sciens.spectracs.logic.appliction.image.houghLine.HoughLineLogicModule import HoughLineLogicModule
 from sciens.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal

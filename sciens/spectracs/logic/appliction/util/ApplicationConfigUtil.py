@@ -1,4 +1,4 @@
-from sciens.base.Singleton import Singleton
+from base.Singleton import Singleton
 from sciens.spectracs.logic.persistence.database.applicationConfig.PersistApplicationConfigLogicModule import \
     PersistApplicationConfigLogicModule
 from sciens.spectracs.model.databaseEntity.application.ApplicationConfig import ApplicationConfig

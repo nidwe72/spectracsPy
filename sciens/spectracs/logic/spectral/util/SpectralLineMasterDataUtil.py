@@ -1,5 +1,5 @@
 from typing import Dict
-from sciens.base.Singleton import Singleton
+from base.Singleton import Singleton
 from sciens.spectracs.logic.persistence.database.spectralLineMasterData.PersistSpectralLineMasterDataLogicModule import \
     PersistSpectralLineMasterDataLogicModule
 from sciens.spectracs.logic.persistence.database.spectralLineMasterData.PersistenceParametersGetSpectralLineMasterDatas import \

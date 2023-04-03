@@ -1,6 +1,6 @@
 from PySide6.QtGui import QColor
 
-from sciens.base.Singleton import Singleton
+from base.Singleton import Singleton
 
 
 class ApplicationStyleLogicModule(Singleton):

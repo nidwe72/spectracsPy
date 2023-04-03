@@ -32,9 +32,9 @@ class SpectrometerProfileListViewModule(PageWidget):
 
     def handleSpectrometerProfileSignal(self,spectrometerProfileSignal:SpectrometerProfileSignal):
         operation = spectrometerProfileSignal.operation
-        if operation==DbEntityCrudOperation.UPDATE:
+        if operation== DbEntityCrudOperation.UPDATE:
             self.spectrometerProfilesListModel.layoutChanged.emit()
-        elif operation==DbEntityCrudOperation.CREATE:
+        elif operation== DbEntityCrudOperation.CREATE:
             self.spectrometerProfilesListModel.addSpectrometerProfile(spectrometerProfileSignal.entity)
             self.spectrometerProfilesListModel.layoutChanged.emit()
 

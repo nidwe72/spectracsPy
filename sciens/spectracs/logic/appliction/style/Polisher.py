@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject, QEvent
 from PySide6.QtWidgets import QWidget
 
-from sciens.base import SingletonQObject
+from base import SingletonQObject
 
 
 class Polisher(SingletonQObject):

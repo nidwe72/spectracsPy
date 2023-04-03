@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, Signal
 
-from sciens.base.SingletonQObject import SingletonQObject
+from base.SingletonQObject import SingletonQObject
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal

@@ -16,8 +16,7 @@ from sciens.spectracs.model.databaseEntity.spectral.device.calibration.Spectrome
     SpectrometerCalibrationProfile
 from sciens.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
-from sciens.spectracs.model.signal import \
-    SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
+from sciens.spectracs.model.signal import SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
 from view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
 from view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
