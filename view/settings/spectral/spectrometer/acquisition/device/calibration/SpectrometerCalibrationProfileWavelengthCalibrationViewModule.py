@@ -76,30 +76,27 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         isVirtual = spectrometerProfile.spectrometer.spectrometerSensor.isVirtual
         self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
 
-        self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignalNew)
+        self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
         self.wavelengthCalibrationVideoThread.setFrameCount(50)
 
         self.wavelengthCalibrationVideoThread.start()
 
 
-    def handleWavelengthCalibrationVideoSignalNew(self, event: threading.Event,
-                                                  videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
+    def handleWavelengthCalibrationVideoSignal(self, event: threading.Event,
+                                               videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
         applicationStatusSignal = ApplicationStatusSignal()
-        applicationStatusSignal.text = 'detecting peaks'
         applicationStatusSignal.isStatusReset = False
         applicationStatusSignal.stepsCount = videoSignal.framesCount
         applicationStatusSignal.currentStepIndex = videoSignal.currentFrameIndex
+        applicationStatusSignal.text = f"detecting peaks > step [{applicationStatusSignal.currentStepIndex+1}/{applicationStatusSignal.stepsCount}]"
 
-        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
-            applicationStatusSignal.isStatusReset = True
-
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
-            applicationStatusSignal)
+        # print(f"applicationStatusSignal.stepsCount:{applicationStatusSignal.stepsCount}");
+        # print(f"applicationStatusSignal.currentStepIndex:{applicationStatusSignal.currentStepIndex}");
 
         self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
 
-        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
+        if applicationStatusSignal.stepsCount-1 == applicationStatusSignal.currentStepIndex:
 
             self.coefficientAComponent.setText(str(videoSignal.model.interpolationCoefficientA))
             self.coefficientBComponent.setText(str(videoSignal.model.interpolationCoefficientB))
@@ -108,62 +105,12 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
             self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(videoSignal.model)
 
-        #self.testRascal(videoSignal)
-
-        event.set()
-
-    def testRascal(self, videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
-
-        spectrumAcquisitionLogicModule = ImageSpectrumAcquisitionLogicModule()
-        spectrum = spectrumAcquisitionLogicModule.execute(
-            ImageSpectrumAcquisitionLogicModuleParameters().setVideoSignal(videoSignal)).spectrum
-
-        rascalLogicModule = RascalLogicModule()
-        rascalLogicModule.execute(spectrum)
-        return
-
-
-    def onClickedDetectPeaksButtonOld(self):
-
-        self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
-        spectrometerProfile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
-        isVirtual = spectrometerProfile.spectrometer.spectrometerSensor.isVirtual
-        self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
-
-        self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignalOld)
-        self.wavelengthCalibrationVideoThread.setFrameCount(100)
-
-        self.wavelengthCalibrationVideoThread.start()
-
-
-    def handleWavelengthCalibrationVideoSignalOld(self, event: threading.Event,
-                                                  videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
-
-        applicationStatusSignal = ApplicationStatusSignal()
-        applicationStatusSignal.text = 'detecting peaks'
-        applicationStatusSignal.isStatusReset = False
-        applicationStatusSignal.stepsCount = videoSignal.framesCount
-        applicationStatusSignal.currentStepIndex = videoSignal.currentFrameIndex
-
-        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
             applicationStatusSignal.isStatusReset = True
 
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
             applicationStatusSignal)
 
-        self.wavelengthCalibrationVideoViewModule.handleVideoThreadSignal(videoSignal)
-
-        if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
-
-            self.coefficientAComponent.setText(str(videoSignal.model.interpolationCoefficientA))
-            self.coefficientBComponent.setText(str(videoSignal.model.interpolationCoefficientB))
-            self.coefficientCComponent.setText(str(videoSignal.model.interpolationCoefficientC))
-            self.coefficientDComponent.setText(str(videoSignal.model.interpolationCoefficientD))
-
-            self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(videoSignal.model)
-
         event.set()
-
 
     def createPolynomialCoefficientsGroupBox(self):
         result = QGroupBox("Polynomial coefficients")

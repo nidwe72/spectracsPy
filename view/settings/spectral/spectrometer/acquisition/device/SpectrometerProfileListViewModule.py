@@ -11,7 +11,7 @@ from sciens.spectracs.controller.application.ApplicationContextLogicModule impor
 from sciens.spectracs.logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
 from sciens.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from sciens.spectracs.model.databaseEntity import DbEntityCrudOperation
+from sciens.spectracs.model.databaseEntity.DbEntityCrudOperation import DbEntityCrudOperation
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from sciens.spectracs.model.signal.SpectrometerProfileSignal import SpectrometerProfileSignal
 from view.application.widgets.page.PageWidget import PageWidget

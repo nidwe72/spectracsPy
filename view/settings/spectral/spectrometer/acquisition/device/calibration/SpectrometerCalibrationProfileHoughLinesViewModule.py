@@ -62,6 +62,7 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         buttonsPanel.setLayout(layout)
 
         self.captureVideoButton = QPushButton('Detect Region of Interest')
+        # noinspection PyUnresolvedReferences
         self.captureVideoButton.clicked.connect(self.onClickedCaptureVideoButton)
         layout.addWidget(self.captureVideoButton, 0, 0, 1, 1)
 
@@ -130,12 +131,16 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
             someNavigationSignal.setTarget("SpectrometerCalibrationProfileViewModule")
 
             applicationStatusSignal = ApplicationStatusSignal()
-            applicationStatusSignal.text = 'retrieving Hough lines'
             applicationStatusSignal.isStatusReset = False
             applicationStatusSignal.stepsCount = videoSignal.framesCount
             applicationStatusSignal.currentStepIndex = videoSignal.currentFrameIndex
+            applicationStatusSignal.text = f"retrieving Hough lines > step [{applicationStatusSignal.currentStepIndex+1}/{applicationStatusSignal.stepsCount}]"
 
-            if applicationStatusSignal.stepsCount == applicationStatusSignal.currentStepIndex:
+            # print(f"videoSignal.currentFrameIndex:{videoSignal.currentFrameIndex}");
+            # print(f"applicationStatusSignal.stepsCount:{applicationStatusSignal.stepsCount}");
+            # print(f"applicationStatusSignal.currentStepIndex:{applicationStatusSignal.currentStepIndex}");
+
+            if applicationStatusSignal.stepsCount-1 == applicationStatusSignal.currentStepIndex:
                 self.y2Component.setText(str(videoSignal.upperHoughLine.p1().y()))
                 self.y1Component.setText(str(videoSignal.lowerHoughLine.p1().y()))
 
@@ -163,8 +168,10 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 
         result = []
 
-        resultUpperHoughLine: QLine = None
-        resultLowerHoughLine: QLine = None
+        # noinspection PyTypeChecker
+        resultUpperHoughLine: QLine=None
+        # noinspection PyTypeChecker
+        resultLowerHoughLine: QLine=None
 
         for someHoughLines in self.allHoughLines:
             upperHoughLine = someHoughLines[0]
@@ -180,8 +187,10 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
             elif lowerHoughLine.p1().y() < resultLowerHoughLine.p1().y():
                 resultLowerHoughLine = lowerHoughLine
 
-        result.append(resultUpperHoughLine)
-        result.append(resultLowerHoughLine)
+        if resultUpperHoughLine is not None:
+            result.append(resultUpperHoughLine)
+        if resultLowerHoughLine is not None:
+            result.append(resultLowerHoughLine)
 
         return result
 

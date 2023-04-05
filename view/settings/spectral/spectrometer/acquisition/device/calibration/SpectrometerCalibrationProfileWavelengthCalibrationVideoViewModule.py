@@ -53,7 +53,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
         spectrometerWavelengthCalibrationLogicModuleResult: SpectrometerWavelengthCalibrationLogicModuleResult = None
 
-        if videoSignal.currentFrameIndex == videoSignal.framesCount:
+        if videoSignal.currentFrameIndex == videoSignal.framesCount-1:
 
             videoSignal.spectrum = self.spectrum
 
