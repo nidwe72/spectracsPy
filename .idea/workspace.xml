@@ -4,12 +4,53 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models">
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models; now things work again">
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/companyFoo/test/TestBuzz.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileListViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileListViewModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/companyFoo/test/TestBar.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/video/SpectrometerCalibrationProfileWavelengthCalibrationVideoThread.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/video/SpectrometerCalibrationProfileWavelengthCalibrationVideoThread.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/general/ToggleSwitch.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/general/ToggleSwitch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/graphicsScene/BaseGraphicsItem.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/graphicsScene/BaseGraphicsItem.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/graphicsScene/BaseGraphicsLineItem.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/graphicsScene/BaseGraphicsLineItem.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/graphicsScene/BaseGraphicsPixmapItem.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/graphicsScene/BaseGraphicsPixmapItem.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/graphicsScene/BaseGraphicsScene.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/graphicsScene/BaseGraphicsScene.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/image/BaseImageViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/image/BaseImageViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/page/PageLabel.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/page/PageLabel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/page/PageLineEdit.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/page/PageLineEdit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/page/PageWidget.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/page/PageWidget.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/video/BaseVideoViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/video/BaseVideoViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/application/widgets/video/VideoViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/application/widgets/video/VideoViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/home/HomeViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/home/HomeViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/main/MainContainerViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/main/MainContainerViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/main/MainStatusBarViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/main/MainStatusBarViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/main/MainViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/main/MainViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/SettingsViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/SettingsViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileListViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileListViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerSensorViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/SpectrometerSensorViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerStyleViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/SpectrometerStyleViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerVendorViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/SpectrometerVendorViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrometerViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/SpectrometerViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/SpectrumCameraAcquisitionViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/SpectrumCameraAcquisitionViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesVideoViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesVideoViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualSpectrometerViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualSpectrometerViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/SpectralJobViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/SpectralJobViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum/SpectralJobImportViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/importSpectrum/SpectralJobImportViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/overview/SpectralJobsOverviewViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/overview/SpectralJobsOverviewViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobGraphViewModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModulePolicyParameter.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobGraphViewModulePolicyParameter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModuleParameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobWidgetViewModuleParameters.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobsWidgetViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobsWidgetViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectrometerConnection/RegisterSpectrometerProfileViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectrometerConnection/RegisterSpectrometerProfileViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/view/spectrometerConnection/SpectrometerConnectionViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectrometerConnection/SpectrometerConnectionViewModule.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,11 +145,11 @@
       <recent name="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/sciens" />
       <recent name="$PROJECT_DIR$/../spectracsPy-model/sciens" />
       <recent name="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model" />
       <recent name="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral" />
       <recent name="$PROJECT_DIR$/chromos" />
-      <recent name="$PROJECT_DIR$/chromos/spectracs" />
     </key>
   </component>
   <component name="RunManager" selected="Python.spectracsMain">
@@ -436,14 +477,7 @@
       <workItem from="1680548682743" duration="710000" />
       <workItem from="1680549417204" duration="735000" />
       <workItem from="1680550327467" duration="1538000" />
-      <workItem from="1680712696051" duration="3405000" />
-    </task>
-    <task id="LOCAL-00083" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'">
-      <created>1666377280489</created>
-      <option name="number" value="00083" />
-      <option name="presentableId" value="LOCAL-00083" />
-      <option name="project" value="LOCAL" />
-      <updated>1666377280489</updated>
+      <workItem from="1680712696051" duration="3558000" />
     </task>
     <task id="LOCAL-00084" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'">
       <created>1666377480983</created>
@@ -781,7 +815,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680551748619</updated>
     </task>
-    <option name="localTasksCounter" value="132" />
+    <task id="LOCAL-00132" summary="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models; now things work again">
+      <created>1680716137781</created>
+      <option name="number" value="00132" />
+      <option name="presentableId" value="LOCAL-00132" />
+      <option name="project" value="LOCAL" />
+      <updated>1680716137784</updated>
+    </task>
+    <option name="localTasksCounter" value="133" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -805,7 +846,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* RascalLogicModule: started evaluating RASCAL algorithm" />
     <MESSAGE value="* RascalLogicModule: peaks are detected now very fine when restricting supplied spectrum to nanometers smaller than 650 nm" />
     <MESSAGE value="* SpectrometerRegionOfInterestLogicModule: detect vertical bounding lines" />
     <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: started RASCAL integration" />
@@ -830,18 +870,19 @@
     <MESSAGE value="* spectracsPy-model: added SpectrumSampleType.py" />
     <MESSAGE value="* added all modules to namespace chromos resp. chromos.spectracs&#10;* spectracsPy-model: added SpectrumSampleType.py" />
     <MESSAGE value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models" />
-    <option name="LAST_COMMIT_MESSAGE" value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models" />
+    <MESSAGE value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models; now things work again" />
+    <option name="LAST_COMMIT_MESSAGE" value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models; now things work again" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py</url>
           <line>44</line>
           <option name="timeStamp" value="326" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
           <line>63</line>
           <option name="timeStamp" value="328" />
         </line-breakpoint>
@@ -851,17 +892,17 @@
           <option name="timeStamp" value="329" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
           <line>105</line>
           <option name="timeStamp" value="330" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
           <line>135</line>
           <option name="timeStamp" value="331" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
           <line>77</line>
           <option name="timeStamp" value="333" />
         </line-breakpoint>
@@ -876,22 +917,22 @@
           <option name="timeStamp" value="335" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
           <line>65</line>
           <option name="timeStamp" value="337" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
           <line>93</line>
           <option name="timeStamp" value="338" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
           <line>100</line>
           <option name="timeStamp" value="340" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
+          <url>file://$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
           <line>102</line>
           <option name="timeStamp" value="341" />
         </line-breakpoint>
@@ -928,7 +969,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest2.coverage" NAME="spectracsTest2 Coverage Results" MODIFIED="1675557332733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1680715829198" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1680716234651" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
     <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />
