@@ -22,12 +22,14 @@ class SpectralJobsWidgetViewModule(QWidget):
         sampleModuleParameters.setSpectrumSampleType(SpectrumSampleType.SAMPLE)
         self.sampleWidget.setModuleParameters(sampleModuleParameters)
         self.tabWidget.addTab(self.sampleWidget,"Oil")
+        self.sampleWidget.initialize()
 
         self.referenceWidget=SpectralJobWidgetViewModule()
         referenceModuleParameters=SpectralJobWidgetViewModuleParameters()
         referenceModuleParameters.setSpectrumSampleType(SpectrumSampleType.REFERENCE)
         self.referenceWidget.setModuleParameters(referenceModuleParameters)
         self.tabWidget.addTab(self.referenceWidget, "Light")
+        self.referenceWidget.initialize()
 
 
 

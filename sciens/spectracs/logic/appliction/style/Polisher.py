@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget
 from base import SingletonQObject
 
 
-class Polisher(SingletonQObject):
+class Polisher(QObject,metaclass=SingletonQObject):
 
     def eventFilter(self, objectInstance: QObject, event: QEvent) -> bool:
 

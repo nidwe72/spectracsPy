@@ -18,27 +18,27 @@ from view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter 
 
 class SpectralJobGraphViewModule(QChartView):
     __moduleParameters: SpectralJobGraphViewModuleParameters
-    allSpectraValues=None
+    allSpectraValues = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.chart = QChart()
+        self.chart.legend().hide()
         self.chart.setBackgroundBrush(QBrush(QColor("transparent")))
         self.chart.setTitleBrush(QBrush(QColor("white")));
         self.setChart(self.chart)
         self.chart.createDefaultAxes()
 
     def clearGraph(self):
-        if len(self.chart.series()) >0:
+        if len(self.chart.series()) > 0:
             self.chart.removeAxis(self.chart.axisX())
             self.chart.removeAxis(self.chart.axisY())
 
         self.chart.removeAllSeries()
 
-    def updateAxes(self,series:QLineSeries,spectralJob: SpectralJob):
+    def updateAxes(self, series: QLineSeries, spectralJob: SpectralJob):
 
-        if len(self.chart.series())==1:
-
+        if len(self.chart.series()) == 1:
             spectra = spectralJob.getSpectra(self.getModuleParameters().getSpectrumSampleType())
             spectrum = spectra[-1]
 
@@ -47,9 +47,6 @@ class SpectralJobGraphViewModule(QChartView):
 
             minimalIntensity = min(list(spectrum.valuesByNanometers.values()))
             maximalIntensity = max(list(spectrum.valuesByNanometers.values()))
-
-
-
 
             x_axis = QValueAxis()
             x_axis.setRange(minimalNanometer, maximalNanometer)
@@ -69,18 +66,9 @@ class SpectralJobGraphViewModule(QChartView):
             y_axis.setTitleText("intensity (a.u.)")
             self.chart.addAxis(y_axis, QtCore.Qt.AlignmentFlag.AlignLeft)
 
-
-            # ax = self.chart.axes(Qt.Orientation.Horizontal, series)[0]
-            # ax.setMin(minimalNanometer - 50)
-            # ax.setMax(maximalNanometer + 50)
-
-            # ay = series.chart().axes(Qt.Orientation.Vertical, series)[0]
-            # ay.setMin(min(SpectralLineUtil().getNanometers(self.getModel().getSpectralLines())) - 50)
-            # ay.setMax(max(SpectralLineUtil().getNanometers(self.getModel().getSpectralLines())) + 50)
-
     def updateGraph(self, spectralJob: SpectralJob):
         policy = self.getModuleParameters().getPolicy()
-        if policy==SpectralJobGraphViewModulePolicyParameter.PLOT_SPECTRA:
+        if policy == SpectralJobGraphViewModulePolicyParameter.PLOT_SPECTRA:
 
             spectra = spectralJob.getSpectra(self.getModuleParameters().getSpectrumSampleType())
             spectrum = spectra[-1]
@@ -91,33 +79,33 @@ class SpectralJobGraphViewModule(QChartView):
             randomGray = random.randint(50, 200)
             pen = series.pen();
             pen.setWidth(1);
-            pen.setBrush(QBrush(QColor.fromRgb(randomGray,randomGray,randomGray)))
+            pen.setBrush(QBrush(QColor.fromRgb(randomGray, randomGray, randomGray)))
             series.setPen(pen)
 
             for nanometer in valuesByNanometers:
                 series.append(nanometer, valuesByNanometers[nanometer])
             self.chart.addSeries(series)
 
-            self.updateAxes(series,spectralJob)
+            self.updateAxes(series, spectralJob)
 
 
         elif policy == SpectralJobGraphViewModulePolicyParameter.PLOT_SPECTRA_MEAN:
             spectra = spectralJob.getSpectra(self.getModuleParameters().getSpectrumSampleType())
             spectrum = spectra[-1]
 
-            if len(spectrum.valuesByNanometers)>0:
+            if len(spectrum.valuesByNanometers) > 0:
 
                 values = list(spectrum.valuesByNanometers.values())
                 keys = list(spectrum.valuesByNanometers.keys())
 
                 if self.allSpectraValues is None:
                     lenValues = len(values)
-                    self.allSpectraValues=np.empty([0, lenValues])
+                    self.allSpectraValues = np.empty([0, lenValues])
                 else:
-                    self.allSpectraValues=np.vstack((self.allSpectraValues, np.array(values)))
+                    self.allSpectraValues = np.vstack((self.allSpectraValues, np.array(values)))
 
-                if isinstance(self.allSpectraValues,numpy.ndarray) and self.allSpectraValues.size != 0:
-                    meanSpectrumValues=np.mean(self.allSpectraValues,axis=0)
+                if isinstance(self.allSpectraValues, numpy.ndarray) and self.allSpectraValues.size != 0:
+                    meanSpectrumValues = np.mean(self.allSpectraValues, axis=0)
 
                     self.chart.removeAllSeries()
                     series = QLineSeries()
@@ -127,7 +115,7 @@ class SpectralJobGraphViewModule(QChartView):
                     pen.setBrush(QBrush(QColor("#33663d")))
                     series.setPen(pen)
 
-                    valuesByNanometers=dict(zip(keys,meanSpectrumValues.tolist()))
+                    valuesByNanometers = dict(zip(keys, meanSpectrumValues.tolist()))
                     for nanometer in valuesByNanometers:
                         series.append(nanometer, valuesByNanometers[nanometer])
                     self.chart.addSeries(series)

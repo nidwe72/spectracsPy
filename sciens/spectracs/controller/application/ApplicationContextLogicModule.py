@@ -8,23 +8,13 @@ from sciens.spectracs.model.databaseEntity.application.ApplicationConfig import 
 
 class ApplicationContextLogicModule(Singleton):
 
-
     applicationSignalsProvider=None
-
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(ApplicationContextLogicModule, cls).__new__(cls)
-            navigationHandler = cls.instance.getNavigationHandler()
-            signalsProvider = cls.instance.getApplicationSignalsProvider()
-        return cls.instance
 
     def getNavigationHandler(self)->NavigationHandlerLogicModule:
         return NavigationHandlerLogicModule()
 
     def getApplicationSignalsProvider(self):
-        if self.applicationSignalsProvider is None:
-            self.applicationSignalsProvider=ApplicationSignalsProviderLogicModule(None)
-        return self.applicationSignalsProvider
+        return ApplicationSignalsProviderLogicModule(None)
 
     def getApplicationSettings(self)->ApplicationSettings:
         return ApplicationSettings()
