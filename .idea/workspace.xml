@@ -4,15 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models; now things work again">
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/base/SingletonQObject.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/base/SingletonQObject.py" afterDir="false" />
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* SpectralJobGraphViewModule; now shows graph without legend, and progress is shown now via MainStatusBarViewModule  &#10;* SingletonQObject: for some reason this gave a '__init__() called twice error' than  called from SpectralJobWidgetViewModule; refactored to be uses as a meta metaclass using type(QtCore.QObject)">
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectrumSampleType.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectrumSampleType.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/controller/application/ApplicationContextLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/controller/application/ApplicationContextLogicModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/controller/application/ApplicationSignalsProviderLogicModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/controller/application/ApplicationSignalsProviderLogicModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/appliction/style/Polisher.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/appliction/style/Polisher.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobsWidgetViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobsWidgetViewModule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/SpectralJobViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/SpectralJobViewModule.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +38,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../spectracsPy-model" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -440,13 +435,9 @@
       <workItem from="1680549417204" duration="735000" />
       <workItem from="1680550327467" duration="1538000" />
       <workItem from="1680712696051" duration="3558000" />
-    </task>
-    <task id="LOCAL-00084" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'">
-      <created>1666377480983</created>
-      <option name="number" value="00084" />
-      <option name="presentableId" value="LOCAL-00084" />
-      <option name="project" value="LOCAL" />
-      <updated>1666377480983</updated>
+      <workItem from="1681070995683" duration="3788000" />
+      <workItem from="1681076898299" duration="124000" />
+      <workItem from="1681077054769" duration="2730000" />
     </task>
     <task id="LOCAL-00085" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'">
       <created>1666525160802</created>
@@ -784,7 +775,14 @@
       <option name="project" value="LOCAL" />
       <updated>1680716137784</updated>
     </task>
-    <option name="localTasksCounter" value="133" />
+    <task id="LOCAL-00133" summary="* SpectralJobGraphViewModule; now shows graph without legend, and progress is shown now via MainStatusBarViewModule  &#10;* SingletonQObject: for some reason this gave a '__init__() called twice error' than  called from SpectralJobWidgetViewModule; refactored to be uses as a meta metaclass using type(QtCore.QObject)">
+      <created>1681054395026</created>
+      <option name="number" value="00133" />
+      <option name="presentableId" value="LOCAL-00133" />
+      <option name="project" value="LOCAL" />
+      <updated>1681054395033</updated>
+    </task>
+    <option name="localTasksCounter" value="134" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -808,7 +806,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* RascalLogicModule: peaks are detected now very fine when restricting supplied spectrum to nanometers smaller than 650 nm" />
     <MESSAGE value="* SpectrometerRegionOfInterestLogicModule: detect vertical bounding lines" />
     <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: started RASCAL integration" />
     <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: RASCAL integration; spectra are now required in burst mode and each step the detected peaks (of the averaged and smoothed spectrum) are shown" />
@@ -833,40 +830,16 @@
     <MESSAGE value="* added all modules to namespace chromos resp. chromos.spectracs&#10;* spectracsPy-model: added SpectrumSampleType.py" />
     <MESSAGE value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models" />
     <MESSAGE value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models; now things work again" />
-    <option name="LAST_COMMIT_MESSAGE" value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models; now things work again" />
+    <MESSAGE value="* SpectralJobGraphViewModule; now shows graph without legend, and progress is shown now via MainStatusBarViewModule  &#10;* SingletonQObject: for some reason this gave a '__init__() called twice error' than  called from SpectralJobWidgetViewModule; refactored to be uses as a meta metaclass using type(QtCore.QObject)" />
+    <option name="LAST_COMMIT_MESSAGE" value="* SpectralJobGraphViewModule; now shows graph without legend, and progress is shown now via MainStatusBarViewModule  &#10;* SingletonQObject: for some reason this gave a '__init__() called twice error' than  called from SpectralJobWidgetViewModule; refactored to be uses as a meta metaclass using type(QtCore.QObject)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py</url>
-          <line>78</line>
-          <option name="timeStamp" value="355" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sciens/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py</url>
-          <line>77</line>
-          <option name="timeStamp" value="356" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
-          <line>58</line>
-          <option name="timeStamp" value="358" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sciens/view/main/MainStatusBarViewModule.py</url>
-          <line>54</line>
-          <option name="timeStamp" value="359" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sciens/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py</url>
-          <line>97</line>
-          <option name="timeStamp" value="360" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sciens/view/main/MainStatusBarViewModule.py</url>
-          <line>45</line>
-          <option name="timeStamp" value="361" />
+          <url>file://$PROJECT_DIR$/sciens/view/spectral/spectralJob/SpectralJobViewModule.py</url>
+          <line>31</line>
+          <option name="timeStamp" value="362" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -896,7 +869,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest2.coverage" NAME="spectracsTest2 Coverage Results" MODIFIED="1675557332733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1681053951993" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1681079774963" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
     <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />

@@ -6,6 +6,8 @@ from PySide6.QtWidgets import QWidget
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from spectracs.logic.spectral.util.SpectralWorkflowUtil import SpectralWorkflowUtil
+from spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
 from view.spectral.spectralJob.widget.SpectralJobsWidgetViewModule import SpectralJobsWidgetViewModule
 
 
@@ -18,19 +20,24 @@ class SpectralJobViewModule(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
 
+        rowIndex=0
         self.spectralJobsWidgetViewModule = SpectralJobsWidgetViewModule(self)
-        layout.addWidget(self.spectralJobsWidgetViewModule, 0, 0, 1, 1)
+        layout.addWidget(self.spectralJobsWidgetViewModule, rowIndex, 0, 1, 1)
+        rowIndex+=1
 
         sampleButtonsGroupBox = self.createSampleButtonsGroupBox()
-        layout.addWidget(sampleButtonsGroupBox, 1, 0, 1, 1)
+        layout.addWidget(sampleButtonsGroupBox, rowIndex, 0, 1, 1)
+        rowIndex += 1
 
-        lightGroupBox = self.createLightButtonsGroupBox()
-        layout.addWidget(lightGroupBox, 2, 0, 1, 1)
+        spectralSampleTypes = SpectralWorkflowUtil().getWorkflow().getAcquireViewPhase().getSpectralSampleTypes()
+        if SpectrumSampleType.REFERENCE in spectralSampleTypes:
+            lightGroupBox = self.createLightButtonsGroupBox()
+            layout.addWidget(lightGroupBox, rowIndex, 0, 1, 1)
+            rowIndex += 1
 
         navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 3, 0, 1, 1)
-
-
+        layout.addWidget(navigationGroupBox, rowIndex, 0, 1, 1)
+        rowIndex += 1
 
     def createSampleButtonsGroupBox(self):
         lightGroupBox = QGroupBox("Oil")
