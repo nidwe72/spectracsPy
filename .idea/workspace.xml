@@ -4,9 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* SpectralJobGraphViewModule; now shows graph without legend, and progress is shown now via MainStatusBarViewModule  &#10;* SingletonQObject: for some reason this gave a '__init__() called twice error' than  called from SpectralJobWidgetViewModule; refactored to be uses as a meta metaclass using type(QtCore.QObject)">
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectrumSampleType.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectrumSampleType.py" afterDir="false" />
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* measurement integration&#10;* SpectralWorkflow: added. This object is intended to let us hold all data to run a measurement, starting with the acquirement of a spectrum and ending with some evaluation. The idea is to finally have the possibility to provide a workflow as a plugin">
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowPhase.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowPhase.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowPhaseType.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowPhaseType.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowStep.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowStep.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/workflow/phase/acquireView/AcquireViewSpectralWorkflowPhase.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/workflow/phase/acquireView/AcquireViewSpectralWorkflowPhase.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralWorkflowUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralWorkflowUtil.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/SpectralJobViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/view/spectral/spectralJob/SpectralJobViewModule.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -437,14 +443,7 @@
       <workItem from="1680712696051" duration="3558000" />
       <workItem from="1681070995683" duration="3788000" />
       <workItem from="1681076898299" duration="124000" />
-      <workItem from="1681077054769" duration="2730000" />
-    </task>
-    <task id="LOCAL-00085" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* SpectralLineMasterData: 'extract entity'">
-      <created>1666525160802</created>
-      <option name="number" value="00085" />
-      <option name="presentableId" value="LOCAL-00085" />
-      <option name="project" value="LOCAL" />
-      <updated>1666525160803</updated>
+      <workItem from="1681077054769" duration="9384000" />
     </task>
     <task id="LOCAL-00086" summary="* SpectrometerCalibrationProfile stuff: persisting&#10;* Polisher: event filter for QWidget/s polishing the style; added PageLineEdit being a QLineEdit setting the Polisher as its event filter; applied to some ViewModule to render read-only fields in a nice way">
       <created>1666529984837</created>
@@ -782,7 +781,14 @@
       <option name="project" value="LOCAL" />
       <updated>1681054395033</updated>
     </task>
-    <option name="localTasksCounter" value="134" />
+    <task id="LOCAL-00134" summary="* measurement integration&#10;* SpectralWorkflow: added. This object is intended to let us hold all data to run a measurement, starting with the acquirement of a spectrum and ending with some evaluation. The idea is to finally have the possibility to provide a workflow as a plugin">
+      <created>1681080042787</created>
+      <option name="number" value="00134" />
+      <option name="presentableId" value="LOCAL-00134" />
+      <option name="project" value="LOCAL" />
+      <updated>1681080042790</updated>
+    </task>
+    <option name="localTasksCounter" value="135" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -806,7 +812,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* SpectrometerRegionOfInterestLogicModule: detect vertical bounding lines" />
     <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: started RASCAL integration" />
     <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: RASCAL integration; spectra are now required in burst mode and each step the detected peaks (of the averaged and smoothed spectrum) are shown" />
     <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: RASCAL integration failed; Now we use a fixed number of most prominent peaks and verify (todo) against the difference to an according look-up table of intensities" />
@@ -831,7 +836,8 @@
     <MESSAGE value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models" />
     <MESSAGE value="* added all modules to namespace sciens resp. sciens.spectracs&#10;* spectracsPy-model: extracted all models; now things work again" />
     <MESSAGE value="* SpectralJobGraphViewModule; now shows graph without legend, and progress is shown now via MainStatusBarViewModule  &#10;* SingletonQObject: for some reason this gave a '__init__() called twice error' than  called from SpectralJobWidgetViewModule; refactored to be uses as a meta metaclass using type(QtCore.QObject)" />
-    <option name="LAST_COMMIT_MESSAGE" value="* SpectralJobGraphViewModule; now shows graph without legend, and progress is shown now via MainStatusBarViewModule  &#10;* SingletonQObject: for some reason this gave a '__init__() called twice error' than  called from SpectralJobWidgetViewModule; refactored to be uses as a meta metaclass using type(QtCore.QObject)" />
+    <MESSAGE value="* measurement integration&#10;* SpectralWorkflow: added. This object is intended to let us hold all data to run a measurement, starting with the acquirement of a spectrum and ending with some evaluation. The idea is to finally have the possibility to provide a workflow as a plugin" />
+    <option name="LAST_COMMIT_MESSAGE" value="* measurement integration&#10;* SpectralWorkflow: added. This object is intended to let us hold all data to run a measurement, starting with the acquirement of a spectrum and ending with some evaluation. The idea is to finally have the possibility to provide a workflow as a plugin" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -869,7 +875,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest2.coverage" NAME="spectracsTest2 Coverage Results" MODIFIED="1675557332733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1681079774963" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1681085939908" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
     <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />
