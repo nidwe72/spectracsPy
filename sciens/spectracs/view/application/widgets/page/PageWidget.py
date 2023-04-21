@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLab
 
 from PySide6.QtCore import Qt
 
-from spectracs.view.application.widgets.page.PageLabel import PageLabel
+from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
 
 class PageWidget(QFrame):
     mainContainerWidgets = None

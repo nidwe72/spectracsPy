@@ -10,7 +10,7 @@ from sciens.spectracs.logic.persistence.database.applicationConfig.PersistGetApp
     PersistGetApplicationConfigToSpectrometerProfilesLogicModule
 from sciens.spectracs.model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
     ApplicationConfigToSpectrometerProfile
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 
 
 class RegisterSpectrometerProfileViewModule(PageWidget):

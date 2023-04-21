@@ -8,8 +8,8 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.model.databaseEntity.DbBase import session_factory
 from sciens.spectracs.model.databaseEntity.application.ApplicationConfigToSpectrometerProfile import \
     ApplicationConfigToSpectrometerProfile
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
-from spectracs.view.spectrometerConnection.RegisterSpectrometerProfileViewModule import RegisterSpectrometerProfileViewModule
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.spectrometerConnection.RegisterSpectrometerProfileViewModule import RegisterSpectrometerProfileViewModule
 
 
 class SpectrometerConnectionViewModule(PageWidget):

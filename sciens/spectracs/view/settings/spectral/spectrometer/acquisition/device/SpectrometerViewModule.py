@@ -1,11 +1,11 @@
 from sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer import Spectrometer
-from spectracs.view.application.widgets.page.PageLineEdit import PageLineEdit
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerSensorViewModule import \
+from sciens.spectracs.view.application.widgets.page.PageLineEdit import PageLineEdit
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerSensorViewModule import \
     SpectrometerSensorViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerStyleViewModule import \
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerStyleViewModule import \
     SpectrometerStyleViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerVendorViewModule import \
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerVendorViewModule import \
     SpectrometerVendorViewModule
 
 

@@ -1,6 +1,6 @@
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerVendor import SpectrometerVendor
-from spectracs.view.application.widgets.page.PageLineEdit import PageLineEdit
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.application.widgets.page.PageLineEdit import PageLineEdit
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 
 
 class SpectrometerVendorViewModule(PageWidget):

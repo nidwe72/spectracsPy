@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QGridLayout, QFrame
 
-from spectracs.view.main.MainStatusBarViewModule import MainStatusBarViewModule
+from sciens.spectracs.view.main.MainStatusBarViewModule import MainStatusBarViewModule
 
-from spectracs.view.main.MainViewModule import MainViewModule
+from sciens.spectracs.view.main.MainViewModule import MainViewModule
 
 
 class MainContainerViewModule(QFrame):

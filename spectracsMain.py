@@ -4,7 +4,9 @@ from PySide6 import QtWidgets
 from PySide6.QtGui import QGuiApplication
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from spectracs.view.main.MainContainerViewModule import MainContainerViewModule
+from sciens.spectracs.view.main.MainContainerViewModule import MainContainerViewModule
+
+
 
 app = QtWidgets.QApplication(sys.argv)
 
@@ -379,6 +381,8 @@ QLabel[style-large="true"]{
 
 
 """)
+
+
 
 mainContainerViewModule = MainContainerViewModule()
 geometry = QGuiApplication.primaryScreen().availableGeometry()

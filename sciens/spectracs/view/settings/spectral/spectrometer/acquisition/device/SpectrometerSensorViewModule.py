@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QTextEdit
 
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 
 
 class SpectrometerSensorViewModule(PageWidget):

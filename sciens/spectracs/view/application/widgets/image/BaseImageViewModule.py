@@ -3,8 +3,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import QGridLayout, QGraphicsView, QFrame
 
-from spectracs.view.application.widgets.graphicsScene.BaseGraphicsPixmapItem import BaseGraphicsPixmapItem
-from spectracs.view.application.widgets.graphicsScene.BaseGraphicsScene import BaseGraphicsScene
+from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsPixmapItem import BaseGraphicsPixmapItem
+from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsScene import BaseGraphicsScene
 
 
 class BaseImageViewModule(QFrame):

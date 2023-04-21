@@ -7,12 +7,12 @@ from sciens.spectracs.logic.persistence.database.spectrometerCalibrationProfile.
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesViewModule import \
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesViewModule import \
     SpectrometerCalibrationProfileHoughLinesViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule import \
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule import \
     SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationViewModule import \
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationViewModule
 
 

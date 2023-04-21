@@ -6,9 +6,9 @@ from PySide6.QtWidgets import QWidget
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from spectracs.logic.spectral.util.SpectralWorkflowUtil import SpectralWorkflowUtil
-from spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
-from spectracs.view.spectral.spectralJob.widget.SpectralJobsWidgetViewModule import SpectralJobsWidgetViewModule
+from sciens.spectracs.logic.spectral.util.SpectralWorkflowUtil import SpectralWorkflowUtil
+from sciens.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobsWidgetViewModule import SpectralJobsWidgetViewModule
 
 
 class SpectralJobViewModule(QWidget):

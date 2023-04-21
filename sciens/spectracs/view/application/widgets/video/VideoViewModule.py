@@ -3,7 +3,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt
 
 from sciens.spectracs.model.application.video.VideoSignal import VideoSignal
-from spectracs.view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
+from sciens.spectracs.view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
 
 class VideoViewModule(BaseVideoViewModule[VideoSignal]):
 

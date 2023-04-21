@@ -3,8 +3,8 @@ from PySide6.QtWidgets import QWidget
 from PySide6.QtWidgets import QGridLayout
 
 from sciens.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
-from spectracs.view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule
-from spectracs.view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import SpectralJobWidgetViewModuleParameters
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobWidgetViewModule import SpectralJobWidgetViewModule
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import SpectralJobWidgetViewModuleParameters
 
 class SpectralJobsWidgetViewModule(QWidget):
 

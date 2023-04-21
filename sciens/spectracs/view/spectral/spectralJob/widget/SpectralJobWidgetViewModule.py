@@ -5,18 +5,18 @@ from PySide6.QtGui import QImage
 
 import threading
 
-from spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
-from spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
-from spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
     SpectralJobGraphViewModulePolicyParameter
-from spectracs.view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import \
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobWidgetViewModuleParameters import \
     SpectralJobWidgetViewModuleParameters
-from spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModule import SpectralJobGraphViewModule
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModule import SpectralJobGraphViewModule
 from sciens.spectracs.logic.spectral.video.SpectrumVideoThread import SpectrumVideoThread
 from sciens.spectracs.model.application.video.VideoSignal import VideoSignal
-from spectracs.view.application.widgets.video.VideoViewModule import VideoViewModule
+from sciens.spectracs.view.application.widgets.video.VideoViewModule import VideoViewModule
 from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 
 

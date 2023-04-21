@@ -5,9 +5,9 @@ from PySide6.QtWidgets import QPushButton, QFileDialog, QGroupBox, QGridLayout, 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from spectracs.view.application.widgets.general.ToggleSwitch import ToggleSwitch
-from spectracs.view.application.widgets.image.BaseImageViewModule import BaseImageViewModule
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.application.widgets.general.ToggleSwitch import ToggleSwitch
+from sciens.spectracs.view.application.widgets.image.BaseImageViewModule import BaseImageViewModule
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 
 class VirtualSpectrometerViewModule(PageWidget):
 

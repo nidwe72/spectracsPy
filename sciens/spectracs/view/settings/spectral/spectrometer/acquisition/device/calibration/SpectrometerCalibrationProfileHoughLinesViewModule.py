@@ -16,8 +16,8 @@ from sciens.spectracs.model.databaseEntity.spectral.device.calibration.Spectrome
 
 from sciens.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \
     SpectrometerCalibrationProfileHoughLinesVideoViewModule
 
 class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):

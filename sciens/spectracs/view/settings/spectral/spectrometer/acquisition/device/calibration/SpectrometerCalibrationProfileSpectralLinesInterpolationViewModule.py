@@ -7,7 +7,7 @@ from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import 
 from sciens.spectracs.logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 
 
 class SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule(PageWidget):

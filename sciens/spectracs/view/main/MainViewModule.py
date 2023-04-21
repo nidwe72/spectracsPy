@@ -2,21 +2,21 @@ from PySide6.QtWidgets import QStackedWidget
 
 from sciens.spectracs.logic.model.util.SpectrometerProfileUtil import SpectrometerProfileUtil
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
-from spectracs.view.home.HomeViewModule import HomeViewModule
-from spectracs.view.settings.SettingsViewModule import SettingsViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileViewModule import SpectrometerProfileViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileListViewModule import \
+from sciens.spectracs.view.home.HomeViewModule import HomeViewModule
+from sciens.spectracs.view.settings.SettingsViewModule import SettingsViewModule
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileViewModule import SpectrometerProfileViewModule
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileListViewModule import \
     SpectrometerProfileListViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileViewModule import \
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileViewModule import \
     SpectrometerCalibrationProfileViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.virtualCamera.VirtualSpectrometerViewModule import \
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.virtualCamera.VirtualSpectrometerViewModule import \
     VirtualSpectrometerViewModule
 
-from spectracs.view.spectral.spectralJob.SpectralJobViewModule import SpectralJobViewModule
+from sciens.spectracs.view.spectral.spectralJob.SpectralJobViewModule import SpectralJobViewModule
 
 
-from spectracs.view.spectral.spectralJob.importSpectrum.SpectralJobImportViewModule import SpectralJobImportViewModule
-from spectracs.view.spectrometerConnection.SpectrometerConnectionViewModule import SpectrometerConnectionViewModule
+from sciens.spectracs.view.spectral.spectralJob.importSpectrum.SpectralJobImportViewModule import SpectralJobImportViewModule
+from sciens.spectracs.view.spectrometerConnection.SpectrometerConnectionViewModule import SpectrometerConnectionViewModule
 
 
 class MainViewModule(QStackedWidget):

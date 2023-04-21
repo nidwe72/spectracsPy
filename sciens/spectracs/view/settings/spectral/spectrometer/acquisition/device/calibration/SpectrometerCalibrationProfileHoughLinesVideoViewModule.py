@@ -4,8 +4,8 @@ from PySide6.QtGui import QPixmap, QPen, QBrush
 from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideoSignal import \
     SpectrometerCalibrationProfileHoughLinesVideoSignal
-from spectracs.view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
-from spectracs.view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
+from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
+from sciens.spectracs.view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
 
 
 

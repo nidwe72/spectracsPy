@@ -1,7 +1,7 @@
 from typing import Dict
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsItem
 
-from spectracs.view.application.widgets.graphicsScene.BaseGraphicsItem import BaseGraphicsItem
+from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsItem import BaseGraphicsItem
 
 
 class BaseGraphicsScene(QGraphicsScene):

@@ -11,8 +11,8 @@ from PySide6.QtGui import QColor
 
 from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.model.spectral.SpectralJob import SpectralJob
-from spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
-from spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
     SpectralJobGraphViewModulePolicyParameter
 
 

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from spectracs.view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
+from sciens.spectracs.view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
 
 
 # from PySide6.QtCore import pyqtSignal

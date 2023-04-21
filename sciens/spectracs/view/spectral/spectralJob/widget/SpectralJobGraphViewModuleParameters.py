@@ -1,5 +1,5 @@
 from sciens.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
-from spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
+from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModulePolicyParameter import \
     SpectralJobGraphViewModulePolicyParameter
 
 

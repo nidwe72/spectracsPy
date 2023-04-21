@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QPushButton
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from spectracs.view.application.widgets.page.PageLabel import PageLabel
+from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
 
 
 class SettingsViewModule(QWidget):

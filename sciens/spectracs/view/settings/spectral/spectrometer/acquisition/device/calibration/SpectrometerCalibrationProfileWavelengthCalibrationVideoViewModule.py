@@ -18,8 +18,8 @@ from sciens.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideo
     SpectrometerCalibrationProfileHoughLinesVideoSignal
 from sciens.spectracs.model.signal import SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
-from spectracs.view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
-from spectracs.view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
+from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
+from sciens.spectracs.view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule
 
 from scipy.signal import find_peaks
 

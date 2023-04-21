@@ -13,10 +13,10 @@ from sciens.spectracs.model.databaseEntity.spectral.device.calibration.Spectrome
     SpectrometerCalibrationProfile
 from sciens.spectracs.model.signal import SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
 from spectracsTest2 import RascalLogicModule
-from spectracs.view.application.widgets.page.PageWidget import PageWidget
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesViewModule import \
+from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesViewModule import \
     SpectrometerCalibrationProfileSpectralLinesViewModule
-from spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule import \
+from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule
 
 

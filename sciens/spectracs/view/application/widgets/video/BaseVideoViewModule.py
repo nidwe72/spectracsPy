@@ -5,9 +5,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen, QBrush, QColor
 from PySide6.QtWidgets import QWidget, QGridLayout, QGraphicsView, QFrame
 
-from spectracs.view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
-from spectracs.view.application.widgets.graphicsScene.BaseGraphicsPixmapItem import BaseGraphicsPixmapItem
-from spectracs.view.application.widgets.graphicsScene.BaseGraphicsScene import BaseGraphicsScene
+from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsLineItem import BaseGraphicsLineItem
+from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsPixmapItem import BaseGraphicsPixmapItem
+from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsScene import BaseGraphicsScene
 
 VIDEO_SIGNAL = TypeVar('VIDEO_SIGNAL')
 
