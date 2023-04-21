@@ -1,6 +1,6 @@
 from typing import Dict
 
-from base.Singleton import Singleton
+from sciens.base.Singleton import Singleton
 from sciens.spectracs.logic.persistence.database.spectrometerVendor.PersistSpectrometerVendorLogicModule import PersistSpectrometerVendorLogicModule
 from sciens.spectracs.logic.persistence.database.spectrometerVendor.PersistenceParametersGetSpectrometerVendors import \
     PersistenceParametersGetSpectrometerVendors

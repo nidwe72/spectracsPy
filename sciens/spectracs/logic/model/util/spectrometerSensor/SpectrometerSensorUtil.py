@@ -2,7 +2,7 @@ from typing import Dict
 
 import usb
 
-from base.Singleton import Singleton
+from sciens.base.Singleton import Singleton
 from sciens.spectracs.logic.model.util.SpectrometerSensorChipUtil import SpectrometerSensorChipUtil
 from sciens.spectracs.logic.persistence.database.spectrometerSensor.PersistSpectrometerSensorLogicModule import \
     PersistSpectrometerSensorLogicModule

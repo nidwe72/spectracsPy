@@ -6,7 +6,7 @@ block_cipher = None
 
 a = Analysis(
     ['spectracsMain.py'],
-    pathex=[],
+    pathex=["../spectracsPy-model"],
     binaries=[],
     datas=[ ],
     hiddenimports=["pyi_splash"],

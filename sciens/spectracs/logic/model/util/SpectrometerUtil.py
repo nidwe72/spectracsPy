@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from base.Singleton import Singleton
+from sciens.base.Singleton import Singleton
 from sciens.spectracs.logic.model.util.SpectrometerStyleUtil import SpectrometerStyleUtil
 from sciens.spectracs.logic.model.util.SpectrometerVendorUtil import SpectrometerVendorUtil
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil

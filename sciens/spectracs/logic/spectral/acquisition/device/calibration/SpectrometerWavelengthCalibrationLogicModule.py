@@ -1,6 +1,6 @@
 from typing import List
 
-from base.Singleton import Singleton
+from sciens.base.Singleton import Singleton
 from sciens.spectracs.logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
 from sciens.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleParameters import \
     SpectrometerWavelengthCalibrationLogicModuleParameters

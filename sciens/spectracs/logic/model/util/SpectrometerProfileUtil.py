@@ -1,5 +1,5 @@
 from typing import Dict
-from base.Singleton import Singleton
+from sciens.base.Singleton import Singleton
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.model.util.SpectrometerCalibrationProfileUtil import SpectrometerCalibrationProfileUtil
 from sciens.spectracs.logic.persistence.database.spectrometerProfile.PersistSpectrometerProfileLogicModule import \
