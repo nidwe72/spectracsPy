@@ -6,59 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* deployment-related changes">
       <change beforePath="$PROJECT_DIR$/../spectracsPy-model/.idea/spectracsPy-model.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/.idea/spectracsPy-model.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectraContainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectraContainer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowPhase.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowPhase.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowStep.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/SpectralWorkflowStep.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/workflow/phase/acquireView/AcquireViewSpectralWorkflowPhase.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/workflow/phase/acquireView/AcquireViewSpectralWorkflowPhase.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/workflow/phase/acquirement/AcquirementSpectralWorkflowPhase.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/workflow/phase/acquirement/AcquirementSpectralWorkflowPhase.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/workflow/phase/setp/AcquireViewSpectralWorkflowStep.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral/workflow/phase/setp/AcquireViewSpectralWorkflowStep.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/databaseEntity/DbEntityChangedSignal.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/databaseEntity/DbEntityChangedSignal.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/spectracsPy.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/spectracsPy.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralWorkflowUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralWorkflowUtil.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/general/ToggleSwitch.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/graphicsScene/BaseGraphicsItem.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/graphicsScene/BaseGraphicsLineItem.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/graphicsScene/BaseGraphicsPixmapItem.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/graphicsScene/BaseGraphicsScene.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/image/BaseImageViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/page/PageLabel.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/page/PageLineEdit.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/page/PageWidget.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/video/BaseVideoViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/application/widgets/video/VideoViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/home/HomeViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/main/MainContainerViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/main/MainStatusBarViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/main/MainViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/SettingsViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileListViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/SpectrometerProfileViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/SpectrometerSensorViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/SpectrometerStyleViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/SpectrometerVendorViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/SpectrometerViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/SpectrumCameraAcquisitionViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesVideoViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileHoughLinesViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileSpectralLinesViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/calibration/SpectrometerCalibrationProfileWavelengthCalibrationViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/settings/spectral/spectrometer/acquisition/device/virtualCamera/VirtualSpectrometerViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/SpectralJobViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/importSpectrum/SpectralJobImportViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/overview/SpectralJobsOverviewViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/widget/SpectralJobGraphViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/widget/SpectralJobGraphViewModuleParameters.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/widget/SpectralJobGraphViewModulePolicyParameter.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/widget/SpectralJobWidgetViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/widget/SpectralJobWidgetViewModuleParameters.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectral/spectralJob/widget/SpectralJobsWidgetViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectrometerConnection/RegisterSpectrometerProfileViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/spectrometerConnection/SpectrometerConnectionViewModule.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/spectracsMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/spectracsMain.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,7 +42,8 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../spectracsPy-model" />
+    <option name="ROOT_SYNC" value="SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -132,15 +86,17 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;ToolWindowDatabase.ShowToolbar&quot;: &quot;false&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/nidwe/development/spectracs/spectracsPy-model/companyFoo/test&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/nidw72/development/spectracs/spectracsPy-model&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PythonContentEntriesConfigurable&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -498,6 +454,11 @@
       <workItem from="1682107128218" duration="9002000" />
       <workItem from="1682116279485" duration="1149000" />
       <workItem from="1682117456833" duration="611000" />
+      <workItem from="1682889300714" duration="1745000" />
+      <workItem from="1682891942814" duration="1649000" />
+      <workItem from="1682893599905" duration="1582000" />
+      <workItem from="1682896264760" duration="399000" />
+      <workItem from="1682896670350" duration="960000" />
     </task>
     <task id="LOCAL-00089" summary="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo">
       <created>1667087851345</created>
@@ -913,32 +874,32 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobViewModule.coverage" NAME="SpectralJobViewModule Coverage Results" MODIFIED="1652455964828" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob" />
-    <SUITE FILE_PATH="coverage/spectracsPy$CameraSelectionViewModule.coverage" NAME="CameraSelectionViewModule Coverage Results" MODIFIED="1655925041866" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
-    <SUITE FILE_PATH="coverage/spectracsPy$VideoViewModule.coverage" NAME="VideoViewModule Coverage Results" MODIFIED="1660994277992" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/video" />
-    <SUITE FILE_PATH="coverage/spectracsPy$PageWidget.coverage" NAME="PageWidget Coverage Results" MODIFIED="1664129353257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/page" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerVendorUtil.coverage" NAME="SpectrometerVendorUtil Coverage Results" MODIFIED="1658165659378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/model/util" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SettingsViewModule.coverage" NAME="SettingsViewModule Coverage Results" MODIFIED="1657132329274" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings" />
-    <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsItem.coverage" NAME="BaseGraphicsItem Coverage Results" MODIFIED="1660995012257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerProfileListViewModule.coverage" NAME="SpectrometerProfileListViewModule Coverage Results" MODIFIED="1660395356161" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrallineUtil.coverage" NAME="SpectrallineUtil Coverage Results" MODIFIED="1662744947239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/util" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectrasTest.coverage" NAME="spectrasTest Coverage Results" MODIFIED="1675715819991" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrumSampleType.coverage" NAME="SpectrumSampleType Coverage Results" MODIFIED="1652564636257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/spectral" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectrasMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1652124565875" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileViewModule.coverage" NAME="SpectrometerCalibrationProfileViewModule Coverage Results" MODIFIED="1665421273731" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerProfileViewModule.coverage" NAME="SpectrometerProfileViewModule Coverage Results" MODIFIED="1656954965081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest2.coverage" NAME="spectracsTest2 Coverage Results" MODIFIED="1675557332733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1682117899154" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
-    <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
-    <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />
     <SUITE FILE_PATH="coverage/spectracsPy$match_orb.coverage" NAME="match_orb Coverage Results" MODIFIED="1653508792757" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.coverage" NAME="SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule Coverage Results" MODIFIED="1662397439593" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerWavelengthCalibrationLogicModule.coverage" NAME="SpectrometerWavelengthCalibrationLogicModule Coverage Results" MODIFIED="1662901841591" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$QGraphicsItem.coverage" NAME="QGraphicsItem Coverage Results" MODIFIED="1660993805617" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/.cache/JetBrains/PyCharm2021.3/python_stubs/882233322/PyQt6/QtWidgets" />
-    <SUITE FILE_PATH="coverage/spectracsPy$colorconv.coverage" NAME="colorconv Coverage Results" MODIFIED="1653498468384" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/venv/lib/python3.8/site-packages/skimage/color" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobWidgetViewModule.coverage" NAME="SpectralJobWidgetViewModule Coverage Results" MODIFIED="1653065906366" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/widget" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest2.coverage" NAME="spectracsTest2 Coverage Results" MODIFIED="1675557332733" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$QGraphicsItem.coverage" NAME="QGraphicsItem Coverage Results" MODIFIED="1660993805617" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/.cache/JetBrains/PyCharm2021.3/python_stubs/882233322/PyQt6/QtWidgets" />
+    <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsItem.coverage" NAME="BaseGraphicsItem Coverage Results" MODIFIED="1660995012257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerProfileViewModule.coverage" NAME="SpectrometerProfileViewModule Coverage Results" MODIFIED="1656954965081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerWavelengthCalibrationLogicModule.coverage" NAME="SpectrometerWavelengthCalibrationLogicModule Coverage Results" MODIFIED="1662901841591" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/acquisition/device/calibration" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1682897584989" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
+    <SUITE FILE_PATH="coverage/spectracsPy$colorconv.coverage" NAME="colorconv Coverage Results" MODIFIED="1653498468384" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/venv/lib/python3.8/site-packages/skimage/color" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectrasTest.coverage" NAME="spectrasTest Coverage Results" MODIFIED="1675715819991" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$PageWidget.coverage" NAME="PageWidget Coverage Results" MODIFIED="1664129353257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/page" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrumSampleType.coverage" NAME="SpectrumSampleType Coverage Results" MODIFIED="1652564636257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/spectral" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.coverage" NAME="SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule Coverage Results" MODIFIED="1662397439593" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileViewModule.coverage" NAME="SpectrometerCalibrationProfileViewModule Coverage Results" MODIFIED="1665421273731" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
+    <SUITE FILE_PATH="coverage/spectracsPy$CameraSelectionViewModule.coverage" NAME="CameraSelectionViewModule Coverage Results" MODIFIED="1655925041866" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectrasMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1652124565875" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />
+    <SUITE FILE_PATH="coverage/spectracsPy$VideoViewModule.coverage" NAME="VideoViewModule Coverage Results" MODIFIED="1660994277992" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/video" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrallineUtil.coverage" NAME="SpectrallineUtil Coverage Results" MODIFIED="1662744947239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/util" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest3.coverage" NAME="spectracsTest3 Coverage Results" MODIFIED="1676142177008" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />
+    <SUITE FILE_PATH="coverage/spectracsPy$DbRelations.coverage" NAME="DbRelations Coverage Results" MODIFIED="1656856885660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/model/databaseEntity" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerProfileListViewModule.coverage" NAME="SpectrometerProfileListViewModule Coverage Results" MODIFIED="1660395356161" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/camera" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerVendorUtil.coverage" NAME="SpectrometerVendorUtil Coverage Results" MODIFIED="1658165659378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/model/util" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule.coverage" NAME="SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule Coverage Results" MODIFIED="1666197695006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
+    <SUITE FILE_PATH="coverage/spectracsPy$SettingsViewModule.coverage" NAME="SettingsViewModule Coverage Results" MODIFIED="1657132329274" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings" />
   </component>
 </project>
