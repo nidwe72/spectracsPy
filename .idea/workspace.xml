@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* deployment-related changes">
+      <change afterPath="$PROJECT_DIR$/../spectracsPy-model/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../spectracsPy-model/.idea/spectracsPy-model.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/.idea/spectracsPy-model.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../spectracsPy-model/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/databaseEntity/DbEntityChangedSignal.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/databaseEntity/DbEntityChangedSignal.py" afterDir="false" />
@@ -458,14 +459,7 @@
       <workItem from="1682891942814" duration="1649000" />
       <workItem from="1682893599905" duration="1582000" />
       <workItem from="1682896264760" duration="399000" />
-      <workItem from="1682896670350" duration="960000" />
-    </task>
-    <task id="LOCAL-00089" summary="* pyInstaller related stuff&#10;* use 'inline' SVG file for logo">
-      <created>1667087851345</created>
-      <option name="number" value="00089" />
-      <option name="presentableId" value="LOCAL-00089" />
-      <option name="project" value="LOCAL" />
-      <updated>1667087851345</updated>
+      <workItem from="1682896670350" duration="1262000" />
     </task>
     <task id="LOCAL-00090" summary="* pyInstaller related stuff&#10;* added phpstorm's workspace configuration">
       <created>1667087890354</created>
@@ -803,7 +797,14 @@
       <option name="project" value="LOCAL" />
       <updated>1682116710401</updated>
     </task>
-    <option name="localTasksCounter" value="138" />
+    <task id="LOCAL-00138" summary="* deployment-related changes">
+      <created>1682897719262</created>
+      <option name="number" value="00138" />
+      <option name="presentableId" value="LOCAL-00138" />
+      <option name="project" value="LOCAL" />
+      <updated>1682897719263</updated>
+    </task>
+    <option name="localTasksCounter" value="139" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
