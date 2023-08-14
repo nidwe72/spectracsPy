@@ -105,6 +105,12 @@ class SpectrometerProfileViewModule(PageWidget):
         layout.addWidget(saveButton, 0, 1, 1, 1)
         saveButton.clicked.connect(self.onClickedSaveButton)
 
+        publishButton = QPushButton()
+        publishButton.setText("Publish")
+        layout.addWidget(publishButton, 0, 2, 1, 1)
+        publishButton.clicked.connect(self.onClickedPublishButton)
+
+
         return result
 
     def onClickedSaveButton(self):
@@ -135,6 +141,12 @@ class SpectrometerProfileViewModule(PageWidget):
             ApplicationContextLogicModule().getApplicationSignalsProvider().emitSpectrometerProfileSignal(modelSignal)
 
         pass
+
+    def onClickedPublishButton(self):
+
+        model = self.getModel()
+        model.serial = self.serial.text()
+        print('publishing')
 
     def onClickedBackButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
