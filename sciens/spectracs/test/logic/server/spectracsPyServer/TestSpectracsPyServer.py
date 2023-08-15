@@ -12,7 +12,7 @@ class TestSpectracsPyServer:
     #     assert version is not None
 
     def test_test2(self):
-        spectracsPyServer = Pyro4.Proxy('PYRO:sciens.SpectracsPyServer@localhost:44349')
+        spectracsPyServer = Pyro4.Proxy('PYRO:sciens.SpectracsPyServer@localhost:45395')
         persistentSpectrometers = spectracsPyServer.getPersistentSpectrometers()
         print('=====persistentSpectrometers=====')
         print(persistentSpectrometers)
