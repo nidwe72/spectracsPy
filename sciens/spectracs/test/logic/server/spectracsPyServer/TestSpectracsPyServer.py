@@ -12,7 +12,16 @@ class TestSpectracsPyServer:
     #     assert version is not None
 
     def test_test2(self):
-        spectracsPyServer = Pyro4.Proxy('PYRO:sciens.SpectracsPyServer@localhost:34151')
+        # nameserverUri: PYRO:Pyro.NameServer @ 192.168
+        # .8
+        # .111: 8090
+
+        host = "192.168.8.111"
+        port = 8090
+        nameserver = Pyro4.locateNS(host=host,port=port)
+        uri = nameserver.lookup("sciens.spectracs.spectracsPyServer")
+
+        spectracsPyServer = Pyro4.Proxy(uri)
         persistentSpectrometers = spectracsPyServer.getPersistentSpectrometers()
         print('=====persistentSpectrometers=====')
         print(persistentSpectrometers)
