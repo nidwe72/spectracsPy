@@ -30,8 +30,8 @@ class SpectracsPyServerClient:
             if spectrometer.id not in localSpectrometers.keys():
 
                 spectrometerVendor = spectrometer.spectrometerVendor
-                spectrometerVendorId= spectrometerVendor.vendorId
-                spectrometerVendors = SpectrometerVendorUtil().getSpectrometerVendors()
+                spectrometerVendorId= spectrometerVendor.id
+                spectrometerVendors = SpectrometerVendorUtil().getPersistentSpectrometerVendors()
                 localSpectrometerVendor=spectrometerVendors.get(spectrometerVendorId)
                 if localSpectrometerVendor is not None:
                     spectrometer.spectrometerVendor=localSpectrometerVendor
