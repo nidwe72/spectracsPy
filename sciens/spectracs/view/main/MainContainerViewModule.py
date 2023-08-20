@@ -1,7 +1,10 @@
+import Pyro5
 from PySide6.QtWidgets import QGridLayout, QFrame
 
+from sciens.spectracs.SqlAlchemySerializer import SqlAlchemySerializer
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
 from sciens.spectracs.model.databaseEntity.DbBase import session_factory
+from sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer import Spectrometer
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerSensorChip import SpectrometerSensorChip
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerStyle import SpectrometerStyle
@@ -34,8 +37,13 @@ class MainContainerViewModule(QFrame):
         SpectrometerSensorChip()
         SpectrometerSensor()
         SpectrometerVendor()
+
+        Spectrometer()
         session = session_factory()
         session.commit()
+
+        className='sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer-Spectrometer'
+        Pyro5.serializers.SerializerBase.register_dict_to_class(className, SqlAlchemySerializer.dictToClass)
 
 
     def syncMasterData(self):
