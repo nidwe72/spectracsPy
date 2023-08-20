@@ -10,7 +10,7 @@ from sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer import S
 class SpectracsPyServerClient:
 
     def getProxy(self):
-        host = "192.168.8.111"
+        host = "192.168.0.176"
         port = 8090
         nameserver = Pyro5.api.locate_ns(host=host,port=port)
         uri = nameserver.lookup("sciens.spectracs.spectracsPyServer")

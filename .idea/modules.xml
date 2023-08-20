@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/spectracsPy.iml" filepath="$PROJECT_DIR$/.idea/spectracsPy.iml" />
       <module fileurl="file://$PROJECT_DIR$/../spectracsPy-model/.idea/spectracsPy-model.iml" filepath="$PROJECT_DIR$/../spectracsPy-model/.idea/spectracsPy-model.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../spectracsPy-server/.idea/spectracsPy-server.iml" filepath="$PROJECT_DIR$/../spectracsPy-server/.idea/spectracsPy-server.iml" />
     </modules>
   </component>
 </project>

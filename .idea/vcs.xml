@@ -3,5 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../spectracsPy-model" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../spectracsPy-server" vcs="Git" />
   </component>
 </project>
