@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* [SpectracsPyServer]&#10;* deserialization of Spectrometer/s now works&#10;* updates models such that dependencies/references are drawn correctly by themselves">
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/logic/model/util/SpectrometerVendorUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/logic/model/util/SpectrometerVendorUtil.py" afterDir="false" />
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectrometers(): cope with reference object having already been persisted locally">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py" afterDir="false" />
     </list>
@@ -135,6 +134,25 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="SpectracsPyServer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="spectracsPy-server" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs/SpectracsPyServer.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="spectracsPy" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -222,42 +240,20 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="spectrasTest" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="spectracsPy" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/spectrasTest.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <list>
+      <item itemvalue="Python.SpectracsPyServer" />
       <item itemvalue="Python.MainContainerViewModule" />
       <item itemvalue="Python.spectracsPyServer" />
       <item itemvalue="Python.spectracsTest3" />
       <item itemvalue="Python.spectracsMain" />
-      <item itemvalue="Python.spectrasTest" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.spectracsMain" />
         <item itemvalue="Python.spectracsPyServer" />
+        <item itemvalue="Python.SpectracsPyServer" />
         <item itemvalue="Python.MainContainerViewModule" />
         <item itemvalue="Python.spectracsTest3" />
-        <item itemvalue="Python.spectrasTest" />
       </list>
     </recent_temporary>
   </component>
@@ -458,14 +454,8 @@
       <workItem from="1686770266554" duration="608000" />
       <workItem from="1691001976212" duration="69000" />
       <workItem from="1691171313075" duration="513000" />
-      <workItem from="1692523095423" duration="13721000" />
-    </task>
-    <task id="LOCAL-00093" summary="* pyInstaller related stuff&#10;* splash screen stuff">
-      <created>1668450633707</created>
-      <option name="number" value="00093" />
-      <option name="presentableId" value="LOCAL-00093" />
-      <option name="project" value="LOCAL" />
-      <updated>1668450633707</updated>
+      <workItem from="1692523095423" duration="14503000" />
+      <workItem from="1692785447971" duration="1856000" />
     </task>
     <task id="LOCAL-00094" summary="* VirtualCameraViewModule: initial commit">
       <created>1669060781389</created>
@@ -803,7 +793,14 @@
       <option name="project" value="LOCAL" />
       <updated>1692536511036</updated>
     </task>
-    <option name="localTasksCounter" value="142" />
+    <task id="LOCAL-00142" summary="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectrometers(): cope with reference object having already been persisted locally">
+      <created>1692536987894</created>
+      <option name="number" value="00142" />
+      <option name="presentableId" value="LOCAL-00142" />
+      <option name="project" value="LOCAL" />
+      <updated>1692536987894</updated>
+    </task>
+    <option name="localTasksCounter" value="143" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -827,7 +824,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: continued with SpectralLineSelectionLogicModule; gotta two lines detected successfully" />
     <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: SpectralLineSelectionLogicModule now detects the five most characteristic spectral lines" />
     <MESSAGE value="* SpectrometerWavelengthCalibrationLogicModule: integrated into GUI" />
     <MESSAGE value="* SpectrometerSelectViewModule: initial commit (todo: this is now using the misnomer SpectrometerConnectionViewModule.py)" />
@@ -852,7 +848,8 @@
     <MESSAGE value="* deployment-related changes" />
     <MESSAGE value="* [SpectracsPyServer]&#10;* updated serialization schemas" />
     <MESSAGE value="* [SpectracsPyServer]&#10;* deserialization of Spectrometer/s now works&#10;* updates models such that dependencies/references are drawn correctly by themselves" />
-    <option name="LAST_COMMIT_MESSAGE" value="* [SpectracsPyServer]&#10;* deserialization of Spectrometer/s now works&#10;* updates models such that dependencies/references are drawn correctly by themselves" />
+    <MESSAGE value="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectrometers(): cope with reference object having already been persisted locally" />
+    <option name="LAST_COMMIT_MESSAGE" value="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectrometers(): cope with reference object having already been persisted locally" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -879,7 +876,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>22</line>
+          <line>32</line>
           <option name="timeStamp" value="366" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -989,22 +986,22 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>45</line>
+          <line>55</line>
           <option name="timeStamp" value="395" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>25</line>
+          <line>35</line>
           <option name="timeStamp" value="396" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>36</line>
+          <line>46</line>
           <option name="timeStamp" value="397" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>42</line>
+          <line>52</line>
           <option name="timeStamp" value="398" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -1019,8 +1016,33 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>33</line>
+          <line>43</line>
           <option name="timeStamp" value="401" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/base/network/NetworkUtil,py</url>
+          <line>29</line>
+          <option name="timeStamp" value="404" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
+          <line>21</line>
+          <option name="timeStamp" value="405" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/base/network/NetworkUtil.py</url>
+          <line>37</line>
+          <option name="timeStamp" value="406" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/base/network/NetworkUtil.py</url>
+          <line>35</line>
+          <option name="timeStamp" value="407" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
+          <line>22</line>
+          <option name="timeStamp" value="408" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -1049,7 +1071,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobWidgetViewModule.coverage" NAME="SpectralJobWidgetViewModule Coverage Results" MODIFIED="1653065906366" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/widget" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$colorconv.coverage" NAME="colorconv Coverage Results" MODIFIED="1653498468384" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/venv/lib/python3.8/site-packages/skimage/color" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1692536539429" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1692787052738" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$PageWidget.coverage" NAME="PageWidget Coverage Results" MODIFIED="1664129353257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/page" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrallineUtil.coverage" NAME="SpectrallineUtil Coverage Results" MODIFIED="1662744947239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/util" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />

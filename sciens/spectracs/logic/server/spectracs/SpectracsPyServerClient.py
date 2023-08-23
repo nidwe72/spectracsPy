@@ -1,8 +1,11 @@
+from socket import socket, AF_INET, SOCK_STREAM, SOCK_DGRAM
 from typing import List
 
 import Pyro5.api
 import Pyro5.client
+import psutil
 
+from sciens.spectracs.logic.base.network.NetworkUtil import NetworkUtil
 from sciens.spectracs.logic.model.util.SpectrometerStyleUtil import SpectrometerStyleUtil
 from sciens.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
 from sciens.spectracs.logic.model.util.SpectrometerVendorUtil import SpectrometerVendorUtil
@@ -11,13 +14,20 @@ from sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer import S
 
 class SpectracsPyServerClient:
 
+
     def getProxy(self):
-        host = "192.168.0.176"
+
         port = 8090
+        host='127.0.0.1'
+        addressUsingPort = NetworkUtil().getAddressUsingPort(port)
+        if addressUsingPort is not None:
+            host = addressUsingPort.ip
+
         nameserver = Pyro5.api.locate_ns(host=host,port=port)
         uri = nameserver.lookup("sciens.spectracs.spectracsPyServer")
         result = Pyro5.client.Proxy(uri)
         return result
+
 
     def syncSpectrometers(self):
         proxy = self.getProxy()
