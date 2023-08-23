@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QPushButton
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
+from sciens.spectracs.logic.model.util.spectrometerSensor.ApplicationSpectrometerUtil import ApplicationSpectrometerUtil
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.logic.persistence.database.spectrometer.PersistSpectrometerLogicModule import PersistSpectrometerLogicModule
 from sciens.spectracs.logic.persistence.database.spectrometerProfile.PersistSpectrometerProfileLogicModule import \
@@ -73,7 +74,7 @@ class SpectrometerProfileViewModule(PageWidget):
                 item.setText(item.text() + ' (no such sensor)')
                 #item.setEnabled(False)
             else:
-                if not SpectrometerSensorUtil().isSensorConnected(spectrometerSensor):
+                if not ApplicationSpectrometerUtil().isSensorConnected(spectrometerSensor):
                     item.setText(item.text() + ' (not connected)')
                     #item.setEnabled(False)
 
