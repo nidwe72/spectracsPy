@@ -5,10 +5,13 @@ import Pyro5.api
 import Pyro5.client
 import psutil
 
+from sciens.spectracs.SpectracsPyServer import SpectracsPyServer
 from sciens.spectracs.logic.base.network.NetworkUtil import NetworkUtil
+from sciens.spectracs.logic.model.util.SpectrometerSensorChipUtil import SpectrometerSensorChipUtil
 from sciens.spectracs.logic.model.util.SpectrometerStyleUtil import SpectrometerStyleUtil
 from sciens.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
 from sciens.spectracs.logic.model.util.SpectrometerVendorUtil import SpectrometerVendorUtil
+from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer import Spectrometer
 
 
@@ -17,7 +20,7 @@ class SpectracsPyServerClient:
 
     def getProxy(self):
 
-        port = 8090
+        port = SpectracsPyServer.PORT
         host='127.0.0.1'
         addressUsingPort = NetworkUtil().getAddressUsingPort(port)
         if addressUsingPort is not None:
@@ -47,11 +50,26 @@ class SpectracsPyServerClient:
                     spectrometer.spectrometerVendor=localSpectrometerVendor
 
                 spectrometerStyle = spectrometer.spectrometerStyle
-                spectrometerStyleStyleId=spectrometerStyle.styleId
-                localSpectrometerStyle=SpectrometerStyleUtil().getSpectrometerStyleWithId(spectrometerStyleStyleId)
+                spectrometerStyleId= spectrometerStyle.id
+                spectrometerStyles = SpectrometerStyleUtil().getPersistentSpectrometerStyles()
+                localSpectrometerStyle=spectrometerStyles.get(spectrometerStyleId)
                 if localSpectrometerStyle is not None:
                     spectrometer.spectrometerStyle=localSpectrometerStyle
 
+                spectrometerSensor = spectrometer.spectrometerSensor
+                spectrometerSensorId=spectrometerSensor.id
+                spectrometerSensors = SpectrometerSensorUtil().getPersistedSpectrometerSensors()
+                localSpectrometerSensor = spectrometerSensors.get(spectrometerSensorId)
+                if localSpectrometerSensor is not None:
+                    spectrometer.spectrometerSensor=localSpectrometerSensor
+
+                spectrometerSensor = spectrometer.spectrometerSensor
+                spectrometerSensorChip = spectrometerSensor.spectrometerSensorChip
+                spectrometerSensorChipId=spectrometerSensorChip.id
+                spectrometerSensorChips=SpectrometerSensorChipUtil().getPersistentSpectrometerSensorChips()
+                localSpectrometerSensorChip = spectrometerSensorChips.get(spectrometerSensorChipId)
+                if localSpectrometerSensorChip is not None:
+                    spectrometerSensor.spectrometerSensorChip=localSpectrometerSensorChip
 
                 SpectrometerUtil().saveSpectrometer(spectrometer)
                 continue
