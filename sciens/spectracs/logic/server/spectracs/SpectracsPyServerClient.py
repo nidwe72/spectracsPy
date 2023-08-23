@@ -22,6 +22,7 @@ class SpectracsPyServerClient:
 
         port = SpectracsPyServer.PORT
         host='127.0.0.1'
+        host = 'sciens.at'
         addressUsingPort = NetworkUtil().getAddressUsingPort(port)
         if addressUsingPort is not None:
             host = addressUsingPort.ip
