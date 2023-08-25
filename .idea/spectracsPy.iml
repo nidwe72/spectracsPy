@@ -8,6 +8,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="spectracsPy-model" />
     <orderEntry type="module" module-name="spectracsPy-server" />
+    <orderEntry type="module" module-name="spectracsPy-base" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
