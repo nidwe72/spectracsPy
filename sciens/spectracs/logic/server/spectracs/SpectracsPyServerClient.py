@@ -21,9 +21,7 @@ class SpectracsPyServerClient:
     def getProxy(self):
 
         port = SpectracsPyServer.NAMESERVER_PORT
-        host='127.0.0.1'
-        # host = 'sciens.at'
-        host = '3.124.93.31'
+        host = SpectracsPyServer.DAEMON_NAT_HOST
         addressUsingPort = NetworkUtil().getAddressUsingPort(port)
         if addressUsingPort is not None:
             host = addressUsingPort.ip
@@ -32,7 +30,6 @@ class SpectracsPyServerClient:
         uri = nameserver.lookup("sciens.spectracs.spectracsPyServer")
         result = Pyro5.client.Proxy(uri)
         return result
-
 
     def syncSpectrometers(self):
         proxy = self.getProxy()
