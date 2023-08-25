@@ -72,3 +72,6 @@ class SpectracsPyServerClient:
 
                 SpectrometerUtil().saveSpectrometer(spectrometer)
                 continue
+
+    def syncSpectralLineMasterDatas(self):
+        pass
