@@ -5,8 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* [SpectracsPyServer]&#10;* preparations for building server app">
+      <change beforePath="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs/SpectracsPyServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs/SpectracsPyServer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../spectracsPy-server/spectracsPyServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-server/spectracsPyServer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/base/network/NetworkUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/base/network/NetworkUtil.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -80,22 +82,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "ToolWindowDatabase.ShowToolbar": "false",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/home/nidwe72/development/spectracs/spectracsPy-server",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;ToolWindowDatabase.ShowToolbar&quot;: &quot;false&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/nidwe72/development/spectracs/spectracsPy-server&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/../spectracsPy-model/companyFoo/test" />
@@ -112,7 +114,7 @@
       <recent name="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model/spectral" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.spectracsMain">
+  <component name="RunManager" selected="Python.spectracsPyServer">
     <configuration name="MainContainerViewModule" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="spectracsPy" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -139,6 +141,9 @@
       <module name="spectracsPy-server" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -211,7 +216,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../spectracsPy-server/spectracsPyServer.py" />
-      <option name="PARAMETERS" value="" />
+      <option name="PARAMETERS" value="--localDaemonHost" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -250,8 +255,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.spectracsMain" />
         <item itemvalue="Python.spectracsPyServer" />
+        <item itemvalue="Python.spectracsMain" />
         <item itemvalue="Python.SpectracsPyServer" />
         <item itemvalue="Python.MainContainerViewModule" />
         <item itemvalue="Python.spectracsTest3" />
@@ -456,14 +461,8 @@
       <workItem from="1691001976212" duration="69000" />
       <workItem from="1691171313075" duration="513000" />
       <workItem from="1692523095423" duration="14503000" />
-      <workItem from="1692785447971" duration="9511000" />
-    </task>
-    <task id="LOCAL-00099" summary="* VirtualCameraViewModule: update ToggleSwitch to use rectangular design better matching the overall design of the app">
-      <created>1670685005752</created>
-      <option name="number" value="00099" />
-      <option name="presentableId" value="LOCAL-00099" />
-      <option name="project" value="LOCAL" />
-      <updated>1670685005753</updated>
+      <workItem from="1692785447971" duration="9826000" />
+      <workItem from="1692960916599" duration="6444000" />
     </task>
     <task id="LOCAL-00100" summary="* VirtualCameraViewModule: refactored settings access">
       <created>1670768644509</created>
@@ -801,7 +800,14 @@
       <option name="project" value="LOCAL" />
       <updated>1692795567460</updated>
     </task>
-    <option name="localTasksCounter" value="148" />
+    <task id="LOCAL-00148" summary="* [SpectracsPyServer]&#10;* preparations for building server app">
+      <created>1692796106174</created>
+      <option name="number" value="00148" />
+      <option name="presentableId" value="LOCAL-00148" />
+      <option name="project" value="LOCAL" />
+      <updated>1692796106174</updated>
+    </task>
+    <option name="localTasksCounter" value="149" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -915,6 +921,16 @@
           <line>25</line>
           <option name="timeStamp" value="421" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../spectracsPy-server/spectracsPyServer.py</url>
+          <line>67</line>
+          <option name="timeStamp" value="422" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../spectracsPy-server/spectracsPyServer.py</url>
+          <line>77</line>
+          <option name="timeStamp" value="423" />
+        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -933,7 +949,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.coverage" NAME="SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule Coverage Results" MODIFIED="1662397439593" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobViewModule.coverage" NAME="SpectralJobViewModule Coverage Results" MODIFIED="1652455964828" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileViewModule.coverage" NAME="SpectrometerCalibrationProfileViewModule Coverage Results" MODIFIED="1665421273731" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsPyServer.coverage" NAME="spectracsPyServer Coverage Results" MODIFIED="1692533393107" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../spectracsPy-server" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsPyServer.coverage" NAME="spectracsPyServer Coverage Results" MODIFIED="1692970872043" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../spectracsPy-server" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest3.coverage" NAME="spectracsTest3 Coverage Results" MODIFIED="1676142177008" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />
     <SUITE FILE_PATH="coverage/spectracsPy$MainContainerViewModule.coverage" NAME="MainContainerViewModule Coverage Results" MODIFIED="1692523944628" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sciens/spectracs/view/main" />

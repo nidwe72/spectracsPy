@@ -1,4 +1,4 @@
-from socket import socket, AF_INET, SOCK_STREAM, SOCK_DGRAM
+from socket import socket, AF_INET, SOCK_STREAM, SOCK_DGRAM, AddressFamily
 
 import psutil
 from psutil._common import addr
@@ -50,3 +50,23 @@ class NetworkUtil(Singleton):
             # ))
 
         return result
+
+    def getLocalIpAddress(self) -> str:
+        result=None
+        addressesByInterfaces = psutil.net_if_addrs()
+        for interfaceName in addressesByInterfaces:
+            if interfaceName.startswith('wlp') or interfaceName.startswith('eth0'):
+                addresses=addressesByInterfaces.get(interfaceName)
+                for someAddress in addresses:
+                    family=someAddress.family
+                    if family==AddressFamily.AF_INET:
+                        result=someAddress.address
+                        break
+            if result is not None:
+                break
+        return result
+
+
+
+
+

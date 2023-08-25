@@ -20,7 +20,7 @@ class SpectracsPyServerClient:
 
     def getProxy(self):
 
-        port = SpectracsPyServer.PORT
+        port = SpectracsPyServer.NAMESERVER_PORT
         host='127.0.0.1'
         # host = 'sciens.at'
         host = '3.124.93.31'
