@@ -102,11 +102,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../spectracsPy-base/sciens/base" />
+      <recent name="$PROJECT_DIR$/../spectracsPy-base/sciens/spectracs/logic/base/network" />
       <recent name="$PROJECT_DIR$/../spectracsPy-model/companyFoo/test" />
       <recent name="$PROJECT_DIR$/../spectracsPy-model/companyFoo" />
       <recent name="$PROJECT_DIR$/companyFoo/test" />
-      <recent name="$PROJECT_DIR$/companyFoo" />
-      <recent name="$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/model" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/sciens/spectracs" />
