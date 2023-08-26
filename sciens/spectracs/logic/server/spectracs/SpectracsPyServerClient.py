@@ -1,17 +1,20 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOCK_DGRAM
-from typing import List
+from typing import List, Dict
 
 import Pyro5.api
 import Pyro5.client
 import psutil
 
 from sciens.spectracs.SpectracsPyServer import SpectracsPyServer
+from sciens.spectracs.SqlAlchemySerializer import SqlAlchemySerializer
 from sciens.spectracs.logic.base.network.NetworkUtil import NetworkUtil
 from sciens.spectracs.logic.model.util.SpectrometerSensorChipUtil import SpectrometerSensorChipUtil
 from sciens.spectracs.logic.model.util.SpectrometerStyleUtil import SpectrometerStyleUtil
 from sciens.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
 from sciens.spectracs.logic.model.util.SpectrometerVendorUtil import SpectrometerVendorUtil
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
+from sciens.spectracs.logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
+from sciens.spectracs.model.databaseEntity.spectral.device.SpectralLineMasterData import SpectralLineMasterData
 from sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer import Spectrometer
 
 
@@ -19,6 +22,8 @@ class SpectracsPyServerClient:
 
 
     def getProxy(self):
+
+        SpectracsPyServer.configure()
 
         port = SpectracsPyServer.NAMESERVER_PORT
         host = SpectracsPyServer.DAEMON_NAT_HOST
@@ -29,6 +34,7 @@ class SpectracsPyServerClient:
         nameserver = Pyro5.api.locate_ns(host=host,port=port)
         uri = nameserver.lookup("sciens.spectracs.spectracsPyServer")
         result = Pyro5.client.Proxy(uri)
+
         return result
 
     def syncSpectrometers(self):
@@ -74,4 +80,11 @@ class SpectracsPyServerClient:
                 continue
 
     def syncSpectralLineMasterDatas(self):
-        pass
+        proxy = self.getProxy()
+        remoteSpectralLineMasterDatas: Dict[str, Spectrometer] = proxy.getSpectralLineMasterDatasByNames();
+        localSpectralLineMasterDatas = SpectralLineMasterDataUtil().getPersistentSpectralLineMasterDatas()
+
+        for remoteSpectralLineMasterData in remoteSpectralLineMasterDatas.values():
+            if remoteSpectralLineMasterData.id not in localSpectralLineMasterDatas.keys():
+                SpectralLineMasterDataUtil().saveSpectralLineMasterData(remoteSpectralLineMasterData)
+        return

@@ -10,6 +10,16 @@ from sciens.spectracs.model.databaseEntity.spectral.device.SpectralLineMasterDat
 
 class SpectralLineMasterDataUtil(Singleton):
 
+    def saveSpectralLineMasterData(self, spectralLineMasterData: SpectralLineMasterData):
+        module = PersistSpectralLineMasterDataLogicModule()
+        module.saveSpectralLineMasterData(SpectralLineMasterData)
+
+    def getPersistentSpectralLineMasterDatas(self)->Dict[int, SpectralLineMasterData]:
+        module = PersistSpectralLineMasterDataLogicModule()
+        moduleParameters = PersistenceParametersGetSpectralLineMasterDatas()
+        result=module.getSpectralLineMasterDatas(moduleParameters)
+        return result
+
     def createTransientSpectralLineMasterDatasByNames(self):
 
         # https: // www.johndcook.com / wavelength_to_RGB.html
@@ -282,7 +292,7 @@ class SpectralLineMasterDataUtil(Singleton):
         return transientSpectralLineMasterData
 
 
-    def createSpectralLineMasterDatasByNames(self):
+    def getSpectralLineMasterDatasByNames(self)->Dict[str,SpectralLineMasterData]:
 
         transientSpectralLineMasterData=self.createTransientSpectralLineMasterDatasByNames()
 
@@ -316,7 +326,7 @@ class SpectralLineMasterDataUtil(Singleton):
         return result
 
     def getSpectralLineMasterDataByName(self,spectralLineMasterDataName)->SpectralLineMasterData:
-        spectralLineMasterDatasByNames = self.createSpectralLineMasterDatasByNames()
+        spectralLineMasterDatasByNames = self.getSpectralLineMasterDatasByNames()
         result=spectralLineMasterDatasByNames[spectralLineMasterDataName]
         return result
 

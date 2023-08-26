@@ -14,7 +14,7 @@ class SpectralLineUtil(Singleton):
 
     def createSpectralLinesByNames(self)->Dict[str,SpectralLine]:
 
-        spectralLineMasterDatas=SpectralLineMasterDataUtil().createSpectralLineMasterDatasByNames()
+        spectralLineMasterDatas=SpectralLineMasterDataUtil().getSpectralLineMasterDatasByNames()
         result = {}
         for spectralLineMasterData in spectralLineMasterDatas.values():
             spectralLine = SpectralLine()
