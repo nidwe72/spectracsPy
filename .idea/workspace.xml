@@ -4,15 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectralLineMasterDatas(): initial/skeletal commit">
+    <list default="true" id="69ffb813-6970-4515-bfaf-d53594b214b3" name="Changes" comment="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectralLineMasterDatas(): serialization/deserialization of SpectralLineMasterData seems to work now; but saving locally does not work for some reason;">
       <change beforePath="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs/SpectracsPyServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs/SpectracsPyServer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs/SqlAlchemySerializer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs/SqlAlchemySerializer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../spectracsPy-server/spectracsPyServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/../spectracsPy-server/spectracsPyServer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralLineMasterDataUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralLineMasterDataUtil.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectrallineUtil.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectrallineUtil.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sciens/spectracs/view/main/MainContainerViewModule.py" beforeDir="false" afterPath="$PROJECT_DIR$/sciens/spectracs/view/main/MainContainerViewModule.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,7 +39,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../spectracsPy-model" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="ROOT_SYNC" value="SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -144,6 +140,9 @@
       <module name="spectracsPy-server" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -209,6 +208,9 @@
       <module name="spectracsPy-server" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../spectracsPy-server" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -464,21 +466,8 @@
       <workItem from="1692785447971" duration="9826000" />
       <workItem from="1692960916599" duration="15647000" />
       <workItem from="1693039306074" duration="541000" />
-      <workItem from="1693039852463" duration="9154000" />
-    </task>
-    <task id="LOCAL-00107" summary="* RascalLogicModule: started evaluating RASCAL algorithm">
-      <created>1675558819969</created>
-      <option name="number" value="00107" />
-      <option name="presentableId" value="LOCAL-00107" />
-      <option name="project" value="LOCAL" />
-      <updated>1675558819970</updated>
-    </task>
-    <task id="LOCAL-00108" summary="* RascalLogicModule: peaks are detected now very fine when restricting supplied spectrum to nanometers smaller than 650 nm">
-      <created>1675885265978</created>
-      <option name="number" value="00108" />
-      <option name="presentableId" value="LOCAL-00108" />
-      <option name="project" value="LOCAL" />
-      <updated>1675885265980</updated>
+      <workItem from="1693039852463" duration="11534000" />
+      <workItem from="1693052736150" duration="1619000" />
     </task>
     <task id="LOCAL-00109" summary="* SpectrometerRegionOfInterestLogicModule: detect vertical bounding lines">
       <created>1676056282600</created>
@@ -809,7 +798,21 @@
       <option name="project" value="LOCAL" />
       <updated>1692982946689</updated>
     </task>
-    <option name="localTasksCounter" value="156" />
+    <task id="LOCAL-00156" summary="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectralLineMasterDatas(): serialization/deserialization of SpectralLineMasterData seems to work now; but saving locally does not work for some reason;">
+      <created>1693049165760</created>
+      <option name="number" value="00156" />
+      <option name="presentableId" value="LOCAL-00156" />
+      <option name="project" value="LOCAL" />
+      <updated>1693049165760</updated>
+    </task>
+    <task id="LOCAL-00157" summary="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectralLineMasterDatas(): serialization/deserialization of SpectralLineMasterData seems to work now; but saving locally does not work for some reason;">
+      <created>1693049189637</created>
+      <option name="number" value="00157" />
+      <option name="presentableId" value="LOCAL-00157" />
+      <option name="project" value="LOCAL" />
+      <updated>1693049189637</updated>
+    </task>
+    <option name="localTasksCounter" value="158" />
     <servers />
   </component>
   <component name="TerminalProjectNonSharedOptionsProvider">
@@ -833,7 +836,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* RegisterSpectrometerProfileViewModule" />
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued" />
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* upgraded to the latest sqlalchemy version" />
     <MESSAGE value="* topic: let the user select the SpectrometerProfile&#10;* SpectrometerConnectionViewModule: continued&#10;* now all IDs are GUID string; persisting ApplicationConfigToSpectrometerProfile works fine;" />
@@ -858,25 +860,16 @@
     <MESSAGE value="* [SpectracsPyServer]&#10;* preparations for building server app&#10;* new project spectracsPy-base" />
     <MESSAGE value="* [SpectracsPyServer]&#10;* SpectracsPyServer should now run correctly on real server (after having upset there a port forwarding rule from sciens.at:8092 to localIp:8091)&#10;* new project spectracsPy-base" />
     <MESSAGE value="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectralLineMasterDatas(): initial/skeletal commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectralLineMasterDatas(): initial/skeletal commit" />
+    <MESSAGE value="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectralLineMasterDatas(): serialization/deserialization of SpectralLineMasterData seems to work now; but saving locally does not work for some reason;" />
+    <option name="LAST_COMMIT_MESSAGE" value="* [SpectracsPyServer]&#10;* SpectracsPyServerClient.syncSpectralLineMasterDatas(): serialization/deserialization of SpectralLineMasterData seems to work now; but saving locally does not work for some reason;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>89</line>
+          <line>93</line>
           <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralLineMasterDataUtil.py</url>
-          <line>14</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>87</line>
-          <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/../spectracsPy-server/sciens/spectracs/SqlAlchemySerializer.py</url>
@@ -910,7 +903,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/sciens/spectracs/logic/server/spectracs/SpectracsPyServerClient.py</url>
-          <line>83</line>
+          <line>87</line>
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -928,10 +921,35 @@
           <line>120</line>
           <option name="timeStamp" value="26" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralLineMasterDataUtil.py</url>
+          <line>319</line>
+          <option name="timeStamp" value="29" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/logic/persistence/database/spectralLineMasterData/PersistSpectralLineMasterDataLogicModule.py</url>
+          <line>16</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/logic/persistence/database/spectrometerSensor/PersistSpectrometerSensorLogicModule.py</url>
+          <line>13</line>
+          <option name="timeStamp" value="31" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../spectracsPy-model/venv/lib/python3.10/site-packages/sqlalchemy/orm/session.py</url>
+          <line>3322</line>
+          <option name="timeStamp" value="33" />
+        </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../spectracsPy-model/sciens/spectracs/logic/persistence/database/spectrometer/PersistSpectrometerLogicModule.py</url>
-          <line>11</line>
-          <option name="timeStamp" value="28" />
+          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralLineMasterDataUtil.py</url>
+          <line>312</line>
+          <option name="timeStamp" value="35" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sciens/spectracs/logic/spectral/util/SpectralLineMasterDataUtil.py</url>
+          <line>314</line>
+          <option name="timeStamp" value="36" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -951,7 +969,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.coverage" NAME="SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule Coverage Results" MODIFIED="1662397439593" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobViewModule.coverage" NAME="SpectralJobViewModule Coverage Results" MODIFIED="1652455964828" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrometerCalibrationProfileViewModule.coverage" NAME="SpectrometerCalibrationProfileViewModule Coverage Results" MODIFIED="1665421273731" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/settings/spectral/spectrometer/acquisition/device/calibration" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsPyServer.coverage" NAME="spectracsPyServer Coverage Results" MODIFIED="1693047881908" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../spectracsPy-server" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsPyServer.coverage" NAME="spectracsPyServer Coverage Results" MODIFIED="1693053232513" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../spectracsPy-server" />
     <SUITE FILE_PATH="coverage/spectracsPy$spectracsTest3.coverage" NAME="spectracsTest3 Coverage Results" MODIFIED="1676142177008" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$VideoThread.coverage" NAME="VideoThread Coverage Results" MODIFIED="1652294079320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/widgets/video" />
     <SUITE FILE_PATH="coverage/spectracsPy$MainContainerViewModule.coverage" NAME="MainContainerViewModule Coverage Results" MODIFIED="1692523944628" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/sciens/spectracs/view/main" />
@@ -960,7 +978,7 @@
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobWidgetViewModule.coverage" NAME="SpectralJobWidgetViewModule Coverage Results" MODIFIED="1653065906366" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/widget" />
     <SUITE FILE_PATH="coverage/spectracsPy$BaseGraphicsScene.coverage" NAME="BaseGraphicsScene Coverage Results" MODIFIED="1660994668916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/graphicsScene" />
     <SUITE FILE_PATH="coverage/spectracsPy$colorconv.coverage" NAME="colorconv Coverage Results" MODIFIED="1653498468384" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/venv/lib/python3.8/site-packages/skimage/color" />
-    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1693048835601" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/spectracsPy$spectracsMain.coverage" NAME="spectracsMain Coverage Results" MODIFIED="1693054322526" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/spectracsPy$PageWidget.coverage" NAME="PageWidget Coverage Results" MODIFIED="1664129353257" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/application/widgets/page" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectrallineUtil.coverage" NAME="SpectrallineUtil Coverage Results" MODIFIED="1662744947239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/logic/spectral/util" />
     <SUITE FILE_PATH="coverage/spectracsPy$SpectralJobImportViewModule.coverage" NAME="SpectralJobImportViewModule Coverage Results" MODIFIED="1652123005862" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/view/spectral/spectralJob/importSpectrum" />

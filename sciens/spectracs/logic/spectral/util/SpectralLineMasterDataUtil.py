@@ -10,9 +10,9 @@ from sciens.spectracs.model.databaseEntity.spectral.device.SpectralLineMasterDat
 
 class SpectralLineMasterDataUtil(Singleton):
 
-    def saveSpectralLineMasterData(self, spectralLineMasterData: SpectralLineMasterData):
+    def saveSpectralLineMasterData(self, spectralLineMasterData:SpectralLineMasterData):
         module = PersistSpectralLineMasterDataLogicModule()
-        module.saveSpectralLineMasterData(SpectralLineMasterData)
+        module.saveSpectralLineMasterData(spectralLineMasterData)
 
     def getPersistentSpectralLineMasterDatas(self)->Dict[int, SpectralLineMasterData]:
         module = PersistSpectralLineMasterDataLogicModule()

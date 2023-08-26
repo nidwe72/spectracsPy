@@ -4,6 +4,7 @@ from typing import List, Dict
 import Pyro5.api
 import Pyro5.client
 import psutil
+from sqlalchemy.orm import make_transient
 
 from sciens.spectracs.SpectracsPyServer import SpectracsPyServer
 from sciens.spectracs.SqlAlchemySerializer import SqlAlchemySerializer
@@ -13,7 +14,10 @@ from sciens.spectracs.logic.model.util.SpectrometerStyleUtil import Spectrometer
 from sciens.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
 from sciens.spectracs.logic.model.util.SpectrometerVendorUtil import SpectrometerVendorUtil
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
+from sciens.spectracs.logic.persistence.database.spectralLineMasterData.PersistSpectralLineMasterDataLogicModule import \
+    PersistSpectralLineMasterDataLogicModule
 from sciens.spectracs.logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
+from sciens.spectracs.model.databaseEntity.DbBase import session_factory
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectralLineMasterData import SpectralLineMasterData
 from sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer import Spectrometer
 
