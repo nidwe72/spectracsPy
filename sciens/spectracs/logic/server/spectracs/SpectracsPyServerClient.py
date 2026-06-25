@@ -30,19 +30,35 @@ class SpectracsPyServerClient:
         SpectracsPyServer.configure()
 
         port = SpectracsPyServer.NAMESERVER_PORT
-        host = SpectracsPyServer.DAEMON_NAT_HOST
+
+        # Try the local development server first (if a nameserver is listening on this
+        # machine's port), then fall back to the remote (sciens.at) server. If neither is
+        # reachable, return None so master-data sync can be skipped without crashing startup.
+        candidateHosts = []
         addressUsingPort = NetworkUtil().getAddressUsingPort(port)
         if addressUsingPort is not None:
-            host = addressUsingPort.ip
+            candidateHosts.append(addressUsingPort.ip)
+        candidateHosts.append(SpectracsPyServer.DAEMON_NAT_HOST)
 
-        nameserver = Pyro5.api.locate_ns(host=host,port=port)
-        uri = nameserver.lookup("sciens.spectracs.spectracsPyServer")
-        result = Pyro5.client.Proxy(uri)
+        # Bound the per-attempt wait so an unreachable remote host cannot hang startup.
+        Pyro5.config.COMMTIMEOUT = 5.0
 
-        return result
+        for host in candidateHosts:
+            try:
+                nameserver = Pyro5.api.locate_ns(host=host, port=port)
+                uri = nameserver.lookup("sciens.spectracs.spectracsPyServer")
+                return Pyro5.client.Proxy(uri)
+            except Exception as exception:
+                print("SpectracsPyServerClient: could not reach server at %s:%s (%s)" % (host, port, exception))
+                continue
+
+        print("SpectracsPyServerClient: no spectracs server reachable; skipping sync")
+        return None
 
     def syncSpectrometers(self):
         proxy = self.getProxy()
+        if proxy is None:
+            return
         remoteSpectrometers: List[Spectrometer] = proxy.getSpectrometers()
 
         remoteSpectrometers = SpectrometerUtil().getEntitiesByIds(remoteSpectrometers)
@@ -85,6 +101,8 @@ class SpectracsPyServerClient:
 
     def syncSpectralLineMasterDatas(self):
         proxy = self.getProxy()
+        if proxy is None:
+            return
         remoteSpectralLineMasterDatas: Dict[str, Spectrometer] = proxy.getSpectralLineMasterDatasByNames();
         localSpectralLineMasterDatas = SpectralLineMasterDataUtil().getPersistentSpectralLineMasterDatas()
 

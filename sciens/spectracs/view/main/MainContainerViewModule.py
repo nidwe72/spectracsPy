@@ -47,8 +47,11 @@ class MainContainerViewModule(QFrame):
 
     def syncMasterData(self):
         self.__createBootstrapSession()
-        SpectracsPyServerClient().syncSpectrometers()
-        SpectracsPyServerClient().syncSpectralLineMasterDatas()
+        try:
+            SpectracsPyServerClient().syncSpectrometers()
+            SpectracsPyServerClient().syncSpectralLineMasterDatas()
+        except Exception as exception:
+            print("MainContainerViewModule: master-data sync failed, continuing without it (%s)" % exception)
 
 
 

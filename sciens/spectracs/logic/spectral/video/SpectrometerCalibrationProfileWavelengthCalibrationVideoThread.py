@@ -2,8 +2,9 @@ import threading
 
 from PySide6.QtCore import Signal
 
-from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.video.VideoThread import VideoThread
+from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
+    SpectrometerCalibrationProfile
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters
@@ -18,16 +19,23 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoThread(VideoThread
 
     videoThreadSignal = Signal(threading.Event, SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal)
 
+    calibrationProfile: SpectrometerCalibrationProfile = None
+
+    def setCalibrationProfile(self, calibrationProfile: SpectrometerCalibrationProfile):
+        self.calibrationProfile = calibrationProfile
+
     def createSignal(self) -> SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal:
         super().createSignal()
 
         self.spectralJob.title = "title"
 
         videoSignalModel = SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal()
-        spectrometerProfile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
 
         videoSignalModel.image=self.qImage
-        videoSignalModel.model=spectrometerProfile.spectrometerCalibrationProfile
+        # Fix A: use the calibration profile the Region-of-Interest tab populated (passed in by the
+        # view), not a possibly-stale profile re-fetched from ApplicationSettings. The two can
+        # diverge, leaving regionOfInterestY1/Y2 as None and crashing acquisition.
+        videoSignalModel.model=self.calibrationProfile
         videoSignalModel.spectralJob = self.spectralJob
         videoSignalModel.framesCount=self.getFrameCount()
         videoSignalModel.currentFrameIndex=self._getCurrentFrameIndex()

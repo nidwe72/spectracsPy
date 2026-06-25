@@ -1,6 +1,6 @@
 import threading
 
-from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
+from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QMessageBox
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
@@ -71,7 +71,25 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
     def onClickedDetectPeaksButtonNew(self):
 
+        calibrationProfile = self.getModel()
+
+        # Fix C: peak detection needs the Region of Interest produced by the first tab. Without it
+        # acquisition crashes on a None ROI, so guard and tell the user what to do first.
+        if calibrationProfile is None \
+                or calibrationProfile.regionOfInterestY1 is None \
+                or calibrationProfile.regionOfInterestY2 is None:
+            QMessageBox.warning(
+                self,
+                "Region of interest required",
+                "Please run 'Detect Region of Interest' on the 'Region of interest' tab "
+                "(and Save) before detecting peaks.")
+            return
+
         self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
+        # Fix A: hand the peak-detection thread the same calibration profile this view edited (which
+        # carries the ROI), instead of letting it re-fetch a possibly-stale one from ApplicationSettings.
+        self.wavelengthCalibrationVideoThread.setCalibrationProfile(calibrationProfile)
+
         spectrometerProfile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
         isVirtual = spectrometerProfile.spectrometer.spectrometerSensor.isVirtual
         self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
