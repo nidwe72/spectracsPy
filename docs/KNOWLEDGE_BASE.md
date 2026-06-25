@@ -202,6 +202,11 @@ R0 spike but **still not producing correct fits in the actual app run** — open
   near-black and the ROI x1 started past them. Fixed to `qGray(red, green, blue)`. Re-run "Detect Region of Interest"
   to pick up the corrected bounds (old saved ROIs don't auto-update). NOTE: calibration peak-detection samples the
   full image width anyway, but measurement uses the ROI x-bounds — so this matters for measurements.
+- **Calibrating different-width images crashed in `SpectrumUtil.mean` (fixed 2026-06-26, spectracsPy-model).**
+  `Spectrum.__capturedValuesByNanometers` was a class-level `[]` shared across all `Spectrum` instances, so
+  frames from earlier runs / different image widths accumulated → ragged `numpy.matrix` → `mean()` TypeError.
+  Fixed by resetting it per-instance in `Spectrum.__init__`. (Watch for other class-level mutable defaults in the
+  entities — same anti-pattern appears elsewhere, e.g. stray class-body instantiations.)
 - Color-based spectral-line validation incomplete (`SpectralLinesSelectionLogicModule`).
 - Spectrum import/export backend partial; virtual spectrometer image not persisted across restarts.
 - Camera device id hard-coded to 0; inlined stylesheet; master-data loads all rows (no pagination).
