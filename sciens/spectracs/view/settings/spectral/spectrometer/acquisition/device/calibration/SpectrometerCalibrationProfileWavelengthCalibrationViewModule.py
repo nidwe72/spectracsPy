@@ -1,8 +1,9 @@
 import threading
 
-from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QMessageBox, QComboBox
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.spectral.acquisition.device.calibration.CalibrationAlgorithm import CalibrationAlgorithm
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters
@@ -25,6 +26,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
     model:SpectrometerCalibrationProfile=None
 
     detectPeaksButton: QPushButton=None
+    algorithmComboBox: QComboBox = None
     wavelengthCalibrationVideoThread: SpectrometerCalibrationProfileWavelengthCalibrationVideoThread = None
     wavelengthCalibrationVideoViewModule: SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule = None
 
@@ -61,10 +63,22 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         layout = QGridLayout()
         buttonsPanel.setLayout(layout)
 
+        # Phase 3: algorithm selection seam. Only HEURISTIC is wired; RANSAC modes are placeholders
+        # that get dispatched to a "not yet implemented" notice in onClickedDetectPeaksButtonNew.
+        self.algorithmComboBox = QComboBox()
+        for value, label, _implemented in CalibrationAlgorithm.ALL:
+            self.algorithmComboBox.addItem(label, value)
+        layout.addWidget(self.algorithmComboBox, 0, 0, 1, 1)
+
         self.detectPeaksButton = QPushButton('Detect peaks')
         self.detectPeaksButton.clicked.connect(self.onClickedDetectPeaksButton)
-        layout.addWidget(self.detectPeaksButton, 0, 0, 1, 1)
+        layout.addWidget(self.detectPeaksButton, 0, 1, 1, 1)
         return buttonsPanel
+
+    def getSelectedAlgorithm(self) -> str:
+        if self.algorithmComboBox is None:
+            return CalibrationAlgorithm.HEURISTIC
+        return self.algorithmComboBox.currentData()
 
     def onClickedDetectPeaksButton(self):
         self.onClickedDetectPeaksButtonNew()
@@ -84,6 +98,19 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
                 "Please run 'Detect Region of Interest' on the 'Region of interest' tab "
                 "(and Save) before detecting peaks.")
             return
+
+        # Dispatch on the selected algorithm. The chosen matcher runs in the video view module's
+        # final-frame handler; pass the selection down so it knows which matcher to use.
+        algorithm = self.getSelectedAlgorithm()
+        if not CalibrationAlgorithm.isImplemented(algorithm):
+            QMessageBox.information(
+                self,
+                "Not yet implemented",
+                f"'{CalibrationAlgorithm.getLabel(algorithm)}' is not implemented yet. "
+                f"Please use '{CalibrationAlgorithm.getLabel(CalibrationAlgorithm.HEURISTIC)}'.")
+            return
+        if self.wavelengthCalibrationVideoViewModule is not None:
+            self.wavelengthCalibrationVideoViewModule.setAlgorithm(algorithm)
 
         self.wavelengthCalibrationVideoThread = SpectrometerCalibrationProfileWavelengthCalibrationVideoThread()
         # Fix A: hand the peak-detection thread the same calibration profile this view edited (which
@@ -123,12 +150,42 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
             self.spectrometerCalibrationProfileSpectralLinesViewModule.setModel(videoSignal.model)
 
+            self._warnIfImplausibleCalibration(videoSignal.model)
+
             applicationStatusSignal.isStatusReset = True
 
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
             applicationStatusSignal)
 
         event.set()
+
+    def _warnIfImplausibleCalibration(self, model):
+        # Phase 4 guardrail: sanity-check the detected anchors so a collapsed/mis-matched calibration
+        # (e.g. green and red pinned a few pixels apart, giving an absurd local dispersion) is flagged
+        # instead of being silently saved. Checks that wavelength rises with pixel position and that
+        # the per-segment dispersion (nm/pixel) is roughly uniform.
+        lines = [line for line in (model.getSpectralLines() or []) if line.spectralLineMasterData is not None]
+        if len(lines) < 3:
+            return
+        lines = sorted(lines, key=lambda line: line.pixelIndex)
+        dispersions = []
+        for i in range(len(lines) - 1):
+            pixelGap = lines[i + 1].pixelIndex - lines[i].pixelIndex
+            if pixelGap <= 0:
+                dispersions = [-1.0]
+                break
+            nmGap = lines[i + 1].spectralLineMasterData.nanometer - lines[i].spectralLineMasterData.nanometer
+            dispersions.append(nmGap / pixelGap)
+        median = sorted(dispersions)[len(dispersions) // 2]
+        implausible = any(d <= 0 for d in dispersions) or median <= 0 or \
+            any(d > 4 * median or d < median / 4 for d in dispersions)
+        if implausible:
+            QMessageBox.warning(
+                self,
+                "Calibration looks implausible",
+                "The detected spectral lines do not increase smoothly in wavelength with pixel position "
+                "(some anchors are likely mis-detected). The calibration is probably wrong — re-check the "
+                "spectrum and Region of Interest before saving.")
 
     def createPolynomialCoefficientsGroupBox(self):
         result = QGroupBox("Polynomial coefficients")

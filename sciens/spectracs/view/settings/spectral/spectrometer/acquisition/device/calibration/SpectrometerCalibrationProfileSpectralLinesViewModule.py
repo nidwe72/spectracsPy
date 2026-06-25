@@ -78,14 +78,20 @@ class SpectrometerCalibrationProfileSpectralLinesViewModule(PageWidget):
 
     def setModel(self,model:SpectrometerCalibrationProfile):
         self.__model=model
+        if self.__pixelIndexComponentsByNanometers is None:
+            return
         lines = model.getSpectralLines()
         for spectralLine in lines:
-            if self.__pixelIndexComponentsByNanometers is not None:
-                pixelIndexComponent=self.__pixelIndexComponentsByNanometers[spectralLine.spectralLineMasterData.nanometer]
-                if spectralLine.pixelIndex is None:
-                    pixelIndexComponent.setText('')
-                else:
-                    pixelIndexComponent.setText(str(spectralLine.pixelIndex))
+            # This view only shows the heuristic anchor lines. RANSAC matches additional atlas lines
+            # (e.g. 587.6, 593.4, 631.1); those have no component here, so skip them rather than crash.
+            pixelIndexComponent = self.__pixelIndexComponentsByNanometers.get(
+                spectralLine.spectralLineMasterData.nanometer)
+            if pixelIndexComponent is None:
+                continue
+            if spectralLine.pixelIndex is None:
+                pixelIndexComponent.setText('')
+            else:
+                pixelIndexComponent.setText(str(spectralLine.pixelIndex))
 
     def __getModel(self)->SpectrometerCalibrationProfile:
         return self.__model

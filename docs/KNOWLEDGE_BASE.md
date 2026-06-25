@@ -139,10 +139,16 @@ PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
 3. Calibrate (2 tabs): **Region of interest** → *Detect Region of Interest* (50 frames, Hough → x1/y1/x2/y2); **Wavelength calibration** → *Detect peaks* → assign known lines → A/B/C/D → **Save**.
 4. Home → **New measurement** (tabs "Light"=reference, "Oil"=sample) → **Measure** → QtCharts: Intensities (averaged) / (raw) / Spectrum image.
 
-**Test images:** raw CFL spectral band at `spectracsPy/testSpectra/cfl_philips_calibration.png`
-(2592×1944) and `..._cropped.png` (1854×336); originals under
-`/home/nidwe72/data/migration/apollo-windows/spectracs#20/testPhilips.png`. Note:
-`spectracs-evaluations/.../sample_step1_original.png` is a plotted CHART, not a usable frame.
+**Test images** (in `spectracsPy/testSpectra/`, **currently NOT committed to git** — TODO: decide whether to
+add these binaries later):
+- `cfl_philips_calibration.png` (2592×1944) — original real capture; heuristic ✓. Origin `/home/nidwe72/data/migration/apollo-windows/spectracs#20/testPhilips.png`.
+- `cfl_snowy_sharp_input.png` — clean sharp CFL band (from SpectralWorkbench spectrum 58696 `poly-Snowy-ADJ3ovc4`), framed Philips-style; heuristic ✓ (all 5 anchors, ~0.21 nm/px, guardrail passes).
+- `cfl_reference_clean_input.png` — smeared/low-res band; heuristic mis-anchors violet 405 to the band onset → guardrail (correctly) flags it. Stress case.
+- `cfl_reference_twinpeaks_fit.png` — visual ground-truth reference (white-dash line markers + nm axis); has overlays, not a clean input.
+Note: `spectracs-evaluations/.../sample_step1_original.png` is a plotted CHART, not a usable frame.
+
+**Heuristic status:** validated on TWO clean inputs (Philips + Snowy). RANSAC (both modes) tuned well in the
+R0 spike but **still not producing correct fits in the actual app run** — open.
 
 ## 13. Known issues / loose ends
 
@@ -162,7 +168,40 @@ PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
   on re-run. One-time DB cleanup removed 10 orphan lines + 1 unreferenced calibration profile
   (backup at `~/.spectracsPy/spectracsPy.db.bak.*`). Confirmed working: saved calibration re-displays
   its spectral lines after navigating back.
-- **Pixel↔wavelength matching quality** is the open algorithm issue (peaks mapped to wrong reference lines).
+- **Pixel↔wavelength matching (algorithm A — prominence anchors).** The heuristic anchored on absolute
+  *intensity*, so the mercury green doublet (the two brightest peaks) mislabelled the right green peak as the
+  red 611 line, collapsing calibration on virtual/over-exposed images. **Fixed 2026-06-25:**
+  `SpectrometerWavelengthCalibrationLogicModule` now anchors green 546 first (single most-prominent peak), then
+  red 611 (most-prominent peak right of green), then grows left for violet/blue/aqua — all by *prominence+position*
+  (exposure-robust) instead of intensity. Validated on testPhilips: anchors 405→669, 436→887, 487→1225, 546→1618,
+  611→2064 (dispersion ~0.148 nm/px, monotonic). Calibration samples full image width (not the ROI x-bounds),
+  so violet/blue at x≈671/889 are seen even though the saved ROI starts at x=1216.
+  - **Algorithm selection box** (`CalibrationAlgorithm` enum + combo in the wavelength-calibration view):
+    **HEURISTIC**, **RANSAC** (rascal standalone), **RANSAC_SEEDED** (rascal seeded by the heuristic cubic).
+  - **RANSAC matcher** (`RascalCalibrationLogicModule`, rascal 0.3.9, headless): CFL atlas from the master-data
+    lines capped at 635 nm, `set_hough_properties(range_tolerance=500, min_wl=3500, max_wl=6500 Å)`,
+    `fit(fit_deg=3)`; converts rascal's ascending-Angstrom `best_p` → our nm cubic `A/B/C/D` (A=p3/10 … D=p0/10),
+    and matched peak↔atlas pairs → `SpectralLine`s. Seeded mode passes the heuristic cubic as `fit_coeff`.
+    **Key tuning:** capping `max_wavelength` ~650 nm (so the rightmost peak can't map to the far-red lines)
+    with a *loose* `range_tolerance` is what makes CFL converge — tightening it makes rascal find no solution.
+    Validated on testPhilips: standalone ~1.4 nm, seeded ~0.5 nm max anchor error.
+  - **Dispatch** is in `...WavelengthCalibrationVideoViewModule._runCalibrationMatcher` (runs on the UI thread
+    with a wait cursor — the proper worker-thread move was deferred to avoid destabilising the working flow;
+    a RANSAC fit briefly blocks the UI). rascal "no solution" → `RascalCalibrationError` → warning, no save.
+  - **Deferred:** R5 consensus cross-check (run heuristic + RANSAC, warn on disagreement) — pairs with the
+    postponed manual fallback (C) as the disagreement resolver.
+  - **Guardrail:** `_warnIfImplausibleCalibration` flags a non-monotonic / inconsistent-dispersion fit before save.
+  - Open: manual-assignment fallback (C, postponed); a real entity-backed headless test is blocked by a pre-existing
+    SQLAlchemy mapper import-order fragility (stray class-body entity instantiations) — works in the app.
+  - **RANSAC display fix (2026-06-26):** RANSAC matches the full atlas, so the calibration profile gets lines
+    for wavelengths beyond the 5 heuristic anchors (587.6, 593.4, 631.1, …). `SpectrometerCalibrationProfileSpectralLinesViewModule`
+    only builds fields for the anchor lines → `KeyError` on display. Fixed: `setModel` skips lines without a field
+    (RANSAC's extras are still saved + used in the fit, just not shown in that view).
+- **ROI left bound dropped blue/violet lines (fixed 2026-06-26).** `SpectrometerRegionOfInterestLogicModule.getVerticalBoundingLines`
+  computed brightness as `qGray(red, green, green)` (blue channel dropped), so blue/violet emission lines read as
+  near-black and the ROI x1 started past them. Fixed to `qGray(red, green, blue)`. Re-run "Detect Region of Interest"
+  to pick up the corrected bounds (old saved ROIs don't auto-update). NOTE: calibration peak-detection samples the
+  full image width anyway, but measurement uses the ROI x-bounds — so this matters for measurements.
 - Color-based spectral-line validation incomplete (`SpectralLinesSelectionLogicModule`).
 - Spectrum import/export backend partial; virtual spectrometer image not persisted across restarts.
 - Camera device id hard-coded to 0; inlined stylesheet; master-data loads all rows (no pagination).

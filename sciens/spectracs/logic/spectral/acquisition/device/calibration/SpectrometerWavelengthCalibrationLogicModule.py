@@ -20,8 +20,11 @@ from sciens.spectracs.model.databaseEntity.spectral.device.calibration.Spectrome
 class SpectrometerWavelengthCalibrationLogicModule(Singleton):
     __moduleParameters: SpectrometerWavelengthCalibrationLogicModuleParameters = None
 
-    spectralLineMasterDataColorNamesToProcess: List[str] = [SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE,
-                                                            SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN,
+    # (A) Anchor on the green mercury line FIRST (it is the single most prominent CFL line), then the
+    # red europium line to its right. The remaining lines grow leftward from green. Processing order
+    # matters: each later step references lines found by earlier steps.
+    spectralLineMasterDataColorNamesToProcess: List[str] = [SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN,
+                                                            SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE,
                                                             SpectralLineMasterDataColorName.MERCURY_FRENCH_VIOLET,
                                                             SpectralLineMasterDataColorName.MERCURY_BLUE,
                                                             SpectralLineMasterDataColorName.TERBIUM_AQUA]
@@ -61,14 +64,18 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         func()
 
     def _processSpectralLineEUROPIUM_VIVID_GAMBOGE(self) -> SpectralLine:
-
+        # (A) Europium red 611 is the most prominent peak to the RIGHT of the green anchor. Selecting by
+        # prominence + position (rather than absolute intensity) avoids mislabelling the second
+        # green-doublet peak as the red line, which collapsed calibration on virtual/over-exposed images.
         spectrum = self.moduleParameters.videoSignal.spectrum
         logicModule = SpectralLinesSelectionLogicModule()
 
+        detectedSpectralLinesByNames = SpectralLineUtil().sortSpectralLinesByNames(self.getModuleResult().getSpectralLines())
+        leftSpectralLine = detectedSpectralLinesByNames[SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN]
+
         moduleParameters = SpectralLinesSelectionLogicModuleParameters()
         moduleParameters.setSpectrum(spectrum) \
-            .addSelectByProminence(10) \
-            .addSelectByIntensity(2).addSelectByPixelIndex(1,reverse=True)
+            .addSelectByProminence(1, leftSpectralLine=leftSpectralLine)
         logicModule.setModuleParameters(moduleParameters)
 
         spectralLine = logicModule.execute().getSpectralLines().pop()
@@ -81,16 +88,15 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
         return;
 
     def _processSpectralLineMERCURY_MANGO_GREEN(self) -> SpectralLine:
+        # (A) Green mercury 546 is the single most prominent line of a CFL spectrum, so anchor on it by
+        # prominence (robust to exposure) instead of absolute intensity. This is the primary anchor and
+        # is selected with no left/right bound (whole spectrum).
         spectrum = self.moduleParameters.videoSignal.spectrum
         logicModule = SpectralLinesSelectionLogicModule()
 
-        detectedSpectralLinesByNames=SpectralLineUtil().sortSpectralLinesByNames(self.getModuleResult().getSpectralLines())
-        rightSpectralLine=detectedSpectralLinesByNames[SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE];
-
         moduleParameters = SpectralLinesSelectionLogicModuleParameters()
         moduleParameters.setSpectrum(spectrum) \
-            .addSelectByProminence(10,rightSpectralLine=rightSpectralLine) \
-            .addSelectByIntensity(1)
+            .addSelectByProminence(1)
         logicModule.setModuleParameters(moduleParameters)
 
         spectralLine = logicModule.execute().getSpectralLines().pop()

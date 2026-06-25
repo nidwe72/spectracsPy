@@ -1,5 +1,6 @@
 from PySide6.QtCore import Qt, QRectF, QPointF
 from PySide6.QtGui import QPixmap, QPen, QBrush
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
@@ -10,6 +11,9 @@ from sciens.spectracs.logic.spectral.acquisition.device.calibration.Spectrometer
     SpectrometerWavelengthCalibrationLogicModuleParameters
 from sciens.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleResult import \
     SpectrometerWavelengthCalibrationLogicModuleResult
+from sciens.spectracs.logic.spectral.acquisition.device.calibration.CalibrationAlgorithm import CalibrationAlgorithm
+from sciens.spectracs.logic.spectral.acquisition.device.calibration.RascalCalibrationLogicModule import \
+    RascalCalibrationLogicModule, RascalCalibrationError
 from sciens.spectracs.logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from sciens.spectracs.logic.spectral.util.SpectrumUtil import SpectrumUtil
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
@@ -30,6 +34,8 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
     __spectrum: Spectrum = None
 
+    __algorithm: str = CalibrationAlgorithm.HEURISTIC
+
     spectrometerWavelengthCalibrationLogicModule: SpectrometerWavelengthCalibrationLogicModule = None
 
     @property
@@ -39,6 +45,62 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
     @spectrum.setter
     def spectrum(self, spectrum):
         self.__spectrum = spectrum
+
+    def setAlgorithm(self, algorithm):
+        self.__algorithm = algorithm
+
+    def getAlgorithm(self):
+        return self.__algorithm
+
+    def _runHeuristicMatcher(self, videoSignal):
+        logicModule = SpectrometerWavelengthCalibrationLogicModule()
+        parameters = SpectrometerWavelengthCalibrationLogicModuleParameters()
+        logicModule.moduleParameters = parameters
+        parameters.videoSignal = videoSignal
+        logicModule.execute()
+        return logicModule.getModuleResult()
+
+    def _applyCoefficients(self, model, a, b, c, d):
+        model.interpolationCoefficientA = a
+        model.interpolationCoefficientB = b
+        model.interpolationCoefficientC = c
+        model.interpolationCoefficientD = d
+
+    def _runCalibrationMatcher(self, videoSignal):
+        # R1: dispatch on the selected algorithm. RANSAC fits can take a few seconds, so show a wait
+        # cursor; if rascal finds no solution, warn and fall back to an empty result (no save).
+        algorithm = self.getAlgorithm()
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            if algorithm == CalibrationAlgorithm.HEURISTIC:
+                result = self._runHeuristicMatcher(videoSignal)
+                coefficients = SpectralLineUtil().polyfit(result.getSpectralLines()).coefficients.tolist()
+                self._applyCoefficients(videoSignal.model, coefficients[0], coefficients[1],
+                                        coefficients[2], coefficients[3])
+                videoSignal.model.spectralLines = result.getSpectralLines()
+                return result
+
+            # R3: seed rascal with the heuristic's cubic when the seeded mode is selected.
+            seedCoefficients = None
+            if algorithm == CalibrationAlgorithm.RANSAC_SEEDED:
+                heuristicResult = self._runHeuristicMatcher(videoSignal)
+                seedCoefficients = SpectralLineUtil().polyfit(
+                    heuristicResult.getSpectralLines()).coefficients.tolist()
+
+            rascalResult = RascalCalibrationLogicModule().match(self.spectrum, seedCoefficients=seedCoefficients)
+            self._applyCoefficients(videoSignal.model,
+                                    rascalResult.interpolationCoefficientA, rascalResult.interpolationCoefficientB,
+                                    rascalResult.interpolationCoefficientC, rascalResult.interpolationCoefficientD)
+            videoSignal.model.spectralLines = rascalResult.getSpectralLines()
+            return rascalResult
+        except RascalCalibrationError:
+            QMessageBox.warning(
+                self, "Calibration failed",
+                "RANSAC could not find a calibration solution for this spectrum. Try the "
+                "'Heuristic (prominence)' or 'RANSAC (seeded by heuristic)' algorithm.")
+            return SpectrometerWavelengthCalibrationLogicModuleResult()
+        finally:
+            QApplication.restoreOverrideCursor()
 
     def handleVideoThreadSignal(self, videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):
 
@@ -57,23 +119,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
             videoSignal.spectrum = self.spectrum
 
-            spectrometerWavelengthCalibrationLogicModule = SpectrometerWavelengthCalibrationLogicModule()
-            spectrometerWavelengthCalibrationLogicModuleParameters = SpectrometerWavelengthCalibrationLogicModuleParameters()
-            spectrometerWavelengthCalibrationLogicModule.moduleParameters = spectrometerWavelengthCalibrationLogicModuleParameters
-            spectrometerWavelengthCalibrationLogicModuleParameters.videoSignal = videoSignal
-            spectrometerWavelengthCalibrationLogicModule.execute()
-            spectrometerWavelengthCalibrationLogicModuleResult = spectrometerWavelengthCalibrationLogicModule.getModuleResult()
-
-            polynomial = SpectralLineUtil().polyfit(
-                spectrometerWavelengthCalibrationLogicModuleResult.getSpectralLines())
-            coefficients = polynomial.coefficients.tolist()
-
-            videoSignal.model.interpolationCoefficientA = coefficients[0]
-            videoSignal.model.interpolationCoefficientB = coefficients[1]
-            videoSignal.model.interpolationCoefficientC = coefficients[2]
-            videoSignal.model.interpolationCoefficientD = coefficients[3]
-
-            videoSignal.model.spectralLines = spectrometerWavelengthCalibrationLogicModuleResult.getSpectralLines()
+            spectrometerWavelengthCalibrationLogicModuleResult = self._runCalibrationMatcher(videoSignal)
 
         else:
 

@@ -28,7 +28,7 @@ class SpectrometerRegionOfInterestLogicModule(Singleton):
         x1=0
         for x in range(1,image.width()):
             color = image.pixelColor(x,y)
-            gray=qGray(color.red(),color.green(),color.green())
+            gray=qGray(color.red(),color.green(),color.blue())
             if gray>20:
                 x1=x
                 break
@@ -36,7 +36,7 @@ class SpectrometerRegionOfInterestLogicModule(Singleton):
         x2 = image.width()
         for x in reversed(range(1,image.width())):
             color = image.pixelColor(x,y)
-            gray=qGray(color.red(),color.green(),color.green())
+            gray=qGray(color.red(),color.green(),color.blue())
             if gray>20:
                 x2=x
                 break
