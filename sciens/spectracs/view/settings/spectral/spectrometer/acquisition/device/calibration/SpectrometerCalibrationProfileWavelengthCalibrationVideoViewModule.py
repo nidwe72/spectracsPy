@@ -12,8 +12,8 @@ from sciens.spectracs.logic.spectral.acquisition.device.calibration.Spectrometer
 from sciens.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationLogicModuleResult import \
     SpectrometerWavelengthCalibrationLogicModuleResult
 from sciens.spectracs.logic.spectral.acquisition.device.calibration.CalibrationAlgorithm import CalibrationAlgorithm
-from sciens.spectracs.logic.spectral.acquisition.device.calibration.RascalCalibrationLogicModule import \
-    RascalCalibrationLogicModule, RascalCalibrationError
+from sciens.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerWavelengthCalibrationConsensusLogicModule import \
+    SpectrometerWavelengthCalibrationConsensusLogicModule
 from sciens.spectracs.logic.spectral.util.SpectrallineUtil import SpectralLineUtil
 from sciens.spectracs.logic.spectral.util.SpectrumUtil import SpectrumUtil
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
@@ -67,38 +67,32 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
         model.interpolationCoefficientD = d
 
     def _runCalibrationMatcher(self, videoSignal):
-        # R1: dispatch on the selected algorithm. RANSAC fits can take a few seconds, so show a wait
-        # cursor; if rascal finds no solution, warn and fall back to an empty result (no save).
-        algorithm = self.getAlgorithm()
+        # The "Heuristic" option runs a CONSENSUS: the simple heuristic produces the five anchor lines,
+        # cross-checked by the advanced (predict-and-snap) cubic + colour + green-doublet to raise
+        # confidence. Lines that fail a check are reported so the user can re-check before trusting them.
         QApplication.setOverrideCursor(Qt.WaitCursor)
         try:
-            if algorithm == CalibrationAlgorithm.HEURISTIC:
-                result = self._runHeuristicMatcher(videoSignal)
-                coefficients = SpectralLineUtil().polyfit(result.getSpectralLines()).coefficients.tolist()
-                self._applyCoefficients(videoSignal.model, coefficients[0], coefficients[1],
-                                        coefficients[2], coefficients[3])
-                videoSignal.model.spectralLines = result.getSpectralLines()
-                return result
+            result = SpectrometerWavelengthCalibrationConsensusLogicModule().match(videoSignal)
+            lines = result.getSpectralLines()
+            if len(lines) < 4:
+                QMessageBox.warning(
+                    self, "Calibration failed",
+                    "Could not detect the calibration lines. Check the spectrum and Region of Interest.")
+                return SpectrometerWavelengthCalibrationLogicModuleResult()
 
-            # R3: seed rascal with the heuristic's cubic when the seeded mode is selected.
-            seedCoefficients = None
-            if algorithm == CalibrationAlgorithm.RANSAC_SEEDED:
-                heuristicResult = self._runHeuristicMatcher(videoSignal)
-                seedCoefficients = SpectralLineUtil().polyfit(
-                    heuristicResult.getSpectralLines()).coefficients.tolist()
+            coefficients = SpectralLineUtil().polyfit(lines).coefficients.tolist()
+            self._applyCoefficients(videoSignal.model, coefficients[0], coefficients[1],
+                                    coefficients[2], coefficients[3])
+            videoSignal.model.spectralLines = lines
 
-            rascalResult = RascalCalibrationLogicModule().match(self.spectrum, seedCoefficients=seedCoefficients)
-            self._applyCoefficients(videoSignal.model,
-                                    rascalResult.interpolationCoefficientA, rascalResult.interpolationCoefficientB,
-                                    rascalResult.interpolationCoefficientC, rascalResult.interpolationCoefficientD)
-            videoSignal.model.spectralLines = rascalResult.getSpectralLines()
-            return rascalResult
-        except RascalCalibrationError:
-            QMessageBox.warning(
-                self, "Calibration failed",
-                "RANSAC could not find a calibration solution for this spectrum. Try the "
-                "'Heuristic (prominence)' or 'RANSAC (seeded by heuristic)' algorithm.")
-            return SpectrometerWavelengthCalibrationLogicModuleResult()
+            if result.getUncertainLines():
+                detail = "\n".join("  %.1f nm: %s" % (nanometer, ", ".join(reasons))
+                                   for nanometer, reasons in result.getUncertainLines())
+                QMessageBox.warning(
+                    self, "Low-confidence calibration lines",
+                    "The cross-check flagged these line(s) as uncertain — re-check the spectrum / Region "
+                    "of Interest before trusting the calibration:\n" + detail)
+            return result
         finally:
             QApplication.restoreOverrideCursor()
 

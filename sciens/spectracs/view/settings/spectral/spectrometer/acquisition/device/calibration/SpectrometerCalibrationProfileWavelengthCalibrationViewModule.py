@@ -1,6 +1,9 @@
+import os
 import threading
 
-from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QMessageBox, QComboBox
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QMessageBox, QDialog, \
+    QVBoxLayout, QLabel
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.spectral.acquisition.device.calibration.CalibrationAlgorithm import CalibrationAlgorithm
@@ -26,7 +29,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
     model:SpectrometerCalibrationProfile=None
 
     detectPeaksButton: QPushButton=None
-    algorithmComboBox: QComboBox = None
+    expectedDetectionButton: QPushButton = None
     wavelengthCalibrationVideoThread: SpectrometerCalibrationProfileWavelengthCalibrationVideoThread = None
     wavelengthCalibrationVideoViewModule: SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule = None
 
@@ -65,10 +68,10 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
         # Phase 3: algorithm selection seam. Only HEURISTIC is wired; RANSAC modes are placeholders
         # that get dispatched to a "not yet implemented" notice in onClickedDetectPeaksButtonNew.
-        self.algorithmComboBox = QComboBox()
-        for value, label, _implemented in CalibrationAlgorithm.ALL:
-            self.algorithmComboBox.addItem(label, value)
-        layout.addWidget(self.algorithmComboBox, 0, 0, 1, 1)
+        self.expectedDetectionButton = QPushButton('help: expected detection')
+        self.expectedDetectionButton.setStyleSheet("background-color: #5A5A5A;")
+        self.expectedDetectionButton.clicked.connect(self.onClickedExpectedDetectionButton)
+        layout.addWidget(self.expectedDetectionButton, 0, 0, 1, 1)
 
         self.detectPeaksButton = QPushButton('Detect peaks')
         self.detectPeaksButton.clicked.connect(self.onClickedDetectPeaksButton)
@@ -76,9 +79,26 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         return buttonsPanel
 
     def getSelectedAlgorithm(self) -> str:
-        if self.algorithmComboBox is None:
-            return CalibrationAlgorithm.HEURISTIC
-        return self.algorithmComboBox.currentData()
+        return CalibrationAlgorithm.HEURISTIC
+
+    def _resourcePath(self, name):
+        directory = os.path.dirname(os.path.abspath(__file__))
+        while directory != os.path.dirname(directory):
+            candidate = os.path.join(directory, 'resource', name)
+            if os.path.exists(candidate):
+                return candidate
+            directory = os.path.dirname(directory)
+        return os.path.join('resource', name)
+
+    def onClickedExpectedDetectionButton(self):
+        # Documentation: show where the app's target spectral lines should appear in a CFL spectrum.
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Expected detection — target spectral lines')
+        layout = QVBoxLayout(dialog)
+        imageLabel = QLabel()
+        imageLabel.setPixmap(QPixmap(self._resourcePath('expectedDetection.png')))
+        layout.addWidget(imageLabel)
+        dialog.exec()
 
     def onClickedDetectPeaksButton(self):
         self.onClickedDetectPeaksButtonNew()

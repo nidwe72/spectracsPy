@@ -7,14 +7,17 @@ class CalibrationAlgorithm:
     """
 
     HEURISTIC = "HEURISTIC"
+    HEURISTIC_ADVANCED = "HEURISTIC_ADVANCED"
+    HEURISTIC_PRO = "HEURISTIC_PRO"
     RANSAC = "RANSAC"
     RANSAC_SEEDED = "RANSAC_SEEDED"
 
     # ordered (value, display label, implemented?)
+    # The single "Heuristic" entry runs a CONSENSUS: simple heuristic + advanced (predict-and-snap) +
+    # colour + green-doublet cross-checks on the five anchor lines, to raise confidence in them.
+    # ADVANCED / PRO / RANSAC remain as internal constants but are no longer offered as separate options.
     ALL = [
-        (HEURISTIC, "Heuristic (prominence)", True),
-        (RANSAC, "RANSAC (standalone)", True),
-        (RANSAC_SEEDED, "RANSAC (seeded by heuristic)", True),
+        (HEURISTIC, "Heuristic", True),
     ]
 
     @staticmethod

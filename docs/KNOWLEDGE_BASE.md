@@ -176,8 +176,36 @@ R0 spike but **still not producing correct fits in the actual app run** — open
   (exposure-robust) instead of intensity. Validated on testPhilips: anchors 405→669, 436→887, 487→1225, 546→1618,
   611→2064 (dispersion ~0.148 nm/px, monotonic). Calibration samples full image width (not the ROI x-bounds),
   so violet/blue at x≈671/889 are seen even though the saved ROI starts at x=1216.
-  - **Algorithm selection box** (`CalibrationAlgorithm` enum + combo in the wavelength-calibration view):
-    **HEURISTIC**, **RANSAC** (rascal standalone), **RANSAC_SEEDED** (rascal seeded by the heuristic cubic).
+  - **No algorithm combo anymore** — "Detect peaks" directly runs the consensus (there was only one option).
+    A gray **"help: expected detection"** button (left of "Detect peaks") opens a dialog showing
+    `resource/expectedDetection.png` — a CFL reference (SpectralWorkbench `polySnowyADJ2steps`, cropped to just
+    the corrected band + intensity curve + wavelength axis; the explanatory text/arrows and the upper captured
+    band were removed) with **wavelength-coloured ticks** under the axis at the five app targets
+    (405/436/487/546/611), documenting where the lines should appear. The dialog resolves the image by walking up
+    from the module to find `resource/`.
+  - **The matcher: a CONSENSUS** (`SpectrometerWavelengthCalibrationConsensusLogicModule`).
+    The deliverable is the **five anchor lines** (405/436/487/546/611) — sufficient for the curve — but each is
+    cross-checked to raise *confidence*: (1) **agreement** — does the advanced predict-and-snap cubic report the
+    same wavelength at the simple-detected pixel? (independent for violet/blue/aqua; green/red agree by
+    construction); (2) **colour** — is the band pixel the expected `mainColorName` bucket? (coarse, the camera
+    isn't colour-safe — this is the independent check for red); (3) **green doublet** — are two close peaks
+    (~4 nm) present? (the mercury-green fingerprint). Lines failing a check are surfaced as "low-confidence" so
+    the user re-checks. Validated: all 5 confident on Philips + Snowy; the smeared stress image correctly flags
+    violet (`disagree`) + green (`no-doublet`). RANSAC and the baseline checkbox were **removed from the GUI**
+    (per user: only the 5 lines matter; baseline added fragility). `HEURISTIC_ADVANCED/PRO/RANSAC*` remain as
+    internal constants; `RascalCalibrationLogicModule`/`removeBaseline` are kept but **no longer wired**.
+  - **Predict-and-snap matcher** (`SpectrometerWavelengthCalibrationAdvancedLogicModule`, deterministic):
+    anchor green + red by prominence → linear pixel→nm seed → predict every CFL line → **snap each detected
+    peak to the nearest predicted line** (peak-centric, so the dense red cluster maps 1 peak↔1 line) → refit
+    cubic, iterate (tighten tolerance). Resolves the green doublet + the 577–631 cluster. Validated: **8–13
+    lines matched, <0.9 nm residual, monotonic** on Philips + Snowy — strictly better than the 5-anchor
+    heuristic, and beats RANSAC. **Pro** adds a coarse color guard: reject a snap only if the band pixel's hue
+    bucket and the line's `mainColorName` bucket differ by >2 (camera isn't colour-safe → gross swaps only).
+  - **Baseline correction** (`SpectrumUtil.removeBaseline`): morphological opening (min then max filter) over
+    a **resolution-adaptive window (~10% of spectrum width)** estimates the continuum; subtract it to isolate
+    sharp lines. A *fixed* window broke the plain heuristic's anchor ranking on the lower-res image; ~10% keeps
+    the heuristic correct on both Philips + Snowy while helping the advanced matcher (e.g. 8→10 lines on Philips).
+    Applied once before whichever matcher runs.
   - **RANSAC matcher** (`RascalCalibrationLogicModule`, rascal 0.3.9, headless): CFL atlas from the master-data
     lines capped at 635 nm, `set_hough_properties(range_tolerance=500, min_wl=3500, max_wl=6500 Å)`,
     `fit(fit_deg=3)`; converts rascal's ascending-Angstrom `best_p` → our nm cubic `A/B/C/D` (A=p3/10 … D=p0/10),
