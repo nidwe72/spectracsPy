@@ -137,9 +137,11 @@ QFrame{{
     border:none;
 }}
 
-/* E2: image/video preview targets get a faint outline so an empty feed reads
-   as a defined "image area", not an invisible void (spec Workstream C / C2). */
-BaseImageViewModule, BaseVideoViewModule {{
+/* E2: a standalone image preview gets a faint outline so an empty feed reads
+   as a defined "image area", not an invisible void (spec Workstream C / C2).
+   The calibration video sits inside a bordered tab card already, so it needs
+   no outline of its own (spec C10). */
+BaseImageViewModule {{
     border: 1px solid {border};
 }}
 
