@@ -14,6 +14,7 @@ from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.cal
     SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationViewModule
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 class SpectrometerCalibrationProfileViewModule(PageWidget):
@@ -87,6 +88,7 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
         result = QGroupBox("")
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         result.setLayout(layout);
 
         backButton = QPushButton()

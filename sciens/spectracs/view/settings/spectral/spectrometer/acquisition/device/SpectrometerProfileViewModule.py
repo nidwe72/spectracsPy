@@ -20,6 +20,7 @@ from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerViewModule import SpectrometerViewModule
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileViewModule import \
     SpectrometerCalibrationProfileViewModule
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 class SpectrometerProfileViewModule(PageWidget):
@@ -94,6 +95,7 @@ class SpectrometerProfileViewModule(PageWidget):
         result = QGroupBox("")
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         result.setLayout(layout);
 
         backButton = QPushButton()

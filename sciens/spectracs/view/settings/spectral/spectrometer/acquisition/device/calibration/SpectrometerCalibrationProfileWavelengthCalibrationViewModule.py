@@ -22,6 +22,7 @@ from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.cal
     SpectrometerCalibrationProfileSpectralLinesViewModule
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
@@ -64,6 +65,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
             'SpectrometerCalibrationProfileViewModule.buttonsPanel')
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         buttonsPanel.setLayout(layout)
 
         # Phase 3: algorithm selection seam. Only HEURISTIC is wired; RANSAC modes are placeholders

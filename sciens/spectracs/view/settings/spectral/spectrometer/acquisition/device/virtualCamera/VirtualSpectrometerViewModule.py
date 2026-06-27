@@ -8,6 +8,7 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.view.application.widgets.general.ToggleSwitch import ToggleSwitch
 from sciens.spectracs.view.application.widgets.image.BaseImageViewModule import BaseImageViewModule
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 class VirtualSpectrometerViewModule(PageWidget):
 
@@ -82,6 +83,7 @@ class VirtualSpectrometerViewModule(PageWidget):
         result = QGroupBox("")
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         result.setLayout(layout);
 
         backButton = QPushButton()

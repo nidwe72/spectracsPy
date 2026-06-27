@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QPushButton
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 class SettingsViewModule(QWidget):
@@ -146,6 +147,7 @@ class SettingsViewModule(QWidget):
         result = QGroupBox("")
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         result.setLayout(layout)
 
         backButton = QPushButton()

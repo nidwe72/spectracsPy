@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QWidget
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 # from PySide6.QtCore import pyqtSignal
@@ -42,6 +43,7 @@ class HomeViewModule(QWidget):
         result = QGroupBox("")
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         result.setLayout(layout);
 
         createSpectralJobButton = QPushButton()

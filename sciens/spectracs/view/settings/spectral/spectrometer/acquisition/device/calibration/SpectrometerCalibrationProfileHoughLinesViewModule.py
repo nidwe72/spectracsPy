@@ -19,6 +19,7 @@ from sciens.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideo
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \
     SpectrometerCalibrationProfileHoughLinesVideoViewModule
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 
@@ -59,6 +60,7 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
             'SpectrometerCalibrationProfileViewModule.buttonsPanel')
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         buttonsPanel.setLayout(layout)
 
         self.captureVideoButton = QPushButton('Detect Region of Interest')

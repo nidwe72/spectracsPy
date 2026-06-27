@@ -9,6 +9,7 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.logic.spectral.util.SpectralWorkflowUtil import SpectralWorkflowUtil
 from sciens.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
 from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobsWidgetViewModule import SpectralJobsWidgetViewModule
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 class SpectralJobViewModule(QWidget):
@@ -62,6 +63,7 @@ class SpectralJobViewModule(QWidget):
         result = QGroupBox("")
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         result.setLayout(layout);
 
         measureLightButton = QPushButton()
