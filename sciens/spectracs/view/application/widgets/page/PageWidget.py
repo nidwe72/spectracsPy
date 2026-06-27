@@ -53,21 +53,29 @@ class PageWidget(QFrame):
         return result
 
     def createMainContainer(self):
-        result=QGroupBox(self._getPageTitle())
+        title=self._getPageTitle()
+        result=QGroupBox(title)
 
+        borderless=False
         if self._isTopMostPageWidget():
             result.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             result.setObjectName('PageWidget_topMost')
+            borderless=True
         elif self.borderlessMainContainer:
             result.setProperty("sectionLabel", True)
+            borderless=True
+        elif title == "":
+            # Untitled nested container: nothing to label, so no frame - else it
+            # double-borders with the surrounding widgets (spec C8).
+            result.setProperty("plain", True)
+            borderless=True
 
         #result.setFlat(True)
 
         layout=QGridLayout()
-        if self._isTopMostPageWidget() or self.borderlessMainContainer:
-            # Borderless container (page container or section label): no frame to
-            # protect, so NO horizontal indent - otherwise nested peers stair-step
-            # out of alignment. Keep vertical room only (spec C7).
+        if borderless:
+            # Borderless container: no frame to protect, so NO horizontal indent
+            # - otherwise nested peers stair-step out of alignment. Vertical only.
             layout.setContentsMargins(0, Metrics.S, 0, Metrics.S)
         else:
             # Bordered panel: uniform inner padding (P=M) so content does not

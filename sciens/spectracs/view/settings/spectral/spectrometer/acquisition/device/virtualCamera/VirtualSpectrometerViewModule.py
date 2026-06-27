@@ -48,6 +48,7 @@ class VirtualSpectrometerViewModule(PageWidget):
             'VirtualSpectrometerViewModule.buttonsPanel')
 
         layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)  # holder adds no indent (spec C8)
         buttonsPanel.setLayout(layout)
 
         self.openPictureButton=QPushButton('Set picture')

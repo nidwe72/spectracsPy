@@ -61,6 +61,7 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 
         layout = QGridLayout()
         layout.setSpacing(Metrics.S)
+        layout.setContentsMargins(0, 0, 0, 0)  # holder adds no indent (spec C8)
         buttonsPanel.setLayout(layout)
 
         self.captureVideoButton = QPushButton('Detect Region of Interest')
@@ -201,6 +202,7 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 
         result = QWidget()
         resultLayout = QGridLayout()
+        resultLayout.setContentsMargins(0, 0, 0, 0)  # holder adds no indent (spec C8)
         result.setLayout(resultLayout)
         resultLayout.addWidget(self.createRegionOfInterestNavigationGroupBox(), 0, 0, 1, 1)
 

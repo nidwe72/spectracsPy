@@ -67,6 +67,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
         layout = QGridLayout()
         layout.setSpacing(Metrics.S)
+        layout.setContentsMargins(0, 0, 0, 0)  # holder adds no indent (spec C8)
         buttonsPanel.setLayout(layout)
 
         # Phase 3: algorithm selection seam. Only HEURISTIC is wired; RANSAC modes are placeholders
@@ -240,6 +241,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
     def createMainWidget(self):
         result = QWidget()
         resultLayout = QGridLayout()
+        resultLayout.setContentsMargins(0, 0, 0, 0)  # holder adds no indent (spec C8)
         result.setLayout(resultLayout)
         resultLayout.addWidget(self.createPolynomialCoefficientsGroupBox(), 0, 0, 1, 1)
 
