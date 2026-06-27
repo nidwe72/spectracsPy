@@ -119,6 +119,15 @@ class ApplicationStyleLogicModule(Singleton):
 * {{
 	background: {background};
 	color: {text};
+}}
+
+/* Borders are opt-in, not universal (spec Workstream C / C1). Inputs and
+   titled group boxes get them explicitly below; everything else is flat. */
+QLineEdit {{
+	border: 1px solid {border};
+}}
+
+QComboBox {{
 	border: 1px solid {border};
 }}
 
@@ -192,6 +201,7 @@ QRadioButton::indicator:checked:hover, QCheckBox::indicator:checked:hover {{
 
 QGroupBox {{
 	margin-top: 6px;
+	border: 1px solid {border};
 }}
 
 
@@ -359,6 +369,7 @@ QComboBox::down-arrow {{
 
 QAbstractSpinBox {{
 	padding-right: 15px;
+	border: 1px solid {border};
 }}
 
 QAbstractSpinBox::up-button, QAbstractSpinBox::down-button {{
