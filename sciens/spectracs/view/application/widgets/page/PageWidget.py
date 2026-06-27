@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLab
 
 from PySide6.QtCore import Qt
 
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
 
 class PageWidget(QFrame):
@@ -16,10 +17,15 @@ class PageWidget(QFrame):
     def initialize(self):
 
         layout=QGridLayout()
+        layout.setSpacing(Metrics.S)
         self.setLayout(layout)
 
 
-        if not self._isTopMostPageWidget():
+        if self._isTopMostPageWidget():
+            # Page-level container: the one place that gets an outer margin.
+            layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
+        else:
+            # Nested page widgets stay flush so margins don't compound.
             layout.setContentsMargins(0,0,0,0)
             self.setContentsMargins(0,0,0,0)
 
@@ -36,6 +42,7 @@ class PageWidget(QFrame):
         result = QGroupBox("")
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         result.setLayout(layout);
 
         return result
@@ -50,13 +57,14 @@ class PageWidget(QFrame):
         #result.setFlat(True)
 
         layout=QGridLayout()
-        layout.setContentsMargins
+        # No top margin (the group-box title occupies it); token gutters + spacing.
+        layout.setContentsMargins(0, Metrics.S, Metrics.S, Metrics.S)
+        layout.setSpacing(Metrics.S)
         result.setLayout(layout)
         row=0
         mainContainerWidgets = self.getMainContainerWidgets()
         for mainContainerWidgetName,mainContainerWidget in mainContainerWidgets.items():
             if self.verticalLayout:
-                layout.setContentsMargins(0, 5, 5, 5)
                 layout.addWidget(mainContainerWidget,row,0,1,1)
             else:
                 layout.addWidget(mainContainerWidget, 0, row, 1, 1)
@@ -76,6 +84,7 @@ class PageWidget(QFrame):
         container=QWidget()
 
         layout=QGridLayout()
+        layout.setSpacing(Metrics.S)
         container.setLayout(layout)
         labelComponent=PageLabel(label)
         layout.addWidget(labelComponent,0,0,1,1)
