@@ -311,6 +311,19 @@ for a visual-regression diff; also the comparison rig for Workstream D (theme sw
 the felt improvement) · view-code **C2b** (single-child demotion, most churn) · cleanup **C4** · audit
 **C5**. Same discipline as P0–P6: one commit per phase, compile + offscreen-gallery verified.
 
+### Phase status (Workstream C)
+- **C0–C5: DONE.** Implemented and committed on branch `visual-harmonization`, one commit per phase,
+  each compile + offscreen-gallery verified and judged screen-by-screen. Delivered: the gallery
+  harness (`tools/screen_gallery.py`), the inverted border model (no universal border; explicit on
+  inputs + titled groups), borderless untitled holders + faint preview outline (E2), single-child
+  frame demotion via `plain`/`sectionLabel` properties + the `borderlessMainContainer` flag, the
+  flattened page container (E1), and painted chart/video colors routed through getters.
+- Two-property model: `QGroupBox[plain="true"]` = titleless holder (no border, no top margin);
+  `QGroupBox[sectionLabel="true"]` = demoted single-child frame (no border, keeps title room).
+- **Deliberately retained** (documented, not theme chrome): HTML profile-list table colors,
+  `ToggleSwitch` paint defaults, spectral-line `color:black` swatch contrast, `SpectralColorUtil`
+  wavelength→RGB, intentional random-gray spectrum pens.
+
 ### 9.7 Workstream D — runtime theme switching (POSTPONED)
 
 Pump-oil green ↔ olive-oil (lighter green) at runtime. **Architecture is already ready** from P0–P6:
