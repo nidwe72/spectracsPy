@@ -137,11 +137,9 @@ QFrame{{
     border:none;
 }}
 
-/* E2: a standalone image preview gets a faint outline so an empty feed reads
-   as a defined "image area", not an invisible void (spec Workstream C / C2).
-   The calibration video sits inside a bordered tab card already, so it needs
-   no outline of its own (spec C10). */
-BaseImageViewModule {{
+/* E2: image/video preview targets get a faint outline so an empty feed reads
+   as a defined "image area", not an invisible void (spec Workstream C / C2). */
+BaseImageViewModule, BaseVideoViewModule {{
     border: 1px solid {border};
 }}
 
@@ -172,9 +170,10 @@ QComboBox{{
 */
 
 /*https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qtabwidget-and-qtabbar*/
-QTabWidget::pane {{ /* The tab widget frame: a bordered card whose content is
-    padded inside the border (spec C9). */
-    border: 1px solid {border};
+QTabWidget::pane {{ /* The tab content area: no outer frame of its own, just
+    padding so the content breathes (spec C9/C10). The content panels carry
+    their own borders. */
+    border: none;
     padding: {panelPadding}px;
 }}
 
