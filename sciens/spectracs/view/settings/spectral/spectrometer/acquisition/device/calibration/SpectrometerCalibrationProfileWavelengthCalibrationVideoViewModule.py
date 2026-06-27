@@ -2,6 +2,8 @@ from PySide6.QtCore import Qt, QRectF, QPointF
 from PySide6.QtGui import QPixmap, QPen, QBrush
 from PySide6.QtWidgets import QApplication, QMessageBox
 
+from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters
@@ -149,7 +151,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             for peakIndex in peaks.tolist():
                 lineItem = BaseGraphicsLineItem()
                 lineItem.setLine(peakIndex, 0, peakIndex, videoSignal.image.height())
-                pen = QPen(QBrush(Qt.white), 1)
+                pen = QPen(QBrush(ApplicationStyleLogicModule().getPrimaryTextColor()), 1)
                 pen.setStyle(Qt.PenStyle.DotLine)
                 lineItem.setPen(pen)
 
@@ -160,7 +162,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             for spectralLine in spectralLines:
                 lineItem = BaseGraphicsLineItem()
                 lineItem.setLine(spectralLine.pixelIndex, 0, spectralLine.pixelIndex, videoSignal.image.height())
-                pen = QPen(QBrush(Qt.white), 3)
+                pen = QPen(QBrush(ApplicationStyleLogicModule().getPrimaryTextColor()), 3)
                 pen.setStyle(Qt.PenStyle.DotLine)
                 lineItem.setPen(pen)
 

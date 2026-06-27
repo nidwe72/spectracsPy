@@ -32,7 +32,7 @@ class SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule(PageWid
         chart.setContentsMargins(0, 0, 0, 0)
 
         chart.setBackgroundBrush(QBrush(QColor("transparent")))
-        chart.setTitleBrush(QBrush(QColor("white")));
+        chart.setTitleBrush(QBrush(ApplicationStyleLogicModule().getPrimaryTextColor()));
 
         result['chartView'] = chartView
 

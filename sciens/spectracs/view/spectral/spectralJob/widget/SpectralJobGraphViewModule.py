@@ -25,7 +25,7 @@ class SpectralJobGraphViewModule(QChartView):
         self.chart = QChart()
         self.chart.legend().hide()
         self.chart.setBackgroundBrush(QBrush(QColor("transparent")))
-        self.chart.setTitleBrush(QBrush(QColor("white")));
+        self.chart.setTitleBrush(QBrush(ApplicationStyleLogicModule().getPrimaryTextColor()));
         self.setChart(self.chart)
         self.chart.createDefaultAxes()
 
