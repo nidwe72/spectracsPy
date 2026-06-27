@@ -234,6 +234,12 @@ QGroupBox[sectionLabel="true"] {{
 	border: none;
 }}
 
+/* The section-label heading aligns with its field's left edge, not the
+   bordered-panel title inset (spec C11). */
+QGroupBox[sectionLabel="true"]::title {{
+	left: 0px;
+}}
+
 
 QGroupBox::title {{
 	top: -7px;
