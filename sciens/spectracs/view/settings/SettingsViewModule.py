@@ -51,6 +51,7 @@ class SettingsViewModule(QWidget):
 
         layout = QGridLayout()
         result.setLayout(layout)
+        Metrics.applyPanelPadding(layout)
 
         comboBox=self.createLabeledComponent('Measurement profile',QComboBox())
         layout.addWidget(comboBox, 0, 0, 1, 3)
@@ -94,6 +95,7 @@ class SettingsViewModule(QWidget):
 
         layout = QGridLayout()
         result.setLayout(layout)
+        Metrics.applyPanelPadding(layout)
 
         openApplicationAboutViewModuleButton = QPushButton()
         openApplicationAboutViewModuleButton.setText("About")

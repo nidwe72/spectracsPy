@@ -216,6 +216,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
         layout = QGridLayout()
         result.setLayout(layout)
+        Metrics.applyPanelPadding(layout)
 
         self.coefficientAComponent = QLineEdit()
         self.coefficientAComponent.setReadOnly(True)

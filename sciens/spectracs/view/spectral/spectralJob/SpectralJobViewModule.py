@@ -48,6 +48,7 @@ class SpectralJobViewModule(QWidget):
 
         lightGroupBoxLayout = QGridLayout()
         lightGroupBox.setLayout(lightGroupBoxLayout);
+        Metrics.applyPanelPadding(lightGroupBoxLayout)
 
         measureLightButton = QPushButton()
         measureLightButton.setText("Measure")
@@ -83,6 +84,7 @@ class SpectralJobViewModule(QWidget):
 
         lightGroupBoxLayout = QGridLayout()
         lightGroupBox.setLayout(lightGroupBoxLayout);
+        Metrics.applyPanelPadding(lightGroupBoxLayout)
 
         measureLightButton = QPushButton()
         measureLightButton.setText("Measure")

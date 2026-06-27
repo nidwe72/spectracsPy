@@ -63,8 +63,14 @@ class PageWidget(QFrame):
         #result.setFlat(True)
 
         layout=QGridLayout()
-        # No top margin (the group-box title occupies it); token gutters + spacing.
-        layout.setContentsMargins(0, Metrics.S, Metrics.S, Metrics.S)
+        if self._isTopMostPageWidget():
+            # Borderless page container: the page's outer margin already insets
+            # it, so add only symmetric breathing room (spec C6).
+            layout.setContentsMargins(0, Metrics.S, 0, Metrics.S)
+        else:
+            # Bordered panel: uniform inner padding (P=M) so content does not
+            # hug the frame and matches every other panel (spec C6).
+            layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
         layout.setSpacing(Metrics.S)
         result.setLayout(layout)
         row=0

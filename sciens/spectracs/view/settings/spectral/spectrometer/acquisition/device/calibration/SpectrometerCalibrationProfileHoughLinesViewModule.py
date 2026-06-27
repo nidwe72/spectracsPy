@@ -86,6 +86,7 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 
         layout = QGridLayout()
         result.setLayout(layout)
+        Metrics.applyPanelPadding(layout)
 
         self.x1Component = QLineEdit()
         layout.addWidget(self.createLabeledComponent('x1', self.x1Component), 0, 0, 1, 1)

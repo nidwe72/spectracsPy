@@ -18,3 +18,9 @@ class Metrics(Singleton):
     M = 12
     L = 16
     XL = 24
+
+    @staticmethod
+    def applyPanelPadding(layout):
+        """Uniform inner padding (P=M) for a bordered panel's content, so panel
+        content never hugs the frame and every panel matches (spec C6)."""
+        layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
