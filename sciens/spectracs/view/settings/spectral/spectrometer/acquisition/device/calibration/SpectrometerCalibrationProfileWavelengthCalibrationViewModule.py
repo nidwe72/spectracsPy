@@ -23,6 +23,7 @@ from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.cal
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 
 
 class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
@@ -71,7 +72,8 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         # Phase 3: algorithm selection seam. Only HEURISTIC is wired; RANSAC modes are placeholders
         # that get dispatched to a "not yet implemented" notice in onClickedDetectPeaksButtonNew.
         self.expectedDetectionButton = QPushButton('help: expected detection')
-        self.expectedDetectionButton.setStyleSheet("background-color: #5A5A5A;")
+        self.expectedDetectionButton.setStyleSheet(
+            "background-color: %s;" % ApplicationStyleLogicModule().getSecondaryColor().name())
         self.expectedDetectionButton.clicked.connect(self.onClickedExpectedDetectionButton)
         layout.addWidget(self.expectedDetectionButton, 0, 0, 1, 1)
 

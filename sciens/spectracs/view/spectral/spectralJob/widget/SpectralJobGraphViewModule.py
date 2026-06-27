@@ -112,7 +112,7 @@ class SpectralJobGraphViewModule(QChartView):
 
                     pen = series.pen();
                     pen.setWidth(2);
-                    pen.setBrush(QBrush(QColor("#3D7848")))
+                    pen.setBrush(QBrush(ApplicationStyleLogicModule().getPrimaryColor()))
                     series.setPen(pen)
 
                     valuesByNanometers = dict(zip(keys, meanSpectrumValues.tolist()))
