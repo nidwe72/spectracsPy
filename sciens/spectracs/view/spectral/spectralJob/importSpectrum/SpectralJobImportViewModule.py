@@ -3,11 +3,6 @@ from PySide6.QtWidgets import QGridLayout
 from PySide6.QtWidgets import QPushButton
 from PySide6.QtWidgets import QFileDialog
 
-from PySide6.QtCharts import QChart
-from PySide6.QtCharts import QLineSeries
-from PySide6.QtCore import QPointF
-from PySide6.QtCharts import QChartView
-
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 
@@ -26,25 +21,9 @@ class SpectralJobImportViewModule(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
 
-        series = QLineSeries()
-
-        series.append(0, 6)
-        series.append(3, 5)
-        series.append(3, 8)
-        series.append(7, 3)
-        series.append(12, 7)
-
-        series << QPointF(11, 1) << QPointF(13, 3) \
-        << QPointF(17, 6) << QPointF(18, 3) << QPointF(20, 20)
-
-        chart = QChart()
-        chart.addSeries(series)
-        # chart.setAnimationOptions(QChart.SeriesAnimations)
-        chart.setTitle("Spectrum")
-        #chart.setTheme(QChart.ChartThemeBlueCerulean)
-
-        chartView = QChartView(chart)
-        #layout.addWidget(chartView, 0, 0, 1, 2)
+        # NOTE: the former QtCharts preview chart here was never added to the
+        # layout (the addWidget call was commented out), so it rendered nothing.
+        # Removed with the QtCharts migration (docs/SPEC_pyside6_and_android.md).
 
         importButton = QPushButton()
         importButton.setText("Open file")

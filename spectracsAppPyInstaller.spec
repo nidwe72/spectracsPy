@@ -1,15 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from PyInstaller.utils.hooks import collect_submodules
 
 block_cipher = None
 
+# pyqtgraph imports its submodules dynamically (graphics items, the Qt binding
+# shim, colormaps), so PyInstaller cannot discover them statically - collect them
+# explicitly (QtCharts->pyqtgraph migration, docs/SPEC_pyside6_and_android.md).
+pyqtgraph_hiddenimports = collect_submodules('pyqtgraph')
 
 a = Analysis(
     ['spectracsMain.py'],
     pathex=["../spectracsPy-model"],
     binaries=[],
     datas=[ ],
-    hiddenimports=["pyi_splash"],
+    hiddenimports=["pyi_splash"] + pyqtgraph_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

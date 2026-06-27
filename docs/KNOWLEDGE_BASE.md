@@ -240,3 +240,26 @@ R0 spike but **still not producing correct fits in the actual app run** — open
 - Camera device id hard-coded to 0; inlined stylesheet; master-data loads all rows (no pagination).
 - Scratch scripts at app root (`spectracsTest*.py`, `match_orb.py`).
 ```
+
+## 14. Planned work / specs
+
+- **[`SPEC_pyside6_and_android.md`](SPEC_pyside6_and_android.md) — QtCharts → pyqtgraph (license-clean
+  charting) + Android groundwork. IMPLEMENTED 2026-06-27 (charting part).** App is *already* 100% PySide6
+  (LGPLv3, OK for closed-source); the one GPL leak was **Qt Charts** (GPLv3/commercial only). **Resolved:**
+  all three charts moved to **pyqtgraph** (MIT) — `grep -rn QtCharts` is now clean, so the GPL obligation
+  is gone and the app can ship closed-source under LGPL. Details:
+  - New `view/application/widgets/chart/ChartThemeUtil.py` — single pyqtgraph theme adapter over
+    `ApplicationStyleLogicModule` (transparent bg, light axes, subtle grid, static/no-zoom).
+  - `SpectralJobGraphViewModule` → `pg.PlotWidget`; live raw overlay is a **bounded `deque(maxlen=200)`**
+    ring buffer (was unbounded `addSeries`), mean = one persistent `setData` curve, axes **frozen to the
+    first spectrum** for parity. Caller's two `.chart.setTitle(...)` calls became `.setTitle(...)`.
+  - Calibration interpolation view → `pg.ScatterPlotItem` + `PlotDataItem`; the "spline" was never a
+    spline — it's the calibration **cubic polynomial** sampled, so no scipy/guard was needed.
+  - Import-preview chart was **dead code** (never added to its layout) → removed.
+  - **Dep note:** `pyqtgraph 0.14.0` added to the venv; its install pulled numpy 2.x which breaks the
+    numpy-1.x-compiled deps (colour-science pins `numpy<2`), so **numpy is pinned to 1.26.4**. Both
+    PyInstaller specs now `collect_submodules('pyqtgraph')` (dynamic imports).
+  - Android = future effort; real blockers are cv2/scipy/usb-serial, not charting.
+- **[`SPEC_visual_harmonization.md`](SPEC_visual_harmonization.md) — spacing system + color
+  consolidation.** Draft spec for a consistent look (spacing scale + Bootstrap-style semantic palette
+  sourced from `ApplicationStyleLogicModule`).

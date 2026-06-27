@@ -38,11 +38,11 @@ class SpectralJobWidgetViewModule(PageWidget):
         self.tabWidget = QTabWidget()
 
         self.plotSpectraMeanViewModule = SpectralJobGraphViewModule()
-        self.plotSpectraMeanViewModule.chart.setTitle("Intensities: mean")
+        self.plotSpectraMeanViewModule.setTitle("Intensities: mean")
         self.tabWidget.addTab(self.plotSpectraMeanViewModule, "Intensities (averaged)")
 
         self.spectralJobGraphViewModule = SpectralJobGraphViewModule()
-        self.spectralJobGraphViewModule.chart.setTitle(
+        self.spectralJobGraphViewModule.setTitle(
             "Intensities: burst mode of 50 measurements holding the raw intensities")
         self.tabWidget.addTab(self.spectralJobGraphViewModule, "Intensities (raw)")
 
