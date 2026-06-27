@@ -204,7 +204,7 @@ QScrollBar::add-page, QScrollBar::sub-page {
 
 QAbstractButton {
     height:50px;
-	background-color:  #33663d;
+	background-color:  #3D7848;
 	font:bold;
 }
 
@@ -213,11 +213,11 @@ QAbstractButton:disabled {
 }
 
 QAbstractButton:hover {
-	background:  #3d7848;
+	background:  #33663d;
 }
 
 QAbstractButton:pressed {
-	background:  #3d7848;	
+	background:  #33663d;
 }
 
 QAbstractItemView {
@@ -257,8 +257,8 @@ QTabBar::tab {
 }
 
 QTabBar::tab:selected {
-	background: #33663d;
-	
+	background: #3D7848;
+
 }
 
 QComboBox::down-arrow {
