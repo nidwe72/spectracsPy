@@ -24,10 +24,12 @@ class SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule(PageWid
         chart.addSeries(self.__getSplineSeries())
         chart.legend().hide()
 
-        # chart.setMargins(QMargins(10,10,10,10))
+        # Outer margins zeroed so the chart sits flush like every other panel
+        # (was -20,-10,-10,-10 — a layout bleed-out hack). The chart's own plot
+        # margins are left at the Qt default so axis labels are not clipped.
         chartView = QChartView(chart)
-        chartView.setContentsMargins(-20, -10, -10, -10)
-        chart.setContentsMargins(-20, -10, -10, -10)
+        chartView.setContentsMargins(0, 0, 0, 0)
+        chart.setContentsMargins(0, 0, 0, 0)
 
         chart.setBackgroundBrush(QBrush(QColor("transparent")))
         chart.setTitleBrush(QBrush(QColor("white")));
