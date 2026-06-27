@@ -40,6 +40,7 @@ class PageWidget(QFrame):
 
     def createNavigationGroupBox(self):
         result = QGroupBox("")
+        result.setProperty("plain", True)  # borderless holder (spec C2)
 
         layout = QGridLayout()
         layout.setSpacing(Metrics.S)

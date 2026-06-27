@@ -136,6 +136,12 @@ QFrame{{
     border:none;
 }}
 
+/* E2: image/video preview targets get a faint outline so an empty feed reads
+   as a defined "image area", not an invisible void (spec Workstream C / C2). */
+BaseImageViewModule, BaseVideoViewModule {{
+    border: 1px solid {border};
+}}
+
 QStackedWidget{{
     border: 1px solid {border};
 }}
@@ -202,6 +208,13 @@ QRadioButton::indicator:checked:hover, QCheckBox::indicator:checked:hover {{
 QGroupBox {{
 	margin-top: 6px;
 	border: 1px solid {border};
+}}
+
+/* Untitled holders (nav rows, region wrappers) tagged plain=True in view code:
+   no border, no reserved title gap (spec Workstream C / C2). */
+QGroupBox[plain="true"] {{
+	border: none;
+	margin-top: 0px;
 }}
 
 

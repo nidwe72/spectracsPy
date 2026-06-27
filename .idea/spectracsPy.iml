@@ -9,6 +9,7 @@
     <orderEntry type="module" module-name="spectracsPy-model" />
     <orderEntry type="module" module-name="spectracsPy-server" />
     <orderEntry type="module" module-name="spectracsPy-base" />
+    <orderEntry type="module" module-name="yell-server" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

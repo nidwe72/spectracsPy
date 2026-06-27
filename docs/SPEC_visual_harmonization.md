@@ -155,9 +155,12 @@ first and are reviewable on their own.
 - **Expansion batch:** P7 → P8. The new semantic colors + final sweep.
 
 ### Phase status
-- **P0–P6: SPECIFIED, awaiting go.** This is the agreed scope to implement first. Not yet implemented.
-- **P7–P8: DEFERRED.** Direction captured in §7.1; concrete decisions (7b thresholds, 7c application,
-  status-widget list) happen when P5/P6 are done. Do **not** start P7 with the P1–P6 go.
+- **P0–P6: DONE.** Implemented and committed on branch `visual-harmonization` (one commit per phase,
+  compile + offscreen verified, P5 proven zero-diff). Delivered tokens + getters, one brand green,
+  chart-margin fix, the PageWidget spacing contract, uniform button-row spacing, the borderless-panel
+  decision, the getter-built QSS, and painted widgets routed through getters.
+- **P7–P8: DEFERRED.** Semantic-status colors. Superseded in priority by Workstream C (§9) — the
+  user's actual pain is borders/panels, not status colors. Direction still captured in §7.1.
 
 ---
 
@@ -224,3 +227,94 @@ Second skeptical pass, this time only on the batch about to be greenlit. The fir
 **Verdict: P1–P6 is GO-ready**, conditional on three cheap disciplines: (1) exhaustive green grep
 before P1, (2) one-phase-per-commit + screenshot each, (3) P5/P6 judged by zero-diff screenshots.
 No blocking unknowns remain in this batch.
+
+---
+
+## 9. Workstream C — Panel & border cleanup
+
+This is the next workstream after P0–P6, and the **highest-impact** one for the "looks dirty /
+mis-aligned" complaint. P0–P6 fixed spacing and color plumbing; they did **not** touch the border
+model. Visual inspection of all 9 top-level screens (annotated gallery, §9.5) shows the structural
+cause is **too many borders**, not color.
+
+### 9.1 Root cause + the 6 visible patterns
+
+The generated QSS opens with a **universal selector** `* { border: 1px solid <border> }` — every
+widget is bordered by default. Combined with `QGroupBox { margin-top: 6px }` (reserves a title-gap
+even on untitled boxes) and deep panel nesting, this produces six on-screen problems:
+
+1. **Doubled border lines** — page-container border + nested PageWidget border + `*` border stack
+   into a visible ~2px double line (seen on S5/S6/S8). The ugliest artifact.
+2. **Untitled nav boxes** draw a pointless rectangle around every bottom button row (~13 across the
+   app: S3#7, S5#8, S6#4, …).
+3. **Untitled region boxes** wrap empty/video/chart space in a border + wasted title-gap (S6#2 ROI
+   video, S5#3 empty calibration area).
+4. **Single-child titled frames** where the title duplicates the lone control (S3 "Evaluation
+   profiles" frame → one "Evaluation profiles" button; S5 "Vendor name"/"Style name" → one field).
+5. **Deep border nesting** — page border → section border → per-field frame border = 3 concentric
+   borders, each insetting content differently.
+6. **Mis-alignment** from mixed framed/unframed rows: framed fields inset further than unframed ones,
+   so columns don't line up.
+
+### 9.2 The rule (agreed)
+
+Three buckets:
+- **Border KEPT:** (a) a titled `QGroupBox` that groups **2+ children**, and (b) **input controls**
+  (`QLineEdit`/`QComboBox`/`QAbstractSpinBox`) for affordance.
+- **Border REMOVED:** untitled boxes (nav rows, region/video holders), plain `QWidget` layout
+  holders, **and single-child titled frames** (→ demote to a plain section label).
+- **Otherwise:** structure comes from whitespace + spacing tokens (Workstream A), not boxes.
+
+### 9.3 Exceptions to the rule (validated against all screens)
+
+Mechanical application of §9.2 is correct for ~80% (all red nav boxes, the orange single-button
+frames). These eight cases need judgment:
+
+| # | Exception | Screen evidence | Handling |
+|---|-----------|-----------------|----------|
+| E1 | **Page-title (breadcrumb) container** loses its border even though titled+multi-child | S4/S5/S6/S8 outer frame = the doubled line | Top-level page container is **never** bordered; breadcrumb → plain header strip. *Biggest win.* |
+| E2 | **Untitled content/region holders ≠ nav boxes**; some need *something*, not nothing | S1#1 graph, S6#2 ROI video, S7#1 preview, S5#3 | Video/preview/chart targets get a **subtle surface-tint placeholder** (or faint 1px), not a hard frame and not an invisible void |
+| E3 | **Don't strip table/list gridlines** | S4 profile list, S5 "Virtuax" table | Removing chrome borders must not touch `QTableView`/`QHeaderView` gridlines (data structure) |
+| E4 | **Tab panes must not double-border** | S1 Oil/Light, S6 ROI/Wavelength tabs | Tab content stays borderless; per-tab group boxes don't add a redundant inner border |
+| E5 | **Single-child count is unreliable** — judge by content block, not control count | S5#2 (chart+Edit), S7#1 (preview+toggle+button) | Don't auto-demote on button/input count alone; a frame holding a chart/table/preview/`ToggleSwitch` is a real group |
+| E6 | **Inputs need their border ADDED back** (companion step) | every `QLineEdit`/`QComboBox` | Dropping `*` border makes fields edge-less; re-add input borders explicitly or fields vanish |
+| E7 | **The keepers** — flatten, don't strip | S3 Acquisition/Infos, S1 Oil/Light, S8 Connect/Download | Multi-child titled groups keep their border; only change is un-nesting them from the page-container border (ties to E1) |
+| E8 | **Status strip** | top "ready for action…" field | Decide: bordered field vs flat status strip |
+
+### 9.4 Screen inventory (categorised)
+
+29 panels / 9 top-level screens: **11 titled** (border justified), **9 untitled `QGroupBox("")`**
+(all nav button-rows → strip), **9 plain `QWidget`** holders (→ strip). Full per-panel classification
+captured by the gallery harness (§9.5).
+
+### 9.5 Tooling — the screen gallery harness (reusable asset)
+
+A ~50-line script boots the app's real `MainViewModule` stack **offscreen**, switches to each screen,
+`grab()`s it to PNG, walks the widget tree, and overlays classified annotations (red = untitled,
+orange = single-child frame, green = legitimate group). No clicking, no server needed (sync no-ops).
+**To be committed as `tools/screen_gallery.py`.** Long-term value: re-run before/after any UI change
+for a visual-regression diff; also the comparison rig for Workstream D (theme switching).
+
+### 9.6 Implementation phases (tabular)
+
+| Phase | Title | What it does | Touches | Risk | Visible? |
+|-------|-------|--------------|---------|------|----------|
+| C0 | Commit gallery harness | Promote the offscreen screenshot+annotation tool to `tools/screen_gallery.py`; capture the **before** gallery | new `tools/screen_gallery.py` | none | tooling |
+| C1 | Invert border model | Remove `border` from the `*` rule; add **explicit** borders to inputs (E6) and multi-child titled group boxes only | QSS getter/template | **High** — enumerate every widget leaning on the implicit border; verify per screen | **Yes — biggest** (kills doubled lines, patterns 1/2/5/6) |
+| C2 | Untitled boxes borderless | Nav/region holders → no border, drop `margin-top` title-gap. Apply E2 (subtle placeholder for video/preview/chart targets) | QSS + nav/region view code | Medium | Yes (pattern 3) |
+| C2b | Demote single-child frames | Replace bordered single-child `QGroupBox` with a lightweight section label; respect E5 (don't demote real groups) | per-screen view code (S3, S5, S7…) | **High** — most view-code churn | Yes (pattern 4) |
+| C3 | Flatten page container | E1 + E7: page-title container loses its border, breadcrumb → header strip; un-nest the keeper groups | PageWidget + QSS | Medium | Yes (removes outer double line) |
+| C4 | Remaining colors → getters | Chart title brushes ×2, video pens ×2, HTML table `#404040`/`gray`, `ToggleSwitch` defaults, hardcoded `color:black` | view code | Low | No (cleanliness) |
+| C5 | Visual audit | Re-run harness → before/after annotated gallery; walk every screen vs §9.2/§9.3; fix residuals | review + fixes | — | — |
+
+**Grouping for review:** structural-wins **C1 → C3** (the doubled-border + nav-box + nesting fixes,
+the felt improvement) · view-code **C2b** (single-child demotion, most churn) · cleanup **C4** · audit
+**C5**. Same discipline as P0–P6: one commit per phase, compile + offscreen-gallery verified.
+
+### 9.7 Workstream D — runtime theme switching (POSTPONED)
+
+Pump-oil green ↔ olive-oil (lighter green) at runtime. **Architecture is already ready** from P0–P6:
+colors flow from getters → QSS builder + painted widgets. Implementation sketch (when un-postponed):
+give `ApplicationStyleLogicModule` a theme enum, re-call `getApplicationStyleSheet()` +
+`app.setStyleSheet()` on switch, repaint (the `Polisher` event-filter already re-polishes on property
+change). The gallery harness (§9.5) is the before/after comparison rig. Not started.
