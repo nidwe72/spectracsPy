@@ -170,11 +170,17 @@ QComboBox{{
 */
 
 /*https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qtabwidget-and-qtabbar*/
-QTabWidget::pane {{ /* The tab content area: no outer frame of its own, just
-    padding so the content breathes (spec C9/C10). The content panels carry
-    their own borders. */
-    border: none;
+QTabWidget::pane {{ /* The tab widget frame: a bordered card whose content is
+    padded inside the border (spec C9). */
+    border: 1px solid {border};
     padding: {panelPadding}px;
+}}
+
+/* The QStackedWidget that QTabWidget uses internally to host tab pages must NOT
+   draw the generic stacked-widget border - else it doubles with the pane card
+   and the content panels inside (spec C10). */
+QTabWidget QStackedWidget {{
+    border: none;
 }}
 
 QWidget::item:selected {{
