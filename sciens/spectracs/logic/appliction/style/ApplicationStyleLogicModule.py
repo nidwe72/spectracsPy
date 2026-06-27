@@ -223,8 +223,15 @@ QGroupBox::title {{
 	left: 7px;	
 }}
 
-QGroupBox#PageWidget_topMost::title {{	
-	color: {primary};	
+/* E1: the top-level page container is never bordered - the breadcrumb title
+   becomes a plain header strip, and inner groups stop being double-framed
+   (spec Workstream C / C3). */
+QGroupBox#PageWidget_topMost {{
+	border: none;
+}}
+
+QGroupBox#PageWidget_topMost::title {{
+	color: {primary};
 }}
 
 QScrollBar {{
