@@ -78,7 +78,7 @@ class SettingsViewModule(QWidget):
 
     def createServiceLoginGroupBox(self):
         result = QGroupBox("Service Login")
-        result.setProperty("plain", True)  # single-child frame -> section label (spec C2b)
+        result.setProperty("sectionLabel", True)  # single-child frame -> section label (spec C2b)
 
         layout = QGridLayout()
         result.setLayout(layout)
@@ -108,7 +108,7 @@ class SettingsViewModule(QWidget):
 
     def createEvaluationProfilesGroupBox(self):
         result = QGroupBox("Evaluation profiles")
-        result.setProperty("plain", True)  # single-child frame -> section label (spec C2b)
+        result.setProperty("sectionLabel", True)  # single-child frame -> section label (spec C2b)
 
         layout = QGridLayout()
         result.setLayout(layout)
@@ -122,7 +122,7 @@ class SettingsViewModule(QWidget):
 
     def createDownloadsGroupBox(self):
         result = QGroupBox("Downloads")
-        result.setProperty("plain", True)  # single-child frame -> section label (spec C2b)
+        result.setProperty("sectionLabel", True)  # single-child frame -> section label (spec C2b)
 
         layout = QGridLayout()
         result.setLayout(layout)
@@ -135,7 +135,7 @@ class SettingsViewModule(QWidget):
 
     def createUploadsGroupBox(self):
         result = QGroupBox("Uploads")
-        result.setProperty("plain", True)  # single-child frame -> section label (spec C2b)
+        result.setProperty("sectionLabel", True)  # single-child frame -> section label (spec C2b)
 
         layout = QGridLayout()
         result.setLayout(layout)

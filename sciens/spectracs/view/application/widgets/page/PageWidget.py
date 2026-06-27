@@ -10,6 +10,9 @@ from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
 class PageWidget(QFrame):
     mainContainerWidgets = None
     verticalLayout:bool=True
+    # Single-content pages (one field) set this so their titled container is
+    # demoted to a borderless section label, not a frame (spec C2b / E5).
+    borderlessMainContainer:bool=False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,6 +57,8 @@ class PageWidget(QFrame):
         if self._isTopMostPageWidget():
             result.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             result.setObjectName('PageWidget_topMost')
+        elif self.borderlessMainContainer:
+            result.setProperty("sectionLabel", True)
 
         #result.setFlat(True)
 

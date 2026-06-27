@@ -217,6 +217,13 @@ QGroupBox[plain="true"] {{
 	margin-top: 0px;
 }}
 
+/* Demoted single-child frames keep their title as a lightweight section
+   label: no border, but retain the base top margin so the title isn't
+   clipped (spec Workstream C / C2b). */
+QGroupBox[sectionLabel="true"] {{
+	border: none;
+}}
+
 
 QGroupBox::title {{
 	top: -7px;

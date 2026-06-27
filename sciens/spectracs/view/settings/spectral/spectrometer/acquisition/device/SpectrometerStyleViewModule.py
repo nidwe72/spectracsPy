@@ -4,6 +4,7 @@ from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 
 
 class SpectrometerStyleViewModule(PageWidget):
+    borderlessMainContainer = True  # single field -> section label, not a frame (C2b/E5)
     model: SpectrometerStyle = None
     spectrometerStyleNameComponent: PageLineEdit = None
 
