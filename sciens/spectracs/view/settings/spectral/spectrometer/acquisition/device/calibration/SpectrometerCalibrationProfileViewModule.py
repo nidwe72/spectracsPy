@@ -57,16 +57,16 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
             self.tabWidget = QTabWidget()
 
+            # Panels are intentionally borderless: structure comes from surface
+            # contrast + token spacing, not per-widget borders (spec decision P4).
             if self.houghLinesViewModule is None:
                 self.houghLinesViewModule=SpectrometerCalibrationProfileHoughLinesViewModule(self)
-            # self.houghLinesViewModule.setStylesheetOnlySelf("border:1px solid #00000000;")
             self.houghLinesViewModule.initialize()
             self.tabWidget.addTab(self.houghLinesViewModule,'Region of interest')
 
             if self.wavelengthCalibrationViewModule is None:
                 self.wavelengthCalibrationViewModule=SpectrometerCalibrationProfileWavelengthCalibrationViewModule(self)
             self.wavelengthCalibrationViewModule.setModel(self.__getModel())
-            # self.wavelengthCalibrationViewModule.setStylesheetOnlySelf("border:1px solid #00000000;")
             self.wavelengthCalibrationViewModule.initialize()
             self.tabWidget.addTab(self.wavelengthCalibrationViewModule, 'Wavelength calibration')
 
