@@ -155,6 +155,7 @@ class SettingsViewModule(QWidget):
 
         layout = QGridLayout()
         layout.setSpacing(Metrics.S)
+        layout.setContentsMargins(0, 0, 0, 0)  # align nav buttons to content edge (spec C7)
         result.setLayout(layout)
 
         backButton = QPushButton()
@@ -197,6 +198,7 @@ class SettingsViewModule(QWidget):
         container=QWidget()
 
         layout=QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)  # align to container content edge (spec C7)
         container.setLayout(layout)
         labelComponent=PageLabel(label)
         layout.addWidget(labelComponent,0,0,1,1)

@@ -47,6 +47,7 @@ class PageWidget(QFrame):
 
         layout = QGridLayout()
         layout.setSpacing(Metrics.S)
+        layout.setContentsMargins(0, 0, 0, 0)  # align nav buttons to content edge (spec C7)
         result.setLayout(layout);
 
         return result
@@ -63,9 +64,10 @@ class PageWidget(QFrame):
         #result.setFlat(True)
 
         layout=QGridLayout()
-        if self._isTopMostPageWidget():
-            # Borderless page container: the page's outer margin already insets
-            # it, so add only symmetric breathing room (spec C6).
+        if self._isTopMostPageWidget() or self.borderlessMainContainer:
+            # Borderless container (page container or section label): no frame to
+            # protect, so NO horizontal indent - otherwise nested peers stair-step
+            # out of alignment. Keep vertical room only (spec C7).
             layout.setContentsMargins(0, Metrics.S, 0, Metrics.S)
         else:
             # Bordered panel: uniform inner padding (P=M) so content does not
@@ -96,6 +98,9 @@ class PageWidget(QFrame):
         container=QWidget()
 
         layout=QGridLayout()
+        # No own margins: the field aligns to its container's content edge, so
+        # peers at different nesting depths line up (spec C7).
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(Metrics.S)
         container.setLayout(layout)
         labelComponent=PageLabel(label)

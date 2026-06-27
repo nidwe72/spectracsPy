@@ -85,6 +85,7 @@ class VirtualSpectrometerViewModule(PageWidget):
 
         layout = QGridLayout()
         layout.setSpacing(Metrics.S)
+        layout.setContentsMargins(0, 0, 0, 0)  # align nav buttons to content edge (spec C7)
         result.setLayout(layout);
 
         backButton = QPushButton()
