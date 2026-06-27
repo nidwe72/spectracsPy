@@ -1,7 +1,6 @@
 from PySide6.QtGui import QColor
 
 from sciens.base.Singleton import Singleton
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 class ApplicationStyleLogicModule(Singleton):
@@ -172,7 +171,6 @@ QComboBox{{
 /*https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qtabwidget-and-qtabbar*/
 QTabWidget::pane {{ /* The tab widget frame */
     border: none;
-    padding: {panelPadding}px;
 }}
 
 QWidget::item:selected {{
@@ -512,6 +510,5 @@ QLabel[style-large="true"]{{
             surface=self.getSurfaceColor().name(),
             disabled=self.getPrimaryColorDisabled().name(),
             surfaceAlt=self.getSurfaceAltColor().name(),
-            panelPadding=Metrics.M,
         )
 
