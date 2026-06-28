@@ -55,6 +55,17 @@ class SpectracsPyServerClient:
         print("SpectracsPyServerClient: no spectracs server reachable; skipping sync")
         return None
 
+    def login(self, username, password):
+        # Returns a plain dict {ok, userId, username, roles, message}. Never raises to the caller.
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "userId": None, "username": None, "roles": [], "message": "server unavailable"}
+        try:
+            return proxy.login(username, password)
+        except Exception as exception:
+            print("SpectracsPyServerClient.login failed: %s" % exception)
+            return {"ok": False, "userId": None, "username": None, "roles": [], "message": "login failed"}
+
     def syncSpectrometers(self):
         proxy = self.getProxy()
         if proxy is None:

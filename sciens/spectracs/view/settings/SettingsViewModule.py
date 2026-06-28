@@ -5,8 +5,10 @@ from PySide6.QtWidgets import QPushButton
 
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
+from sciens.spectracs.view.settings.login.ServiceLoginDialog import ServiceLoginDialog
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
@@ -84,11 +86,28 @@ class SettingsViewModule(QWidget):
         layout = QGridLayout()
         result.setLayout(layout)
 
-        openServiceLoginViewModuleButton = QPushButton()
-        openServiceLoginViewModuleButton.setText("Login")
-        layout.addWidget(openServiceLoginViewModuleButton, 0, 0, 1, 1)
+        self.serviceLoginButton = QPushButton()
+        self.serviceLoginButton.clicked.connect(self.onClickedServiceLoginButton)
+        layout.addWidget(self.serviceLoginButton, 0, 0, 1, 1)
+        self.updateServiceLoginButton()
 
         return result
+
+    def updateServiceLoginButton(self):
+        if CurrentUserSession().isLoggedIn():
+            self.serviceLoginButton.setText("Logout (%s)" % CurrentUserSession().username)
+        else:
+            self.serviceLoginButton.setText("Login")
+
+    def onClickedServiceLoginButton(self):
+        if CurrentUserSession().isLoggedIn():
+            CurrentUserSession().logout()
+            self.updateServiceLoginButton()
+            return
+
+        dialog = ServiceLoginDialog(self)
+        if dialog.exec():
+            self.updateServiceLoginButton()
 
     def createInfosGroupBox(self):
         result = QGroupBox("Infos")
