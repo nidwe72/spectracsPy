@@ -5,10 +5,8 @@ from PySide6.QtWidgets import QPushButton
 
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
-from sciens.spectracs.view.settings.login.ServiceLoginDialog import ServiceLoginDialog
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
@@ -36,16 +34,12 @@ class SettingsViewModule(QWidget):
         layout.addWidget(uploadsGroupBoxGroupBox, 3, 0, 1, 1)
         layout.setRowStretch(3, 15)
 
-        serviceLoginGroupBox = self.createServiceLoginGroupBox()
-        layout.addWidget(serviceLoginGroupBox, 4, 0, 1, 1)
+        infosGroupBox = self.createInfosGroupBox()
+        layout.addWidget(infosGroupBox, 4, 0, 1, 1)
         layout.setRowStretch(4, 15)
 
-        infosGroupBox = self.createInfosGroupBox()
-        layout.addWidget(infosGroupBox, 5, 0, 1, 1)
-        layout.setRowStretch(5, 15)
-
         navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 6, 0, 1, 1)
+        layout.addWidget(navigationGroupBox, 5, 0, 1, 1)
 
 
     def createAcquisitionSettingsGroupBox(self):
@@ -78,36 +72,6 @@ class SettingsViewModule(QWidget):
         openVirtualSpectrometerViewModuleButton.clicked.connect(self.onClickedOpenVirtualSpectrometerViewModuleButton)
 
         return result
-
-    def createServiceLoginGroupBox(self):
-        result = QGroupBox("Service Login")
-        result.setProperty("sectionLabel", True)  # single-child frame -> section label (spec C2b)
-
-        layout = QGridLayout()
-        result.setLayout(layout)
-
-        self.serviceLoginButton = QPushButton()
-        self.serviceLoginButton.clicked.connect(self.onClickedServiceLoginButton)
-        layout.addWidget(self.serviceLoginButton, 0, 0, 1, 1)
-        self.updateServiceLoginButton()
-
-        return result
-
-    def updateServiceLoginButton(self):
-        if CurrentUserSession().isLoggedIn():
-            self.serviceLoginButton.setText("Logout (%s)" % CurrentUserSession().username)
-        else:
-            self.serviceLoginButton.setText("Login")
-
-    def onClickedServiceLoginButton(self):
-        if CurrentUserSession().isLoggedIn():
-            CurrentUserSession().logout()
-            self.updateServiceLoginButton()
-            return
-
-        dialog = ServiceLoginDialog(self)
-        if dialog.exec():
-            self.updateServiceLoginButton()
 
     def createInfosGroupBox(self):
         result = QGroupBox("Infos")

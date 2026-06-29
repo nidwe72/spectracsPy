@@ -1,11 +1,13 @@
-from PySide6.QtGui import QPixmap, QPainter
+from PySide6.QtGui import QPixmap, QPainter, QIcon
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QWidget, QLabel, QGridLayout, QProgressBar
+from PySide6.QtWidgets import QWidget, QLabel, QProgressBar, QVBoxLayout, QHBoxLayout, QToolButton, QMenu, QSizePolicy
 
 from PySide6 import QtCore
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.view.settings.login.ServiceLoginDialog import ServiceLoginDialog
 
 class MainStatusBarViewModule(QWidget):
 
@@ -13,13 +15,22 @@ class MainStatusBarViewModule(QWidget):
     painter=None
     svgRenderer=None
 
+    # Shared height for the logo + account icon so they sit equal on the header row (spec D6 / RD2).
+    # 70px ~= the logo's native aspect at the 720px display width, which also de-distorts it (RD3),
+    # and is centered in the fixed 100px band, leaving the icon a sensible (not edge-to-edge) size.
+    HEADER_CONTENT_HEIGHT = 70
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setFixedHeight(100)
 
-        layout=QGridLayout()
-        layout.setContentsMargins(0,0,0,0)
-        self.setLayout(layout)
+        outerLayout=QVBoxLayout()
+        outerLayout.setContentsMargins(0,0,0,0)
+        self.setLayout(outerLayout)
+
+        # --- header row: logo (left) -- stretch -- username + account icon (right) ---
+        headerRow=QHBoxLayout()
+        headerRow.setContentsMargins(0,0,0,0)
 
         self.label=QLabel()
 
@@ -31,20 +42,90 @@ class MainStatusBarViewModule(QWidget):
         self.svgRenderer.load(bytearray(self.logo_png,'utf-8'))
 
         self.svgRenderer.render(self.painter,self.pixmap.rect())
+        self.painter.end()
         self.label.setPixmap(self.pixmap)
         self.label.setScaledContents(True)
         self.label.setMinimumWidth(int(480 * 1.5))
+        self.label.setFixedHeight(self.HEADER_CONTENT_HEIGHT)
 
-        layout.addWidget(self.label,0,0, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+        headerRow.addWidget(self.label, alignment=QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        headerRow.addStretch(1)
 
+        self.accountButton=QToolButton()
+        self.accountButton.setAutoRaise(True)  # flat, icon-in-header chrome (spec D5/RD6)
+        # The theme styles every QAbstractButton with a solid green background; override to a flat,
+        # transparent header control with a squared, slightly-rounded border (matching the app's
+        # 1px solid #5A5A5A) and a subtle light hover (no green box).
+        self.accountButton.setStyleSheet(
+            "QToolButton { background: transparent; border: 1px solid #5A5A5A; border-radius: 6px; }"
+            "QToolButton:hover { background: rgba(255, 255, 255, 0.10); }"
+            "QToolButton:pressed { background: rgba(255, 255, 255, 0.16); }")
+        self.accountButton.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        self.accountButton.setFixedSize(self.HEADER_CONTENT_HEIGHT, self.HEADER_CONTENT_HEIGHT)
+        self.accountButton.setIconSize(QtCore.QSize(self.HEADER_CONTENT_HEIGHT - 24, self.HEADER_CONTENT_HEIGHT - 24))
+        self.accountButton.clicked.connect(self.onClickedAccountButton)
+        headerRow.addWidget(self.accountButton, alignment=QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
+
+        outerLayout.addLayout(headerRow)
+
+        # --- progress bar: full window width ---
         self.progressBar=QProgressBar(self)
-        self.progressBar.setMinimumWidth(int(480 * 1.5))
+        self.progressBar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.resetProgressBar()
+        outerLayout.addWidget(self.progressBar)
 
-        layout.addWidget(self.progressBar, 1, 0, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.updateAccountControl()
 
         ApplicationContextLogicModule().getApplicationSignalsProvider().applicationStatusSignal.connect(
             self.handleApplicationStatusSignal)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().userSessionSignal.connect(
+            self.updateAccountControl)
+
+    def renderSvgPixmap(self, svgString):
+        size = self.HEADER_CONTENT_HEIGHT
+        pixmap = QPixmap(size, size)
+        pixmap.fill(QtCore.Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        renderer = QSvgRenderer()
+        renderer.load(bytearray(svgString, 'utf-8'))
+        renderer.render(painter, pixmap.rect())
+        painter.end()
+        return pixmap
+
+    def buildAccountIcon(self, template, normalColor, hoverColor):
+        # Normal + Active(hover) pixmaps -> the icon recolours on mouse-over (QToolButton autoRaise).
+        icon = QIcon()
+        icon.addPixmap(self.renderSvgPixmap(template % {'c': normalColor}), QIcon.Mode.Normal)
+        icon.addPixmap(self.renderSvgPixmap(template % {'c': hoverColor}), QIcon.Mode.Active)
+        return icon
+
+    def updateAccountControl(self):
+        if CurrentUserSession().isLoggedIn():
+            self.accountButton.setIcon(self.buildAccountIcon(
+                self.PERSON_FILLED_SVG, self.ACCOUNT_ACTIVE_COLOR, self.ACCOUNT_ACTIVE_HOVER_COLOR))
+            self.accountButton.setToolTip("Signed in as %s — click for options" % CurrentUserSession().username)
+        else:
+            self.accountButton.setIcon(self.buildAccountIcon(
+                self.PERSON_OUTLINE_SVG, self.ACCOUNT_NEUTRAL_COLOR, self.ACCOUNT_NEUTRAL_HOVER_COLOR))
+            self.accountButton.setToolTip("Login")
+
+    def onClickedAccountButton(self):
+        if CurrentUserSession().isLoggedIn():
+            menu = QMenu(self)
+            roles = ", ".join(CurrentUserSession().roles) or "no role"
+            headerAction = menu.addAction("%s (%s)" % (CurrentUserSession().username, roles))
+            headerAction.setEnabled(False)
+            menu.addSeparator()
+            logoutAction = menu.addAction("Logout")
+            chosen = menu.exec(self.accountButton.mapToGlobal(QtCore.QPoint(0, self.accountButton.height())))
+            if chosen == logoutAction:
+                CurrentUserSession().logout()
+                ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
+            return
+
+        dialog = ServiceLoginDialog(self)
+        if dialog.exec():
+            ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
 
     def resetProgressBar(self):
         self.progressBar.setValue(0)
@@ -59,6 +140,24 @@ class MainStatusBarViewModule(QWidget):
             percents = applicationStatusSignal.currentStepIndex / float(applicationStatusSignal.stepsCount) * 100.0
             self.progressBar.setValue(percents)
 
+
+    # Account/person glyph; %(c)s is the colour (set per state). Outline = logged out, filled = logged in.
+    PERSON_OUTLINE_SVG='''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <circle cx="12" cy="8" r="4.2" fill="none" stroke="%(c)s" stroke-width="1.8"/>
+  <path d="M4.5 20 C4.5 15.6 8 13.5 12 13.5 C16 13.5 19.5 15.6 19.5 20" fill="none" stroke="%(c)s" stroke-width="1.8" stroke-linecap="round"/>
+</svg>'''
+
+    PERSON_FILLED_SVG='''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <circle cx="12" cy="8" r="4.2" fill="%(c)s"/>
+  <path d="M4.5 20 C4.5 15.6 8 13.5 12 13.5 C16 13.5 19.5 15.6 19.5 20 Z" fill="%(c)s"/>
+</svg>'''
+
+    # Logged-out: muted form-label grey (#808080, the QSS label/readonly grey); logged-in: brand
+    # green (active session). Hover brightens a shade (grey -> lighter grey, never pure white).
+    ACCOUNT_NEUTRAL_COLOR='#808080'
+    ACCOUNT_NEUTRAL_HOVER_COLOR='#AAAAAA'
+    ACCOUNT_ACTIVE_COLOR='#3D7848'
+    ACCOUNT_ACTIVE_HOVER_COLOR='#4E9A5E'
 
     logo_png='''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
