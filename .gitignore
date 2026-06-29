@@ -1,3 +1,7 @@
 
 # screen-gallery harness output (regenerable)
 .gallery/
+
+# Python bytecode caches (regenerable)
+__pycache__/
+*.py[cod]
