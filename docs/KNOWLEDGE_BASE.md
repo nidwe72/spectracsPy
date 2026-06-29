@@ -263,3 +263,11 @@ R0 spike but **still not producing correct fits in the actual app run** — open
 - **[`SPEC_visual_harmonization.md`](SPEC_visual_harmonization.md) — spacing system + color
   consolidation.** Draft spec for a consistent look (spacing scale + Bootstrap-style semantic palette
   sourced from `ApplicationStyleLogicModule`).
+- **[`SPEC_spectrum_processing.md`](SPEC_spectrum_processing.md) — spectrum processing + spectrum→colour
+  (Roadmap #1).** Design spec: `SpectrumUtil` façade with one logic module per operation
+  (mean/smooth/removeBaseline/rebin/normalize), plus `SpectrumToColorLogicModule` (CIE hue pipeline
+  lifted from `spectrasTest.py`). Trims the prototype's heavy dependency set.
+- **[`KB_spectrum_libraries.md`](KB_spectrum_libraries.md) — spectrum-related Python libraries
+  (brain-helper).** Catalogue of the colour/spectrum libs (colour, colorsys, rgbxy, spectres, colormath,
+  scipy) + the **dropped** ones (luxpy, BaselineRemoval, pyspectra, pandas, matplotlib) with "why it
+  might return" notes.
