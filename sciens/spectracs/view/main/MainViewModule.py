@@ -18,6 +18,7 @@ from sciens.spectracs.view.spectral.spectralJob.SpectralJobViewModule import Spe
 from sciens.spectracs.view.spectral.spectralJob.importSpectrum.SpectralJobImportViewModule import SpectralJobImportViewModule
 from sciens.spectracs.view.settings.user.UserListViewModule import UserListViewModule
 from sciens.spectracs.view.settings.user.UserViewModule import UserViewModule
+from sciens.spectracs.view.playground.PlaygroundViewModule import PlaygroundViewModule
 from sciens.spectracs.view.spectrometerConnection.SpectrometerConnectionViewModule import SpectrometerConnectionViewModule
 
 
@@ -72,5 +73,9 @@ class MainViewModule(QStackedWidget):
         userViewModule = UserViewModule()
         userViewModule.initialize()
         self.addWidget(userViewModule)
+
+        playgroundViewModule = PlaygroundViewModule()
+        playgroundViewModule.initialize()
+        self.addWidget(playgroundViewModule)
 
         self.setCurrentWidget(spectrometerConnectionViewModule)

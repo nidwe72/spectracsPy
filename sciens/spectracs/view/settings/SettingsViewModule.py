@@ -96,6 +96,11 @@ class SettingsViewModule(QWidget):
         layout.addWidget(openUserListViewModuleButton, 0, 0, 1, 1)
         openUserListViewModuleButton.clicked.connect(self.onClickedUsersButton)
 
+        openPlaygroundViewModuleButton = QPushButton()
+        openPlaygroundViewModuleButton.setText("Playground")
+        layout.addWidget(openPlaygroundViewModuleButton, 0, 1, 1, 1)
+        openPlaygroundViewModuleButton.clicked.connect(self.onClickedPlaygroundButton)
+
         return result
 
     def updateAdministrationVisibility(self):
@@ -107,6 +112,13 @@ class SettingsViewModule(QWidget):
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("UserListViewModule")
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def onClickedPlaygroundButton(self):
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        someNavigationSignal = NavigationSignal(None)
+        someNavigationSignal.setTarget("PlaygroundViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def createInfosGroupBox(self):

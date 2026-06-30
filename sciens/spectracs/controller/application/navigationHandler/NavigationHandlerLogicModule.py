@@ -45,6 +45,9 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="UserViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Users > User")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="PlaygroundViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Playground")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
         self.setPreviousNavigationSignal(navigationSignal)
 
@@ -74,6 +77,8 @@ class NavigationHandlerLogicModule(Singleton):
             result = 9
         elif target=="UserViewModule":
             result = 10
+        elif target=="PlaygroundViewModule":
+            result = 11
 
 
         return result

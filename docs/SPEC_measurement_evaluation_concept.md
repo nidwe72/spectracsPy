@@ -99,8 +99,9 @@ for any future feature work — but **not** for the swatch.
 - **Numeric verdict thresholds** (`lo`, `hi`, perfect-green hue, tolerance) need **real, provenance-known**
   measurements to calibrate — the local `spectracs-evaluations` spectra are **not trustworthy** for this
   (unknown capture). Deferred until controlled captures exist. **For a demo**, derive provisional bands
-  from the **synthetic presets' own achieved hues** (playground §6) — self-consistent, not from the
-  hue-degenerate `oilScores.svg` palette.
+  from the **synthetic presets' own achieved hues** (playground §8) — self-consistent, not from the
+  hue-degenerate `oilScores.svg` palette. **Quality is perfect-centred** (target ≈ 80°; too-green =
+  under-roasted, too-brown = over-roasted), per the band sketch in §5 — not monotonic in hue.
 - **Absorbance vs absorptance:** use **`A = −log10(T)`** (Beer–Lambert standard) for the absorption plot;
   the legacy Julia prototype used `1 − S/R` (bounded). Colour is unaffected (it uses `T`).
 - **Lightness/saturation** are currently informational; whether they carry quality signal (beyond hue) is

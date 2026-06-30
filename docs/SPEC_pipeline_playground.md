@@ -1,186 +1,198 @@
 # SPEC — Pipeline Playground (test/dev bench)
 
-> Status: **DESIGN (spec-first; implement on explicit request only).** A master-only top-level view that
-> runs the full spectral pipeline as a **flat strip of per-step tabs**, with **synthetic** REFERENCE and
-> SAMPLE. It is the dev shortcut for what the pumpkin **plugin** will do, and the place to **test the
-> stability claim**. Builds on `SPEC_measurement_evaluation_concept.md` (the sound pipeline),
-> `KB_spectroscopy_physics.md`, `KB_led_and_oil_spectra.md`. Overlaps Roadmap **#5** (virtual-device
-> images) and **#6** (absorption + evaluation).
+> Status: **IMPLEMENTED 2026-06-30** (all 7 phases). Verified: Phase-2–5 logic unit-tested headless;
+> Phase-1 CFL calibration runs DB-free (advanced matcher) → px→nm cubic (404–635 nm); click-through of
+> the 4 tabs as master (calibration image, reference SPD, 3 oil spectra, measured-vs-target swatches +
+> verdicts); role-gating confirmed (Playground hidden when logged out).
+>
+> Demo hues used: **UNDER 72° / PERFECT 60° / OVER 35°** (green → yellow-green → brown). These are the
+> hues real oil-like transmission actually yields through the (correct) colour pipeline — the achievable
+> green→brown range is naturally narrow (the oil's colours don't "breathe" far), not a defect.
+>
+> A master-only top-level view that
+> runs the spectral pipeline on **synthetic** REFERENCE and SAMPLE spectra and shows the result. It is
+> the dev shortcut for what the pumpkin **plugin** will do. Builds on
+> `SPEC_measurement_evaluation_concept.md` (the sound pipeline), `KB_spectroscopy_physics.md`,
+> `KB_led_and_oil_spectra.md`. Bridges Roadmap **#5** (virtual-device images, *deferred here*) and **#6**
+> (absorption + evaluation).
 
 ---
 
-## 1. Goal & scope
+## 1. Goal & scope (first cut)
 
-- One **tab per pipeline step**: synthesize REFERENCE → synthesize SAMPLE → transmission/absorption →
-  evaluate→colour. "This test does what the plugin should do" — a known-provenance, fully-controlled
-  bench (every parameter ours; **no captured/unknown data**).
-- **Reuse the same utility methods the plugin will use** (`SpectrumUtil`, `SpectralColorUtil`) + new
-  reusable **ops** — so the playground *is* the first real implementation of #6's building blocks.
-- **Kept** (not throwaway) — useful for calibration sanity, LED-set selection, and regression.
+Display, in the playground, the pieces of one synthetic run as **flat tabs**:
+1. the **CFL calibration image** (→ the px→nm polynomial),
+2. the synthesised **reference spectrum**,
+3. the synthesised **oil sample spectra** (3 demo oils),
+4. the **measured-vs-target colour** for each oil.
 
-**Non-goals:** the end-user nested wizard (this is a flat dev strip); persistence of runs; the plugin
-loader / role-filtered end-user mode. Numeric verdict thresholds (deferred — need real captures).
+Known-provenance, fully controlled (every parameter ours; **no captured/unknown data**). **Reuse the same
+utility methods the plugin will use** (`SpectrumUtil`, `SpectralColorUtil`) + new reusable **logic
+modules/ops** — so the playground *is* the first real implementation of #6's building blocks.
 
-## 2. Tabs ↔ phases (does not contradict the settled model)
+**First-cut scope:** **spectra-only** — synthesise directly on the calibration's nm axis; **no image
+round-trip**. **Deferred:** the virtual-device 3-image slots (#5), an interactive LED picker, the
+LED-swap stability check (§11). **Non-goals:** end-user wizard, run persistence, real verdict thresholds.
 
-| Tab | Phase · step | Produces | View |
-|---|---|---|---|
-| **(a) Reference** | ACQUISITION · reference | `C{reference:[R]}` | LED picker + live SPD plot |
-| **(b) Sample** | ACQUISITION · sample | `C{sample:[S]}` | oil preset + model knobs + SPD plot |
-| **(c) Process** | PROCESSING | `C{transmission:[T], absorption:[A]}` | T and A plots |
-| **(d) Evaluate** | EVALUATION | `EvaluationResult` | swatch + perfect-green sample + hue/L/S + verdict |
+## 2. The tabs (3 oils, flat — no nested selector)
 
-Each tab is a sub-view; the playground page is a `PageWidget` whose single main-container widget is a
-`QTabWidget` (mirror `SpectralJobsWidgetViewModule`). Tabs read the previous tab's `SpectraContainer`.
-
-## 2a. Next concrete build — the **Setup** tab (three images + target colours)
-
-**This is the first thing to implement** and the deliverable of the current task: **display the virtual
-device's three images in the playground**, plus the target-colour swatches. It realises Roadmap **#5**
-(grow `VirtualSpectrometerSettings` from **one** image slot to **three**).
-
-A **"Setup" tab group** with **4 inner tabs**:
-
-| Inner tab | Shows | Source |
+| Tab | Shows | Backed by |
 |---|---|---|
-| **Calibration** | `testSpectra/cfl_philips_calibration.png` — a CFL capture whose sharp **Hg/phosphor lines** (~405, 436, 487, 542/546, 611 nm) give the **pixel→nm polynomial** | existing calibration |
-| **Reference** | the synthesised **LED reference** capture image | tab (a) SPD → rasterise via the polynomial |
-| **Sample** | the synthesised **oil sample** capture image | tab (b) SPD → rasterise |
-| **Target colours** | the demo swatches **EXCELLENT / GOOD / BAD** (hue ≈ 100 / 80 / 45°, §6) | concept demo anchors |
+| **1 · Calibration** | `testSpectra/cfl_philips_calibration.png` + the fitted px→nm polynomial | §3 |
+| **2 · LED setup** | each Avonec LED's SPD + the overall reference `R(λ)` (white) | §4 |
+| **3 · Reference spectrum** | the synthesised LED reference `R(λ)` (pyqtgraph plot) | §4 |
+| **4 · Oil spectra** | the 3 synthesised sample spectra `S(λ)` (under/perfect/over-roasted), overlaid | §5 |
+| **5 · Absorption** | per oil: absorbance `A = −log10(T)` (the transmission valley shifts with roast) | §6 |
+| **6 · Camera capture** | the dispersed strips the sensor would see — REFERENCE rainbow + each oil's transmitted window | §3–§5 |
+| **7 · Measured vs target** | per oil: measured swatch `colour(T)` next to its target swatch (3 pairs) + verdict | §6–§8 |
 
-**Goal of *this* step:** just **render the three images + the target swatches** — proving the three-slot
-virtual device and the synthesis→image rasterisation end-to-end. The downstream pipeline tabs (§3–§6)
-then consume the spectra acquired from these images.
+The page is a `PageWidget` whose main-container widget is a `QTabWidget` (mirror
+`SpectralJobsWidgetViewModule`). Tabs share one `SpectraContainer` chain.
 
-> **"3×4 tabs" — my reading:** the **3 device images + 1 target-colours = 4 inner tabs** of this Setup
-> group (alongside the 4 pipeline tabs in §2). **Confirm** if you meant a literal 3×4 grid / different
-> nesting — flagged for the next discussion.
+## 3. Calibration — fresh & automatic (CFL)
 
-## 3. Tab (a) — REFERENCE synthesis (the LED bench)
+- Use a **dedicated playground virtual spectrometer profile**; feed `cfl_philips_calibration.png` as its
+  virtual camera image and run the **existing automatic HEURISTIC calibration** — the only wired path: a
+  **consensus** of prominence anchor-and-grow + predict-and-snap
+  (`SpectrometerWavelengthCalibrationConsensusLogicModule`; RANSAC/rascal modes are placeholders, unused).
+  It detects the bright lines, matches them to the **CFL master-data nm** in `SpectralLineMasterDataUtil`
+  (Hg 405.4, 436.6, Tb aqua, Hg green ×2, …), and fits the **cubic px→nm** (`SpectrallineUtil.polyfit`).
+  **This already works in the live app.** Output: a `SpectrometerCalibrationProfile` (ROI + polynomial).
+- **The polynomial is what the playground needs** — it defines the **nm axis** the spectra are
+  synthesised on. (ROI matters only for the deferred image path, §11.) **Verify** the known CFL lines map
+  back to their nm.
 
-- A **LED picker**: the Avonec catalogue (`KB_led_and_oil_spectra.md` §1) as toggleable entries, each
-  with a **per-LED SPD**. **Primary source = the shop's MEASURED spectrum** (digitised from the
-  Spektralmessung JPG) — confirmed available, incl. the **warm-white** (a bimodal blue-pump ~448 +
-  phosphor ~586 shape that a Gaussian cannot represent → measured is mandatory for whites). **Fallback
-  = skewed-Gaussian** (peak, FWHM, skew) only for any *coloured* LED whose JPG isn't harvested. **luxpy
-  is not needed** for the default set (measured curves cover it); keep it optional. Per-LED **weight**
-  (drive power).
-- `R(λ) = Σ weightᵢ · SPDᵢ(λ)`, plotted **live** (pyqtgraph). Default set: 2× warm-white + hyper-violet +
-  royal-blue + green + red + deep-red (candidates: blue 455, amber 590–610).
-- **Decide the LED set empirically here:** toggle LEDs, watch (i) gap-free coverage and (ii) intensity in
-  the diagnostic bands 430–480 / 520–560 / 630–670. This *is* how the final set gets chosen (§ "two
-  missing LEDs" discussion).
-- Output: `SpectraContainer{reference:[R]}`.
+## 4. Reference synthesis — `LedReferenceSynthesisOp`
 
-## 4. Tab (b) — SAMPLE synthesis (the physical oil model)
+- `R(λ) = Σ weightᵢ · SPDᵢ(λ)`, evaluated on the calibration nm axis. **Per-LED SPD = the shop's
+  MEASURED spectrum** (digitised from the Avonec Spektralmessung JPGs in `spectracs-references/`;
+  whites are bimodal pump+phosphor → measured is mandatory). **390–410 UV-A (the only LED without a
+  measured curve) → synthesised with luxpy** (decided; luxpy is installed). Including it also fills the
+  violet edge (<410 nm) so `R` isn't ~0 there — easing the low-`R` division guard (§6).
+- **Default set** (first cut, fixed): 2× warm-white + hyper-violet + royal-blue + green + red + deep-red
+  — gap-free, strong in the diagnostic bands 430–480 / 520–560 / 630–670. Output:
+  `SpectraContainer{reference:[R]}`.
 
-- **Synthetic, known-provenance.** `S(λ) = R(λ) · 10^(−A_oil(λ) · c·l)` where
+## 5. Sample synthesis — `OilSampleSynthesisOp` (physical, 3 demo oils)
+
+- `S(λ) = R(λ) · 10^(−A_oil(λ) · c·l)` with
   `A_oil(λ) = chlorophyll(Soret≈430, Q≈665) + carotenoid/lutein(≈440–480) + browning(↗ short-λ)`.
-- **`c·l` (concentration × path) is the primary green→brown knob** (Beer–Lambert dichromatism); a
-  **browning amplitude** adds the roast axis.
-- **Presets, not free sliders** (per decision): named oils — e.g. **`EXCELLENT`** (clean green window, low
-  browning) and **`BAD/over-roasted`** (high browning, higher `c·l`) — each a fixed parameter set with an
-  **expected HSL** (you provide the targets). The tab shows the resulting `S` SPD and the achieved HSL
-  vs the target (a pass/fail bench). Model knobs are visible (read-only or advanced) for inspection.
-- Output: `SpectraContainer{sample:[S]}` (with `inputs=[reference container]`).
+- **`c·l` (concentration × path) + browning amplitude** are the green→brown knobs (Beer–Lambert
+  dichromatism).
+- **3 fixed presets, named by roast state**, tuned so `colour(T)` lands on each demo hue (§8):
+  **PERFECT-ROASTED** (~80°), **UNDER-ROASTED** (~100°, greener), **OVER-ROASTED** (~45°, brown). Output:
+  `SpectraContainer{sample:[S_perfect, S_under, S_over]}` (`inputs=[reference]`).
 
-## 5. Tab (c) — PROCESS (transmission + absorption)
+## 6. Process — Transmission & Absorption (**logic module + utility shortcut**)
 
-- Condition R and S (`smooth → removeBaseline → rebin 380–780 → normalize`), then:
-  **`T = S/R`** (`TransmissionOp`) and **`A = −log10(T)`** (`AbsorptionOp`).
-- Plot **T** and **A**. (T is what feeds colour; A is the absorption fingerprint/plot.)
-- Output: `SpectraContainer{transmission:[T], absorption:[A]}`.
+Per the established per-op pattern (like `MeanSpectrumLogicModule`), **two-input** (reference + sample):
+- **`TransmissionLogicModule`** (+ `…Parameters{reference, sample}` + `…Result{spectrum}`) → `T = S/R`.
+- **`AbsorptionLogicModule`** (+ `…Parameters` + `…Result`) → `A = −log10(T)`.
+- **`SpectrumUtil` shortcuts:** `SpectrumUtil.transmission(reference, sample)` and
+  `SpectrumUtil.absorption(reference, sample)` — the convenience façade (note: two-arg, unlike the
+  existing single-spectrum ops).
+- Condition both R and S first (`smooth → removeBaseline → rebin 380–780 → normalize`) so they share the
+  grid before dividing. **Guard division where `R` is low** (floor `R` / mask sub-threshold λ) so a dip
+  can't blow up `T`. `T` feeds colour; `A` is the absorption plot.
 
-## 6. Tab (d) — EVALUATE (colour + verdict)
+## 7. Evaluate — colour & verdict
 
-- **`QColor = SpectralColorUtil.spectrumToColor(T)`** (fixed D65 → LED-independent; §concept) → measured
+- **`QColor = SpectralColorUtil.spectrumToColor(T)`** (fixed D65 → LED-independent; concept §3) → measured
   **hue / lightness / saturation**.
-- Render the `EvaluationResult` view-models: **`ColorSwatch`** (measured), **`ColorSample`(s)** (the
-  reference anchors), **`Label`** (hue/L/S), **`Verdict`** (band → GREEN/PERFECT/BROWN/UNDER). First
-  concrete take on **`EvaluationResult` → GUI rendering** (a deferred design thread).
-- **Demo verdict thresholds (provenance-clean):** derive the hue band boundaries from the **synthetic
-  presets' own achieved hues**. Self-consistent, fully owned, no captured data. (Real thresholds still
-  need provenance-known captures — concept §8.)
+- `EvaluationResult` view-models: **`ColorSwatch`** (measured), **`ColorSample`** (the oil's target),
+  **`Label`** (hue/L/S), **`Verdict`**. First concrete take on **`EvaluationResult` → GUI rendering**.
 
-  **Demo hue anchors & bands** (provisional; hue in degrees = `colorsys` hue × 360; **higher hue =
-  greener = better**, lower = browner. Rendered at fixed lightness 0.20):
+## 8. Demo hue anchors & verdict band (CONFIRMED)
 
-  | Preset / band | Target hue | Reads as |
-  |---|---|---|
-  | `EXCELLENT` preset | **~100°** | fleshy fresh green |
-  | `GOOD` preset | **~80°** | green / yellow-green |
-  | `BAD` preset | **~45°** | brownish (over-roasted) |
+Hue in degrees (`colorsys` hue × 360), swatch saturation fixed at **0.85** (display), rendered at the
+pipeline's fixed lightness 0.20. **Quality is perfect-centred, NOT monotonic** — a *target* hue with
+deviation worse on both sides:
 
-  | Verdict band | Rule | Label |
-  |---|---|---|
-  | hue ≥ **90°** | fresh green | **PERFECT** |
-  | **70–90°** | green | **GOOD** |
-  | **55–70°** | yellowing | **ACCEPTABLE** |
-  | hue < **55°** | brown | **OVER-ROASTED** |
+Presets and verdict labels use **one roast-state vocabulary** (no separate quality names):
 
-  Tune the SAMPLE oil model (`c·l`, browning) in tab (b) until each preset lands on its target hue; the
-  band edges (55°, 70°, 90°) then sit between the presets. All clearly **DEMO/provisional**.
-- **The `oilScores.svg` colours (`#669900`/`#446600`/`#223300`) are display anchors only — NOT threshold
-  seeds:** they are **hue-degenerate** (all hue ≈ 80°, differing only in lightness 0.30/0.20/0.10), so
-  they encode quality as *darkness*, not the green→brown *hue* our pipeline discriminates on. Fine as
-  stylised perfect/good/bad swatches next to the measured one; useless for hue cut-points.
+| Preset = verdict label | Target hue | Reads as (L0.20 / L0.40) |
+|---|---|---|
+| **PERFECT-ROASTED** | **~80°** | `#415e08` / `#83bd0f` (yellow-green) |
+| **UNDER-ROASTED** | **~100°** | `#255e08` / `#49bd0f` (fresher green) |
+| **OVER-ROASTED** | **~45°** | `#5e4908` / `#bd910f` (brown/amber) |
 
-## 7. Calibration honoured via the image path (delivers Roadmap #5)
+**Verdict band (provisional/demo):** **PERFECT-ROASTED** ≈ 80° ± tolerance; **UNDER-ROASTED** = too green
+(hue ≳ 90°); **OVER-ROASTED** = too brown (hue ≲ 65°). Exact edges are demo-only and derive from the
+presets' achieved hues; **real thresholds need provenance-known captures** (concept §8).
+The `oilScores.svg` palette is **display-only** (hue-degenerate — all 80°, differ in lightness), **not** a
+threshold source.
 
-To genuinely exercise ROI + calibration (your requirement), the synthetic spectra round-trip through the
-**existing acquisition**:
-1. Synthesize `R`/`S` SPD (tabs a/b).
-2. **Rasterise** onto the calibration ROI as a grayscale strip: for each ROI pixel column `x`, `nm =
-   poly(x)`, `gray = clamp(scale · SPD(nm))` → a synthetic capture **image**.
-3. Store as the **virtual device's REFERENCE / SAMPLE image** — growing `VirtualSpectrometerSettings`
-   from **one** image slot to **three** (calibration / REFERENCE / SAMPLE) = **Roadmap #5**.
-4. The **existing** `ImageSpectrumAcquisitionLogicModule` reads it back (applies the polynomial) → the
-   `Spectrum`. So calibration is real, not bypassed; one effort builds both the playground and #5.
+## 9. Reuse vs greenfield
 
-(A lighter "sample directly on the calibration nm-axis" mode may exist as a shortcut, but the image path
-is the faithful default.)
-
-## 8. Reuse vs greenfield
-
-| Reuse (implemented) | New (greenfield, plugin-SDK-shaped ops) |
+| Reuse (implemented) | New (greenfield, plugin-SDK-shaped) |
 |---|---|
 | `Spectrum`, `SpectraContainer` (fix dup-`__init__`) | `LedReferenceSynthesisOp` (LED SPDs → R) |
 | `SpectrumUtil` mean/smooth/removeBaseline/rebin/normalize | `OilSampleSynthesisOp` (R + oil model → S) |
-| `SpectralColorUtil.spectrumToColor` / `getColorDifference` | `TransmissionOp` (S/R), `AbsorptionOp` (−log10) |
-| `ImageSpectrumAcquisitionLogicModule`, calibration poly | `VerdictOp` (hue → band); `EvaluationResult` view-model rendering |
-| `QTabWidget` pattern, `PageWidget`, nav registration | LED-SPD harvest (measured JPG → peak/FWHM/skew or digitised) |
+| `SpectralColorUtil.spectrumToColor` | `TransmissionLogicModule` + `AbsorptionLogicModule` (+ `SpectrumUtil` shortcuts) |
+| heuristic-consensus calibration + `SpectrallineUtil.polyfit` + CFL master data | `VerdictOp` (hue → band); `EvaluationResult` GUI rendering |
+| `QTabWidget`, `PageWidget`, nav registration | LED-SPD digitiser (measured JPG → nm/intensity) |
 
-Ops are plain `SpectraContainer → SpectraContainer` so the pumpkin plugin reuses them verbatim.
-
-## 9. Stability check (a first-class feature)
-
-A control to **swap/perturb the LED set** and observe the verdict: with reference-normalization the hue
-should barely move (concept §4). Surfacing "verdict Δ vs LED change" turns the bench into a **proof** of
-LED-independence — and a guard against regressions.
+Logic modules/ops stay plain `SpectraContainer → SpectraContainer` so the pumpkin plugin reuses them.
 
 ## 10. Placement & registration
 
-- **Master-only** top-level **"Playground"** view, reached from a Settings → Administration (or Tools)
-  button, gated on `CurrentUserSession().hasRole(MASTER_USER)` (mirror the User-admin gate).
-- Register like any page: instantiate + `addWidget` in `MainViewModule`; add the target to both chains in
-  `NavigationHandlerLogicModule`; launch button emits the `NavigationSignal`.
+**Master-only** top-level **"Playground"** view; launch button gated on
+`CurrentUserSession().hasRole(MASTER_USER)`; register in `MainViewModule` + `NavigationHandlerLogicModule`
+(mirror the User-admin gate/registration).
 
-## 11. Open / deferred
+## 11. Later extensions (out of first cut)
 
-- **Final LED set** — decided empirically in tab (a). **Full Avonec measured set already harvested** to
-  `spectracs-references/leds/avonec/` (410–660 colours + all whites). The only gap, **390–410 UV-A (no
-  measured spectrum published), is synthesised with luxpy** (or a skewed-Gaussian) if that LED is used.
-- **Verdict thresholds** — for the demo, derived from the synthetic presets' achieved hues (§6); real
-  thresholds deferred until provenance-known captures exist (concept §8).
+- **Interactive LED picker** in the Reference tab (toggle Avonec LEDs, live SPD) — empirical LED-set choice.
+- **LED-swap stability check** — perturb the LED set, watch the verdict barely move (concept §4) → proof
+  of LED-independence.
+- **Virtual-device 3-image slots (#5) + image-path round-trip** — grow `VirtualSpectrometerSettings` to
+  calibration/REF/SAMPLE images; rasterise SPD → ROI strip via the polynomial → existing
+  `ImageSpectrumAcquisitionLogicModule`. Replaces §1's spectra-only shortcut with the faithful image path.
+- **Oil-model tuning UI**, real verdict thresholds.
+- **FUTURE REQUEST — LED-combination optimisation (separate task).** The LED-synthesis bench is a good
+  tool to *search LED combinations* for an **even better continuous (gap-free, flat) reference light
+  source** — try other Avonec LED sets/weights and score the resulting `R(λ)` for flatness/coverage.
+  This is a **distinct future requirement**; the **current default LED set is fine and must NOT be
+  modified** for the present task.
+
+## 12. Open / deferred
+
+- **Auto-calibration** — the HEURISTIC consensus already works in the live app; for the playground just
+  drive it on the static CFL PNG and **verify** the known lines map back to nm (§13 P1). Manual fallback
+  only if the static-image path mis-fits.
+- **Division-by-low-`R` guard** — floor/mask where the synthetic `R` is ~0 (e.g. <410 nm) so `T` stays sane.
 - **`SpectraContainer` dup-`__init__` bug** — fix when first used.
-- **luxpy dependency** — only if we use its white-LED/mixing builders; otherwise skewed-Gaussian keeps it
-  dependency-light. Decide at build time.
+- **luxpy** — confirmed dependency (already installed), used to synthesise the 390–410 UV-A SPD (§4).
 
-## 12. Build phases (for the eventual implementation request)
+## 13. Implementation phases
 
-1. Ops in `-model` (`LedReferenceSynthesisOp`, `OilSampleSynthesisOp`, `TransmissionOp`, `AbsorptionOp`,
-   `VerdictOp`) + unit tests (synthesize → T/A → colour → verdict; LED-swap stability assertion).
-2. LED-SPD harvest util (measured JPG params or digitised) + the Avonec default set.
-3. Playground `PageWidget` + `QTabWidget` + the four sub-views (pyqtgraph plots, swatch).
-4. Virtual-device three-image slots (#5) + the rasterise-to-ROI image path.
-5. Master-only registration + nav.
+First cut only (later extensions §11 are separate). Logic before view; each phase compiles + is testable.
+
+| # | Phase | Repo | Deliverable | Verify |
+|---|-------|------|-------------|--------|
+| **1** | CFL calibration | `spectracsPy` (+ existing model) | Dedicated playground profile; auto-calibrate `cfl_philips_calibration.png` (HEURISTIC consensus → CFL master-data nm → `polyfit`) → persist `SpectrometerCalibrationProfile`; expose its **px→nm polynomial** | Known CFL lines map back to their nm (overlay/print); polynomial monotonic across 400–700 |
+| **2** | Transmission/Absorption ops | `spectracsPy` | `TransmissionLogicModule` + `AbsorptionLogicModule` (+ Params/Result triples) + `SpectrumUtil.transmission/absorption(reference, sample)` shortcuts; low-`R` guard | Unit test: known R,S → T=S/R, A=−log10(T); guard handles R≈0 |
+| **3** | Reference synthesis | `spectracsPy` (+ refs) | `LedReferenceSynthesisOp`: digitise Avonec measured SPDs (+ **luxpy** for 390–410 UV-A) → `R(λ)` on the calib nm axis; default LED set | Unit test: R gap-free incl. violet edge, strong in 430–480/520–560/630–670; plot sane |
+| **4** | Sample synthesis (3 oils) | `spectracsPy` | `OilSampleSynthesisOp`: `A_oil` model + `c·l`/browning; 3 presets tuned to the demo hues | Unit test: `colour(T)` of each preset lands within ±~5° of 80/100/45 |
+| **5** | Verdict | `spectracsPy` | `VerdictOp`: hue → perfect-centred band → label | Unit test: 80→PERFECT-ROASTED, 100→UNDER-ROASTED, 45→OVER-ROASTED |
+| **6** | Playground view (the 4 flat tabs) | `spectracsPy` | `PageWidget` + `QTabWidget`: Calibration image · Reference plot · 3 oil-spectra overlaid · measured-vs-target swatch pairs | Click-through: navigate, all four tabs render; swatches ≈ targets |
+| **7** | Master-only registration | `spectracsPy` | Launch button (role-gated) + `MainViewModule`/nav registration | Click-through: visible as master, hidden otherwise |
+
+> First milestone (#6's "absorption displayed end-to-end") is reached at Phase 6: a synthetic run shown
+> as calibration → reference → oil spectra → colour, all from owned parameters.
+
+## 14. Regression test & documentation PDF (IMPLEMENTED)
+
+`tests/test_pumpkin_oil_spectrum_to_color_eval.py` → `PumpkinOilSpectrumToColorEvalTest` (unittest;
+runs under pytest). **Decoupled from the view** — depends only on the logic recipe + matplotlib, so it
+survives the playground changing. Two jobs:
+- **Assertions (headless, no Qt widgets/server):** reference continuity + diagnostic-band strength,
+  hue monotonic in roast, the 3 oils hit targets (±4°) / strictly ordered / correct verdicts, T/A +
+  low-`R` guard, CFL calibration monotonic + plausible nm range. Asserts **ordering/tolerances/labels**,
+  not exact numbers — robust to colour-module changes.
+- **Documentation PDF (side artefact):** renders the same content the playground shows (8 pages:
+  recipe, calibration image, LED setup, reference, oil spectra, absorption, camera captures, measured-
+  vs-target) via matplotlib `PdfPages`, to the **non-versioned** `spectracs-references/reports/`. Camera
+  strips come from the shared `logic/playground/CameraCaptureRenderUtil` (numpy) so they match the app.
+
+Split: **recipe = code, versioned**; **PDF = rendered artefact, not versioned**. 10/10 pass.
