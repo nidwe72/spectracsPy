@@ -13,6 +13,10 @@ class PageWidget(QFrame):
     # Single-content pages (one field) set this so their titled container is
     # demoted to a borderless section label, not a frame (spec C2b / E5).
     borderlessMainContainer:bool=False
+    # Form/editor pages set this so their fields pack at the TOP (natural height)
+    # instead of spreading over the panel height. Hub/menu pages leave it False so
+    # their large controls fill the height intentionally (see docs/DESIGN_GUIDE.md).
+    compactMainContainer:bool=False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -91,6 +95,11 @@ class PageWidget(QFrame):
             else:
                 layout.addWidget(mainContainerWidget, 0, row, 1, 1)
             row=row+1
+
+        if self.compactMainContainer and self.verticalLayout:
+            # Trailing spacer row absorbs the slack so fields stay top-packed at
+            # natural height instead of spreading over the panel.
+            layout.setRowStretch(row, 1)
 
         return result
 

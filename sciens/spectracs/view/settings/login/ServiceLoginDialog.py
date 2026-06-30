@@ -28,6 +28,7 @@ class ServiceLoginDialog(QDialog):
         layout.addWidget(loginButton, 2, 0, 1, 1)
 
         cancelButton = QPushButton("Cancel")
+        cancelButton.setProperty("buttonType", "secondary")  # Bootstrap 'secondary' (gray), not primary
         cancelButton.clicked.connect(self.reject)
         layout.addWidget(cancelButton, 2, 1, 1, 1)
 

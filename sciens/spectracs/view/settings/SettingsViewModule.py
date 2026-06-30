@@ -5,7 +5,9 @@ from PySide6.QtWidgets import QPushButton
 
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
+from sciens.spectracs.model.databaseEntity.application.user.UserRoleType import UserRoleType
 from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
@@ -38,8 +40,17 @@ class SettingsViewModule(QWidget):
         layout.addWidget(infosGroupBox, 4, 0, 1, 1)
         layout.setRowStretch(4, 15)
 
+        self.administrationGroupBox = self.createAdministrationGroupBox()
+        layout.addWidget(self.administrationGroupBox, 5, 0, 1, 1)
+        layout.setRowStretch(5, 15)
+
         navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 5, 0, 1, 1)
+        layout.addWidget(navigationGroupBox, 6, 0, 1, 1)
+
+        # The Administration group is master-only; refresh visibility on login/logout.
+        ApplicationContextLogicModule().getApplicationSignalsProvider().userSessionSignal.connect(
+            self.updateAdministrationVisibility)
+        self.updateAdministrationVisibility()
 
 
     def createAcquisitionSettingsGroupBox(self):
@@ -72,6 +83,31 @@ class SettingsViewModule(QWidget):
         openVirtualSpectrometerViewModuleButton.clicked.connect(self.onClickedOpenVirtualSpectrometerViewModuleButton)
 
         return result
+
+    def createAdministrationGroupBox(self):
+        result = QGroupBox("Administration")
+        result.setProperty("sectionLabel", True)  # single-child frame -> section label (spec C2b)
+
+        layout = QGridLayout()
+        result.setLayout(layout)
+
+        openUserListViewModuleButton = QPushButton()
+        openUserListViewModuleButton.setText("Users")
+        layout.addWidget(openUserListViewModuleButton, 0, 0, 1, 1)
+        openUserListViewModuleButton.clicked.connect(self.onClickedUsersButton)
+
+        return result
+
+    def updateAdministrationVisibility(self):
+        isMaster = CurrentUserSession().hasRole(UserRoleType.MASTER_USER.value)
+        self.administrationGroupBox.setVisible(isMaster)
+
+    def onClickedUsersButton(self):
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        someNavigationSignal = NavigationSignal(None)
+        someNavigationSignal.setTarget("UserListViewModule")
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def createInfosGroupBox(self):
         result = QGroupBox("Infos")

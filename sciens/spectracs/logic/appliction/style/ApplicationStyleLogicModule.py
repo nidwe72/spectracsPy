@@ -31,8 +31,14 @@ class ApplicationStyleLogicModule(Singleton):
         # #506254
 
     def getSecondaryColor(self):
-        # Neutral / info-like buttons. Same gray as the border ramp. #5A5A5A
-        result=QColor.fromRgb(90, 90, 90)
+        # Bootstrap 'secondary' — neutral gray, matching the PageLabel background
+        # (surfaceAlt). Used for non-primary actions like a dialog's Cancel. #404040
+        result=QColor.fromRgb(64, 64, 64)
+        return result
+
+    def getSecondaryPressedColor(self):
+        # Slightly lighter gray for hover/pressed of secondary buttons. #4A4A4A
+        result=QColor.fromRgb(74, 74, 74)
         return result
 
     def getSuccessColor(self):
@@ -40,8 +46,14 @@ class ApplicationStyleLogicModule(Singleton):
         return self.getPrimaryColor()
 
     def getInfoColor(self):
-        # Muted teal — stays in the green family, NOT blue. #3D7878
-        result=QColor.fromRgb(61, 120, 120)
+        # Bootstrap 'info' — light gray PLACEHOLDER for now (overrides spec D3 teal
+        # until a real info hue is chosen). #8A8A8A
+        result=QColor.fromRgb(138, 138, 138)
+        return result
+
+    def getInfoPressedColor(self):
+        # Darker gray for hover/pressed of info buttons. #757575
+        result=QColor.fromRgb(117, 117, 117)
         return result
 
     def getWarningColor(self):
@@ -339,6 +351,34 @@ QAbstractButton {{
     height:50px;
 	background-color:  {primary};
 	font:bold;
+	/* Explicit border so a default/focused button (e.g. the login dialog's "Login")
+	   doesn't fall back to the native blue default-frame. */
+	border: none;
+}}
+
+/* Keep the default/focused button flat too (no native highlight frame). */
+QPushButton:default, QPushButton:focus {{
+	border: none;
+	outline: none;
+}}
+
+/* Semantic button variants (Bootstrap-style roles, spec P7). Tag a button in view
+   code with setProperty("buttonType", "info"|"secondary"|"danger") to recolour it;
+   default (no property) stays the primary green. */
+QAbstractButton[buttonType="info"] {{
+	background-color: {info};
+}}
+QAbstractButton[buttonType="info"]:hover, QAbstractButton[buttonType="info"]:pressed {{
+	background-color: {infoPressed};
+}}
+QAbstractButton[buttonType="secondary"] {{
+	background-color: {secondary};
+}}
+QAbstractButton[buttonType="secondary"]:hover, QAbstractButton[buttonType="secondary"]:pressed {{
+	background-color: {secondaryPressed};
+}}
+QAbstractButton[buttonType="danger"] {{
+	background-color: {danger};
 }}
 
 QAbstractButton:disabled {{
@@ -351,6 +391,18 @@ QAbstractButton:hover {{
 
 QAbstractButton:pressed {{
 	background:  {primaryPressed};
+}}
+
+/* QCheckBox/QRadioButton ARE QAbstractButtons, so the green button fill (incl. its
+   :hover/:pressed) above applies to them too — making a bare checkbox look like a big
+   green box around a tiny indicator. Flatten the widget background back to transparent
+   (only the ::indicator, styled above, should show). MUST come after the QAbstractButton
+   rules (later rule wins). Height is left to callers (a custom ToggleSwitch wants its own
+   size); form checkboxes set a compact fixed height in code. */
+QCheckBox, QRadioButton,
+QCheckBox:hover, QCheckBox:pressed,
+QRadioButton:hover, QRadioButton:pressed {{
+	background: transparent;
 }}
 
 QAbstractItemView {{
@@ -526,6 +578,11 @@ QLabel[style-large="true"]{{
             surface=self.getSurfaceColor().name(),
             disabled=self.getPrimaryColorDisabled().name(),
             surfaceAlt=self.getSurfaceAltColor().name(),
+            info=self.getInfoColor().name(),
+            infoPressed=self.getInfoPressedColor().name(),
+            secondary=self.getSecondaryColor().name(),
+            secondaryPressed=self.getSecondaryPressedColor().name(),
+            danger=self.getDangerColor().name(),
             panelPadding=Metrics.M,
         )
 

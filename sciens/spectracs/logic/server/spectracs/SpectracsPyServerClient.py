@@ -66,6 +66,48 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.login failed: %s" % exception)
             return {"ok": False, "userId": None, "username": None, "roles": [], "message": "login failed"}
 
+    def listUsers(self):
+        # Returns a list of plain user DTOs, or None when the server is unreachable
+        # (the None sentinel lets the UI distinguish "server unavailable" from "no users").
+        proxy = self.getProxy()
+        if proxy is None:
+            return None
+        try:
+            return proxy.listUsers()
+        except Exception as exception:
+            print("SpectracsPyServerClient.listUsers failed: %s" % exception)
+            return None
+
+    def createUser(self, username, password, displayName, enabled, roleName):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "userId": None, "message": "server unavailable"}
+        try:
+            return proxy.createUser(username, password, displayName, enabled, roleName)
+        except Exception as exception:
+            print("SpectracsPyServerClient.createUser failed: %s" % exception)
+            return {"ok": False, "userId": None, "message": "create failed"}
+
+    def updateUser(self, userId, displayName, enabled, roleName, newPassword):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "userId": None, "message": "server unavailable"}
+        try:
+            return proxy.updateUser(userId, displayName, enabled, roleName, newPassword)
+        except Exception as exception:
+            print("SpectracsPyServerClient.updateUser failed: %s" % exception)
+            return {"ok": False, "userId": None, "message": "update failed"}
+
+    def deleteUser(self, userId):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "userId": None, "message": "server unavailable"}
+        try:
+            return proxy.deleteUser(userId)
+        except Exception as exception:
+            print("SpectracsPyServerClient.deleteUser failed: %s" % exception)
+            return {"ok": False, "userId": None, "message": "delete failed"}
+
     def syncSpectrometers(self):
         proxy = self.getProxy()
         if proxy is None:

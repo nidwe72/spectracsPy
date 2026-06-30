@@ -39,6 +39,12 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="SpectrometerConnectionViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Connect spectrometer")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="UserListViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Users")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="UserViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Users > User")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
         self.setPreviousNavigationSignal(navigationSignal)
 
@@ -64,6 +70,10 @@ class NavigationHandlerLogicModule(Singleton):
             result = 7
         elif target=="SpectrometerConnectionViewModule":
             result = 8
+        elif target=="UserListViewModule":
+            result = 9
+        elif target=="UserViewModule":
+            result = 10
 
 
         return result
