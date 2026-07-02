@@ -1,5 +1,7 @@
 import importlib
 
+from PySide6.QtGui import qGray
+
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.playground.PlaygroundCalibrationLogicModule import PlaygroundCalibrationLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
@@ -113,12 +115,19 @@ class SpectralWorkflowEngine:
         applicationSettings = ApplicationContextLogicModule().getApplicationSettings()
         profile = applicationSettings.getSpectrometerProfile()
         calibration = profile.spectrometerCalibrationProfile if profile is not None else None
-        if calibration is not None and getattr(calibration, "interpolationCoefficientA", None) is not None:
-            return  # already calibrated
+        hasPolynomial = calibration is not None and getattr(calibration, "interpolationCoefficientA", None) is not None
 
         calibrationImage = applicationSettings.getVirtualSpectrometerSettings().getImage(VirtualCaptureRole.CALIBRATION)
+
+        # Trust an installed polynomial ONLY when its ROI still lands on signal in the CURRENT calibration
+        # image. A profile tuned for a different capture (e.g. an older, differently-sized virtual set) would
+        # otherwise sample a black row -> empty spectrum -> no peaks. With no virtual calibration image (a real
+        # device) there's nothing to re-detect against, so the stored profile stands.
+        if hasPolynomial and (calibrationImage is None or self.__calibrationRoiHasSignal(calibration, calibrationImage)):
+            return  # already calibrated and the ROI fits the loaded image
+
         if calibrationImage is None:
-            return  # nothing to calibrate from — capture will surface the missing setup
+            return  # nothing to (re)calibrate from — capture will surface the missing setup
         calibrationProfile = PlaygroundCalibrationLogicModule().calibrateImage(calibrationImage)
         for attribute in ("regionOfInterestX1", "regionOfInterestX2",
                           "regionOfInterestY1", "regionOfInterestY2"):
@@ -126,6 +135,24 @@ class SpectralWorkflowEngine:
         spectrometerProfile = SpectrometerProfile()
         spectrometerProfile.spectrometerCalibrationProfile = calibrationProfile
         applicationSettings.setSpectrometerProfile(spectrometerProfile)
+
+    def __calibrationRoiHasSignal(self, calibration, image):
+        # The reader samples the ROI centre row y=(Y1+Y2)/2 across [X1,X2]; the ROI is only valid for this
+        # image if that row actually has lit pixels (same gray>20 threshold the vertical-edge scan uses).
+        # An out-of-bounds or all-black row means the profile was tuned for a different capture -> re-detect.
+        x1, x2 = calibration.regionOfInterestX1, calibration.regionOfInterestX2
+        y1, y2 = calibration.regionOfInterestY1, calibration.regionOfInterestY2
+        if None in (x1, x2, y1, y2):
+            return False
+        centreY = int(y1 + (y2 - y1) / 2.0)
+        if not (0 <= centreY < image.height()):
+            return False
+        left = max(0, min(int(x1), int(x2)))
+        right = min(image.width(), max(int(x1), int(x2)))
+        for x in range(left, right):
+            if qGray(image.pixel(x, centreY)) > 20:
+                return True
+        return False
 
     def __capture(self, role, frames):
         # Set the active role, then read the virtual image `frames` times into one Spectrum's captured

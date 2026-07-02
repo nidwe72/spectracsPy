@@ -2,9 +2,10 @@ import threading
 from typing import List
 
 from PySide6.QtCore import QLine
-from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
+from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QMessageBox
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
 from sciens.spectracs.logic.spectral.acquisition.device.calibration.SpectrometerRegionOfInterestLogicModule import \
     SpectrometerRegionOfInterestLogicModule
 from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
@@ -73,10 +74,35 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 
     def onClickedCaptureVideoButton(self):
 
+        applicationSettings = ApplicationContextLogicModule().getApplicationSettings()
+        spectrometerProfile = applicationSettings.getSpectrometerProfile()
+
+        # Guard the preconditions so the click gives feedback instead of silently dying inside the Qt slot
+        # (a raised AttributeError in a slot is swallowed → the button looks dead).
+        sensor = None
+        if spectrometerProfile is not None and spectrometerProfile.spectrometer is not None:
+            sensor = spectrometerProfile.spectrometer.spectrometerSensor
+        if sensor is None:
+            QMessageBox.warning(self, "Spectrometer required",
+                                "Select a spectrometer for this profile (Spectrometer tab) before detecting "
+                                "the region of interest.")
+            return
+
+        isVirtual = sensor.isVirtual
+        virtualSettings = applicationSettings.getVirtualSpectrometerSettings()
+        if isVirtual and virtualSettings.getImage(VirtualCaptureRole.CALIBRATION) is None:
+            QMessageBox.warning(self, "Virtual capture image required",
+                                "This is a virtual spectrometer but no calibration image is loaded. Open "
+                                "Settings → Virtual spectrometer and set an image folder (with calibration.png) "
+                                "first.")
+            return
+
+        if isVirtual:
+            # The reader serves the ACTIVE role's frame; ROI detection must run on the calibration capture.
+            virtualSettings.setActiveRole(VirtualCaptureRole.CALIBRATION)
+
         self.allHoughLines = []
         self.videoThread = SpectrometerCalibrationProfileHoughLinesVideoThread()
-        spectrometerProfile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
-        isVirtual = spectrometerProfile.spectrometer.spectrometerSensor.isVirtual
         self.videoThread.setIsVirtual(isVirtual)
         self.videoThread.videoThreadSignal.connect(self.handleVideoThreadSignal)
         self.videoThread.setFrameCount(50)

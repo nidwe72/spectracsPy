@@ -442,6 +442,19 @@ stub):
   is real.)
 - **Computed phases:** run the plugin's `processing`/`evaluation` hooks, which compose the `plugin_sdk`
   ops over the accumulated containers.
+- **Calibration staleness guard (2026-07-02):** `__ensureCalibration` trusts an installed polynomial **only
+  when its ROI still lands on signal** in the *current* CALIBRATION image (samples the reader's own centre
+  row `(Y1+Y2)/2` across `[X1,X2]`, same `gray>20` test as the vertical-edge scan). A profile left over from a
+  different capture (e.g. an older, differently-sized virtual set) would otherwise read a black row → empty
+  spectrum → no peaks; it now forces a re-detect. A real device (no virtual calibration image) keeps its
+  stored profile untouched. Regression-tested in `tests/test_stale_calibration_recovery.py`. *(An earlier
+  attempt to clear the whole `SpectrometerProfile` on folder-load was reverted — it nulled the sensor the
+  manual calibration UI reads.)*
+- **Manual ROI detection (Settings → …→ "Detect Region of Interest"):** the handler now guards its
+  preconditions with feedback instead of dying silently in the Qt slot (no spectrometer selected → prompt to
+  pick one; virtual sensor with no calibration image → prompt to load a folder) and pins the virtual
+  **active role to CALIBRATION** so detection runs on the calibration frame. `HoughLineLogicModule` also
+  guards `HoughLinesP` returning `None` on a featureless image.
 
 ## C.2 `PumpkinOilPlugin`
 New `logic/spectral/plugin/pumpkin/PumpkinOilPlugin.py` (a `SpectralPlugin`), criteria as constants

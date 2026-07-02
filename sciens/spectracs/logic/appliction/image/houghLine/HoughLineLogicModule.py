@@ -44,7 +44,7 @@ class HoughLineLogicModule:
         lowestMidpoint=height
         highestMidpoint=0
 
-        for line in lines:
+        for line in (lines if lines is not None else []):  # HoughLinesP returns None on a featureless image
             for x1, y1, x2, y2 in line:
                 midpointX=x1+(x2-x1)/2.0
 
