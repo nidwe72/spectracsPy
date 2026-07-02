@@ -1,8 +1,11 @@
+import os
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QPushButton, QFileDialog, QGroupBox, QGridLayout, QWidget
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
 from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.application.widgets.general.ToggleSwitch import ToggleSwitch
@@ -51,7 +54,7 @@ class VirtualSpectrometerViewModule(PageWidget):
         layout.setContentsMargins(0, 0, 0, 0)  # holder adds no indent (spec C8)
         buttonsPanel.setLayout(layout)
 
-        self.openPictureButton=QPushButton('Set picture')
+        self.openPictureButton=QPushButton('Set image folder…')
         self.openPictureButton.clicked.connect(self.onClickedOpenPictureButton)
         layout.addWidget(self.openPictureButton, 0, 0, 1, 1)
 
@@ -74,11 +77,40 @@ class VirtualSpectrometerViewModule(PageWidget):
             print('unchecked')
         ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings().setDoSavePhysicallyCapturedImages(isChecked)
 
+    # Filename convention inside the chosen folder (SPEC_pumpkin_integration.md A.4).
+    __FILENAME_BY_ROLE = {
+        VirtualCaptureRole.CALIBRATION: 'calibration.png',
+        VirtualCaptureRole.REFERENCE: 'reference.png',
+        VirtualCaptureRole.SAMPLE: 'sample.png',
+    }
+
     def onClickedOpenPictureButton(self):
-        filepath = QFileDialog.getOpenFileName(self, 'Open picture',                                            None, "Image files (*.png *.jpg *.gif)")
-        image=QImage(filepath[0])
-        ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings().setVirtualCameraImage(image)
-        self.__getImageViewModule().setImage(image)
+        folder = QFileDialog.getExistingDirectory(self, 'Select virtual capture image folder')
+        if not folder:
+            return
+        virtualSettings = ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings()
+        missing = []
+        calibrationImage = None
+        for role, filename in self.__FILENAME_BY_ROLE.items():
+            path = self.__findImage(folder, filename)
+            if path is None:
+                missing.append(filename)
+                continue
+            image = QImage(path)
+            virtualSettings.setImage(role, image)
+            if role == VirtualCaptureRole.CALIBRATION:
+                calibrationImage = image
+        if calibrationImage is not None:
+            self.__getImageViewModule().setImage(calibrationImage)
+        if missing:
+            print('virtual capture folder is missing: %s' % ', '.join(missing))
+
+    def __findImage(self, folder, filename):
+        target = filename.lower()  # PNG-only, case-insensitive match
+        for entry in os.listdir(folder):
+            if entry.lower() == target:
+                return os.path.join(folder, entry)
+        return None
 
     def createNavigationGroupBox(self):
         result = QGroupBox("")

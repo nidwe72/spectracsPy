@@ -48,6 +48,9 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="PlaygroundViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Playground")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="WizardViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Measurement")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
         self.setPreviousNavigationSignal(navigationSignal)
 
@@ -79,6 +82,8 @@ class NavigationHandlerLogicModule(Singleton):
             result = 10
         elif target=="PlaygroundViewModule":
             result = 11
+        elif target=="WizardViewModule":
+            result = 12
 
 
         return result

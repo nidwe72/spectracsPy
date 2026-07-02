@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QPushButton
 from PySide6.QtWidgets import QWidget
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
@@ -34,9 +35,11 @@ class HomeViewModule(QWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def onClickedCreateSpectralJobButton(self):
+        # Route a plugin-configured user to their measurement wizard; otherwise keep the legacy flow.
+        target = "WizardViewModule" if CurrentUserSession().getPluginCodeRef() else "SpectralJob"
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
-        someNavigationSignal.setTarget("SpectralJob")
+        someNavigationSignal.setTarget(target)
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def createNavigationGroupBox(self):

@@ -1,7 +1,9 @@
 from PySide6.QtWidgets import QDialog, QGridLayout, QLabel, QLineEdit, QPushButton, QMessageBox
 
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
+from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 
 
 class ServiceLoginDialog(QDialog):
@@ -40,6 +42,16 @@ class ServiceLoginDialog(QDialog):
         if result.get("ok"):
             CurrentUserSession().login(result)
             self.accept()
+            # C.0 launch seam: a user configured to run a plugin lands straight in its measurement wizard.
+            if CurrentUserSession().getPluginCodeRef():
+                self.__navigateTo("WizardViewModule")
         else:
             message = result.get("message") or "invalid credentials"
             QMessageBox.warning(self, "Login failed", message)
+
+    def __navigateTo(self, target):
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        signal = NavigationSignal(None)
+        signal.setTarget(target)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
