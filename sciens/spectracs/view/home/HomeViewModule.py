@@ -20,9 +20,9 @@ class HomeViewModule(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
 
-        spectralJobsOverviewViewModule = SpectralJobsOverviewViewModule()
-        spectralJobsOverviewViewModule.resize(600,600)
-        layout.addWidget(spectralJobsOverviewViewModule, 0, 0, 1, 1)
+        self.spectralJobsOverviewViewModule = SpectralJobsOverviewViewModule()
+        self.spectralJobsOverviewViewModule.resize(600,600)
+        layout.addWidget(self.spectralJobsOverviewViewModule, 0, 0, 1, 1)
         layout.setRowStretch(0,100)
 
         navigationGroupBox = self.createNavigationGroupBox()
@@ -56,9 +56,19 @@ class HomeViewModule(QWidget):
         layout.addWidget(createSpectralJobButton, 0, 0, 1, 1)
         createSpectralJobButton.clicked.connect(self.onClickedCreateSpectralJobButton)
 
+        # Edit / Delete act on the selected row of the workflows table (right of New measurement).
+        editButton = QPushButton("Edit")
+        layout.addWidget(editButton, 0, 1, 1, 1)
+        editButton.clicked.connect(self.spectralJobsOverviewViewModule.onClickedEdit)
+
+        deleteButton = QPushButton("Delete")
+        deleteButton.setProperty("buttonType", "secondary")
+        layout.addWidget(deleteButton, 0, 2, 1, 1)
+        deleteButton.clicked.connect(self.spectralJobsOverviewViewModule.onClickedDelete)
+
         settingsButton = QPushButton()
         settingsButton.setText("Settings")
-        layout.addWidget(settingsButton, 0, 1, 1, 1)
+        layout.addWidget(settingsButton, 0, 3, 1, 1)
         settingsButton.clicked.connect(self.onClickedSettingsButton)
 
         return result

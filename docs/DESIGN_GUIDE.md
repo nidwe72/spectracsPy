@@ -62,11 +62,31 @@ Add new variants by extending the palette getters + the `QAbstractButton[buttonT
 
 - A selectable grid → `QTableView` + a `QAbstractTableModel`; `SelectRows`, `SingleSelection`,
   `NoEditTriggers`. **Hide the vertical header** (`verticalHeader().setVisible(False)`) — otherwise an
-  empty row-number gutter shows on the left. `horizontalHeader().setStretchLastSection(True)`.
+  empty row-number gutter shows on the left ("first empty column").
+- **Fill the width evenly, don't balloon the last column.** Use
+  `horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)` so every column shares the width.
+  `setStretchLastSection(True)` stretches *only* the final column into a wide empty band on the right —
+  avoid it for content-light tables.
+- **Header band + gridline alignment (shared QSS).** `QHeaderView::section` paints on `surfaceAlt`
+  (`#404040`, bold) so the header reads as a distinct band, and draws **only** a `border-right` +
+  `border-bottom` (single 1px `border` line) so the section dividers land exactly on the body gridlines;
+  the outer frame is the `QTableView { border: 1px solid }`. A full four-side section border doubles to 2px
+  between sections and visibly misaligns against the 1px body gridlines — don't reintroduce it.
 - A rich rows-as-cards list → `QListView` + `QAbstractListModel` + an HTML delegate
   (see `SpectrometerProfileListViewModule`).
 - Standard nav buttons live in `createNavigationGroupBox()`: **Back** first, then actions
   (Add / Edit / Delete / Save). Double-click a row = Edit. Destructive actions confirm via `QMessageBox`.
+
+## 4b. Chevron step bar (`StepBarWidget`)
+
+A generic, custom-painted horizontal step indicator (`view/application/widgets/StepBarWidget.py`) for
+wizard-style flows — **all steps visible at once**, the current one filled in the app **primary** colour,
+the rest in the **secondary** gray (`getSecondaryColor()`, `#404040`) with white text, matching an inactive
+`QTabBar` tab. Interlocking right-pointing chevrons, except the **last step is flat-edged** (no trailing
+arrow). It knows nothing about its domain — just `setSteps([labels])` + `setCurrentIndex(i)`. Colours are
+pulled live from `ApplicationStyleLogicModule` so it tracks the theme; Qt QSS can't clip to an arrow shape,
+hence the `paintEvent`/`QPolygonF`. Used by the measurement wizard to show
+`Acquisition › Processing › Evaluation › Metadata`.
 
 ## 5. Data freshness (server-backed screens)
 

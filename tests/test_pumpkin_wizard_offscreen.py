@@ -70,7 +70,7 @@ class PumpkinWizardOffscreenTest(unittest.TestCase):
         wizard._WizardViewModule__refreshNav()
         self.assertTrue(wizard._WizardViewModule__nextButton.isEnabled())
 
-        # 3) Next -> PROCESSING (an absorption plot tab), Next -> EVALUATION (terminal -> Save)
+        # 3) Next -> PROCESSING (an absorption plot tab), Next -> EVALUATION, Next -> METADATA (terminal)
         self.__next()
         self.assertEqual(wizard._WizardViewModule__shownPhases[wizard._WizardViewModule__cursor],
                          SpectralWorkflowPhaseType.PROCESSING)
@@ -78,6 +78,10 @@ class PumpkinWizardOffscreenTest(unittest.TestCase):
         self.__next()
         self.assertEqual(wizard._WizardViewModule__shownPhases[wizard._WizardViewModule__cursor],
                          SpectralWorkflowPhaseType.EVALUATION)
+        self.assertEqual(wizard._WizardViewModule__nextButton.text(), "Next ▶")  # METADATA phase follows
+        self.__next()
+        self.assertEqual(wizard._WizardViewModule__shownPhases[wizard._WizardViewModule__cursor],
+                         SpectralWorkflowPhaseType.METADATA)
         self.assertEqual(wizard._WizardViewModule__nextButton.text(), "Save")
 
         # 4) the verdict rendered

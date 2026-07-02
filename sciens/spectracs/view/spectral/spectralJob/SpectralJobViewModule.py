@@ -30,9 +30,8 @@ class SpectralJobViewModule(QWidget):
         layout.addWidget(sampleButtonsGroupBox, rowIndex, 0, 1, 1)
         rowIndex += 1
 
-        acquireViewSteps=SpectralWorkflowUtil().getWorkflow().getAcquireViewPhase().getSteps()
-        acquireViewStep = next(iter(acquireViewSteps.values()), None)
-        spectralSampleTypes=acquireViewStep.getSpectralSampleTypes()
+        # The retired AcquireViewSpectralWorkflowStep used to declare these; inline them (behaviour-preserving).
+        spectralSampleTypes = [SpectrumSampleType.SAMPLE, SpectrumSampleType.REFERENCE]
 
         if SpectrumSampleType.REFERENCE in spectralSampleTypes:
             lightGroupBox = self.createLightButtonsGroupBox()

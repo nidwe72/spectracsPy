@@ -413,13 +413,18 @@ QAbstractItemView {{
 }}
 
 QHeaderView {{
-	border: 1px solid {border};
+	border: none;
 }}
 
 QHeaderView::section {{
-	background: {background};
-	border: 1px solid {border};
+	background: {surfaceAlt};
+	/* Only a right+bottom separator (single 1px line) so header dividers land exactly on the
+	   body gridlines; the outer frame is drawn by QTableView's border. */
+	border: none;
+	border-right: 1px solid {border};
+	border-bottom: 1px solid {border};
 	padding: 4px;
+	font-weight: bold;
 }}
 
 QHeaderView::section:selected, QHeaderView::section::checked {{
@@ -428,6 +433,7 @@ QHeaderView::section:selected, QHeaderView::section::checked {{
 
 QTableView {{
 	gridline-color: {border};
+	border: 1px solid {border};
 }}
 
 QTabBar {{
