@@ -1,9 +1,11 @@
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel, QStyleOption, QFrame
+from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel, QStyleOption, QFrame, \
+    QScrollArea
 
 from PySide6.QtCore import Qt
 
+from sciens.base.PlatformUtil import is_android
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
 
@@ -37,7 +39,18 @@ class PageWidget(QFrame):
             self.setContentsMargins(0,0,0,0)
 
         mainContainer = self.createMainContainer()
-        layout.addWidget(mainContainer, 0, 0, 1, 1)
+        if is_android() and self._isTopMostPageWidget():
+            # On phones, tall forms must scroll rather than clip / get squeezed. Wrap only the
+            # top-most page's content (never nested pages -> no nested scroll areas). Desktop is
+            # untouched. Horizontal scroll off so content reflows to the screen width.
+            scrollArea = QScrollArea()
+            scrollArea.setWidgetResizable(True)
+            scrollArea.setFrameShape(QFrame.Shape.NoFrame)
+            scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+            scrollArea.setWidget(mainContainer)
+            layout.addWidget(scrollArea, 0, 0, 1, 1)
+        else:
+            layout.addWidget(mainContainer, 0, 0, 1, 1)
         layout.setRowStretch(0,90)
 
         if self._isTopMostPageWidget():

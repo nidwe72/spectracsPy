@@ -16,7 +16,6 @@ from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSigna
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
 from sciens.spectracs.model.signal import SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal
-from spectracsTest2 import RascalLogicModule
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileSpectralLinesViewModule import \
     SpectrometerCalibrationProfileSpectralLinesViewModule

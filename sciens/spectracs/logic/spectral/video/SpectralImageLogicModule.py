@@ -5,7 +5,6 @@ from PySide6.QtGui import qGray
 from PySide6.QtGui import QColor
 import numpy as np
 import cv2
-from skimage import color
 
 class SpectralImageLogicModule:
 

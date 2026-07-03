@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QProgressBar, QVBoxLayout, QHBoxL
 
 from PySide6 import QtCore
 
+from sciens.base.PlatformUtil import is_android
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
@@ -45,7 +46,10 @@ class MainStatusBarViewModule(QWidget):
         self.painter.end()
         self.label.setPixmap(self.pixmap)
         self.label.setScaledContents(True)
-        self.label.setMinimumWidth(int(480 * 1.5))
+        # On phones the 720px logo min-width would force the whole window wider than the screen;
+        # let the scaled logo shrink there. Desktop keeps the fixed minimum width.
+        if not is_android():
+            self.label.setMinimumWidth(int(480 * 1.5))
         self.label.setFixedHeight(self.HEADER_CONTENT_HEIGHT)
 
         headerRow.addWidget(self.label, alignment=QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)

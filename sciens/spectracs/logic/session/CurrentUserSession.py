@@ -1,6 +1,11 @@
+import os
 from typing import List, Optional
 
 from sciens.base.Singleton import Singleton
+
+
+def _isDevLoginBypassEnabled() -> bool:
+    return os.environ.get("SPECTRACS_DEV_LOGIN_BYPASS", "").strip().lower() in ("1", "true", "yes", "on")
 
 
 class CurrentUserSession(Singleton):
@@ -31,6 +36,31 @@ class CurrentUserSession(Singleton):
         self.pluginId = None
         self.pluginCodeRef = None
         self.spectrometerDevice = None
+
+    def applyDevLoginBypassIfEnabled(self) -> bool:
+        """Bring-up only (Android P4/P5): log in a synthetic dev user WITHOUT the server, so the
+        virtual pipeline can be exercised on-device before the server app exists. Gated by the
+        SPECTRACS_DEV_LOGIN_BYPASS env var; the plugin/device/role are env-overridable so the bound
+        flow can be tuned during on-device validation. This bypass is REMOVED at P6 — see
+        docs/SPEC_android_port.md decision D13. No-op (returns False) when the flag is off.
+        """
+        if not _isDevLoginBypassEnabled():
+            return False
+
+        # Local import to avoid a session↔model import cycle at module load.
+        from sciens.spectracs.model.databaseEntity.application.user.UserRoleType import UserRoleType
+
+        self.login({
+            "userId": os.environ.get("SPECTRACS_DEV_USER_ID", "dev-user"),
+            "username": os.environ.get("SPECTRACS_DEV_USERNAME", "dev"),
+            "roles": [UserRoleType.MASTER_USER.value],
+            "pluginId": os.environ.get("SPECTRACS_DEV_PLUGIN_ID", "pumpkin-oil"),
+            "pluginCodeRef": os.environ.get(
+                "SPECTRACS_DEV_PLUGIN_CODEREF",
+                "sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin"),
+            "spectrometerDevice": os.environ.get("SPECTRACS_DEV_DEVICE", "Virtuax"),
+        })
+        return True
 
     def isLoggedIn(self) -> bool:
         return self.userId is not None

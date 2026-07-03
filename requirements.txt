@@ -1,0 +1,25 @@
+# Spectracs — desktop dependency set (all desktop platforms), pinned to the working venv.
+# See requirements-android-main.txt / requirements-android-server.txt for the on-device subsets.
+#
+# NOT listed (removed in P1 as dead/scratch-only — docs/SPEC_android_port.md D9):
+#   astropy, pandas, BaselineRemoval, rascal, scikit-image, scikit-learn
+PySide6==6.5.0
+pyqtgraph==0.14.0
+numpy==1.26.4
+scipy==1.10.1
+opencv-python-headless==4.7.0.72
+Pyro5==5.14
+SQLAlchemy==2.0.12
+SQLAlchemy-serializer==1.4.1
+marshmallow==3.20.1
+marshmallow-sqlalchemy==0.29.0
+bcrypt==5.0.0
+colour-science==0.4.2
+colormath==3.0.0
+luxpy==1.9.8
+spectres==2.2.0
+rgbxy==0.5
+pyspectra==0.0.1.2
+psutil==5.9.5
+pyusb==1.2.1
+appdata==2.2.0

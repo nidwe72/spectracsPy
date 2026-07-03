@@ -3,7 +3,6 @@ from typing import List, Dict
 
 import Pyro5.api
 import Pyro5.client
-import psutil
 from sqlalchemy.orm import make_transient
 
 from sciens.spectracs.SpectracsPyServer import SpectracsPyServer
@@ -29,11 +28,23 @@ class SpectracsPyServerClient:
 
         SpectracsPyServer.configure()
 
+        # Bound the per-attempt wait so an unreachable host cannot hang startup.
+        Pyro5.config.COMMTIMEOUT = 5.0
+
+        # 1) Two-app on-device path (P6): connect straight to the local server APK's fixed-URI
+        # daemon — no nameserver (Pyro's UDP discovery doesn't cross Android sandboxes). On the
+        # phone this is the only server; on desktop it's a fast no-op when nothing is listening.
+        try:
+            localProxy = Pyro5.client.Proxy(SpectracsPyServer.localUri())
+            localProxy._pyroBind()  # force a connection so we fail fast if nothing is listening
+            return localProxy
+        except Exception:
+            pass
+
         port = SpectracsPyServer.NAMESERVER_PORT
 
-        # Try the local development server first (if a nameserver is listening on this
-        # machine's port), then fall back to the remote (sciens.at) server. If neither is
-        # reachable, return None so master-data sync can be skipped without crashing startup.
+        # 2) Otherwise: local dev nameserver (if listening on this machine's port), then the remote
+        # (sciens.at) server. If neither is reachable, return None so sync is skipped, not crashed.
         candidateHosts = []
         addressUsingPort = NetworkUtil().getAddressUsingPort(port)
         if addressUsingPort is not None:

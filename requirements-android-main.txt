@@ -1,0 +1,24 @@
+# MAIN app (Android APK) — the buildable on-device subset for the first (virtual) target.
+# Built with Qt's p4a fork (D12). Versions tagged "(recipe)" come from the python-for-android
+# recipe and may differ from the desktop pins — reconcile the version matrix during the P0 spike.
+#
+# Excluded vs desktop:
+#   appdata  -> desktop-only; on Android the data dir is ANDROID_PRIVATE (AppDataPathUtil)
+#   pyusb, psutil -> deferred with real capture (P7) / unneeded with fixed 127.0.0.1
+#   astropy, pandas, BaselineRemoval, rascal, scikit-image, scikit-learn -> removed (D9)
+PySide6            # (recipe) Qt-for-Python Android, from Qt's p4a fork
+numpy              # (recipe) p4a CORE_RECIPE
+scipy              # (recipe) p4a scipy recipe = Meson + OpenBLAS + flang
+opencv             # (recipe) p4a opencv recipe -> provides cv2 (desktop uses opencv-python-headless)
+pyqtgraph==0.14.0
+Pyro5==5.14
+SQLAlchemy==2.0.12
+SQLAlchemy-serializer==1.4.1
+marshmallow==3.20.1
+marshmallow-sqlalchemy==0.29.0
+colour-science==0.4.2
+colormath==3.0.0
+luxpy==1.9.8
+spectres==2.2.0
+rgbxy==0.5
+# pyspectra==0.0.1.2   # optional: only for .dx spectrum import (off the core virtual path)

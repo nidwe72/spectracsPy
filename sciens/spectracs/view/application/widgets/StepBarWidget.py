@@ -2,6 +2,7 @@ from PySide6.QtCore import Qt, QPointF, QRectF, QSize
 from PySide6.QtGui import QPainter, QPolygonF, QColor
 from PySide6.QtWidgets import QWidget
 
+from sciens.base.PlatformUtil import is_android
 from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 
 
@@ -36,7 +37,11 @@ class StepBarWidget(QWidget):
         return self.__currentIndex
 
     def sizeHint(self):
-        return QSize(max(1, len(self.__steps)) * 150, self.__HEIGHT)
+        # paintEvent scales the chevrons to self.width(), so the bar already fits any width. Only the
+        # PREFERRED width matters here: on phones use a smaller per-step hint so the bar doesn't demand
+        # a wide layout (it compresses to the screen), desktop keeps the roomy 150px/step.
+        perStep = 84 if is_android() else 150
+        return QSize(max(1, len(self.__steps)) * perStep, self.__HEIGHT)
 
     def __primaryColor(self):
         color = ApplicationStyleLogicModule().getPrimaryColor()

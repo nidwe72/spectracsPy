@@ -5,3 +5,13 @@
 # Python bytecode caches (regenerable)
 __pycache__/
 *.py[cod]
+
+# Android build artifacts (multi-GB, regenerable) — keep only the source scaffolds
+# (android/patch_p4a.sh, android/spike/{main.py,buildozer.spec,README.md})
+android/spike/.buildozer/
+android/spike/bin/
+android/spike/wheels/
+android/spike/app_src/
+android/spike/deployment/
+android/spike/*.apk
+android/tooling-venv/

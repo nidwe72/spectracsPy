@@ -2,12 +2,13 @@ from sciens.spectracs.logic.spectral.importSpectrum.ImportSpectrumLogicModulePar
 from sciens.spectracs.logic.spectral.importSpectrum.ImportSpectrumLogicModuleResult import ImportSpectrumLogicModuleResult
 from sciens.spectracs.model.spectral.SpectralJob import SpectralJob
 
-from pyspectra.readers.read_dx import read_dx
-
 
 class ImportSpectrumLogicModule:
 
     def importSpectrum(self, importSpectrumLogicModuleParameters: ImportSpectrumLogicModuleParameters):
+        # pyspectra (→ pandas + spc-spectra) is only needed for .dx import, not for the core/virtual
+        # pipeline. Import lazily so this module stays importable without those heavy deps on Android.
+        from pyspectra.readers.read_dx import read_dx
         Foss_single = read_dx()
         filepath = importSpectrumLogicModuleParameters.getFilepath()
         filepath = "/home/nidwe/tmp/test.dx"

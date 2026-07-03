@@ -7,8 +7,7 @@ from PySide6.QtGui import QImage
 
 from sys import platform
 
-from appdata import AppDataPaths
-
+from sciens.spectracs.model.databaseEntity.AppDataPathUtil import get_app_data_dir
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 
 S = TypeVar('S')
@@ -55,37 +54,25 @@ class VideoThread(QThread,Generic[S]):
 
         self.onStart()
 
-        #todo:hardCoded
-        videoDeviceId=0
-        #videoDeviceId = 1
+        # Virtual mode serves frames from VirtualSpectrometerSettings and must never touch a
+        # physical camera. This is also required on Android, where cv2.VideoCapture(0) has no
+        # usable device. Only open/configure the capture device for a real (non-virtual) sensor.
+        if not self.getIsVirtual():
+            #todo:hardCoded
+            videoDeviceId=0
+            self.cap = cv2.VideoCapture(videoDeviceId)
 
-        #self.cap = cv2.VideoCapture(0)
-        self.cap = cv2.VideoCapture(videoDeviceId)
+            fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+            self.cap.set(cv2.CAP_PROP_FOURCC, fourcc)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        self.cap.set(cv2.CAP_PROP_FOURCC, fourcc)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
 
-        # bar=cv2.VideoWriter.get(cv2.VIDEOWRITER_PROP_HW_DEVICE)
-        # print(bar)
-
-        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
-
-        if platform=='linux':
-            #self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
-            #self.cap.set(cv2.CAP_PROP_EXPOSURE, 500)
-            self.cap.set(cv2.CAP_PROP_EXPOSURE, 150)
-        elif platform=='win32':
-            self.cap.set(cv2.CAP_PROP_EXPOSURE, -3)
-
-
-
-        #self.cap.set(cv2.CAP_PROP_EXPOSURE, 300)
-        # foo=""
-        # foo=self.cap.get(cv2.CAP_PROP_EXPOSURE)
-        # print(foo)
-        # print(fourcc)
+            if platform=='linux':
+                self.cap.set(cv2.CAP_PROP_EXPOSURE, 150)
+            elif platform=='win32':
+                self.cap.set(cv2.CAP_PROP_EXPOSURE, -3)
 
         while self._runFlag:
 
@@ -94,7 +81,8 @@ class VideoThread(QThread,Generic[S]):
 
 
         self._setCurrentFrameIndex(0)
-        self.cap.release()
+        if self.cap is not None:
+            self.cap.release()
 
     def __captureFrame(self):
 
@@ -104,9 +92,7 @@ class VideoThread(QThread,Generic[S]):
 
         temporaryDirectory=None
         if doSavePhysicallyCapturedImages:
-            app_paths = AppDataPaths()
-            app_paths.setup()
-            temporaryDirectory = app_paths.app_data_path+'/tmpImages'
+            temporaryDirectory = get_app_data_dir()+'/tmpImages'
 
             if not os.path.isdir(temporaryDirectory):
                 os.makedirs(temporaryDirectory)
