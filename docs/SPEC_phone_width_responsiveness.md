@@ -345,7 +345,9 @@ branch). Acceptance **PASS**: offscreen boot of the real `MainContainerViewModul
 the 720px status-bar content clipped (not expanded) — no `maximumWidth` fallback needed. Ready for P2 audit.
 
 **Notes**
-- P0, P1, P2, **P3a** all **DONE**. Next explicit-request step is **P3b** (implement the rules).
+- P0, P1, P2, **P3a** all **DONE**. **P3b in progress:** **R6 DONE** 2026-07-04 (`MainStatusBarViewModule`:
+  logo now in a bordered box via `_AspectLogoLabel` scale-to-fit; 720px min removed → offender A1 gone;
+  full "SPECTRACS" renders un-clipped at 412, verified by re-shoot). Remaining P3b: R2, R1, R3, R4/R5, Rwrap/R7.
 - Strategy is **fix rules, not screens** (Edwin): each rule = one shared helper/QSS edit → every screen
   inherits it → desktop + Android both benefit. Per-screen patching is explicitly rejected.
 - Recommend P3b order **R6 → R2 → R1 → R3 → R4/R5 → Rwrap/R7**, re-shooting `--phone` after each rule

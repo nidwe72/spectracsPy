@@ -1,6 +1,7 @@
 from PySide6.QtGui import QPixmap, QPainter, QIcon
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QWidget, QLabel, QProgressBar, QVBoxLayout, QHBoxLayout, QToolButton, QMenu, QSizePolicy
+from PySide6.QtWidgets import QWidget, QLabel, QProgressBar, QVBoxLayout, QHBoxLayout, QToolButton, QMenu, QSizePolicy, \
+    QFrame
 
 from PySide6 import QtCore
 
@@ -10,6 +11,44 @@ from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.settings.login.ServiceLoginDialog import ServiceLoginDialog
+
+
+class _AspectLogoLabel(QLabel):
+    """A QLabel that draws a source pixmap scaled to fit its current width, preserving aspect ratio
+    and never exceeding maxHeight. Rescales on resize so the wide logo fits any window width without
+    distortion or right-edge clipping (R6). sizeHint is decoupled from the (changing) pixmap so
+    setPixmap during resize can't trigger a relayout loop."""
+
+    def __init__(self, sourcePixmap, maxHeight):
+        super().__init__()
+        self._source = sourcePixmap
+        self._maxHeight = maxHeight
+        self.setMinimumWidth(1)
+        self.setFixedHeight(maxHeight)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self._rescale(sourcePixmap.width())
+
+    def _naturalWidth(self):
+        return int(self._maxHeight * (self._source.width() / self._source.height()))
+
+    def _rescale(self, width):
+        scaled = self._source.scaled(
+            max(1, width), self._maxHeight,
+            QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+            QtCore.Qt.TransformationMode.SmoothTransformation)
+        self.setPixmap(scaled)
+
+    def resizeEvent(self, event):
+        self._rescale(event.size().width())
+        super().resizeEvent(event)
+
+    def sizeHint(self):
+        return QtCore.QSize(self._naturalWidth(), self._maxHeight)
+
+    def minimumSizeHint(self):
+        return QtCore.QSize(1, self._maxHeight)
+
 
 class MainStatusBarViewModule(QWidget):
 
@@ -21,6 +60,10 @@ class MainStatusBarViewModule(QWidget):
     # 70px ~= the logo's native aspect at the 720px display width, which also de-distorts it (RD3),
     # and is centered in the fixed 100px band, leaving the icon a sensible (not edge-to-edge) size.
     HEADER_CONTENT_HEIGHT = 70
+
+    # Logo SVG viewBox ratio (160.33255 / 15.725352). The logo is ~10.2:1, so at 58px tall it wants
+    # ~591px wide — the source of the old 720px min-width (offender A1). R6 scales it to fit instead.
+    LOGO_ASPECT = 160.33255 / 15.725352
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,26 +77,28 @@ class MainStatusBarViewModule(QWidget):
         headerRow=QHBoxLayout()
         headerRow.setContentsMargins(0,0,0,0)
 
-        self.label=QLabel()
+        # R6: put the logo in a bordered box (mirroring the account button's chrome) whose contents
+        # scale to fit. The old fixed 720px min-width (int(480*1.5)) forced the whole window wider
+        # than a phone screen — offender A1. Now the logo keeps its aspect and shrinks with the box,
+        # so BOTH desktop and phone stay clean; the box never overlaps the account icon (addStretch).
+        pad = 6
+        logoContentHeight = self.HEADER_CONTENT_HEIGHT - 2 * pad
+        naturalWidth = int(logoContentHeight * self.LOGO_ASPECT)
 
-        self.pixmap = QPixmap(480,100)
-        self.pixmap.fill(QtCore.Qt.GlobalColor.transparent)
-        self.painter=QPainter(self.pixmap)
+        self.label = _AspectLogoLabel(self._renderLogoSource(), logoContentHeight)
 
-        self.svgRenderer = QSvgRenderer()
-        self.svgRenderer.load(bytearray(self.logo_png,'utf-8'))
+        logoBox = QFrame()
+        logoBox.setObjectName("logoBox")
+        logoBox.setStyleSheet(
+            "#logoBox { background: transparent; border: 1px solid #5A5A5A; border-radius: 6px; }")
+        logoBoxLayout = QHBoxLayout(logoBox)
+        logoBoxLayout.setContentsMargins(pad, pad, pad, pad)
+        logoBoxLayout.addWidget(self.label)
+        logoBox.setFixedHeight(self.HEADER_CONTENT_HEIGHT)
+        logoBox.setMaximumWidth(naturalWidth + 2 * pad)  # hug the logo on desktop...
+        logoBox.setMinimumWidth(0)                       # ...but shrink to fit on the phone
 
-        self.svgRenderer.render(self.painter,self.pixmap.rect())
-        self.painter.end()
-        self.label.setPixmap(self.pixmap)
-        self.label.setScaledContents(True)
-        # On phones the 720px logo min-width would force the whole window wider than the screen;
-        # let the scaled logo shrink there. Desktop keeps the fixed minimum width.
-        if not is_android():
-            self.label.setMinimumWidth(int(480 * 1.5))
-        self.label.setFixedHeight(self.HEADER_CONTENT_HEIGHT)
-
-        headerRow.addWidget(self.label, alignment=QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        headerRow.addWidget(logoBox, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
         headerRow.addStretch(1)
 
         self.accountButton=QToolButton()
@@ -85,6 +130,20 @@ class MainStatusBarViewModule(QWidget):
             self.handleApplicationStatusSignal)
         ApplicationContextLogicModule().getApplicationSignalsProvider().userSessionSignal.connect(
             self.updateAccountControl)
+
+    def _renderLogoSource(self):
+        """Render the logo SVG once into a high-res pixmap at its native aspect (no distortion).
+        _AspectLogoLabel scales this down to fit the header box (R6)."""
+        srcHeight = 120
+        srcWidth = int(srcHeight * self.LOGO_ASPECT)
+        pixmap = QPixmap(srcWidth, srcHeight)
+        pixmap.fill(QtCore.Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        renderer = QSvgRenderer()
+        renderer.load(bytearray(self.logo_png, 'utf-8'))
+        renderer.render(painter, pixmap.rect())
+        painter.end()
+        return pixmap
 
     def renderSvgPixmap(self, svgString):
         size = self.HEADER_CONTENT_HEIGHT
