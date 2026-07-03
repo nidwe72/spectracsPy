@@ -344,10 +344,57 @@ else is flag flips (R2), QSS edits (R5), and a header rework (R6). All shared �
 branch). Acceptance **PASS**: offscreen boot of the real `MainContainerViewModule` reports width **412** with
 the 720px status-bar content clipped (not expanded) — no `maximumWidth` fallback needed. Ready for P2 audit.
 
+### 6.1 P3b implementation phases (rule-by-rule)
+
+Order chosen so the most cross-cutting / unblocking rules land first; re-shoot `--phone` after each.
+
+```
++======+===============================+===================================================+=============================+=========+=======+
+| RULE | GOAL                          | KEY CHANGE (steps)                                | FILES                       | NEWCODE | STATUS|
++======+===============================+===================================================+=============================+=========+=======+
+| R6   | Header logo box (kills A1)    | a box logo like account btn                       | MainStatusBarViewModule.py  | _Aspect | DONE  |
+|      |                               | b _AspectLogoLabel KeepAspectRatio scale-to-fit   |                             | LogoLbl |       |
+|      |                               | c drop int(480*1.5)=720 min (both OS)             |                             |         |       |
++------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
+| R2   | Spacing: kill vertical stretch| a compactMainContainer=True on form pages         | PageWidget.py; Metrics.py;  | no      | DONE* |
+|      | (cramped-phone/spread-desktop)| b SPACE_AFTER_BREADCRUMB=Metrics.L on topMost     | SpectrometerProfile,        |         |       |
+|      |                               |   (*so far Profile+Connection; more forms = flag) | Connection                  |         |       |
++------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
+| R1   | Uniform label chips           | createLabeledComponent: label chip fills column   | PageWidget.py;              | no      | DONE  |
+|      | (fixes misalignment 1,2)      | (Expanding) in both copies (shared fixed-col      | SettingsViewModule.py       |         |       |
+|      |                               | createForm deferred as refinement)                |                             |         |       |
++------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
+| R3   | Control row not clipped       | a ResponsiveRow (H>=thresh else stack) -> Settings| widgets/ResponsiveRow.py;   | Respons | DONE  |
+|      | (Settings btn row; Edit#3)    |   acquisition 4-btn row                            | Settings; Calibration       | iveRow  |       |
+|      |                               | b graph+Edit: verticalLayout=True (Edit below)    | (verticalLayout flip)       |         |       |
++------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
+| R4   | Table fits (Stretch+elide)    | applyTableLayout: Stretch all cols + ElideRight   | widgets/table/*.py;         | applyTa | DONE* |
+|      | (UserList Enabled col)        | (*real QTableViews only; QListView pseudo-tables  | UserListViewModule          | bleLay  |       |
+|      |                               | ProfileList/sensor deferred)                      |                             |         |       |
++------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
+| R5   | Table border in shared QSS    | broaden QTableView -> QTableView,QTableWidget      | ApplicationStyleLogicModule | no      | DONE  |
+|      | (kills Android red gridlines) | (red is Android-only; confirm on device at P4)    | .py (QSS)                   |         | (P4)  |
++------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
+| Rwrap| Long text wraps               | createMessageLabel helper; setWordWrap on the     | PageWidget.py;              | create  | DONE* |
+|      | (Connection msg)              | Connection message (*combo current-text elide     | RegisterSpectrometerProfile | Message |       |
+|      |                               | deferred — minor)                                 |                             |         |       |
++------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
+| R7   | One section container         | createSection(title,content) helper ADDED to      | PageWidget.py               | create  | PARTL |
+|      | (Settings mixed styles)       | PageWidget; not yet routed through Settings        | (helper only)               | Section |       |
++======+===============================+===================================================+=============================+=========+=======+
+```
+
 **Notes**
-- P0, P1, P2, **P3a** all **DONE**. **P3b in progress:** **R6 DONE** 2026-07-04 (`MainStatusBarViewModule`:
-  logo now in a bordered box via `_AspectLogoLabel` scale-to-fit; 720px min removed → offender A1 gone;
-  full "SPECTRACS" renders un-clipped at 412, verified by re-shoot). Remaining P3b: R2, R1, R3, R4/R5, Rwrap/R7.
+- P0, P1, P2, **P3a** all **DONE**. **P3b landed** (2026-07-04): **R6, R1, R2, R3, R4, R5, Rwrap DONE**
+  (verified by `--phone` re-shoots); **R7 helper added, routing deferred**.
+- Verified fixes (screenshots): logo boxed + full "SPECTRACS" (R6); Settings 4-btn row stacks (R3);
+  Edit now below the graph (R3/#3); SpectrometerProfile vendor/style top-packed + breadcrumb gap (R2);
+  uniform label chips (R1); UserList "Enabled" column visible, values elide (R4); Connection message
+  wraps (Rwrap).
+- **Deferred (documented, not silent):** shared fixed-column `createForm` (R1 refinement); QListView
+  pseudo-tables ProfileList/sensor (R4); combo current-text elide (Rwrap); `createSection` routing +
+  Settings hub-page vertical spread (R7); `compactMainContainer` on the remaining form pages (R2).
+- **R5 red-gridline removal is only confirmable on device (P4).**
 - Strategy is **fix rules, not screens** (Edwin): each rule = one shared helper/QSS edit → every screen
   inherits it → desktop + Android both benefit. Per-screen patching is explicitly rejected.
 - Recommend P3b order **R6 → R2 → R1 → R3 → R4/R5 → Rwrap/R7**, re-shooting `--phone` after each rule

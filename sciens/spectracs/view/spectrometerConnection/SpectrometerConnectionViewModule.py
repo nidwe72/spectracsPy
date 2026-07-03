@@ -14,6 +14,8 @@ from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 class SpectrometerConnectionViewModule(PageWidget):
+    # R2: form/editor page — top-pack fields (see PageWidget.compactMainContainer).
+    compactMainContainer = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,7 +1,9 @@
 from PySide6.QtWidgets import QWidget, QComboBox
 from PySide6.QtWidgets import QGridLayout
 from PySide6.QtWidgets import QGroupBox
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QPushButton, QSizePolicy
+
+from sciens.spectracs.view.application.widgets.ResponsiveRow import ResponsiveRow
 
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
@@ -61,26 +63,32 @@ class SettingsViewModule(QWidget):
         Metrics.applyPanelPadding(layout)
 
         comboBox=self.createLabeledComponent('Measurement profile',QComboBox())
-        layout.addWidget(comboBox, 0, 0, 1, 3)
+        layout.addWidget(comboBox, 0, 0, 1, 1)
 
         openSpectrometerConnectionViewModuleButton = QPushButton()
         openSpectrometerConnectionViewModuleButton.setText("Connect spectrometer")
-        layout.addWidget(openSpectrometerConnectionViewModuleButton, 1, 0, 1, 1)
         openSpectrometerConnectionViewModuleButton.clicked.connect(self.onClickedOpenSpectrometerConnectionViewModuleButton)
 
         openSpectrometerProfileListViewModuleButton = QPushButton()
         openSpectrometerProfileListViewModuleButton.setText("Spectrometer profiles")
-        layout.addWidget(openSpectrometerProfileListViewModuleButton, 1, 1, 1, 1)
         openSpectrometerProfileListViewModuleButton.clicked.connect(self.onClickedCameraSelectionButton)
 
         openMeasurementProfilesListViewModuleButton = QPushButton()
         openMeasurementProfilesListViewModuleButton.setText("Measurement profiles")
-        layout.addWidget(openMeasurementProfilesListViewModuleButton, 1, 2, 1, 1)
 
         openVirtualSpectrometerViewModuleButton = QPushButton()
         openVirtualSpectrometerViewModuleButton.setText("Virtual Spectrometer")
-        layout.addWidget(openVirtualSpectrometerViewModuleButton, 1, 3, 1, 1)
         openVirtualSpectrometerViewModuleButton.clicked.connect(self.onClickedOpenVirtualSpectrometerViewModuleButton)
+
+        # R3: four action buttons that overflow 412 dp as a single row -> ResponsiveRow stacks them
+        # vertically on the phone and keeps them in a row on the desktop.
+        buttonsRow = ResponsiveRow([
+            openSpectrometerConnectionViewModuleButton,
+            openSpectrometerProfileListViewModuleButton,
+            openMeasurementProfilesListViewModuleButton,
+            openVirtualSpectrometerViewModuleButton,
+        ])
+        layout.addWidget(buttonsRow, 1, 0, 1, 1)
 
         return result
 
@@ -232,6 +240,8 @@ class SettingsViewModule(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)  # align to container content edge (spec C7)
         container.setLayout(layout)
         labelComponent=PageLabel(label)
+        # R1: chip fills its column so labels align uniformly (see PageWidget.createLabeledComponent).
+        labelComponent.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         layout.addWidget(labelComponent,0,0,1,1)
         layout.setColumnStretch(0,30)
 

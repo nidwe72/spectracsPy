@@ -24,6 +24,10 @@ from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 
 class SpectrometerProfileViewModule(PageWidget):
+    # R2: an editor/form page — pack fields at natural height from the top instead of spreading
+    # them over the panel (cramped on phone / huge gaps on desktop).
+    compactMainContainer = True
+
     model: SpectrometerProfile = None
     spectrometerViewModule: SpectrometerViewModule = None
     spectrometersComboBox:QComboBox = None

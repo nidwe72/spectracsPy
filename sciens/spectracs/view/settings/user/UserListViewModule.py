@@ -9,6 +9,7 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.model.databaseEntity.application.user.UserRoleType import UserRoleType
 from sciens.spectracs.model.signal.UserSignal import UserSignal
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
+from sciens.spectracs.view.application.widgets.table.TableLayoutUtil import applyTableLayout
 from sciens.spectracs.view.settings.user.UserViewModule import UserViewModule
 
 
@@ -50,7 +51,7 @@ class UserListViewModule(PageWidget):
 
         self.usersTableModel = UsersTableModel()
         self.tableView.setModel(self.usersTableModel)
-        self.tableView.horizontalHeader().setStretchLastSection(True)
+        applyTableLayout(self.tableView)  # R4: fit columns, elide, reachable scroll (no clipped last col)
         self.tableView.verticalHeader().setVisible(False)  # no empty row-number gutter
         self.tableView.doubleClicked.connect(self.onDoubleClickedRow)
 

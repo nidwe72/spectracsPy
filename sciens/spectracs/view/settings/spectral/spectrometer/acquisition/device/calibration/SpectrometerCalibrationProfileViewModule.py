@@ -29,7 +29,10 @@ class SpectrometerCalibrationProfileViewModule(PageWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.verticalLayout=False
+        # R3 / issue 3: stack the graph and its Edit button vertically (Edit below the graph) instead
+        # of side-by-side, which clipped Edit off the right at 412 dp. Edwin's preference is "Edit
+        # below the graph anyway", so this is unconditional (both OS), not width-conditional.
+        self.verticalLayout=True
 
     def _getPageTitle(self):
         if not self._isTopMostPageWidget():

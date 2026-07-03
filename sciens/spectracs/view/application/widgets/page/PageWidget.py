@@ -1,7 +1,7 @@
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel, QStyleOption, QFrame, \
-    QScrollArea
+    QScrollArea, QSizePolicy
 
 from PySide6.QtCore import Qt
 
@@ -74,7 +74,8 @@ class PageWidget(QFrame):
         result=QGroupBox(title)
 
         borderless=False
-        if self._isTopMostPageWidget():
+        isTopMost=self._isTopMostPageWidget()
+        if isTopMost:
             result.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             result.setObjectName('PageWidget_topMost')
             borderless=True
@@ -93,7 +94,9 @@ class PageWidget(QFrame):
         if borderless:
             # Borderless container: no frame to protect, so NO horizontal indent
             # - otherwise nested peers stair-step out of alignment. Vertical only.
-            layout.setContentsMargins(0, Metrics.S, 0, Metrics.S)
+            # R2: the top-most page adds breathing room under the breadcrumb title (issue 5).
+            topMargin = Metrics.SPACE_AFTER_BREADCRUMB if isTopMost else Metrics.S
+            layout.setContentsMargins(0, topMargin, 0, Metrics.S)
         else:
             # Bordered panel: uniform inner padding (P=M) so content does not
             # hug the frame and matches every other panel (spec C6).
@@ -134,6 +137,9 @@ class PageWidget(QFrame):
         layout.setSpacing(Metrics.S)
         container.setLayout(layout)
         labelComponent=PageLabel(label)
+        # R1: the label fills its whole column so every field-label "chip" has the same width and
+        # left/right edge — otherwise chips size to their text and read as ragged (issues 1,2).
+        labelComponent.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         layout.addWidget(labelComponent,0,0,1,1)
         layout.setColumnStretch(0,30)
 
@@ -141,6 +147,25 @@ class PageWidget(QFrame):
         layout.setColumnStretch(1, 70)
 
         return container
+
+    def createMessageLabel(self, text: str):
+        """Rwrap: a prose/status label that wraps instead of overflowing (and being clipped both
+        sides, as the connection message was). Use for any multi-word informational text."""
+        result = QLabel(text)
+        result.setWordWrap(True)
+        return result
+
+    def createSection(self, title: str, content: QWidget):
+        """R7: one section pattern app-wide — a borderless titled heading (sectionLabel) over its
+        content, so sections stop mixing bordered group-boxes and bare labels."""
+        result = QGroupBox(title)
+        result.setProperty("sectionLabel", True)  # borderless heading (spec C2b)
+        layout = QGridLayout()
+        layout.setContentsMargins(0, Metrics.S, 0, 0)
+        layout.setSpacing(Metrics.S)
+        result.setLayout(layout)
+        layout.addWidget(content, 0, 0, 1, 1)
+        return result
 
     def _isTopMostPageWidget(self):
         parent=self.parent()

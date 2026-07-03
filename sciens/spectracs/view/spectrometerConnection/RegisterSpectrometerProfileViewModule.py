@@ -25,6 +25,7 @@ class RegisterSpectrometerProfileViewModule(PageWidget):
 
         label = QLabel()
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setWordWrap(True)  # Rwrap: wrap the message instead of clipping it both sides at 412 dp
 
         label.setText(
             "Your spectrometer has been calibrated in the factory. \nPlease supply the serial number of the device for downloading the calibration profile.");

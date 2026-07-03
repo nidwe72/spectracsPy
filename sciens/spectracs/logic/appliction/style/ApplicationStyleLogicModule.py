@@ -431,7 +431,9 @@ QHeaderView::section:selected, QHeaderView::section::checked {{
 	background: {surface};
 }}
 
-QTableView {{
+/* R5: cover QTableWidget too (it subclasses QTableView but a bare selector can miss it on some
+   platforms, where gridlines fell back to a red default on Android). Both get the neutral border. */
+QTableView, QTableWidget {{
 	gridline-color: {border};
 	border: 1px solid {border};
 }}

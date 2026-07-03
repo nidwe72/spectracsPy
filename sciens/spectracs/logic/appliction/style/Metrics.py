@@ -19,6 +19,9 @@ class Metrics(Singleton):
     L = 16
     XL = 24
 
+    # Vertical breathing room under the breadcrumb/page title before the first row (R2, issue 5).
+    SPACE_AFTER_BREADCRUMB = L
+
     @staticmethod
     def applyPanelPadding(layout):
         """Uniform inner padding (P=M) for a bordered panel's content, so panel
