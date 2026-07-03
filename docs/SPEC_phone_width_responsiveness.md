@@ -369,8 +369,9 @@ Order chosen so the most cross-cutting / unblocking rules land first; re-shoot `
 |      |                               | b graph+Edit: verticalLayout=True (Edit below)    | (verticalLayout flip)       |         |       |
 +------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
 | R4   | Table fits (Stretch+elide)    | applyTableLayout: Stretch all cols + ElideRight   | widgets/table/*.py;         | applyTa | DONE* |
-|      | (UserList Enabled col)        | (*real QTableViews only; QListView pseudo-tables  | UserListViewModule          | bleLay  |       |
-|      |                               | ProfileList/sensor deferred)                      |                             |         |       |
+|      | (UserList; sensor migrated)   | UserList table; SENSOR migrated QTextEdit-HTML ->  | UserList; SpectrometerSensor | bleLay  |       |
+|      |                               | two read-only QTableWidgets (fixes editable bug + | ViewModule                  |         |       |
+|      |                               | width + red border). (*ProfileList list deferred) |                             |         |       |
 +------+-------------------------------+---------------------------------------------------+-----------------------------+---------+-------+
 | R5   | Table border in shared QSS    | broaden QTableView -> QTableView,QTableWidget      | ApplicationStyleLogicModule | no      | DONE  |
 |      | (kills Android red gridlines) | (red is Android-only; confirm on device at P4)    | .py (QSS)                   |         | (P4)  |
@@ -391,9 +392,15 @@ Order chosen so the most cross-cutting / unblocking rules land first; re-shoot `
   Edit now below the graph (R3/#3); SpectrometerProfile vendor/style top-packed + breadcrumb gap (R2);
   uniform label chips (R1); UserList "Enabled" column visible, values elide (R4); Connection message
   wraps (Rwrap).
-- **Deferred (documented, not silent):** shared fixed-column `createForm` (R1 refinement); QListView
-  pseudo-tables ProfileList/sensor (R4); combo current-text elide (Rwrap); `createSection` routing +
-  Settings hub-page vertical spread (R7); `compactMainContainer` on the remaining form pages (R2).
+- **Sensor migration (2026-07-04):** the sensor "table" was an *editable* `QTextEdit`-HTML (its
+  `<style>` literally set `border:1px solid red` — the Android red). Replaced with two read-only
+  `QTableWidget`s in the original layout → fixes the tap-to-edit bug, fits 412, and removes the red at
+  source. Only `SpectrometerSensorViewModule` changed; `getSensorMarkup` now unused by it (kept; the
+  ProfileList delegate uses its own markup and is untouched).
+- **Deferred (documented, not silent):** shared fixed-column `createForm` (R1 refinement); ProfileList
+  QListView-delegate list width (R4 — not editable, just wide); combo current-text elide (Rwrap);
+  `createSection` routing + Settings hub-page vertical spread (R7); `compactMainContainer` on the
+  remaining form pages (R2).
 - **R5 red-gridline removal is only confirmable on device (P4).**
 - Strategy is **fix rules, not screens** (Edwin): each rule = one shared helper/QSS edit → every screen
   inherits it → desktop + Android both benefit. Per-screen patching is explicitly rejected.

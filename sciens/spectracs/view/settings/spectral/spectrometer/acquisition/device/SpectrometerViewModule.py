@@ -25,7 +25,8 @@ class SpectrometerViewModule(PageWidget):
         result['spectrometerModelNameComponent'] =self.createLabeledComponent("Product name", self.spectrometerModelNameComponent)
 
         self.spectrometerSensorViewModule=SpectrometerSensorViewModule(self)
-        self.spectrometerSensorViewModule.setMaximumHeight(120)
+        # The two sensor tables are fixed-height now (no scroll), so the old 120px cap that squeezed
+        # the QTextEdit is dropped — it would otherwise clip the second table.
         self.spectrometerSensorViewModule.initialize()
         result['spectrometerSensorViewModule']=self.spectrometerSensorViewModule
 
