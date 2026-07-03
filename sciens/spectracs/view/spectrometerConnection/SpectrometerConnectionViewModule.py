@@ -45,6 +45,10 @@ class SpectrometerConnectionViewModule(PageWidget):
     def getSelectSpectrometerProfileComboBox(self):
         if self.__selectSpectrometerProfileComboBox is None:
             self.__selectSpectrometerProfileComboBox = QComboBox()
+            # B3: long current selection elides in its cell instead of clipping at the arrow.
+            self.__selectSpectrometerProfileComboBox.setSizeAdjustPolicy(
+                QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+            self.__selectSpectrometerProfileComboBox.setMinimumContentsLength(1)
         return self.__selectSpectrometerProfileComboBox
 
     def updateSelectSpectrometerProfileComboBoxModel(self):

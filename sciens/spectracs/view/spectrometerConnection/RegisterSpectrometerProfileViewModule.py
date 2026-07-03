@@ -14,6 +14,7 @@ from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 
 
 class RegisterSpectrometerProfileViewModule(PageWidget):
+    compactMainContainer = True  # B2: top-pack, don't spread
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

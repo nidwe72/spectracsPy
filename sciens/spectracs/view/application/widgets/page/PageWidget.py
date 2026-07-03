@@ -148,6 +148,24 @@ class PageWidget(QFrame):
 
         return container
 
+    def createForm(self, rows):
+        """R1/B5: lay several (label, widget) rows in ONE shared grid so the label column is a single
+        width across all rows — even rows that would otherwise live in separate createLabeledComponent
+        containers and not share an edge. `rows` is a list of (labelText, component)."""
+        container = QWidget()
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(Metrics.S)
+        container.setLayout(layout)
+        for row, (labelText, component) in enumerate(rows):
+            label = PageLabel(labelText)
+            label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+            layout.addWidget(label, row, 0, 1, 1)
+            layout.addWidget(component, row, 1, 1, 1)
+        layout.setColumnStretch(0, 30)
+        layout.setColumnStretch(1, 70)
+        return container
+
     def createMessageLabel(self, text: str):
         """Rwrap: a prose/status label that wraps instead of overflowing (and being clipped both
         sides, as the connection message was). Use for any multi-word informational text."""

@@ -92,6 +92,10 @@ class SpectrometerProfileViewModule(PageWidget):
 
     def createSpectrometersComboBox(self):
         self.spectrometersComboBox = QComboBox()
+        # B3: don't demand the full text width; the combo fits its cell and the current (often long)
+        # selection elides with an ellipsis instead of being clipped at the drop-down arrow.
+        self.spectrometersComboBox.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.spectrometersComboBox.setMinimumContentsLength(1)
         self.updateSpectrometersComboBox()
         return self.spectrometersComboBox
 
@@ -167,12 +171,12 @@ class SpectrometerProfileViewModule(PageWidget):
     def getMainContainerWidgets(self):
         result = super().getMainContainerWidgets()
 
-        spectrometersComboBox = self.createLabeledComponent('Spectrometer', self.createSpectrometersComboBox())
-        result['spectrometersComboBox'] = spectrometersComboBox
-
         self.serial = QLineEdit()
-        serial = self.createLabeledComponent('serial', self.serial)
-        result['serial'] = serial
+        # B5: the two top rows share one grid (one label column) via createForm.
+        result['topForm'] = self.createForm([
+            ('Spectrometer', self.createSpectrometersComboBox()),
+            ('serial', self.serial),
+        ])
 
         self.spectrometerCalibrationProfileViewModule = SpectrometerCalibrationProfileViewModule(self)
         self.spectrometerCalibrationProfileViewModule.setModel(self.getModel().spectrometerCalibrationProfile)

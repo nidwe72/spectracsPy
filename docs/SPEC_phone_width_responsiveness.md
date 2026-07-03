@@ -407,6 +407,51 @@ Order chosen so the most cross-cutting / unblocking rules land first; re-shoot `
 - Recommend P3b order **R6 → R2 → R1 → R3 → R4/R5 → Rwrap/R7**, re-shooting `--phone` after each rule
   so regressions surface immediately (the harness makes this cheap).
 
+### 6.2 Pending / backlog (all remaining work)
+
+All critical burdens are resolved; what's left is cosmetic/low-ROI plus the on-device pass. Ordered
+quick-wins-first.
+
+```
++====+==============================+=================================================+==============================+========+=======+
+| #  | ITEM                         | WHAT                                            | FILES                        | EFFORT | VALUE |
++====+==============================+=================================================+==============================+========+=======+
+| B1 | Settings vertical spread     | remove 6x setRowStretch(n,15) + trailing        | SettingsViewModule.py        | trivial| med   |
+|    | (hub gaps too big)           | stretch -> sections top-pack                    |                              |        |       |
++----+------------------------------+-------------------------------------------------+------------------------------+--------+-------+
+| B2 | compactMainContainer on rest | one class-attr on remaining form/editor pages   | User/Vendor/Style/Virtual/   | trivial| med   |
+|    | of the form pages (R2)       | (top-pack, no spread)                           | Login/calibration ViewModules|        |       |
++----+------------------------------+-------------------------------------------------+------------------------------+--------+-------+
+| B3 | Combo current-text elide     | ensure long combo value elides with ...         | SpectrometerProfile/         | trivial| low   |
+|    | (Rwrap tail)                 | (minimum width + size-adjust policy)            | Connection combos            |        |       |
++----+------------------------------+-------------------------------------------------+------------------------------+--------+-------+
+| B4 | createSection routing (R7)   | route Settings section headings through the     | SettingsViewModule.py        | moderat| low   |
+|    | (uniform section styling)    | createSection helper (already added)            |                              |  e     |       |
++----+------------------------------+-------------------------------------------------+------------------------------+--------+-------+
+| B5 | createForm shared column (R1)| single grid w/ fixed label col across nested    | PageWidget.py; form          | moderat| low   |
+|    | (cross-container alignment)  | containers (chip-fill already covers visible)   | ViewModules                  |  e     |       |
++----+------------------------------+-------------------------------------------------+------------------------------+--------+-------+
+| B6 | ProfileList list width (R4)  | wide HTML-delegate rows clip; rework markup     | SpectrometerProfileList      | moderat| med   |
+|    | (not editable, just wide)    | width:100%/vertical OR migrate to QTableView    | ViewModule.py                |  e     |       |
++----+------------------------------+-------------------------------------------------+------------------------------+--------+-------+
+| P4 | On-device verify (Note20)    | build APK; confirm red gone + no font-metric    | android/                     | build  | high  |
+|    | (the real proof)             | overflow residuals; fix + rebuild if needed     | (device)                     |        |       |
++====+==============================+=================================================+==============================+========+=======+
+```
+
+**Notes**
+- **B1–B6 all DONE 2026-07-04** (verified by `--phone` re-shoots + desktop boot):
+  - B1: Settings section `setRowStretch(n,15)` removed + spacer row → sections top-pack, nav at bottom.
+  - B2: `compactMainContainer` added to Vendor/Style/Sensor/Spectrometer/Register nested forms.
+  - B3: combos `AdjustToMinimumContentsLengthWithIcon` → current text elides in its cell.
+  - B4: `Acquisition`/`Infos` converted to borderless `sectionLabel` → all six sections uniform.
+  - B5: `createForm(rows)` added to `PageWidget`; SpectrometerProfile top rows share one label column.
+  - B6: ProfileList `HTMLDelegate.sizeHint` now constrains to item width (was `idealWidth`) + listView
+    `ScrollBarAlwaysOff`/`ResizeMode.Adjust` → rows wrap to 412, Serial column no longer clipped.
+- **P4 is the only remaining phase** — everything is verified on the desktop `--phone` approximation;
+  the red-gridline removal (now migrated at source for the sensor) and any font-metric overflows are
+  only *confirmable* on the real Note20 (build APK, walk, fix residuals).
+
 ---
 
 ## 7. Resolved (was: open questions)

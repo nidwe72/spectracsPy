@@ -16,6 +16,7 @@ class SpectrometerSensorViewModule(PageWidget):
     See docs/SPEC_phone_width_responsiveness.md."""
 
     ROW_HEIGHT = 30
+    compactMainContainer = True  # B2: top-pack the two fixed-height tables
 
     model: SpectrometerSensor = None
     sensorTable: QTableWidget = None

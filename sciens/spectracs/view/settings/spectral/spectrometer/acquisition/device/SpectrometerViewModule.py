@@ -10,6 +10,7 @@ from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.Spe
 
 
 class SpectrometerViewModule(PageWidget):
+    compactMainContainer = True  # B2: top-pack the product-name/sensor/vendor/style rows
 
     model:Spectrometer=None
     spectrometerModelNameComponent:PageLineEdit = None

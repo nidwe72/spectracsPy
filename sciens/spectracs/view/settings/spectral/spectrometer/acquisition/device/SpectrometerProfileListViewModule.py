@@ -115,6 +115,10 @@ class SpectrometerProfileListViewModule(PageWidget):
 
         #self.listView.setEditTriggers(QAbstractItemView.EditTrigger.AllEditTriggers)
         self.listView.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        # B6: force rows to the viewport width (no horizontal scroll) and re-flow on resize, so the
+        # width=100% HTML rows fit 412 dp instead of clipping the Serial column.
+        self.listView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.listView.setResizeMode(QListView.ResizeMode.Adjust)
 
         self.spectrometerProfilesListModel=SpectrometerProfilesListModel()
 
@@ -280,15 +284,18 @@ class HTMLDelegate(QStyledItemDelegate):
         if self._font is not None:
             doc.setDefaultFont(self._font)
         doc.setDocumentMargin(1)
-        #  bad long (multiline) strings processing doc.setTextWidth(options.rect.width())
+        # B6: constrain the doc to the item width so the `width=100%` HTML table wraps to the viewport
+        # instead of laying out at its natural (overflowing) width. Returning idealWidth() (the old
+        # behavior) made each row wider than 412 dp -> the Serial column clipped off the right edge.
+        width = option.rect.width()
+        if width <= 0:
+            width = 400
+        doc.setTextWidth(width)
 
         html =self.getMarkup(index)
         doc.setHtml(html)
 
-
-
-        #result=QSize(doc.idealWidth(), doc.size().height())
-        result = QSize(doc.idealWidth(), doc.size().height())
+        result = QSize(width, int(doc.size().height()))
         return result
 
     def createEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> QWidget:

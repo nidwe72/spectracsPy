@@ -20,34 +20,34 @@ class SettingsViewModule(QWidget):
         super().__init__(*args, **kwargs)
 
         layout = QGridLayout()
+        layout.setSpacing(Metrics.S)
         self.setLayout(layout)
 
+        # B1: no per-row stretch (that spread the sections into huge uneven gaps). Sections take their
+        # natural height and top-pack; a single spacer row (6) absorbs the slack so the nav pins to the
+        # bottom like every other page.
         acquisitionSettingsGroupBox = self.createAcquisitionSettingsGroupBox()
         layout.addWidget(acquisitionSettingsGroupBox, 0, 0, 1, 1)
-        layout.setRowStretch(0, 15)
 
         evaluationProfilesGroupBox = self.createEvaluationProfilesGroupBox()
         layout.addWidget(evaluationProfilesGroupBox, 1, 0, 1, 1)
-        layout.setRowStretch(1, 15)
 
         downloadsGroupBoxGroupBox = self.createDownloadsGroupBox()
         layout.addWidget(downloadsGroupBoxGroupBox, 2, 0, 1, 1)
-        layout.setRowStretch(2, 15)
 
         uploadsGroupBoxGroupBox = self.createUploadsGroupBox()
         layout.addWidget(uploadsGroupBoxGroupBox, 3, 0, 1, 1)
-        layout.setRowStretch(3, 15)
 
         infosGroupBox = self.createInfosGroupBox()
         layout.addWidget(infosGroupBox, 4, 0, 1, 1)
-        layout.setRowStretch(4, 15)
 
         self.administrationGroupBox = self.createAdministrationGroupBox()
         layout.addWidget(self.administrationGroupBox, 5, 0, 1, 1)
-        layout.setRowStretch(5, 15)
+
+        layout.setRowStretch(6, 1)  # spacer absorbs slack -> sections top-pack, nav at bottom
 
         navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 6, 0, 1, 1)
+        layout.addWidget(navigationGroupBox, 7, 0, 1, 1)
 
         # The Administration group is master-only; refresh visibility on login/logout.
         ApplicationContextLogicModule().getApplicationSignalsProvider().userSessionSignal.connect(
@@ -57,10 +57,11 @@ class SettingsViewModule(QWidget):
 
     def createAcquisitionSettingsGroupBox(self):
         result = QGroupBox("Acquisition")
+        result.setProperty("sectionLabel", True)  # B4: uniform borderless section heading
 
         layout = QGridLayout()
         result.setLayout(layout)
-        Metrics.applyPanelPadding(layout)
+        layout.setSpacing(Metrics.S)
 
         comboBox=self.createLabeledComponent('Measurement profile',QComboBox())
         layout.addWidget(comboBox, 0, 0, 1, 1)
@@ -131,10 +132,11 @@ class SettingsViewModule(QWidget):
 
     def createInfosGroupBox(self):
         result = QGroupBox("Infos")
+        result.setProperty("sectionLabel", True)  # B4: uniform borderless section heading
 
         layout = QGridLayout()
         result.setLayout(layout)
-        Metrics.applyPanelPadding(layout)
+        layout.setSpacing(Metrics.S)
 
         openApplicationAboutViewModuleButton = QPushButton()
         openApplicationAboutViewModuleButton.setText("About")
