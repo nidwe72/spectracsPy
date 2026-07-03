@@ -64,4 +64,32 @@ else:
     else:
         np.write_text(s.replace(old, new)); print("  ✓ numpy/__init__.py: cross-file preserve")
 PY
+
+# --- P4e: build-venv pip guard --------------------------------------------------
+# p4a builds a host "build venv" and pip-installs the pure-python requirements into
+# it. A half-completed `pip install -U pip` there leaves a MISMATCHED vendored
+# resolvelib (newer resolver code, older structs), which breaks ALL dependency
+# resolution mid-build:
+#     ImportError: cannot import name 'RequirementInformation'
+#                  from 'pip._vendor.resolvelib.structs'
+# (Hit on 2026-07-04.) Re-extract a clean, consistent pip via ensurepip. Idempotent;
+# only touches build-venvs that already exist (a fresh clean build makes its own).
+# NOTE: derived from the default spike storage dir; if you pass a custom p4a path as
+# $1, the build-venv still lives under spike/.buildozer — adjust if you relocate it.
+STORAGE="$(cd "$(dirname "$0")" && pwd)/spike/.buildozer/android/platform"
+shopt -s nullglob
+for VENV in "$STORAGE"/build-*/build/venv; do
+    [ -x "$VENV/bin/python" ] || continue
+    for SP in "$VENV"/lib/python3.*/site-packages; do
+        rm -rf "$SP"/pip "$SP"/pip-*.dist-info
+    done
+    if "$VENV/bin/python" -m ensurepip --upgrade >/dev/null 2>&1; then
+        echo "  ✓ build-venv pip re-extracted clean: ${VENV#"$STORAGE"/}"
+    else
+        echo "  ! build-venv pip repair FAILED (re-extract manually): $VENV"
+    fi
+done
+shopt -u nullglob
+
 echo "done. (also ensure buildozer.spec: p4a.bootstrap=qt, android.ndk=28c, android.minapi=26, JDK 17)"
+echo "note: rgbxy is NOT a requirement — it is vendored as app_src/rgbxy (pure-python; no py3.11 wheel on PyPI)."
