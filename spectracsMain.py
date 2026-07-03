@@ -1,3 +1,4 @@
+import os
 import sys
 
 from PySide6 import QtWidgets, QtCore
@@ -59,6 +60,34 @@ def _ensureFocusedWidgetVisible(old, now):
         widget = widget.parentWidget()
 
 
+def _parsePhoneModeArgs(argv):
+    """Desktop-only dev switch (P1): reproduce the phone's constrained *logical* width on desktop so
+    too-wide / cut-off controls surface without an APK rebuild. Returns (phoneMode, phoneWidth,
+    phoneZoom). Defaults target a Galaxy Note20 5G at default display zoom (412 dp) with a 1.1× view
+    zoom that fits the full ~883 dp height on a 1920x1080 monitor.
+
+    Order matters: '--phone' is a prefix of '--phone=' and '--phone-zoom=', so test the longer forms
+    first. See docs/SPEC_phone_width_responsiveness.md."""
+    phoneMode = False
+    phoneWidth = 412
+    phoneZoom = 1.1
+    for arg in argv[1:]:
+        if arg.startswith("--phone-zoom="):
+            phoneZoom = float(arg.split("=", 1)[1])
+        elif arg.startswith("--phone="):
+            phoneMode = True
+            phoneWidth = int(arg.split("=", 1)[1])
+        elif arg == "--phone":
+            phoneMode = True
+    return phoneMode, phoneWidth, phoneZoom
+
+
+# Parse the phone-mode flags BEFORE QApplication is constructed: QT_SCALE_FACTOR is read by Qt at
+# construction time. An explicit QT_SCALE_FACTOR in the environment wins (escape hatch).
+phoneMode, phoneWidth, phoneZoom = _parsePhoneModeArgs(sys.argv)
+if phoneMode and "QT_SCALE_FACTOR" not in os.environ:
+    os.environ["QT_SCALE_FACTOR"] = str(phoneZoom)
+
 app = QtWidgets.QApplication(sys.argv)
 
 # Stable identity for QStandardPaths / caches (P2). The SQLite path itself resolves via
@@ -67,7 +96,9 @@ app.setOrganizationName("Sciens")
 app.setApplicationName("SpectracsPy")
 
 styleSheet = ApplicationStyleLogicModule().getApplicationStyleSheet()
-if is_android():
+# phoneMode gets the touch-density overrides too, so enlarged indicators/scrollbars/drop-downs
+# contribute their real width to the desktop width audit (else desktop under-reports clipping).
+if is_android() or phoneMode:
     styleSheet += ANDROID_TOUCH_DENSITY_QSS
 app.setStyleSheet(styleSheet)
 
@@ -88,6 +119,14 @@ if is_android():
     app.installEventFilter(_androidBackButtonFilter)
     # Keep the focused input visible above the soft keyboard.
     app.focusChanged.connect(_ensureFocusedWidgetVisible)
+elif phoneMode:
+    # Desktop "phone mode" (P1): fix the window to the phone's logical width — the audit invariant —
+    # so cut-off / too-wide controls surface exactly as on device. Height fits the monitor; vertical
+    # scroll (PageWidget QScrollArea) handles overflow. See docs/SPEC_phone_width_responsiveness.md.
+    availableHeight = QGuiApplication.primaryScreen().availableGeometry().height()
+    mainContainerViewModule.setFixedWidth(phoneWidth)
+    mainContainerViewModule.setFixedHeight(min(883, int(availableHeight * 0.95)))
+    mainContainerViewModule.show()
 else:
     geometry = QGuiApplication.primaryScreen().availableGeometry()
     mainContainerViewModule.setMinimumWidth(geometry.width() / 2)
