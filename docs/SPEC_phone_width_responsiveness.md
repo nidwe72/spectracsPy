@@ -1,6 +1,10 @@
 # Spec — Phone-Width Responsiveness (desktop "phone mode" + width audit)
 
-Status: **DRAFT / spec only — no implementation until explicitly requested.**
+Status: **IMPLEMENTED (desktop-verified) — only P4 on-device Note20 verify remains** (as of 2026-07-04).
+P0–P1 (dev switch), P2 (all-screens audit), P3a (design), P3b (R1–R7 + Rwrap), the sensor
+QTableWidget migration, and the B1–B6 backlog are all done and verified via the `--phone` harness +
+desktop boot. See §6 / §6.1 / §6.2 for the phase ledger. Commits: b496ccf, 0a67b7b, 2c19802,
+91b129c, 9478828 (+ the earlier dbb7233 P1).
 Scope: PySide6 app, both desktop and Android. Goal: eliminate controls that render **too wide**
 and get **cut off at the right edge** on the phone, by first reproducing the constrained width on
 the Linux desktop (fast iteration) and fixing what can be fixed there.
