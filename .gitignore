@@ -14,4 +14,10 @@ android/spike/wheels/
 android/spike/app_src/
 android/spike/deployment/
 android/spike/*.apk
+android/spike/pysidedeploy.spec
 android/tooling-venv/
+# android/server: track buildozer.spec + patch_server_p4a.sh; ignore build artifacts + staged sources
+android/server/.buildozer/
+android/server/bin/
+android/server/app_src/
+android/server/*.apk

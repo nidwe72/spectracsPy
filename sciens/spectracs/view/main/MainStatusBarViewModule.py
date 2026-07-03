@@ -8,6 +8,7 @@ from sciens.base.PlatformUtil import is_android
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.settings.login.ServiceLoginDialog import ServiceLoginDialog
 
 class MainStatusBarViewModule(QWidget):
@@ -115,6 +116,12 @@ class MainStatusBarViewModule(QWidget):
 
     def onClickedAccountButton(self):
         if CurrentUserSession().isLoggedIn():
+            if is_android():
+                # QMenu.exec() opens a top-level popup window, which crashes on Qt-for-Android
+                # (single-window limit; see P4c). Log out directly instead of showing the menu.
+                CurrentUserSession().logout()
+                ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
+                return
             menu = QMenu(self)
             roles = ", ".join(CurrentUserSession().roles) or "no role"
             headerAction = menu.addAction("%s (%s)" % (CurrentUserSession().username, roles))
@@ -125,6 +132,17 @@ class MainStatusBarViewModule(QWidget):
             if chosen == logoutAction:
                 CurrentUserSession().logout()
                 ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
+            return
+
+        if is_android():
+            # ServiceLoginDialog is a top-level QDialog -> crashes on Qt-for-Android. Navigate to the
+            # in-window LoginViewModule page instead (P4c). Session-signal emission happens there.
+            navigationHandler = ApplicationContextLogicModule().getNavigationHandler()
+            ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+                navigationHandler.handleNavigationSignal)
+            signal = NavigationSignal(None)
+            signal.setTarget("LoginViewModule")
+            ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
             return
 
         dialog = ServiceLoginDialog(self)

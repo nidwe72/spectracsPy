@@ -21,6 +21,7 @@ from sciens.spectracs.view.settings.user.UserViewModule import UserViewModule
 from sciens.spectracs.view.playground.PlaygroundViewModule import PlaygroundViewModule
 from sciens.spectracs.view.spectral.workflow.WizardViewModule import WizardViewModule
 from sciens.spectracs.view.spectrometerConnection.SpectrometerConnectionViewModule import SpectrometerConnectionViewModule
+from sciens.spectracs.view.settings.login.LoginViewModule import LoginViewModule
 
 
 class MainViewModule(QStackedWidget):
@@ -82,5 +83,9 @@ class MainViewModule(QStackedWidget):
         wizardViewModule = WizardViewModule()  # index 12 — the pumpkin measurement wizard (C.3)
         wizardViewModule.initialize()
         self.addWidget(wizardViewModule)
+
+        loginViewModule = LoginViewModule()  # index 13 — in-window login (Android-safe; P4c)
+        loginViewModule.initialize()
+        self.addWidget(loginViewModule)
 
         self.setCurrentWidget(spectrometerConnectionViewModule)

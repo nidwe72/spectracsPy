@@ -51,6 +51,9 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="WizardViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Measurement")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="LoginViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Login")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
         self.setPreviousNavigationSignal(navigationSignal)
 
@@ -84,6 +87,8 @@ class NavigationHandlerLogicModule(Singleton):
             result = 11
         elif target=="WizardViewModule":
             result = 12
+        elif target=="LoginViewModule":
+            result = 13
 
 
         return result

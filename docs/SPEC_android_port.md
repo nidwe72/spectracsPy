@@ -2,11 +2,21 @@
 
 Status: **IN IMPLEMENTATION.** P0 gate **PASSED 2026-07-03** (real scipy + PySide6 + OpenCV on a Galaxy
 Note 20 — §7). P1/P2/P3-desktop done. **P4b reached: the REAL app builds, boots, and renders its UI
-on-device** (full import chain resolved — see §8). **P5/P6 code done + desktop-verified** (two-app
-localhost model — fixed-URI server + direct-proxy client + real login over loopback; §3.1). **P7
-scaffolded** (capture backend abstraction; real backends deferred/hardware-gated). Remaining: package
-the **server APK** (mainline p4a + foreground service + bcrypt/cffi) and integrate the two apps
-on-device; plus postponed **P4c** (usage crashes) and **P4d** (on-device cosmetic/layout pass). Supersedes the earlier draft of this file and §5 of `docs/SPEC_pyside6_and_android.md`.
+on-device** (full import chain resolved — see §8). **P5 SERVER APK PASSED 2026-07-03** — the server app
+builds (mainline p4a + bcrypt/cffi/pycparser + SQLAlchemy 2.0.43), installs, launches, and runs the Pyro5
+daemon in an Android **foreground service** (separate `:service_pyro` process) that **survives the
+activity being backgrounded and killed**, answering **real RPC on-device**: `login('endUser','endUser')`
+→ `{ok:True, roles:['END_USER']}` via real bcrypt verify + a SQLAlchemy query against the seeded on-device
+SQLite DB, reachable across the app-sandbox boundary (§9). **P6 TWO-APP LOGIN PROVEN ON-DEVICE 2026-07-03** — the main app (dev-bypass off) logs in through the
+server APK over loopback via the real UI: tap account → in-window login page → `endUser`/`endUser` →
+signed in (account icon green, navigates Home). This required the first **P4c** fix: `ServiceLoginDialog`
+(a top-level `QDialog`) crashes on Qt-for-Android, so login is now an in-window `LoginViewModule` page.
+**P7 scaffolded** (capture backend abstraction; real backends deferred/hardware-gated). Remaining: the
+**rest of the P4c dialog pass** (every other `QDialog`/`QMessageBox` still crashes on Android until
+converted to the same in-window pattern) + running the full measurement pipeline on-device; plus **P4d**
+(cosmetic/layout — incl. views clipped at phone width) and **P4f** (main-app ~3 s blank-white cold-start
+splash). Both apps now install + run on-device (Edwin, 2026-07-03). Supersedes the earlier draft of this
+file and §5 of `docs/SPEC_pyside6_and_android.md`.
 
 Goal: run SpectracsPy on Android as **two literal apps** (main UI + local server), with the **full
 processing pipeline — including real `scipy` — running on-device in the main app**. First target is
@@ -115,7 +125,7 @@ processing pipeline — including real `scipy` — running on-device in the main
 | **P4a · Persist toolchain fixes** | Move the 3 p4a edits into `p4a.local_recipes` so clean builds keep them: numpy cross-file **patch**, scipy `Cython>=3.1.2`, `python3`+`hostpython3`=**3.11.9**; freeze the proven buildozer.spec (qt bootstrap, NDK r28c, minapi 26). | host | clean rebuild reproduces the working stack, no manual edits |
 | **P4b · Package the REAL main app** | source = the 4 `sciens` repos (bundle the `sciens.*` namespace); full reqs: numpy,scipy,opencv,colour,colormath,luxpy,rgbxy,spectres,Pyro5,SQLAlchemy,marshmallow*,pyspectra. | host | app + all `sciens.*` + full dep set packaged |
 | **P4 · MAIN APP on device** `<MILE>` | Build main APK; logcat-driven fixes; run the **virtual pipeline** via `SPECTRACS_DEV_LOGIN_BYPASS=1`. | phone | virtual pipeline runs end-to-end on the phone (dev bypass) — first summit |
-| **P5 · SERVER APP on device** | buildozer.spec #2 (**mainline p4a**, headless); Pyro5 daemon on a **non-main thread** @ `127.0.0.1` fixed port (no nameserver); foreground service + `POST_NOTIFICATIONS`; bcrypt; 2nd isolated DB. | phone | server app launches, foreground service stays alive, reachable on loopback (airplane-mode ok) |
+| **P5 · SERVER APP on device** | buildozer.spec #2 (**mainline p4a**, headless); Pyro5 daemon @ `127.0.0.1:8091` fixed port (no nameserver); bcrypt; 2nd isolated DB; **foreground service**. | phone | ✅ **PASSED 2026-07-03** — builds/installs/launches; daemon runs in a foreground service (survives backgrounding + activity kill); **real `login` RPC** answered on-device (§9). |
 | **P6 · Integration + REAL login** `<MILE>` | Client "local" proxy mode; **remove dev bypass**; real login + master-data sync over loopback; "launch the server app" UX; functionality recap checklist. | phone | real login + sync + **full functionality checklist** pass; no public service — **milestone complete** |
 | **P7 · Deferred: real capture** | UVC-over-OTG **or** RPi-network tier + USB permissions (§6). | **device** | separate future spec |
 
@@ -142,11 +152,12 @@ processing pipeline — including real `scipy` — running on-device in the main
 
 | # | Remaining work | Verify on | Done-when |
 |---|---|:---:|---|
-| **P4c · Usage-crash fixes** | From live logcat: (a) delta-E `_bz2` — patch p4a python3 to wire arm64 libbz2 into the **target** build, OR reimplement `SpectralColorUtil.getColorDifference` (CIEDE2000 + sRGB→Lab) in numpy (removes the colormath→networkx→bz2 chain); (b) wire the dev-login bypass on Android (env not settable on device → bake a flag) so login-gated flows run; (c) whatever else the traceback shows. | device | no crash navigating the app / running the virtual flow |
-| **P4d · On-device cosmetic/layout pass** | The many visual issues: QSS density/fonts/spacing, header band, scroll/overflow, touch targets — the real UI pass that only device-driving reveals. Screenshot-driven. | device | UI legible + usable in portrait |
+| **P4c · Usage-crash fixes** | **ROOT CAUSE (2026-07-03):** Qt-for-Android supports only ONE top-level window/EGL surface, so **every top-level `QDialog`/`QMessageBox` aborts** the app (`SIGABRT` — "Failed to acquire deadlock protector for QAndroidPlatformOpenGLWindow::eglSurface()"). Confirmed via the login path: account icon → `ServiceLoginDialog` (QDialog) → crash. FIX: on Android, embed dialogs/forms as pages in the main `QStackedWidget` nav (not separate windows) and replace `QMessageBox` with in-window banners. **DONE for login (2026-07-03):** `LoginViewModule` (in-window page, index 13) replaces the dialog on Android; account-button logout also goes direct (QMenu popup crashes too). **REMAINING:** convert every other dialog/QMessageBox the same way (wizard, settings, user CRUD, spectrometer flows). Also (secondary): delta-E `_bz2` (reimplement `SpectralColorUtil.getColorDifference` in numpy, or wire arm64 libbz2). | device | no crash navigating / logging in / running the virtual flow |
+| **P4d · On-device cosmetic/layout pass** | The many visual issues: QSS density/fonts/spacing, header band, scroll/overflow, touch targets — the real UI pass that only device-driving reveals. Screenshot-driven. **Observed on-device 2026-07-03 (Edwin, both apps running):** (a) **views cut off at phone width** — some views don't reflow to the narrow portrait screen and their right edge is clipped (need width-responsive layouts / horizontal reflow, not fixed widths); (b) see also P4f (startup white screen). | device | UI legible + usable in portrait, nothing clipped |
+| **P4f · Main-app cold-start splash** | **Observed 2026-07-03:** the main app shows a **blank white screen for ~3 s** before the UI appears (p4a unpacks the Python bundle + Qt/scipy/opencv load on first frame — see risk #4). Add a proper **presplash** (branded loading screen) and/or trim first-frame work so it doesn't read as a hang. Lower priority than P4c/P4d. | device | branded splash instead of blank white; no "is it stuck?" moment |
 | **P4e · Durable build recipe** | Fold `app_src` staging + full requirements + vendored colormath/rgbxy + import guards + libbz2/liblzma into a repeatable script (extends `android/patch_p4a.sh`). | host | a clean checkout rebuilds the APK with no manual dep-walking |
-| **P5 · Server APK** | **Code done + desktop-verified** (`SpectracsPyServer.serveLocalForever()` — fixed URI, no nameserver; server `main.py` runs it). **Remaining:** package as a 2nd APK — mainline p4a (headless, no Qt) + **foreground service** + **bcrypt→cffi** + 2nd DB. | phone | server app stays alive, reachable on loopback |
-| **P6 · Integration + REAL login** | **Code done + desktop-verified** (client `getProxy` local-proxy first; real login over loopback → `{ok:True}`). **Remaining:** run both APKs on-device, "launch server" UX, remove dev-bypass, functionality recap. | phone | real login + sync + functionality checklist |
+| **P5 · Server APK** | ✅ **PASSED 2026-07-03** (§9) — 2nd APK (mainline p4a, headless, sdl2), bcrypt/cffi/pycparser + SQLAlchemy 2.0.43, builds/installs/launches, daemon in a **foreground service** (survives backgrounding + activity kill), **real `login` RPC on-device**. Patches in `android/server/patch_server_p4a.sh`. | phone | ✅ reachable on loopback; FGS persists |
+| **P6 · Integration + REAL login** | ✅ **LOGIN PROVEN ON-DEVICE 2026-07-03** — both APKs installed; main app (bypass off) → in-window login → `endUser`/`endUser` → signed in through the server APK over loopback (account icon green, navigates Home). Needed the first P4c fix (`LoginViewModule` in-window page — see P4c). **Remaining:** full functionality recap (running the whole pipeline needs the rest of the P4c dialog pass). | phone | ✅ real login over loopback; full checklist pending |
 | **P7 · Real capture** | **Scaffolded** (`logic/appliction/video/capture/CaptureBackend.py`: desktop cv2 real; Android-UVC + RPi-network = documented stubs). **Remaining:** deferred/hardware-gated (§6). | device+hw | separate future spec |
 
 ## 4. Dependency plan
@@ -246,7 +257,55 @@ it (and the version pins) into `p4a.local_recipes` so clean rebuilds don't need 
 
 ---
 
-## 9. Out of scope
+## 9. P5 result — the proven SERVER build config (2026-07-03)
+
+**P5 SERVER APK PASSED.** The headless server app builds, installs, and runs on the Galaxy Note 20;
+the Pyro5 daemon binds `127.0.0.1:8091` and answers real RPC on-device (verified via `adb forward
+tcp:18091 tcp:8091` + a desktop Pyro5 client): `login('endUser','endUser')` →
+`{ok:True, roles:['END_USER'], userId:…}` (real `bcrypt` verify + SQLAlchemy query on the seeded
+on-device SQLite DB); `getSpectrometers` serializes fine server-side (the throwaway test client just
+lacked the class registration the real `SpectracsPyServerClient` performs). Project: `android/server/`
+(`buildozer.spec` + `patch_server_p4a.sh` tracked; `app_src/` + build dirs gitignored). The working recipe:
+
+| Component | Value |
+|---|---|
+| Packager | raw **buildozer** driving mainline **python-for-android `develop`**, `p4a.bootstrap = sdl2` |
+| Python | **mainline default (3.14.2)** — NO 3.11 pin (no PySide6 in this app) |
+| requirements | `python3,Pyro5,serpent,SQLAlchemy,sqlalchemy-serializer,marshmallow,marshmallow-sqlalchemy,typing_extensions,pycparser,bcrypt,pyjnius,android` |
+| foreground service | `services = pyro:service_pyro.py:foreground:foregroundServiceType=dataSync`; perms `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_DATA_SYNC` + `POST_NOTIFICATIONS` + `INTERNET` |
+| entry | `main.py` (activity) requests `POST_NOTIFICATIONS`, starts `ServicePyro` via `jnius`, then `moveTaskToBack(True)` (the app is headless/no-UI, so it drops to the background instead of showing a blank SDL window) and idles. `service_pyro.py` (service, `:service_pyro` process) → `SpectracsPyServer.serveLocalForever()` (fixed URI `127.0.0.1:8091`, no nameserver) |
+| minapi / api / arch | 24 / 34 / `arm64-v8a` |
+
+**Two recipe patches (re-applied by `android/server/patch_server_p4a.sh`):**
+1. **bcrypt** — its build runs `ffi = FFI()` under the HOST python; p4a recreates the build venv each
+   run and doesn't add cffi/pycparser, so bcrypt's FFI() falls back to a setuptools `.eggs` cffi that
+   can't `import pycparser`. Fix: `hostpython_prerequisites = ['cffi', 'pycparser']` on the recipe.
+2. **sqlalchemy** — the recipe pinned 2.0.30, which crashes on Python 3.14 (`Can't replace canonical
+   symbol for '__firstlineno__'`; 3.13/3.14 auto-inject `__firstlineno__` into class dicts). Bump to
+   **2.0.43** (3.14 support is in the 2.0.41+ range). Per-app DBs, so a device-only bump is safe.
+
+**Note:** the pure-Python `pip … --only-binary=:all: --dry-run` prints a `ResolutionImpossible` for
+`sqlalchemy-serializer`/`marshmallow-sqlalchemy` (their transitive `SQLAlchemy` dep has no Android
+wheel — pip can't see the recipe provides it). This is **non-fatal**: p4a falls back to per-package
+install and the full `_python_bundle/site-packages` is complete (verified on disk).
+
+**Foreground service — DONE (2026-07-03).** The daemon runs in a `:service_pyro` foreground service
+(`isForeground=true`, dataSync type) that survives the activity being backgrounded **and killed**:
+after `input keyevent HOME` + `am kill`, the activity process is gone but the service persists and
+`login` still answers over loopback. **Launcher UX:** on tap, `main.py` starts the service then
+`moveTaskToBack(True)` so the user returns to the home screen (the app is headless — otherwise it sits
+on a blank white SDL window and reads as frozen); the persistent notification is the "running"
+indicator (grant `POST_NOTIFICATIONS` on first launch, else it's silent but still serving). **Launch gotcha:** launch via `am start -n <pkg>/org.kivy.android.PythonActivity`
+— a Samsung `monkey` launch sometimes hits `onStop` before `SDL_main` runs, so the activity never
+starts `main.py`; `am start` is reliable.
+
+**Still to do for the full P6 milestone:** rebuild the **main** app with `SPECTRACS_DEV_LOGIN_BYPASS`
+off so it logs in through the server over loopback (the client's `getProxy` already tries the local URI
+first) — this folds into the postponed P4c.
+
+---
+
+## 10. Out of scope
 
 - Real-hardware capture / USB (§6) — deferred, separate future spec.
 - The Raspberry-Pi tier itself (hardware design).
