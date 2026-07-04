@@ -1,5 +1,6 @@
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QTableView, QLabel, QAbstractItemView, QMessageBox
+from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QTableView, QLabel, QAbstractItemView
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
@@ -156,15 +157,14 @@ class UserListViewModule(PageWidget):
         user = self.__getSelectedUser()
         if user is None:
             return
-        confirm = QMessageBox.question(
-            self, "Delete user",
-            'Delete user "%s"? This cannot be undone.' % (user.get('username') or ''),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-        if confirm != QMessageBox.StandardButton.Yes:
+        if not InWindowDialog.confirm(
+                self, "Delete user",
+                'Delete user "%s"? This cannot be undone.' % (user.get('username') or ''),
+                destructive=True):
             return
         result = SpectracsPyServerClient().deleteUser(user.get('userId'))
         if not result.get('ok'):
-            QMessageBox.warning(self, "Delete failed", result.get('message') or "delete failed")
+            InWindowDialog.notify(self, "Delete failed", result.get('message') or "delete failed")
             return
         self.refresh()
 

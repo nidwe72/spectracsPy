@@ -1,7 +1,8 @@
-from PySide6.QtWidgets import QGridLayout, QGroupBox, QPushButton, QLineEdit, QComboBox, QCheckBox, QMessageBox, \
+from PySide6.QtWidgets import QGridLayout, QGroupBox, QPushButton, QLineEdit, QComboBox, QCheckBox, \
     QWidget, QHBoxLayout
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
@@ -135,14 +136,14 @@ class UserViewModule(PageWidget):
             operation = DbEntityCrudOperation.UPDATE
 
         if not result.get('ok'):
-            QMessageBox.warning(self, "Save failed", result.get('message') or "save failed")
+            InWindowDialog.notify(self, "Save failed", result.get('message') or "save failed")
             return
 
         # Self-edit notice: a master changing their own account is allowed, but the live
         # session keeps its current role/state until next login.
         if (not self.__isCreate()) and self.dto.get('userId') == CurrentUserSession().userId:
-            QMessageBox.information(self, "Saved",
-                                    "Changes to your own account take effect on next login.")
+            InWindowDialog.notify(self, "Saved",
+                                  "Changes to your own account take effect on next login.")
 
         userSignal = UserSignal().setEntity(result).setOperation(operation)
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSignal(userSignal)

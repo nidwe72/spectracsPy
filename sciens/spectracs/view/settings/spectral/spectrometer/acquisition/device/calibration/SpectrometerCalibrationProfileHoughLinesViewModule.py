@@ -2,7 +2,8 @@ import threading
 from typing import List
 
 from PySide6.QtCore import QLine
-from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QMessageBox
+from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
@@ -83,18 +84,18 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         if spectrometerProfile is not None and spectrometerProfile.spectrometer is not None:
             sensor = spectrometerProfile.spectrometer.spectrometerSensor
         if sensor is None:
-            QMessageBox.warning(self, "Spectrometer required",
-                                "Select a spectrometer for this profile (Spectrometer tab) before detecting "
-                                "the region of interest.")
+            InWindowDialog.notify(self, "Spectrometer required",
+                                  "Select a spectrometer for this profile (Spectrometer tab) before detecting "
+                                  "the region of interest.")
             return
 
         isVirtual = sensor.isVirtual
         virtualSettings = applicationSettings.getVirtualSpectrometerSettings()
         if isVirtual and virtualSettings.getImage(VirtualCaptureRole.CALIBRATION) is None:
-            QMessageBox.warning(self, "Virtual capture image required",
-                                "This is a virtual spectrometer but no calibration image is loaded. Open "
-                                "Settings → Virtual spectrometer and set an image folder (with calibration.png) "
-                                "first.")
+            InWindowDialog.notify(self, "Virtual capture image required",
+                                  "This is a virtual spectrometer but no calibration image is loaded. Open "
+                                  "Settings → Virtual spectrometer and set an image folder (with calibration.png) "
+                                  "first.")
             return
 
         if isVirtual:

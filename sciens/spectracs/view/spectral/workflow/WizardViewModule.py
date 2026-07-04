@@ -2,7 +2,7 @@ import datetime
 
 from PySide6.QtCore import QDate
 from PySide6.QtWidgets import (QPushButton, QTabWidget, QLabel, QWidget, QVBoxLayout, QLineEdit,
-                               QDateEdit, QMessageBox)
+                               QDateEdit)
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
@@ -13,6 +13,7 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.model.spectral.SpectralWorkflowMetadata import SpectralWorkflowMetadata
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.model.spectral.evaluation.SpectrumPlotView import SpectrumPlotView
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 from sciens.spectracs.view.application.widgets.StepBarWidget import StepBarWidget
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.spectral.workflow.EvaluationResultRenderer import EvaluationResultRenderer
@@ -361,8 +362,7 @@ class WizardViewModule(PageWidget):
         # Available in BOTH modes: leave without saving (a new run is discarded; metadata edits are dropped).
         message = ("Discard unsaved changes to this measurement?" if self.__isView()
                    else "Discard this measurement? It will not be saved.")
-        reply = QMessageBox.question(self, "Cancel", message, QMessageBox.Yes | QMessageBox.No)
-        if reply != QMessageBox.Yes:
+        if not InWindowDialog.confirm(self, "Cancel", message):
             return
         self.resetToNewMode()
         self.__goHome()
@@ -399,10 +399,9 @@ class WizardViewModule(PageWidget):
         self.__goHome()
 
     def __deleteWorkflow(self):
-        reply = QMessageBox.question(self, "Delete measurement",
-                                     "This measurement will be permanently deleted. Continue?",
-                                     QMessageBox.Yes | QMessageBox.No)
-        if reply != QMessageBox.Yes:
+        if not InWindowDialog.confirm(self, "Delete measurement",
+                                      "This measurement will be permanently deleted. Continue?",
+                                      destructive=True):
             return
         PersistSpectralWorkflowLogicModule().delete(self.__viewWorkflowId, userId=CurrentUserSession().userId)
         self.resetToNewMode()

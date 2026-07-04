@@ -1,4 +1,5 @@
-from PySide6.QtWidgets import QDialog, QGridLayout, QLabel, QLineEdit, QPushButton, QMessageBox
+from PySide6.QtWidgets import QDialog, QGridLayout, QLabel, QLineEdit, QPushButton
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
@@ -47,7 +48,7 @@ class ServiceLoginDialog(QDialog):
                 self.__navigateTo("WizardViewModule")
         else:
             message = result.get("message") or "invalid credentials"
-            QMessageBox.warning(self, "Login failed", message)
+            InWindowDialog.notify(self, "Login failed", message)
 
     def __navigateTo(self, target):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(

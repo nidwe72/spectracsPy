@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt, QRectF, QPointF
 from PySide6.QtGui import QPixmap, QPen, QBrush
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 
 from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 
@@ -77,7 +78,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             result = SpectrometerWavelengthCalibrationConsensusLogicModule().match(videoSignal)
             lines = result.getSpectralLines()
             if len(lines) < 4:
-                QMessageBox.warning(
+                InWindowDialog.notify(
                     self, "Calibration failed",
                     "Could not detect the calibration lines. Check the spectrum and Region of Interest.")
                 return SpectrometerWavelengthCalibrationLogicModuleResult()
@@ -90,7 +91,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             if result.getUncertainLines():
                 detail = "\n".join("  %.1f nm: %s" % (nanometer, ", ".join(reasons))
                                    for nanometer, reasons in result.getUncertainLines())
-                QMessageBox.warning(
+                InWindowDialog.notify(
                     self, "Low-confidence calibration lines",
                     "The cross-check flagged these line(s) as uncertain — re-check the spectrum / Region "
                     "of Interest before trusting the calibration:\n" + detail)

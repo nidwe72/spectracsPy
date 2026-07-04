@@ -2,8 +2,9 @@ import os
 import threading
 
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QMessageBox, QDialog, \
+from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QDialog, \
     QVBoxLayout, QLabel
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.spectral.acquisition.device.calibration.CalibrationAlgorithm import CalibrationAlgorithm
@@ -116,7 +117,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         if calibrationProfile is None \
                 or calibrationProfile.regionOfInterestY1 is None \
                 or calibrationProfile.regionOfInterestY2 is None:
-            QMessageBox.warning(
+            InWindowDialog.notify(
                 self,
                 "Region of interest required",
                 "Please run 'Detect Region of Interest' on the 'Region of interest' tab "
@@ -127,7 +128,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         # final-frame handler; pass the selection down so it knows which matcher to use.
         algorithm = self.getSelectedAlgorithm()
         if not CalibrationAlgorithm.isImplemented(algorithm):
-            QMessageBox.information(
+            InWindowDialog.notify(
                 self,
                 "Not yet implemented",
                 f"'{CalibrationAlgorithm.getLabel(algorithm)}' is not implemented yet. "
@@ -204,7 +205,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         implausible = any(d <= 0 for d in dispersions) or median <= 0 or \
             any(d > 4 * median or d < median / 4 for d in dispersions)
         if implausible:
-            QMessageBox.warning(
+            InWindowDialog.notify(
                 self,
                 "Calibration looks implausible",
                 "The detected spectral lines do not increase smoothly in wavelength with pixel position "

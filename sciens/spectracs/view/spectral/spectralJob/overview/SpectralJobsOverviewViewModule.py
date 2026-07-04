@@ -1,7 +1,8 @@
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
-from PySide6.QtWidgets import QWidget, QGridLayout, QTableView, QAbstractItemView, QPushButton, QMessageBox, QHeaderView
+from PySide6.QtWidgets import QWidget, QGridLayout, QTableView, QAbstractItemView, QPushButton, QHeaderView
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 from sciens.spectracs.logic.persistence.database.spectral.PersistSpectralWorkflowLogicModule import PersistSpectralWorkflowLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
@@ -126,11 +127,9 @@ class SpectralJobsOverviewViewModule(QWidget):
         workflow = self.__selectedWorkflow()
         if workflow is None:
             return
-        reply = QMessageBox.question(
-            self, "Delete measurement",
-            "This measurement will be permanently deleted. Continue?",
-            QMessageBox.Yes | QMessageBox.No)
-        if reply != QMessageBox.Yes:
+        if not InWindowDialog.confirm(self, "Delete measurement",
+                                      "This measurement will be permanently deleted. Continue?",
+                                      destructive=True):
             return
         PersistSpectralWorkflowLogicModule().delete(workflow.id, userId=CurrentUserSession().userId)
         self.refresh()

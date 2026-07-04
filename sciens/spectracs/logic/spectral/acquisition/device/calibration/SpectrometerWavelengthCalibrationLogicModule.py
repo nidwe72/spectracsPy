@@ -60,7 +60,11 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
             self._processSpectralLine(spectralLineMasterDataColorName)
 
     def _processSpectralLine(self, spectralLineMasterDataColorName):
-        func = getattr(self, f"_processSpectralLine{spectralLineMasterDataColorName}")
+        # Use .name (the bare member, e.g. MERCURY_MANGO_GREEN) — NOT f"{enum}". This enum is a
+        # (str, Enum); on Python 3.10 f"{member}" yields the value, but on Android's Python 3.11 the
+        # enum __str__/__format__ change yields "ClassName.MEMBER", which built a wrong method name
+        # and raised AttributeError. .name is identical on both Pythons.
+        func = getattr(self, f"_processSpectralLine{spectralLineMasterDataColorName.name}")
         func()
 
     def _processSpectralLineEUROPIUM_VIVID_GAMBOGE(self) -> SpectralLine:
