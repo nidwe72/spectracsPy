@@ -152,13 +152,74 @@ processing pipeline — including real `scipy` — running on-device in the main
 
 | # | Remaining work | Verify on | Done-when |
 |---|---|:---:|---|
-| **P4c · Usage-crash fixes** | **ROOT CAUSE (2026-07-03):** Qt-for-Android supports only ONE top-level window/EGL surface, so **every top-level `QDialog`/`QMessageBox` aborts** the app (`SIGABRT` — "Failed to acquire deadlock protector for QAndroidPlatformOpenGLWindow::eglSurface()"). Confirmed via the login path: account icon → `ServiceLoginDialog` (QDialog) → crash. FIX: on Android, embed dialogs/forms as pages in the main `QStackedWidget` nav (not separate windows) and replace `QMessageBox` with in-window banners. **DONE for login (2026-07-03):** `LoginViewModule` (in-window page, index 13) replaces the dialog on Android; account-button logout also goes direct (QMenu popup crashes too). **REMAINING:** convert every other dialog/QMessageBox the same way (wizard, settings, user CRUD, spectrometer flows). Also (secondary): delta-E `_bz2` (reimplement `SpectralColorUtil.getColorDifference` in numpy, or wire arm64 libbz2). | device | no crash navigating / logging in / running the virtual flow |
+| **P4c · Usage-crash fixes** | **ROOT CAUSE (2026-07-03):** Qt-for-Android supports only ONE top-level window/EGL surface, so **every top-level `QDialog`/`QMessageBox` aborts** the app (`SIGABRT` — "Failed to acquire deadlock protector for QAndroidPlatformOpenGLWindow::eglSurface()"). Confirmed via the login path: account icon → `ServiceLoginDialog` (QDialog) → crash. FIX: on Android, embed dialogs/forms as pages in the main `QStackedWidget` nav (not separate windows) and replace `QMessageBox` with in-window banners. **DONE for login (2026-07-03):** `LoginViewModule` (in-window page, index 13) replaces the dialog on Android; account-button logout also goes direct (QMenu popup crashes too). **REMAINING:** convert every other dialog/QMessageBox the same way (wizard, settings, user CRUD, spectrometer flows). Also (secondary): delta-E `_bz2` (reimplement `SpectralColorUtil.getColorDifference` in numpy, or wire arm64 libbz2). **NB:** the virtual-spectrometer "Set image folder" is **NOT** a P4c widget-dialog crash — on-device it opens the native SAF picker fine; the app is then reclaimed while backgrounded. Tracked separately as **P4g / §3.2**. | device | no crash navigating / logging in / running the virtual flow |
 | **P4d · On-device cosmetic/layout pass** | The many visual issues: QSS density/fonts/spacing, header band, scroll/overflow, touch targets — the real UI pass that only device-driving reveals. Screenshot-driven. **Observed on-device 2026-07-03 (Edwin, both apps running):** (a) **views cut off at phone width** — some views don't reflow to the narrow portrait screen and their right edge is clipped (need width-responsive layouts / horizontal reflow, not fixed widths); (b) see also P4f (startup white screen). **(a) LARGELY RESOLVED 2026-07-04 → see `docs/SPEC_phone_width_responsiveness.md`:** full desktop `--phone` audit + generic layout ruleset (R1–R7, sensor QTableWidget migration, B1–B6), rebuilt + installed on the Note20 — **R6 (logo box), Rwrap (message wrap), R2 (top-pack) confirmed on-device**; remaining device check = red gridlines on the sensor table (migrated at source, expected gone). | device | UI legible + usable in portrait, nothing clipped |
 | **P4f · Main-app cold-start splash** | **Observed 2026-07-03:** the main app shows a **blank white screen for ~3 s** before the UI appears (p4a unpacks the Python bundle + Qt/scipy/opencv load on first frame — see risk #4). Add a proper **presplash** (branded loading screen) and/or trim first-frame work so it doesn't read as a hang. Lower priority than P4c/P4d. | device | branded splash instead of blank white; no "is it stuck?" moment |
 | **P4e · Durable build recipe** | Fold `app_src` staging + full requirements + vendored colormath/rgbxy + import guards + libbz2/liblzma into a repeatable script (extends `android/patch_p4a.sh`). **PROGRESS 2026-07-04 (rebuild for the phone-width fixes):** (1) `rgbxy` **removed from `buildozer.spec requirements`** — no py3.11 PyPI wheel exists; it's vendored as `app_src/rgbxy` (bundled app source, importable). (2) **build-venv pip guard added to `patch_p4a.sh`** — a half-done `pip -U pip` had left a mismatched vendored `resolvelib` (`ImportError: RequirementInformation`) that broke ALL dependency resolution mid-build; the guard re-extracts a clean pip via `ensurepip`. Re-stage source with `android/spike/stage_app_src.sh` before a rebuild. **Still manual:** colormath vendoring, the full clean-checkout one-command path. | host | a clean checkout rebuilds the APK with no manual dep-walking |
 | **P5 · Server APK** | ✅ **PASSED 2026-07-03** (§9) — 2nd APK (mainline p4a, headless, sdl2), bcrypt/cffi/pycparser + SQLAlchemy 2.0.43, builds/installs/launches, daemon in a **foreground service** (survives backgrounding + activity kill), **real `login` RPC on-device**. Patches in `android/server/patch_server_p4a.sh`. | phone | ✅ reachable on loopback; FGS persists |
 | **P6 · Integration + REAL login** | ✅ **LOGIN PROVEN ON-DEVICE 2026-07-03** — both APKs installed; main app (bypass off) → in-window login → `endUser`/`endUser` → signed in through the server APK over loopback (account icon green, navigates Home). Needed the first P4c fix (`LoginViewModule` in-window page — see P4c). **Remaining:** full functionality recap (running the whole pipeline needs the rest of the P4c dialog pass). | phone | ✅ real login over loopback; full checklist pending |
 | **P7 · Real capture** | **Scaffolded** (`logic/appliction/video/capture/CaptureBackend.py`: desktop cv2 real; Android-UVC + RPi-network = documented stubs). **Remaining:** deferred/hardware-gated (§6). | device+hw | separate future spec |
+| **P4g · Native folder picker survives** | The virtual-spectrometer "Set image folder…" (`QFileDialog.getExistingDirectory`). **On-device 2026-07-04: the native SAF picker launches fine, but the heavy main app is reclaimed while backgrounded behind it — the picker result is lost.** Design in **§3.2**. | device | pick any folder via the system picker, app survives, the 3 PNGs load |
+
+### 3.2 P4g — native folder picker: keep-alive + content-URI (design, spec only)
+
+**Status:** DRAFT / design only — no implementation until explicitly requested (2026-07-04).
+
+**Problem (measured on-device, not assumed).** `VirtualSpectrometerViewModule.onClickedOpenPictureButton`
+→ `QFileDialog.getExistingDirectory(...)`. On the Note20 (PySide6/Qt **6.11.1**) this **correctly opens
+the native Android Storage Access Framework picker** — logcat shows
+`com.android.documentsui.picker.PickActivity` launch. So Qt's native folder selection *works* (Edwin's
+premise confirmed); it is **not** the P4c widget-dialog EGL-abort. **But** when the picker comes to the
+foreground, the ~217 MB main app (Qt+scipy+opencv) is **reclaimed while backgrounded**:
+`WindowStopped → Destroy: end of app → libprocessgroup killed → signal 9`, then a fresh relaunch. The
+picker's result is never delivered, so the selection is lost. Verified the app **survives an ordinary
+Home-background** (same pid resumes) — so this is *picker-specific memory reclaim*, not a general
+lifecycle death.
+
+**Decisions.**
+- **D-a — keep the native picker.** Full "select any folder" is required (an in-window/predefined list
+  is explicitly rejected). Scoped storage means "any folder" *must* go through SAF anyway.
+- **D-b — keep the main app alive during the picker via a same-process foreground service.** An FGS
+  raises the process oom priority so Android won't reclaim it while it's behind the picker. NOTE this
+  differs from the **server app's** FGS (P5): that runs the daemon in a *separate* `:service_pyro`
+  process; here we must keep the **main UI process itself** alive, so the service must run **in the main
+  process** (a separate-process service wouldn't protect the UI process).
+- **D-c — consume SAF's `content://` result.** The picker returns a **tree URI**, not a filesystem
+  path, so the image load must go through the content resolver / Qt content-URI engine, not
+  `os.listdir` + `QImage(path)`. Desktop keeps the current path-based load unchanged.
+
+**Workstreams.**
+1. **FGS keep-alive (the crux, Android-only).** Minimal `Service` (persistent notification, its own
+   notification channel) declared in the manifest and running **in the main process**; started
+   *before* `getExistingDirectory` and stopped after the result returns. Needs manifest `<service>` +
+   `FOREGROUND_SERVICE` (+ an Android-14 `foregroundServiceType`, likely `shortService` or `dataSync`)
+   + `POST_NOTIFICATIONS`. Start/stop from Python via **`pyjnius`** (add to the main-app
+   `requirements`; the qt bootstrap doesn't bundle it) or Qt's JNI.
+2. **Content-URI image load (Android branch).** Enumerate the tree URI's children, match
+   `calibration.png` / `reference.png` / `sample.png` (§A.4 convention), and load each via its child
+   `content://` URI into a `QImage`. Confirm on-device whether Qt 6.11's `QDir`/`QImage`/`QFile` handle
+   `content://tree/...` directly, else enumerate via `DocumentFile` over JNI.
+3. **Wiring.** `onClickedOpenPictureButton`: on Android → `startKeepAlive()` → `getExistingDirectory` →
+   on return `stopKeepAlive()` → load-from-URI; on desktop → the existing path flow. Behind
+   `is_android()`; desktop untouched (both-OS).
+
+**Open questions / risks (de-risk before full impl).**
+- **Same-process FGS under the qt bootstrap** — p4a's `services=` directive makes *separate*-process
+  services; a same-process service likely needs a **custom manifest `<service>` + Java class injected**
+  (extend `patch_p4a.sh` / a manifest template). *This is the biggest unknown — spike it first.*
+- **What `getExistingDirectory` returns on this Qt build** (a `content://` URI string vs a synthetic
+  path) — verify on-device; it dictates the §2 approach.
+- **Does an FGS reliably prevent reclaim during the picker**, or is `android:largeHeap` / trimming
+  first-frame memory also needed? Measure.
+- **Android 14 FGS rules** (API 34 target): the right `foregroundServiceType` for a short-lived
+  keep-alive (`shortService` fits the "brief task" semantics).
+
+**Scope:** substantial — Java service + manifest/permissions + JNI + content-URI enumeration + several
+rebuild/on-device cycles. Recommend a **spike** proving (a) a same-process FGS keeps the main app alive
+across the picker, and (b) reading a PNG from a `content://` child URI — before the full wiring.
+
+**Verification (done-when):** on the Note20, "Set image folder…" opens the system picker → user selects
+`…/pumpkinoil_perfect_v1` (any folder) → app stays alive → the 3 PNGs load → calibration preview shows.
 
 ## 4. Dependency plan
 
