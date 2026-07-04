@@ -159,11 +159,56 @@ processing pipeline — including real `scipy` — running on-device in the main
 | **P5 · Server APK** | ✅ **PASSED 2026-07-03** (§9) — 2nd APK (mainline p4a, headless, sdl2), bcrypt/cffi/pycparser + SQLAlchemy 2.0.43, builds/installs/launches, daemon in a **foreground service** (survives backgrounding + activity kill), **real `login` RPC on-device**. Patches in `android/server/patch_server_p4a.sh`. | phone | ✅ reachable on loopback; FGS persists |
 | **P6 · Integration + REAL login** | ✅ **LOGIN PROVEN ON-DEVICE 2026-07-03** — both APKs installed; main app (bypass off) → in-window login → `endUser`/`endUser` → signed in through the server APK over loopback (account icon green, navigates Home). Needed the first P4c fix (`LoginViewModule` in-window page — see P4c). **Remaining:** full functionality recap (running the whole pipeline needs the rest of the P4c dialog pass). | phone | ✅ real login over loopback; full checklist pending |
 | **P7 · Real capture** | **Scaffolded** (`logic/appliction/video/capture/CaptureBackend.py`: desktop cv2 real; Android-UVC + RPi-network = documented stubs). **Remaining:** deferred/hardware-gated (§6). | device+hw | separate future spec |
-| **P4g · Native folder picker survives** | The virtual-spectrometer "Set image folder…" (`QFileDialog.getExistingDirectory`). **On-device 2026-07-04: the native SAF picker launches fine, but the heavy main app is reclaimed while backgrounded behind it — the picker result is lost.** Design in **§3.2**. | device | pick any folder via the system picker, app survives, the 3 PNGs load |
+| **P4g · Native folder picker** | ✅ **DONE 2026-07-04 — works end-to-end on the Note20.** The real blocker was NOT memory reclaim (the app survived) but that p4a's `PythonActivity` (extends `QtActivity`) overrode `onActivityResult` **without calling `super`**, so the SAF result never reached Qt's file-dialog helper → `getExistingDirectory` hung. Fix + the content-URI loader in **§3.2**. | device | ✅ pick any folder via the system picker; the calibration/reference/sample images load |
 
-### 3.2 P4g — native folder picker: keep-alive + content-URI (design, spec only)
+### 3.2 P4g — native folder picker: onActivityResult forwarding + content-URI
 
-**Status:** DRAFT / design only — no implementation until explicitly requested (2026-07-04).
+**Status:** ✅ **IMPLEMENTED + verified on device 2026-07-04.** The design below (keep-alive) turned out
+to be the *wrong* diagnosis; the actual fix + working loader are in **§3.2.0**.
+
+#### 3.2.0 What actually fixed it (2026-07-04)
+
+Debugged live on the Note20; each step measured, not assumed:
+
+1. **Result never came back → the core bug.** `QFileDialog.getExistingDirectory` opened the native SAF
+   picker (`com.android.documentsui.picker.PickActivity`) and the user selected a folder, but the call
+   never returned. Root cause: p4a's qt-bootstrap `PythonActivity` (which **extends `QtActivity`**)
+   **overrides `onActivityResult` without calling `super.onActivityResult(...)`** — so the result went
+   only to p4a's own listeners and was never forwarded to `QtActivity` → Qt's file-dialog helper.
+   **Fix:** add the missing `super` call (patched into the bootstrap via `patch_p4a.sh`). One line.
+2. **The picker returns a SAF tree URI**, e.g.
+   `content://com.android.externalstorage.documents/tree/primary%3A…%2Fpumpkinoil_perfect_v1` — not a
+   path. So `os.listdir`/`QImage(path)` fail. **Loader (`VirtualSpectrometerViewModule`):** build the
+   child *document* URI per filename (path-based doc IDs for the primary-storage provider), read the
+   bytes through a `QFile` (Qt's content-URI engine — confirmed working), decode with `QImage`.
+3. **JPEG named `.png`.** The camera captures are JPEG with a `.png` name, and the **Android Qt build
+   ships no JPEG image-format plugin** ("Unsupported image format"; PNG is built-in). **Fallback:**
+   decode via **Pillow** (bundled) and build the QImage from raw RGBA. PNGs use Qt's native path.
+4. **Keep-alive: not needed / not working.** The app **survived** the picker (reclaim is probabilistic,
+   not the blocker). The FGS keep-alive was built (`KeepAliveService.java` same-process, declared via
+   `patch_p4a.sh`; `AndroidForegroundKeepAlive.py`) but **`pyjnius` won't load under the qt bootstrap**
+   (`cannot locate symbol "WebView_AndroidGetJNIEnv"`), so `start()/stop()` are graceful no-ops. Left
+   in place (harmless); if on-device reclaim ever bites, wire the service via Qt JNI (`QJniObject`)
+   instead of pyjnius. `pyjnius` stays in `requirements` only as scaffolding.
+
+**Toolchain fixes folded into `patch_p4a.sh` this round (reproducibility):** (a) neutralize p4a's
+`pip install -U pip` (it upgraded the build-venv pip to a broken 26.1.2 with a mismatched vendored
+`resolvelib` → `ImportError: RequirementInformation`, breaking all dependency resolution); (b) build
+with **`JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64`** — the host default is Java 25, which Gradle 8.14
+rejects (`Unsupported class file major version 69`).
+
+**Also fixed on-device (pipeline/cosmetic, both-OS):**
+- **Evaluation crash** — `SpectrumToColorLogicModule.spectrumToColor`: the camera spectrum (~472
+  samples) hit `colour.sd_to_XYZ` against the 471-point CMF grid → `operands could not be broadcast
+  (1,472) (471,)` on the device's stricter `colour`. Fix: `spectralDistribution.align(cmfs.shape)`
+  before integrating (identical results on desktop; verified).
+- **Wizard nav glyphs** — `◀/▶` are the play/reverse **emoji** → rendered orange on Android; the
+  `◄/►` replacements were absent from the font (tofu). Final: `← Back` / `Next →` (Arrows block,
+  monochrome, present in Roboto).
+
+#### 3.2.1 Original design (superseded — kept for the record)
+
+**Status:** DRAFT / design only — superseded by §3.2.0 (the keep-alive premise was wrong).
 
 **Problem (measured on-device, not assumed).** `VirtualSpectrometerViewModule.onClickedOpenPictureButton`
 → `QFileDialog.getExistingDirectory(...)`. On the Note20 (PySide6/Qt **6.11.1**) this **correctly opens

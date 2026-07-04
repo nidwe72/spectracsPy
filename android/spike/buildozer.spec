@@ -5,7 +5,7 @@ package.domain = org.spectracsp0
 source.dir = ./app_src
 source.include_exts = py,png,jpg,svg,ttf,qml,js,kv,atlas
 version = 0.1
-requirements = python3,shiboken6,PySide6,numpy,scipy,opencv,pyqtgraph,Pyro5,SQLAlchemy,sqlalchemy-serializer,marshmallow,marshmallow-sqlalchemy,colour-science,spectres,pillow,typing_extensions,colorama,networkx,imageio,serpent,libbz2,liblzma
+requirements = python3,shiboken6,PySide6,numpy,scipy,opencv,pyqtgraph,Pyro5,SQLAlchemy,sqlalchemy-serializer,marshmallow,marshmallow-sqlalchemy,colour-science,spectres,pillow,typing_extensions,colorama,networkx,imageio,serpent,libbz2,liblzma,pyjnius
 orientation = portrait
 osx.python_version = 3
 osx.kivy_version = 1.9.1
@@ -23,7 +23,9 @@ android.ndk_path = /home/nidwe72/.buildozer/android/platform/android-ndk-r28c
 p4a.bootstrap = qt
 p4a.local_recipes = /home/nidwe72/development/spectracs/spectracsPy/android/spike/deployment/recipes
 p4a.branch = develop
-android.permissions = android.permission.INTERNET, android.permission.WRITE_EXTERNAL_STORAGE
+android.permissions = android.permission.INTERNET, android.permission.WRITE_EXTERNAL_STORAGE, android.permission.FOREGROUND_SERVICE, android.permission.POST_NOTIFICATIONS
+# P4g: the same-process keep-alive foreground service class (declared in the manifest by patch_p4a.sh).
+android.add_src = ./javasrc
 android.add_jars = /home/nidwe72/development/spectracs/spectracsPy/android/spike/deployment/jar/PySide6/jar/Qt6AndroidBindings.jar,/home/nidwe72/development/spectracs/spectracsPy/android/spike/deployment/jar/PySide6/jar/Qt6Android.jar
 p4a.extra_args = --qt-libs=Gui,Widgets,Core --load-local-libs=plugins_platforms_qtforandroid --init-classes=
 icon.filename = /home/nidwe72/development/spectracs/spectracsPy/android/tooling-venv/lib/python3.10/site-packages/PySide6/scripts/deploy_lib/pyside_icon.jpg

@@ -65,6 +65,82 @@ else:
         np.write_text(s.replace(old, new)); print("  ✓ numpy/__init__.py: cross-file preserve")
 PY
 
+# --- P4g: declare the same-process keep-alive foreground service ----------------
+# The virtual-spectrometer native folder picker backgrounds the heavy main app, which Android then
+# reclaims (see SPEC_android_port.md §3.2). KeepAliveService (added via buildozer android.add_src)
+# runs in the MAIN process to keep it alive across the picker. It must be declared INSIDE
+# <application> WITH a foregroundServiceType — the `native_services` slot is same-process but adds no
+# type, and `extra_manifest_xml` lands OUTSIDE <application> — so we inject it into the qt template.
+TMPL="$P4A/pythonforandroid/bootstraps/qt/build/templates/AndroidManifest.tmpl.xml"
+if [ -f "$TMPL" ]; then
+python3 - "$TMPL" <<'PY'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); s = p.read_text()
+anchor = ("        {% for name in native_services %}\n"
+          "        <service android:name=\"{{ name }}\" />\n"
+          "        {% endfor %}\n")
+svc = ('        <service android:name="{{ args.package }}.KeepAliveService"\n'
+       '                 android:exported="false"\n'
+       '                 android:foregroundServiceType="shortService" />\n')
+if "KeepAliveService" in s:
+    print("  = qt manifest: KeepAliveService already declared")
+elif anchor in s:
+    p.write_text(s.replace(anchor, anchor + svc, 1))
+    print("  ✓ qt manifest: KeepAliveService declared (same-process, shortService)")
+else:
+    print("  ! qt manifest: native_services anchor not found — declare KeepAliveService manually")
+PY
+else
+    echo "  = qt manifest template not present yet (run after buildozer clones the qt bootstrap)"
+fi
+
+# --- P4g: forward onActivityResult to Qt (fixes QFileDialog/SAF result delivery) ----------------
+# The qt-bootstrap PythonActivity extends QtActivity but OVERRIDES onActivityResult WITHOUT calling
+# super — so the native folder-picker (SAF) result reaches PythonActivity, is dispatched only to
+# p4a's own ActivityResultListeners, and is NEVER forwarded to QtActivity -> Qt's file-dialog helper.
+# Result: QFileDialog.getExistingDirectory launches the picker but never returns (measured 2026-07-04).
+# Add the missing super call. See docs/SPEC_android_port.md §3.2.
+PA="$P4A/pythonforandroid/bootstraps/qt/build/src/main/java/org/kivy/android/PythonActivity.java"
+if [ -f "$PA" ]; then
+python3 - "$PA" <<'PY'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); s = p.read_text()
+sig = "    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {\n"
+supercall = "        super.onActivityResult(requestCode, resultCode, intent);  // forward to Qt (QFileDialog/SAF)\n"
+if "super.onActivityResult(requestCode, resultCode, intent)" in s:
+    print("  = PythonActivity: onActivityResult already forwards to super")
+elif sig in s:
+    p.write_text(s.replace(sig, sig + supercall, 1))
+    print("  ✓ PythonActivity: onActivityResult now forwards to Qt (super)")
+else:
+    print("  ! PythonActivity: onActivityResult signature not found — patch manually")
+PY
+else
+    echo "  = qt PythonActivity.java not present yet"
+fi
+
+# --- P4e: neutralize p4a's pip self-upgrade (root cause of the resolvelib corruption) ----------
+# p4a's build.py upgrades the fresh build-venv pip via `pip install -U pip` on every `create`; that
+# pulls a pip whose vendored resolvelib is mismatched -> `ImportError: RequirementInformation` breaks
+# ALL dependency resolution. The venv's own ensurepip pip is fine, so skip the upgrade. (The guard
+# below is belt-and-suspenders for venvs corrupted before this patch was in place.)
+python3 - "$P4A" <<'PY'
+import sys, pathlib
+p4a = pathlib.Path(sys.argv[1])
+bp = p4a / "pythonforandroid" / "build.py"
+s = bp.read_text()
+old, new = "source venv/bin/activate && pip install -U pip", "source venv/bin/activate && python -m pip --version"
+if new in s:            print("  = build.py: pip self-upgrade already neutralized")
+elif old in s:          bp.write_text(s.replace(old, new, 1)); print("  ✓ build.py: skip pip self-upgrade")
+else:                   print("  ! build.py: pip-upgrade line not found")
+pp = p4a / "pythonforandroid" / "pythonpackage.py"
+s = pp.read_text()
+old2, new2 = '"install", "-U", "pip", "wheel",', '"install", "-U", "wheel",'
+if new2 in s and old2 not in s: print("  = pythonpackage.py: pip self-upgrade already neutralized")
+elif old2 in s:                 pp.write_text(s.replace(old2, new2, 1)); print("  ✓ pythonpackage.py: drop pip self-upgrade")
+else:                           print("  ! pythonpackage.py: pip-upgrade line not found")
+PY
+
 # --- P4e: build-venv pip guard --------------------------------------------------
 # p4a builds a host "build venv" and pip-installs the pure-python requirements into
 # it. A half-completed `pip install -U pip` there leaves a MISMATCHED vendored

@@ -74,7 +74,7 @@ class WizardViewModule(PageWidget):
     def createNavigationGroupBox(self):
         result = super().createNavigationGroupBox()
         layout = result.layout()
-        self.__backButton = QPushButton("◀ Back")
+        self.__backButton = QPushButton("← Back")
         self.__backButton.clicked.connect(self.onClickedBack)
         layout.addWidget(self.__backButton, 0, 0, 1, 1)
         self.__cancelButton = QPushButton("Cancel")
@@ -86,7 +86,7 @@ class WizardViewModule(PageWidget):
         self.__deleteButton.clicked.connect(self.onClickedDelete)
         self.__deleteButton.setVisible(False)  # VIEW mode only
         layout.addWidget(self.__deleteButton, 0, 2, 1, 1)
-        self.__nextButton = QPushButton("Next ▶")
+        self.__nextButton = QPushButton("Next →")
         self.__nextButton.clicked.connect(self.onClickedNext)
         layout.addWidget(self.__nextButton, 0, 3, 1, 1)
         return result
@@ -234,10 +234,10 @@ class WizardViewModule(PageWidget):
         self.__backButton.setEnabled(self.__cursor > 0)
         self.__deleteButton.setVisible(self.__isView())  # Delete only exists for a saved run
         if self.__isView():
-            self.__nextButton.setText("Save changes" if terminal else "Next ▶")
+            self.__nextButton.setText("Save changes" if terminal else "Next →")
             self.__nextButton.setEnabled(True)
         else:
-            self.__nextButton.setText("Save" if terminal else "Next ▶")
+            self.__nextButton.setText("Save" if terminal else "Next →")
             phaseType = self.__shownPhases[self.__cursor]
             if phaseType == SpectralWorkflowPhaseType.ACQUISITION:
                 self.__nextButton.setEnabled(self.__acquisitionComplete())
