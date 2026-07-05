@@ -32,6 +32,7 @@ from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupListViewM
     SpectrometerSetupListViewModule
 from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupViewModule import \
     SpectrometerSetupViewModule
+from sciens.spectracs.view.registration.RegistrationViewModule import RegistrationViewModule
 
 
 class MainViewModule(QStackedWidget):
@@ -122,5 +123,9 @@ class MainViewModule(QStackedWidget):
         spectrometerSetupViewModule = SpectrometerSetupViewModule()  # index 19
         spectrometerSetupViewModule.initialize()
         self.addWidget(spectrometerSetupViewModule)
+
+        registrationViewModule = RegistrationViewModule()  # index 20 — end-user self-registration (C1)
+        registrationViewModule.initialize()
+        self.addWidget(registrationViewModule)
 
         self.setCurrentWidget(spectrometerConnectionViewModule)

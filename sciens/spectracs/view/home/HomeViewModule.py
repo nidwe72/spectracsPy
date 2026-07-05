@@ -1,9 +1,11 @@
 from PySide6.QtWidgets import QGridLayout
 from PySide6.QtWidgets import QGroupBox
+from PySide6.QtWidgets import QLabel
 from PySide6.QtWidgets import QPushButton
 from PySide6.QtWidgets import QWidget
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.connection.ConnectionStatusLogicModule import ConnectionStatusLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
@@ -20,13 +22,34 @@ class HomeViewModule(QWidget):
         layout = QGridLayout()
         self.setLayout(layout)
 
+        # Connection status of the current user's instrument (SPEC_connection_and_calibration_ux.md §4.4).
+        self.connectionStatusLabel = QLabel("")
+        self.connectionStatusLabel.setProperty("sectionLabel", True)
+        layout.addWidget(self.connectionStatusLabel, 0, 0, 1, 1)
+
         self.spectralJobsOverviewViewModule = SpectralJobsOverviewViewModule()
         self.spectralJobsOverviewViewModule.resize(600,600)
-        layout.addWidget(self.spectralJobsOverviewViewModule, 0, 0, 1, 1)
-        layout.setRowStretch(0,100)
+        layout.addWidget(self.spectralJobsOverviewViewModule, 1, 0, 1, 1)
+        layout.setRowStretch(1,100)
 
         navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 1, 0, 1, 1)
+        layout.addWidget(navigationGroupBox, 2, 0, 1, 1)
+
+        # Refresh the indicator whenever the session changes (login / logout / registration auto-login).
+        ApplicationContextLogicModule().getApplicationSignalsProvider().userSessionSignal.connect(
+            self.updateConnectionStatus)
+        self.updateConnectionStatus()
+
+    def updateConnectionStatus(self):
+        if CurrentUserSession().isLoggedIn():
+            self.connectionStatusLabel.setText(ConnectionStatusLogicModule().getLabel())
+            self.connectionStatusLabel.setVisible(True)
+        else:
+            self.connectionStatusLabel.setVisible(False)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.updateConnectionStatus()
 
     def onClickedSettingsButton(self):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)

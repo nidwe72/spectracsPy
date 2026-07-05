@@ -71,10 +71,15 @@ class LoginViewModule(PageWidget):
         loginButton.clicked.connect(self.onClickedLoginButton)
         layout.addWidget(loginButton, 0, 0, 1, 1)
 
+        registerButton = QPushButton("Register")
+        registerButton.setProperty("buttonType", "secondary")
+        registerButton.clicked.connect(self.onClickedRegisterButton)
+        layout.addWidget(registerButton, 0, 1, 1, 1)
+
         backButton = QPushButton("Back")
         backButton.setProperty("buttonType", "secondary")  # Bootstrap 'secondary' (gray)
         backButton.clicked.connect(self.onClickedBackButton)
-        layout.addWidget(backButton, 0, 1, 1, 1)
+        layout.addWidget(backButton, 0, 2, 1, 1)
 
         return result
 
@@ -95,6 +100,9 @@ class LoginViewModule(PageWidget):
             message = result.get("message") or "invalid credentials"
             self.getErrorLabel().setText(message)
             self.getErrorLabel().setVisible(True)
+
+    def onClickedRegisterButton(self):
+        self.__navigateTo("RegistrationViewModule")
 
     def onClickedBackButton(self):
         self.__navigateTo("Home")
