@@ -1,10 +1,12 @@
 # Spec — Connection & calibration UX (serial-keyed setup, master authoring, end-user self-registration)
 
-Status: **DESIGN.** Not implemented — spec-first, build on explicit request only. Companion to
-`SPEC_real_camera_capture.md` (the physical capture path); this spec covers the **integration layer** above
-it: who sets up an instrument, how an end user activates it, and how the app knows a real, calibrated
-spectrometer is connected before a measurement. Seeded from `SPEC_real_camera_capture.md` §9.1/§9.4 — that
-file remains the record of how these decisions were reached; **this spec is authoritative going forward.**
+Status: **MILESTONE 5a IMPLEMENTED + pushed (2026-07-05).** The virtual-first sweep — serial-keyed object
+model, master authoring GUIs, end-user self-registration, connect indicator, measure-on-virtual — is built
+and verified (server RPC round-trips + app boots + a rendered header check). Milestone 5b (real device) is
+still design-only (depends on `SPEC_real_camera_capture.md` RC-R0…R3). Implementation summary in §10.
+Companion to `SPEC_real_camera_capture.md` (the physical capture path); this spec covers the **integration
+layer** above it: who sets up an instrument, how an end user activates it, and how the app knows a
+spectrometer is connected before a measurement. **This spec is authoritative going forward.**
 
 Goal: a coherent, end-user-sensible setup where the **serial** printed on the hand-held unit is the pivot
 key. A **master** authors, per serial, the `{ device, calibration, plugin }` bundle; an **end user
@@ -366,3 +368,42 @@ capture-track dependency.
   (`applicationSettings.getSpectrometerProfile()`) to the session bundle, or virtual measurement breaks.
 - **5a sample image** comes from the existing `VirtualSpectrometerViewModule` folder picker (client-side);
   the bundle ships calibration+plugin, not image blobs.
+
+---
+
+## 10. As-built — milestone 5a (IMPLEMENTED 2026-07-05)
+
+Commits pushed across three repos: model `b7d8d18`/`f893f43`, server `14ca1c4`/`3ccb036`, app
+`52108e5`/`05cdd39`/`f642d07` (+ UI fixups `6a13231`…`b502692`).
+
+**Phase A — serial-keyed model (server-DB migration).** Device graph (`Spectrometer`/`Sensor`/`Chip`/
+`Vendor`/`Style`/`SpectrometerProfile`/`SpectrometerCalibrationProfile`/`SpectralLine` + `SpectralLineMasterData`)
+moved to the server DB. New `SpectrometerSetup` (→ `SpectrometerProfile` + `DbPlugin`). `AppUser` gained
+`email`/`firstName`/`lastName`/`registeredSerial` and **dropped** `pluginId`/`plugin`/`spectrometerDevice`
+— the instrument now resolves through the serial. `InstrumentLogicModule.resolveBundle`,
+`RegisterUserLogicModule`, and `login()` returns the serial bundle. Cross-registry break resolved by
+decoupling `ApplicationConfigToSpectrometerProfile` to a soft id (its readers look the profile up by id).
+
+**Phase B — master authoring GUIs** (Settings → Administration, master-gated): **Plugins** (`DbPlugin`
+CRUD), **Spectrometer profiles** (serial + device + "Load capture folder" → auto-calibrate via
+`PlaygroundCalibrationLogicModule.calibrateImage` → `saveSpectrometerProfile`), **Spectrometer setups**
+(bind profile + plugin). Backed by `InstrumentAuthoringLogicModule` + RPCs.
+
+**Phase C — end-user + connect:** `RegistrationViewModule` (Register link on **both** the desktop
+`ServiceLoginDialog` and the in-window `LoginViewModule`) → `registerEndUser` → **auto-login** → route to
+the plugin wizard. Connection indicator is a **bordered camera icon in the header**, left of the account
+icon (green = connected, white = disconnected, grey = no spectrometer / not signed in), via
+`ConnectionStatusLogicModule` (targeted: virtual = always connected; real = `isSensorConnected` by VID/PID).
+
+**Deviations / notes vs. the design above:**
+- The master authoring screens are **new** screens (Settings → Administration); the legacy local profile
+  screen was **renamed "Device calibration (legacy)"** and left intact for future real-device (5b)
+  interactive calibration.
+- Connection status lives in the **header** (not a Home label, as first prototyped).
+- **Deferred within 5a (works without them for the virtual path):** acquisition does not yet *read*
+  `session.calibration` (the virtual device auto-calibrates; the seeded calibration is empty); the
+  `ApplicationConfig` entity still exists but its active-profile role is superseded by `registeredSerial`.
+- **Seeded test data:** `masterUser/masterUser` (author), `pumpkinTestUser/pumpkinTestUser` (end user →
+  serial `TEST-0001` → Virtuax + pumpkin plugin).
+- **Verification was structural** (server RPC round-trips, headless boots, a rendered-header image) — a
+  full visual click-through is Edwin's drive-and-observe review.
