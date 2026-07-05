@@ -24,7 +24,7 @@ class HomeViewModule(QWidget):
 
         # Connection status of the current user's instrument (SPEC_connection_and_calibration_ux.md §4.4).
         self.connectionStatusLabel = QLabel("")
-        self.connectionStatusLabel.setProperty("sectionLabel", True)
+        self.connectionStatusLabel.setStyleSheet("font-weight: bold; padding: 4px;")
         layout.addWidget(self.connectionStatusLabel, 0, 0, 1, 1)
 
         self.spectralJobsOverviewViewModule = SpectralJobsOverviewViewModule()

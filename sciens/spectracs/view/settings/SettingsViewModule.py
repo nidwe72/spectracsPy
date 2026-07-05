@@ -71,7 +71,9 @@ class SettingsViewModule(QWidget):
         openSpectrometerConnectionViewModuleButton.clicked.connect(self.onClickedOpenSpectrometerConnectionViewModuleButton)
 
         openSpectrometerProfileListViewModuleButton = QPushButton()
-        openSpectrometerProfileListViewModuleButton.setText("Spectrometer profiles")
+        # Legacy interactive device-calibration screen (Hough/wavelength over a camera). Renamed to avoid
+        # colliding with the master "Spectrometer profiles" authoring screen in the Administration group.
+        openSpectrometerProfileListViewModuleButton.setText("Device calibration (legacy)")
         openSpectrometerProfileListViewModuleButton.clicked.connect(self.onClickedCameraSelectionButton)
 
         openMeasurementProfilesListViewModuleButton = QPushButton()
