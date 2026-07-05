@@ -190,11 +190,14 @@ class MainStatusBarViewModule(QWidget):
     def updateConnectionIcon(self):
         # Lazy import avoids a session<->logic import cycle at module load.
         from sciens.spectracs.logic.connection.ConnectionStatusLogicModule import ConnectionStatusLogicModule
-        if not CurrentUserSession().isLoggedIn():
-            self.connectionButton.setVisible(False)
-            return
+        # Always visible so the indicator is discoverable in the header; grey when there is no instrument
+        # (logged out, or a user without a registered serial e.g. the master).
         self.connectionButton.setVisible(True)
-        status = ConnectionStatusLogicModule().getStatus()
+        if not CurrentUserSession().isLoggedIn():
+            status = ConnectionStatusLogicModule.NO_INSTRUMENT
+        else:
+            status = ConnectionStatusLogicModule().getStatus()
+
         if status == ConnectionStatusLogicModule.CONNECTED:
             colour = self.CONNECTION_CONNECTED_COLOR
             tooltip = "Spectrometer connected (%s)" % (CurrentUserSession().getSpectrometerDevice() or "")
@@ -203,7 +206,7 @@ class MainStatusBarViewModule(QWidget):
             tooltip = "Spectrometer not connected"
         else:
             colour = self.CONNECTION_NO_INSTRUMENT_COLOR
-            tooltip = "No instrument registered"
+            tooltip = "No instrument"
         icon = QIcon()
         icon.addPixmap(self.renderSvgPixmap(self.CAMERA_SVG % {'c': colour}), QIcon.Mode.Normal)
         self.connectionButton.setIcon(icon)
