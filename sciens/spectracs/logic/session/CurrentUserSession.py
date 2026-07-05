@@ -17,9 +17,12 @@ class CurrentUserSession(Singleton):
     userId: Optional[str] = None
     username: Optional[str] = None
     roles: List[str] = []
-    pluginId: Optional[str] = None            # config binding downloaded at login (SPEC B.1a)
+    pluginId: Optional[str] = None            # legacy (dev-bypass only); real login resolves via serial
     pluginCodeRef: Optional[str] = None       # import path of the bound plugin — the client imports it
     spectrometerDevice: Optional[str] = None  # stable device code-name, e.g. "Virtuax"
+    # Instrument bundle resolved from the user's serial at login (SPEC_connection_and_calibration_ux §4.3):
+    registeredSerial: Optional[str] = None
+    calibration: Optional[dict] = None        # ROI + pixel->nm coeffs dict (None if not calibrated yet)
 
     def login(self, loginResult: dict):
         self.userId = loginResult.get("userId")
@@ -28,6 +31,8 @@ class CurrentUserSession(Singleton):
         self.pluginId = loginResult.get("pluginId")
         self.pluginCodeRef = loginResult.get("pluginCodeRef")
         self.spectrometerDevice = loginResult.get("spectrometerDevice")
+        self.registeredSerial = loginResult.get("registeredSerial")
+        self.calibration = loginResult.get("calibration")
 
     def logout(self):
         self.userId = None
@@ -36,6 +41,8 @@ class CurrentUserSession(Singleton):
         self.pluginId = None
         self.pluginCodeRef = None
         self.spectrometerDevice = None
+        self.registeredSerial = None
+        self.calibration = None
 
     def applyDevLoginBypassIfEnabled(self) -> bool:
         """Bring-up only (Android P4/P5): log in a synthetic dev user WITHOUT the server, so the
@@ -76,3 +83,9 @@ class CurrentUserSession(Singleton):
 
     def getSpectrometerDevice(self) -> Optional[str]:
         return self.spectrometerDevice
+
+    def getRegisteredSerial(self) -> Optional[str]:
+        return self.registeredSerial
+
+    def getCalibration(self) -> Optional[dict]:
+        return self.calibration

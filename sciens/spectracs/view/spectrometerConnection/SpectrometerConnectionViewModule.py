@@ -56,10 +56,16 @@ class SpectrometerConnectionViewModule(PageWidget):
 
         spectrometerProfilesMapping = ApplicationContextLogicModule().getApplicationConfig().getSpectrometerProfilesMapping()
 
+        # SpectrometerProfile moved to the server DB — resolve the soft id reference by lookup (the ORM
+        # relationship no longer exists). See ApplicationConfigToSpectrometerProfile / A2.
+        profilesById = SpectrometerProfileUtil().getSpectrometerProfiles() if spectrometerProfilesMapping else {}
+
         for spectrometerProfilesMappingEntry in spectrometerProfilesMapping:
+            spectrometerProfile = profilesById.get(spectrometerProfilesMappingEntry.spectrometer_profile_id)
+            if spectrometerProfile is None:
+                continue
             item = QStandardItem()
 
-            spectrometerProfile = spectrometerProfilesMappingEntry.spectrometerProfile
             spectrometerName = SpectrometerUtil().getEntityViewName(spectrometerProfile.spectrometer);
             text = f"{spectrometerName} ({spectrometerProfile.serial})"
             item.setText(text)

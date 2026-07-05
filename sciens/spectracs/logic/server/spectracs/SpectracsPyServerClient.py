@@ -119,6 +119,48 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.deleteUser failed: %s" % exception)
             return {"ok": False, "userId": None, "message": "delete failed"}
 
+    # --- connection & calibration (SPEC_connection_and_calibration_ux.md §4) ---
+
+    def resolveInstrumentBySerial(self, serial):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.resolveInstrumentBySerial(serial)
+        except Exception as exception:
+            print("SpectracsPyServerClient.resolveInstrumentBySerial failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
+    def registerEndUser(self, username, password, email, firstName, lastName, serial):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.registerEndUser(username, password, email, firstName, lastName, serial)
+        except Exception as exception:
+            print("SpectracsPyServerClient.registerEndUser failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
+    def listPlugins(self):
+        proxy = self.getProxy()
+        if proxy is None:
+            return []
+        try:
+            return proxy.listPlugins()
+        except Exception as exception:
+            print("SpectracsPyServerClient.listPlugins failed: %s" % exception)
+            return []
+
+    def savePlugin(self, title, codeRef, version, pdfRef=None):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.savePlugin(title, codeRef, version, pdfRef)
+        except Exception as exception:
+            print("SpectracsPyServerClient.savePlugin failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
     def syncSpectrometers(self):
         proxy = self.getProxy()
         if proxy is None:
