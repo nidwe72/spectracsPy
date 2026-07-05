@@ -193,10 +193,8 @@ class MainStatusBarViewModule(QWidget):
         # Always visible so the indicator is discoverable in the header; grey when there is no instrument
         # (logged out, or a user without a registered serial e.g. the master).
         self.connectionButton.setVisible(True)
-        if not CurrentUserSession().isLoggedIn():
-            status = ConnectionStatusLogicModule.NO_INSTRUMENT
-        else:
-            status = ConnectionStatusLogicModule().getStatus()
+        loggedOut = not CurrentUserSession().isLoggedIn()
+        status = ConnectionStatusLogicModule.NO_INSTRUMENT if loggedOut else ConnectionStatusLogicModule().getStatus()
 
         if status == ConnectionStatusLogicModule.CONNECTED:
             colour = self.CONNECTION_CONNECTED_COLOR
@@ -206,7 +204,7 @@ class MainStatusBarViewModule(QWidget):
             tooltip = "Spectrometer not connected"
         else:
             colour = self.CONNECTION_NO_INSTRUMENT_COLOR
-            tooltip = "No instrument"
+            tooltip = "Not signed in" if loggedOut else "No spectrometer registered"
         icon = QIcon()
         icon.addPixmap(self.renderSvgPixmap(self.CAMERA_SVG % {'c': colour}), QIcon.Mode.Normal)
         self.connectionButton.setIcon(icon)
