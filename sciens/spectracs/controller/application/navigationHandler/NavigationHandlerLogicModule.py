@@ -54,6 +54,24 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="LoginViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Login")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="PluginListViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Plugins")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="PluginViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Plugins > Plugin")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="SpectrometerProfileAuthoringListViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer profiles")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="SpectrometerProfileAuthoringViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer profiles > Profile")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="SpectrometerSetupListViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer setups")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="SpectrometerSetupViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer setups > Setup")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
         self.setPreviousNavigationSignal(navigationSignal)
 
@@ -89,6 +107,18 @@ class NavigationHandlerLogicModule(Singleton):
             result = 12
         elif target=="LoginViewModule":
             result = 13
+        elif target=="PluginListViewModule":
+            result = 14
+        elif target=="PluginViewModule":
+            result = 15
+        elif target=="SpectrometerProfileAuthoringListViewModule":
+            result = 16
+        elif target=="SpectrometerProfileAuthoringViewModule":
+            result = 17
+        elif target=="SpectrometerSetupListViewModule":
+            result = 18
+        elif target=="SpectrometerSetupViewModule":
+            result = 19
 
 
         return result

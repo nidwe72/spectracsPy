@@ -22,6 +22,16 @@ from sciens.spectracs.view.playground.PlaygroundViewModule import PlaygroundView
 from sciens.spectracs.view.spectral.workflow.WizardViewModule import WizardViewModule
 from sciens.spectracs.view.spectrometerConnection.SpectrometerConnectionViewModule import SpectrometerConnectionViewModule
 from sciens.spectracs.view.settings.login.LoginViewModule import LoginViewModule
+from sciens.spectracs.view.settings.plugin.PluginListViewModule import PluginListViewModule
+from sciens.spectracs.view.settings.plugin.PluginViewModule import PluginViewModule
+from sciens.spectracs.view.settings.spectrometerProfileAuthoring.SpectrometerProfileAuthoringListViewModule import \
+    SpectrometerProfileAuthoringListViewModule
+from sciens.spectracs.view.settings.spectrometerProfileAuthoring.SpectrometerProfileAuthoringViewModule import \
+    SpectrometerProfileAuthoringViewModule
+from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupListViewModule import \
+    SpectrometerSetupListViewModule
+from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupViewModule import \
+    SpectrometerSetupViewModule
 
 
 class MainViewModule(QStackedWidget):
@@ -87,5 +97,30 @@ class MainViewModule(QStackedWidget):
         loginViewModule = LoginViewModule()  # index 13 — in-window login (Android-safe; P4c)
         loginViewModule.initialize()
         self.addWidget(loginViewModule)
+
+        # --- master authoring GUIs (SPEC_connection_and_calibration_ux.md §4.1, indices 14-19) ---
+        pluginListViewModule = PluginListViewModule()  # index 14
+        pluginListViewModule.initialize()
+        self.addWidget(pluginListViewModule)
+
+        pluginViewModule = PluginViewModule()  # index 15
+        pluginViewModule.initialize()
+        self.addWidget(pluginViewModule)
+
+        spectrometerProfileAuthoringListViewModule = SpectrometerProfileAuthoringListViewModule()  # index 16
+        spectrometerProfileAuthoringListViewModule.initialize()
+        self.addWidget(spectrometerProfileAuthoringListViewModule)
+
+        spectrometerProfileAuthoringViewModule = SpectrometerProfileAuthoringViewModule()  # index 17
+        spectrometerProfileAuthoringViewModule.initialize()
+        self.addWidget(spectrometerProfileAuthoringViewModule)
+
+        spectrometerSetupListViewModule = SpectrometerSetupListViewModule()  # index 18
+        spectrometerSetupListViewModule.initialize()
+        self.addWidget(spectrometerSetupListViewModule)
+
+        spectrometerSetupViewModule = SpectrometerSetupViewModule()  # index 19
+        spectrometerSetupViewModule.initialize()
+        self.addWidget(spectrometerSetupViewModule)
 
         self.setCurrentWidget(spectrometerConnectionViewModule)

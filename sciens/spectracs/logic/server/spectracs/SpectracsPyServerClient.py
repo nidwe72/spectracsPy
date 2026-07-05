@@ -161,6 +161,46 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.savePlugin failed: %s" % exception)
             return {"ok": False, "message": "failed"}
 
+    def saveSpectrometerProfile(self, serial, deviceCodeName, calibration=None):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.saveSpectrometerProfile(serial, deviceCodeName, calibration)
+        except Exception as exception:
+            print("SpectracsPyServerClient.saveSpectrometerProfile failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
+    def saveSpectrometerSetup(self, serial, pluginCodeRef):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.saveSpectrometerSetup(serial, pluginCodeRef)
+        except Exception as exception:
+            print("SpectracsPyServerClient.saveSpectrometerSetup failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
+    def listSpectrometerProfiles(self):
+        proxy = self.getProxy()
+        if proxy is None:
+            return []
+        try:
+            return proxy.listSpectrometerProfiles()
+        except Exception as exception:
+            print("SpectracsPyServerClient.listSpectrometerProfiles failed: %s" % exception)
+            return []
+
+    def listSpectrometerSetups(self):
+        proxy = self.getProxy()
+        if proxy is None:
+            return []
+        try:
+            return proxy.listSpectrometerSetups()
+        except Exception as exception:
+            print("SpectracsPyServerClient.listSpectrometerSetups failed: %s" % exception)
+            return []
+
     def syncSpectrometers(self):
         proxy = self.getProxy()
         if proxy is None:

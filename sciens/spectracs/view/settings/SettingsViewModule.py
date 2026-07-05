@@ -110,7 +110,38 @@ class SettingsViewModule(QWidget):
         layout.addWidget(openPlaygroundViewModuleButton, 0, 1, 1, 1)
         openPlaygroundViewModuleButton.clicked.connect(self.onClickedPlaygroundButton)
 
+        openPluginsButton = QPushButton()
+        openPluginsButton.setText("Plugins")
+        layout.addWidget(openPluginsButton, 0, 2, 1, 1)
+        openPluginsButton.clicked.connect(self.onClickedPluginsButton)
+
+        openProfilesButton = QPushButton()
+        openProfilesButton.setText("Spectrometer profiles")
+        layout.addWidget(openProfilesButton, 1, 0, 1, 1)
+        openProfilesButton.clicked.connect(self.onClickedSpectrometerProfilesButton)
+
+        openSetupsButton = QPushButton()
+        openSetupsButton.setText("Spectrometer setups")
+        layout.addWidget(openSetupsButton, 1, 1, 1, 1)
+        openSetupsButton.clicked.connect(self.onClickedSpectrometerSetupsButton)
+
         return result
+
+    def __navigateTo(self, target):
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+        someNavigationSignal = NavigationSignal(None)
+        someNavigationSignal.setTarget(target)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def onClickedPluginsButton(self):
+        self.__navigateTo("PluginListViewModule")
+
+    def onClickedSpectrometerProfilesButton(self):
+        self.__navigateTo("SpectrometerProfileAuthoringListViewModule")
+
+    def onClickedSpectrometerSetupsButton(self):
+        self.__navigateTo("SpectrometerSetupListViewModule")
 
     def updateAdministrationVisibility(self):
         isMaster = CurrentUserSession().hasRole(UserRoleType.MASTER_USER.value)
