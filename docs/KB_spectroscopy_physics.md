@@ -114,6 +114,30 @@ Hermetter (2007) explain it with exactly **Beer–Lambert + CIE CMFs** — i.e. 
 | `colour = f(T)` | `SpectralColorUtil.spectrumToColor` | implemented |
 | hue → verdict band | `VerdictOp` / plugin constants | greenfield |
 
+## 7. Physical instrument construction (hardware)
+
+The Spectracs device is a **hand-held DIY spectrometer optically coupled to a USB camera**: the
+diffraction/grating unit is mounted in front of (attached to) the **camera's lens**, so the optical system
+is *grating-block + camera-lens + sensor* as one stack. Consequences for the rest of the system:
+
+- **Camera hardware:** a small, known set of USB (UVC) cameras — **Microdia/Sonix `0c45:6366`** (the cheap
+  Chinese cam intended for the **production batch**) and **ELP `32e4:8830`** (more expensive; the current
+  bench/dev unit). See `SPEC_real_camera_capture.md` §4.
+- **Resolution is an *optical* question, not just a data one:** because the grating sits on the lens, the
+  "best" capture resolution is whatever makes *this optical stack* resolve the spectrum best — it must be
+  **judged empirically against a known line source (the CFL lamp)**, then hardcoded per chipset. Higher
+  sensor resolution does not automatically mean better spectral resolution once the lens/grating optics
+  are the limiting factor. (`SPEC_real_camera_capture.md` §9.2.)
+- **Two light sources, two jobs** (drives the future best-fit-exposure work, §9.3 of that spec):
+  - **CFL bulb** — the **calibration** source. Mercury emission **lines** (≈436 nm blue, 546 nm green,
+    577/579 nm yellow, 611 nm orange) at known wavelengths → drives the pixel→nm wavelength calibration.
+    A real capture of this on the ELP is verified (sharp vertical emission lines).
+  - **Array of 7 × 3 W LEDs** — the **measurement** source (broadband, illuminates the sample). This is
+    the "LED light source" in §1's chain.
+- **Per-unit identity:** each produced spectrometer carries a **printed serial label** used as the key to
+  its factory calibration profile (`SpectrometerProfile.serial`) — the USB cameras themselves expose no
+  serial. (`SPEC_real_camera_capture.md` §9.1.)
+
 ## Sources
 - `KB_led_and_oil_spectra.md` (LED + oil sources). Fruhwirth & Hermetter (2007), ResearchGate 227762370.
 - Implemented colour math: `SPEC_spectrum_processing.md`. Prior absorptance prototype: `unsorted/oils.jl`.
