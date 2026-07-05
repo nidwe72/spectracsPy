@@ -101,6 +101,14 @@ class MainStatusBarViewModule(QWidget):
         headerRow.addWidget(logoBox, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
         headerRow.addStretch(1)
 
+        # Connection-state indicator, left of the account icon (SPEC_connection_and_calibration_ux §4.4):
+        # a coloured dot for the current user's instrument (green = connected, red = not connected,
+        # grey = no instrument; hidden when logged out).
+        self.connectionIconLabel = QLabel()
+        self.connectionIconLabel.setFixedSize(self.HEADER_CONTENT_HEIGHT, self.HEADER_CONTENT_HEIGHT)
+        self.connectionIconLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        headerRow.addWidget(self.connectionIconLabel, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
+
         self.accountButton=QToolButton()
         self.accountButton.setAutoRaise(True)  # flat, icon-in-header chrome (spec D5/RD6)
         # The theme styles every QAbstractButton with a solid green background; override to a flat,
@@ -172,6 +180,28 @@ class MainStatusBarViewModule(QWidget):
             self.accountButton.setIcon(self.buildAccountIcon(
                 self.PERSON_OUTLINE_SVG, self.ACCOUNT_NEUTRAL_COLOR, self.ACCOUNT_NEUTRAL_HOVER_COLOR))
             self.accountButton.setToolTip("Login")
+        self.updateConnectionIcon()
+
+    def updateConnectionIcon(self):
+        # Lazy import avoids a session<->logic import cycle at module load.
+        from sciens.spectracs.logic.connection.ConnectionStatusLogicModule import ConnectionStatusLogicModule
+        if not CurrentUserSession().isLoggedIn():
+            self.connectionIconLabel.setVisible(False)
+            return
+        self.connectionIconLabel.setVisible(True)
+        status = ConnectionStatusLogicModule().getStatus()
+        if status == ConnectionStatusLogicModule.CONNECTED:
+            dot, colour = "●", "#5cb85c"  # ● green
+            tooltip = "Spectrometer connected (%s)" % (CurrentUserSession().getSpectrometerDevice() or "")
+        elif status == ConnectionStatusLogicModule.NOT_CONNECTED:
+            dot, colour = "●", "#d9534f"  # ● red
+            tooltip = "Spectrometer not connected"
+        else:
+            dot, colour = "○", "#999999"  # ○ grey
+            tooltip = "No instrument registered"
+        self.connectionIconLabel.setText(dot)
+        self.connectionIconLabel.setStyleSheet("font-size: 24px; color: %s;" % colour)
+        self.connectionIconLabel.setToolTip(tooltip)
 
     def onClickedAccountButton(self):
         if CurrentUserSession().isLoggedIn():
