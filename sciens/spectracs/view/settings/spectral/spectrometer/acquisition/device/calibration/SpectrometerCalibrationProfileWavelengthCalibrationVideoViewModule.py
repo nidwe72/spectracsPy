@@ -118,6 +118,11 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
 
             spectrometerWavelengthCalibrationLogicModuleResult = self._runCalibrationMatcher(videoSignal)
 
+            # Attach the raw CFL capture to the shared calibration model so the setup editor's Save can
+            # round-trip it to the server (provenance). Transient — persisted as calibrationSpectrumJson.
+            if videoSignal.model is not None:
+                videoSignal.model.calibrationSpectrum = self.spectrum
+
         else:
 
             imageAcquisitionLogicModule = ImageSpectrumAcquisitionLogicModule()

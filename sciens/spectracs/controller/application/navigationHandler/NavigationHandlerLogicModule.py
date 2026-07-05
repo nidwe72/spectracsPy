@@ -24,14 +24,8 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="SettingsViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
-        elif target=="SpectrometerProfileListViewModule":
-            self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometers")
-            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
-        elif target=="SpectrometerProfileViewModule":
-            self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometer profile")
-            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
         elif target=="SpectrometerCalibrationProfileViewModule":
-            self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometer profile > Calibration profile")
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Spectrometer setup > Calibration")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
         elif target=="VirtualSpectrometerViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Virtual spectrometer")
@@ -60,17 +54,11 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="PluginViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Plugins > Plugin")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
-        elif target=="SpectrometerProfileAuthoringListViewModule":
-            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer profiles")
-            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
-        elif target=="SpectrometerProfileAuthoringViewModule":
-            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer profiles > Profile")
-            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
         elif target=="SpectrometerSetupListViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer setups")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
         elif target=="SpectrometerSetupViewModule":
-            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer setups > Setup")
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Spectrometer setups > Spectrometer setup")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
         elif target=="RegistrationViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Register")
@@ -90,40 +78,32 @@ class NavigationHandlerLogicModule(Singleton):
             result = 2
         elif target=="SettingsViewModule":
             result = 3
-        elif target=="SpectrometerProfileListViewModule":
-            result = 4
-        elif target=="SpectrometerProfileViewModule":
-            result = 5
         elif target=="SpectrometerCalibrationProfileViewModule":
-            result = 6
+            result = 4
         elif target=="VirtualSpectrometerViewModule":
-            result = 7
+            result = 5
         elif target=="SpectrometerConnectionViewModule":
-            result = 8
+            result = 6
         elif target=="UserListViewModule":
-            result = 9
+            result = 7
         elif target=="UserViewModule":
-            result = 10
+            result = 8
         elif target=="PlaygroundViewModule":
-            result = 11
+            result = 9
         elif target=="WizardViewModule":
-            result = 12
+            result = 10
         elif target=="LoginViewModule":
-            result = 13
+            result = 11
         elif target=="PluginListViewModule":
-            result = 14
+            result = 12
         elif target=="PluginViewModule":
-            result = 15
-        elif target=="SpectrometerProfileAuthoringListViewModule":
-            result = 16
-        elif target=="SpectrometerProfileAuthoringViewModule":
-            result = 17
+            result = 13
         elif target=="SpectrometerSetupListViewModule":
-            result = 18
+            result = 14
         elif target=="SpectrometerSetupViewModule":
-            result = 19
+            result = 15
         elif target=="RegistrationViewModule":
-            result = 20
+            result = 16
 
 
         return result

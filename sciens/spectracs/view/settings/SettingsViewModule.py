@@ -70,12 +70,6 @@ class SettingsViewModule(QWidget):
         openSpectrometerConnectionViewModuleButton.setText("Connect spectrometer")
         openSpectrometerConnectionViewModuleButton.clicked.connect(self.onClickedOpenSpectrometerConnectionViewModuleButton)
 
-        openSpectrometerProfileListViewModuleButton = QPushButton()
-        # Legacy interactive device-calibration screen (Hough/wavelength over a camera). Renamed to avoid
-        # colliding with the master "Spectrometer profiles" authoring screen in the Administration group.
-        openSpectrometerProfileListViewModuleButton.setText("Device calibration (legacy)")
-        openSpectrometerProfileListViewModuleButton.clicked.connect(self.onClickedCameraSelectionButton)
-
         openMeasurementProfilesListViewModuleButton = QPushButton()
         openMeasurementProfilesListViewModuleButton.setText("Measurement profiles")
 
@@ -83,11 +77,10 @@ class SettingsViewModule(QWidget):
         openVirtualSpectrometerViewModuleButton.setText("Virtual Spectrometer")
         openVirtualSpectrometerViewModuleButton.clicked.connect(self.onClickedOpenVirtualSpectrometerViewModuleButton)
 
-        # R3: four action buttons that overflow 412 dp as a single row -> ResponsiveRow stacks them
-        # vertically on the phone and keeps them in a row on the desktop.
+        # §11: the "Device calibration (legacy)" screen is retired — interactive calibration now lives in
+        # the SpectrometerSetup editor's embedded wizard. R3: buttons stack on phone width, row on desktop.
         buttonsRow = ResponsiveRow([
             openSpectrometerConnectionViewModuleButton,
-            openSpectrometerProfileListViewModuleButton,
             openMeasurementProfilesListViewModuleButton,
             openVirtualSpectrometerViewModuleButton,
         ])
@@ -117,14 +110,11 @@ class SettingsViewModule(QWidget):
         layout.addWidget(openPluginsButton, 0, 2, 1, 1)
         openPluginsButton.clicked.connect(self.onClickedPluginsButton)
 
-        openProfilesButton = QPushButton()
-        openProfilesButton.setText("Spectrometer profiles")
-        layout.addWidget(openProfilesButton, 1, 0, 1, 1)
-        openProfilesButton.clicked.connect(self.onClickedSpectrometerProfilesButton)
-
+        # §11 reconsolidation: the separate "Spectrometer profiles (authoring)" screen is retired — the
+        # unified "Spectrometer setups" editor now assembles serial + device + calibration + plugin + user.
         openSetupsButton = QPushButton()
         openSetupsButton.setText("Spectrometer setups")
-        layout.addWidget(openSetupsButton, 1, 1, 1, 1)
+        layout.addWidget(openSetupsButton, 1, 0, 1, 1)
         openSetupsButton.clicked.connect(self.onClickedSpectrometerSetupsButton)
 
         return result
@@ -138,9 +128,6 @@ class SettingsViewModule(QWidget):
 
     def onClickedPluginsButton(self):
         self.__navigateTo("PluginListViewModule")
-
-    def onClickedSpectrometerProfilesButton(self):
-        self.__navigateTo("SpectrometerProfileAuthoringListViewModule")
 
     def onClickedSpectrometerSetupsButton(self):
         self.__navigateTo("SpectrometerSetupListViewModule")
@@ -245,13 +232,6 @@ class SettingsViewModule(QWidget):
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("Home")
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
-
-    def onClickedCameraSelectionButton(self):
-        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
-            ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
-        someNavigationSignal = NavigationSignal(None)
-        someNavigationSignal.setTarget("SpectrometerProfileListViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
 
     def onClickedOpenSpectrometerConnectionViewModuleButton(self):

@@ -4,9 +4,6 @@ from sciens.spectracs.logic.model.util.SpectrometerProfileUtil import Spectromet
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from sciens.spectracs.view.home.HomeViewModule import HomeViewModule
 from sciens.spectracs.view.settings.SettingsViewModule import SettingsViewModule
-from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileViewModule import SpectrometerProfileViewModule
-from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.SpectrometerProfileListViewModule import \
-    SpectrometerProfileListViewModule
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileViewModule import \
     SpectrometerCalibrationProfileViewModule
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.virtualCamera.VirtualSpectrometerViewModule import \
@@ -24,10 +21,6 @@ from sciens.spectracs.view.spectrometerConnection.SpectrometerConnectionViewModu
 from sciens.spectracs.view.settings.login.LoginViewModule import LoginViewModule
 from sciens.spectracs.view.settings.plugin.PluginListViewModule import PluginListViewModule
 from sciens.spectracs.view.settings.plugin.PluginViewModule import PluginViewModule
-from sciens.spectracs.view.settings.spectrometerProfileAuthoring.SpectrometerProfileAuthoringListViewModule import \
-    SpectrometerProfileAuthoringListViewModule
-from sciens.spectracs.view.settings.spectrometerProfileAuthoring.SpectrometerProfileAuthoringViewModule import \
-    SpectrometerProfileAuthoringViewModule
 from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupListViewModule import \
     SpectrometerSetupListViewModule
 from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupViewModule import \
@@ -54,19 +47,12 @@ class MainViewModule(QStackedWidget):
         settingsViewModule = SettingsViewModule()
         self.addWidget(settingsViewModule)
 
-        spectrometerProfileListViewModule=SpectrometerProfileListViewModule()
-        spectrometerProfileListViewModule.initialize()
-        self.addWidget(spectrometerProfileListViewModule)
-
+        # §11 wizard: the legacy Spectrometer-profile list+editor are retired; the calibration wizard
+        # (idx 4) is reached only from the unified SpectrometerSetup editor's embedded Edit button.
         spectrometerProfile=SpectrometerProfile()
         SpectrometerProfileUtil().initializeSpectrometerProfile(spectrometerProfile)
 
-        spectrometerProfileViewModule=SpectrometerProfileViewModule()
-        spectrometerProfileViewModule.setModel(spectrometerProfile)
-        spectrometerProfileViewModule.initialize()
-        self.addWidget(spectrometerProfileViewModule)
-
-        spectrometerCalibrationProfileViewModule=SpectrometerCalibrationProfileViewModule()
+        spectrometerCalibrationProfileViewModule=SpectrometerCalibrationProfileViewModule()  # index 4 — calibration wizard
         spectrometerCalibrationProfileViewModule.setModel(spectrometerProfile.spectrometerCalibrationProfile)
         spectrometerCalibrationProfileViewModule.initialize()
         self.addWidget(spectrometerCalibrationProfileViewModule)
@@ -91,40 +77,34 @@ class MainViewModule(QStackedWidget):
         playgroundViewModule.initialize()
         self.addWidget(playgroundViewModule)
 
-        wizardViewModule = WizardViewModule()  # index 12 — the pumpkin measurement wizard (C.3)
+        wizardViewModule = WizardViewModule()  # index 10 — the pumpkin measurement wizard (C.3)
         wizardViewModule.initialize()
         self.addWidget(wizardViewModule)
 
-        loginViewModule = LoginViewModule()  # index 13 — in-window login (Android-safe; P4c)
+        loginViewModule = LoginViewModule()  # index 11 — in-window login (Android-safe; P4c)
         loginViewModule.initialize()
         self.addWidget(loginViewModule)
 
-        # --- master authoring GUIs (SPEC_connection_and_calibration_ux.md §4.1, indices 14-19) ---
-        pluginListViewModule = PluginListViewModule()  # index 14
+        # --- master authoring GUIs (SPEC_connection_and_calibration_ux.md §4.1 / §11, indices 12-16) ---
+        # §11 reconsolidation: the separate SpectrometerProfileAuthoring list+editor is retired; the unified
+        # SpectrometerSetupViewModule now assembles serial + device + calibration + plugin + user.
+        pluginListViewModule = PluginListViewModule()  # index 12
         pluginListViewModule.initialize()
         self.addWidget(pluginListViewModule)
 
-        pluginViewModule = PluginViewModule()  # index 15
+        pluginViewModule = PluginViewModule()  # index 13
         pluginViewModule.initialize()
         self.addWidget(pluginViewModule)
 
-        spectrometerProfileAuthoringListViewModule = SpectrometerProfileAuthoringListViewModule()  # index 16
-        spectrometerProfileAuthoringListViewModule.initialize()
-        self.addWidget(spectrometerProfileAuthoringListViewModule)
-
-        spectrometerProfileAuthoringViewModule = SpectrometerProfileAuthoringViewModule()  # index 17
-        spectrometerProfileAuthoringViewModule.initialize()
-        self.addWidget(spectrometerProfileAuthoringViewModule)
-
-        spectrometerSetupListViewModule = SpectrometerSetupListViewModule()  # index 18
+        spectrometerSetupListViewModule = SpectrometerSetupListViewModule()  # index 14
         spectrometerSetupListViewModule.initialize()
         self.addWidget(spectrometerSetupListViewModule)
 
-        spectrometerSetupViewModule = SpectrometerSetupViewModule()  # index 19
+        spectrometerSetupViewModule = SpectrometerSetupViewModule()  # index 15
         spectrometerSetupViewModule.initialize()
         self.addWidget(spectrometerSetupViewModule)
 
-        registrationViewModule = RegistrationViewModule()  # index 20 — end-user self-registration (C1)
+        registrationViewModule = RegistrationViewModule()  # index 16 — end-user self-registration (C1)
         registrationViewModule.initialize()
         self.addWidget(registrationViewModule)
 

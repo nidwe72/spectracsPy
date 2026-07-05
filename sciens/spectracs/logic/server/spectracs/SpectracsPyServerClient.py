@@ -119,6 +119,17 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.deleteUser failed: %s" % exception)
             return {"ok": False, "userId": None, "message": "delete failed"}
 
+    def setRegisteredSerial(self, userId, serial):
+        # MASTER manual override of the user<->serial link (SPEC §11).
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "userId": None, "message": "server unavailable"}
+        try:
+            return proxy.setRegisteredSerial(userId, serial)
+        except Exception as exception:
+            print("SpectracsPyServerClient.setRegisteredSerial failed: %s" % exception)
+            return {"ok": False, "userId": None, "message": "assign failed"}
+
     # --- connection & calibration (SPEC_connection_and_calibration_ux.md §4) ---
 
     def resolveInstrumentBySerial(self, serial):

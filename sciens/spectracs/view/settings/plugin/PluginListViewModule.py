@@ -62,8 +62,37 @@ class PluginListViewModule(PageWidget):
     pluginsTableModel: PluginsTableModel = None
     bannerLabel: QLabel = None
 
+    # R2: reusable SELECT mode (SPEC §11) — the same list doubles as a plugin picker launched from the
+    # SpectrometerSetup editor. When a callback is armed the nav bar shows Back/Select (Add/Edit hidden),
+    # a chosen row is handed back to the caller, and navigation returns to the launching screen.
+    addButton: QPushButton = None
+    editButton: QPushButton = None
+    selectButton: QPushButton = None
+    _selectCallback = None
+    _returnTarget = None
+
     def _getPageTitle(self):
         return "Settings > Plugins"
+
+    def enterSelectMode(self, onSelect, returnTarget):
+        self._selectCallback = onSelect
+        self._returnTarget = returnTarget
+        self.__applyMode()
+        self.refresh()
+
+    def exitSelectMode(self):
+        self._selectCallback = None
+        self._returnTarget = None
+        self.__applyMode()
+
+    def __applyMode(self):
+        selecting = self._selectCallback is not None
+        if self.addButton is not None:
+            self.addButton.setVisible(not selecting)
+        if self.editButton is not None:
+            self.editButton.setVisible(not selecting)
+        if self.selectButton is not None:
+            self.selectButton.setVisible(selecting)
 
     def getMainContainerWidgets(self):
         result = super().getMainContainerWidgets()
@@ -123,16 +152,22 @@ class PluginListViewModule(PageWidget):
         layout.addWidget(backButton, 0, 0, 1, 1)
         backButton.clicked.connect(self.onClickedBackButton)
 
-        addButton = QPushButton()
-        addButton.setText("Add")
-        layout.addWidget(addButton, 0, 1, 1, 1)
-        addButton.clicked.connect(self.onClickedAddButton)
+        self.addButton = QPushButton()
+        self.addButton.setText("Add")
+        layout.addWidget(self.addButton, 0, 1, 1, 1)
+        self.addButton.clicked.connect(self.onClickedAddButton)
 
-        editButton = QPushButton()
-        editButton.setText("Edit")
-        layout.addWidget(editButton, 0, 2, 1, 1)
-        editButton.clicked.connect(self.onClickedEditButton)
+        self.editButton = QPushButton()
+        self.editButton.setText("Edit")
+        layout.addWidget(self.editButton, 0, 2, 1, 1)
+        self.editButton.clicked.connect(self.onClickedEditButton)
 
+        self.selectButton = QPushButton()
+        self.selectButton.setText("Select")
+        layout.addWidget(self.selectButton, 0, 3, 1, 1)
+        self.selectButton.clicked.connect(self.onClickedSelectButton)
+
+        self.__applyMode()  # start in normal (CRUD) mode: Select hidden
         return result
 
     def __getSelectedPlugin(self):
@@ -150,7 +185,23 @@ class PluginListViewModule(PageWidget):
             self.__openEditor(plugin)
 
     def onDoubleClickedRow(self, index):
-        self.onClickedEditButton()
+        if self._selectCallback is not None:
+            self.onClickedSelectButton()
+        else:
+            self.onClickedEditButton()
+
+    def onClickedSelectButton(self):
+        plugin = self.__getSelectedPlugin()
+        if plugin is None:
+            return
+        callback = self._selectCallback
+        returnTarget = self._returnTarget
+        self.exitSelectMode()
+        if callback is not None:
+            callback(plugin)
+        navigationSignal = NavigationSignal(None)
+        navigationSignal.setTarget(returnTarget or "SettingsViewModule")
+        self.__emitNavigation(navigationSignal)
 
     def __openEditor(self, dto):
         from sciens.spectracs.view.settings.plugin.PluginViewModule import PluginViewModule
@@ -162,8 +213,12 @@ class PluginListViewModule(PageWidget):
             self.__emitNavigation(navigationSignal)
 
     def onClickedBackButton(self):
+        # In select mode, Back returns to the launching screen and disarms the picker.
+        returnTarget = self._returnTarget
+        if self._selectCallback is not None:
+            self.exitSelectMode()
         navigationSignal = NavigationSignal(None)
-        navigationSignal.setTarget("SettingsViewModule")
+        navigationSignal.setTarget(returnTarget or "SettingsViewModule")
         self.__emitNavigation(navigationSignal)
 
     def __emitNavigation(self, navigationSignal: NavigationSignal):

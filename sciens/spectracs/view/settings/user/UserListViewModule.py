@@ -22,9 +22,38 @@ class UserListViewModule(PageWidget):
     usersTableModel = None
     bannerLabel: QLabel = None
 
+    # R3: reusable SELECT mode (SPEC §11) — the same list doubles as a user picker launched from the
+    # SpectrometerSetup editor (all AppUsers, no filter). When armed, the nav bar shows Back/Select
+    # (Add/Edit/Delete hidden) and a chosen row is handed back to the caller.
+    addButton: QPushButton = None
+    editButton: QPushButton = None
+    deleteButton: QPushButton = None
+    selectButton: QPushButton = None
+    _selectCallback = None
+    _returnTarget = None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         ApplicationContextLogicModule().getApplicationSignalsProvider().userSignal.connect(self.handleUserSignal)
+
+    def enterSelectMode(self, onSelect, returnTarget):
+        self._selectCallback = onSelect
+        self._returnTarget = returnTarget
+        self.__applyMode()
+        self.refresh()
+
+    def exitSelectMode(self):
+        self._selectCallback = None
+        self._returnTarget = None
+        self.__applyMode()
+
+    def __applyMode(self):
+        selecting = self._selectCallback is not None
+        for button in (self.addButton, self.editButton, self.deleteButton):
+            if button is not None:
+                button.setVisible(not selecting)
+        if self.selectButton is not None:
+            self.selectButton.setVisible(selecting)
 
     def handleUserSignal(self, userSignal: UserSignal):
         # Any create/update/delete -> re-fetch from the server.
@@ -104,22 +133,28 @@ class UserListViewModule(PageWidget):
         layout.addWidget(backButton, 0, 0, 1, 1)
         backButton.clicked.connect(self.onClickedBackButton)
 
-        addButton = QPushButton()
-        addButton.setText("Add")
-        layout.addWidget(addButton, 0, 1, 1, 1)
-        addButton.clicked.connect(self.onClickedAddButton)
+        self.addButton = QPushButton()
+        self.addButton.setText("Add")
+        layout.addWidget(self.addButton, 0, 1, 1, 1)
+        self.addButton.clicked.connect(self.onClickedAddButton)
 
-        editButton = QPushButton()
-        editButton.setText("Edit")
-        layout.addWidget(editButton, 0, 2, 1, 1)
-        editButton.clicked.connect(self.onClickedEditButton)
+        self.editButton = QPushButton()
+        self.editButton.setText("Edit")
+        layout.addWidget(self.editButton, 0, 2, 1, 1)
+        self.editButton.clicked.connect(self.onClickedEditButton)
 
-        deleteButton = QPushButton()
-        deleteButton.setText("Delete")
-        deleteButton.setProperty("buttonType", "secondary")  # gray, not red (deletion is guarded by a confirm dialog)
-        layout.addWidget(deleteButton, 0, 3, 1, 1)
-        deleteButton.clicked.connect(self.onClickedDeleteButton)
+        self.deleteButton = QPushButton()
+        self.deleteButton.setText("Delete")
+        self.deleteButton.setProperty("buttonType", "secondary")  # gray, not red (deletion is guarded by a confirm dialog)
+        layout.addWidget(self.deleteButton, 0, 3, 1, 1)
+        self.deleteButton.clicked.connect(self.onClickedDeleteButton)
 
+        self.selectButton = QPushButton()
+        self.selectButton.setText("Select")
+        layout.addWidget(self.selectButton, 0, 4, 1, 1)
+        self.selectButton.clicked.connect(self.onClickedSelectButton)
+
+        self.__applyMode()  # start in normal (CRUD) mode: Select hidden
         return result
 
     def __getSelectedUser(self) -> dict:
@@ -151,7 +186,23 @@ class UserListViewModule(PageWidget):
             self.__emitNavigation(someNavigationSignal)
 
     def onDoubleClickedRow(self, index: QModelIndex):
-        self.onClickedEditButton()
+        if self._selectCallback is not None:
+            self.onClickedSelectButton()
+        else:
+            self.onClickedEditButton()
+
+    def onClickedSelectButton(self):
+        user = self.__getSelectedUser()
+        if user is None:
+            return
+        callback = self._selectCallback
+        returnTarget = self._returnTarget
+        self.exitSelectMode()
+        if callback is not None:
+            callback(user)
+        someNavigationSignal = NavigationSignal(None)
+        someNavigationSignal.setTarget(returnTarget or "SettingsViewModule")
+        self.__emitNavigation(someNavigationSignal)
 
     def onClickedDeleteButton(self):
         user = self.__getSelectedUser()
@@ -169,8 +220,11 @@ class UserListViewModule(PageWidget):
         self.refresh()
 
     def onClickedBackButton(self):
+        returnTarget = self._returnTarget
+        if self._selectCallback is not None:
+            self.exitSelectMode()
         someNavigationSignal = NavigationSignal(None)
-        someNavigationSignal.setTarget("SettingsViewModule")
+        someNavigationSignal.setTarget(returnTarget or "SettingsViewModule")
         self.__emitNavigation(someNavigationSignal)
 
     def __emitNavigation(self, navigationSignal: NavigationSignal):

@@ -1,7 +1,7 @@
 import threading
 from typing import List
 
-from PySide6.QtCore import QLine
+from PySide6.QtCore import QLine, Signal
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 
@@ -24,6 +24,11 @@ from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.cal
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
+
+    # Wizard (§11 calibration wizard): let the enclosing step editor lock nav during a burst and refresh
+    # button validity when ROI detection finishes.
+    detectionStarted = Signal()
+    detectionCompleted = Signal()
 
     __model:SpectrometerCalibrationProfile=None
 
@@ -107,6 +112,7 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         self.videoThread.setIsVirtual(isVirtual)
         self.videoThread.videoThreadSignal.connect(self.handleVideoThreadSignal)
         self.videoThread.setFrameCount(50)
+        self.detectionStarted.emit()
         self.videoThread.start()
 
     def createRegionOfInterestNavigationGroupBox(self):
@@ -192,6 +198,9 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 
 
             self.setModel(self.__getModel())
+
+            if applicationStatusSignal.isStatusReset:
+                self.detectionCompleted.emit()
 
             event.set()
 

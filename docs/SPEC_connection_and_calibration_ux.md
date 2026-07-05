@@ -4,6 +4,16 @@ Status: **MILESTONE 5a IMPLEMENTED + pushed (2026-07-05).** The virtual-first sw
 model, master authoring GUIs, end-user self-registration, connect indicator, measure-on-virtual — is built
 and verified (server RPC round-trips + app boots + a rendered header check). Milestone 5b (real device) is
 still design-only (depends on `SPEC_real_camera_capture.md` RC-R0…R3). Implementation summary in §10.
+**POST-5a GUI RECONSOLIDATION — DONE: IMPLEMENTED + committed + pushed 2026-07-06 (§11).** The three separate
+master authoring screens are collapsed into **one** unified SpectrometerSetup screen (serial + device +
+embedded calibration + plugin + user, server-persisted); plugin/user chosen via selection views; the legacy
+Spectrometer-profile screens are deleted and interactive calibration is a two-step **wizard** embedded in the
+setup editor. The full calibration (ROI + coefficients + detected lines + raw CFL spectrum) round-trips to the
+server, reusing the workflow `Spectrum` serialization. No object-model change beyond additive columns
+(`calibrationSpectrumJson`, `AppUser` DTO `registeredSerial`). As-built detail in **§11.2–§11.4**; §11 revises
+the §4.1 / §9 screen layout and is authoritative over them. Verified structurally (server round-trips, headless
+boots, offscreen renders); a full visual click-through is Edwin's drive-and-observe. **Commits:** model
+`dc9500c`, server `7a6ebcd`, app (this commit).
 Companion to `SPEC_real_camera_capture.md` (the physical capture path); this spec covers the **integration
 layer** above it: who sets up an instrument, how an end user activates it, and how the app knows a
 spectrometer is connected before a measurement. **This spec is authoritative going forward.**
@@ -407,3 +417,198 @@ icon (green = connected, white = disconnected, grey = no spectrometer / not sign
   serial `TEST-0001` → Virtuax + pumpkin plugin).
 - **Verification was structural** (server RPC round-trips, headless boots, a rendered-header image) — a
   full visual click-through is Edwin's drive-and-observe review.
+
+---
+
+## 11. Post-5a reconsolidation — one unified SpectrometerSetup screen (Edwin, 2026-07-05)
+
+**Decision (design-only, supersedes the §4.1 / §9 three-screen layout).** Collapse the three separate master
+authoring screens shipped in 5a — **B1 Plugins**, **B2 Spectrometer-profiles-authoring**, **B3
+Spectrometer-setups** — into **one** master screen built by **repurposing the legacy
+`SpectrometerProfileViewModule`** as the **SpectrometerSetup** editor. The **B2 profile-authoring** list+editor
+and the **B3 thin-setup** editor (serial-combo + plugin-combo) become **obsolete**. **No object-model change**
+— `SpectrometerProfile` and `SpectrometerSetup` stay two entities; the Phase-A DB work (§10) is untouched. This
+is purely a **GUI reconsolidation**.
+
+**Why the legacy view is the right base.** It already carries **serial + `Spectrometer` (device) combo + the
+embedded interactive calibration editor** (`SpectrometerCalibrationProfileViewModule` → Hough-ROI tab +
+wavelength-λ tab, live video preview, "Detect Region of Interest" / "Detect peaks"). The thin B2 screen
+discarded that in favour of auto-calibrate-only. Repurposing the legacy view makes **one screen serve both
+paths**: **virtual/5a** = auto-calibrate on an assigned file-set; **real/5b** = the interactive CFL
+calibration the tabbed editor already provides. This is the main reason for the consolidation.
+
+**Unified screen composition** (top → bottom; the legacy spine, `+` = added):
+```
+  Settings › Spectrometer setups › Spectrometer setup
+   [ Spectrometer ▼ ]  [ serial ]                         (top form)
+ +   Plugin :  [ selected plugin ]  [ Select… ] ─► plugin picker   (same grid/height as serial)
+ +   User   :  [ selected user   ]  [ Select… ] ─► user picker     (optional manual override)
+   ── Calibration Profile (nanometer/pixel) ──            (embedded; graph + Edit → ROI/λ tabs)
+   ── Spectrometer (read-only device info) ──             (Product name / Sensor / Vendor / Style)
+   [ Back ] [ Save ]                                      (legacy "Publish" DROPPED — Edwin)
+```
+(Layout tweak, Edwin: Plugin/User rows sit **directly under the serial** and share the top-form grid, so
+their fields and Select buttons are the same single-line height as Spectrometer/serial — not the app's
+default 50px button height.)
+
+**Selection views:**
+- **Plugin picker** = `PluginListViewModule` in **select mode** — columns `Title / Code reference / Version`;
+  nav `Back / Select` (double-click = Select). **Add** still reaches the plugin editor so the `DbPlugin`
+  catalog stays growable (a pure picker can't create rows; the first setup needs something to pick).
+- **User picker** = `UserListViewModule` in **select mode** — columns `Username / Display name / Role /
+  Enabled`; **NO filter** (all `AppUser`s, Edwin); nav `Back / Select`. User CRUD already exists, so this is
+  pure-select.
+
+**User binding = manual override, not the normal path.** The 1:1 link lives as `AppUser.registeredSerial`
+(user side), set at **registration** (§4.2). The User selector is an **admin override**: picking a user writes
+*that user's* `registeredSerial = this serial` and enforces 1:1 (clears any prior holder). Blank = leave the
+link to registration. Edwin: the master usually does **not** assign the user, but manual editing is useful in
+some situations.
+
+**Save.** One **Save** persists both the `SpectrometerProfile` (serial + device + calibration) and its
+`SpectrometerSetup` (plugin) via the existing `saveSpectrometerProfile` + `saveSpectrometerSetup` RPCs; the
+optional user override writes `AppUser.registeredSerial`. (Legacy view persisted to the **app DB** — repoint to
+these server RPCs, which already exist from Phase A.)
+
+**Save only — "Publish" DROPPED (Edwin).** The legacy `Back / Save / Publish` bar loses **Publish** (deprecate
++ remove); a single **Save** persists everything server-side. Bar is now `Back / Save`.
+
+**Instrument list (RESOLVED — Edwin).** One **instrument list** replaces the legacy profile list, keeping the
+legacy **rich HTML-row card** style (`SpectrometerProfileListViewModule`'s per-row table + bold summary) but
+re-columned to **`Serial · Device · Plugin · User`**:
+```
+  Settings › Spectrometer setups
+  ┌──────────────────────────────────────────────────────────────┐
+  │  Serial      Device        Plugin          User               │   ← per-row header cells
+  │  TEST-0001   Virtuax       Pumpkin Oil     carol               │   ← bold summary line
+  ├──────────────────────────────────────────────────────────────┤
+  │  MSTR-0002   ELP-USBFHD    Pumpkin Oil     — (unassigned)      │
+  └──────────────────────────────────────────────────────────────┘
+   [ Back ]  [ Add ]  [ Edit ]        (double-click / Edit → unified SpectrometerSetup editor)
+```
+(`User` shows the `AppUser` whose `registeredSerial` = this serial, or `—` when none.)
+
+**Kept / retired:**
+- **Kept:** the instrument list above → Add/Edit into the unified editor; the **Plugin CRUD editor** (catalog
+  authoring); **User CRUD** (existing).
+- **Retired:** `SpectrometerProfileAuthoring` list+editor; the thin `SpectrometerSetup` editor; the legacy
+  `Publish` button; their nav targets/indices.
+
+### 11.1 Implementation phases — reconsolidation (design-only; supersedes §9 Phase B)
+
+```
+ PH  STEP     WHAT                                              DEPENDS  KEY TOUCHPOINTS / NOTES
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────────
+ R   RECONSOLIDATION — one setup screen from the legacy view (supersedes B1–B3 layout; no DB change)
+ R1  repurpose  legacy SpectrometerProfileViewModule →           5a      keep embedded calib editor (Hough/λ
+                SpectrometerSetupViewModule; +Plugin field/                tabs = the 5b path) + auto-cal on
+                picker +User field/picker (optional); DROP                file-set; wire Save →
+                Publish; repoint Save app-DB → server RPCs                saveProfile + saveSetup
+ R2  plugin-sel PluginListViewModule gains SELECT mode           R1       Back/Select; keep Add → plugin editor
+                (launched from R1)                                        so the DbPlugin catalog stays growable
+ R3  user-sel   UserListViewModule gains SELECT mode (NO         R1       Back/Select; pick writes AppUser.
+                filter); manual-override write                            registeredSerial, enforce 1:1
+ R4  retire     drop SpectrometerProfileAuthoring list+editor    R1–R3    remove their nav targets/indices; keep
+                + thin SpectrometerSetup editor; ONE instr.               ONE instrument list → unified editor;
+                list (Serial·Device·Plugin·User, rich rows)              re-column legacy rich HTML-row list
+ R5  verify     master round-trip (author→Save→resolveBySerial); R1–R4    click-through: masterUser authors,
+                registration link + connect unaffected                   endUser registers, measures on virtual
+```
+
+### 11.2 As-built — reconsolidation (IMPLEMENTED 2026-07-05, not yet committed)
+
+R1–R5 done and verified (server round-trip + headless boot + picker-contract test). Files:
+- **R1 unified editor** — `SpectrometerSetupViewModule` rewritten to the legacy composition: **Spectrometer
+  combo + serial** + the **embedded calibration profile block** (`SpectrometerCalibrationProfileViewModule`:
+  nm/px interpolation graph + **Edit** → ROI/wavelength tabs) + **read-only device info**
+  (`SpectrometerViewModule`) + **Plugin** (field + Select…) + **User** (field + Select…, optional) +
+  `Back / Save` (**no Publish**). Save harvests the ROI+coeffs off the calibration model + the selected
+  device's sensor codeName and persists via RPC: `saveSpectrometerProfile` + (if a plugin is picked)
+  `saveSpectrometerSetup` + (if a user is picked) `setRegisteredSerial`. On Edit of an existing serial the
+  calibration graph is populated from `resolveInstrumentBySerial`. (Edwin: the calibration block belongs on
+  this screen now, independent of virtual vs. real; the earlier "Load capture folder" quick path was dropped.)
+  The shared calibration tabs editor (idx 6) gained a settable `editReturnTarget` so calibrating from this
+  screen returns here, not to the legacy profile screen.
+- **R2/R3 pickers** — `PluginListViewModule` + `UserListViewModule` gained a reusable **SELECT mode**
+  (`enterSelectMode(onSelect, returnTarget)` / `exitSelectMode`): nav bar swaps Add/Edit(/Delete) for
+  **Select**, a chosen row is handed back via callback, Back/Select return to the launcher and disarm. User
+  picker is unfiltered (all `AppUser`s).
+- **R3 override RPC** (new) — `UserAdminLogicModule.setRegisteredSerial(userId, serial)` (1:1: clears the
+  serial off any prior holder) + `@expose` on `SpectracsPyServer` + client wrapper. `listUsers` DTO now
+  carries `registeredSerial`.
+- **R4 instrument list** — `SpectrometerSetupListViewModule` re-columned **Serial · Device · Plugin · User**
+  in the legacy rich HTML-row card style (`QListView` + dict-fed HTML delegate); rows assembled server-side
+  (profiles left-joined with setups for plugin, with users for the registered user). Retired:
+  `SpectrometerProfileAuthoring` list+editor (files deleted); Settings "Spectrometer profiles" button dropped;
+  MainViewModule + both NavigationHandler ladders renumbered (setup list/editor + registration → 16/17/18;
+  authoring 16/17 removed) — headless boot confirms index↔widget consistency (19 stack widgets, was 21).
+
+### 11.3 Calibration round-trip + display (IMPLEMENTED 2026-07-06, not yet committed)
+
+Fixes the "calibration profile not shown after Edit / reload" — the server bundle was lossy (ROI + 4 coeffs
+only) and the graph didn't repaint on return. Now the whole calibration round-trips server-side, reusing the
+workflow `Spectrum` serialization for the raw CFL capture.
+
+- **③A — spectral lines round-trip.** The calibration dict now carries `spectralLines` (`{name, nanometer,
+  pixelIndex}`): `SpectrometerSetupViewModule.__harvestCalibration` collects them; `InstrumentAuthoringLogicModule.
+  saveProfile` rebuilds server `SpectralLine` children (linked to seeded `SpectralLineMasterData` by name,
+  nm fallback; seeds master data if empty; delete-orphan replaces on re-save); `InstrumentLogicModule.resolveBundle`
+  returns them; `__buildModelFromDto` rebuilds transient `SpectralLine`s → the graph's scatter dots return.
+- **③-spectrum — raw CFL capture via the COMMON `Spectrum` serialization.** New `calibrationSpectrumJson`
+  Text column on the server `SpectrometerCalibrationProfile` stores `Spectrum.toJson()` (`{str(pixel):intensity}`
+  — same contract as workflow `Spectrum.valuesJson`, different container because `Spectrum` is app-DB-only). The
+  built CFL `Spectrum` is attached to the shared calibration model at detection (transient `calibrationSpectrum`),
+  harvested on Save, round-tripped through save/resolve, rebuilt with `Spectrum.fromJson()`. Provenance that a
+  sane CFL spectrum was used.
+- **③B — curve from the persisted params.** `…SpectralLinesInterpolationViewModule` draws the polynomial curve
+  over the **ROI x-range** from the 4 coefficients, ungated by pixel indices — so the curve shows from the 8
+  persisted params even before/without lines. Scatter dots stay gated on lines.
+- **① — repaint on return.** `SpectrometerSetupViewModule.showEvent` re-`setModel`s the embedded calibration
+  block from the current in-memory model (not a re-fetch) → returning from the ROI/λ tabs repaints the graph.
+- **② — server-only calibration.** The ROI/λ tabs' Save no longer writes the local app DB when opened from the
+  setup editor (gated by `editReturnTarget`); calibration lives in memory and is persisted to the server solely
+  by the setup editor's Save. Legacy screen keeps its local persistence.
+
+Migration: `calibrationSpectrumJson` is a new server column → drop the dev server DB so `create_all` rebuilds.
+Verified: server round-trip (coeffs + 3 lines + spectrum + delete-orphan re-save), headless boot, curve renders
+32 pts from coeffs+ROI alone, harvest/rebuild of lines+spectrum. NOT click-through-verified on a real display.
+
+### 11.4 Calibration wizard + legacy teardown (IMPLEMENTED 2026-07-06, not yet committed)
+
+The idx-6 tabbed calibration editor became a guided two-step **wizard**, the inner Save was dropped, and the
+legacy Spectrometer-profile screens were deleted (so the calibration editor is reached only from the setup
+editor — one behavior, no `editReturnTarget` gating).
+
+- **Wizard (W1).** `SpectrometerCalibrationProfileViewModule` (top-most) drives the two steps via nav:
+  **Step 1 Region of interest** `[Cancel] [Next →]` → **Step 2 Wavelength calibration** `[Cancel] [← Back]
+  [Finish]`. The tab bar stays **visible as a step indicator** (Edwin) — Next/Back drive it and `currentChanged`
+  keeps the nav in sync whether the step changes via a button or a tab click; the tab bar is disabled during a
+  burst. Two new signals on the sub-views (`detectionStarted`/`detectionCompleted` on the Hough + wavelength
+  views) drive nav state. Breadcrumbs shortened for narrow screens: setup editor = "Settings > Spectrometer
+  setup"; wizard = "Settings > Spectrometer setup > Calibration".
+- **Drop Save (W2).** No inner Save. **Finish** keeps the in-memory calibration and returns to the setup
+  editor (its `showEvent` repaints, ①). Local-DB persistence removed from this path entirely.
+- **Snapshot-restore Cancel (W3).** `setModel` snapshots ROI + coeffs + lines + spectrum on entry; **Cancel**
+  writes the snapshot back onto the shared model and returns — so abandoning a re-detection restores the
+  previous calibration (verified).
+- **Disabled-until-valid (W4).** Next enabled iff ROI set; Finish enabled iff coefficients set; all nav
+  disabled while a detection burst runs, re-enabled on completion. The setup editor now also points the
+  ACTIVE profile at the one being authored (`onSelectedSpectrometer`) so detection captures the right device.
+- **Legacy teardown (W5).** Deleted `SpectrometerProfileListViewModule` (idx 4) + `SpectrometerProfileViewModule`
+  (idx 5) (+ their list model / HTML delegate); removed the Settings → Acquisition **"Device calibration
+  (legacy)"** button + handler; unwired both from `MainViewModule` + the two `NavigationHandler` ladders and
+  **renumbered** (calibration wizard 6→4, everything below −2; setup list/editor 16/17→14/15, registration
+  18→16). 17 stack widgets (was 19). Real-camera 5b calibration now happens in the setup editor's wizard.
+
+Verified: headless boot with widget↔index consistency; wizard flow (Next gated by ROI, Finish by coeffs,
+detection lock/unlock, Cancel restores snapshot); no dangling legacy imports; picker/loadview/calibration
+regressions still pass. NOT click-through-verified on a real display.
+
+**Deviation vs. the literal "legacy file becomes the setup view".** The unified editor was built on the
+**RPC/server-authoritative** `SpectrometerSetupViewModule` (correct persistence side, matches Phase A), given
+the legacy-resembling composition — NOT by rewiring the legacy ORM/local-DB `SpectrometerProfileViewModule`
+(idx 5) to RPC. User-visible result is identical to the §11 mock. The **interactive calibration tabs**
+(ROI / wavelength, idx 6) are **embedded in the unified editor** via the calibration block's Edit button
+(shared with the legacy "Device calibration (legacy)" screen, which stays intact) — so calibration authoring
+is on this screen for both virtual and real devices. **Not yet visually click-through-verified** (needs Edwin
+drive-and-observe with a running server + display).

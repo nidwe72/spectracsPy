@@ -1,6 +1,7 @@
 import os
 import threading
 
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QGroupBox, QLineEdit, QDialog, \
     QVBoxLayout, QLabel
@@ -27,6 +28,10 @@ from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import 
 
 
 class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
+
+    # Wizard (§11): lock nav during a burst and refresh Finish validity when peak detection finishes.
+    detectionStarted = Signal()
+    detectionCompleted = Signal()
 
     model:SpectrometerCalibrationProfile=None
 
@@ -149,6 +154,7 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
         self.wavelengthCalibrationVideoThread.setFrameCount(50)
 
+        self.detectionStarted.emit()
         self.wavelengthCalibrationVideoThread.start()
 
 
@@ -181,6 +187,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(
             applicationStatusSignal)
+
+        if applicationStatusSignal.isStatusReset:
+            self.detectionCompleted.emit()
 
         event.set()
 

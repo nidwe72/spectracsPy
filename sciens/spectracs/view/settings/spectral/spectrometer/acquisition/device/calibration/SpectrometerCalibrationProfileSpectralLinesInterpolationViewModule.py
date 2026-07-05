@@ -93,13 +93,15 @@ class SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule(PageWid
 
         model = self.getModel()
 
-        if not self.__doesModelHasCalibratedSpectralLines():
+        # ③B: the calibration curve is fully defined by the persisted cubic coefficients — draw it from
+        # those over the ROI x-range, independent of whether the per-line pixel indices are present. So the
+        # curve shows from the 8 persisted parameters alone (e.g. after a reload that carries no lines yet).
+        if model is None or model.interpolationCoefficientA is None:
             return
 
-        spectralLines = model.getSpectralLines()
-        pixelIndices = SpectralLineUtil().getPixelIndices(spectralLines)
-        minPixelIndex = min(pixelIndices) - 50
-        maxPixelIndex = max(pixelIndices) + 50
+        minPixelIndex, maxPixelIndex = self.__curveXRange(model)
+        if minPixelIndex is None:
+            return
 
         polynomial = poly1d([model.interpolationCoefficientA, model.interpolationCoefficientB,
                              model.interpolationCoefficientC, model.interpolationCoefficientD])
@@ -111,6 +113,21 @@ class SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule(PageWid
             ys.append(int(polynomial(pixelIndex)))
 
         self.__curveItem.setData(xs, ys)
+
+        # When there are no scatter points to frame the axes (curve-only case), frame the curve itself.
+        if xs and not self.__doesModelHasCalibratedSpectralLines():
+            self.__plotWidget.setXRange(min(xs), max(xs), padding=0.05)
+            self.__plotWidget.setYRange(min(ys), max(ys), padding=0.05)
+
+    def __curveXRange(self, model):
+        if model.regionOfInterestX1 is not None and model.regionOfInterestX2 is not None:
+            x1 = int(model.regionOfInterestX1)
+            x2 = int(model.regionOfInterestX2)
+            return (min(x1, x2), max(x1, x2))
+        if self.__doesModelHasCalibratedSpectralLines():
+            pixelIndices = SpectralLineUtil().getPixelIndices(model.getSpectralLines())
+            return (min(pixelIndices) - 50, max(pixelIndices) + 50)
+        return (None, None)
 
     def setModel(self, model: SpectrometerCalibrationProfile):
         self.__model = model

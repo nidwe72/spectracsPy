@@ -4,6 +4,13 @@ Status: **DESIGN.** No code in this spec is implemented yet — it is written to
 implemented on explicit request. Scope is **desktop Linux/Windows real capture**; Android real capture
 stays deferred (cross-refs `docs/SPEC_android_port.md` §6 and the `CaptureBackend` scaffold).
 
+> **UI moved (2026-07-06):** references below to `SpectrometerProfileViewModule` /
+> `SpectrometerProfileListViewModule` ("Settings > Spectrometer profiles") as the calibration screen are
+> **superseded** — those legacy screens were deleted. Interactive calibration (ROI + wavelength) is now a
+> two-step **wizard embedded in the unified SpectrometerSetup editor**
+> (`SPEC_connection_and_calibration_ux.md` §11.4). Real-camera 5b calibration happens **there**; the
+> VID/PID capture mechanics in this spec are unchanged, only the host screen differs.
+
 Goal: capture real frames from the USB spectrometer camera the same way the app already renders the
 virtual device — so a **non-virtual** `SpectrometerSensor` drives the calibration, wavelength-calibration
 **and measurement** flows off a live camera, with the **right physical device** selected automatically
