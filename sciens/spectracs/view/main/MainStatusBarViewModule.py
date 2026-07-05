@@ -101,13 +101,18 @@ class MainStatusBarViewModule(QWidget):
         headerRow.addWidget(logoBox, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
         headerRow.addStretch(1)
 
-        # Connection-state indicator, left of the account icon (SPEC_connection_and_calibration_ux §4.4):
-        # a coloured dot for the current user's instrument (green = connected, red = not connected,
-        # grey = no instrument; hidden when logged out).
-        self.connectionIconLabel = QLabel()
-        self.connectionIconLabel.setFixedSize(self.HEADER_CONTENT_HEIGHT, self.HEADER_CONTENT_HEIGHT)
-        self.connectionIconLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        headerRow.addWidget(self.connectionIconLabel, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
+        # Connection-state indicator, left of the account icon (SPEC_connection_and_calibration_ux §4.4).
+        # Same chrome as the account button (bordered box, same size); a camera glyph recoloured by state:
+        # green = connected, white = disconnected, grey = no instrument; hidden when logged out.
+        self.connectionButton = QToolButton()
+        self.connectionButton.setAutoRaise(True)
+        self.connectionButton.setStyleSheet(
+            "QToolButton { background: transparent; border: 1px solid #5A5A5A; border-radius: 6px; }"
+            "QToolButton:hover { background: rgba(255, 255, 255, 0.10); }"
+            "QToolButton:pressed { background: rgba(255, 255, 255, 0.16); }")
+        self.connectionButton.setFixedSize(self.HEADER_CONTENT_HEIGHT, self.HEADER_CONTENT_HEIGHT)
+        self.connectionButton.setIconSize(QtCore.QSize(self.HEADER_CONTENT_HEIGHT - 24, self.HEADER_CONTENT_HEIGHT - 24))
+        headerRow.addWidget(self.connectionButton, alignment=QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
 
         self.accountButton=QToolButton()
         self.accountButton.setAutoRaise(True)  # flat, icon-in-header chrome (spec D5/RD6)
@@ -186,22 +191,23 @@ class MainStatusBarViewModule(QWidget):
         # Lazy import avoids a session<->logic import cycle at module load.
         from sciens.spectracs.logic.connection.ConnectionStatusLogicModule import ConnectionStatusLogicModule
         if not CurrentUserSession().isLoggedIn():
-            self.connectionIconLabel.setVisible(False)
+            self.connectionButton.setVisible(False)
             return
-        self.connectionIconLabel.setVisible(True)
+        self.connectionButton.setVisible(True)
         status = ConnectionStatusLogicModule().getStatus()
         if status == ConnectionStatusLogicModule.CONNECTED:
-            dot, colour = "●", "#5cb85c"  # ● green
+            colour = self.CONNECTION_CONNECTED_COLOR
             tooltip = "Spectrometer connected (%s)" % (CurrentUserSession().getSpectrometerDevice() or "")
         elif status == ConnectionStatusLogicModule.NOT_CONNECTED:
-            dot, colour = "●", "#d9534f"  # ● red
+            colour = self.CONNECTION_DISCONNECTED_COLOR
             tooltip = "Spectrometer not connected"
         else:
-            dot, colour = "○", "#999999"  # ○ grey
+            colour = self.CONNECTION_NO_INSTRUMENT_COLOR
             tooltip = "No instrument registered"
-        self.connectionIconLabel.setText(dot)
-        self.connectionIconLabel.setStyleSheet("font-size: 24px; color: %s;" % colour)
-        self.connectionIconLabel.setToolTip(tooltip)
+        icon = QIcon()
+        icon.addPixmap(self.renderSvgPixmap(self.CAMERA_SVG % {'c': colour}), QIcon.Mode.Normal)
+        self.connectionButton.setIcon(icon)
+        self.connectionButton.setToolTip(tooltip)
 
     def onClickedAccountButton(self):
         if CurrentUserSession().isLoggedIn():
@@ -269,6 +275,17 @@ class MainStatusBarViewModule(QWidget):
     ACCOUNT_NEUTRAL_HOVER_COLOR='#AAAAAA'
     ACCOUNT_ACTIVE_COLOR='#3D7848'
     ACCOUNT_ACTIVE_HOVER_COLOR='#4E9A5E'
+
+    # Spectrometer (camera) glyph for the connection indicator; %(c)s is the colour (set per state).
+    CAMERA_SVG='''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <rect x="3" y="7" width="18" height="12" rx="2" fill="none" stroke="%(c)s" stroke-width="1.8"/>
+  <path d="M8 7 L9.5 4.6 L14.5 4.6 L16 7" fill="none" stroke="%(c)s" stroke-width="1.8" stroke-linejoin="round"/>
+  <circle cx="12" cy="13" r="3.2" fill="none" stroke="%(c)s" stroke-width="1.8"/>
+</svg>'''
+
+    CONNECTION_CONNECTED_COLOR='#3D7848'      # green
+    CONNECTION_DISCONNECTED_COLOR='#FFFFFF'   # white
+    CONNECTION_NO_INSTRUMENT_COLOR='#808080'  # grey
 
     logo_png='''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
