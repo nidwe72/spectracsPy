@@ -30,10 +30,15 @@ class ServiceLoginDialog(QDialog):
         loginButton.clicked.connect(self.onClickedLoginButton)
         layout.addWidget(loginButton, 2, 0, 1, 1)
 
+        registerButton = QPushButton("Register")
+        registerButton.setProperty("buttonType", "secondary")
+        registerButton.clicked.connect(self.onClickedRegisterButton)
+        layout.addWidget(registerButton, 2, 1, 1, 1)
+
         cancelButton = QPushButton("Cancel")
         cancelButton.setProperty("buttonType", "secondary")  # Bootstrap 'secondary' (gray), not primary
         cancelButton.clicked.connect(self.reject)
-        layout.addWidget(cancelButton, 2, 1, 1, 1)
+        layout.addWidget(cancelButton, 2, 2, 1, 1)
 
     def onClickedLoginButton(self):
         username = self.usernameComponent.text()
@@ -49,6 +54,11 @@ class ServiceLoginDialog(QDialog):
         else:
             message = result.get("message") or "invalid credentials"
             InWindowDialog.notify(self, "Login failed", message)
+
+    def onClickedRegisterButton(self):
+        # Close the desktop login dialog and open the in-window registration page (§4.2).
+        self.reject()
+        self.__navigateTo("RegistrationViewModule")
 
     def __navigateTo(self, target):
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
