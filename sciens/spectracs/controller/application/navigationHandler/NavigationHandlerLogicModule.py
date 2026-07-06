@@ -60,6 +60,9 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="RegistrationViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Register")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="AppUserSettingsViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Account settings")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
         self.setPreviousNavigationSignal(navigationSignal)
 
@@ -99,6 +102,8 @@ class NavigationHandlerLogicModule(Singleton):
             result = 14
         elif target=="RegistrationViewModule":
             result = 15
+        elif target=="AppUserSettingsViewModule":
+            result = 16
 
 
         return result

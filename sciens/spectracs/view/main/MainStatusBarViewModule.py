@@ -264,11 +264,19 @@ class MainStatusBarViewModule(QWidget):
             headerAction = menu.addAction("%s (%s)" % (CurrentUserSession().username, roles))
             headerAction.setEnabled(False)
             menu.addSeparator()
+            accountSettingsAction = menu.addAction("Account settings…")
             logoutAction = menu.addAction("Logout")
             chosen = menu.exec(self.accountButton.mapToGlobal(QtCore.QPoint(0, self.accountButton.height())))
             if chosen == logoutAction:
                 CurrentUserSession().logout()
                 ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
+            elif chosen == accountSettingsAction:
+                navigationHandler = ApplicationContextLogicModule().getNavigationHandler()
+                ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+                    navigationHandler.handleNavigationSignal)
+                signal = NavigationSignal(None)
+                signal.setTarget("AppUserSettingsViewModule")
+                ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
             return
 
         # Not logged in: show the in-window LoginViewModule page on BOTH desktop and Android — no separate

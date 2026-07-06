@@ -100,6 +100,13 @@ class InWindowDialog(QWidget):
         return bool(dialog.__run())
 
     @staticmethod
+    def choose(host, title, message, buttons):
+        """Generic in-window chooser with custom button labels. `buttons` = list of
+        (text, value, buttonType); returns the chosen value (exec()-like)."""
+        window = host.window()
+        return InWindowDialog(window, title, message, buttons).__run()
+
+    @staticmethod
     def notify(host, title, message):
         """One-shot message (replacement for QMessageBox.warning / information)."""
         window = host.window()

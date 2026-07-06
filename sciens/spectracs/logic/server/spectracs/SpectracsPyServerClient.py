@@ -212,6 +212,38 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.listSpectrometerSetups failed: %s" % exception)
             return []
 
+    # --- payment (SPEC_paypal_payment.md §4.3) ---
+
+    def createPayment(self, userId):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.createPayment(userId)
+        except Exception as exception:
+            print("SpectracsPyServerClient.createPayment failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
+    def capturePayment(self, userId, orderId):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "status": None, "message": "server unavailable"}
+        try:
+            return proxy.capturePayment(userId, orderId)
+        except Exception as exception:
+            print("SpectracsPyServerClient.capturePayment failed: %s" % exception)
+            return {"ok": False, "status": None, "message": "failed"}
+
+    def listTransactions(self, userId):
+        proxy = self.getProxy()
+        if proxy is None:
+            return []
+        try:
+            return proxy.listTransactions(userId)
+        except Exception as exception:
+            print("SpectracsPyServerClient.listTransactions failed: %s" % exception)
+            return []
+
     def syncSpectrometers(self):
         proxy = self.getProxy()
         if proxy is None:
