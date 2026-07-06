@@ -1,24 +1,22 @@
 import os
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QPushButton, QFileDialog, QGroupBox, QGridLayout, QWidget
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from sciens.spectracs.view.application.widgets.general.ToggleSwitch import ToggleSwitch
+from sciens.spectracs.model.databaseEntity.application.user.UserRoleType import UserRoleType
 from sciens.spectracs.view.application.widgets.image.BaseImageViewModule import BaseImageViewModule
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 
 class VirtualSpectrometerViewModule(PageWidget):
 
-    __doSavePhysicallyCapturedImagesComponent:ToggleSwitch=None
     openPictureButton:QPushButton=None
     __imageViewModule:BaseImageViewModule=None
-    __doSavePhysicallyCapturedImagesComponent:ToggleSwitch=None
+    __masterOnlyNote=None
 
     def createMainContainer(self):
         result=super().createMainContainer()
@@ -31,19 +29,16 @@ class VirtualSpectrometerViewModule(PageWidget):
         imageViewModule = self.__getImageViewModule()
         result['imageViewModule'] = imageViewModule
 
-        result['doSavePhysicallyCapturedImagesComponent']=self.createLabeledComponent('save physically captured images', self.__getDoSavePhysicallyCapturedImagesComponent())
-
         buttonsPanel = self.__createButtonsPanel()
         result[buttonsPanel.objectName()] = buttonsPanel
 
+        # Item C: only a master authors the fileset; a non-master sees this note instead of the picker.
+        self.__masterOnlyNote = self.createMessageLabel(
+            "Only a master user can set the virtual-spectrometer fileset.")
+        self.__masterOnlyNote.setVisible(False)
+        result['masterOnlyNote'] = self.__masterOnlyNote
+
         return result
-
-    def __getDoSavePhysicallyCapturedImagesComponent(self):
-        if self.__doSavePhysicallyCapturedImagesComponent is None:
-            self.__doSavePhysicallyCapturedImagesComponent=ToggleSwitch(None, Qt.gray, ApplicationStyleLogicModule().getPrimaryColor())
-            self.__doSavePhysicallyCapturedImagesComponent.stateChanged.connect(self.onStateChangedDoSavePhysicallyCapturedImagesComponent)
-
-        return self.__doSavePhysicallyCapturedImagesComponent
 
     def __createButtonsPanel(self):
         buttonsPanel = QWidget()
@@ -69,13 +64,15 @@ class VirtualSpectrometerViewModule(PageWidget):
     def _getPageTitle(self):
         return "Virtual spectrometer"
 
-    def onStateChangedDoSavePhysicallyCapturedImagesComponent(self):
-        isChecked = self.__getDoSavePhysicallyCapturedImagesComponent().isChecked()
-        if isChecked:
-            print('checked')
-        else:
-            print('unchecked')
-        ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings().setDoSavePhysicallyCapturedImages(isChecked)
+    def showEvent(self, event):
+        # Item C defense-in-depth (SPEC_gui_cosmetic_tweaks §3.3): only a master may set the fileset.
+        # The Settings entry is already master-gated; this backstops the screen if reached another way.
+        super().showEvent(event)
+        isMaster = CurrentUserSession().hasRole(UserRoleType.MASTER_USER.value)
+        if self.openPictureButton is not None:
+            self.openPictureButton.setEnabled(isMaster)
+        if self.__masterOnlyNote is not None:
+            self.__masterOnlyNote.setVisible(not isMaster)
 
     # Filename convention inside the chosen folder (SPEC_pumpkin_integration.md A.4).
     __FILENAME_BY_ROLE = {

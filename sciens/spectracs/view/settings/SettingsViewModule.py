@@ -32,8 +32,10 @@ class SettingsViewModule(QWidget):
         # bottom like every other page.
         # §G2: dropped the dead Evaluation-profiles and Uploads sections. Kept Acquisition (Virtual
         # Spectrometer), Downloads (Repository profiles — future server-connection config), Infos, Admin.
-        acquisitionSettingsGroupBox = self.createAcquisitionSettingsGroupBox()
-        layout.addWidget(acquisitionSettingsGroupBox, 0, 0, 1, 1)
+        # Item C: Acquisition holds only "Virtual Spectrometer" (master authoring), so it is master-only
+        # (kept on self so updateAdministrationVisibility can toggle it). SPEC_gui_cosmetic_tweaks §3.
+        self.acquisitionSettingsGroupBox = self.createAcquisitionSettingsGroupBox()
+        layout.addWidget(self.acquisitionSettingsGroupBox, 0, 0, 1, 1)
 
         downloadsGroupBoxGroupBox = self.createDownloadsGroupBox()
         layout.addWidget(downloadsGroupBoxGroupBox, 1, 0, 1, 1)
@@ -134,6 +136,7 @@ class SettingsViewModule(QWidget):
 
     def updateAdministrationVisibility(self):
         isMaster = CurrentUserSession().hasRole(UserRoleType.MASTER_USER.value)
+        self.acquisitionSettingsGroupBox.setVisible(isMaster)  # Item C: Virtual Spectrometer is master-only
         self.administrationGroupBox.setVisible(isMaster)
         self.developmentGroupBox.setVisible(isMaster)
 

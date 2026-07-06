@@ -28,12 +28,6 @@ class HomeViewModule(QWidget):
         navigationGroupBox = self.createNavigationGroupBox()
         layout.addWidget(navigationGroupBox, 1, 0, 1, 1)
 
-    def onClickedSettingsButton(self):
-        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
-        someNavigationSignal = NavigationSignal(None)
-        someNavigationSignal.setTarget("SettingsViewModule")
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
-
     def onClickedCreateSpectralJobButton(self):
         # Route a plugin-configured user to their measurement wizard; otherwise keep the legacy flow.
         target = "WizardViewModule" if CurrentUserSession().getPluginCodeRef() else "SpectralJob"
@@ -66,11 +60,7 @@ class HomeViewModule(QWidget):
         layout.addWidget(deleteButton, 0, 2, 1, 1)
         deleteButton.clicked.connect(self.spectralJobsOverviewViewModule.onClickedDelete)
 
-        settingsButton = QPushButton()
-        settingsButton.setText("Settings")
-        layout.addWidget(settingsButton, 0, 3, 1, 1)
-        settingsButton.clicked.connect(self.onClickedSettingsButton)
-
+        # Settings moved to the header account menu (SPEC_gui_cosmetic_tweaks §1); no footer button.
         return result
 
 

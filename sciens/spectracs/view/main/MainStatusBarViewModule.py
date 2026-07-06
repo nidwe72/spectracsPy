@@ -265,27 +265,30 @@ class MainStatusBarViewModule(QWidget):
             headerAction.setEnabled(False)
             menu.addSeparator()
             accountSettingsAction = menu.addAction("Account settings…")
+            settingsAction = menu.addAction("Settings")
+            menu.addSeparator()
             logoutAction = menu.addAction("Logout")
             chosen = menu.exec(self.accountButton.mapToGlobal(QtCore.QPoint(0, self.accountButton.height())))
             if chosen == logoutAction:
                 CurrentUserSession().logout()
                 ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
             elif chosen == accountSettingsAction:
-                navigationHandler = ApplicationContextLogicModule().getNavigationHandler()
-                ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
-                    navigationHandler.handleNavigationSignal)
-                signal = NavigationSignal(None)
-                signal.setTarget("AppUserSettingsViewModule")
-                ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
+                self.__navigateTo("AppUserSettingsViewModule")
+            elif chosen == settingsAction:
+                # Settings moved here from the Home footer (SPEC_gui_cosmetic_tweaks §1).
+                self.__navigateTo("SettingsViewModule")
             return
 
         # Not logged in: show the in-window LoginViewModule page on BOTH desktop and Android — no separate
         # window (§G3a; replaces the desktop-only ServiceLoginDialog). Session signal is emitted there.
+        self.__navigateTo("LoginViewModule")
+
+    def __navigateTo(self, target):
         navigationHandler = ApplicationContextLogicModule().getNavigationHandler()
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
             navigationHandler.handleNavigationSignal)
         signal = NavigationSignal(None)
-        signal.setTarget("LoginViewModule")
+        signal.setTarget(target)
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
 
     def resetProgressBar(self):
