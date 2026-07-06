@@ -102,13 +102,9 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
 
     def onClickedExpectedDetectionButton(self):
         # Documentation: show where the app's target spectral lines should appear in a CFL spectrum.
-        dialog = QDialog(self)
-        dialog.setWindowTitle('Expected detection — target spectral lines')
-        layout = QVBoxLayout(dialog)
-        imageLabel = QLabel()
-        imageLabel.setPixmap(QPixmap(self._resourcePath('expectedDetection.png')))
-        layout.addWidget(imageLabel)
-        dialog.exec()
+        # In-window (no separate QDialog window) — §G3b.
+        pixmap = QPixmap(self._resourcePath('expectedDetection.png'))
+        InWindowDialog.showImage(self, 'Expected detection — target spectral lines', pixmap)
 
     def onClickedDetectPeaksButton(self):
         self.onClickedDetectPeaksButtonNew()

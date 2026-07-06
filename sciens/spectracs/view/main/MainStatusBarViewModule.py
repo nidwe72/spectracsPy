@@ -1,4 +1,4 @@
-from PySide6.QtGui import QPixmap, QPainter, QIcon
+from PySide6.QtGui import QPixmap, QPainter, QIcon, QShortcut, QKeySequence
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QWidget, QLabel, QProgressBar, QVBoxLayout, QHBoxLayout, QToolButton, QMenu, QSizePolicy, \
     QFrame
@@ -10,7 +10,6 @@ from sciens.spectracs.controller.application.ApplicationContextLogicModule impor
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from sciens.spectracs.view.settings.login.ServiceLoginDialog import ServiceLoginDialog
 
 
 class _AspectLogoLabel(QLabel):
@@ -72,6 +71,12 @@ class MainStatusBarViewModule(QWidget):
         outerLayout=QVBoxLayout()
         outerLayout.setContentsMargins(0,0,0,0)
         self.setLayout(outerLayout)
+
+        # Ctrl+L (app-wide): the account shortcut — same as clicking the account icon. Opens the login
+        # view when logged out, and the account (Logout) menu when logged in. Works from any screen.
+        accountShortcut = QShortcut(QKeySequence("Ctrl+L"), self)
+        accountShortcut.setContext(QtCore.Qt.ShortcutContext.ApplicationShortcut)
+        accountShortcut.activated.connect(self.onClickedAccountButton)
 
         # --- header row: logo (left) -- stretch -- username + account icon (right) ---
         headerRow=QHBoxLayout()
@@ -230,20 +235,14 @@ class MainStatusBarViewModule(QWidget):
                 ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
             return
 
-        if is_android():
-            # ServiceLoginDialog is a top-level QDialog -> crashes on Qt-for-Android. Navigate to the
-            # in-window LoginViewModule page instead (P4c). Session-signal emission happens there.
-            navigationHandler = ApplicationContextLogicModule().getNavigationHandler()
-            ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
-                navigationHandler.handleNavigationSignal)
-            signal = NavigationSignal(None)
-            signal.setTarget("LoginViewModule")
-            ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
-            return
-
-        dialog = ServiceLoginDialog(self)
-        if dialog.exec():
-            ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
+        # Not logged in: show the in-window LoginViewModule page on BOTH desktop and Android — no separate
+        # window (§G3a; replaces the desktop-only ServiceLoginDialog). Session signal is emitted there.
+        navigationHandler = ApplicationContextLogicModule().getNavigationHandler()
+        ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+            navigationHandler.handleNavigationSignal)
+        signal = NavigationSignal(None)
+        signal.setTarget("LoginViewModule")
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
 
     def resetProgressBar(self):
         self.progressBar.setValue(0)

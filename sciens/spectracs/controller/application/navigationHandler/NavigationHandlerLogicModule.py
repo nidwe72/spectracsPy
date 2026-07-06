@@ -30,9 +30,6 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="VirtualSpectrometerViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Virtual spectrometer")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
-        elif target=="SpectrometerConnectionViewModule":
-            self.mainContainerViewModule.setWindowTitle("Spectracs > Connect spectrometer")
-            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
         elif target=="UserListViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Users")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
@@ -82,28 +79,26 @@ class NavigationHandlerLogicModule(Singleton):
             result = 4
         elif target=="VirtualSpectrometerViewModule":
             result = 5
-        elif target=="SpectrometerConnectionViewModule":
-            result = 6
         elif target=="UserListViewModule":
-            result = 7
+            result = 6
         elif target=="UserViewModule":
-            result = 8
+            result = 7
         elif target=="PlaygroundViewModule":
-            result = 9
+            result = 8
         elif target=="WizardViewModule":
-            result = 10
+            result = 9
         elif target=="LoginViewModule":
-            result = 11
+            result = 10
         elif target=="PluginListViewModule":
-            result = 12
+            result = 11
         elif target=="PluginViewModule":
-            result = 13
+            result = 12
         elif target=="SpectrometerSetupListViewModule":
-            result = 14
+            result = 13
         elif target=="SpectrometerSetupViewModule":
-            result = 15
+            result = 14
         elif target=="RegistrationViewModule":
-            result = 16
+            result = 15
 
 
         return result

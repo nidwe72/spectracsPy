@@ -131,7 +131,7 @@ else:
     geometry = QGuiApplication.primaryScreen().availableGeometry()
     mainContainerViewModule.setMinimumWidth(geometry.width() / 2)
     mainContainerViewModule.setMinimumHeight(geometry.height() * 0.9)
-    mainContainerViewModule.show()
+    mainContainerViewModule.showMaximized()  # G1: desktop opens maximized
 
 try:
     import pyi_splash

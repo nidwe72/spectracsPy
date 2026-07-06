@@ -17,7 +17,6 @@ from sciens.spectracs.view.settings.user.UserListViewModule import UserListViewM
 from sciens.spectracs.view.settings.user.UserViewModule import UserViewModule
 from sciens.spectracs.view.playground.PlaygroundViewModule import PlaygroundViewModule
 from sciens.spectracs.view.spectral.workflow.WizardViewModule import WizardViewModule
-from sciens.spectracs.view.spectrometerConnection.SpectrometerConnectionViewModule import SpectrometerConnectionViewModule
 from sciens.spectracs.view.settings.login.LoginViewModule import LoginViewModule
 from sciens.spectracs.view.settings.plugin.PluginListViewModule import PluginListViewModule
 from sciens.spectracs.view.settings.plugin.PluginViewModule import PluginViewModule
@@ -57,14 +56,13 @@ class MainViewModule(QStackedWidget):
         spectrometerCalibrationProfileViewModule.initialize()
         self.addWidget(spectrometerCalibrationProfileViewModule)
 
-        virtualSpectrometerViewModule = VirtualSpectrometerViewModule()
+        virtualSpectrometerViewModule = VirtualSpectrometerViewModule()  # index 5
         virtualSpectrometerViewModule.initialize()
         self.addWidget(virtualSpectrometerViewModule)
 
-        spectrometerConnectionViewModule = SpectrometerConnectionViewModule()
-        spectrometerConnectionViewModule.initialize()
-        self.addWidget(spectrometerConnectionViewModule)
-
+        # §G2: the "Connect spectrometer" screen (SpectrometerConnectionViewModule +
+        # RegisterSpectrometerProfileViewModule) is retired — connection is the header indicator +
+        # autoconnect; serials are bound at registration.
         userListViewModule = UserListViewModule()
         userListViewModule.initialize()
         self.addWidget(userListViewModule)
@@ -77,35 +75,36 @@ class MainViewModule(QStackedWidget):
         playgroundViewModule.initialize()
         self.addWidget(playgroundViewModule)
 
-        wizardViewModule = WizardViewModule()  # index 10 — the pumpkin measurement wizard (C.3)
+        wizardViewModule = WizardViewModule()  # index 9 — the pumpkin measurement wizard (C.3)
         wizardViewModule.initialize()
         self.addWidget(wizardViewModule)
 
-        loginViewModule = LoginViewModule()  # index 11 — in-window login (Android-safe; P4c)
+        loginViewModule = LoginViewModule()  # index 10 — in-window login (Android-safe; P4c)
         loginViewModule.initialize()
         self.addWidget(loginViewModule)
 
-        # --- master authoring GUIs (SPEC_connection_and_calibration_ux.md §4.1 / §11, indices 12-16) ---
+        # --- master authoring GUIs (SPEC_connection_and_calibration_ux.md §4.1 / §11, indices 11-15) ---
         # §11 reconsolidation: the separate SpectrometerProfileAuthoring list+editor is retired; the unified
         # SpectrometerSetupViewModule now assembles serial + device + calibration + plugin + user.
-        pluginListViewModule = PluginListViewModule()  # index 12
+        pluginListViewModule = PluginListViewModule()  # index 11
         pluginListViewModule.initialize()
         self.addWidget(pluginListViewModule)
 
-        pluginViewModule = PluginViewModule()  # index 13
+        pluginViewModule = PluginViewModule()  # index 12
         pluginViewModule.initialize()
         self.addWidget(pluginViewModule)
 
-        spectrometerSetupListViewModule = SpectrometerSetupListViewModule()  # index 14
+        spectrometerSetupListViewModule = SpectrometerSetupListViewModule()  # index 13
         spectrometerSetupListViewModule.initialize()
         self.addWidget(spectrometerSetupListViewModule)
 
-        spectrometerSetupViewModule = SpectrometerSetupViewModule()  # index 15
+        spectrometerSetupViewModule = SpectrometerSetupViewModule()  # index 14
         spectrometerSetupViewModule.initialize()
         self.addWidget(spectrometerSetupViewModule)
 
-        registrationViewModule = RegistrationViewModule()  # index 16 — end-user self-registration (C1)
+        registrationViewModule = RegistrationViewModule()  # index 15 — end-user self-registration (C1)
         registrationViewModule.initialize()
         self.addWidget(registrationViewModule)
 
-        self.setCurrentWidget(spectrometerConnectionViewModule)
+        # §G2: startup lands on Home (was the retired connect screen).
+        self.setCurrentWidget(homeViewModule)

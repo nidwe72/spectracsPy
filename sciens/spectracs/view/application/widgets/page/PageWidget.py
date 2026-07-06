@@ -1,7 +1,7 @@
 from PySide6 import QtGui
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QPushButton, QLabel, QStyleOption, QFrame, \
-    QScrollArea, QSizePolicy
+from PySide6.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QGroupBox, QPushButton, QLabel, QStyleOption, \
+    QFrame, QScrollArea, QSizePolicy
 
 from PySide6.QtCore import Qt
 
@@ -19,6 +19,12 @@ class PageWidget(QFrame):
     # instead of spreading over the panel height. Hub/menu pages leave it False so
     # their large controls fill the height intentionally (see docs/DESIGN_GUIDE.md).
     compactMainContainer:bool=False
+    # Opt-in (with compactMainContainer): centre the content block vertically instead of top-packing it —
+    # for short forms like Login. Adds a leading spacer to match the trailing one.
+    verticalCenterMainContainer:bool=False
+    # G5 opt-in: cap the content column at Metrics.CONTENT_MAX_WIDTH and centre it horizontally (short forms
+    # like Login on a wide desktop window). The nav footer stays full-width. Phone width < cap → no effect.
+    maxContentWidth:bool=False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,6 +45,20 @@ class PageWidget(QFrame):
             self.setContentsMargins(0,0,0,0)
 
         mainContainer = self.createMainContainer()
+
+        # G5: cap + centre the content column (opt-in, top-most only). The container expands up to the cap
+        # and is centred by side spacers; the nav footer below stays full-width. Phone width < cap → fills.
+        content = mainContainer
+        if self.maxContentWidth and self._isTopMostPageWidget():
+            mainContainer.setMaximumWidth(Metrics.CONTENT_MAX_WIDTH)
+            mainContainer.setSizePolicy(QSizePolicy.Policy.Expanding, mainContainer.sizePolicy().verticalPolicy())
+            content = QWidget()
+            centreLayout = QHBoxLayout(content)
+            centreLayout.setContentsMargins(0, 0, 0, 0)
+            centreLayout.addStretch(1)
+            centreLayout.addWidget(mainContainer)
+            centreLayout.addStretch(1)
+
         if is_android() and self._isTopMostPageWidget():
             # On phones, tall forms must scroll rather than clip / get squeezed. Wrap only the
             # top-most page's content (never nested pages -> no nested scroll areas). Desktop is
@@ -47,10 +67,10 @@ class PageWidget(QFrame):
             scrollArea.setWidgetResizable(True)
             scrollArea.setFrameShape(QFrame.Shape.NoFrame)
             scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            scrollArea.setWidget(mainContainer)
+            scrollArea.setWidget(content)
             layout.addWidget(scrollArea, 0, 0, 1, 1)
         else:
-            layout.addWidget(mainContainer, 0, 0, 1, 1)
+            layout.addWidget(content, 0, 0, 1, 1)
         layout.setRowStretch(0,90)
 
         if self._isTopMostPageWidget():
@@ -104,6 +124,12 @@ class PageWidget(QFrame):
         layout.setSpacing(Metrics.S)
         result.setLayout(layout)
         row=0
+        # Vertical-centre pages (verticalCenterMainContainer) add a LEADING spacer too, so a short form
+        # (e.g. Login) sits mid-height instead of top-packed. Compact-only + vertical.
+        centerVertically = self.verticalCenterMainContainer and self.compactMainContainer and self.verticalLayout
+        if centerVertically:
+            layout.setRowStretch(0, 1)
+            row = 1
         mainContainerWidgets = self.getMainContainerWidgets()
         for mainContainerWidgetName,mainContainerWidget in mainContainerWidgets.items():
             if self.verticalLayout:
@@ -113,8 +139,8 @@ class PageWidget(QFrame):
             row=row+1
 
         if self.compactMainContainer and self.verticalLayout:
-            # Trailing spacer row absorbs the slack so fields stay top-packed at
-            # natural height instead of spreading over the panel.
+            # Trailing spacer row absorbs the slack; with a leading spacer too the content centres,
+            # otherwise it top-packs at natural height instead of spreading over the panel.
             layout.setRowStretch(row, 1)
 
         return result

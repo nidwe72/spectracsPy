@@ -22,6 +22,11 @@ class Metrics(Singleton):
     # Vertical breathing room under the breadcrumb/page title before the first row (R2, issue 5).
     SPACE_AFTER_BREADCRUMB = L
 
+    # G5: reasonable max width for a short form / dialog content column. Capping + centring at this width
+    # keeps a maximized desktop window readable; on phone-mode / Android the window is narrower so it never
+    # binds (full width). Referenced by PageWidget.maxContentWidth (opt-in). Currently used by Login.
+    CONTENT_MAX_WIDTH = 560
+
     @staticmethod
     def applyPanelPadding(layout):
         """Uniform inner padding (P=M) for a bordered panel's content, so panel
