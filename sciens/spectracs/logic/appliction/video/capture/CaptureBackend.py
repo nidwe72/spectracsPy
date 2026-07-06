@@ -25,31 +25,59 @@ class CaptureBackend:
 
 
 class DesktopCv2CaptureBackend(CaptureBackend):
-    """Real, works today — the existing desktop path: cv2.VideoCapture over a USB/UVC webcam.
-    (VideoThread currently implements this inline; extracting it here is the P7 wiring step.)"""
+    """Real desktop path: cv2.VideoCapture over a USB/UVC webcam. Now the single owner of the cv2
+    capture flags (extracted from VideoThread — R1). Two robustness rules baked in from the bench
+    findings (SPEC_real_camera_capture.md §0):
+      - Do NOT force MJPG. On newer OpenCV forcing MJPG can raise inside read() on empty warm-up
+        buffers and wedge the UVC stream; let the driver default (YUYV) negotiate — cv2 returns BGR
+        either way, so nothing downstream changes.
+      - read() never raises: an empty/failed/raising read returns None, and the caller keeps the last
+        good frame.
+
+    Capture params (resolution/exposure) stay HARDCODED at today's values for now — they become
+    configurable later (likely plugin-driven), see spec §4/§7.3."""
 
     def __init__(self):
         self._cap = None
 
     def open(self, deviceId: int = 0) -> None:
         import cv2
-        self._cap = cv2.VideoCapture(deviceId)
-        self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        from sys import platform
+        # V4L2 is the reference backend on Linux (verified in the probe); CAP_ANY elsewhere.
+        apiPreference = cv2.CAP_V4L2 if platform == 'linux' else cv2.CAP_ANY
+        self._cap = cv2.VideoCapture(deviceId, apiPreference)
+
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
+        # AUTO_EXPOSURE=1 selects MANUAL exposure mode on V4L2, then a fixed per-OS value (there is no
+        # auto-exposure today — spec §7.4). Kept identical to the old inline VideoThread values.
+        self._cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
+        if platform == 'linux':
+            self._cap.set(cv2.CAP_PROP_EXPOSURE, 150)
+        elif platform == 'win32':
+            self._cap.set(cv2.CAP_PROP_EXPOSURE, -3)
+
     def read(self) -> QImage:
         import cv2
-        ok, frame = self._cap.read()
-        if not ok:
+        if self._cap is None:
+            return None
+        try:
+            ok, frame = self._cap.read()   # OpenCV can *raise* on an empty UVC buffer — never let it out
+        except cv2.error:
+            return None
+        if not ok or frame is None:
             return None
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb.shape
-        return QImage(rgb.data, w, h, ch * w, QImage.Format.Format_RGB888)
+        # .copy() detaches the QImage from the numpy buffer `rgb` (which is freed when this returns) —
+        # otherwise the QImage points at released memory (the "crashes after some frames" symptom).
+        return QImage(rgb.data, w, h, ch * w, QImage.Format.Format_RGB888).copy()
 
     def release(self) -> None:
         if self._cap is not None:
             self._cap.release()
+            self._cap = None
 
 
 class AndroidUvcCaptureBackend(CaptureBackend):

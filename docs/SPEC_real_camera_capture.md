@@ -101,18 +101,27 @@ resolveCaptureIndex(sensor: SpectrometerSensor) -> int | None
 4. Fallback within a match set: pick the first node whose `cv2.VideoCapture(N).read()` returns a frame
    (probe-and-release). This also filters out non-capturable nodes on kernels without a clean `index`.
 
-**Windows:** DirectShow gives no stable VID/PID→index map. Strategy: enumerate `0..N`, open each,
-compare frame/name heuristically; if ambiguous, fall back to the **configured index** (§4) or `0` and
-surface the choice in the UI (§3.4). *Documented as best-effort; Linux is the reference platform.*
+**Windows:** there is no sysfs / `/dev/videoN`; cv2's DirectShow/MSMF backend addresses cameras by index
+`0..N` but **cv2 alone exposes no VID/PID→index map**, and the index order is not guaranteed. Auto-resolve
+is nonetheless **achievable** — the DirectShow device **moniker path carries the VID/PID**
+(e.g. `\\?\usb#vid_32e4&pid_8830#…`), readable via a Windows-specific enumerator (**pygrabber / comtypes /
+WMI**), whose position in the enumeration is the DirectShow index. So the Windows resolver is a *separate,
+currently-untested code path*, not an impossibility. Fallbacks if it is not built / is ambiguous:
+enumerate `0..N` + heuristics, or the **manual camera picker** (§3.4) defaulting to the configured index
+(§4) or `0`. *Linux (sysfs) is the reference platform; Windows moniker-enumeration is a first-class but
+later milestone.*
+
+> **pyusb ≠ resolver (why sysfs at all):** `usb.core.find(vid,pid)` (`isSensorConnected`) only answers
+> *presence* — is a device with this VID/PID on the bus? It **cannot** yield the `cv2.VideoCapture` index.
+> Nothing in pyusb or cv2 maps a USB device to a capture index; on Linux that bridge is **V4L2 via sysfs**
+> (`videoN` ↔ USB parent + capture-vs-metadata `index`), on Windows it is the **DirectShow moniker path**
+> (above). Presence gates the button; the resolver gates the open.
 
 **Android:** out of scope — resolver returns `None`, capture stays deferred (`CaptureBackend` Android
 branch already raises).
 
 The resolver returns `None` when no matching capturable node is found; callers then show the existing
 "device not connected / no image" notification instead of blindly opening index 0.
-
-> Note: this is Linux-sysfs, not pyusb — pyusb (`isSensorConnected`) answers *presence*; sysfs answers
-> *which video node*. They stay complementary: presence gates the button, resolver gates the open.
 
 ---
 
@@ -230,6 +239,22 @@ the right physical unit. This is **not** the same as capture parameters — it i
 
 ## 5. Milestones (implement on explicit request, in order)
 
+> **Reordered 2026-07-06 (Edwin).** The first real-camera sub-milestone is a **"Capture images" dev
+> view** (Settings → Development: live stream + save PNG), specified in its own doc
+> **`SPEC_dev_capture_view.md`**. It is the *simplest consumer* of a live camera, so it carries **R0 + R1**
+> (resolver + backend) and proves them before any calibration wiring. **Sub-milestone 2** is real
+> calibration producing a **complete** `SpectrometerSetup` — which needs **both** the ROI/Hough step
+> **and** the detect-peaks/wavelength step off the real camera (R2), so R2 below now explicitly spans
+> *both* calibration views. R3 (workflow Measure) follows. Mapping:
+>
+> | Sub-milestone | Carries | Spec |
+> |---|---|---|
+> | **1 — Capture-images dev view** | R0 + R1 | `SPEC_dev_capture_view.md` |
+> | **2 — Real calibration → complete `SpectrometerSetup`** | R2 (ROI **and** detect-peaks) | this doc §3.3, §5 (R2) |
+> | **3 — Real measurement** | R3 | this doc §3.5 |
+>
+> The R0–R5 definitions below are unchanged; only the *order and grouping* moved.
+
 - **R0 — Resolver, verified standalone.** Build `SensorCaptureIndexResolver`; unit-drive it on this
   machine: `resolveCaptureIndex(elp4KDevice)` → `0`, and it must **reject** the metadata node. No UI.
   *Gate: prints the correct index for the plugged-in ELP; returns `None` when unplugged.*
@@ -237,9 +262,15 @@ the right physical unit. This is **not** the same as capture parameters — it i
   with `CaptureSettings`; VideoThread calls `getCaptureBackend()` + `setDeviceId`. Behavior identical to
   today when index resolves to 0. *Gate: live preview in the calibration view still renders off the real
   camera.*
-- **R2 — Real device selection in calibration + wavelength-cal views.** Wire the resolver into both
-  view modules; unplug → not-connected notice; replug → live frames. *Gate: Hough ROI + wavelength
-  calibration both run off the real ELP with no hardcoded 0.*
+- **R2 — Real device selection in calibration + wavelength-cal views (= sub-milestone 2).** Wire the
+  resolver into **both** view modules — the ROI/Hough step **and** the detect-peaks/wavelength step — so a
+  real `SpectrometerSetup` gets **complete** calibration data (Edwin: "complete calibration data" needs
+  both). Not-connected feedback: rather than only a toast, **render the "Detect Region of Interest" and
+  the detect-peaks buttons read-only** with a clear message; replug → live frames + buttons re-enabled.
+  Also verify the attached camera **matches the selected spectrometer's sensor** (reuses the SM1
+  resolver/matching primitive — `SPEC_dev_capture_view.md` §3.2). *Gate: Hough ROI + wavelength
+  calibration both run off the real ELP with no hardcoded 0, and the produced `SpectrometerSetup` has full
+  calibration.*
 - **R3 — Real capture in the workflow Measure step.** Add the non-virtual branch to
   `SpectralWorkflowEngine.__capture` with warm-up. *Gate: run a full measurement workflow end-to-end on
   the real camera; a `Spectrum` comes out and the pumpkin/plugin evaluation renders.*
@@ -271,10 +302,13 @@ For each of R2/R3, with the ELP plugged in:
 1. **Capture parameters are per USB-vendor/chipset, hardcoded** (DIY, known camera set) — not per-DB-row
    user tuning. Home = `SpectrometerSensorSettings`, transient/in-memory to start (§4). No schema change
    for milestone 1.
-2. **Windows is the primary *customer* target** — Linux is dev-first (auto-resolve works today), but the
-   port must **not forget Windows**: it needs the manual camera-picker fallback (§3.4) since USB→index
-   auto-resolution isn't clean on DirectShow. Windows integration is a first-class future milestone, not
-   an afterthought.
+2. **Windows is the primary *customer* target — but Windows auto-resolve is a CONFIRMED DEFERRED
+   milestone (Edwin, 2026-07-06).** Linux is dev-first (sysfs auto-resolve works today). Windows auto-
+   resolve is *achievable* via the DirectShow **moniker path** (`\\?\usb#vid_…&pid_…`) read with a
+   Windows-specific enumerator (pygrabber/WMI) — not the sysfs path (§2.1) — plus the manual camera-picker
+   fallback (§3.4). This whole Windows capture layer is its **own later milestone**, not folded into SM1
+   (which ships Linux-first). It remains first-class, not an afterthought — just sequenced after the Linux
+   sub-milestones.
 3. **Frame count is set by the plugin.** Global default **50**; the plugin overrides — `PumpkinOilPlugin`
    should set **20** (Edwin: 20 gives a confident mean in practice). So the measurement/"Measure" path
    reads the count from the plugin's `MeasurementStep` (default 50, pumpkin 20). Calibration bursts keep
@@ -354,6 +388,20 @@ own design pass (some may become separate specs). Do not implement against these
   property of the *whole optical stack* (grating + lens + sensor), not just the sensor's max mode — a
   visual/quantitative check (does the CFL's mercury lines resolve sharpest?) decides it. Hardware
   construction is documented in `KB_spectroscopy_physics.md` §7.
+- **The loop, made explicit (Edwin, 2026-07-06):** *human judges best resolution per specific camera
+  against the CFL line source → records it in the **knowledge base** (`KB_spectroscopy_physics.md` §7) →
+  that recorded value becomes a **hardcoded per-chipset** entry in the app's code* (parent §4,
+  `SpectrometerSensorSettings`). The two artefacts are complementary: the KB holds the *finding + why*, the
+  code holds the *value*.
+- **The judging tool = the "Capture images" dev view** (`SPEC_dev_capture_view.md` §5). Its optional
+  live-resolution combo lets the human switch modes against the CFL and see which resolves the mercury
+  lines sharpest. So this open thread is no longer tool-blocked — SM1 provides the instrument; SM1 itself
+  does **not** hardcode anything (it only enables the human to determine the value).
+- **Observed 2026-07-06 (SM1 dev-view capture, to discuss):** on the ELP CFL capture the **green doublet
+  did not resolve** (the mercury green ~546 nm region read as a single band, not a resolved pair). This is
+  the first concrete data point for this thread — it points at the optical stack / capture mode (and
+  possibly exposure/saturation on the bright green line), not at the dev view. Feeds the resolution
+  decision here; separate discussion pending.
 - **Open:** the actual chosen resolution for Microdia vs ELP (to be determined by the CFL inspection), and
   the selection rule (fixed per-chipset table, seeded from that inspection).
 

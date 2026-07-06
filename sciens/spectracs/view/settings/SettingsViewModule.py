@@ -119,6 +119,11 @@ class SettingsViewModule(QWidget):
         layout.addWidget(openPlaygroundViewModuleButton, 0, 0, 1, 1)
         openPlaygroundViewModuleButton.clicked.connect(self.onClickedPlaygroundButton)
 
+        captureImagesButton = QPushButton()
+        captureImagesButton.setText("Capture images")
+        layout.addWidget(captureImagesButton, 1, 0, 1, 1)
+        captureImagesButton.clicked.connect(self.onClickedCaptureImagesButton)
+
         return result
 
     def __navigateTo(self, target):
@@ -153,6 +158,9 @@ class SettingsViewModule(QWidget):
         someNavigationSignal = NavigationSignal(None)
         someNavigationSignal.setTarget("PlaygroundViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(someNavigationSignal)
+
+    def onClickedCaptureImagesButton(self):
+        self.__navigateTo("DevCaptureViewModule")
 
     def createInfosGroupBox(self):
         result = QGroupBox("Infos")

@@ -128,6 +128,16 @@ is *grating-block + camera-lens + sensor* as one stack. Consequences for the res
   **judged empirically against a known line source (the CFL lamp)**, then hardcoded per chipset. Higher
   sensor resolution does not automatically mean better spectral resolution once the lens/grating optics
   are the limiting factor. (`SPEC_real_camera_capture.md` §9.2.)
+  - **Verified best-resolution per camera (human-judged → hardcoded).** The workflow: a human switches
+    capture modes live in the **"Capture images" dev view** (`SPEC_dev_capture_view.md`), inspects the CFL
+    mercury lines, and records the sharpest mode here; that recorded value then becomes the hardcoded
+    per-chipset capture resolution in the app (`SpectrometerSensorSettings`, `SPEC_real_camera_capture.md`
+    §4). This table is the source of truth for the finding + rationale; the code holds the value.
+
+    | Camera / chipset | VID:PID | Best resolution (CFL-verified) | Notes |
+    |---|---|---|---|
+    | **ELP** | `32e4:8830` | *TBD (observed native 1600×1200; snaps 1920×1080→1600×1200)* | bench/dev unit; sharp CFL lines confirmed at this mode, formal best-mode judgement pending |
+    | **Microdia / Sonix** | `0c45:6366` | *TBD* | production-batch cam; not yet judged |
 - **Two light sources, two jobs** (drives the future best-fit-exposure work, §9.3 of that spec):
   - **CFL bulb** — the **calibration** source. Mercury emission **lines** (≈436 nm blue, 546 nm green,
     577/579 nm yellow, 611 nm orange) at known wavelengths → drives the pixel→nm wavelength calibration.

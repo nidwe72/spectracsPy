@@ -1,12 +1,10 @@
 import os
 from typing import Generic, TypeVar
 
-import cv2
 from PySide6.QtCore import QThread
 from PySide6.QtGui import QImage
 
-from sys import platform
-
+from sciens.spectracs.logic.appliction.video.capture.CaptureBackend import getCaptureBackend
 from sciens.spectracs.model.databaseEntity.AppDataPathUtil import get_app_data_dir
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 
@@ -20,13 +18,19 @@ class VideoThread(QThread,Generic[S]):
     def __init__(self):
         super().__init__()
         self._runFlag = True
-        self.cap = None
         self.qImage = None
+
+        # Real capture is routed through a platform CaptureBackend (owns cv2). _deviceId defaults to 0,
+        # preserving today's behaviour; the resolver sets the correct index via setDeviceId (SM2).
+        self._backend = None
+        self._deviceId = 0
 
         self._frameCount = 0
         self._currentFrameIndex = 0
-        self.cap=None
         self.spectralJob=None
+
+    def setDeviceId(self, deviceId: int):
+        self._deviceId = deviceId
 
 
     def setFrameCount(self, spectraCount: int):
@@ -55,24 +59,17 @@ class VideoThread(QThread,Generic[S]):
         self.onStart()
 
         # Virtual mode serves frames from VirtualSpectrometerSettings and must never touch a
-        # physical camera. This is also required on Android, where cv2.VideoCapture(0) has no
-        # usable device. Only open/configure the capture device for a real (non-virtual) sensor.
+        # physical camera. This is also required on Android, where there is no usable capture device
+        # (getCaptureBackend() there raises on open). Only open a backend for a real sensor.
         if not self.getIsVirtual():
-            #todo:hardCoded
-            videoDeviceId=0
-            self.cap = cv2.VideoCapture(videoDeviceId)
+            self._backend = getCaptureBackend()
+            self._backend.open(self._deviceId)
 
-            fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-            self.cap.set(cv2.CAP_PROP_FOURCC, fourcc)
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-
-            self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
-
-            if platform=='linux':
-                self.cap.set(cv2.CAP_PROP_EXPOSURE, 150)
-            elif platform=='win32':
-                self.cap.set(cv2.CAP_PROP_EXPOSURE, -3)
+            # Warm-up: the first frames after open can be empty while the UVC stream settles; discard a
+            # few so the first delivered frame is real (spec §3.5 / §0). read() never raises → None ok.
+            for _ in range(6):
+                if self._backend.read() is not None:
+                    break
 
         while self._runFlag:
 
@@ -81,8 +78,9 @@ class VideoThread(QThread,Generic[S]):
 
 
         self._setCurrentFrameIndex(0)
-        if self.cap is not None:
-            self.cap.release()
+        if self._backend is not None:
+            self._backend.release()
+            self._backend = None
 
     def __captureFrame(self):
 
@@ -103,19 +101,15 @@ class VideoThread(QThread,Generic[S]):
             self.__capturePhysicalFrame(temporaryDirectory)
 
     def __capturePhysicalFrame(self,temporaryDirectory:str):
-        ret, frame = self.cap.read()
-        if ret:
-            rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            h, w, ch = rgbImage.shape
-            bytesPerLine = ch * w
-            # needs QImage.Format.Format_RGB888 or crashes for some reason after some frames
-            self.qImage = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format.Format_RGB888)
+        qImage = self._backend.read() if self._backend is not None else None
+        if qImage is not None:
+            # backend.read() already yields a detached RGB888 QImage (freed-buffer safe).
+            self.qImage = qImage
 
             if temporaryDirectory is not None:
                 self.qImage.save(temporaryDirectory+'/test.png','PNG')
 
-            # self.onCapturedFrame(qImage)
-
+        # On a failed/empty read qImage stays as the last good frame; always advance the burst.
         self.afterCapture()
 
     def __captureVirtualFrame(self):

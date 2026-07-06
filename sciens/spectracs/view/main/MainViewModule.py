@@ -26,6 +26,7 @@ from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupViewModul
     SpectrometerSetupViewModule
 from sciens.spectracs.view.registration.RegistrationViewModule import RegistrationViewModule
 from sciens.spectracs.view.account.AppUserSettingsViewModule import AppUserSettingsViewModule
+from sciens.spectracs.view.settings.development.DevCaptureViewModule import DevCaptureViewModule
 
 
 class MainViewModule(QStackedWidget):
@@ -110,6 +111,10 @@ class MainViewModule(QStackedWidget):
         appUserSettingsViewModule = AppUserSettingsViewModule()  # index 16 — account + payment (SPEC_paypal_payment §4.3)
         appUserSettingsViewModule.initialize()
         self.addWidget(appUserSettingsViewModule)
+
+        devCaptureViewModule = DevCaptureViewModule()  # index 17 — dev "Capture images" (SPEC_dev_capture_view SM1)
+        devCaptureViewModule.initialize()
+        self.addWidget(devCaptureViewModule)
 
         # §G2: startup lands on Home (was the retired connect screen).
         self.setCurrentWidget(homeViewModule)
