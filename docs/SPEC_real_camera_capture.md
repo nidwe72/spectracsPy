@@ -446,13 +446,36 @@ Driven with the SM1 dev view + a scratch exposure sweep against the live ELP on 
   static seeded value is a genuine "working cow" for calibration — SM2's peak detection works on real
   hardware with it.
 - **A fixed value is fragile** — the right exposure depends on lamp brightness/distance (150 may have
-  suited a dimmer past setup). This is the standing motivation for an auto-exposure algorithm.
-  **Agreed direction (Edwin, 2026-07-07):** auto-exposure by **our own algorithm** — a **bisection** that
-  targets ~95 % full-scale on the brightest line, **seeded from the per-camera value (78)** so it converges
-  in 1–2 steps — **not** the camera's built-in auto-exposure (which parks near-black and does not work,
-  §0). Details (per-capture vs re-tune, gain, where it lives, dev-view "Auto-expose" button + live slider
-  as the proving ground) to be settled in a dedicated discussion. Likely companion: **live exposure
-  controls in the dev capture view** (see `SPEC_dev_capture_view.md`).
+  suited a dimmer past setup). So the seeded value is only a **fallback**; the operational value comes from
+  **auto-exposure**.
+
+#### Auto-exposure — DECIDED + first implementation (Edwin, 2026-07-07)
+
+- **Our own algorithm, NOT the camera's built-in** (which parks near-black on a mostly-dark spectrum, §0).
+  Objective is spectroscopy-specific: **drive the brightest line to just below saturation** (target ~92 %
+  full-scale = 235/255) so the full dynamic range is used without clipping. Brightness is monotonic in
+  exposure → a **bisection** converges in ~8 probes. Reusable pure module `AutoExposureLogicModule`
+  (`logic/appliction/video/capture/`) — handed a `measure(exposure)->brightness` callable so the same code
+  serves the dev view, calibration, and measurement.
+- **Do NOT use the seeded value as the operational value if auto-exposure works (Edwin).** The seeded 78 is
+  a **fallback only** (used if auto-exposure can't run). The first implementation runs a **full-range
+  bisection** (not seeded), so it adapts to the actual lamp/sample.
+- **Calibration:** auto-expose the CFL capture.
+- **Measurement (principle DECIDED; screen-level details deferred — "discuss later"):** auto-expose on the
+  **reference** (isopropanol, the bright baseline), then **capture the sample at that SAME exposure.**
+  Rationale (corrects an earlier over-think): equal exposure makes **T = S/R cancel the exposure cleanly —
+  no normalization** — and it **preserves the absorption signal** (the sample *should* read dimmer; that
+  dimness is T<1). Auto-exposing the sample separately to "fill the range" would divide out the very
+  absorption being measured. (Gain deferred to v2 — Edwin: matters, but skip for v1.)
+- **IMPLEMENTED as the dev-view proving ground (SM1):** an **"Auto-expose"** button drives the bisection
+  over the **live stream** (applies a candidate via the slider, lets the UVC stream settle, measures the
+  delivered frame's 99.9-percentile brightness). Verified on the ELP: a clipped stream (slider 250, 17 k
+  railed px) → auto-exposed to 61, green unclipped. Plus a **live manual exposure slider** to dial by hand
+  (the tool to find the still-TBD LED-measurement value). See `SPEC_dev_capture_view.md`.
+- **Still open:** whether calibration/measurement flows call auto-exposure automatically (they should, per
+  above) vs a manual "re-tune"; the LED-measurement exposure value itself; camera **response linearity**
+  (the RGB output may carry ISP gamma — worth confirming for quantitative T, though same-exposure ref/sample
+  keeps the *ratio* robust regardless).
 
 ### 9.4 Connection + calibration UX ("a sound setup the end user understands")
 > **This thread now has its own spec:** `docs/SPEC_connection_and_calibration_ux.md` (the full serial-keyed

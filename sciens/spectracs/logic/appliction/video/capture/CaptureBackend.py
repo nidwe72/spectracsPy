@@ -20,6 +20,10 @@ class CaptureBackend:
     def read(self) -> QImage:
         raise NotImplementedError
 
+    def setExposure(self, exposure: int) -> None:
+        """Change exposure on the already-open device (for a live control). No-op by default."""
+        pass
+
     def release(self) -> None:
         pass
 
@@ -76,6 +80,11 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         # .copy() detaches the QImage from the numpy buffer `rgb` (which is freed when this returns) —
         # otherwise the QImage points at released memory (the "crashes after some frames" symptom).
         return QImage(rgb.data, w, h, ch * w, QImage.Format.Format_RGB888).copy()
+
+    def setExposure(self, exposure: int) -> None:
+        import cv2
+        if self._cap is not None and exposure is not None:
+            self._cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
 
     def release(self) -> None:
         if self._cap is not None:

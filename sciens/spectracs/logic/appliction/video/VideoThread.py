@@ -27,6 +27,9 @@ class VideoThread(QThread,Generic[S]):
         # Per-camera manual exposure (V4L2 units); None => backend legacy default. Set by the caller from
         # the seeded SpectrometerSensorSettings for the active light-source scenario (spec §9.3).
         self._exposure = None
+        # Live exposure override applied mid-stream (a dev-view slider). None => leave as opened.
+        self._liveExposure = None
+        self._appliedExposure = None
 
         self._frameCount = 0
         self._currentFrameIndex = 0
@@ -37,6 +40,10 @@ class VideoThread(QThread,Generic[S]):
 
     def setExposure(self, exposure: int):
         self._exposure = exposure
+
+    def setLiveExposure(self, exposure: int):
+        # Thread-safe enough: a plain int assignment; the capture loop applies it before the next grab.
+        self._liveExposure = exposure
 
 
     def setFrameCount(self, spectraCount: int):
@@ -70,6 +77,7 @@ class VideoThread(QThread,Generic[S]):
         if not self.getIsVirtual():
             self._backend = getCaptureBackend()
             self._backend.open(self._deviceId, self._exposure)
+            self._appliedExposure = self._exposure
 
             # Warm-up: the first frames after open can be empty while the UVC stream settles; discard a
             # few so the first delivered frame is real (spec §3.5 / §0). read() never raises → None ok.
@@ -78,6 +86,12 @@ class VideoThread(QThread,Generic[S]):
                     break
 
         while self._runFlag:
+
+            # Apply a pending live-exposure change (dev-view slider) before grabbing the next frame.
+            if self._backend is not None and self._liveExposure is not None \
+                    and self._liveExposure != self._appliedExposure:
+                self._backend.setExposure(self._liveExposure)
+                self._appliedExposure = self._liveExposure
 
             self.beforeCapture()
             self.__captureFrame()

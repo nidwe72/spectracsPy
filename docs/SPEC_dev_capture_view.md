@@ -1,13 +1,16 @@
 # Spec — "Capture images" development view (real-camera sub-milestone 1)
 
-Status: **IMPLEMENTED (P0–P3, desktop Linux) + click-through verified 2026-07-06** — driven live in the
-running GUI (Settings → Development → Capture images) against the ELP: resolver→cv2 index 0, backend
-captured the real CFL mercury-line spectrum (1600×1200 RGB888), dev view streams + saves PNG, auto-selects
-the connected sensor, Start/Save read-only when not connected. Optional P4 (live resolution combo) not
-built. Windows auto-resolve deferred (own milestone). **Observed (to discuss, NOT a dev-view issue):** in
-the captured CFL spectrum the **green doublet was not resolved** — an optical-stack / resolution matter
-that feeds §9.2 (best-resolution per chipset) and possibly exposure/optics, tracked separately. Scope is
-**desktop Linux/Windows**. This is the **first** real-camera sub-milestone; it deliberately precedes real
+Status: **IMPLEMENTED (P0–P3 + exposure controls + nav) + click-through verified 2026-07-06/07** — driven
+live in the running GUI (Settings → Development → Capture images) against the ELP: resolver→cv2 index 0,
+backend captured the real CFL mercury-line spectrum (1600×1200 RGB888), dev view streams + saves PNG,
+auto-selects the connected sensor, Start/Save read-only when not connected. **Added:** a live **exposure
+slider** + an **"auto-exposure" checkbox** (default on, one-shot on stream start, status-bar progress,
+locks the slider) driving our own bisection (§6, parent §9.3); a **Back** button; the full **breadcrumb**
+`Settings > Development > Capture images`. The **green-doublet** clipping was traced to over-exposure and
+fixed via per-camera exposure (ELP CFL=78) — calibration detect-peaks now resolves it; the residual is the
+optical/slit limit (§9.2), accepted. Optional P4 (live resolution combo) not built. Windows auto-resolve
+deferred (own milestone). Scope is **desktop Linux/Windows**. This is the **first** real-camera
+sub-milestone; it deliberately precedes real
 calibration because it is the *simplest possible consumer* of a live physical camera, so the shared
 capture foundation (resolver + backend) can be built and proven here before any calibration wiring.
 
@@ -147,12 +150,19 @@ half of that loop.
 - **Configurable capture params** (frame count, resolution, fourcc): stay **hardcoded** for now. Later
   configurable by some mechanism — **likely plugin-driven** — to be discussed (parent §4, §7.3). SM1 builds
   no settings UI for them beyond the optional live resolution combo.
-- **Exposure — now per-camera, one control still to come.** The dev view applies the camera's seeded
-  **CFL-calibration exposure** (`SpectrometerSensorUtil.getSensorSettings().calibrationExposure`, ELP=78,
-  set via `VideoThread.setExposure`), verified 2026-07-07 to unclip the green (parent §9.3). Still deferred:
-  a **live exposure control/slider in this view** so a human can dial + verify per setup and per light
-  source (CFL calibration vs the LED-array measurement regime, which needs its own value). Edwin: "we will
-  need it" — sequenced after the auto-exposure discussion.
+- **Exposure — per-camera default + live manual slider (IMPLEMENTED 2026-07-07).** The view seeds the
+  slider from the camera's **CFL-calibration exposure** (`getSensorSettings().calibrationExposure`, ELP=78)
+  and applies it via `VideoThread.setExposure`; the **live slider** (`setLiveExposure` →
+  `CaptureBackend.setExposure` on the open cap) lets a human dial the sweet spot mid-stream — verified the
+  green clips/unclips live. This is the tool to *find* the still-TBD **LED-array measurement** exposure.
+  Now also an **"auto-exposure" checkbox (default ON)** (IMPLEMENTED 2026-07-07): runs our own **bisection**
+  (`AutoExposureLogicModule`) over the **live stream** — applies a candidate via the slider, lets the UVC
+  stream settle, measures the delivered frame's 99.9-percentile brightness, targets ~92 % full-scale. Runs
+  **one-shot** when enabled / on stream start; **progress shows in the app status bar** (under the logo,
+  `ApplicationStatusSignal` "finding best exposure [i/N]"); the **manual slider is locked while it is on**.
+  Verified on the ELP: clipped stream (slider 250) → auto-exposed to 61, green unclipped; toggling off
+  unlocks the slider. Proving ground before the algorithm enters the calibration/measurement flows (§9.3).
+  *(Open: one-shot vs continuous re-adjustment — see §9 Q.)*
 - **Focus-assist dev tool (FUTURE task, captured here):** a companion dev view that uses a **sharpness
   algorithm** (e.g. maximise high-frequency energy / line contrast on the CFL lines) to help focus the
   grating-on-lens stack **better than the eye alone**. The instrument is already correctly focused; this is
