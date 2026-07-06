@@ -1,8 +1,3 @@
-from typing import List
-
-from sciens.spectracs.logic.model.util.SpectrometerUtil import SpectrometerUtil
-from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
-from sciens.spectracs.model.databaseEntity.spectral.device.Spectrometer import Spectrometer
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
 
 
@@ -20,18 +15,3 @@ class ApplicationSpectrometerUtil:
                             idProduct=int('0x' + spectrometerSensor.modelId, base=16))
 
         return dev is not None
-
-    def getSpectrometersHavingSensorConnected(self)->List[Spectrometer]:
-        result:List[Spectrometer]=[]
-
-        spectrometers = SpectrometerUtil().getSpectrometers()
-
-        for spectrometerId, spectrometer in spectrometers.items():
-            spectrometerSensor = SpectrometerSensorUtil().getSensorByCodeName(spectrometer.spectrometerSensor.codeName)
-            if spectrometerSensor is not None:
-                isSensorConnected = SpectrometerSensorUtil().isSensorConnected(spectrometerSensor)
-                if isSensorConnected:
-                    result.append(spectrometer)
-        return result
-
-

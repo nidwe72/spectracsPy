@@ -68,6 +68,10 @@ class MainStatusBarViewModule(QWidget):
         super().__init__(*args, **kwargs)
         self.setFixedHeight(100)
 
+        # §12 auto-connection: background presence poller for the session's real device (None otherwise).
+        self.__connectionPollThread = None
+        self.__connectionDeviceCodeName = None
+
         outerLayout=QVBoxLayout()
         outerLayout.setContentsMargins(0,0,0,0)
         self.setLayout(outerLayout)
@@ -193,23 +197,55 @@ class MainStatusBarViewModule(QWidget):
         self.updateConnectionIcon()
 
     def updateConnectionIcon(self):
-        # Lazy import avoids a session<->logic import cycle at module load.
-        from sciens.spectracs.logic.connection.ConnectionStatusLogicModule import ConnectionStatusLogicModule
-        # Always visible so the indicator is discoverable in the header; grey when there is no instrument
-        # (logged out, or a user without a registered serial e.g. the master).
-        self.connectionButton.setVisible(True)
-        loggedOut = not CurrentUserSession().isLoggedIn()
-        status = ConnectionStatusLogicModule.NO_INSTRUMENT if loggedOut else ConnectionStatusLogicModule().getStatus()
+        # §12 auto-connection. The camera icon is shown ONLY when logged in AND the session has a resolved
+        # device (a SpectrometerSetup). Virtual -> green. Real -> a background poll thread (started here)
+        # tracks USB plug/unplug live and recolours the icon. Logged out / no setup -> hidden (the old grey
+        # "no instrument" state is gone from the UI). Called on every session change (updateAccountControl).
+        from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 
-        if status == ConnectionStatusLogicModule.CONNECTED:
-            colour = self.CONNECTION_CONNECTED_COLOR
-            tooltip = "Spectrometer connected (%s)" % (CurrentUserSession().getSpectrometerDevice() or "")
-        elif status == ConnectionStatusLogicModule.NOT_CONNECTED:
-            colour = self.CONNECTION_DISCONNECTED_COLOR
-            tooltip = "Spectrometer not connected"
+        self.__stopConnectionPoll()  # tear down any previous device's poller first
+
+        if not CurrentUserSession().isLoggedIn():
+            self.connectionButton.setVisible(False)
+            return
+        deviceCodeName = CurrentUserSession().getSpectrometerDevice()
+        if not deviceCodeName:
+            self.connectionButton.setVisible(False)
+            return
+        sensor = SpectrometerSensorUtil().getSensorByCodeName(deviceCodeName)
+        if sensor is None:
+            self.connectionButton.setVisible(False)
+            return
+
+        self.connectionButton.setVisible(True)
+        self.__connectionDeviceCodeName = deviceCodeName
+
+        if sensor.isVirtual:
+            self.__setConnectionColour(self.CONNECTION_CONNECTED_COLOR,
+                                       "Spectrometer connected (%s)" % deviceCodeName)
+            return
+
+        # Real device: 'checking' until the first poll result, then live via presenceChanged.
+        self.__setConnectionColour(self.CONNECTION_DISCONNECTED_COLOR, "Checking spectrometer…")
+        from sciens.spectracs.logic.connection.ConnectionPollThread import ConnectionPollThread
+        self.__connectionPollThread = ConnectionPollThread(sensor.vendorId, sensor.modelId, parent=self)
+        self.__connectionPollThread.presenceChanged.connect(self.__onConnectionPresenceChanged)
+        self.__connectionPollThread.start()
+
+    def __onConnectionPresenceChanged(self, present):
+        if present:
+            self.__setConnectionColour(self.CONNECTION_CONNECTED_COLOR,
+                                       "Spectrometer connected (%s)" % (self.__connectionDeviceCodeName or ""))
         else:
-            colour = self.CONNECTION_NO_INSTRUMENT_COLOR
-            tooltip = "Not signed in" if loggedOut else "No spectrometer registered"
+            self.__setConnectionColour(self.CONNECTION_DISCONNECTED_COLOR, "Spectrometer not connected")
+
+    def __stopConnectionPoll(self):
+        if self.__connectionPollThread is not None:
+            self.__connectionPollThread.stop()
+            self.__connectionPollThread.wait(1000)
+            self.__connectionPollThread = None
+
+    def __setConnectionColour(self, colour, tooltip):
         icon = QIcon()
         icon.addPixmap(self.renderSvgPixmap(self.CAMERA_SVG % {'c': colour}), QIcon.Mode.Normal)
         self.connectionButton.setIcon(icon)

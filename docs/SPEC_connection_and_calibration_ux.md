@@ -13,7 +13,12 @@ server, reusing the workflow `Spectrum` serialization. No object-model change be
 (`calibrationSpectrumJson`, `AppUser` DTO `registeredSerial`). As-built detail in **§11.2–§11.4**; §11 revises
 the §4.1 / §9 screen layout and is authoritative over them. Verified structurally (server round-trips, headless
 boots, offscreen renders); a full visual click-through is Edwin's drive-and-observe. **Commits:** model
-`dc9500c`, server `7a6ebcd`, app (this commit).
+`dc9500c`, server `7a6ebcd`, app `a59a2fb`.
+**§12 AUTOMATIC CONNECTION (5b-connect) — DONE: IMPLEMENTED + committed 2026-07-06.** Presence-only auto-connect
+for the logged-in user's REAL spectrometer: a background poll thread live-tracks USB plug/unplug and recolours
+the header icon (shown only when logged in + a setup is resolved). Seeded a real ELP instrument + `elpUser`.
+Verified against the live ELP (`getStatus`→CONNECTED). As-built §12 / §12.1. **Commits:** model `4440e2e`,
+app (this commit).
 Companion to `SPEC_real_camera_capture.md` (the physical capture path); this spec covers the **integration
 layer** above it: who sets up an instrument, how an end user activates it, and how the app knows a
 spectrometer is connected before a measurement. **This spec is authoritative going forward.**
@@ -228,7 +233,8 @@ misleading "Connect spectrometer" combo with a real check + a **clear connected 
 **VID/PID lives on the hard-coded `SpectrometerSensor` templates** (`SpectrometerSensorUtil.getSpectrometerSensors()`:
 `vendorId`/`modelId` — virtual `0c99/9999`, Microdia `0c45/6366`, ELP `32e4/8830`), and the enumerate-match is
 **already written but dead**: `ApplicationSpectrometerUtil.isSensorConnected()` (`usb.core.find(idVendor,
-idProduct)`) and `getSpectrometersHavingSensorConnected()` (no callers → **revive it**). Two flavours:
+idProduct)`) and `getSpectrometersHavingSensorConnected()` (no callers → **REMOVED in §12**; targeted presence
+is all the auto-connect needs). Two flavours:
 - **Targeted (recommended for end-user autoconnect):** the logged-in user's serial → bundle already names the
   device, so verify **that** sensor's VID/PID is present — no multi-camera ambiguity.
 - **Enumerate-and-match** (`getSpectrometersHavingSensorConnected`): find *any* known spectrometer — for the
@@ -612,3 +618,71 @@ the legacy-resembling composition — NOT by rewiring the legacy ORM/local-DB `S
 (shared with the legacy "Device calibration (legacy)" screen, which stays intact) — so calibration authoring
 is on this screen for both virtual and real devices. **Not yet visually click-through-verified** (needs Edwin
 drive-and-observe with a running server + display).
+
+---
+
+## 12. Automatic connection — 5b-connect (presence-only, live hotplug/unplug)
+
+**DESIGN 2026-07-06 (Edwin), impl on explicit request.** The first real-device (5b) piece: make the header
+connection icon track the logged-in user's real spectrometer automatically, including plug/unplug, WITHOUT
+capturing yet. Grounded facts (verified 2026-07-06): `pyusb` is installed in the run venv; the target device
+**ELP `32e4:8830` (code `EXAKTA`) is present** (`usb.core.find` → True, `lsusb`: "32e4:8830 HD USB Camera").
+
+**Scope decisions (Edwin):**
+- **PRESENCE-ONLY.** No RC-R0 cv2-index resolver, no "present but not capturable" state, no probe-for-frames
+  — those + real capture are the LATER capture milestone (`SPEC_real_camera_capture.md` R0–R3). Keep the
+  existing `ConnectionStatusLogicModule` 3 states (`NO_INSTRUMENT` / `CONNECTED` / `NOT_CONNECTED`); virtual →
+  connected; real → `isSensorConnected(sensor)` (targeted `usb.core.find` on the session device's VID/PID).
+  "Present" = green/connected for now.
+- **LIVE HOTPLUG/UNPLUG via a WORKER THREAD (Edwin — not a main-loop timer).** The Qt main thread *is* the
+  GUI/event-loop thread, so running `usb.core.find` on a `QTimer` could briefly hitch the UI if the bus
+  enumerate ever blocks. Instead a **dedicated poll thread** runs `usb.core.find(vid, pid)` every ~2 s **off**
+  the GUI thread and **emits a Qt signal** to update the icon (queued → thread-safe). The thread is given the
+  **pre-resolved VID/PID** (resolved once on login on the GUI thread), so it touches **neither the DB nor the
+  session** — it only does the USB presence syscall + emit. **Cross-platform desktop** — the poll is NOT
+  Linux-only (that was only the unused `pyudev` event-based alternative).
+- **POLL ONLY WHILE LOGGED IN** (Edwin): start the thread on login, stop it on logout (gate on
+  `userSessionSignal` / `CurrentUserSession().isLoggedIn()`); the thread has an interruptible stop.
+- **ICON SHOWN ONLY WHEN LOGGED IN *AND* A SETUP IS RESOLVED** (Edwin): show the camera icon only when the
+  session has a device (registered serial → resolved `SpectrometerSetup`); **no setup → hidden**. This
+  **removes the grey "no instrument" state from the UI** — the icon appears only when there is a real device to
+  report, and only its own camera is looked for (targeted). Virtual device → shown green (no polling needed);
+  real device → shown, thread polls its VID/PID → green (present) / white (absent).
+- **Enumerate-and-match REMOVED (Edwin).** `ApplicationSpectrometerUtil.getSpectrometersHavingSensorConnected()`
+  (dead code + latent `AttributeError`) is **deleted** to avoid confusion; targeted presence is all this needs.
+
+**Implementation sketch:** on login (GUI thread) resolve the session device → sensor → `(vendorId, modelId)`
+(or "virtual"); if there is no device, hide the icon and start nothing. Virtual → set green, no thread. Real →
+show icon + start a `ConnectionPollThread(vid, pid)` that loops `usb.core.find` every ~2 s and emits
+`presenceChanged(bool)`; `MainStatusBarViewModule` maps it to green/white. On logout → stop the thread + hide
+the icon. `ConnectionStatusLogicModule` stays the source of the initial state; the thread only re-checks
+presence for a real device.
+
+**Precondition (seeded, Edwin):** seed a `SpectrometerSetup` for the ELP — serial **ELP-0001** + the **EXAKTA**
+`Spectrometer` (`32e4:8830`) + (empty) calibration + pumpkin plugin — and a user **elpUser/elpUser** (END_USER,
+`registeredSerial = ELP-0001`) in `UserSeedLogicModule` (idempotent, mirrors `__seedInstrument`). Login then
+sets `session.spectrometerDevice = EXAKTA`; the icon goes green when the ELP is plugged, white when unplugged.
+
+**Deferred (later capture milestone):** RC-R0 resolver (VID/PID → `/dev/videoN`), "present but not capturable"
+state, routing `VideoThread`/`CaptureBackend` off the resolved index (drop the hardcoded index 0), and the
+real branch in `SpectralWorkflowEngine.__capture`.
+
+### 12.1 As-built (IMPLEMENTED 2026-07-06, not yet committed)
+
+Verified against the **live ELP** on the dev box (`usb.core.find(32e4:8830)` → present).
+- **AC1 seed** (model `UserSeedLogicModule.__seedElpInstrument`, idempotent): `SpectrometerSetup` serial
+  **ELP-0001** → **EXAKTA** (`32e4:8830`) + empty calibration + pumpkin plugin; user **elpUser/elpUser**
+  (END_USER, `registeredSerial=ELP-0001`). Re-seed does not duplicate.
+- **AC2** deleted `ApplicationSpectrometerUtil.getSpectrometersHavingSensorConnected` (dead + latent bug).
+- **AC3** new `logic/connection/ConnectionPollThread` (`QThread`): loops `usb.core.find(vid,pid)` off the GUI
+  thread every ~2 s, edge-triggered `presenceChanged(bool)`, interruptible `stop()`; pre-resolved VID/PID →
+  no DB/session access on the worker.
+- **AC4** `MainStatusBarViewModule.updateConnectionIcon` rewritten: icon shown only when logged in **and** the
+  session has a resolved device; virtual → green (no thread); real → start the poller (green present / white
+  absent, "Checking…" until first result); logout / no device → hide + stop the thread. Grey "no instrument"
+  removed from the UI.
+- **AC5 verified:** server — seed → `login elpUser` → device Exakta → `getStatus()==CONNECTED` (real bus);
+  virtual user still connected; re-seed idempotent. App (headless) — `ConnectionPollThread` emits True for the
+  ELP / False for a bogus VID/PID; icon hidden logged-out & for a device-less master, shown+green for elpUser
+  (real) and virtual; poll thread starts for real / not for virtual, and is torn down on device change.
+  Plug/unplug live-flip is Edwin's drive-through. Repos: model (AC1) + app (AC2–AC4).
