@@ -24,6 +24,9 @@ class VideoThread(QThread,Generic[S]):
         # preserving today's behaviour; the resolver sets the correct index via setDeviceId (SM2).
         self._backend = None
         self._deviceId = 0
+        # Per-camera manual exposure (V4L2 units); None => backend legacy default. Set by the caller from
+        # the seeded SpectrometerSensorSettings for the active light-source scenario (spec §9.3).
+        self._exposure = None
 
         self._frameCount = 0
         self._currentFrameIndex = 0
@@ -31,6 +34,9 @@ class VideoThread(QThread,Generic[S]):
 
     def setDeviceId(self, deviceId: int):
         self._deviceId = deviceId
+
+    def setExposure(self, exposure: int):
+        self._exposure = exposure
 
 
     def setFrameCount(self, spectraCount: int):
@@ -63,7 +69,7 @@ class VideoThread(QThread,Generic[S]):
         # (getCaptureBackend() there raises on open). Only open a backend for a real sensor.
         if not self.getIsVirtual():
             self._backend = getCaptureBackend()
-            self._backend.open(self._deviceId)
+            self._backend.open(self._deviceId, self._exposure)
 
             # Warm-up: the first frames after open can be empty while the UVC stream settles; discard a
             # few so the first delivered frame is real (spec §3.5 / §0). read() never raises → None ok.

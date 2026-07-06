@@ -418,6 +418,42 @@ own design pass (some may become separate specs). Do not implement against these
 - **Open:** the algorithm itself, whether it runs per-measurement or is calibrated once per source, and
   how the "which light source is active" context is known.
 
+#### Empirical finding + IMPLEMENTED bake-in (2026-07-07, ELP CFL calibration)
+
+Driven with the SM1 dev view + a scratch exposure sweep against the live ELP on the CFL source:
+- The app's old fixed exposure **150 is badly over-exposed for this camera/lamp** — it clipped the blue
+  (railed 254), clipped the green (255, ~40% of core, 80 px bloom that **merged the green doublet**), and
+  smeared the **entire red cluster into one 242 px saturated blob** (5 bands detected).
+- **~78 is the highest value that keeps the brightest line (green ~546) unclipped** (peak ~242, 0% railed).
+  At 78 the spectrum resolves into **8 bands** incl. 4 distinct red lines and two faint violet/cyan lines.
+- The green "doublet" is a shoulder + main peak, ~14 px apart, shallow (~25 %) valley — **only marginally
+  resolved even when perfectly exposed**. Edwin: the instrument is **correctly focused**; this residual is
+  the optical/slit limit (§9.2) and is **the accepted reality for now**. (A future **focus-assist dev tool**
+  — an algorithm that helps focus better than the eye — is captured as a future task in
+  `SPEC_dev_capture_view.md`; it would matter mostly for calibration.)
+- **Two exposure regimes per camera, DECIDED (Edwin):** this value (78) is the **CFL-calibration** regime.
+  The **LED array** (7×3 W, the actual reference + sample measurement illumination) is a *different,
+  brighter-source regime* needing its **own** exposure value(s) — still **TBD**. So exposure is
+  per-camera **× per-light-source-scenario**.
+- **Home = the seeded camera table (Edwin):** the good values live **where the cameras are hard-coded** —
+  `SpectrometerSensorUtil.__CAPTURE_SETTINGS_BY_HARDWARE_ID` (keyed by `vendorId_modelId`), holding a
+  `SpectrometerSensorSettings(calibrationExposure, measurementExposure)` per camera (ELP calibration=78;
+  Microdia + all measurement values TBD). Wired through `VideoThread.setExposure` →
+  `CaptureBackend.open(deviceId, exposure)`; the dev view applies the **calibration** value. This realises
+  §4's "per-chipset `SpectrometerSensorSettings`" — now concrete and seeded, not orphan.
+- **Downstream win — VERIFIED (Edwin, 2026-07-07):** with the seeded 78, the calibration **"detect peaks"
+  step now resolves the green lines** off the real ELP (they were merged/unresolvable at 150). So the
+  static seeded value is a genuine "working cow" for calibration — SM2's peak detection works on real
+  hardware with it.
+- **A fixed value is fragile** — the right exposure depends on lamp brightness/distance (150 may have
+  suited a dimmer past setup). This is the standing motivation for an auto-exposure algorithm.
+  **Agreed direction (Edwin, 2026-07-07):** auto-exposure by **our own algorithm** — a **bisection** that
+  targets ~95 % full-scale on the brightest line, **seeded from the per-camera value (78)** so it converges
+  in 1–2 steps — **not** the camera's built-in auto-exposure (which parks near-black and does not work,
+  §0). Details (per-capture vs re-tune, gain, where it lives, dev-view "Auto-expose" button + live slider
+  as the proving ground) to be settled in a dedicated discussion. Likely companion: **live exposure
+  controls in the dev capture view** (see `SPEC_dev_capture_view.md`).
+
 ### 9.4 Connection + calibration UX ("a sound setup the end user understands")
 > **This thread now has its own spec:** `docs/SPEC_connection_and_calibration_ux.md` (the full serial-keyed
 > object model, master-authoring + end-user self-registration flows, connection status, measurement UX).

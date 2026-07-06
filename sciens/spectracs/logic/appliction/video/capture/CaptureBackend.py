@@ -14,7 +14,7 @@ from sciens.base.PlatformUtil import is_android
 
 
 class CaptureBackend:
-    def open(self, deviceId: int = 0) -> None:
+    def open(self, deviceId: int = 0, exposure: int = None) -> None:
         raise NotImplementedError
 
     def read(self) -> QImage:
@@ -40,7 +40,7 @@ class DesktopCv2CaptureBackend(CaptureBackend):
     def __init__(self):
         self._cap = None
 
-    def open(self, deviceId: int = 0) -> None:
+    def open(self, deviceId: int = 0, exposure: int = None) -> None:
         import cv2
         from sys import platform
         # V4L2 is the reference backend on Linux (verified in the probe); CAP_ANY elsewhere.
@@ -50,10 +50,13 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-        # AUTO_EXPOSURE=1 selects MANUAL exposure mode on V4L2, then a fixed per-OS value (there is no
-        # auto-exposure today — spec §7.4). Kept identical to the old inline VideoThread values.
+        # AUTO_EXPOSURE=1 selects MANUAL exposure mode on V4L2, then a fixed value (there is no
+        # auto-exposure today — spec §7.4/§9.3). `exposure` is the per-camera good value seeded in
+        # SpectrometerSensorUtil (e.g. ELP CFL calibration = 78); None falls back to the legacy default.
         self._cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
-        if platform == 'linux':
+        if exposure is not None:
+            self._cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
+        elif platform == 'linux':
             self._cap.set(cv2.CAP_PROP_EXPOSURE, 150)
         elif platform == 'win32':
             self._cap.set(cv2.CAP_PROP_EXPOSURE, -3)
@@ -86,7 +89,7 @@ class AndroidUvcCaptureBackend(CaptureBackend):
     libusb (libusb_wrap_sys_device) -> libuvc -> frames. Needs <uses-feature usb.host> +
     UsbManager.requestPermission (NOT android.permission.CAMERA). See spec §6."""
 
-    def open(self, deviceId: int = 0) -> None:
+    def open(self, deviceId: int = 0, exposure: int = None) -> None:
         raise NotImplementedError("Android UVC-over-OTG capture is deferred (P7) — see spec §6")
 
     def read(self) -> QImage:
@@ -98,7 +101,7 @@ class RaspberryPiNetworkCaptureBackend(CaptureBackend):
     capture and the phone becomes a network client (reusing the Pyro/HTTP pattern) — no OTG. The
     choice between this and AndroidUvcCaptureBackend is made when the hardware direction is set."""
 
-    def open(self, deviceId: int = 0) -> None:
+    def open(self, deviceId: int = 0, exposure: int = None) -> None:
         raise NotImplementedError("RPi-network capture is deferred (P7) — see spec §6")
 
     def read(self) -> QImage:

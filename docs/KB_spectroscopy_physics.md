@@ -144,6 +144,14 @@ is *grating-block + camera-lens + sensor* as one stack. Consequences for the res
     A real capture of this on the ELP is verified (sharp vertical emission lines).
   - **Array of 7 × 3 W LEDs** — the **measurement** source (broadband, illuminates the sample). This is
     the "LED light source" in §1's chain.
+  - **Exposure is per-camera AND per-light-source.** Measured on the ELP (2026-07-07): the old fixed
+    exposure 150 **over-exposed** the CFL capture — clipping blue+green and merging the whole red cluster
+    into one saturated blob — while **~78** keeps the brightest line (green ~546) unclipped and resolves
+    8 bands. So each camera needs a **CFL-calibration exposure** (ELP=78, seeded in
+    `SpectrometerSensorUtil`) *and* a separate **LED-measurement exposure** (brighter broadband source,
+    TBD). Even perfectly exposed, the mercury green **doublet is only marginally resolved** (shoulder +
+    peak, ~14 px, shallow valley) — the optical/slit limit, not exposure (§9.2). The right value also
+    drifts with lamp brightness/distance → motivates auto-exposure (`SPEC_real_camera_capture.md` §9.3).
 - **Per-unit identity:** each produced spectrometer carries a **printed serial label** used as the key to
   its factory calibration profile (`SpectrometerProfile.serial`) — the USB cameras themselves expose no
   serial. (`SPEC_real_camera_capture.md` §9.1.)

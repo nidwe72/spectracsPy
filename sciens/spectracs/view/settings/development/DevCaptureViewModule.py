@@ -162,6 +162,11 @@ class DevCaptureViewModule(PageWidget):
         thread = DevCaptureVideoThread()
         thread.setIsVirtual(False)
         thread.setDeviceId(self.__resolvedIndex)
+        # This view captures the CFL-calibration scenario, so use the camera's seeded calibration
+        # exposure (e.g. ELP=78; None falls back to the backend default). Live exposure controls +
+        # the LED-measurement regime are a later increment (SPEC_dev_capture_view.md §6 / §9.3).
+        settings = SpectrometerSensorUtil().getSensorSettings(self.__currentSensor())
+        thread.setExposure(settings.calibrationExposure)
         thread.setFrameCount(0)  # 0 = continuous stream until stop()
         # noinspection PyUnresolvedReferences
         thread.videoThreadSignal.connect(self.handleVideoThreadSignal)

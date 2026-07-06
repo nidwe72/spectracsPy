@@ -144,10 +144,20 @@ half of that loop.
 
 ## 6. Explicitly deferred (recorded, not designed here)
 
-- **Configurable capture params** (frame count, resolution, exposure, fourcc): stay **hardcoded** for
-  now. Later these become configurable by some mechanism — **likely plugin-driven** — to be discussed
-  (parent §4, §7.3). SM1 does not build any settings UI for them beyond the optional live resolution combo.
-- **Best-fit exposure algorithm** (parent §9.3) — out of scope.
+- **Configurable capture params** (frame count, resolution, fourcc): stay **hardcoded** for now. Later
+  configurable by some mechanism — **likely plugin-driven** — to be discussed (parent §4, §7.3). SM1 builds
+  no settings UI for them beyond the optional live resolution combo.
+- **Exposure — now per-camera, one control still to come.** The dev view applies the camera's seeded
+  **CFL-calibration exposure** (`SpectrometerSensorUtil.getSensorSettings().calibrationExposure`, ELP=78,
+  set via `VideoThread.setExposure`), verified 2026-07-07 to unclip the green (parent §9.3). Still deferred:
+  a **live exposure control/slider in this view** so a human can dial + verify per setup and per light
+  source (CFL calibration vs the LED-array measurement regime, which needs its own value). Edwin: "we will
+  need it" — sequenced after the auto-exposure discussion.
+- **Focus-assist dev tool (FUTURE task, captured here):** a companion dev view that uses a **sharpness
+  algorithm** (e.g. maximise high-frequency energy / line contrast on the CFL lines) to help focus the
+  grating-on-lens stack **better than the eye alone**. The instrument is already correctly focused; this is
+  a quality aid that matters mostly for calibration. Not scoped yet — logged so it isn't lost.
+- **Best-fit auto-exposure algorithm** (parent §9.3) — out of scope here; under discussion.
 - **Android** — out of scope (`CaptureBackend` Android branch raises; parent §2.1).
 - **Windows manual picker** — auto-resolve is the Linux-reference path; the Windows DirectShow
   ambiguity/fallback (parent §3.4) is a later concern, not part of SM1.
