@@ -27,6 +27,7 @@ from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupViewModul
 from sciens.spectracs.view.registration.RegistrationViewModule import RegistrationViewModule
 from sciens.spectracs.view.account.AppUserSettingsViewModule import AppUserSettingsViewModule
 from sciens.spectracs.view.settings.development.DevCaptureViewModule import DevCaptureViewModule
+from sciens.spectracs.view.settings.development.DevMeasurementBenchViewModule import DevMeasurementBenchViewModule
 
 
 class MainViewModule(QStackedWidget):
@@ -115,6 +116,10 @@ class MainViewModule(QStackedWidget):
         devCaptureViewModule = DevCaptureViewModule()  # index 17 — dev "Capture images" (SPEC_dev_capture_view SM1)
         devCaptureViewModule.initialize()
         self.addWidget(devCaptureViewModule)
+
+        devMeasurementBenchViewModule = DevMeasurementBenchViewModule()  # index 18 — dev measurement bench (SPEC_dev_measure_bench)
+        devMeasurementBenchViewModule.initialize()
+        self.addWidget(devMeasurementBenchViewModule)
 
         # §G2: startup lands on Home (was the retired connect screen).
         self.setCurrentWidget(homeViewModule)

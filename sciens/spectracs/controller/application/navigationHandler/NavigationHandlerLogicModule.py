@@ -66,6 +66,9 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="DevCaptureViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Development > Capture images")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="DevMeasurementBenchViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Development > Measurement bench")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
         self.setPreviousNavigationSignal(navigationSignal)
 
@@ -109,6 +112,8 @@ class NavigationHandlerLogicModule(Singleton):
             result = 16
         elif target=="DevCaptureViewModule":
             result = 17
+        elif target=="DevMeasurementBenchViewModule":
+            result = 18
 
 
         return result

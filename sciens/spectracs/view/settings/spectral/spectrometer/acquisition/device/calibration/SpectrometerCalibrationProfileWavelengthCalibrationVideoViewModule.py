@@ -133,7 +133,10 @@ class SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule(
             imageAcquisitionLogicModule.execute(logicModuleParameters)
 
             SpectrumUtil().mean(self.spectrum)
-            SpectrumUtil().smooth(self.spectrum)
+            # Light smoothing only: the 50-frame mean already denoises ~7×, so the historical 7×/window-10
+            # savgol is redundant and merged the ~4 nm green doublet before peak-finding. One narrow pass
+            # keeps the two green peaks separable (SPEC_dev_measure_bench (a)).
+            SpectrumUtil().smooth(self.spectrum, passes=1, window=7, polyorder=3)
 
             for prominence in range(1, 100):
                 peaks, _ = find_peaks(list(self.spectrum.valuesByNanometers.values()), distance=3, width=3,

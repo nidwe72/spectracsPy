@@ -27,7 +27,17 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
                                                             SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE,
                                                             SpectralLineMasterDataColorName.MERCURY_FRENCH_VIOLET,
                                                             SpectralLineMasterDataColorName.MERCURY_BLUE,
-                                                            SpectralLineMasterDataColorName.TERBIUM_AQUA]
+                                                            SpectralLineMasterDataColorName.TERBIUM_AQUA,
+                                                            # Best-effort 6th anchor: the 542.4 partner of the green
+                                                            # doublet. Runs LAST so the 5 primary anchors (esp. green
+                                                            # + red, needed for the dispersion estimate) already exist;
+                                                            # skipped silently if the doublet is unresolved (b).
+                                                            SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN_LEFT]
+
+    # Doublet geometry for the best-effort green-left search (nm).
+    GREEN_NANOMETER = 546.5
+    GREEN_LEFT_NANOMETER = 542.4
+    RED_NANOMETER = 611.6
 
     model: SpectrometerCalibrationProfile = None
 
@@ -175,6 +185,46 @@ class SpectrometerWavelengthCalibrationLogicModule(Singleton):
 
         self.getModuleResult().getSpectralLines().append(spectralLine)
 
+
+    def _processSpectralLineMERCURY_MANGO_GREEN_LEFT(self):
+        # Best-effort 2nd green anchor (542.4, the left partner of the 546.5 doublet). We do NOT take the
+        # global 2nd-most-prominent peak (that is usually the red/blue, not the fainter left green) — instead
+        # we search a small window just LEFT of the dominant green peak, sized from the green→red dispersion.
+        # If no peak is found there (doublet unresolved), skip: the 5 primary anchors still calibrate (b).
+        spectrum = self.moduleParameters.videoSignal.spectrum
+        linesByNames = SpectralLineUtil().sortSpectralLinesByNames(self.getModuleResult().getSpectralLines())
+        greenLine = linesByNames.get(SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN)
+        redLine = linesByNames.get(SpectralLineMasterDataColorName.EUROPIUM_VIVID_GAMBOGE)
+        if greenLine is None or redLine is None or redLine.pixelIndex <= greenLine.pixelIndex:
+            return
+
+        dispersion = (self.RED_NANOMETER - self.GREEN_NANOMETER) / (redLine.pixelIndex - greenLine.pixelIndex)  # nm/px
+        if dispersion <= 0:
+            return
+        doubletPixels = (self.GREEN_NANOMETER - self.GREEN_LEFT_NANOMETER) / dispersion
+        leftBoundPixel = int(greenLine.pixelIndex - 2.5 * doubletPixels)
+        rightBoundPixel = int(greenLine.pixelIndex - 0.3 * doubletPixels)
+        if rightBoundPixel <= leftBoundPixel:
+            return
+
+        leftBound = SpectralLine()
+        leftBound.pixelIndex = leftBoundPixel
+        rightBound = SpectralLine()
+        rightBound.pixelIndex = rightBoundPixel
+
+        moduleParameters = SpectralLinesSelectionLogicModuleParameters()
+        moduleParameters.setSpectrum(spectrum) \
+            .addSelectByProminence(1, leftSpectralLine=leftBound, rightSpectralLine=rightBound)
+        logicModule = SpectralLinesSelectionLogicModule()
+        logicModule.setModuleParameters(moduleParameters)
+        selected = logicModule.execute().getSpectralLines()
+        if not selected:
+            return  # doublet unresolved -> best-effort skip
+
+        spectralLine = selected.pop()
+        spectralLine.spectralLineMasterData = SpectralLineMasterDataUtil().getSpectralLineMasterDataByName(
+            SpectralLineMasterDataColorName.MERCURY_MANGO_GREEN_LEFT)
+        self.getModuleResult().getSpectralLines().append(spectralLine)
 
     def setModel(self, model: SpectrometerCalibrationProfile):
         self.model = model

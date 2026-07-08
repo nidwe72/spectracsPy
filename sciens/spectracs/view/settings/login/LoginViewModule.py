@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QGridLayout, QGroupBox, QLabel, QLineEdit, QPushBu
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
+from sciens.spectracs.logic.session.ActiveSpectrometerProfileLogicModule import ActiveSpectrometerProfileLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
@@ -114,6 +115,9 @@ class LoginViewModule(PageWidget):
         result = SpectracsPyServerClient().login(username, password)
         if result.get("ok"):
             CurrentUserSession().login(result)
+            # Install the user's calibrated profile (by serial) into ApplicationSettings so views that read
+            # the active profile — e.g. the dev measurement bench — see it (SPEC_dev_measure_bench §11).
+            ActiveSpectrometerProfileLogicModule().installFromSession()
             ApplicationContextLogicModule().getApplicationSignalsProvider().emitUserSessionSignal()
             self.getErrorLabel().setVisible(False)
             self.getPasswordComponent().clear()

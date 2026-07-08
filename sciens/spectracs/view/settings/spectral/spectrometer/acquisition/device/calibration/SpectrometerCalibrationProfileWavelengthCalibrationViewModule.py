@@ -14,6 +14,7 @@ from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicMo
     ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
+from sciens.spectracs.logic.appliction.video.capture.AutoExposureCaptureHelper import AutoExposureCaptureHelper
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
@@ -144,8 +145,18 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         self.wavelengthCalibrationVideoThread.setCalibrationProfile(calibrationProfile)
 
         spectrometerProfile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
-        isVirtual = spectrometerProfile.spectrometer.spectrometerSensor.isVirtual
+        sensor = spectrometerProfile.spectrometer.spectrometerSensor
+        isVirtual = sensor.isVirtual
         self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
+
+        # Real camera: auto-expose FIRST so the peak-detection burst is not bloomed (clipping merges the
+        # CFL emission lines and the anchor-matching fails) — same pre-pass as the ROI step (D6).
+        if not isVirtual:
+            deviceIndex, bestExposure = AutoExposureCaptureHelper().autoExposeForSensor(sensor)
+            if deviceIndex is not None:
+                self.wavelengthCalibrationVideoThread.setDeviceId(deviceIndex)
+            if bestExposure is not None:
+                self.wavelengthCalibrationVideoThread.setExposure(bestExposure)
 
         self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
         self.wavelengthCalibrationVideoThread.setFrameCount(50)

@@ -25,19 +25,16 @@ class SpectrometerRegionOfInterestLogicModule(Singleton):
 
         y = int(y1 + (y2 - y1) / 2.0)
 
+        threshold = 20
         x1=0
         for x in range(1,image.width()):
-            color = image.pixelColor(x,y)
-            gray=qGray(color.red(),color.green(),color.blue())
-            if gray>20:
+            if self.__columnBrightness(image, x, y) > threshold:
                 x1=x
                 break
 
         x2 = image.width()
         for x in reversed(range(1,image.width())):
-            color = image.pixelColor(x,y)
-            gray=qGray(color.red(),color.green(),color.blue())
-            if gray>20:
+            if self.__columnBrightness(image, x, y) > threshold:
                 x2=x
                 break
 
@@ -50,6 +47,22 @@ class SpectrometerRegionOfInterestLogicModule(Singleton):
         rightBoundingLine.setP1(QPoint(x2, 0))
         rightBoundingLine.setP2(QPoint(x2, image.height()))
         videoSignal.rightBoundingLine = rightBoundingLine
+
+    def __columnBrightness(self, image, x, yCenter):
+        # Brightest CHANNEL over a small vertical window — NOT qGray. Luminance under-weights blue
+        # (~5/32), so a visible blue CFL line reads as low gray and was skipped, clipping the ROI's left
+        # bound. max(r,g,b) matches the auto-exposure metric, so a line auto-exposure kept is also seen
+        # here; the ±2-row window tolerates a line that does not cross the exact centre row.
+        best = 0
+        height = image.height()
+        for dy in (-2, -1, 0, 1, 2):
+            yy = yCenter + dy
+            if 0 <= yy < height:
+                color = image.pixelColor(x, yy)
+                channelMax = max(color.red(), color.green(), color.blue())
+                if channelMax > best:
+                    best = channelMax
+        return best
 
 
 

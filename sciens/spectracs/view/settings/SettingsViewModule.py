@@ -124,6 +124,11 @@ class SettingsViewModule(QWidget):
         layout.addWidget(captureImagesButton, 1, 0, 1, 1)
         captureImagesButton.clicked.connect(self.onClickedCaptureImagesButton)
 
+        measurementBenchButton = QPushButton()
+        measurementBenchButton.setText("Measurement bench")
+        layout.addWidget(measurementBenchButton, 2, 0, 1, 1)
+        measurementBenchButton.clicked.connect(self.onClickedMeasurementBenchButton)
+
         return result
 
     def __navigateTo(self, target):
@@ -161,6 +166,9 @@ class SettingsViewModule(QWidget):
 
     def onClickedCaptureImagesButton(self):
         self.__navigateTo("DevCaptureViewModule")
+
+    def onClickedMeasurementBenchButton(self):
+        self.__navigateTo("DevMeasurementBenchViewModule")
 
     def createInfosGroupBox(self):
         result = QGroupBox("Infos")

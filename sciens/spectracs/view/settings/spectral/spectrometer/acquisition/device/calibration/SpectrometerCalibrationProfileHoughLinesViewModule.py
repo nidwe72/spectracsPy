@@ -11,6 +11,7 @@ from sciens.spectracs.logic.spectral.acquisition.device.calibration.Spectrometer
     SpectrometerRegionOfInterestLogicModule
 from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
     SpectrometerCalibrationProfileHoughLinesVideoThread
+from sciens.spectracs.logic.appliction.video.capture.AutoExposureCaptureHelper import AutoExposureCaptureHelper
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
@@ -110,6 +111,16 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         self.allHoughLines = []
         self.videoThread = SpectrometerCalibrationProfileHoughLinesVideoThread()
         self.videoThread.setIsVirtual(isVirtual)
+
+        # Real camera: auto-expose FIRST (a live pre-pass) so the ROI burst is not bloomed — a clipped
+        # capture merges the CFL lines and Hough/edge detection fails (SPEC_dev_measure_bench D6).
+        if not isVirtual:
+            deviceIndex, bestExposure = AutoExposureCaptureHelper().autoExposeForSensor(sensor)
+            if deviceIndex is not None:
+                self.videoThread.setDeviceId(deviceIndex)
+            if bestExposure is not None:
+                self.videoThread.setExposure(bestExposure)
+
         self.videoThread.videoThreadSignal.connect(self.handleVideoThreadSignal)
         self.videoThread.setFrameCount(50)
         self.detectionStarted.emit()
