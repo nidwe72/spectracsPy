@@ -161,6 +161,9 @@ is *grating-block + camera-lens + sensor* as one stack. Consequences for the res
   the optical layout and what to expect from a cheap grating + lens build.
 
 ## Sources
-- `KB_led_and_oil_spectra.md` (LED + oil sources). Fruhwirth & Hermetter (2007), ResearchGate 227762370.
+- `KB_led_and_oil_spectra.md` (LED + oil sources). Fruhwirth & Hermetter (2007), *Seeds and oil of the
+  Styrian oil pumpkin*, Eur. J. Lipid Sci. Technol. **109**(11):1128–1140, DOI
+  [10.1002/ejlt.200700105](https://doi.org/10.1002/ejlt.200700105) — record in
+  `spectracs-references/articles/`.
 - Implemented colour math: `SPEC_spectrum_processing.md`. Prior absorptance prototype: `unsorted/oils.jl`.
 - Real measured spectra: `../../spectracs-evaluations/` (`.dx`/`.sgd`, incl. `light_*` references + `*abs*`).

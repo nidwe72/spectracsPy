@@ -1,5 +1,7 @@
 import pyqtgraph as pg
 
+from PySide6.QtWidgets import QSizePolicy
+
 from sciens.spectracs.view.application.widgets.chart.ChartThemeUtil import ChartThemeUtil
 
 
@@ -10,6 +12,10 @@ class SpectrumPlotWidget(pg.PlotWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         ChartThemeUtil.stylePlotWidget(self)
+        # Responsive: shrink to fit narrow / phone-width panels (SPEC_dev_measure_bench.md §18/H1) — a modest
+        # floor (NOT 0) keeps the plot usable and prevents total collapse in a horizontal layout.
+        self.setMinimumWidth(120)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def plotSpectrum(self, spectrum, title=None, color="y", clear=True, width=2):
         # clear=False overlays onto the existing curves (used for gray per-frame traces + a green mean,

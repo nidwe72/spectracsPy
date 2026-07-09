@@ -114,6 +114,42 @@ extract UV/VIS max ~440 nm.
 transmitted colour further toward brown. So the green↔brown verdict axis is governed by
 **(pigment concentration × path)** *and* **roast-browning** — both expressible as terms in `A_oil(λ)`.
 
+> **Scope caveat (literature, 2026-07-09 sweep — see Sources + `spectracs-references/articles/`).** The visible-absorption / colour route is
+> well-founded for **roast & quality** (green→brown), but colour **alone cannot authenticate** the oil
+> (detect adulteration/blending): natural colour variance from roasting swamps adulterant colour shifts
+> (Balbino et al. 2022 — CIELAB + PCA could not separate pure from sunflower-cut PSO; only **NIR** at
+> 904–922 & 1675–1699 nm could). Keep the product's **quality verdict** and any **purity/authenticity**
+> claim strictly separate — authentication needs NIR/FTIR/NMR/Raman, not the visible band.
+
+### Pigment absorption peaks (Fruhwirth & Hermetter 2007, Fig. 3A) — and our bench reproduces them
+The tetrapyrrole pigments give a classic **Soret + Q-band** signature. Read off Fig. 3A (fresh oil in
+methanol; positions ±~5–10 nm):
+
+| Peak | ~λ | Transition | Role in colour |
+|---|---|---|---|
+| **Soret** | **~430 nm** | strong, fully-allowed π→π* | dominant **blue** wall of the green window |
+| **Q-band 1** | **~575–580 nm** | weak vibronic Q-band | trims the **yellow** long-λ edge of the green window |
+| **Q-band 2** | **~630 nm** | weak Q-band (near the 635 nm fluorescence) | **orange/red** absorption |
+
+(+ a steep UV rise <320 nm, not a pigment peak.) The green transmission window (~500–560 nm) sits *between*
+the Soret and the Q-bands — that geometry is the dichromatism.
+
+**Why the ~575–580 nm Q-band is the star of OUR measurement (even though it's tiny in Fig. 3A).** Fig. 3A
+is a *dilute* solution, so the Soret towers (~0.85 A) and the Q-band is ~0.06. But the bench measures **neat
+oil** over a real path: Beer–Lambert scales everything by conc×path, so the ~14×-stronger Soret **saturates
+the blue** while the ~575 nm Q-band grows into the strongest *structured* feature left on the measurable
+curve. In the dev-bench T/A run (2026-07-09, `capture001`) the absorption showed exactly this: a strong
+short-λ (Soret) rise toward blue **plus a clean ~570 nm bump (A≈0.46)** — i.e. the instrument resolved the
+real **protochlorophyll/protopheophytin Q-band**, a neat-oil version of Fig. 3A. Notes:
+- The ~575 band is **not** carotenoid (lutein/β-carotene absorb ~445–475 nm) and **not** an LED artifact
+  (A=−log₁₀(S/R) divides the LED envelope out). Disambiguate from the sharp Hg **577/579 nm** *calibration*
+  doublet — different thing, same neighbourhood; the pigment band is broad.
+- Its **depth is a sensitive freshness/quality signal**: the Q-bands collapse fastest under sunlight/oxidation
+  (Fig. 3A 3/5/14-day series) → a shrinking ~575 dip = pigment loss = degraded oil.
+- The paper doesn't resolve which component (protochlorophyll vs protopheophytin, a vs b) contributes; the
+  ~575 band is likely an **aggregate** of several close transitions. Full summary:
+  `spectracs-references/articles/Fruhwirth_Hermetter_2007_SUMMARY.pdf`.
+
 ### Implication for SAMPLE synthesis (forward, physical)
 `A_oil(λ) = chlorophyll(Soret≈430, Q≈665) + carotenoid/lutein(≈440–480) + browning(rising toward blue) `,
 scaled by **concentration × path** (the dichromatism knob). Then `SAMPLE S = R · 10^(−A_oil)`, colour from
@@ -164,8 +200,31 @@ Harvested LED spectra + this index live in **`../../spectracs-references/`**. Ph
 
 ## Sources
 - Avonec 3 W high-power LEDs: https://www.avonec.de/3w-high-power-led/
-- Fruhwirth & Hermetter (2007), *Seeds and oil of the Styrian oil pumpkin* — ResearchGate 227762370;
-  Wikipedia *Pumpkin seed oil*.
+- Fruhwirth & Hermetter (2007), *Seeds and oil of the Styrian oil pumpkin: Components and biological
+  activities*, Eur. J. Lipid Sci. Technol. **109**(11):1128–1140, DOI
+  [10.1002/ejlt.200700105](https://doi.org/10.1002/ejlt.200700105) (bronze OA; ResearchGate 227762370).
+  Reference record: `spectracs-references/articles/Fruhwirth_Hermetter_2007_Styrian_oil_pumpkin.md`.
+  Also Wikipedia *Pumpkin seed oil*.
+- **PSO spectroscopy literature sweep (2026-07-09; records + some PDFs in `spectracs-references/articles/`):**
+  - Lankmayr et al. (2004), *Chemometrical classification of pumpkin seed oils using UV-Vis, NIR and FTIR*,
+    J. Biochem. Biophys. Methods **61**:95–106, DOI [10.1016/j.jbbm.2004.04.007](https://doi.org/10.1016/j.jbbm.2004.04.007)
+    — 186 Styrian oils → sensory-quality classes (the UV/VIS-fingerprint QC precedent).
+  - Balbino et al. (2022), *Foods* **11**(6):835, DOI [10.3390/foods11060835](https://doi.org/10.3390/foods11060835)
+    (gold OA) — **colour alone can't authenticate PSO; only NIR can** (the scope caveat above).
+  - Lörchner et al. (2024), *Food Anal. Methods* **17**:332–347, DOI [10.1007/s12161-023-02568-4](https://doi.org/10.1007/s12161-023-02568-4)
+    — NMR vs MIR vs Raman adulteration benchmark.
+  - Dogruer et al. (2021), *Food Chem.* **345**:128815, DOI [10.1016/j.foodchem.2020.128815](https://doi.org/10.1016/j.foodchem.2020.128815)
+    — fluorescence + MIR; PSO best-predicted.
+  - Sikorska et al. (2005), *Food Chem.* **89**:217–225, DOI [10.1016/j.foodchem.2004.02.028](https://doi.org/10.1016/j.foodchem.2004.02.028)
+    — chlorophyll fluorescence signature (ex ~405 / em ~670 nm).
+  - Fruhwirth, Wenzl, El-Toukhy, **Wagner**, Hermetter (2003), *Fluorescence screening of antioxidant
+    capacity in pumpkin seed oils*, EJLST **105**(6):266–274, DOI
+    [10.1002/ejlt.200390055](https://doi.org/10.1002/ejlt.200390055) — fluorescence, same TU Graz group as
+    the 2007 review.
+  - Wenzl, Prettner, Schweiger, **Wagner** (2002), *An improved method to discover adulteration of Styrian
+    pumpkin seed oil*, J. Biochem. Biophys. Methods **53**:193–202, DOI
+    [10.1016/S0165-022X(02)00108-2](https://doi.org/10.1016/S0165-022X(02)00108-2) — Δ5-sterol test
+    (chromatography, not spectroscopy).
 - Carotenoid/chlorophyll spectral properties in solvents: ScienceDirect S2772753X22001666;
   β-carotene in pumpkin: PMC8857520.
 - Spectral reconstruction: *Physically Plausible Spectral Reconstruction*, MDPI Sensors 20(21):6399;

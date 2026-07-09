@@ -1,11 +1,13 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QSizePolicy, QVBoxLayout
 
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.model.spectral.evaluation.ColorSwatchView import ColorSwatchView
 from sciens.spectracs.model.spectral.evaluation.LabelView import LabelView
+from sciens.spectracs.model.spectral.evaluation.MetricFieldView import MetricFieldView
 from sciens.spectracs.model.spectral.evaluation.SpectrumPlotView import SpectrumPlotView
 from sciens.spectracs.model.spectral.evaluation.VerdictView import VerdictView
+from sciens.spectracs.view.application.widgets.page.TooltipPageLabel import TooltipPageLabel
 
 
 class EvaluationResultRenderer:
@@ -19,7 +21,10 @@ class EvaluationResultRenderer:
         container.setLayout(layout)
 
         swatchRow = None
+        metricGrid = None  # accumulates consecutive MetricFieldViews into one grid (aligned label column)
         for item in evaluationResult.getItems():
+            if not isinstance(item, MetricFieldView):
+                metricGrid = self.__flushMetricGrid(layout, metricGrid)
             if isinstance(item, ColorSwatchView):
                 if swatchRow is None:
                     swatchRow = self.__swatchRow()
@@ -27,15 +32,49 @@ class EvaluationResultRenderer:
                 self.__addSwatch(swatchRow, item)
             elif isinstance(item, VerdictView):
                 layout.addWidget(self.__verdictLabel(item.roastState))
+            elif isinstance(item, MetricFieldView):
+                metricGrid = self.__addMetricRow(metricGrid, item)
             elif isinstance(item, LabelView):
-                layout.addWidget(QLabel(item.text))
+                label = QLabel(item.text)
+                label.setWordWrap(True)  # long text (e.g. the header) must wrap, else it forces the whole
+                layout.addWidget(label)  # panel wide → horizontal scrollbar at narrow width (§18.1)
             elif isinstance(item, SpectrumPlotView):
                 title = item.title or "Spectrum"
                 points = len(item.spectrum.valuesByNanometers) if item.spectrum is not None else 0
                 layout.addWidget(QLabel("%s (%d points)" % (title, points)))
 
+        self.__flushMetricGrid(layout, metricGrid)
         layout.addStretch(1)
         return container
+
+    def __addMetricRow(self, metricGrid, metricFieldView):
+        # A Spectrometer-setup-style row: gray PageLabel chip (col 0, 30%) + read-only value field (col 1,
+        # 70%). Clicking the label pops the tooltip (TooltipPageLabel). Consecutive metrics share one grid.
+        if metricGrid is None:
+            widget = QWidget()
+            grid = QGridLayout()
+            grid.setContentsMargins(0, 0, 0, 0)
+            grid.setSpacing(Metrics.S)
+            grid.setColumnStretch(0, 30)
+            grid.setColumnStretch(1, 70)
+            widget.setLayout(grid)
+            metricGrid = [widget, grid, 0]
+        _, grid, row = metricGrid
+        label = TooltipPageLabel(metricFieldView.label)
+        label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        if metricFieldView.tooltip:
+            label.setToolTip(metricFieldView.tooltip)
+        field = QLineEdit(str(metricFieldView.value))
+        field.setReadOnly(True)
+        grid.addWidget(label, row, 0, 1, 1)
+        grid.addWidget(field, row, 1, 1, 1)
+        metricGrid[2] = row + 1
+        return metricGrid
+
+    def __flushMetricGrid(self, layout, metricGrid):
+        if metricGrid is not None:
+            layout.addWidget(metricGrid[0])
+        return None
 
     def __swatchRow(self):
         row = QWidget()

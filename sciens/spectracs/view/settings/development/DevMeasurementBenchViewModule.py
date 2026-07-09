@@ -1,16 +1,18 @@
 import numpy as np
+import pyqtgraph as pg
 
 from PySide6.QtCore import Qt, QEventLoop, QTimer, QRect
 from PySide6.QtGui import QPixmap, QColor, QPainter
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
-                               QSlider, QCheckBox, QTabWidget, QStackedWidget, QScrollArea, QSizePolicy)
+                               QSlider, QCheckBox, QTabWidget, QTabBar, QStackedWidget, QScrollArea,
+                               QProgressBar, QFrame, QSizePolicy)
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
 from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
-from sciens.spectracs.logic.spectral.acquisition.BenchRoiLogicModule import BenchRoiLogicModule
+from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import ExtendedRoiLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModule import MeanSpectrumLogicModule
@@ -25,8 +27,11 @@ from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
 from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
+from sciens.spectracs.plugin_sdk import SpectrumFeatureUtil
 from sciens.spectracs.plugin_sdk.roles import REFERENCE, SAMPLE, TRANSMISSION, ABSORPTION
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
+from sciens.spectracs.view.application.widgets.ScaledImageLabel import ScaledImageLabel
+from sciens.spectracs.view.spectral.workflow.EvaluationResultRenderer import EvaluationResultRenderer
 from sciens.spectracs.view.application.widgets.StepBarWidget import StepBarWidget
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.settings.development.DevCaptureVideoViewModule import DevCaptureVideoViewModule
@@ -69,7 +74,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__engine = None
         self.__workflow = None
         self.__cursor = 0
-        self.__phases = [SpectralWorkflowPhaseType.ACQUISITION, SpectralWorkflowPhaseType.PROCESSING]
+        self.__phases = [SpectralWorkflowPhaseType.ACQUISITION, SpectralWorkflowPhaseType.PROCESSING,
+                         SpectralWorkflowPhaseType.EVALUATION]
 
         self.__activeRole = REFERENCE
         self.__lockedExposure = None
@@ -83,14 +89,17 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__stack = None
         self.__videoViewModule = None
         self.__statusLabel = None
-        self.__roleComboBox = None
+        self.__roleTabBar = None
+        self.__innerTabs = None
+        self.__spectrumPlot = None
         self.__framesComboBox = None
         self.__exposureSlider = None
         self.__exposureLabel = None
         self.__autoExposureCheckBox = None
         self.__captureButton = None
-        self.__rolePlot = None
+        self.__captureProgress = None
         self.__processingTabs = None
+        self.__evaluationScroll = None
         self.__backButton = None
         self.__cancelButton = None
         self.__nextButton = None
@@ -109,6 +118,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__stack = QStackedWidget()
         self.__stack.addWidget(self.__buildAcquisitionPanel())   # index 0
         self.__stack.addWidget(self.__buildProcessingPage())     # index 1
+        self.__stack.addWidget(self.__buildEvaluationPage())     # index 2 (E1)
         result["stack"] = self.__stack
         return result
 
@@ -127,7 +137,10 @@ class DevMeasurementBenchViewModule(PageWidget):
         layout.addWidget(self.__nextButton, 0, 2, 1, 1)
         return result
 
-    # --- acquisition panel (single shared live preview + role toggle) ---
+    # --- acquisition panel (role tab-bar + shared [Captured image | Spectrum] — Option A, §15) ---
+
+    __IMAGE_TAB = 0
+    __SPECTRUM_TAB = 1
 
     def __buildAcquisitionPanel(self):
         panel = QWidget()
@@ -140,12 +153,26 @@ class DevMeasurementBenchViewModule(PageWidget):
                                        "camera. Capture the reference (blank) first, then the sample.")
         layout.addWidget(hint)
 
-        self.__videoViewModule = DevCaptureVideoViewModule()
-        self.__videoViewModule.setObjectName("DevMeasurementBenchViewModule.videoViewModule")
-        layout.addWidget(self.__videoViewModule)
-
         self.__statusLabel = self.createMessageLabel("")
         layout.addWidget(self.__statusLabel)
+
+        # Role tab-BAR (Reference / Sample) — the two ACQUISITION steps; selects which role Capture writes
+        # to (§15 Option A). Its content is the shared container below (so a QTabBar, not a QTabWidget).
+        self.__roleTabBar = QTabBar()
+        self.__roleTabBar.addTab("Reference")
+        self.__roleTabBar.addTab("Sample")
+        self.__roleTabBar.currentChanged.connect(self.__onRoleChanged)
+        layout.addWidget(self.__roleTabBar)
+
+        # Shared [ Captured image | Spectrum ] tabs: ONE live-video widget + ONE spectrum plot (re-plotted
+        # per active role). During auto-exposure → Captured image; after a capture → Spectrum (E3).
+        self.__videoViewModule = DevCaptureVideoViewModule()
+        self.__videoViewModule.setObjectName("DevMeasurementBenchViewModule.videoViewModule")
+        self.__spectrumPlot = SpectrumPlotWidget()
+        self.__innerTabs = QTabWidget()
+        self.__innerTabs.addTab(self.__videoViewModule, "Captured image")  # __IMAGE_TAB
+        self.__innerTabs.addTab(self.__spectrumPlot, "Spectrum")           # __SPECTRUM_TAB
+        layout.addWidget(self.__innerTabs)
 
         controls = QWidget()
         controls.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
@@ -154,16 +181,10 @@ class DevMeasurementBenchViewModule(PageWidget):
         controlsLayout.setSpacing(Metrics.S)
         controls.setLayout(controlsLayout)
 
-        self.__roleComboBox = QComboBox()
-        self.__roleComboBox.addItem("Reference", REFERENCE)
-        self.__roleComboBox.addItem("Sample", SAMPLE)
-        self.__roleComboBox.currentIndexChanged.connect(self.__onRoleChanged)
-        controlsLayout.addWidget(self.createLabeledComponent("Capture", self.__roleComboBox), 0, 0, 1, 2)
-
         self.__framesComboBox = QComboBox()
         self.__framesComboBox.addItems(self.__FRAME_CHOICES)
         self.__framesComboBox.setCurrentText(self.__DEFAULT_FRAMES)
-        controlsLayout.addWidget(self.createLabeledComponent("Frames", self.__framesComboBox), 1, 0, 1, 2)
+        controlsLayout.addWidget(self.createLabeledComponent("Frames", self.__framesComboBox), 0, 0, 1, 2)
 
         self.__exposureSlider = QSlider(Qt.Orientation.Horizontal)
         self.__exposureSlider.setMinimum(self.__EXPOSURE_MIN)
@@ -178,23 +199,44 @@ class DevMeasurementBenchViewModule(PageWidget):
         exposureRowLayout.setContentsMargins(0, 0, 0, 0)
         exposureRowLayout.setSpacing(Metrics.S)
         exposureRow.setLayout(exposureRowLayout)
+        # H3: auto-exposure on its OWN line (full width) so its label no longer wraps/cuts at narrow width
+        # (the wrapping was what made the row too tall + overflow).
         exposureRowLayout.addWidget(self.__exposureSlider, 0, 0, 1, 1)
         exposureRowLayout.addWidget(self.__exposureLabel, 0, 1, 1, 1)
-        exposureRowLayout.addWidget(self.__autoExposureCheckBox, 0, 2, 1, 1)
-        exposureRowLayout.setColumnStretch(0, 70)
-        exposureRowLayout.setColumnStretch(1, 10)
-        exposureRowLayout.setColumnStretch(2, 20)
-        controlsLayout.addWidget(self.createLabeledComponent("Exposure", exposureRow), 2, 0, 1, 2)
+        exposureRowLayout.addWidget(self.__autoExposureCheckBox, 1, 0, 1, 2)
+        exposureRowLayout.setColumnStretch(0, 85)
+        exposureRowLayout.setColumnStretch(1, 15)
+        controlsLayout.addWidget(self.createLabeledComponent("Exposure", exposureRow), 1, 0, 1, 2)
 
         self.__captureButton = QPushButton("Capture reference")
         self.__captureButton.clicked.connect(self.onClickedCapture)
-        controlsLayout.addWidget(self.__captureButton, 3, 0, 1, 2)
+        controlsLayout.addWidget(self.__captureButton, 2, 0, 1, 2)
+
+        # Per-frame capture progress (F1) — hidden when idle, shown/advanced during a capture.
+        self.__captureProgress = QProgressBar()
+        self.__captureProgress.setTextVisible(True)
+        self.__captureProgress.setVisible(False)
+        controlsLayout.addWidget(self.__captureProgress, 3, 0, 1, 2)
 
         layout.addWidget(controls)
-
-        self.__rolePlot = SpectrumPlotWidget()
-        layout.addWidget(self.__rolePlot)
         return panel
+
+    def __roleForTabIndex(self, index):
+        return REFERENCE if index == 0 else SAMPLE
+
+    def __buildEvaluationPage(self):
+        # E1: EVALUATION is its own phase/page (was a Processing tab). Populated by __runEvaluation on entry.
+        page = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, Metrics.S, 0, 0)
+        page.setLayout(layout)
+        self.__evaluationScroll = QScrollArea()
+        self.__evaluationScroll.setWidgetResizable(True)
+        # I2: the content already fits (min-width ~187 « panel) — no band-aid H-scrollbar-off needed. Drop
+        # the frame + rely on the content's right margin so nothing is clipped at the edge.
+        self.__evaluationScroll.setFrameShape(QFrame.Shape.NoFrame)
+        layout.addWidget(self.__evaluationScroll)
+        return page
 
     def __buildProcessingPage(self):
         page = QWidget()
@@ -244,9 +286,13 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__workflow = self.__engine.getWorkflow()
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.ACQUISITION)  # declares REFERENCE + SAMPLE
 
-        self.__stepBar.setSteps(["Acquisition", "Processing"])
+        self.__stepBar.setSteps(["Acquisition", "Processing", "Evaluation"])
         self.__syncExposureToSensor()
-        self.__rolePlot.plotSpectrum(None, title="Reference")
+        self.__roleTabBar.blockSignals(True)
+        self.__roleTabBar.setCurrentIndex(0)  # start on Reference
+        self.__roleTabBar.blockSignals(False)
+        self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)  # start on the live camera image
+        self.__spectrumPlot.plotSpectrum(None, title="Reference")
         self.__renderPhase()
         self.__startStream()
 
@@ -317,7 +363,11 @@ class DevMeasurementBenchViewModule(PageWidget):
             self.__runProcessing()
             self.__cursor = 1
             self.__renderPhase()
-        else:
+        elif phaseType == SpectralWorkflowPhaseType.PROCESSING:
+            self.__runEvaluation()               # E1: EVALUATION is its own phase
+            self.__cursor = 2
+            self.__renderPhase()
+        else:  # EVALUATION -> terminal
             self.__goToSettings()
 
     # --- capture ---
@@ -329,24 +379,38 @@ class DevMeasurementBenchViewModule(PageWidget):
         if role == REFERENCE and self.__autoExposureCheckBox.isChecked():
             self.__runAutoExposure()
 
-        frames = int(self.__framesComboBox.currentText())
-        images = self.__grabFrames(frames)
-        if not images:
-            InWindowDialog.notify(self, "Capture failed", "No frames were delivered by the camera.")
-            return
+        frameCount = int(self.__framesComboBox.currentText())
+        self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)   # watch the spectra build (F1/E3)
+        self.__beginCaptureProgress(frameCount)
+        self.__waitForFirstFrame()
 
-        # Widen the ROI to the bench analysis window before extraction — needs the real raster width to
-        # clamp 700 nm to the sensor edge (§12). Idempotent; restored on leaving the view.
-        self.__applyExtendedRoi(images[0].width())
-
+        # Per-frame loop (F1, SPEC §16.1): grab → extract → re-plot traces-so-far + running mean → step the
+        # progress bar. The event-loop pump between frames is what paints the progress + live plot.
+        images = []
         spectrum = None
-        for image in images:
+        for i in range(frameCount):
+            self.__pumpFrames(120)  # let the stream advance a frame
+            if self.__latestImage is None:
+                continue
+            image = self.__latestImage.copy()  # detach from the live numpy buffer (RD-2)
+            images.append(image)
+            if spectrum is None:
+                # Widen the ROI to the bench analysis window before the FIRST extraction — needs the real
+                # raster width to clamp 700 nm to the sensor edge (§12). Idempotent; restored on leave.
+                self.__applyExtendedRoi(image.width())
             signal = SpectralVideoThreadSignal()
             signal.image = image
             parameters = ImageSpectrumAcquisitionLogicModuleParameters()
             parameters.setVideoSignal(signal)
             parameters.spectrum = spectrum
             spectrum = ImageSpectrumAcquisitionLogicModule().execute(parameters).spectrum
+            self.__plotRoleSpectrum(role, spectrum)  # live: frame traces so far + running mean
+            self.__stepCaptureProgress(i + 1)
+
+        self.__endCaptureProgress()
+        if not images or spectrum is None:
+            InWindowDialog.notify(self, "Capture failed", "No frames were delivered by the camera.")
+            return
 
         step = self.__stepForRole(role)
         container = SpectraContainer()
@@ -365,16 +429,8 @@ class DevMeasurementBenchViewModule(PageWidget):
                 self.__stepForRole(SAMPLE).setContainer(None)
 
         self.__plotActiveRole()
+        self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)  # E3: after a capture, reveal the spectrum
         self.__refreshNav()
-
-    def __grabFrames(self, count):
-        self.__waitForFirstFrame()
-        images = []
-        for _ in range(count):
-            self.__pumpFrames(120)  # let the stream advance a frame
-            if self.__latestImage is not None:
-                images.append(self.__latestImage.copy())
-        return images
 
     def __stepForRole(self, role):
         phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.ACQUISITION)
@@ -384,19 +440,43 @@ class DevMeasurementBenchViewModule(PageWidget):
         return None
 
     def __plotActiveRole(self):
-        role = self.__activeRole
+        self.__plotRoleSpectrum(self.__activeRole, self.__roleSpectra.get(self.__activeRole))
+
+    def __plotRoleSpectrum(self, role, spectrum):
+        # Plot a role's per-frame traces + running mean on the shared spectrum plot. Called live per frame
+        # during capture (F1) and once after (from __plotActiveRole).
+        plot = self.__spectrumPlot
+        if plot is None:
+            return
         title = "Reference" if role == REFERENCE else "Sample"
-        spectrum = self.__roleSpectra.get(role)
         if spectrum is None:
-            self.__rolePlot.plotSpectrum(None, title=title)
+            plot.plotSpectrum(None, title=title)
             return
         frames = spectrum.getCapturedValuesByNanometers()
-        self.__rolePlot.plotSpectrum(None, title=title)  # clear + set title
+        plot.plotSpectrum(None, title=title)  # clear + set title
         for values in frames:
             frameSpectrum = Spectrum()
             frameSpectrum.setValuesByNanometers(dict(values))
-            self.__rolePlot.addTrace(frameSpectrum, color=self.__FRAME_COLOR, width=1)
-        self.__rolePlot.addTrace(self.__meanSpectrum(spectrum), color=self.__MEAN_COLOR, width=2)
+            plot.addTrace(frameSpectrum, color=self.__FRAME_COLOR, width=1)
+        plot.addTrace(self.__meanSpectrum(spectrum), color=self.__MEAN_COLOR, width=2)
+
+    # --- capture progress bar (F1) ---
+
+    def __beginCaptureProgress(self, total):
+        if self.__captureProgress is None:
+            return
+        self.__captureProgress.setMaximum(max(1, total))
+        self.__captureProgress.setValue(0)
+        self.__captureProgress.setFormat("capturing frame %v / %m")
+        self.__captureProgress.setVisible(True)
+
+    def __stepCaptureProgress(self, value):
+        if self.__captureProgress is not None:
+            self.__captureProgress.setValue(value)
+
+    def __endCaptureProgress(self):
+        if self.__captureProgress is not None:
+            self.__captureProgress.setVisible(False)
 
     def __meanSpectrum(self, spectrum):
         parameters = MeanSpectrumLogicModuleParameters()
@@ -419,6 +499,63 @@ class DevMeasurementBenchViewModule(PageWidget):
             if widget is not None:
                 self.__processingTabs.addTab(widget, step.getLabel())
 
+    # --- evaluation (own phase — E1) ---
+
+    def __runEvaluation(self):
+        # Plugin-driven, RENDER ONLY (SPEC_pumpkin_peak_ratio_eval.md P2/§15 E1). Run the EVALUATION hook on
+        # phase entry and (re)build the evaluation page. Idempotent on Back-then-Next.
+        evaluationPhase = self.__workflow.getPhase(SpectralWorkflowPhaseType.EVALUATION)
+        evaluationPhase.getSteps().clear()
+        self.__engine.runPhaseHook(SpectralWorkflowPhaseType.EVALUATION)
+
+        content = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
+        layout.setSpacing(Metrics.M)
+        content.setLayout(layout)
+
+        steps = list(evaluationPhase.getSteps().values())
+        if not steps:
+            layout.addWidget(QLabel("No evaluation produced (insufficient signal)."))
+        for step in steps:
+            result = step.getEvaluationResult()
+            if result is not None:
+                layout.addWidget(EvaluationResultRenderer().render(result))
+
+        plot = self.__absorptionBandsPlot()
+        if plot is not None:
+            layout.addWidget(QLabel("Absorption A(λ) with the measurement bands:"))
+            layout.addWidget(plot)
+        layout.addStretch(1)
+        self.__evaluationScroll.setWidget(content)
+
+    def __absorptionBandsPlot(self):
+        absorption = self.__findProcessingSpectrum(ABSORPTION)
+        if absorption is None:
+            return None
+        plot = SpectrumPlotWidget()
+        plot.plotSpectrum(absorption, title="A(λ) — bands")
+        # Shade the three bands using DevSpectralPlugin's (hard-coded) constants — the plugin owns them.
+        for band, rgba in ((DevSpectralPlugin.BLUE_BAND, (46, 111, 176, 60)),
+                           (DevSpectralPlugin.GREEN_BAND, (46, 139, 87, 60)),
+                           (DevSpectralPlugin.Q_BASELINE, (184, 134, 11, 45))):
+            region = pg.LinearRegionItem(values=band, movable=False, brush=pg.mkBrush(*rgba))
+            region.setZValue(-10)
+            plot.addItem(region)
+        peak = SpectrumFeatureUtil().peakInRange(absorption, *DevSpectralPlugin.Q_SEARCH)
+        if peak is not None:
+            plot.addItem(pg.InfiniteLine(pos=peak[0], angle=90,
+                                         pen=pg.mkPen((200, 60, 60), width=1, style=Qt.PenStyle.DashLine)))
+        return plot
+
+    def __findProcessingSpectrum(self, role):
+        phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.PROCESSING)
+        for step in phase.getSteps().values():
+            container = step.getContainer()
+            if container is not None and role in container.getSpectra():
+                return container.getSpectra()[role]
+        return None
+
     def __processingStepWidget(self, step):
         view = step.getView()
         if view is not None and getattr(view, "spectrum", None) is not None:
@@ -436,28 +573,28 @@ class DevMeasurementBenchViewModule(PageWidget):
         return None
 
     def __rasterTab(self, role):
-        wrapper = QScrollArea()
-        wrapper.setWidgetResizable(True)
-        content = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
-        layout.setSpacing(Metrics.M)
-        content.setLayout(layout)
-
+        # I1: the full masked frame and the cropped ROI go into TWO sub-tabs (one image each → fits the
+        # panel width AND height, no scrollbar) instead of stacking both in a scrolled column.
         image = self.__representativeFrames.get(role)
         if image is None:
-            layout.addWidget(QLabel("No captured frame."))
-            wrapper.setWidget(content)
-            return wrapper
-
+            return QLabel("No captured frame.")
         roi = self.__roi()
-        layout.addWidget(QLabel("Raw frame — region outside the ROI blacked out (preview only):"))
-        layout.addWidget(self.__imageLabel(self.__maskOutsideRoi(image, roi)))
-        layout.addWidget(QLabel("Cropped ROI raster:"))
-        layout.addWidget(self.__imageLabel(self.__cropToRoi(image, roi)))
+        tabs = QTabWidget()
+        tabs.addTab(self.__rasterImageTab("Region outside the ROI blacked out (preview only)",
+                                          self.__maskOutsideRoi(image, roi)), "Full frame")
+        tabs.addTab(self.__rasterImageTab("Cropped to the ROI", self.__cropToRoi(image, roi)), "Cropped ROI")
+        return tabs
+
+    def __rasterImageTab(self, caption, image):
+        widget = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
+        layout.setSpacing(Metrics.S)
+        widget.setLayout(layout)
+        layout.addWidget(QLabel(caption))
+        layout.addWidget(self.__imageLabel(image))
         layout.addStretch(1)
-        wrapper.setWidget(content)
-        return wrapper
+        return widget
 
     def __roi(self):
         calibration = ApplicationContextLogicModule().getApplicationSettings() \
@@ -486,7 +623,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         x1, x2 = calibration.regionOfInterestX1, calibration.regionOfInterestX2
         if x1 is None or x2 is None:
             return
-        newX1, newX2 = BenchRoiLogicModule().extendedXBounds(calibration, imageWidth,
+        newX1, newX2 = ExtendedRoiLogicModule().extendedXBounds(calibration, imageWidth,
                                                              self.__NM_MIN, self.__NM_MAX)
         if newX1 is None or newX2 is None:
             return
@@ -529,17 +666,15 @@ class DevMeasurementBenchViewModule(PageWidget):
         return image.copy(roi)
 
     def __imageLabel(self, image):
-        label = QLabel()
-        pixmap = QPixmap.fromImage(image)
-        if pixmap.width() > 720:
-            pixmap = pixmap.scaledToWidth(720, Qt.TransformationMode.SmoothTransformation)
-        label.setPixmap(pixmap)
+        # H2: a resize-aware label that scales the frame to the panel width (no fixed 720 → no H-scrollbar).
+        label = ScaledImageLabel()
+        label.setImagePixmap(QPixmap.fromImage(image))
         return label
 
     # --- controls / exposure (mirrors DevCaptureViewModule) ---
 
     def __onRoleChanged(self):
-        self.__activeRole = self.__roleComboBox.currentData()
+        self.__activeRole = self.__roleForTabIndex(self.__roleTabBar.currentIndex())
         if self.__activeRole == SAMPLE and self.__lockedExposure is not None:
             self.__exposureSlider.blockSignals(True)
             self.__exposureSlider.setValue(self.__lockedExposure)
@@ -585,8 +720,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         if self.__exposureSlider is not None:
             self.__exposureSlider.setEnabled(onAcquisition and streaming and not busy
                                              and not autoOn and not sampleLocked)
-        if self.__roleComboBox is not None:
-            self.__roleComboBox.setEnabled(onAcquisition and not busy)
+        if self.__roleTabBar is not None:
+            self.__roleTabBar.setEnabled(onAcquisition and not busy)
         if self.__framesComboBox is not None:
             self.__framesComboBox.setEnabled(onAcquisition and not busy)
 
@@ -627,7 +762,21 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__latestImage = videoSignal.image
         if self.__videoViewModule is not None:
             self.__videoViewModule.handleVideoThreadSignal(videoSignal)
+            width = videoSignal.image.width() if videoSignal.image is not None else None
+            if width is not None and width != getattr(self, '_DevMeasurementBenchViewModule__previewRoiWidth', None):
+                self.__previewRoiWidth = width
+                self.__applyPreviewRoiOverlay(width)
         event.set()
+
+    def __applyPreviewRoiOverlay(self, imageWidth):
+        # Draw the extended 400–700 window on the live acquisition preview — the same window the bench
+        # analyses, shared with the capture view (SPEC_dev_measure_bench.md §14).
+        calibration = self.__calibration()
+        extended = ExtendedRoiLogicModule().extendedRoi(calibration, imageWidth) if calibration is not None else None
+        if extended is None:
+            self.__videoViewModule.clearRoi()
+        else:
+            self.__videoViewModule.setRoi(*extended)
 
     # --- auto-exposure (bisection over the live stream — mirrors DevCaptureViewModule) ---
 
@@ -635,6 +784,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         if self.__videoThread is None or self.__autoExposing:
             return
         self.__autoExposing = True
+        if self.__innerTabs is not None:
+            self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)  # E3: watch the frame while exposure converges
         self.__updateControls()
         self.__waitForFirstFrame()
         probe = {"i": 0}

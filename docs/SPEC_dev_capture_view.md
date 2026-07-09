@@ -408,6 +408,19 @@ sensor). Recompute-and-apply at the moments the inputs can change — **not** pe
   authoring stays in the calibration flow (`SpectrometerCalibrationProfileHoughLines*`).
 - **No resolution-scaling** (§11.2 caveat) until/unless the optional P4 resolution combo lands.
 
+### 11.7 Follow-up (IMPLEMENTED 2026-07-09): draw the EXTENDED 400–700 window, not the authored ROI
+
+**Change requested** ("yes, show the ROI"): the overlay should draw the **extended 400–700 nm window** — the
+same window the measurement bench analyses (`SPEC_dev_measure_bench.md` §12/§14) — so *what the human frames
+equals what gets measured*. Design:
+- Compute the box via the **shared `ExtendedRoiLogicModule`** (promoted from `BenchRoiLogicModule`): invert
+  the calibration nm→px for 400/700, clamp to the raster (→ ~692 nm on the 1600 px sensor). Needs the frame
+  width → compute on the first captured frame.
+- Feed the extended `(x1,y1,x2,y2)` to `setRoi` instead of the authored `X1/X2` (Y stays from the
+  calibration). The §11.1 predicate + §11.2 coordinate handling are unchanged.
+- Tracked as **P4** in `SPEC_pumpkin_peak_ratio_eval.md` §10. Supersedes the "draws the authored ROI"
+  behaviour of §11.3 once built.
+
 ### 11.6 Verification (click-through, when implemented)
 
 With the ELP plugged in, logged in as master:

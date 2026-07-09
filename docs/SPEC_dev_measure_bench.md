@@ -449,9 +449,8 @@ discoverable without shouting. Optional nicety: lightly mark the extrapolated ta
 - **No persisted change to the calibration ROI** — the widening is an **in-memory, restored-on-exit**
   mutation (§12.4); `SpectrometerCalibrationProfile.regionOfInterest*` in the DB and its authored A–D are
   never written. A re-login reloads the original.
-- **No change to the capture-view ROI overlay (`SPEC_dev_capture_view.md` §11)** — that overlay draws the
-  *authored* calibration ROI. If Edwin later wants the capture overlay to also show the 400–700 window,
-  that's a separate request.
+- ~~No change to the capture-view ROI overlay~~ **— SUPERSEDED by §14 (Edwin confirmed):** the capture-view
+  overlay now draws the **extended 400–700 window** via the shared `ExtendedRoiLogicModule`.
 - **Not a per-measurement control** — fixed 400–700 constants; no slider/settings UI in this increment.
 - **No capture-resolution change** — the transparent adjust shrinks the *window* to the raster, it does not
   re-open the camera at a wider mode to physically reach 700 nm (that's the deferred per-chipset resolution
@@ -468,3 +467,207 @@ discoverable without shouting. Optional nicety: lightly mark the extrapolated ta
    widening).
 5. **Leave the bench (Back / navigate away), reopen another calibrated view → the ROI is the original
    authored one** (temporary widening was restored). Force an error mid-run → still restored.
+
+---
+
+## 13. Acquisition as two tabs — Reference & Sample (IMPLEMENTED 2026-07-09 — RESTRUCTURED by §15)
+
+> **Superseded in part by §15:** the plain per-role `QTabWidget` shipped here is reworked into a role **tab
+> bar** + a shared `[ Captured image | Spectrum ]` container (Option A). §13 stays for history.
+
+Edwin (2026-07-09): the two acquisition steps (REFERENCE capture, SAMPLE capture) should be **two tabs**,
+not the current selection list.
+
+**As-is:** the acquisition panel uses a **`__roleComboBox`** (`QComboBox` with "Reference"/"Sample",
+`DevMeasurementBenchViewModule` L157–161) whose `currentIndexChanged` sets `__activeRole`; one shared live
+preview + Capture button acts on the selected role.
+
+**To be:** a **`QTabWidget`** (or the existing `StepBarWidget`/stack pattern) with a **Reference tab** and a
+**Sample tab**. Selecting a tab sets `__activeRole` (replacing `__onRoleChanged`); each tab shows its own
+capture state (captured/not, its representative frame, its role plot). The Capture button captures into the
+active tab's role.
+
+Design notes:
+- **Keep the single camera stream** — both tabs share one live preview (the camera doesn't change per role);
+  the tab only switches *which role the capture writes to* and *which role's result is shown*.
+- **Preserve the existing role logic** — `__stepForRole`, `__roleSpectra`, `__representativeFrames`,
+  the N2 rule (a fresh REFERENCE re-locks exposure and clears a stale SAMPLE), and the exposure lock still
+  apply; only the *selector widget* changes (combo → tabs).
+- **Reference-first affordance** — the Reference tab is the default/left tab; the Next→Processing gate still
+  needs both roles captured (`__acquisitionComplete`).
+- Cosmetic only — no pipeline change.
+
+## 14. Shared extended-ROI with the capture view (IMPLEMENTED 2026-07-09 — overlay draws the ROI)
+
+The 400–700 extended ROI (§12, `BenchRoiLogicModule`) and the capture-view ROI **overlay**
+(`SPEC_dev_capture_view.md` §11) use **one shared extended-ROI computation**, so *what the human frames in
+the capture view equals what the bench analyses*. Decision (Edwin 2026-07-09: **"yes, show the ROI"**):
+- **Promote `BenchRoiLogicModule` → shared `ExtendedRoiLogicModule`** (pure: invert calibration nm→px for
+  400/700, clamp to the raster). Used by (a) the bench analysis (§12) and (b) the capture-view overlay.
+- **The capture-view overlay draws the extended 400–700 window** (not the authored ~405–632 ROI). This
+  **supersedes §12.6's "no change to the capture overlay" note**.
+- Needs the frame width to clamp → compute on the first captured frame (as §12 does). Show it in **both**
+  the capture view and the bench's live ref/sample preview for consistency.
+- Implemented as **P4** in `SPEC_pumpkin_peak_ratio_eval.md` §10 (shared with that work's ROI needs).
+
+---
+
+## 15. Bench restructure — evaluation phase + Option-A acquisition (IMPLEMENTED 2026-07-09, awaits click-through)
+
+**As built (E1–E3, `DevMeasurementBenchViewModule` only):** E1 — `__phases` +EVALUATION, StepBar
+`Acquisition|Processing|Evaluation`, a 3rd stack page (`__buildEvaluationPage`), `__runEvaluation` runs the
+eval hook on the PROC→EVAL Next (terminal "Close"), eval-tab injection removed from `__runProcessing`. E2 —
+role `QTabWidget`→`QTabBar` selector + a shared `[ Captured image | Spectrum ]` `QTabWidget` (one
+`videoViewModule` + one `spectrumPlot`, re-plotted per role). E3 — auto-exposure → `__IMAGE_TAB`, after a
+capture → `__SPECTRUM_TAB`. Headless-verified: 3 phases/3 pages, PROC→Next lands on the Evaluation page
+(Close) with the metrics rendered, Back returns to Processing.
+
+
+Edwin, after running the bench: three structural changes on top of the shipped P0/P1/P2/P3/P4.
+
+### 15.1 What changes
+1. **Evaluation → its own workflow phase.** The Evaluation is currently a tab in the Processing tab strip
+   (P2). Change it to a real **EVALUATION phase**: StepBar `Acquisition | Processing | Evaluation`, a 3rd
+   stack page, rendered from the workflow's EVALUATION steps; the eval hook runs on **phase entry**
+   (PROCESSING→EVALUATION), not inside `__runProcessing`.
+2. **Reference / Sample = the two ACQUISITION-phase steps**, shown as a **role tab bar**.
+3. **Captured-image / Spectrum tabbed container (Option A).** Below the role bar, a **shared** tab pair
+   `[ Captured image | Spectrum ]`: "Captured image" holds the one live-video widget (+ the captured still);
+   "Spectrum" holds the active role's graph (re-plotted on role change). One camera stream.
+
+```
+ACQUISITION phase        (StepBar:  Acquisition | Processing | Evaluation)
+  ┌ Reference | Sample ┐            role TAB BAR (selects the active ACQUISITION step)
+  │  ┌ Captured image | Spectrum ┐  ONE shared inner QTabWidget (Option A)
+  │  │  Captured image → live/captured frame  (+ P4 extended-ROI overlay)
+  │  │  Spectrum       → active role's graph
+  │  └───────────────────────────┘
+  │  Frames / Exposure / Capture
+```
+
+### 15.2 Behaviour
+- **During auto-exposure → force the "Captured image" tab** (watch the frame converge).
+- **After a capture → auto-switch to the "Spectrum" tab**; the user can flip back to "Captured image" any
+  time (manual switch always allowed).
+
+### 15.3 Rubber-duck (vs the shipped code)
+- **Nav surgery (main risk):** `__phases`, StepBar, a 3rd stack page, Back/Next, the terminal "Close" check
+  (moves to EVALUATION), `__renderPhase`/`__refreshNav` all update for 3 phases.
+- **Eval hook moves to phase-entry** (PROC→EVAL transition), idempotent on Back-then-Next; remove the
+  eval-tab injection from `__runProcessing`.
+- **Role selector = `QTabBar`, not `QTabWidget`** — Option A's content is a *shared* container below, so one
+  widget can't sit in two `QTabWidget` pages (reworks P3's role `QTabWidget`).
+- **Per-role plots → one shared spectrum plot** (collapses P3's `__rolePlots`), re-plotted on role change.
+- **One live-video widget** lives in the "Captured image" tab; hidden when Spectrum is active (stream keeps
+  running, negligible). **P4 ROI overlay draws on that same widget** → still visible in the image tab.
+- **Hint/status above the role bar; Frames/Exposure/Capture below the container** (cosmetic, decide once).
+
+### 15.4 Implementation phases (build on shipped P0/P1/P4)
+```
+| E1 | Evaluation -> its own phase (StepBar Acq|Proc|Eval, 3rd page; eval hook on phase entry;
+|    | drop eval-tab-in-processing).  TOUCH DevMeasurementBenchViewModule (nav/stack/StepBar).      MED
+| E2 | Acquisition Option-A: role QTabBar + shared [Captured image | Spectrum]; one shared spectrum
+|    | plot; video re-parented into the image tab.  TOUCH DevMeasurementBenchViewModule.            MED
+| E3 | Tab-switch behaviour: auto-expose -> Captured image; after capture -> Spectrum.               LOW
+Order:  E1 & E2 independent  ·  E3 after E2.
+```
+
+---
+
+## 16. Measurement UX — per-frame progress + live spectra + illustrative evaluation (2026-07-09)
+
+Edwin, after the E1–E3 run. Two changes (F1 view-side, F2 plugin-side).
+
+### 16.1 F1 — per-frame capture loop (progress bar + live spectra + running mean)
+`onClickedCapture` currently grabs all N frames then extracts them in a batch. Restructure to a **per-frame
+loop**: grab one frame → extract (`ImageSpectrumAcquisitionLogicModule.execute`, accumulating into the role
+spectrum) → re-plot the frames-so-far **traces + running mean** on the **Spectrum tab** → step a progress bar.
+- **`QProgressBar`** in the acquisition panel (range 0…N; hidden when idle, shown/reset at capture start,
+  `setValue(i+1)` per frame).
+- The extended-ROI widen (`__applyExtendedRoi`) moves to **before the first frame's extraction** (needs the
+  raster width from frame 0). Keep the `.copy()` on each grabbed frame (buffer lifetime).
+- Switch to the **Spectrum tab** at the start of the frame loop (E3 refined: Captured-image *during
+  auto-exposure*, Spectrum *during + after* capture). The event-loop pump between frames is what paints the
+  progress + live plot.
+
+### 16.2 F2 — illustrative evaluation labels
+Enrich the `LabelView` texts in `DevSpectralPlugin.__peakRatioResult` (the plugin owns the composition): each
+quantity gets meaning + how-to-read, e.g. `Greenness G = 1.91 (D_Q÷A_green) — headline quality index; higher
+= greener/fresher. PROVISIONAL`. Multi-line text renders in the existing `EvaluationResultRenderer` (QLabel).
+
+**Status: IMPLEMENTED 2026-07-09 (headless-verified; awaits click-through).**
+
+---
+
+## 17. Evaluation metrics as form fields — gray label + read-only field + click-tooltip (2026-07-09)
+
+Edwin: render the evaluation metrics like Spectrometer-setup rows — a **`PageLabel`** gray chip + a
+**read-only `QLineEdit`**; **clicking the label pops its description as a tooltip** (desktop). Supersedes the
+§16.2 (F2) two-line prose labels.
+
+**As built (G1–G3):**
+- **G1** — new Qt-free `MetricFieldView(label, value, tooltip)` (spectracsPy-model `.../evaluation/`);
+  `EvaluationResult.toJson/fromJson` gain a `"metric"` branch; exported from `plugin_sdk`.
+- **G2** — `EvaluationResultRenderer` renders consecutive `MetricFieldView`s into one 30/70 grid: a
+  **`TooltipPageLabel`** (new `PageLabel` subclass — `mousePressEvent` → `QToolTip.showText`, desktop
+  affordance since a phone has no hover; hover still works via `setToolTip`) + a read-only `QLineEdit`. The
+  gray-chip + read-only styling is free from the existing QSS (`PageLabel`, `QLineEdit[readOnly="true"]`).
+- **G3** — `DevSpectralPlugin.__peakRatioResult` emits `MetricFieldView`s (Greenness G, Pigment D_Q,
+  Browning A_blue, Clarity A_green, Browning ratio, G′) with the meaning as each label's tooltip; the header
+  + confidence stay `LabelView`.
+
+**Status: IMPLEMENTED 2026-07-09 (headless-verified: plugin emits 6 metric fields; serialization
+round-trips; renderer builds 6 gray label-chips + 6 read-only fields with tooltips; click handler runs).
+Awaits click-through.** `MetricFieldView` is shared infra — any plugin can use it.
+
+---
+
+## 18. Narrow/phone-width responsiveness — no horizontal scrollbars, content fits (DESIGN 2026-07-09)
+
+Edwin, running the bench at phone width: content overflows the panel → horizontal scrollbars + cut fields.
+Four issues, three fixes (H1 fixes two). Ties into the phone-width responsiveness work (`--phone`, Note20).
+
+### 18.1 Issues (from the screenshots)
+1. Evaluation **metric value fields cut at the right edge**.
+2. Evaluation **absorption plot** shows a horizontal scrollbar (shouldn't).
+3. Processing **raster image** shows a horizontal scrollbar (fixed `scaledToWidth(720)` too wide).
+4. Acquisition **exposure control row** doesn't fit width (auto-exposure cut) and is too tall.
+
+### 18.2 Key insight (1 + 2 share a root cause)
+The eval page is ONE `QScrollArea` holding the metric grid AND the pyqtgraph plot. The plot's large
+**minimum width** forces the whole content wider than the panel → the H-scrollbar (2) AND the metric fields
+stretch past the viewport and clip (1). Shrinking the plot fixes both.
+
+### 18.3 Fixes (H1–H3)
+- **H1 (SHARED):** `SpectrumPlotWidget` gets a modest min-width floor (~120 px, NOT 0 — avoid collapse) +
+  a shrink-friendly horizontal size policy in its `__init__`, so every plot fits its panel. The bench eval
+  `QScrollArea` sets `HorizontalScrollBarAlwaysOff`. Fixes issues 1 + 2 (+ the acquisition plot). Blast
+  radius: all plots (wizard, calibration) become responsive — intended.
+- **H2:** new reusable **`ScaledImageLabel`** (QLabel that on `resizeEvent` scales the **original** pixmap
+  to the label width, KeepAspectRatio — never rescale the already-scaled one). Replaces the bench
+  `__imageLabel`'s fixed `scaledToWidth(720)`; raster `QScrollArea` → horizontal-off. Fixes issue 3.
+- **H3:** reflow the acquisition **exposure row** so slider + value + auto-exposure fit the narrow width
+  (auto-exposure on its own short line if needed) and cap its height; preserve the slider/checkbox signals
+  + `__updateControls` wiring. Fixes issue 4.
+
+**Status: IMPLEMENTED 2026-07-09 (headless-verified; awaits phone-width click-through).** H1 —
+`SpectrumPlotWidget` min-width 120 + Expanding size policy (shared: all plots responsive), bench eval
+`QScrollArea` H-scrollbar off. H2 — new `ScaledImageLabel` (verified: 1600×1200 → 360×270 at panel width,
+aspect kept, small images stay native), bench `__imageLabel` uses it, raster `QScrollArea` H-off. H3 —
+exposure row reflowed (auto-exposure on its own full-width line → no wrap/cut/over-tall).**
+
+### 18.1 Follow-up (IMPLEMENTED 2026-07-09) — raster two-tabs + eval frame
+
+After H1/H2/H3: (I1) the raster tab stacked two full-width images → a *vertical* scrollbar → split into a
+nested `[ Full frame | Cropped ROI ]` `QTabWidget` (one image per sub-tab → fits height, no scroll);
+(I2) the eval fields/plot were clipped a few px at the right — probing showed the content min-width is only
+~187 px (« panel), so it genuinely fits: the clip was the `QScrollArea`'s 1 px frame, not overflow. Fixed by
+`setFrameShape(NoFrame)` + dropping the band-aid forced H-scrollbar-off (Auto never triggers since content
+fits). Headless-verified.
+
+**Real cause of the eval overflow (found 2026-07-09 after I2):** the header `LabelView` is a NON-wrapping
+`QLabel` — its text ("Pumpkin-oil peak-ratio — PROVISIONAL (uncalibrated: …)") has a **497 px** minimum
+width, forcing the whole eval content to ~519 px » panel → the horizontal scrollbar (the earlier probe
+missed it because it tested only the metric fields). **Fix:** `EvaluationResultRenderer` now sets
+`setWordWrap(True)` on `LabelView` labels → content min-width drops to **159 px** → fits, no scrollbar/clip.
+Shared renderer change (wizard benefits too). Headless-verified.

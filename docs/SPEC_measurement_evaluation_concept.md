@@ -5,6 +5,13 @@
 > `spectracs-docs/SPECTRAL_WORKFLOW_CONCEPT.md` §4 (see §6). Physics: `KB_spectroscopy_physics.md`.
 > Domain facts: `KB_led_and_oil_spectra.md`. The playground (`SPEC_pipeline_playground.md`) is the
 > dev/test bench that exercises this concept.
+>
+> **Concrete evaluation as of 2026-07: the peak-ratio criterion.** The current, implemented realisation of
+> this concept is `SPEC_pumpkin_peak_ratio_eval.md` — see its **§0 Concept & rationale**. It reads the
+> specific pigment bands (Soret-flank blue + ~575 nm Q-band + green anchor → a *greenness* ratio) instead of
+> collapsing the spectrum to a single hue, so it separates *why* an oil is off (browned vs faded vs turbid).
+> The hue/colour verdict below remains the earlier framing; the peak-ratio is the physically-specific
+> successor, running render-only in the dev measurement bench pending real-oil calibration.
 
 ---
 
@@ -109,5 +116,7 @@ for any future feature work — but **not** for the swatch.
 
 ## Sources
 `KB_spectroscopy_physics.md`, `KB_led_and_oil_spectra.md`, `SPEC_spectrum_processing.md` (implemented
-colour math), `spectracs-docs/SPECTRAL_WORKFLOW_CONCEPT.md` (object model). Fruhwirth & Hermetter (2007)
-— dichromatism via Beer–Lambert + CMFs.
+colour math), `spectracs-docs/SPECTRAL_WORKFLOW_CONCEPT.md` (object model). Fruhwirth & Hermetter (2007),
+*Seeds and oil of the Styrian oil pumpkin*, Eur. J. Lipid Sci. Technol. **109**(11):1128–1140, DOI
+[10.1002/ejlt.200700105](https://doi.org/10.1002/ejlt.200700105) — dichromatism via Beer–Lambert + CMFs;
+reference record in `spectracs-references/articles/`.

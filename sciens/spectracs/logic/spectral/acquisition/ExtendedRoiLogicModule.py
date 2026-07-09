@@ -1,13 +1,14 @@
 import numpy as np
 
 
-class BenchRoiLogicModule:
-    """Compute the measurement bench's *extended* ROI x-bounds for a target wavelength window.
+class ExtendedRoiLogicModule:
+    """Compute the *extended* ROI for a target wavelength window — shared by the measurement bench analysis
+    (SPEC_dev_measure_bench.md §12/§14) and the dev capture-view overlay (SPEC_dev_capture_view.md §11.7).
 
-    Inverts the calibration's px->nm cubic for nmMin/nmMax, picks the real root on the physical
-    monotonic branch (nearest the authored ROI edge), and clamps to the raster width — the transparent
-    auto-adjust when a target wavelength falls off the sensor. Y is never touched; the extension is
-    spectral (horizontal) only. See SPEC_dev_measure_bench.md §12. Pure/side-effect-free."""
+    Inverts the calibration's px->nm cubic for nmMin/nmMax, picks the real root on the physical monotonic
+    branch (nearest the authored ROI edge), and clamps to the raster width — the transparent auto-adjust
+    when a target wavelength falls off the sensor. Y is never touched; the extension is spectral (horizontal)
+    only. Pure/side-effect-free. (Promoted from the former BenchRoiLogicModule.)"""
 
     def extendedXBounds(self, calibration, imageWidth, nmMin=400.0, nmMax=700.0):
         x1 = getattr(calibration, "regionOfInterestX1", None)
@@ -28,6 +29,15 @@ class BenchRoiLogicModule:
         left = max(0, min(imageWidth - 1, left))
         right = max(0, min(imageWidth - 1, right))
         return min(left, right), max(left, right)
+
+    def extendedRoi(self, calibration, imageWidth, nmMin=400.0, nmMax=700.0):
+        # 4-corner convenience for the overlay: extended x-bounds + the authored Y band (unchanged).
+        x1, x2 = self.extendedXBounds(calibration, imageWidth, nmMin, nmMax)
+        y1 = getattr(calibration, "regionOfInterestY1", None)
+        y2 = getattr(calibration, "regionOfInterestY2", None)
+        if x1 is None or x2 is None or y1 is None or y2 is None:
+            return None
+        return int(x1), int(y1), int(x2), int(y2)
 
     def __invert(self, coeffs, targetNm, referenceX):
         # Solve poly(x) = targetNm; a cubic yields 1 or 3 real roots. Choose the real root nearest the

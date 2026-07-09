@@ -11,6 +11,7 @@ from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
 from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
+from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import ExtendedRoiLogicModule
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.settings.development.DevCaptureVideoViewModule import DevCaptureVideoViewModule
@@ -26,6 +27,7 @@ class DevCaptureViewModule(PageWidget):
         self.__resolver = SensorCaptureIndexResolver()
         self.__resolvedIndex = None
         self.__latestImage = None
+        self.__roiFrameWidth = None  # frame width the ROI overlay was last computed for (§11.7)
         self.__videoThread = None
 
         self.videoViewModule = None
@@ -257,6 +259,13 @@ class DevCaptureViewModule(PageWidget):
         values = [getattr(calibration, field, None) for field in self.__ROI_FIELDS]
         if any(value is None for value in values):  # half-populated calibration → treat as no ROI
             return None
+        # Draw the EXTENDED 400–700 window (the same window the measurement bench analyses) once the frame
+        # width is known; fall back to the authored ROI until the first frame arrives. §11.7 / shared module.
+        image = self.__latestImage
+        if image is not None:
+            extended = ExtendedRoiLogicModule().extendedRoi(calibration, image.width())
+            if extended is not None:
+                return extended
         return tuple(values)
 
     def __currentSensor(self):
@@ -347,6 +356,12 @@ class DevCaptureViewModule(PageWidget):
         self.__latestImage = videoSignal.image
         self.videoViewModule.handleVideoThreadSignal(videoSignal)
         self.__updateButtons()  # enable Save once the first real frame lands
+        # Redraw the ROI overlay once the frame width is known (extended 400–700 window needs it — §11.7),
+        # and again only if the capture resolution changes.
+        width = videoSignal.image.width() if videoSignal.image is not None else None
+        if width is not None and width != self.__roiFrameWidth:
+            self.__roiFrameWidth = width
+            self.__applyRoiOverlay()
         event.set()
 
     def __onAutoExposureToggled(self):
