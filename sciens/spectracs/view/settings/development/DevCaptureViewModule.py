@@ -85,6 +85,7 @@ class DevCaptureViewModule(PageWidget):
 
         self.__populateSensors()
         self.__resolve()
+        self.__applyRoiOverlay()
         return result
 
     def __createControlsPanel(self):
@@ -215,6 +216,49 @@ class DevCaptureViewModule(PageWidget):
                 return i
         return None
 
+    # ROI overlay fields carried on the assigned profile's calibration.
+    __ROI_FIELDS = ('regionOfInterestX1', 'regionOfInterestY1', 'regionOfInterestX2', 'regionOfInterestY2')
+
+    def __applyRoiOverlay(self):
+        # Overlay the calibrated ROI box iff the current SpectrometerSetup has a profile assigned — reached
+        # here via the active SpectrometerProfile → spectrometerCalibrationProfile chain — that carries all
+        # four ROI corners, AND the selected camera is that profile's sensor (else the box is meaningless).
+        # SPEC_dev_capture_view.md §11.
+        if self.videoViewModule is None:
+            return
+        roi = self.__assignedRoi()
+        if roi is None:
+            self.videoViewModule.clearRoi()
+        else:
+            self.videoViewModule.setRoi(*roi)
+
+    def __assignedRoi(self):
+        try:
+            profile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
+        except AttributeError:
+            return None
+        if profile is None:
+            return None
+
+        # Sensor-match guard: only show the ROI when the selected camera is the profile's device.
+        try:
+            profileSensor = profile.spectrometer.spectrometerSensor
+        except AttributeError:
+            profileSensor = None
+        current = self.__currentSensor()
+        if profileSensor is None or current is None:
+            return None
+        if profileSensor.vendorId != current.vendorId or profileSensor.modelId != current.modelId:
+            return None
+
+        calibration = getattr(profile, 'spectrometerCalibrationProfile', None)
+        if calibration is None:
+            return None
+        values = [getattr(calibration, field, None) for field in self.__ROI_FIELDS]
+        if any(value is None for value in values):  # half-populated calibration → treat as no ROI
+            return None
+        return tuple(values)
+
     def __currentSensor(self):
         if self.sensorComboBox is None or self.sensorComboBox.currentIndex() < 0:
             return None
@@ -226,6 +270,7 @@ class DevCaptureViewModule(PageWidget):
             self.__stopStream()
         self.__resolve()
         self.__syncExposureToSensor()
+        self.__applyRoiOverlay()  # ROI belongs to a specific device — re-evaluate on camera switch
 
     def __resolve(self):
         sensor = self.__currentSensor()
@@ -394,6 +439,7 @@ class DevCaptureViewModule(PageWidget):
         # Re-resolve on open in case the device was (un)plugged since the view was built.
         if self.sensorComboBox is not None:
             self.__resolve()
+            self.__applyRoiOverlay()  # a profile may have been assigned/calibrated since last open
 
     def hideEvent(self, event):
         super().hideEvent(event)

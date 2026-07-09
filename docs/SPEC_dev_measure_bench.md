@@ -337,3 +337,134 @@ already does this; if not, it's a small wire-up. Alternative: seed an
 
 *(Phase `P-seed` is listed in the build-ordered table in §9.)*
 ```
+
+---
+
+## 12. Extend the bench ROI to a fixed 400–700 nm window (IMPLEMENTED 2026-07-09, awaits click-through §12.7)
+
+Edwin's ask (2026-07-09): *in the bench, extend the ROI so it covers the wavelength range 400–700 nm* —
+because the authored calibration ROI clips the visible spectrum at both ends (see below). This is a
+**bench-only analysis window**; the stored calibration ROI and every other consumer of it are untouched.
+
+**As built:** new pure helper `BenchRoiLogicModule.extendedXBounds(...)`; `DevMeasurementBenchViewModule`
+temporarily widens the in-memory calibration `X1/X2` (`__applyExtendedRoi`/`__restoreRoi`). Headless-
+verified: helper maps 400 nm→x329 and clamps 700 nm→x1599 (692 nm) on a 1600 px raster but reaches x1637
+(700 nm) on a 3000 px raster (data-driven, not hardcoded), falls back to the authored ROI on missing
+coefficients; the bench apply/restore cycle widens X, leaves Y untouched, shows "Analysis window: 400–692
+nm", and restores exactly. **One detail differs from the sketch below:** the widening is applied on the
+**first capture** (`onClickedCapture`), not on `showEvent` — because clamping 700 nm to the sensor edge
+needs the *real* raster width, which is only known once a frame is grabbed. Restore still happens on leave.
+
+### 12.1 Why — the calibration ROI clips the VIS band
+
+Measured on `capture001.png` against its calibration (`X1=350, X2=1319`, cubic `nm = A·x³+B·x²+C·x+D`
+applied to the **absolute** pixel column — `ImageSpectrumAcquisitionLogicModule.py:75–76`):
+
+| | pixel x | nm |
+|---|---|---|
+| ROI left  `X1` | 350 | **404.7** |
+| ROI right `X2` | 1319 | **631.8** |
+| visible red still present (~10 % of peak) | ~1405 | ~651 |
+| target left  400 nm → invert poly | **329** | 400.0 |
+| target right 700 nm → invert poly | **1637** | 700.0 |
+
+So the ROI already starts ~essentially at 400 nm (X1=405 nm) but **cuts the red at 632 nm**, discarding
+~20 nm of red the sensor still sees. Extending the analysis window to 400–700 nm recovers that tail (and
+a sliver of blue below 405 nm).
+
+### 12.2 Hard physical limit — 700 nm is off THIS sensor → adjust transparently (Edwin)
+
+The frame is 1600 px wide. **700 nm maps to x≈1637 — past the last column (x=1599).** The sensor's right
+edge only reaches **~692 nm** (`p(1599)=692.2`). **Decision (Edwin 2026-07-09): when the requested
+wavelength exceeds what the raster can hold, adjust transparently** — the window auto-shrinks to the
+largest sub-range the raster supports and the bench just proceeds. No warning modal, no run-blocking; at
+most a quiet effective-range readout (§12.5). Consequences the design must still honour:
+
+- The right bound **clamps to the sensor edge** (`x = width-1` → ~692 nm here) automatically; the left
+  bound clamps to `0`. This is data-driven off the actual frame width, not a hardcoded 692.
+- The polynomial was fit only over `x∈[350,1319]` (405–632 nm); using it out to ~1599 is **extrapolation**.
+  It stays monotonic to x≈2900 (no fold-back within the sensor), so it's usable, but nm accuracy in the
+  extended red tail degrades with distance from the fit region.
+- Beyond ~660 nm (~x=1449) the illuminated spectrum has faded to near-dark, so in the extended red region
+  `T=S/R` divides two near-zero values → low-SNR / unstable. Acceptable for a dev tool; not "wrong", just
+  noisy at the far tail.
+
+### 12.3 Design — a derived "bench ROI" computed from the calibration
+
+Introduce a small pure helper (e.g. `BenchRoiLogicModule.extendedXBounds(calibration, imageWidth,
+nmMin=400, nmMax=700) -> (x1, x2)`):
+
+1. Build `poly1d([A,B,C,D])` from the active calibration.
+2. **Invert** for each target: `roots(poly1d([A,B,C,D-nmTarget]))`; keep the **real** root on the physical
+   monotonic branch — the one inside/nearest `[0, imageWidth)` and closest to the calibrated fit region
+   (left root near `X1`, right root at/right-of `X2`). (Cubic → 1 or 3 real roots; §12.1 shows the correct
+   ones are 329 and 1637.)
+3. **Clamp** to the sensor: `x1 = max(0, round(xLeft))`, `x2 = min(imageWidth-1, round(xRight))` — this is
+   the transparent auto-adjust of §12.2.
+4. **Y is left alone** — the extension is spectral (horizontal) only; `Y1/Y2` are never touched.
+5. **Fallbacks:** if coefficients are missing / inversion yields no valid root, return the calibration's
+   own `X1/X2` (i.e. behave exactly as today). Never widen past the sensor or invert the ordering.
+
+`nmMin=400`, `nmMax=700` are **named bench constants** (documented here), not user-facing controls.
+
+### 12.4 Apply it by temporarily widening the in-memory calibration (Edwin — no parameter plumbing)
+
+**Decision (Edwin 2026-07-09): don't thread optional override parameters through the acquisition module —
+temporarily change the active profile's calibration instead.** The bench overwrites *only*
+`calibration.regionOfInterestX1` / `X2` on the **in-memory** `SpectrometerCalibrationProfile`
+(`ApplicationSettings.getSpectrometerProfile().spectrometerCalibrationProfile`) with the §12.3 extended
+bounds, runs its flow, then **restores the originals**. Both bench consumers then read the widened ROI with
+**zero pipeline changes**:
+
+- **Spectrum extraction** — `ImageSpectrumAcquisitionLogicModule` reads `regionOfInterestX1/X2` straight off
+  the active profile (`ImageSpectrumAcquisitionLogicModule.py:69–75`) and iterates `range(x1,x2)`; it now
+  sees the extended bounds automatically.
+- **Raster preview** — `DevMeasurementBenchViewModule.__roi()` (view L449–456) reads the same corners; also
+  automatic. No change to `__roi`, `__maskOutsideRoi`, `__cropToRoi`.
+
+**Guardrails that make the temporary mutation safe (all required):**
+- **Scope:** apply on entering the bench flow / on `showEvent`; **restore on `hideEvent` + `onClickedBack`**
+  (leaving the view). Save the two original ints first; restore them verbatim.
+- **In-memory only — never persisted.** Do **not** call the server save / `SpectrometerSetup` write. The
+  DB-authored ROI is untouched; a re-login / re-resolve reloads the original.
+- **Exception-safe:** restore in a `finally` so a mid-run error can't leave the session profile widened.
+- **Why it's safe despite being shared state:** the bench is a standalone full-page master view; while it
+  is open the user is not extracting from another view, and extraction runs **synchronously on the GUI
+  thread** (`onClickedCapture` loops frames inline). So no concurrent reader observes the widened ROI. (This
+  is the §11 "in-memory vs DB" profile — we mutate (2), never (1).)
+- **Only X1/X2** are mutated; `Y1/Y2` and the A–D coefficients are left exactly as authored.
+
+*(This supersedes the earlier "optional `setRoiXBounds` parameter" sketch — Edwin prefers the temporary
+in-memory profile change; it is less code and keeps the acquisition module's signature untouched.)*
+
+### 12.5 UX — quiet, not loud (transparent adjust)
+
+Per §12.2 the clamp is transparent, so **no warning modal and nothing blocks the run**. At most a **quiet
+effective-range readout** — e.g. a small caption near the plot "Window 400–692 nm" — so the number is
+discoverable without shouting. Optional nicety: lightly mark the extrapolated tail (beyond the calibrated
+405–632 nm fit) on the plot. Neither is a gate; the run proceeds regardless.
+
+### 12.6 Explicitly out of scope
+
+- **No persisted change to the calibration ROI** — the widening is an **in-memory, restored-on-exit**
+  mutation (§12.4); `SpectrometerCalibrationProfile.regionOfInterest*` in the DB and its authored A–D are
+  never written. A re-login reloads the original.
+- **No change to the capture-view ROI overlay (`SPEC_dev_capture_view.md` §11)** — that overlay draws the
+  *authored* calibration ROI. If Edwin later wants the capture overlay to also show the 400–700 window,
+  that's a separate request.
+- **Not a per-measurement control** — fixed 400–700 constants; no slider/settings UI in this increment.
+- **No capture-resolution change** — the transparent adjust shrinks the *window* to the raster, it does not
+  re-open the camera at a wider mode to physically reach 700 nm (that's the deferred per-chipset resolution
+  work, `SPEC_dev_capture_view.md` §5/P4).
+
+### 12.7 Verification (click-through, when implemented)
+
+1. Bench raster tab: the masked/cropped band is **wider** than before on the red side (right edge at the
+   sensor limit), left edge ~unchanged (already ~400 nm).
+2. Bench T/A plot: the nm axis now runs ~400 → ~692 nm; a quiet readout shows the effective window.
+3. A device whose calibration maps 700 nm **on-sensor** (higher-res frame) reaches nearer 700 nm — proves
+   the clamp is data-driven, not hardcoded to 692.
+4. Missing/partial calibration coefficients → bench falls back to the calibration `X1/X2` (no crash, no
+   widening).
+5. **Leave the bench (Back / navigate away), reopen another calibrated view → the ROI is the original
+   authored one** (temporary widening was restored). Force an error mid-run → still restored.

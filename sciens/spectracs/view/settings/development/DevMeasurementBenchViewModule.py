@@ -10,6 +10,7 @@ from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
 from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
+from sciens.spectracs.logic.spectral.acquisition.BenchRoiLogicModule import BenchRoiLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModule import MeanSpectrumLogicModule
@@ -46,6 +47,11 @@ class DevMeasurementBenchViewModule(PageWidget):
     __FRAME_CHOICES = ["10", "20", "50"]
     __DEFAULT_FRAMES = "20"
 
+    # Bench analysis window (SPEC_dev_measure_bench.md §12): the calibration ROI clips the VIS band, so the
+    # bench temporarily widens the in-memory ROI to span this wavelength range (clamped to the raster).
+    __NM_MIN = 400.0
+    __NM_MAX = 700.0
+
     __REF_COLOR = "#5DADE2"      # reference spectrum (blue)
     __SAMPLE_COLOR = "#F5B041"   # sample spectrum (orange)
     __FRAME_COLOR = "#777777"    # per-frame traces (gray)
@@ -69,6 +75,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__lockedExposure = None
         self.__roleSpectra = {}            # role -> extracted Spectrum (with N captured frames)
         self.__representativeFrames = {}   # role -> QImage (preview-only middle frame)
+        self.__savedRoiX = None            # (x1, x2) authored originals while the extended window is applied
 
         # widgets
         self.__messageLabel = None
@@ -207,9 +214,11 @@ class DevMeasurementBenchViewModule(PageWidget):
     def hideEvent(self, event):
         super().hideEvent(event)
         self.__stopStream()
+        self.__restoreRoi()  # leaving the view restores the authored ROI (never persisted; §12.4)
 
     def __startRun(self):
         # Reset run state.
+        self.__restoreRoi()  # defensive: never start a run with a leftover widened ROI
         self.__cursor = 0
         self.__activeRole = REFERENCE
         self.__lockedExposure = None
@@ -325,6 +334,10 @@ class DevMeasurementBenchViewModule(PageWidget):
         if not images:
             InWindowDialog.notify(self, "Capture failed", "No frames were delivered by the camera.")
             return
+
+        # Widen the ROI to the bench analysis window before extraction — needs the real raster width to
+        # clamp 700 nm to the sensor edge (§12). Idempotent; restored on leaving the view.
+        self.__applyExtendedRoi(images[0].width())
 
         spectrum = None
         for image in images:
@@ -454,6 +467,51 @@ class DevMeasurementBenchViewModule(PageWidget):
         x2 = int(calibration.regionOfInterestX2)
         y2 = int(calibration.regionOfInterestY2)
         return QRect(min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1))
+
+    # --- bench-extended ROI (SPEC_dev_measure_bench.md §12) -----------------------------------------
+    # Temporarily widen the IN-MEMORY calibration's X1/X2 to span __NM_MIN..__NM_MAX (clamped to the
+    # raster), so both extraction and the raster preview read the wider window with zero pipeline
+    # plumbing. Never persisted; restored on leaving the view. Y and the A-D coefficients are untouched.
+
+    def __calibration(self):
+        profile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
+        return getattr(profile, "spectrometerCalibrationProfile", None) if profile is not None else None
+
+    def __applyExtendedRoi(self, imageWidth):
+        if self.__savedRoiX is not None:
+            return  # already applied this session (idempotent)
+        calibration = self.__calibration()
+        if calibration is None:
+            return
+        x1, x2 = calibration.regionOfInterestX1, calibration.regionOfInterestX2
+        if x1 is None or x2 is None:
+            return
+        newX1, newX2 = BenchRoiLogicModule().extendedXBounds(calibration, imageWidth,
+                                                             self.__NM_MIN, self.__NM_MAX)
+        if newX1 is None or newX2 is None:
+            return
+        self.__savedRoiX = (x1, x2)  # save originals only once we are actually widening
+        calibration.regionOfInterestX1 = int(newX1)
+        calibration.regionOfInterestX2 = int(newX2)
+        self.__showEffectiveWindow(calibration, newX1, newX2)
+
+    def __restoreRoi(self):
+        if self.__savedRoiX is None:
+            return
+        calibration = self.__calibration()
+        if calibration is not None:
+            calibration.regionOfInterestX1, calibration.regionOfInterestX2 = self.__savedRoiX
+        self.__savedRoiX = None
+
+    def __showEffectiveWindow(self, calibration, x1, x2):
+        # Quiet effective-range readout (§12.5) — the achieved window after the transparent clamp.
+        try:
+            polynomial = np.poly1d([calibration.interpolationCoefficientA, calibration.interpolationCoefficientB,
+                                    calibration.interpolationCoefficientC, calibration.interpolationCoefficientD])
+            self.__messageLabel.setText("Analysis window: %d–%d nm"
+                                        % (round(float(polynomial(x1))), round(float(polynomial(x2)))))
+        except (TypeError, AttributeError):
+            pass
 
     def __maskOutsideRoi(self, image, roi):
         masked = image.copy()

@@ -155,6 +155,10 @@ is *grating-block + camera-lens + sensor* as one stack. Consequences for the res
 - **Per-unit identity:** each produced spectrometer carries a **printed serial label** used as the key to
   its factory calibration profile (`SpectrometerProfile.serial`) — the USB cameras themselves expose no
   serial. (`SPEC_real_camera_capture.md` §9.1.)
+- **External physical-hardware reference — comparable DIY spectroscope.** Review of a simple AliExpress
+  hand-held spectroscope: <https://star-hunter.ru/en/simple-spectroscope-review-aliexpress/> — a low-cost
+  grating-based visual spectroscope in the same class as the Spectracs optical stack. Useful reference for
+  the optical layout and what to expect from a cheap grating + lens build.
 
 ## Sources
 - `KB_led_and_oil_spectra.md` (LED + oil sources). Fruhwirth & Hermetter (2007), ResearchGate 227762370.

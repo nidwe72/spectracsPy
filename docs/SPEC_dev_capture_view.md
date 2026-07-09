@@ -306,10 +306,127 @@ SM2 must not over-promise unit-level matching from the resolver alone.
 
 ---
 
-## 10. Cross-references
+## 11. ROI overlay when a profile is assigned (DESIGN — implement on explicit request)
+
+Status: **IMPLEMENTED 2026-07-09 (awaits click-through §11.6).** Edwin's ask: *in the dev capture view,
+overlay the ROI box when the current SpectrometerSetup has a profile assigned.* Headless-verified: the sink
+draws/updates/hides one normalised rect item; the `__assignedRoi` predicate gates correctly across
+no-profile / full-ROI / sensor-mismatch / half-populated-ROI. New file `BaseGraphicsRectItem`; `setRoi`/
+`clearRoi` on `DevCaptureVideoViewModule`; `__applyRoiOverlay`+`__assignedRoi` on `DevCaptureViewModule`,
+called on build / sensor-change / view-open.
+
+### 11.1 What "has a profile assigned" means here
+
+The dev capture view holds **no `SpectrometerSetup`** (§ nav is sensor-level: it drives a sensor combo +
+`SpectrometerSensorUtil`, not a setup object). The only device handle it can already reach is the **active
+`SpectrometerProfile`** via `ApplicationSettings.getSpectrometerProfile()` (installed by
+`ActiveSpectrometerProfileLogicModule.installFromSession()` — server-authoritative, re-fetched by serial).
+The ROI is two hops down that chain:
+
+```
+SpectrometerSetup ─spectrometerProfileId(FK)→ SpectrometerProfile
+                                                 └─spectrometerCalibrationProfileId(FK)→ SpectrometerCalibrationProfile
+                                                       └─ regionOfInterestX1/Y1/X2/Y2  (int px, two corners)
+```
+
+So in this view the ask maps to a concrete, already-reachable predicate — **no new `SpectrometerSetup`
+wiring required**:
+
+> **Show the ROI overlay iff** an active `SpectrometerProfile` is installed **and** its
+> `spectrometerCalibrationProfile` has all four `regionOfInterest{X1,Y1,X2,Y2}` non-`None`.
+
+(The four-field completeness check mirrors `SpectralWorkflowEngine` §132–144 and the `_CAL_FIELDS` tuple —
+a half-populated calibration is treated as "no ROI", overlay off.) A `SpectrometerSetup` with **no**
+profile FK resolves to no active profile here → predicate false → no overlay, which is exactly the
+requested behaviour.
+
+**Guard — sensor must match the profile's device (recommended).** The ROI belongs to one calibration of one
+device. If the user selects a sensor in the combo that is **not** the active profile's sensor, the ROI is
+meaningless for that frame. Reuse the VID/PID match the view already computes in `__activeRealSensorIndex`
+(DevCaptureViewModule.py:205–216): overlay only when `__currentSensor()` equals the active profile's
+`spectrometer.spectrometerSensor` (same vendorId+modelId). Otherwise overlay off, even if a profile is
+assigned. This keeps the box honest when the combo is pointed at a different camera.
+
+### 11.2 Coordinate space — 1:1, with one stated assumption
+
+- ROI corners are **integer pixels on the full-frame sensor image** captured at calibration time.
+- The live preview `QImage` is that same full frame; `imageItem` sits at scene origin **unscaled**, so
+  **scene coordinates == image pixels**, and `fitInView(imageItem, KeepAspectRatio)` handles view scaling.
+  ⇒ A rect drawn in scene coords lands on the correct pixels **with no manual scaling**.
+- The corners are **not** guaranteed top-left/bottom-right (X1=left, X2=right, but Y1=lower Hough line,
+  Y2=upper — see PlaygroundCalibrationLogicModule.py:70–73). Build the rect from
+  `min/max(X1,X2)` × `min/max(Y1,Y2)` so orientation can't invert it.
+- **Assumption to state (caveat):** this holds only while **live capture resolution == calibration
+  resolution.** Both use the hardcoded per-chipset capture params today (§6), so they match. If a live
+  **resolution combo** (optional P4, §5) ever changes the mode mid-stream, the overlay would misalign — at
+  that point scale the rect by `liveImage.width()/calibWidth` (and height). Since no calibration frame size
+  is stored, P4 would need to record it. **Out of scope now; logged so P4 doesn't silently break the box.**
+
+### 11.3 Where to draw — extend the sink minimally
+
+`DevCaptureVideoViewModule` is today a "no overlays" sink (its docstring). Give it a small, **optional** ROI
+capability rather than a new subclass — the scene/pixmap plumbing already exists in `BaseVideoViewModule`:
+
+- Add `setRoi(x1, y1, x2, y2)` and `clearRoi()` to `DevCaptureVideoViewModule`.
+  - `setRoi` creates-or-updates **one** rect item on `self.scene`, positioned in scene/pixmap coords
+    (normalised via min/max per §11.2). No fill; **dotted primary-colour pen**, matching the existing
+    calibration overlays (`ApplicationStyleLogicModule().getPrimaryTextColor()`, `Qt.PenStyle.DotLine`).
+  - `clearRoi` removes/hides that item.
+- **Primitive:** a single rect item is cleaner than four lines. Repo has `BaseGraphicsPixmapItem` /
+  `BaseGraphicsLineItem` but (verify at impl) no rect base — either add a trivial `BaseGraphicsRectItem`
+  (`QGraphicsRectItem` subclass, mirroring `BaseGraphicsLineItem`) or, to stay 100 % on the proven path,
+  draw the four edges as `BaseGraphicsLineItem`s exactly like
+  `SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule` (lines 158–178). Recommend the rect
+  item.
+- **Lifecycle — set once, not per frame.** The ROI is static for a given profile+sensor, and `setPixmap`
+  on `imageItem` does **not** disturb other scene items. So the per-frame `handleVideoThreadSignal` stays
+  unchanged (still just `setPixmap` + `fitInView`); the rect is added on top of the pixmap once and left in
+  place. The rect is inside the pixmap bounds, so `fitInView(imageItem)` already frames it — no z-order or
+  scene-rect changes needed (rect added after `imageItem` ⇒ painted on top).
+
+### 11.4 Driving it from the parent view
+
+`DevCaptureViewModule` owns the predicate (it already reads the active profile and knows the selected
+sensor). Recompute-and-apply at the moments the inputs can change — **not** per frame:
+
+1. **On view open / after the profile is (re)installed** and **on sensor-combo change** and **on stream
+   start**, call a private `__applyRoiOverlay()`:
+   - resolve active profile → `spectrometerCalibrationProfile`;
+   - if predicate (§11.1) true **and** sensor-match guard passes →
+     `videoViewModule.setRoi(cal.regionOfInterestX1, …Y1, …X2, …Y2)`;
+   - else → `videoViewModule.clearRoi()`.
+2. Because the active profile is server-authoritative and installed once per session, no live DB polling is
+   needed; if desired, `ActiveSpectrometerProfileLogicModule().installFromSession()` can be called on view
+   open so a just-authored calibration shows immediately (same pattern the dev measurement bench uses).
+
+### 11.5 Explicitly out of scope for this addition
+
+- **No `SpectrometerSetup` object is wired into the view.** The predicate is satisfied through the active
+  `SpectrometerProfile` handle the view already has. If a genuine "current setup" concept later lands in
+  `ApplicationSettings` (there is no `getSpectrometerSetup()` today), the predicate can move to it verbatim.
+- **No ROI editing/dragging** — this is a **read-only overlay** of the assigned calibration's ROI. ROI
+  authoring stays in the calibration flow (`SpectrometerCalibrationProfileHoughLines*`).
+- **No resolution-scaling** (§11.2 caveat) until/unless the optional P4 resolution combo lands.
+
+### 11.6 Verification (click-through, when implemented)
+
+With the ELP plugged in, logged in as master:
+1. **Profile assigned + sensor matches** → open Capture images → the ROI box is drawn over the live stream
+   at the calibrated pixel bounds; it stays put as the window resizes (rides `fitInView`).
+2. **Switch the sensor combo to a different real sensor** → box disappears (guard §11.1); switch back →
+   reappears.
+3. **Log in / select a device whose profile has no ROI (or no profile assigned)** → **no** box, no error.
+4. Box corners visually coincide with where the calibration/wavelength views crop (same X1/X2 band).
+
+---
+
+## 12. Cross-references
 
 - `SPEC_real_camera_capture.md` — parent; R0/R1 realised here, calibration (R2/R3) is sub-milestone 2;
   §9.2 best-resolution loop, §9.1 per-unit serial identity.
 - `KB_spectroscopy_physics.md` §7 — hardware; the per-camera best-resolution finding is recorded there.
 - `SPEC_pumpkin_integration.md` A.4 — the `calibration/reference/sample.png` virtual-fileset convention.
 - `VirtualSpectrometerViewModule.py` — the consumer of saved filesets.
+- `SpectrometerCalibrationProfile.py` (spectracsPy-model) — holds `regionOfInterest{X1,Y1,X2,Y2}` (§11.1).
+- `ActiveSpectrometerProfileLogicModule.py` — installs the active profile the overlay predicate reads.
+- `SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule.py` — the overlay pattern §11.3 mirrors.
