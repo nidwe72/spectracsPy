@@ -22,3 +22,8 @@ luxpy==1.9.8
 spectres==2.2.0
 rgbxy==0.5
 # pyspectra==0.0.1.2   # optional: only for .dx spectrum import (off the core virtual path)
+# PDF report (M2 — SPEC_bench_pdf_export.md §8): pypdf is pure-Python → Android-safe, kept in the subset.
+# matplotlib on Android is heavy → the on-device PDF render is DEFERRED with the Android port, so matplotlib
+# is intentionally NOT listed here yet (the bench that produces reports is desktop/master-only).
+pypdf==6.14.2
+# matplotlib          # DEFERRED — enable when Android PDF export is taken on (Android port)

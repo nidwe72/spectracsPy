@@ -65,7 +65,7 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
         # S5: presentation the plugin attached (MetricFieldViewStyle). Apply via QFont so the gray-chip QSS on
         # TooltipPageLabel is preserved (a setStyleSheet would clobber it).
         style = getattr(view, "style", None)
-        if style is not None and getattr(style, "labelBold", False):
+        if style is not None and getattr(style, "isLabelBold", False):
             font = label.font()
             font.setBold(True)
             label.setFont(font)

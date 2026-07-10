@@ -18,7 +18,7 @@ class InWindowDialog(QWidget):
     confirm() / notify(); showImage() for image help.
     """
 
-    def __init__(self, host, title, message, buttons, pixmap=None):
+    def __init__(self, host, title, message, buttons, pixmap=None, contentWidget=None):
         super().__init__(host)
         self.__host = host
         self.__result = None
@@ -29,10 +29,12 @@ class InWindowDialog(QWidget):
         layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
         layout.setSpacing(Metrics.M)
 
-        # Little-content dialogs read better with the content vertically centered (Edwin): a top spacer
-        # balances the bottom one so the title/message/image block sits mid-height above the footer. When
-        # content is tall the spacers collapse and it fills naturally.
-        layout.addStretch(1)
+        # A `contentWidget` fills the body (e.g. the full-size report preview) — no centering spacers, it
+        # expands to the whole page. `message`/`pixmap` dialogs stay vertically centered as before (Edwin):
+        # a top spacer balances the bottom one so a little block sits mid-height above the footer.
+        fills = contentWidget is not None
+        if not fills:
+            layout.addStretch(1)
 
         titleLabel = QLabel(title)
         titleLabel.setProperty("style-bold", True)
@@ -52,7 +54,10 @@ class InWindowDialog(QWidget):
             imageLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(imageLabel, 0, Qt.AlignmentFlag.AlignHCenter)
 
-        layout.addStretch(1)  # push the footer to the bottom (title/content top-pack like a page)
+        if fills:
+            layout.addWidget(contentWidget, 1)  # the content owns the body (fills to the footer)
+        else:
+            layout.addStretch(1)  # push the footer to the bottom (title/content top-pack like a page)
 
         footer = QWidget()
         footerLayout = QHBoxLayout(footer)
@@ -117,3 +122,10 @@ class InWindowDialog(QWidget):
         """One-shot image help, in-window (replacement for a QDialog that shows a QPixmap)."""
         window = host.window()
         InWindowDialog(window, title, None, [("OK", None, None)], pixmap=pixmap).__run()
+
+    @staticmethod
+    def showWidget(host, title, contentWidget):
+        """One-shot full-window view of an arbitrary widget (e.g. the report preview at full size). The
+        widget fills the body above a Close footer."""
+        window = host.window()
+        InWindowDialog(window, title, None, [("Close", None, None)], contentWidget=contentWidget).__run()

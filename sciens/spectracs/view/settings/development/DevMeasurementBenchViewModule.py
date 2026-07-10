@@ -3,9 +3,9 @@ import pyqtgraph as pg
 
 from PySide6.QtCore import Qt, QEventLoop, QTimer, QRect
 from PySide6.QtGui import QPixmap, QColor, QPainter
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
                                QSlider, QCheckBox, QTabWidget, QStackedWidget, QScrollArea,
-                               QFrame, QSizePolicy)
+                               QFrame, QSizePolicy, QFileDialog)
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
@@ -28,10 +28,14 @@ from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
 from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
+from sciens.spectracs.model.spectral.plugin.view.ReportView import ReportView
+from sciens.spectracs.model.spectral.plugin.view.SpectrumCaptureView import SpectrumCaptureView
+from sciens.spectracs.model.spectral.plugin.view.SpectrumPlotView import SpectrumPlotView
 from sciens.spectracs.plugin_sdk import SpectrumFeatureUtil
 from sciens.spectracs.plugin_sdk.roles import REFERENCE, SAMPLE, TRANSMISSION, ABSORPTION
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 from sciens.spectracs.view.application.widgets.ScaledImageLabel import ScaledImageLabel
+from sciens.spectracs.view.application.widgets.PdfPreviewWidget import PdfPreviewWidget
 from sciens.spectracs.view.spectral.workflow.EvaluationResultRenderer import EvaluationResultRenderer
 from sciens.spectracs.view.application.widgets.StepBarWidget import StepBarWidget
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
@@ -101,6 +105,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__innerTabs = None
         self.__spectrumPlot = None
         self.__framesComboBox = None
+        self.__framesControl = None     # labeled "Frames" component (plugin may hide it)
+        self.__exposureControl = None   # labeled "Exposure" component (plugin may hide it)
         self.__exposureSlider = None
         self.__exposureLabel = None
         self.__autoExposureCheckBox = None
@@ -198,7 +204,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__framesComboBox = QComboBox()
         self.__framesComboBox.addItems(self.__FRAME_CHOICES)
         self.__framesComboBox.setCurrentText(self.__DEFAULT_FRAMES)
-        controlsLayout.addWidget(self.createLabeledComponent("Frames", self.__framesComboBox), 0, 0, 1, 2)
+        self.__framesControl = self.createLabeledComponent("Frames", self.__framesComboBox)
+        controlsLayout.addWidget(self.__framesControl, 0, 0, 1, 2)
 
         self.__exposureSlider = QSlider(Qt.Orientation.Horizontal)
         self.__exposureSlider.setMinimum(self.__EXPOSURE_MIN)
@@ -220,7 +227,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         exposureRowLayout.addWidget(self.__autoExposureCheckBox, 1, 0, 1, 2)
         exposureRowLayout.setColumnStretch(0, 85)
         exposureRowLayout.setColumnStretch(1, 15)
-        controlsLayout.addWidget(self.createLabeledComponent("Exposure", exposureRow), 1, 0, 1, 2)
+        self.__exposureControl = self.createLabeledComponent("Exposure", exposureRow)
+        controlsLayout.addWidget(self.__exposureControl, 1, 0, 1, 2)
 
         self.__captureButton = QPushButton("Capture reference")
         self.__captureButton.clicked.connect(self.onClickedCapture)
@@ -338,6 +346,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__roleTabs.blockSignals(False)
         self.__attachStepContent(0)  # defensive: ensure the shared content sits in the Reference page
         self.__applyPluginAcquisitionLabels()  # P6-lite: role-tab + capture-button wording from the plugin's steps
+        self.__applyCaptureControlVisibility()  # plugin decides if frame/exposure controls are shown (Edwin)
         self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)  # start on the live camera image
         self.__spectrumPlot.plotSpectrum(None, title="Reference")
         self.__renderPhase()
@@ -519,6 +528,19 @@ class DevMeasurementBenchViewModule(PageWidget):
             self.__roleTabs.setTabText(1, sampleStep.getLabel())
         self.__captureButton.setText(self.__captureLabelForRole(self.__activeRole))
 
+    def __applyCaptureControlVisibility(self):
+        # The plugin's CaptureView decides whether the dev capture chrome is shown (Edwin): the frame-count and
+        # exposure/auto-exposure controls are hidden by default (end-user plugins), and the master dev plugin
+        # opts them back in. Both acquisition steps carry the same flags, so read the reference step's view.
+        step = self.__stepForRole(REFERENCE)
+        view = step.getView() if step is not None else None
+        showFrames = bool(getattr(view, "showFramesControl", False))
+        showExposure = bool(getattr(view, "showExposureControls", False))
+        if self.__framesControl is not None:
+            self.__framesControl.setVisible(showFrames)
+        if self.__exposureControl is not None:
+            self.__exposureControl.setVisible(showExposure)
+
     def __plotActiveRole(self):
         self.__plotRoleSpectrum(self.__activeRole, self.__roleSpectra.get(self.__activeRole))
 
@@ -603,9 +625,69 @@ class DevMeasurementBenchViewModule(PageWidget):
             return
         renderer = WorkflowPhaseRenderer()
         for step in steps:
-            content = renderer.renderStep(step)
+            view = step.getView() if hasattr(step, "getView") else None
+            if isinstance(view, ReportView):
+                # M2: the plugin-declared Report step → a matplotlib preview (that IS the PDF) + Save action.
+                # Fill the acquisition captures with the real frames first so they render + embed (§5b).
+                self.__fillReportCaptures()
+                content = self.__buildReportTab(view)
+            else:
+                content = renderer.renderStep(step)
             if content is not None:
                 self.__evaluationTabs.addTab(content, step.getLabel())
+
+    # --- report (M2 — SPEC_bench_pdf_export.md §1/§6) ---
+
+    def __fillReportCaptures(self):
+        # Inject the host-owned acquisition data into the plugin-declared, report-flagged views on the
+        # acquisition steps: the captured FRAME into each SpectrumCaptureView (cropped to / masked outside the
+        # ROI per its descriptor), and the role's extracted SPECTRUM (mean) into each SpectrumPlotView. The
+        # plugin declared presence + flag; the host supplies the pixels/values it alone has.
+        acquisition = self.__workflow.getPhase(SpectralWorkflowPhaseType.ACQUISITION)
+        if acquisition is None:
+            return
+        roi = self.__roi()
+        for step in acquisition.getSteps().values():
+            role = step.getRole()
+            frame = self.__representativeFrames.get(role)
+            spectrum = self.__roleSpectra.get(role)
+            result = step.getEvaluationResult()
+            if result is None:
+                continue
+            for item in result.getItems():
+                if isinstance(item, SpectrumCaptureView) and frame is not None:
+                    item.image = self.__cropToRoi(frame, roi) if item.cropped \
+                        else self.__maskOutsideRoi(frame, roi)
+                elif isinstance(item, SpectrumPlotView) and spectrum is not None:
+                    item.spectrum = self.__meanSpectrum(spectrum)
+
+    def __buildReportTab(self, reportView):
+        from sciens.spectracs.view.spectral.workflow.render.WorkflowReportBuilder import WorkflowReportBuilder
+        builder = WorkflowReportBuilder(self.__workflow, reportView).build()
+        pixmaps = builder.previewPixmaps()  # rasterise once; reused by the tab preview and the "Open bigger" view
+        return _ReportTab(pixmaps,
+                          onSave=lambda: self.__onSaveReport(builder),
+                          onOpenBigger=lambda: self.__openReportBigger(pixmaps))
+
+    def __openReportBigger(self, pixmaps):
+        # Small-device affordance (Edwin): show the PDF preview in a full-window in-window view so it is legible
+        # without the tab/pane chrome. A fresh PdfPreviewWidget fits the pages to the whole window width.
+        InWindowDialog.showWidget(self, "Report", PdfPreviewWidget(pixmaps))
+
+    def __onSaveReport(self, builder):
+        # Native save dialog (the existing convention — cf. DevCaptureViewModule "save PNG"); bench is
+        # desktop/master-only. Append .pdf if missing.
+        path, _ = QFileDialog.getSaveFileName(self, "Save report", "measurement_report.pdf", "PDF (*.pdf)")
+        if not path:
+            return
+        if not path.lower().endswith(".pdf"):
+            path = path + ".pdf"
+        try:
+            builder.savePdf(path)
+        except Exception as error:
+            InWindowDialog.notify(self, "Report failed", "Could not write the PDF:\n%s" % error)
+            return
+        InWindowDialog.notify(self, "Report saved", "Saved the PDF report to:\n%s" % path)
 
     def __onPluginChanged(self, index):
         # P7: switch the plugin driving the bench and restart the run (only once the view is built).
@@ -888,3 +970,33 @@ class DevMeasurementBenchViewModule(PageWidget):
         signal = NavigationSignal(None)
         signal.setTarget("SettingsViewModule")
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
+
+
+class _ReportTab(QWidget):
+    # The EVALUATION Report step's tab body (SPEC_bench_pdf_export.md §1): a Save row + the fit-to-width PDF
+    # preview, with NO padding (the preview hugs the pane). An "Open bigger" button (Edwin) opens the same pages
+    # in a full-window in-window view where the tab/pane chrome is gone and the pages get the whole window width.
+    # Offered on EVERY device — on the phone to escape the cramped tab, on desktop to inspect a page up close.
+
+    def __init__(self, pixmaps, onSave, onOpenBigger):
+        super().__init__()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)   # no padding — the preview spans the full width (Edwin)
+        layout.setSpacing(Metrics.S)
+        self.setLayout(layout)
+
+        buttonRow = QWidget()
+        buttonRowLayout = QHBoxLayout()
+        buttonRowLayout.setContentsMargins(0, 0, 0, 0)
+        buttonRowLayout.setSpacing(Metrics.S)
+        buttonRow.setLayout(buttonRowLayout)
+        saveButton = QPushButton("Save PDF…")
+        saveButton.clicked.connect(lambda: onSave())
+        buttonRowLayout.addWidget(saveButton, 1)
+        openBiggerButton = QPushButton("Open bigger")
+        openBiggerButton.setProperty("buttonType", "secondary")
+        openBiggerButton.clicked.connect(lambda: onOpenBigger())
+        buttonRowLayout.addWidget(openBiggerButton, 1)
+        layout.addWidget(buttonRow)
+
+        layout.addWidget(PdfPreviewWidget(pixmaps), 1)

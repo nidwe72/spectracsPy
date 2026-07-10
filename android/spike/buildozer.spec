@@ -5,7 +5,10 @@ package.domain = org.spectracsp0
 source.dir = ./app_src
 source.include_exts = py,png,jpg,svg,ttf,qml,js,kv,atlas
 version = 0.1
-requirements = python3,shiboken6,PySide6,numpy,scipy,opencv,pyqtgraph,Pyro5,SQLAlchemy,sqlalchemy-serializer,marshmallow,marshmallow-sqlalchemy,colour-science,spectres,pillow,typing_extensions,colorama,networkx,imageio,serpent,libbz2,liblzma,pyjnius
+# M2 PDF report: pypdf is pure-Python → Android-safe (embeds workflow JSON + capture images). matplotlib
+# (the page renderer) is DEFERRED for Android — the report-producing bench is desktop/master-only, so it is
+# intentionally omitted here until the on-device PDF render is taken on with the Android port.
+requirements = python3,shiboken6,PySide6,numpy,scipy,opencv,pyqtgraph,Pyro5,SQLAlchemy,sqlalchemy-serializer,marshmallow,marshmallow-sqlalchemy,colour-science,spectres,pillow,typing_extensions,colorama,networkx,imageio,serpent,libbz2,liblzma,pyjnius,pypdf
 orientation = portrait
 osx.python_version = 3
 osx.kivy_version = 1.9.1

@@ -164,7 +164,12 @@ the internal package can be re-homed transparently (see **Namespace** below).
 | `VerdictView(roastState, hueDegrees)` | all | — | headline | `visitVerdict` | evaluation |
 | `SpectrumPlotView(traces[], bands[], title)` **†** | traces, bands, title | (spectra already in model) | plot (curves + band overlays) | `visitSpectrumPlot` | processing, evaluation |
 | `SpectrumCaptureView(caption, cropped, roiOverlay)` **‡** | caption, `cropped`, `roiOverlay`, *its presence = "show it"* | **`image`** (masked/cropped frame) | scaled raster image | `visitSpectrumCapture` | acquisition, processing |
-| `CaptureView(prompt, captureLabel, showLivePreview, geometry)` **‡** | shell params | live video, burst, progress | capture panel | **host capture path** (not visitor) | acquisition |
+| `CaptureView(prompt, captureLabel, showLivePreview, geometry, showFramesControl, showExposureControls)` **‡** | shell params + dev-chrome flags | live video, burst, progress | capture panel | **host capture path** (not visitor) | acquisition |
+
+**‡ extended** (M2, 2026-07-11): `CaptureView` gained `showFramesControl` / `showExposureControls` (+ fluent setters),
+**hidden by default** — the plugin decides whether the bench's frame-count + exposure/auto-exposure dev chrome is
+exposed (an end-user plugin wants a bare Measure button; auto-exposure still runs). `SpectrumCaptureView` gained a
+report `attachmentName` and a host-set Qt-free `reportImage` for the PDF (M2, `SPEC_bench_pdf_export.md`).
 
 **† extended** (M1, additive): today `SpectrumPlotView(spectrum, title)` = one trace, no bands; extend to
 `traces=[(spectrum,label,color)]` + `bands=[(lo,hi,label)]`, keeping the single-spectrum constructor valid. Covers

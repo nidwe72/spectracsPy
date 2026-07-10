@@ -23,3 +23,9 @@ pyspectra==0.0.1.2
 psutil==5.9.5
 pyusb==1.2.1
 appdata==2.2.0
+# PDF report (M2 — SPEC_bench_pdf_export.md): matplotlib renders the pages, pypdf embeds the
+# whole-Workflow JSON + captured images as named attachments. matplotlib/Pillow were present in the
+# working venv transitively; pinned here now that they are a declared dependency.
+matplotlib==3.7.1
+Pillow==9.5.0
+pypdf==6.14.2

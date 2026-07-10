@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QTabWidget, QWidget, QVBoxLayout, QLabel
 
 from sciens.spectracs.model.spectral.plugin.view.CaptureView import CaptureView
+from sciens.spectracs.model.spectral.plugin.view.ReportView import ReportView
 from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
 
 
@@ -46,7 +47,10 @@ class WorkflowPhaseRenderer:
         if result is not None:
             items.extend(result.getItems())
         view = step.getView() if hasattr(step, "getView") else None
-        if view is not None and not isinstance(view, CaptureView):
+        # CaptureView (interactive) and ReportView (a report descriptor the generic host can't render) are NOT
+        # passive visitor items — skip them. A report-aware host (the dev bench, M2) special-cases the ReportView
+        # step before delegating here; in a generic host a report step is simply headless (no tab).
+        if view is not None and not isinstance(view, (CaptureView, ReportView)):
             items.append(view)
         return items
 
