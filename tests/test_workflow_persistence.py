@@ -17,9 +17,9 @@ from sciens.spectracs.model.spectral.SpectralWorkflowPhase import SpectralWorkfl
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.model.spectral.SpectralWorkflowStep import SpectralWorkflowStep
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
-from sciens.spectracs.model.spectral.evaluation.ColorSwatchView import ColorSwatchView
-from sciens.spectracs.model.spectral.evaluation.EvaluationResult import EvaluationResult
-from sciens.spectracs.model.spectral.evaluation.VerdictView import VerdictView
+from sciens.spectracs.model.spectral.plugin.view.ColorSwatchView import ColorSwatchView
+from sciens.spectracs.model.spectral.plugin.view.EvaluationResult import EvaluationResult
+from sciens.spectracs.model.spectral.plugin.view.VerdictView import VerdictView
 
 USER_ID = "test-user-persistence"
 

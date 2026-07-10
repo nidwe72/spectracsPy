@@ -7,7 +7,7 @@ from sciens.spectracs.logic.persistence.database.spectral.PersistSpectralWorkflo
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
-from sciens.spectracs.model.spectral.evaluation.VerdictView import VerdictView
+from sciens.spectracs.model.spectral.plugin.view.VerdictView import VerdictView
 
 
 def _verdictView(workflow):

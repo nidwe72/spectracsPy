@@ -12,12 +12,13 @@ from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import Spec
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.model.spectral.SpectralWorkflowMetadata import SpectralWorkflowMetadata
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
-from sciens.spectracs.model.spectral.evaluation.SpectrumPlotView import SpectrumPlotView
+from sciens.spectracs.model.spectral.plugin.view.SpectrumPlotView import SpectrumPlotView
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 from sciens.spectracs.view.application.widgets.StepBarWidget import StepBarWidget
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.spectral.workflow.EvaluationResultRenderer import EvaluationResultRenderer
 from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
+from sciens.spectracs.view.spectral.workflow.render.WorkflowPhaseRenderer import WorkflowPhaseRenderer
 
 _PHASE_TITLES = {
     SpectralWorkflowPhaseType.ACQUISITION: "ACQUISITION",
@@ -278,14 +279,12 @@ class WizardViewModule(PageWidget):
         return panel
 
     def __computedPanel(self, step):
-        if step.getEvaluationResult() is not None:
-            return EvaluationResultRenderer().render(step.getEvaluationResult())
-        view = step.getView()
-        if isinstance(view, SpectrumPlotView):
-            plot = SpectrumPlotWidget()
-            plot.plotSpectrum(view.spectrum, title=view.title)
-            return plot
-        container = step.getContainer()  # VIEW mode: `view` is transient/None -> plot from the container
+        # M1: route EvaluationResult + the declared _view (SpectrumPlotView incl. traces/bands/markers,
+        # SpectrumCaptureView) through the shared render seam — same generic path the bench uses.
+        content = WorkflowPhaseRenderer().renderStep(step)
+        if content is not None:
+            return content
+        container = step.getContainer()  # VIEW mode: `_view` is transient/None -> plot from the container
         if container is not None and len(container.getSpectra()) > 0:
             spectrum = next(iter(container.getSpectra().values()))
             plot = SpectrumPlotWidget()

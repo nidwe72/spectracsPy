@@ -26,7 +26,7 @@ from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptu
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import SpectrometerCalibrationProfile
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
-from sciens.spectracs.model.spectral.evaluation.VerdictView import VerdictView
+from sciens.spectracs.model.spectral.plugin.view.VerdictView import VerdictView
 
 
 class StaleCalibrationRecoveryTest(unittest.TestCase):

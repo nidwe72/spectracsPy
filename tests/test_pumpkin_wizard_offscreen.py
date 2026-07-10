@@ -20,7 +20,7 @@ from sciens.spectracs.controller.application.ApplicationContextLogicModule impor
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
-from sciens.spectracs.model.spectral.evaluation.VerdictView import VerdictView
+from sciens.spectracs.model.spectral.plugin.view.VerdictView import VerdictView
 from sciens.spectracs.view.spectral.workflow.WizardViewModule import WizardViewModule
 
 PLUGIN_CODE_REF = "sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin.PumpkinOilPlugin"

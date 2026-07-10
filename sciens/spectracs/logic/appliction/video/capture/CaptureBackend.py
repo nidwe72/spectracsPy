@@ -84,6 +84,10 @@ class DesktopCv2CaptureBackend(CaptureBackend):
     def setExposure(self, exposure: int) -> None:
         import cv2
         if self._cap is not None and exposure is not None:
+            # Re-assert V4L2 MANUAL exposure mode before the value: many UVC drivers ignore mid-stream
+            # CAP_PROP_EXPOSURE writes unless manual mode is (re)asserted, so slider/auto-exposure changes had
+            # no effect (the AE bisection saw constant brightness → slider stuck at the seed). Mirrors open().
+            self._cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
             self._cap.set(cv2.CAP_PROP_EXPOSURE, exposure)
 
     def release(self) -> None:

@@ -23,7 +23,7 @@ from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import Spec
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
-from sciens.spectracs.model.spectral.evaluation.VerdictView import VerdictView
+from sciens.spectracs.model.spectral.plugin.view.VerdictView import VerdictView
 
 
 class PumpkinWorkflowEndToEndTest(unittest.TestCase):

@@ -20,6 +20,7 @@ from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModuleParamet
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.logic.session.ActiveSpectrometerProfileLogicModule import ActiveSpectrometerProfileLogicModule
 from sciens.spectracs.logic.spectral.plugin.dev.DevSpectralPlugin import DevSpectralPlugin
+from sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin import PumpkinOilPlugin
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
@@ -36,6 +37,7 @@ from sciens.spectracs.view.application.widgets.StepBarWidget import StepBarWidge
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.settings.development.DevCaptureVideoViewModule import DevCaptureVideoViewModule
 from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
+from sciens.spectracs.view.spectral.workflow.render.WorkflowPhaseRenderer import WorkflowPhaseRenderer
 
 
 class DevMeasurementBenchViewModule(PageWidget):
@@ -73,6 +75,10 @@ class DevMeasurementBenchViewModule(PageWidget):
 
         self.__engine = None
         self.__workflow = None
+        # P7: which plugin drives the bench (master-selectable, decoupled from SpectrometerSetup).
+        self.__pluginClasses = [DevSpectralPlugin, PumpkinOilPlugin]
+        self.__selectedPluginClass = DevSpectralPlugin
+        self.__pluginSelect = None
         self.__cursor = 0
         self.__phases = [SpectralWorkflowPhaseType.ACQUISITION, SpectralWorkflowPhaseType.PROCESSING,
                          SpectralWorkflowPhaseType.EVALUATION]
@@ -115,6 +121,13 @@ class DevMeasurementBenchViewModule(PageWidget):
         result = super().getMainContainerWidgets()
         self.__messageLabel = self.createMessageLabel("")
         result["message"] = self.__messageLabel
+        # P7: master-only plugin selector — run ANY plugin on the bench (the M1 acceptance test). Decoupled
+        # from the SpectrometerSetup binding; selecting one re-injects it and restarts the run.
+        self.__pluginSelect = QComboBox()
+        for pluginClass in self.__pluginClasses:
+            self.__pluginSelect.addItem(pluginClass.title)
+        self.__pluginSelect.currentIndexChanged.connect(self.__onPluginChanged)
+        result["pluginSelect"] = self.createLabeledComponent("Plugin", self.__pluginSelect)
         self.__stepBar = StepBarWidget()
         result["stepBar"] = self.__stepBar
         self.__stack = QStackedWidget()
@@ -314,7 +327,7 @@ class DevMeasurementBenchViewModule(PageWidget):
             return
 
         self.__resolveCamera()
-        self.__engine = SpectralWorkflowEngine(DevSpectralPlugin())
+        self.__engine = SpectralWorkflowEngine(self.__selectedPluginClass())  # P7: the selected plugin
         self.__workflow = self.__engine.getWorkflow()
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.ACQUISITION)  # declares REFERENCE + SAMPLE
 
@@ -324,6 +337,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__roleTabs.setCurrentIndex(0)  # start on Reference
         self.__roleTabs.blockSignals(False)
         self.__attachStepContent(0)  # defensive: ensure the shared content sits in the Reference page
+        self.__applyPluginAcquisitionLabels()  # P6-lite: role-tab + capture-button wording from the plugin's steps
         self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)  # start on the live camera image
         self.__spectrumPlot.plotSpectrum(None, title="Reference")
         self.__renderPhase()
@@ -378,7 +392,10 @@ class DevMeasurementBenchViewModule(PageWidget):
 
     def __refreshNav(self):
         terminal = self.__cursor >= len(self.__phases) - 1
-        self.__backButton.setEnabled(True)  # Back always available (to prior phase or out to Settings)
+        # Back only from the 2nd phase (PROCESSING) onward — on the first phase (ACQUISITION) there is nowhere
+        # to go back to; use Cancel to leave (Edwin).
+        self.__backButton.setVisible(self.__cursor > 0)
+        self.__backButton.setEnabled(self.__cursor > 0)
         self.__nextButton.setText("Close" if terminal else "Next →")
         if terminal:
             self.__nextButton.setEnabled(True)
@@ -483,6 +500,25 @@ class DevMeasurementBenchViewModule(PageWidget):
                 return step
         return None
 
+    # P6-lite: the acquisition WORDING is plugin-driven — role-tab labels come from the declared step labels and
+    # the Measure-button text from the step's CaptureView.captureLabel (so Pumpkin shows "Isopropanol (reference)"
+    # etc.). The capture machinery (video/exposure/ROI/§15 reparenting) is unchanged. (TODO P6: the CaptureView
+    # prompt has no home since S7 removed the hint label; full capture-path migration remains.)
+    def __captureLabelForRole(self, role):
+        step = self.__stepForRole(role)
+        view = step.getView() if step is not None else None
+        label = getattr(view, "captureLabel", None) if view is not None else None
+        return label or ("Capture reference" if role == REFERENCE else "Capture sample")
+
+    def __applyPluginAcquisitionLabels(self):
+        refStep = self.__stepForRole(REFERENCE)
+        sampleStep = self.__stepForRole(SAMPLE)
+        if refStep is not None and refStep.getLabel():
+            self.__roleTabs.setTabText(0, refStep.getLabel())
+        if sampleStep is not None and sampleStep.getLabel():
+            self.__roleTabs.setTabText(1, sampleStep.getLabel())
+        self.__captureButton.setText(self.__captureLabelForRole(self.__activeRole))
+
     def __plotActiveRole(self):
         self.__plotRoleSpectrum(self.__activeRole, self.__roleSpectra.get(self.__activeRole))
 
@@ -534,100 +570,50 @@ class DevMeasurementBenchViewModule(PageWidget):
         phase.getSteps().clear()  # idempotent if the user came Back then Next again
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.PROCESSING)
 
+        # P5: plugin steps render generically through the shared WorkflowPhaseRenderer (the "Spectra" overlay
+        # is now a declared multi-trace SpectrumPlotView). The raster inspection tabs stay host dev chrome for
+        # now — TODO P5 raster-as-SpectrumCaptureView (the captured frame is host-only, not in the model).
         self.__processingTabs.clear()
         self.__processingTabs.addTab(self.__rasterTab(REFERENCE), "Reference raster")
         self.__processingTabs.addTab(self.__rasterTab(SAMPLE), "Sample raster")
-
+        renderer = WorkflowPhaseRenderer()
         for step in phase.getSteps().values():
-            widget = self.__processingStepWidget(step)
-            if widget is not None:
-                self.__processingTabs.addTab(widget, step.getLabel())
+            content = renderer.renderStep(step)
+            if content is not None:
+                self.__processingTabs.addTab(content, step.getLabel())
 
     # --- evaluation (own phase — E1) ---
 
     def __runEvaluation(self):
-        # Plugin-driven, RENDER ONLY (SPEC_pumpkin_peak_ratio_eval.md P2/§15 E1). Run the EVALUATION hook on
-        # phase entry and (re)build the evaluation page. Idempotent on Back-then-Next.
+        # P4: EVALUATION is fully plugin-driven — the plugin declares Metrics + Spectrum steps and the shared
+        # WorkflowPhaseRenderer renders each as a step-tab (was: host-built Metrics scroll + host-drawn bands
+        # plot with DevSpectralPlugin's constants). Idempotent on Back-then-Next.
         evaluationPhase = self.__workflow.getPhase(SpectralWorkflowPhaseType.EVALUATION)
         evaluationPhase.getSteps().clear()
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.EVALUATION)
 
         self.__evaluationTabs.clear()
-
-        # --- Metrics tab: the plugin's EvaluationResult rows. Scrolled only as a fallback on very short screens.
-        metricsContent = QWidget()
-        metricsLayout = QVBoxLayout()
-        metricsLayout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
-        metricsLayout.setSpacing(Metrics.M)
-        metricsContent.setLayout(metricsLayout)
         steps = list(evaluationPhase.getSteps().values())
         if not steps:
-            metricsLayout.addWidget(QLabel("No evaluation produced (insufficient signal)."))
+            placeholder = QWidget()
+            placeholderLayout = QVBoxLayout()
+            placeholder.setLayout(placeholderLayout)
+            placeholderLayout.addWidget(QLabel("No evaluation produced (insufficient signal)."))
+            self.__evaluationTabs.addTab(placeholder, "Metrics")
+            return
+        renderer = WorkflowPhaseRenderer()
         for step in steps:
-            result = step.getEvaluationResult()
-            if result is not None:
-                metricsLayout.addWidget(EvaluationResultRenderer().render(result))
-        metricsLayout.addStretch(1)
-        metricsScroll = QScrollArea()
-        metricsScroll.setWidgetResizable(True)
-        metricsScroll.setFrameShape(QFrame.Shape.NoFrame)
-        metricsScroll.setWidget(metricsContent)
-        self.__evaluationTabs.addTab(metricsScroll, "Metrics")
+            content = renderer.renderStep(step)
+            if content is not None:
+                self.__evaluationTabs.addTab(content, step.getLabel())
 
-        # --- Spectrum tab: the A(λ) bands plot, filling the tab (no longer height-constrained by the metrics).
-        plot = self.__absorptionBandsPlot()
-        if plot is not None:
-            spectrumWidget = QWidget()
-            spectrumLayout = QVBoxLayout()
-            spectrumLayout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
-            spectrumLayout.setSpacing(Metrics.S)
-            spectrumWidget.setLayout(spectrumLayout)
-            spectrumLayout.addWidget(QLabel("Absorption A(λ) with the measurement bands:"))
-            spectrumLayout.addWidget(plot)
-            self.__evaluationTabs.addTab(spectrumWidget, "Spectrum")
-
-    def __absorptionBandsPlot(self):
-        absorption = self.__findProcessingSpectrum(ABSORPTION)
-        if absorption is None:
-            return None
-        plot = SpectrumPlotWidget()
-        plot.plotSpectrum(absorption, title="A(λ) — bands")
-        # Shade the three bands using DevSpectralPlugin's (hard-coded) constants — the plugin owns them.
-        for band, rgba in ((DevSpectralPlugin.BLUE_BAND, (46, 111, 176, 60)),
-                           (DevSpectralPlugin.GREEN_BAND, (46, 139, 87, 60)),
-                           (DevSpectralPlugin.Q_BASELINE, (184, 134, 11, 45))):
-            region = pg.LinearRegionItem(values=band, movable=False, brush=pg.mkBrush(*rgba))
-            region.setZValue(-10)
-            plot.addItem(region)
-        peak = SpectrumFeatureUtil().peakInRange(absorption, *DevSpectralPlugin.Q_SEARCH)
-        if peak is not None:
-            plot.addItem(pg.InfiniteLine(pos=peak[0], angle=90,
-                                         pen=pg.mkPen((200, 60, 60), width=1, style=Qt.PenStyle.DashLine)))
-        return plot
-
-    def __findProcessingSpectrum(self, role):
-        phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.PROCESSING)
-        for step in phase.getSteps().values():
-            container = step.getContainer()
-            if container is not None and role in container.getSpectra():
-                return container.getSpectra()[role]
-        return None
-
-    def __processingStepWidget(self, step):
-        view = step.getView()
-        if view is not None and getattr(view, "spectrum", None) is not None:
-            plot = SpectrumPlotWidget()
-            plot.plotSpectrum(view.spectrum, title=view.title)
-            return plot
-        # Spectra step: overlay reference + sample from the container.
-        container = step.getContainer()
-        if container is not None and REFERENCE in container.getSpectra() and SAMPLE in container.getSpectra():
-            plot = SpectrumPlotWidget()
-            plot.plotSpectrum(container.getSpectra()[REFERENCE], title=step.getLabel(),
-                              color=self.__REF_COLOR)
-            plot.addTrace(container.getSpectra()[SAMPLE], color=self.__SAMPLE_COLOR)
-            return plot
-        return None
+    def __onPluginChanged(self, index):
+        # P7: switch the plugin driving the bench and restart the run (only once the view is built).
+        if 0 <= index < len(self.__pluginClasses):
+            self.__selectedPluginClass = self.__pluginClasses[index]
+            if self.__stack is not None:
+                self.__stopStream()
+                self.__startRun()
 
     def __rasterTab(self, role):
         # I1: the full masked frame and the cropped ROI go into TWO sub-tabs (one image each → fits the
@@ -648,12 +634,12 @@ class DevMeasurementBenchViewModule(PageWidget):
         layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
         layout.setSpacing(Metrics.S)
         widget.setLayout(layout)
-        # S12: centre the caption + image vertically in the tab (leading AND trailing stretch) so the raster
-        # sits mid-height instead of top-packed with dead space below.
-        layout.addStretch(1)
+        # Caption on top; the image FILLS the remaining area (stretch factor 1) and ScaledImageLabel fits it to
+        # BOTH width and height, centred — a tall 1600x1200 frame no longer overflows the panel height (which
+        # pushed the ROI band below the fold → all black when maximized). Supersedes the S12 leading/trailing
+        # stretch (the fitted image centres itself within the space).
         layout.addWidget(QLabel(caption))
-        layout.addWidget(self.__imageLabel(image))
-        layout.addStretch(1)
+        layout.addWidget(self.__imageLabel(image), 1)
         return widget
 
     def __roi(self):
@@ -734,7 +720,7 @@ class DevMeasurementBenchViewModule(PageWidget):
             self.__updateExposureLabel()
             if self.__videoThread is not None:
                 self.__videoThread.setLiveExposure(self.__lockedExposure)
-        self.__captureButton.setText("Capture reference" if self.__activeRole == REFERENCE else "Capture sample")
+        self.__captureButton.setText(self.__captureLabelForRole(self.__activeRole))
         self.__plotActiveRole()
         self.__updateControls()
 
