@@ -1,5 +1,27 @@
 # Spectracs — Development Workflow
 
+## Mock before you build (Wireloom)
+
+**Best practice.** For any non-trivial **layout / UI-shape** change, sketch it as a **Wireloom** mockup and
+agree it *before* writing Qt code. Discussing GUI layout in prose or ASCII is slow and ambiguous; a rendered
+wireframe is unambiguous and cheap to iterate.
+
+**Why Wireloom** (chosen 2026-07-10 over PlantUML-salt / ASCII): it is **markup → SVG**, **toolkit-neutral**
+(knows nothing about Qt), has real UI primitives (`window/panel/tabs/slider/checkbox/…` + `annotation`
+callouts), is authored in one shot by an agent, and **versions in git next to the SPEC** — regenerable forever.
+Low-fidelity by design, so feedback stays on *structure*, not pixels.
+
+**How (this repo).**
+1. Grammar reference: [`.claude/skills/wireloom-AGENTS.md`](../.claude/skills/wireloom-AGENTS.md). The
+   [`wireloom` skill](../.claude/skills/wireloom.md) auto-activates on "mock up / sketch / wireframe a UI".
+2. Write the source as a `.wireloom` file in `docs/` beside the SPEC (e.g.
+   [`mock_bench_acquisition.wireloom`](mock_bench_acquisition.wireloom)).
+3. Render + view: `cd tools/wireloom && npm install wireloom` (one-time), then
+   `node render.mjs ../../docs/<name>.wireloom <out>.svg` and `rsvg-convert -o <out>.png <out>.svg`.
+4. Iterate the mock with the reviewer, land the agreed version in `docs/`, *then* implement + click-through.
+
+> Mock (agree the shape) → build → **click-through** (verify the pixels). The two practices bracket the work.
+
 ## Click-through review (drive-and-observe)
 
 **Definition.** A *click-through review* is verifying a change by **driving the running app along the

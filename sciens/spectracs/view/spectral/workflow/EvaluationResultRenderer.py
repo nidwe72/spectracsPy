@@ -64,6 +64,13 @@ class EvaluationResultRenderer:
         label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         if metricFieldView.tooltip:
             label.setToolTip(metricFieldView.tooltip)
+        # S5: presentation the plugin attached (MetricFieldViewStyle). Apply via QFont so the gray-chip QSS on
+        # TooltipPageLabel is preserved (a setStyleSheet would clobber it).
+        style = getattr(metricFieldView, "style", None)
+        if style is not None and getattr(style, "labelBold", False):
+            font = label.font()
+            font.setBold(True)
+            label.setFont(font)
         field = QLineEdit(str(metricFieldView.value))
         field.setReadOnly(True)
         grid.addWidget(label, row, 0, 1, 1)

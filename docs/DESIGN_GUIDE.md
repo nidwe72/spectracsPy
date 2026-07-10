@@ -43,6 +43,10 @@ solid-green 50 px fill. The global stylesheet now resets checkbox/radio *backgro
   `QHBoxLayout` with the checkbox + `addStretch(1)` — then pass that wrapper to
   `createLabeledComponent`. Otherwise the indicator floats in a wide empty cell.
 
+- **Touch density (S13):** the indicator is enlarged to 26 px as a finger target on **real Android only**
+  (`ANDROID_ONLY_TOUCH_QSS` in `spectracsMain.py`). Desktop **`--phone`** keeps the desktop 13 px indicator, so
+  it looks the same as normal desktop — don't be surprised the enlarged icon isn't reproduced under `--phone`.
+
 For an on/off control that should look like a switch, reuse `ToggleSwitch` instead of a bare checkbox.
 
 ## 3b. Button variants (semantic roles)
@@ -123,7 +127,13 @@ defense-in-depth check in the gated page itself (don't rely on the hidden button
 - **Selector order matters:** equal-specificity rules → the *later* one wins. To override a base rule
   (e.g. `QAbstractButton`), place your override **after** it.
 - When editing, watch the `{{` / `}}` escaping (the template is `str.format`ed) and never drop an
-  adjacent selector line — a missing `Selector {` orphans the next block and breaks parsing.
+  adjacent selector line — a missing `Selector {` orphans the next block and breaks parsing. **This applies to
+  comments too:** a literal `{ border }` in a `/* … */` comment is read by `str.format` as a placeholder and
+  raises `KeyError: ' border '` at startup (S14). Escape as `{{ }}` or avoid raw single braces in the template.
 - **Partially-styled buttons fall back to native frames:** if you set a button's `background` but no
   `border`, a default/focused button (e.g. a dialog's default button) renders the native blue
   default-frame. `QAbstractButton` sets `border: none` to suppress it — keep that when restyling buttons.
+- **Styling a `QComboBox` sub-control suppresses the native arrow (S14):** any `QComboBox::drop-down` or
+  `::down-arrow` rule makes Qt stop drawing its built-in ▼ — you then get an empty box unless you supply an
+  `image:`. The CSS border-triangle trick does **not** work in Qt (renders as a box). So for a real arrow,
+  leave both sub-controls **unstyled** (the base `QComboBox` border is fine) and Qt draws the native ▼.

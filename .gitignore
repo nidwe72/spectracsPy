@@ -21,3 +21,8 @@ android/server/.buildozer/
 android/server/bin/
 android/server/app_src/
 android/server/*.apk
+
+# Claude Code machine-local settings (personal; not shared)
+.claude/settings.local.json
+# Stray camera capture probe (debug artifact)
+camera_capture_probe.png

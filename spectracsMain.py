@@ -15,14 +15,21 @@ from sciens.spectracs.view.main.MainContainerViewModule import MainContainerView
 # Touch-density overrides appended to the base stylesheet on Android only (P3). Applied AFTER the
 # base sheet's .format(), so these are literal QSS (single braces) and win by ordering. Desktop is
 # untouched. Tune on-device during P4.
+# Touch-density overrides applied on real Android AND desktop --phone (so the desktop width audit reproduces the
+# phone's enlarged controls — see docs/SPEC_phone_width_responsiveness.md). The QComboBox::drop-down/::down-arrow
+# overrides were removed (S14): styling ::drop-down suppresses Qt's native ▼ glyph, so we rely on the native arrow
+# at every density instead of a border-box.
 ANDROID_TOUCH_DENSITY_QSS = """
-QRadioButton::indicator, QCheckBox::indicator { width: 26px; height: 26px; }
 QScrollBar:vertical { width: 26px; }
 QScrollBar:horizontal { height: 26px; }
 QSpinBox::up-button, QSpinBox::down-button, QDoubleSpinBox::up-button, QDoubleSpinBox::down-button { width: 30px; }
 QSpinBox::up-arrow, QSpinBox::down-arrow, QDoubleSpinBox::up-arrow, QDoubleSpinBox::down-arrow { width: 14px; height: 14px; }
-QComboBox::drop-down { width: 38px; }
-QComboBox::down-arrow { width: 16px; height: 16px; }
+"""
+
+# S13: the enlarged checkbox/radio indicator is a REAL-DEVICE touch target only. Desktop --phone drives with a
+# mouse, so it keeps the desktop 13px indicator (Edwin) — this is the one touch override --phone does NOT get.
+ANDROID_ONLY_TOUCH_QSS = """
+QRadioButton::indicator, QCheckBox::indicator { width: 26px; height: 26px; }
 """
 
 
@@ -96,10 +103,14 @@ app.setOrganizationName("Sciens")
 app.setApplicationName("SpectracsPy")
 
 styleSheet = ApplicationStyleLogicModule().getApplicationStyleSheet()
-# phoneMode gets the touch-density overrides too, so enlarged indicators/scrollbars/drop-downs
-# contribute their real width to the desktop width audit (else desktop under-reports clipping).
+# phoneMode gets the width-relevant touch-density overrides too (scrollbars/spinbox), so enlarged controls
+# contribute their real width to the desktop width audit (else desktop under-reports clipping). The checkbox
+# indicator is the ONE exception (S13) — it's device-only, so --phone shows the desktop-size icon.
 if is_android() or phoneMode:
     styleSheet += ANDROID_TOUCH_DENSITY_QSS
+if is_android():
+    # S13: 26px checkbox indicator only on a real touch device — desktop --phone stays at the desktop 13px.
+    styleSheet += ANDROID_ONLY_TOUCH_QSS
 app.setStyleSheet(styleSheet)
 
 # Bring-up only (P4/P5): synthesize a logged-in dev session when SPECTRACS_DEV_LOGIN_BYPASS is set,

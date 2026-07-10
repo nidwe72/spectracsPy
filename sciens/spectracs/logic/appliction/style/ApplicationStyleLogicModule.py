@@ -454,21 +454,11 @@ QTabBar::tab:selected {{
 
 }}
 
-QComboBox::down-arrow {{
-	border: 1px solid {border};
-	background: {surface};
-}}
-
-QComboBox::drop-down {{
-	border: 1px solid {border};
-	background: {surface};
-}}
-
-QComboBox::down-arrow {{
-	width: 3px;
-	height: 3px;
-	border: 1px solid {border};
-}}
+/* S14: no ::drop-down / ::down-arrow styling — Qt draws its native down-arrow (down-triangle) glyph. The
+   previous border-box rules replaced the native arrow with an empty bordered box (styling ::drop-down at all
+   suppresses the native arrow), which read as a "weird" empty box at both densities. Leaving the sub-controls
+   unstyled restores the real glyph app-wide. The base QComboBox border rule above is fine — only sub-control
+   styling suppresses the arrow. (The phone/android touch-density combo overrides are dropped too, spectracsMain.py.) */
 
 QAbstractSpinBox {{
 	padding-right: 15px;

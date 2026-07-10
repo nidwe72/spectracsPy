@@ -1,0 +1,27 @@
+window "Measurement bench":
+  tabs:
+    tab "Acquisition" active
+    tab "Processing"
+    tab "Evaluation"
+  tabs:
+    tab "Reference" active
+    tab "Sample"
+  panel:
+    tabs:
+      tab "Captured image"
+      tab "Spectrum" active
+    panel:
+      text "Reference plot  400-650 nm" muted
+      chart
+      row:
+        text "Frames"
+        input placeholder="20"
+      row:
+        text "Exposure"
+        slider range=0-100 value=30
+        checkbox "auto-exposure" label-right
+      button "Capture reference" primary
+  row:
+    button "Back"
+    button "Cancel"
+    button "Next" primary

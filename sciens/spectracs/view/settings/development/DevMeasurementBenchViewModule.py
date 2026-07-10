@@ -4,8 +4,8 @@ import pyqtgraph as pg
 from PySide6.QtCore import Qt, QEventLoop, QTimer, QRect
 from PySide6.QtGui import QPixmap, QColor, QPainter
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
-                               QSlider, QCheckBox, QTabWidget, QTabBar, QStackedWidget, QScrollArea,
-                               QProgressBar, QFrame, QSizePolicy)
+                               QSlider, QCheckBox, QTabWidget, QStackedWidget, QScrollArea,
+                               QFrame, QSizePolicy)
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
@@ -88,8 +88,10 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__stepBar = None
         self.__stack = None
         self.__videoViewModule = None
-        self.__statusLabel = None
-        self.__roleTabBar = None
+        self.__roleTabs = None          # QTabWidget wrapping the Reference/Sample steps (S1)
+        self.__referencePage = None
+        self.__samplePage = None
+        self.__stepContent = None       # the ONE shared inner-tabs + controls widget, reparented per role (S1)
         self.__innerTabs = None
         self.__spectrumPlot = None
         self.__framesComboBox = None
@@ -97,9 +99,9 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__exposureLabel = None
         self.__autoExposureCheckBox = None
         self.__captureButton = None
-        self.__captureProgress = None
+        self.__captureTotal = 1         # frame count of the in-flight capture (S2: status-bar progress)
         self.__processingTabs = None
-        self.__evaluationScroll = None
+        self.__evaluationTabs = None    # QTabWidget: Metrics | Spectrum (S4)
         self.__backButton = None
         self.__cancelButton = None
         self.__nextButton = None
@@ -116,6 +118,13 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__stepBar = StepBarWidget()
         result["stepBar"] = self.__stepBar
         self.__stack = QStackedWidget()
+        self.__stack.setObjectName("benchPhaseStack")
+        # S11: the phase stack shows ONE WorkflowPhase page at a time (a single content component), whose own
+        # tab widgets already frame it — so the stack needs no frame of its own. Drop the global
+        # `QStackedWidget { border:1px }` here. This is the WORKFLOW-PHASE border Edwin flagged; it is NOT the
+        # WorkflowStep (Reference/Sample = __roleTabs) frame, which stays. Scoped by objectName so it does not
+        # touch the internal QStackedWidgets of the nested QTabWidgets (already border:none globally).
+        self.__stack.setStyleSheet("QStackedWidget#benchPhaseStack { border: none; }")
         self.__stack.addWidget(self.__buildAcquisitionPanel())   # index 0
         self.__stack.addWidget(self.__buildProcessingPage())     # index 1
         self.__stack.addWidget(self.__buildEvaluationPage())     # index 2 (E1)
@@ -149,30 +158,22 @@ class DevMeasurementBenchViewModule(PageWidget):
         layout.setSpacing(Metrics.S)
         panel.setLayout(layout)
 
-        hint = self.createMessageLabel("Transmission geometry — place the sample between the bulb and the "
-                                       "camera. Capture the reference (blank) first, then the sample.")
-        layout.addWidget(hint)
-
-        self.__statusLabel = self.createMessageLabel("")
-        layout.addWidget(self.__statusLabel)
-
-        # Role tab-BAR (Reference / Sample) — the two ACQUISITION steps; selects which role Capture writes
-        # to (§15 Option A). Its content is the shared container below (so a QTabBar, not a QTabWidget).
-        self.__roleTabBar = QTabBar()
-        self.__roleTabBar.addTab("Reference")
-        self.__roleTabBar.addTab("Sample")
-        self.__roleTabBar.currentChanged.connect(self.__onRoleChanged)
-        layout.addWidget(self.__roleTabBar)
+        # S7: no hint, no inline connection-status line — the role QTabWidget is the top element of the phase
+        # content. Connection state shows in the header indicator (green/white/grey); the not-connected
+        # diagnostic goes to the app status bar (see __resolveCamera).
 
         # Shared [ Captured image | Spectrum ] tabs: ONE live-video widget + ONE spectrum plot (re-plotted
         # per active role). During auto-exposure → Captured image; after a capture → Spectrum (E3).
         self.__videoViewModule = DevCaptureVideoViewModule()
         self.__videoViewModule.setObjectName("DevMeasurementBenchViewModule.videoViewModule")
+        # S10 (was S8 ③): drop the image widget's own outline (the global BaseVideoViewModule E2/C2 border) for
+        # the bench — __innerTabs' pane (the INNER frame) already frames the image area, so the image's own
+        # hairline would double it. Bench-only; same selector as the global rule so this widget-local sheet wins.
+        self.__videoViewModule.setStyleSheet("BaseVideoViewModule { border: none; }")
         self.__spectrumPlot = SpectrumPlotWidget()
         self.__innerTabs = QTabWidget()
         self.__innerTabs.addTab(self.__videoViewModule, "Captured image")  # __IMAGE_TAB
         self.__innerTabs.addTab(self.__spectrumPlot, "Spectrum")           # __SPECTRUM_TAB
-        layout.addWidget(self.__innerTabs)
 
         controls = QWidget()
         controls.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
@@ -211,31 +212,62 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__captureButton = QPushButton("Capture reference")
         self.__captureButton.clicked.connect(self.onClickedCapture)
         controlsLayout.addWidget(self.__captureButton, 2, 0, 1, 2)
+        # S2: per-frame capture progress is emitted to the app status bar (like auto-exposure) — no inline bar.
 
-        # Per-frame capture progress (F1) — hidden when idle, shown/advanced during a capture.
-        self.__captureProgress = QProgressBar()
-        self.__captureProgress.setTextVisible(True)
-        self.__captureProgress.setVisible(False)
-        controlsLayout.addWidget(self.__captureProgress, 3, 0, 1, 2)
+        # Reference / Sample acquisition STEPS as a real tab panel whose pane frames the whole step content
+        # (S1). The ONE shared inner-tabs + controls widget (§15 Option A) is reparented into the active
+        # step's page on tab change — never duplicated.
+        self.__stepContent = QWidget()
+        stepContentLayout = QVBoxLayout()
+        stepContentLayout.setContentsMargins(0, 0, 0, 0)
+        stepContentLayout.setSpacing(Metrics.S)
+        self.__stepContent.setLayout(stepContentLayout)
+        stepContentLayout.addWidget(self.__innerTabs)
+        stepContentLayout.addWidget(controls)
 
-        layout.addWidget(controls)
+        self.__roleTabs = QTabWidget()
+        # S10: every QTabWidget keeps its global QTabWidget::pane border — no override here. The role-tabs pane
+        # is the OUTER frame of the acquisition step; __innerTabs' pane is the INNER frame around the plot/video
+        # (the controls sit below __innerTabs, inside this outer frame). Supersedes S8 ① (which flattened this
+        # pane) and S9 (which would have moved the frame onto __stepContent).
+        self.__referencePage = self.__stepPage()
+        self.__samplePage = self.__stepPage()
+        self.__roleTabs.addTab(self.__referencePage, "Reference")
+        self.__roleTabs.addTab(self.__samplePage, "Sample")
+        self.__roleTabs.tabBar().setDrawBase(False)  # S3: drop the white base line under the inactive tab
+        self.__referencePage.layout().addWidget(self.__stepContent)  # start on Reference (index 0)
+        self.__roleTabs.currentChanged.connect(self.__onRoleChanged)
+        layout.addWidget(self.__roleTabs)
         return panel
+
+    def __stepPage(self):
+        # An empty host page for one acquisition step; the shared step-content is reparented in on selection.
+        page = QWidget()
+        pageLayout = QVBoxLayout()
+        pageLayout.setContentsMargins(0, Metrics.S, 0, 0)
+        pageLayout.setSpacing(Metrics.S)
+        page.setLayout(pageLayout)
+        return page
+
+    def __attachStepContent(self, index):
+        # Move the single shared step-content widget into the selected step's page (reparent auto-removes it
+        # from the previous page). Keeps §15 Option A: one live-video widget + one spectrum plot, not two.
+        page = self.__referencePage if index == 0 else self.__samplePage
+        if self.__stepContent is not None and self.__stepContent.parentWidget() is not page:
+            page.layout().addWidget(self.__stepContent)
 
     def __roleForTabIndex(self, index):
         return REFERENCE if index == 0 else SAMPLE
 
     def __buildEvaluationPage(self):
-        # E1: EVALUATION is its own phase/page (was a Processing tab). Populated by __runEvaluation on entry.
+        # E1: EVALUATION is its own phase/page. S4: two step-tabs — Metrics | Spectrum — so the metric list and
+        # the bands plot no longer compete for height (no vertical scrollbar). Populated by __runEvaluation.
         page = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(0, Metrics.S, 0, 0)
         page.setLayout(layout)
-        self.__evaluationScroll = QScrollArea()
-        self.__evaluationScroll.setWidgetResizable(True)
-        # I2: the content already fits (min-width ~187 « panel) — no band-aid H-scrollbar-off needed. Drop
-        # the frame + rely on the content's right margin so nothing is clipped at the edge.
-        self.__evaluationScroll.setFrameShape(QFrame.Shape.NoFrame)
-        layout.addWidget(self.__evaluationScroll)
+        self.__evaluationTabs = QTabWidget()
+        layout.addWidget(self.__evaluationTabs)
         return page
 
     def __buildProcessingPage(self):
@@ -288,9 +320,10 @@ class DevMeasurementBenchViewModule(PageWidget):
 
         self.__stepBar.setSteps(["Acquisition", "Processing", "Evaluation"])
         self.__syncExposureToSensor()
-        self.__roleTabBar.blockSignals(True)
-        self.__roleTabBar.setCurrentIndex(0)  # start on Reference
-        self.__roleTabBar.blockSignals(False)
+        self.__roleTabs.blockSignals(True)
+        self.__roleTabs.setCurrentIndex(0)  # start on Reference
+        self.__roleTabs.blockSignals(False)
+        self.__attachStepContent(0)  # defensive: ensure the shared content sits in the Reference page
         self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)  # start on the live camera image
         self.__spectrumPlot.plotSpectrum(None, title="Reference")
         self.__renderPhase()
@@ -310,17 +343,28 @@ class DevMeasurementBenchViewModule(PageWidget):
         except AttributeError:
             self.__sensor = None
         self.__resolvedIndex = self.__resolver.resolveCaptureIndex(self.__sensor)
+        # S7: no inline status line. Connected → the header connection indicator (green) already shows it, so
+        # just clear any stale message; the not-connected/virtual/no-sensor diagnostic goes to the app status bar.
         if self.__sensor is None:
-            self.__statusLabel.setText("The active setup has no camera device — re-run instrument setup.")
+            self.__emitStatusMessage("The active setup has no camera device — re-run instrument setup.")
         elif self.__sensor.isVirtual:
-            self.__statusLabel.setText("The active setup is a virtual device; the bench needs a real camera.")
+            self.__emitStatusMessage("The active setup is a virtual device; the bench needs a real camera.")
         elif self.__resolvedIndex is None:
-            self.__statusLabel.setText("Not connected — no %s:%s camera found. Plug the device directly into a "
-                                       "USB port (not a hub) and reopen this view."
-                                       % (self.__sensor.vendorId, self.__sensor.modelId))
+            self.__emitStatusMessage("Not connected — no %s:%s camera found. Plug the device directly into a "
+                                     "USB port (not a hub) and reopen this view."
+                                     % (self.__sensor.vendorId, self.__sensor.modelId))
         else:
-            self.__statusLabel.setText("Connected: %s:%s → cv2 index %d."
-                                       % (self.__sensor.vendorId, self.__sensor.modelId, self.__resolvedIndex))
+            self.__clearStatus()
+
+    def __emitStatusMessage(self, text):
+        # S7: a plain (non-progress) message in the app status bar — value 0, text = message (mirrors the
+        # resting "ready for action..." look). Used for the bench's not-connected diagnostics.
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = 1
+        signal.currentStepIndex = 0
+        signal.text = text
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     # --- rendering / navigation ---
 
@@ -463,20 +507,20 @@ class DevMeasurementBenchViewModule(PageWidget):
     # --- capture progress bar (F1) ---
 
     def __beginCaptureProgress(self, total):
-        if self.__captureProgress is None:
-            return
-        self.__captureProgress.setMaximum(max(1, total))
-        self.__captureProgress.setValue(0)
-        self.__captureProgress.setFormat("capturing frame %v / %m")
-        self.__captureProgress.setVisible(True)
+        # S2: capture progress is emitted to the app status bar (same path as auto-exposure), not an inline bar.
+        self.__captureTotal = max(1, total)
 
     def __stepCaptureProgress(self, value):
-        if self.__captureProgress is not None:
-            self.__captureProgress.setValue(value)
+        roleText = "reference" if self.__activeRole == REFERENCE else "sample"
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = self.__captureTotal
+        signal.currentStepIndex = min(value, self.__captureTotal)
+        signal.text = "Capturing %s frame %d / %d" % (roleText, signal.currentStepIndex, self.__captureTotal)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     def __endCaptureProgress(self):
-        if self.__captureProgress is not None:
-            self.__captureProgress.setVisible(False)
+        self.__clearStatus()
 
     def __meanSpectrum(self, spectrum):
         parameters = MeanSpectrumLogicModuleParameters()
@@ -508,26 +552,39 @@ class DevMeasurementBenchViewModule(PageWidget):
         evaluationPhase.getSteps().clear()
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.EVALUATION)
 
-        content = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
-        layout.setSpacing(Metrics.M)
-        content.setLayout(layout)
+        self.__evaluationTabs.clear()
 
+        # --- Metrics tab: the plugin's EvaluationResult rows. Scrolled only as a fallback on very short screens.
+        metricsContent = QWidget()
+        metricsLayout = QVBoxLayout()
+        metricsLayout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
+        metricsLayout.setSpacing(Metrics.M)
+        metricsContent.setLayout(metricsLayout)
         steps = list(evaluationPhase.getSteps().values())
         if not steps:
-            layout.addWidget(QLabel("No evaluation produced (insufficient signal)."))
+            metricsLayout.addWidget(QLabel("No evaluation produced (insufficient signal)."))
         for step in steps:
             result = step.getEvaluationResult()
             if result is not None:
-                layout.addWidget(EvaluationResultRenderer().render(result))
+                metricsLayout.addWidget(EvaluationResultRenderer().render(result))
+        metricsLayout.addStretch(1)
+        metricsScroll = QScrollArea()
+        metricsScroll.setWidgetResizable(True)
+        metricsScroll.setFrameShape(QFrame.Shape.NoFrame)
+        metricsScroll.setWidget(metricsContent)
+        self.__evaluationTabs.addTab(metricsScroll, "Metrics")
 
+        # --- Spectrum tab: the A(λ) bands plot, filling the tab (no longer height-constrained by the metrics).
         plot = self.__absorptionBandsPlot()
         if plot is not None:
-            layout.addWidget(QLabel("Absorption A(λ) with the measurement bands:"))
-            layout.addWidget(plot)
-        layout.addStretch(1)
-        self.__evaluationScroll.setWidget(content)
+            spectrumWidget = QWidget()
+            spectrumLayout = QVBoxLayout()
+            spectrumLayout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
+            spectrumLayout.setSpacing(Metrics.S)
+            spectrumWidget.setLayout(spectrumLayout)
+            spectrumLayout.addWidget(QLabel("Absorption A(λ) with the measurement bands:"))
+            spectrumLayout.addWidget(plot)
+            self.__evaluationTabs.addTab(spectrumWidget, "Spectrum")
 
     def __absorptionBandsPlot(self):
         absorption = self.__findProcessingSpectrum(ABSORPTION)
@@ -591,6 +648,9 @@ class DevMeasurementBenchViewModule(PageWidget):
         layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
         layout.setSpacing(Metrics.S)
         widget.setLayout(layout)
+        # S12: centre the caption + image vertically in the tab (leading AND trailing stretch) so the raster
+        # sits mid-height instead of top-packed with dead space below.
+        layout.addStretch(1)
         layout.addWidget(QLabel(caption))
         layout.addWidget(self.__imageLabel(image))
         layout.addStretch(1)
@@ -630,7 +690,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__savedRoiX = (x1, x2)  # save originals only once we are actually widening
         calibration.regionOfInterestX1 = int(newX1)
         calibration.regionOfInterestX2 = int(newX2)
-        self.__showEffectiveWindow(calibration, newX1, newX2)
+        # S6: the "Analysis window: N–N nm" readout was removed (not wanted); the ROI clamp itself stays.
 
     def __restoreRoi(self):
         if self.__savedRoiX is None:
@@ -639,16 +699,6 @@ class DevMeasurementBenchViewModule(PageWidget):
         if calibration is not None:
             calibration.regionOfInterestX1, calibration.regionOfInterestX2 = self.__savedRoiX
         self.__savedRoiX = None
-
-    def __showEffectiveWindow(self, calibration, x1, x2):
-        # Quiet effective-range readout (§12.5) — the achieved window after the transparent clamp.
-        try:
-            polynomial = np.poly1d([calibration.interpolationCoefficientA, calibration.interpolationCoefficientB,
-                                    calibration.interpolationCoefficientC, calibration.interpolationCoefficientD])
-            self.__messageLabel.setText("Analysis window: %d–%d nm"
-                                        % (round(float(polynomial(x1))), round(float(polynomial(x2)))))
-        except (TypeError, AttributeError):
-            pass
 
     def __maskOutsideRoi(self, image, roi):
         masked = image.copy()
@@ -674,7 +724,9 @@ class DevMeasurementBenchViewModule(PageWidget):
     # --- controls / exposure (mirrors DevCaptureViewModule) ---
 
     def __onRoleChanged(self):
-        self.__activeRole = self.__roleForTabIndex(self.__roleTabBar.currentIndex())
+        index = self.__roleTabs.currentIndex()
+        self.__attachStepContent(index)  # bring the shared step-content into the newly-selected step's page
+        self.__activeRole = self.__roleForTabIndex(index)
         if self.__activeRole == SAMPLE and self.__lockedExposure is not None:
             self.__exposureSlider.blockSignals(True)
             self.__exposureSlider.setValue(self.__lockedExposure)
@@ -720,8 +772,9 @@ class DevMeasurementBenchViewModule(PageWidget):
         if self.__exposureSlider is not None:
             self.__exposureSlider.setEnabled(onAcquisition and streaming and not busy
                                              and not autoOn and not sampleLocked)
-        if self.__roleTabBar is not None:
-            self.__roleTabBar.setEnabled(onAcquisition and not busy)
+        if self.__roleTabs is not None:
+            # Disable only the TAB BAR (role switching), not the QTabWidget — the page content stays usable.
+            self.__roleTabs.tabBar().setEnabled(onAcquisition and not busy)
         if self.__framesComboBox is not None:
             self.__framesComboBox.setEnabled(onAcquisition and not busy)
 
