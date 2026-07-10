@@ -304,12 +304,20 @@ class DevMeasurementBenchViewModule(PageWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self.__startRun()
+        # React only to real navigation TO the bench (non-spontaneous). A spontaneous show is a window-system
+        # event — a virtual-desktop switch back, minimise/restore — and must NOT restart the run (which resets
+        # to ACQUISITION) or re-open the camera; the stream is still live from before (Edwin's desktop-switch bug).
+        if not event.spontaneous():
+            self.__startRun()
 
     def hideEvent(self, event):
         super().hideEvent(event)
-        self.__stopStream()
-        self.__restoreRoi()  # leaving the view restores the authored ROI (never persisted; §12.4)
+        # Symmetric: only free the camera + restore the ROI when actually navigating AWAY (non-spontaneous).
+        # A spontaneous hide (leaving the desktop) leaves the stream running and the cursor/ROI intact so
+        # returning is a no-op.
+        if not event.spontaneous():
+            self.__stopStream()
+            self.__restoreRoi()  # leaving the view restores the authored ROI (never persisted; §12.4)
 
     def __startRun(self):
         # Reset run state.

@@ -95,7 +95,11 @@ class WizardViewModule(PageWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        self.__startRun()
+        # Start a fresh run only on real navigation TO this view (non-spontaneous). A spontaneous show comes
+        # from the window system — a virtual-desktop switch back, a minimise/restore — and must NOT reset the
+        # wizard to ACQUISITION or discard the in-progress workflow (Edwin's desktop-switch bug).
+        if not event.spontaneous():
+            self.__startRun()
 
     # --- setup ---
 
