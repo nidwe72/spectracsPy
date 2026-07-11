@@ -19,6 +19,8 @@ from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModule import
 from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModuleParameters import MeanSpectrumLogicModuleParameters
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.logic.session.ActiveSpectrometerProfileLogicModule import ActiveSpectrometerProfileLogicModule
+from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
+from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
 from sciens.spectracs.logic.spectral.plugin.dev.DevSpectralPlugin import DevSpectralPlugin
 from sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin import PumpkinOilPlugin
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
@@ -29,6 +31,7 @@ from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVi
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
 from sciens.spectracs.model.spectral.plugin.view.ReportView import ReportView
+from sciens.spectracs.model.spectral.plugin.view.LimsPublishView import LimsPublishView
 from sciens.spectracs.model.spectral.plugin.view.SpectrumCaptureView import SpectrumCaptureView
 from sciens.spectracs.model.spectral.plugin.view.SpectrumPlotView import SpectrumPlotView
 from sciens.spectracs.plugin_sdk import SpectrumFeatureUtil
@@ -114,6 +117,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__captureTotal = 1         # frame count of the in-flight capture (S2: status-bar progress)
         self.__processingTabs = None
         self.__evaluationTabs = None    # QTabWidget: Metrics | Spectrum (S4)
+        self.__publishingTabs = None    # QTabWidget: Send to LIMS (L6)
         self.__backButton = None
         self.__cancelButton = None
         self.__nextButton = None
@@ -147,6 +151,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__stack.addWidget(self.__buildAcquisitionPanel())   # index 0
         self.__stack.addWidget(self.__buildProcessingPage())     # index 1
         self.__stack.addWidget(self.__buildEvaluationPage())     # index 2 (E1)
+        self.__stack.addWidget(self.__buildPublishingPage())     # index 3 (L6 — shown only if declared)
         result["stack"] = self.__stack
         return result
 
@@ -300,6 +305,17 @@ class DevMeasurementBenchViewModule(PageWidget):
         layout.addWidget(self.__processingTabs)
         return page
 
+    def __buildPublishingPage(self):
+        # L6: the PUBLISHING phase page — a "Send to LIMS" step-tab. Populated by __runPublishing; the page
+        # exists in the stack even when the plugin declares no publishing step (then it is simply never shown).
+        page = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, Metrics.S, 0, 0)
+        page.setLayout(layout)
+        self.__publishingTabs = QTabWidget()
+        layout.addWidget(self.__publishingTabs)
+        return page
+
     # --- lifecycle ---
 
     def showEvent(self, event):
@@ -346,8 +362,15 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__engine = SpectralWorkflowEngine(self.__selectedPluginClass())  # P7: the selected plugin
         self.__workflow = self.__engine.getWorkflow()
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.ACQUISITION)  # declares REFERENCE + SAMPLE
+        self.__engine.runPhaseHook(SpectralWorkflowPhaseType.PUBLISHING)   # L6: static; detect if the plugin declares it
 
-        self.__stepBar.setSteps(["Acquisition", "Processing", "Evaluation"])
+        self.__phases = [SpectralWorkflowPhaseType.ACQUISITION, SpectralWorkflowPhaseType.PROCESSING,
+                         SpectralWorkflowPhaseType.EVALUATION]
+        labels = ["Acquisition", "Processing", "Evaluation"]
+        if not self.__engine.isSkipped(SpectralWorkflowPhaseType.PUBLISHING):
+            self.__phases.append(SpectralWorkflowPhaseType.PUBLISHING)
+            labels.append("Publishing")
+        self.__stepBar.setSteps(labels)
         self.__syncExposureToSensor()
         self.__roleTabs.blockSignals(True)
         self.__roleTabs.setCurrentIndex(0)  # start on Reference
@@ -445,7 +468,14 @@ class DevMeasurementBenchViewModule(PageWidget):
             self.__runEvaluation()               # E1: EVALUATION is its own phase
             self.__cursor = 2
             self.__renderPhase()
-        else:  # EVALUATION -> terminal
+        elif phaseType == SpectralWorkflowPhaseType.EVALUATION:
+            if SpectralWorkflowPhaseType.PUBLISHING in self.__phases:
+                self.__runPublishing()           # L6: PUBLISHING is its own phase when the plugin declares it
+                self.__cursor = self.__phases.index(SpectralWorkflowPhaseType.PUBLISHING)
+                self.__renderPhase()
+            else:
+                self.__goToSettings()
+        else:  # PUBLISHING -> terminal
             self.__goToSettings()
 
     # --- capture ---
@@ -696,6 +726,52 @@ class DevMeasurementBenchViewModule(PageWidget):
             InWindowDialog.notify(self, "Report failed", "Could not write the PDF:\n%s" % error)
             return
         InWindowDialog.notify(self, "Report saved", "Saved the PDF report to:\n%s" % path)
+
+    # --- publishing (L6 — SPEC_lims_integration.md §3) ---
+
+    def __runPublishing(self):
+        # Render the plugin's PUBLISHING step(s). A LimsPublishView step becomes a "Send to LIMS" tab with a
+        # Publish button; the click builds the M2 PDF and calls the server publish RPC. Idempotent on Back/Next.
+        phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.PUBLISHING)
+        phase.getSteps().clear()
+        self.__engine.runPhaseHook(SpectralWorkflowPhaseType.PUBLISHING)
+        self.__publishingTabs.clear()
+        for step in phase.getSteps().values():
+            view = step.getView() if hasattr(step, "getView") else None
+            if isinstance(view, LimsPublishView):
+                tab = _PublishTab(view)
+                tab.publishButton.clicked.connect(
+                    lambda checked=False, t=tab, v=view: self.__onPublish(t, v))
+                self.__publishingTabs.addTab(tab, step.getLabel())
+
+    def __onPublish(self, tab, view):
+        tab.setBusy("Publishing to LIMS…")
+        pdfBytes = self.__buildReportPdfBytes()
+        if pdfBytes is None:
+            tab.setResult(False, "No report is available to publish (run the evaluation first).")
+            return
+        userId = CurrentUserSession().userId
+        result = SpectracsPyServerClient().publishSampleToLims(userId, view.toPluginLimsInfo(), pdfBytes)
+        if result.get("ok"):
+            tab.setResult(True, "Logged to LIMS — sample %s" % result.get("sampleId"))
+        else:
+            tab.setResult(False, result.get("message") or "Publish failed")
+
+    def __buildReportPdfBytes(self):
+        # Build the same M2 PDF the Report tab shows, as bytes, for the publish RPC. Reuses the EVALUATION
+        # ReportView + fills the acquisition captures first (as the Report tab does).
+        from sciens.spectracs.view.spectral.workflow.render.WorkflowReportBuilder import WorkflowReportBuilder
+        evaluation = self.__workflow.getPhase(SpectralWorkflowPhaseType.EVALUATION)
+        reportView = None
+        for step in evaluation.getSteps().values():
+            view = step.getView() if hasattr(step, "getView") else None
+            if isinstance(view, ReportView):
+                reportView = view
+                break
+        if reportView is None:
+            return None
+        self.__fillReportCaptures()
+        return WorkflowReportBuilder(self.__workflow, reportView).build().pdfBytes()
 
     def __onPluginChanged(self, index):
         # P7: switch the plugin driving the bench and restart the run (only once the view is built).
@@ -1008,3 +1084,37 @@ class _ReportTab(QWidget):
         layout.addWidget(buttonRow)
 
         layout.addWidget(PdfPreviewWidget(pixmaps), 1)
+
+
+class _PublishTab(QWidget):
+    # L6 (SPEC_lims_integration.md §3): the PUBLISHING "Send to LIMS" step body — a short summary of what will
+    # be sent, a Publish button, and a status line the host updates with the returned sample id (or the error).
+
+    def __init__(self, view):
+        super().__init__()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
+        layout.setSpacing(Metrics.S)
+        self.setLayout(layout)
+
+        analyses = ", ".join(analysis.get("name", "") for analysis in view.analyses) or "—"
+        summary = QLabel("Send this measurement to the LIMS as a new sample.\n"
+                         "Sample type: %s     Analyses: %s" % (view.sampleTypeName, analyses))
+        summary.setWordWrap(True)
+        layout.addWidget(summary)
+
+        self.publishButton = QPushButton("Publish to LIMS")
+        layout.addWidget(self.publishButton)
+
+        self.__status = QLabel("")
+        self.__status.setWordWrap(True)
+        layout.addWidget(self.__status)
+        layout.addStretch(1)
+
+    def setBusy(self, message):
+        self.publishButton.setEnabled(False)
+        self.__status.setText(message)
+
+    def setResult(self, ok, message):
+        self.publishButton.setEnabled(True)
+        self.__status.setText(("✓ " if ok else "✗ ") + message)

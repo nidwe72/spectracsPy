@@ -214,8 +214,12 @@ completeness drives what a machine ingests.
 
 ---
 
-## 7. Deferred — send to an external LIS/LIMS (plugin-owned)
-Not designed now. When built: a plugin-declared `Send to LIS` step (naturally in **PUBLISHING**); the host transmits the
+## 7. Send to an external LIS/LIMS (plugin-owned) — **IMPLEMENTED 2026-07-11**
+Built as its own milestone — see [`SPEC_lims_integration.md`](SPEC_lims_integration.md) (SENAITE first, LIMS-agnostic;
+the plugin-declared PUBLISHING `Send to LIMS` step builds this PDF and the server creates an AnalysisRequest + attaches
+it). Original sketch below stands.
+
+When built: a plugin-declared `Send to LIS` step (naturally in **PUBLISHING**); the host transmits the
 report to a configured lab system. The **embedded whole-Workflow JSON (§5) is the payload** a LIS ingests without
 parsing the visuals. **Concrete target: SENAITE LIMS** (Edwin runs a **local** instance) — integration is a push to its
 **JSON REST API (`senaite.jsonapi`)**, creating an AnalysisRequest / posting results (SENAITE is Plone/Zope, not native

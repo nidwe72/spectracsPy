@@ -244,6 +244,20 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.listTransactions failed: %s" % exception)
             return []
 
+    def publishSampleToLims(self, userId, pluginLimsInfo, pdfBytes):
+        # Create a LIMS sample + attach the M2 PDF. The PDF is sent base64 (robust over the Pyro serpent
+        # serializer); the server holds the LIMS creds. SPEC_lims_integration.md §2 / L1-RPC.
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            import base64
+            pdfBase64 = base64.b64encode(pdfBytes or b"").decode("ascii")
+            return proxy.publishSampleToLims(userId, pluginLimsInfo, pdfBase64)
+        except Exception as exception:
+            print("SpectracsPyServerClient.publishSampleToLims failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
     def syncSpectrometers(self):
         proxy = self.getProxy()
         if proxy is None:

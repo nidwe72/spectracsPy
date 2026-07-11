@@ -155,6 +155,19 @@ class WorkflowReportBuilder:
                 os.remove(tempPath)
         return path
 
+    def pdfBytes(self):
+        # The finished PDF (pages + embedded workflow.json + capture PNGs) as bytes — for the LIMS publish
+        # RPC, which ships the report to the server (SPEC_lims_integration.md L6). Reuses savePdf via a temp.
+        handle, tempPath = tempfile.mkstemp(suffix=".pdf")
+        os.close(handle)
+        try:
+            self.savePdf(tempPath)
+            with open(tempPath, "rb") as source:
+                return source.read()
+        finally:
+            if os.path.exists(tempPath):
+                os.remove(tempPath)
+
     def __embedAttachments(self, sourcePdfPath, targetPath):
         from pypdf import PdfReader, PdfWriter
         writer = PdfWriter()
