@@ -1,0 +1,3 @@
+# Per-scene screenshots produced by the doc-automation harness are build artifacts, not source.
+*.png
+!.gitignore

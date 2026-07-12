@@ -159,6 +159,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         result = super().createNavigationGroupBox()
         layout = result.layout()
         self.__backButton = QPushButton("← Back")
+        self.__backButton.setObjectName("DevMeasurementBenchViewModule.backButton")  # SPEC_doc_automation §7.1
         self.__backButton.clicked.connect(self.onClickedBack)
         layout.addWidget(self.__backButton, 0, 0, 1, 1)
         self.__cancelButton = QPushButton("Cancel")
@@ -166,6 +167,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__cancelButton.clicked.connect(self.__goToSettings)
         layout.addWidget(self.__cancelButton, 0, 1, 1, 1)
         self.__nextButton = QPushButton("Next →")
+        self.__nextButton.setObjectName("DevMeasurementBenchViewModule.nextButton")  # SPEC_doc_automation §7.1
         self.__nextButton.clicked.connect(self.onClickedNext)
         layout.addWidget(self.__nextButton, 0, 2, 1, 1)
         return result
@@ -196,6 +198,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__videoViewModule.setStyleSheet("BaseVideoViewModule { border: none; }")
         self.__spectrumPlot = SpectrumPlotWidget()
         self.__innerTabs = QTabWidget()
+        self.__innerTabs.setObjectName("DevMeasurementBenchViewModule.innerTabs")  # SPEC_doc_automation §7.1
         self.__innerTabs.addTab(self.__videoViewModule, "Captured image")  # __IMAGE_TAB
         self.__innerTabs.addTab(self.__spectrumPlot, "Spectrum")           # __SPECTRUM_TAB
 
@@ -236,6 +239,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         controlsLayout.addWidget(self.__exposureControl, 1, 0, 1, 2)
 
         self.__captureButton = QPushButton("Capture reference")
+        self.__captureButton.setObjectName("DevMeasurementBenchViewModule.captureButton")  # SPEC_doc_automation §7.1
         self.__captureButton.clicked.connect(self.onClickedCapture)
         controlsLayout.addWidget(self.__captureButton, 2, 0, 1, 2)
         # S2: per-frame capture progress is emitted to the app status bar (like auto-exposure) — no inline bar.
@@ -252,6 +256,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         stepContentLayout.addWidget(controls)
 
         self.__roleTabs = QTabWidget()
+        self.__roleTabs.setObjectName("DevMeasurementBenchViewModule.roleTabs")  # SPEC_doc_automation §7.1
         # S10: every QTabWidget keeps its global QTabWidget::pane border — no override here. The role-tabs pane
         # is the OUTER frame of the acquisition step; __innerTabs' pane is the INNER frame around the plot/video
         # (the controls sit below __innerTabs, inside this outer frame). Supersedes S8 ① (which flattened this
@@ -1104,6 +1109,7 @@ class _PublishTab(QWidget):
         layout.addWidget(summary)
 
         self.publishButton = QPushButton("Publish to LIMS")
+        self.publishButton.setObjectName("DevMeasurementBenchViewModule.sendToLimsButton")  # SPEC_doc_automation §7.1
         layout.addWidget(self.publishButton)
 
         self.__status = QLabel("")

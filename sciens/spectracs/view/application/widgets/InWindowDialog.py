@@ -67,6 +67,9 @@ class InWindowDialog(QWidget):
             button = QPushButton(text)
             if buttonType is not None:
                 button.setProperty("buttonType", buttonType)
+            else:
+                # SPEC_doc_automation §7.1: let the doc-mode `dismiss` command clear an unexpected modal.
+                button.setObjectName("inWindowDialog.primaryButton")
             button.clicked.connect(lambda _checked=False, v=value: self.__finish(v))
             footerLayout.addWidget(button, 1)
         layout.addWidget(footer)

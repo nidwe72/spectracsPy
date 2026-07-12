@@ -117,7 +117,44 @@ app.setStyleSheet(styleSheet)
 # so the virtual pipeline can run before the server app exists. No-op otherwise. Removed at P6 (D13).
 CurrentUserSession().applyDevLoginBypassIfEnabled()
 
-mainContainerViewModule = MainContainerViewModule()
+
+def _loadDevVirtualCapturesIfEnabled():
+    """Dev/doc-mode only: preload role-keyed virtual camera images from a folder so the virtual capture
+    pipeline works with no hardware (SPEC_doc_automation — the pumpkin_wizard screencast). Gated by
+    SPECTRACS_DEV_VIRTUAL_CAPTURES (a folder holding calibration/reference/sample.png). Mirrors
+    tests/test_pumpkin_wizard_offscreen setup. No-op when the env var is unset/invalid."""
+    folder = os.environ.get("SPECTRACS_DEV_VIRTUAL_CAPTURES")
+    if not folder or not os.path.isdir(folder):
+        return
+    from PySide6.QtGui import QImage
+    from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
+    settings = ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings()
+    for role, name in [(VirtualCaptureRole.CALIBRATION, "calibration.png"),
+                       (VirtualCaptureRole.REFERENCE, "reference.png"),
+                       (VirtualCaptureRole.SAMPLE, "sample.png")]:
+        path = os.path.join(folder, name)
+        if os.path.isfile(path):
+            image = QImage(path)
+            settings.setImage(role, image)
+            print("spectracsMain:   %s <- %s (%dx%d, null=%s)"
+                  % (role, name, image.width(), image.height(), image.isNull()))
+    ApplicationContextLogicModule().getApplicationSettings().setSpectrometerProfile(None)  # force auto-calibrate
+    # Read back through a FRESH settings fetch — exactly how the capture path reaches the image — so a run
+    # log tells us whether the images actually survive to capture time (singleton retention check).
+    readback = ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings()
+    check = readback.getImage(VirtualCaptureRole.REFERENCE)
+    print("spectracsMain: loaded dev virtual captures from %s; readback reference=%s"
+          % (folder, ("%dx%d" % (check.width(), check.height())) if check is not None else "None"))
+
+
+_loadDevVirtualCapturesIfEnabled()
+
+# --doc-mode (SPEC_doc_automation): augment the app with a right-side hint panel + a local UDP listener so
+# an external "Director" screencast script can narrate and drive it. Read after QApplication (unlike --phone
+# it doesn't touch QT_SCALE_FACTOR). Absent → the whole feature is inert.
+docMode = "--doc-mode" in sys.argv
+
+mainContainerViewModule = MainContainerViewModule(docMode=docMode)
 mainContainerViewModule.setWindowTitle("Spectracs")
 
 ApplicationContextLogicModule().getNavigationHandler().mainContainerViewModule = mainContainerViewModule

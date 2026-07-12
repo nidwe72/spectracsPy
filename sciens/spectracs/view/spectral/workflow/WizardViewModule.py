@@ -70,6 +70,7 @@ class WizardViewModule(PageWidget):
         self.__stepBar = StepBarWidget()
         result['stepBar'] = self.__stepBar
         self.__tabWidget = QTabWidget()
+        self.__tabWidget.setObjectName("WizardViewModule.tabWidget")  # SPEC_doc_automation §7.2
         result['tabs'] = self.__tabWidget
         return result
 
@@ -77,6 +78,7 @@ class WizardViewModule(PageWidget):
         result = super().createNavigationGroupBox()
         layout = result.layout()
         self.__backButton = QPushButton("← Back")
+        self.__backButton.setObjectName("WizardViewModule.backButton")  # SPEC_doc_automation §7.2
         self.__backButton.clicked.connect(self.onClickedBack)
         layout.addWidget(self.__backButton, 0, 0, 1, 1)
         self.__cancelButton = QPushButton("Cancel")
@@ -89,6 +91,7 @@ class WizardViewModule(PageWidget):
         self.__deleteButton.setVisible(False)  # VIEW mode only
         layout.addWidget(self.__deleteButton, 0, 2, 1, 1)
         self.__nextButton = QPushButton("Next →")
+        self.__nextButton.setObjectName("WizardViewModule.nextButton")  # SPEC_doc_automation §7.2
         self.__nextButton.clicked.connect(self.onClickedNext)
         layout.addWidget(self.__nextButton, 0, 3, 1, 1)
         return result
@@ -260,6 +263,9 @@ class WizardViewModule(PageWidget):
 
         if not self.__isView():
             measureButton = QPushButton("Measure")
+            # SPEC_doc_automation §7.2: role-qualified so both acquisition tabs' Measure buttons (which
+            # coexist in the tree) are individually resolvable by the Director's locate.
+            measureButton.setObjectName("WizardViewModule.measureButton.%s" % step.getRole().lower())
             statusLabel = QLabel("Not measured")
             layout.addWidget(measureButton)
             layout.addWidget(statusLabel)

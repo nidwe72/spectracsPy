@@ -17,7 +17,7 @@ from sciens.spectracs.view.main.MainViewModule import MainViewModule
 
 class MainContainerViewModule(QFrame):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, docMode=False, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.syncMasterData()
@@ -31,6 +31,19 @@ class MainContainerViewModule(QFrame):
         self.mainViewModule = MainViewModule()
         layout.addWidget(self.mainViewModule,1,0,1,1)
         layout.setRowStretch(0,100)
+
+        # --doc-mode only (SPEC_doc_automation): a right-side hint panel (col 1, spanning both rows) driven
+        # by an external Director script over UDP, plus the UDP listener itself. Everything is gated on
+        # docMode, so the normal app is untouched when the flag is absent.
+        self.docHintPanelViewModule = None
+        self.docModeUdpService = None
+        if docMode:
+            from sciens.spectracs.view.main.DocHintPanelViewModule import DocHintPanelViewModule
+            from sciens.spectracs.logic.appliction.docmode.DocModeUdpService import DocModeUdpService
+            self.docHintPanelViewModule = DocHintPanelViewModule()
+            layout.addWidget(self.docHintPanelViewModule, 0, 1, 2, 1)
+            layout.setColumnStretch(0, 100)  # app content keeps (almost) all the width
+            self.docModeUdpService = DocModeUdpService(self, self.docHintPanelViewModule)
 
 
     def __createBootstrapSession(self):
