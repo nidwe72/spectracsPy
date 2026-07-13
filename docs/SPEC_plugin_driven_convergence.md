@@ -295,9 +295,126 @@ Pipeline extraction, calibration, the evaluation maths, persistence (Save still 
 and the *camera mechanics* (live feed, burst, exposure, ROI) — those stay host machinery forever. This is a
 **host/rendering** refactor: same pixels, driven generically.
 
+> **Superseded for ACQUISITION by Milestone 3 (D1-A, 2026-07-13).** To unblock SM3 (real capture in the wizard)
+> without duplicating the bench's burst logic, the camera *mechanics* (burst, auto-exposure, ROI) move **out of
+> the bench view into the shared engine** (`captureAcquisitionStep`), so both hosts capture through one call. They
+> are still mechanics — they just live in a shared home, not per host. Only **navigation + dev-chrome** stay host.
+> See §9.
+
 ## 8. Verification (when implemented)
 1. Adding/removing a step in the plugin changes both hosts identically, no per-view edits.
 2. Metrics|Spectrum and the raster tabs are plugin-declared (removing them from the plugin removes the tabs).
 3. `EvaluationResultRenderer` output byte-identical after the P1 extraction (screenshot diff).
 4. A `SpectrumCaptureView(cropped=True)` shows the cropped ROI; `roiOverlay=True` paints the ROI rectangle — both from
    plugin flags, pixels host-filled.
+
+---
+
+## 9. Milestone 3 — ACQUISITION convergence & shared capture (unblocks SM3)
+
+Status: **DESIGN — decisions locked 2026-07-13 (Edwin).** ACQUISITION is the last un-converged phase (bespoke in
+**both** hosts, differently). This milestone routes it through the shared render seam, **extracts the real-capture
+mechanism into the engine so the wizard gains real capture (SM3)**, and collapses the ~100-line mirrored
+acquisition-guidance. Design-only; Stages S2–S3 are **rig-gated**. Grounded in the acquisition map of both hosts
+(2026-07-13).
+
+**Where each host stands today (the divergence to remove):**
+- **Bench:** real camera; **one** `DevCaptureVideoViewModule` reparented across Reference/Sample role-tabs; **one**
+  capture button whose label flips; capture is **host-run** — a per-frame burst loop
+  (`ImageSpectrumAcquisitionLogicModule`) in the view, with auto-exposure, ROI widening, exposure-lock-on-sample.
+  Fully bespoke; does **not** use `WorkflowPhaseRenderer` for acquisition.
+- **Wizard:** **no camera**; one Measure button *per step* in sibling tabs; capture delegated to
+  `engine.captureAcquisitionStep(step)`, which reads the **virtual** device only.
+- **Dead shared skeleton:** `WorkflowPhaseRenderer` already has a `CaptureView` branch + `captureHandler` +
+  `decorateCapturePanel(panel, step)` params — **wired by nobody**. Both hosts read `CaptureView` fields directly,
+  never through the renderer.
+
+### 9.1 The §7 revision (D1 = A) — a frame-provider seam, not swallowing the camera
+
+§7 said camera mechanics "stay host machinery forever." **Refined for acquisition (rubber-duck 2026-07-13):** the
+engine stays **headless** — it does *not* absorb the live camera. `SpectralWorkflowEngine.captureAcquisitionStep`
+gains a **frame-provider seam**: `captureAcquisitionStep(step, frameProvider)` runs the numeric burst by calling
+`frameProvider()` `frames` times through `ImageSpectrumAcquisitionLogicModule().execute()` — the bench and the engine
+already call the **same** `execute()`. The **provider** is host-injected: virtual → a static-image provider (today's
+`__capture`); real → a host provider that pumps the live `DevCaptureVideoThread`. The nested `QEventLoop` frame-pump
+and the exposure→thread wiring stay **host-side**, so the engine never becomes Qt/camera-coupled. Auto-exposure is
+**already** a shared numeric module (`AutoExposureLogicModule.findExposure(measure, …)`, a pure algorithm over a host
+`measure` callback — the identical pattern). So what actually relocates is thin (the burst loop's provider
+indirection); the wizard gains real capture by being handed the **same real provider**, not by duplicating the bench.
+New boundary: **the engine owns the burst maths; the host owns the frame source, camera thread, nav, and dev-chrome.**
+
+### 9.2 Locked decisions
+
+- **D1 = A** — extract capture into the engine; delivers SM3; revises §7 (9.1).
+- **D2 = yes** — the bench adopts the wizard's **per-step-tab + per-step-Measure** layout; the single shared camera
+  widget is reparented into the *active* step tab (real device only); bench dev-chrome via `decorateCapturePanel`.
+  Retire the bench's single-flipping-button, `roleTabs`, and `__roleSpectra` cache.
+- **D3 = yes** — keep **two nav skins** (bench `StepBar` + Back/Next + stack vs. wizard linear phase-at-a-time) over
+  the one shared content path. Navigation is genuine host identity; unifying it is high-risk, low-value.
+- **D4** — a shared **`AcquisitionGuidance`** helper, **~75%** of the ~100 mirrored lines (rubber-duck-measured, not
+  a total collapse): the byte-identical icon painters (~40 lines: `__paintGuidanceIcon` / `__amberDotIcon` /
+  `__amberArrowIcon` / `__setButtonDot` / emit-reset) lift **now** (cheap, standalone); the derivation (~17 lines)
+  collapses after D1-A (`role in __roleSpectra` → `step.getContainer() is not None`); the highlight logic (~15 lines)
+  mostly collapses after D2 via a thin per-host tab-bar/button accessor. **Stays host-specific (~15 lines):** the
+  `__refreshGuidance` **entry gate** (bench keys off its stack-cursor + camera-ready; wizard off view-mode /
+  shownPhases) — it *cannot* unify because **D3 keeps two nav skins**. Net: one shared helper + a ~15-line host
+  entry-gate + a highlight-targets accessor per host.
+- **D5 = adapter** — the renderer reads step content via the existing `WorkflowPhaseRenderer.stepViewModels` adapter
+  (`evaluationResult` / `_view` / `container`); acquisition enters through the already-present `_view → CaptureView`
+  branch wired to `captureHandler`. **No `viewModels()` list on the persisted entity; no plugin/persistence change.**
+
+### 9.3 Target architecture
+
+- **The frame-provider seam (9.1):** `engine.captureAcquisitionStep(step, frameProvider)`. The shared capture panel
+  builds the provider + burst params from a small **capture context** and passes it to the Measure handler.
+- **Shared capture panel** = the renderer's (currently-dead) `CaptureView` branch, wired: `captureHandler(step,
+  captureView)` builds prompt + Measure + live preview (when `showLivePreview` and the device is real) + per-frame
+  progress; on Measure it calls `engine.captureAcquisitionStep(step, provider)` and plots `step.getContainer()`.
+- **`decorateCapturePanel` gains a capture-context channel (rubber-duck fix).** The current 2-arg
+  `decorateCapturePanel(panel, step)` has no way to feed the bench's frames / exposure / ROI *into* the engine call.
+  It gains a **capture context** it populates — `{ frameProvider, frames, exposure control, ROI-widen callback }` —
+  which the Measure handler passes to `captureAcquisitionStep`. The wizard leaves the context at its defaults
+  (virtual static-image provider). Without this the dev-chrome would be decorative but disconnected.
+- **Camera machinery is EXTRACTED into the shared panel, not refactored in place (S2).** The camera widget
+  (`DevCaptureVideoViewModule`), thread (`DevCaptureVideoThread`), device-index resolution, live preview, and the
+  real frame-provider all move **out of the bench** into the shared capture panel as host-generic, reusable assets —
+  so S3 (wizard real capture) is *pointing the wizard at the same panel* + adding its own calibrated-serial gate, not
+  a second build. One camera-widget instance is reparented into the active step tab (bench Option-A), used by
+  whichever host has a real device; virtual device → no live preview, Measure still works (virtual provider).
+- **Guidance** = the shared `AcquisitionGuidance` helper (D4), keyed off `step.getContainer()`; each host injects its
+  own entry-gate + highlight targets.
+- **Exposure-lock-on-sample + ROI widening** are not lost — they survive as **capture-context parameters** (real
+  provider) + bench dev-chrome, not bespoke view logic.
+
+### 9.4 Implementation phases (staged; S2–S3 rig-gated)
+
+| # | Phase | Impl tasks | Rig | Acceptance |
+|---|---|---|---|---|
+| **S1a** | Guidance painters → shared util | extract the ~40 byte-identical lines (`__paintGuidanceIcon` etc.) into `AcquisitionGuidance`; both hosts delegate | no | screenshot-diff: guidance visuals unchanged |
+| **S1b** | Frame-provider seam | add `captureAcquisitionStep(step, frameProvider)`; virtual = static-image provider (today's `__capture`); back-compat default | no | offscreen wizard capture byte-identical to today |
+| **S1c** | Shared panel on the **wizard** | wire the renderer's dead `captureHandler` / `decorateCapturePanel` (+ capture-context); route wizard ACQUISITION through the renderer (per-step tab, Measure → engine); adapter yields `CaptureView` via `_view` | no | offscreen: wizard acquisition renders via renderer; Next-gating intact |
+| **S1d** | Synthetic live-frame provider | a fake provider emitting canned frames on a timer, so the **real-frame burst path** gets no-rig coverage before the rig | no | offscreen: burst via the provider yields the expected spectrum |
+| **S2a** | Extract camera machinery → shared panel | move `DevCaptureVideoViewModule` + `DevCaptureVideoThread` + device-index resolution + live preview + real frame-provider **out of the bench** into the shared panel (host-generic) | **yes** | bench live preview + resolution work from the shared panel |
+| **S2b** | Capture-context channel | `decorateCapturePanel` populates the capture context (provider + frames + exposure + ROI-widen); Measure passes it to the engine | **yes** | bench dev-chrome drives the engine capture (auto-expose, frames, ROI) |
+| **S2c** | Bench through the shared panel | bench ACQUISITION delegates to the shared panel + dev-chrome; adopt per-step-tab layout (D2); retire single button / `roleTabs` / `__roleSpectra` | **yes** | **golden-frame**: identical input frames → identical spectrum; **+ live bench smoke** (capture succeeds) |
+| **S3** | Wizard real capture = **SM3** | point the wizard at the same shared panel with the real provider; add the wizard's calibrated-serial gate | **yes** | live-burst → graph in the wizard on a real device |
+| **S4a** | Full guidance collapse | derivation + highlight into `AcquisitionGuidance`; each host keeps its ~15-line entry-gate + highlight-targets accessor | — | a plugin step edit changes both hosts identically |
+| **S4b** | Cleanup + click-through | delete the bench bespoke acquisition panel; click-through both hosts + `--phone` | — | no bespoke acquisition code remains |
+
+Sequencing: **S1a–S1d are no-rig** (the whole seam is proven offscreen, incl. the burst path via S1d's synthetic
+provider) → **S2a–S2c** extract + wire the real camera on the rig → **S3** is then a *flip* (same panel, real
+provider, + the wizard's own calibrated-serial gate) → **S4** dedups guidance and deletes the bespoke code.
+
+### 9.5 Risk & acceptance
+
+Acquisition is the most hardware-entangled code and the bench real-capture is the hero path.
+- The engine stays **headless** — only the burst's provider indirection moves in (9.1); the live camera never enters
+  the engine, so offscreen/headless tests keep working.
+- **S1 gets a synthetic live-frame provider (S1d)** so the frame-provider burst path — the one seam that carries the
+  whole milestone — is exercised offscreen *before* the rig, not first-tested on hardware.
+- The bench acceptance bar is **not** "byte-unchanged" (live camera frames are non-deterministic): it is a
+  **golden-frame** test (identical recorded input frames → identical extracted spectrum, proving the extraction maths
+  is untouched) **plus** a **live bench smoke** (capture still succeeds).
+- The scary work (extracting the camera machinery, S2) is isolated and rig-gated; SM3 (S3) only flips on once S2's
+  shared panel is proven on the bench — the working bench path stays protected until the shared machinery is proven
+  around it.

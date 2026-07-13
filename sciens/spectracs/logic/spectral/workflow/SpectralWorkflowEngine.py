@@ -91,17 +91,31 @@ class SpectralWorkflowEngine:
         # A phase whose hook created no steps is auto-skipped (no tab, no stop — §9.1).
         return len(self.workflow.getPhase(phaseType).getSteps()) == 0
 
-    def captureAcquisitionStep(self, step):
-        # Capture one interactive measurement step from the (virtual) device — the Measure-button action.
+    def captureAcquisitionStep(self, step, frameProvider=None, frames=None, onFrame=None):
+        # Capture one interactive measurement step — the Measure-button action. The frame SOURCE is a
+        # host-injected provider (SPEC_plugin_driven_convergence.md §9.1): a no-arg callable returning the
+        # next frame image (or None to skip a dropped frame). Default = the virtual static-image provider
+        # (headless, no camera). A real host (bench / wizard on a live device) passes a provider that pumps
+        # its own camera thread — so the engine runs the SAME numeric burst without ever touching Qt / camera
+        # machinery (stays headless).
+        #
+        # Capture-context (§9.3, S2b): `frames` overrides the step's frame count (the bench's Frames combo);
+        # `onFrame(spectrum, index, total)` is called after each extracted frame so the host can live-plot the
+        # running mean + step a progress bar (what the bench's in-view burst did per frame). Both optional.
+        # Returns the accumulated spectrum, or None if no frame was delivered (host surfaces "Capture failed").
         self.__ensureCalibration()
         role = step.getRole()
         if role is None:
-            return
-        frames = step.getFrames() or 1
-        spectrum = self.__capture(role, frames)
+            return None
+        frameCount = frames if frames is not None else (step.getFrames() or 1)
+        provider = frameProvider if frameProvider is not None else self.__virtualFrameProvider(role)
+        spectrum = self.__runBurst(frameCount, provider, onFrame)
+        if spectrum is None:
+            return None
         container = SpectraContainer()
         container.addToSpectra(spectrum, role)
         step.setContainer(container)
+        return spectrum
 
     def __fillAcquisitionSteps(self, phase):
         for step in phase.getSteps().values():
@@ -154,19 +168,31 @@ class SpectralWorkflowEngine:
                 return True
         return False
 
-    def __capture(self, role, frames):
-        # Set the active role, then read the virtual image `frames` times into one Spectrum's captured
-        # frames (each identical for a virtual device — the mean step reduces them). Reader pulls its
-        # calibration from the app-context singleton.
+    def __virtualFrameProvider(self, role):
+        # Default frame source (headless): the active role's virtual image, returned identically each frame
+        # (the mean step reduces them). Sets the active role as a side effect, exactly as the old __capture.
         virtualSettings = ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings()
         virtualSettings.setActiveRole(role)
         image = virtualSettings.getImage(role)
+        return lambda: image
+
+    def __runBurst(self, frames, frameProvider, onFrame=None):
+        # The numeric burst (Qt-free): pull `frames` frames from the provider and accumulate them into one
+        # Spectrum via the REAL reader. `frameProvider` is a no-arg callable returning a frame image (or None
+        # for a dropped frame, which is skipped). Reader pulls its calibration from the app-context singleton.
+        # This is the ONLY thing that "moved into the engine"; the live camera stays behind the provider
+        # (§9.1). `onFrame(spectrum, index, total)` lets the host live-plot / step a progress bar per frame.
         spectrum = None
-        for _ in range(frames):
+        for index in range(frames):
+            image = frameProvider()
+            if image is None:
+                continue
             signal = SpectralVideoThreadSignal()
             signal.image = image
             parameters = ImageSpectrumAcquisitionLogicModuleParameters()
             parameters.setVideoSignal(signal)
             parameters.spectrum = spectrum
             spectrum = ImageSpectrumAcquisitionLogicModule().execute(parameters).spectrum
+            if onFrame is not None:
+                onFrame(spectrum, index, frames)
         return spectrum

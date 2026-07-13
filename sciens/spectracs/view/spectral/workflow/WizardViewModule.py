@@ -9,6 +9,7 @@ from sciens.spectracs.controller.application.ApplicationContextLogicModule impor
 from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
 from sciens.spectracs.logic.persistence.database.spectral.PersistSpectralWorkflowLogicModule import PersistSpectralWorkflowLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
@@ -56,8 +57,7 @@ class WizardViewModule(PageWidget):
     __viewWorkflowId = None
     # SPEC_acquisition_guidance.md — per-render guidance state (NEW+ACQUISITION only). Rebuilt each render.
     __rendering = False
-    __amberDot: QIcon = None
-    __amberArrow: QIcon = None
+    __guidanceHelper = None   # shared AcquisitionGuidance primitives (S1a), lazily created
 
     def _getPageTitle(self):
         return "Measurement"
@@ -248,11 +248,16 @@ class WizardViewModule(PageWidget):
             self.__tabWidget.addTab(self.__metadataPanel(), _METADATA_TAB)
         else:
             phase = self.__workflow().getPhase(phaseType)
+            # S1c: acquisition steps flow through the SHARED capture seam — a CaptureView step routes to the
+            # wizard's captureHandler (__buildCapturePanel). The wizard has no dev-chrome, so
+            # decorateCapturePanel stays empty. Computed steps keep __computedPanel (its VIEW-mode container
+            # fallback isn't in the generic renderer).
+            renderer = WorkflowPhaseRenderer(captureHandler=self.__buildCapturePanel)
             for step in phase.getSteps().values():
                 isAcquisitionStep = (phaseType == SpectralWorkflowPhaseType.ACQUISITION
                                      and step.getRole() is not None)
                 if isAcquisitionStep:
-                    widget = self.__acquisitionPanel(step)
+                    widget = renderer.renderStep(step)
                 else:
                     widget = self.__computedPanel(step)
                 if widget is not None:
@@ -362,52 +367,35 @@ class WizardViewModule(PageWidget):
         else:
             bar.setTabIcon(index, self.__amberDotIcon())  # wrong tab -> amber ● on the tab to switch to
 
-    # --- the amber cue icons: ● (act-here, on capture buttons / target tabs) and ▶ (permanent, on Next). ---
+    # --- the amber cue icons: delegated to the shared AcquisitionGuidance util (S1a). The derivation +
+    #     highlight application above stay host-specific (S4a folds them in). ---
 
     def __setButtonDot(self, button, on):
-        if button is not None:
-            button.setIcon(self.__amberDotIcon() if on else QIcon())
+        self.__guidance().setButtonDot(button, on)
 
     def __amberDotIcon(self):
-        if self.__amberDot is None:
-            self.__amberDot = self.__paintGuidanceIcon("dot")
-        return self.__amberDot
+        return self.__guidance().amberDotIcon()
 
     def __amberArrowIcon(self):
-        if self.__amberArrow is None:
-            self.__amberArrow = self.__paintGuidanceIcon("arrow")
-        return self.__amberArrow
+        return self.__guidance().amberArrowIcon()
 
-    def __paintGuidanceIcon(self, shape):
-        pixmap = QPixmap(12, 12)
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(ApplicationStyleLogicModule().getGuidanceColor())
-        if shape == "arrow":
-            painter.drawPolygon(QPolygon([QPoint(3, 2), QPoint(10, 6), QPoint(3, 10)]))  # right-pointing ▶
-        else:
-            painter.drawEllipse(2, 2, 8, 8)  # ●
-        painter.end()
-        return QIcon(pixmap)
+    def __guidance(self):
+        if self.__guidanceHelper is None:
+            self.__guidanceHelper = AcquisitionGuidance()
+        return self.__guidanceHelper
 
     def __emitGuidance(self, text):
         # Plugin/guidance text → muted-amber font, no progress bar. A None/empty text rests the bar instead.
-        if not text:
-            self.__emitStatusReset()
-            return
-        signal = ApplicationStatusSignal()
-        signal.text = text
-        signal.guidance = True
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+        self.__guidance().emit(text)
 
     def __emitStatusReset(self):
-        signal = ApplicationStatusSignal()
-        signal.isStatusReset = True
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+        self.__guidance().emit(None)
 
-    def __acquisitionPanel(self, step):
+    def __buildCapturePanel(self, step, captureView):
+        # The wizard's captureHandler (S1c) — invoked BY WorkflowPhaseRenderer's capture seam, not directly.
+        # Builds the interactive Measure panel (plot + Measure + status). `captureView` carries the plugin's
+        # shell (prompt/captureLabel); the wizard keeps the button as "Measure" and surfaces the prompt via
+        # the guidance coach line, so it's unused here for now (the shared panel + prompt wiring is S2a).
         panel = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)

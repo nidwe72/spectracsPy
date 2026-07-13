@@ -26,6 +26,7 @@ from sciens.spectracs.logic.spectral.plugin.dev.DevSpectralPlugin import DevSpec
 from sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin import PumpkinOilPlugin
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
 from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
@@ -116,8 +117,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__autoExposureCheckBox = None
         self.__captureButton = None
         self.__captureTotal = 1         # frame count of the in-flight capture (S2: status-bar progress)
-        self.__amberDot = None          # SPEC_acquisition_guidance: lazily-painted amber ● cue icon
-        self.__amberArrow = None        # SPEC_acquisition_guidance: lazily-painted amber ▶ Next-button cue icon
+        self.__guidance = AcquisitionGuidance()   # shared guidance primitives (S1a); painters/emit live here
         self.__processingTabs = None
         self.__evaluationTabs = None    # QTabWidget: Metrics | Spectrum (S4)
         self.__publishingTabs = None    # QTabWidget: Send to LIMS (L6)
@@ -660,46 +660,20 @@ class DevMeasurementBenchViewModule(PageWidget):
         else:
             bar.setTabIcon(0 if nextRole == REFERENCE else 1, self.__amberDotIcon())  # switch to that role-tab
 
-    # --- the amber cue icons: ● (act-here, on the Capture button / target role-tab) and ▶ (permanent, on Next). ---
+    # --- the amber cue icons: delegated to the shared AcquisitionGuidance util (S1a). ---
 
     def __setButtonDot(self, button, on):
-        if button is not None:
-            button.setIcon(self.__amberDotIcon() if on else QIcon())
+        self.__guidance.setButtonDot(button, on)
 
     def __amberDotIcon(self):
-        if self.__amberDot is None:
-            self.__amberDot = self.__paintGuidanceIcon("dot")
-        return self.__amberDot
+        return self.__guidance.amberDotIcon()
 
     def __amberArrowIcon(self):
-        if self.__amberArrow is None:
-            self.__amberArrow = self.__paintGuidanceIcon("arrow")
-        return self.__amberArrow
-
-    def __paintGuidanceIcon(self, shape):
-        pixmap = QPixmap(12, 12)
-        pixmap.fill(Qt.transparent)
-        painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(ApplicationStyleLogicModule().getGuidanceColor())
-        if shape == "arrow":
-            painter.drawPolygon(QPolygon([QPoint(3, 2), QPoint(10, 6), QPoint(3, 10)]))  # right-pointing ▶
-        else:
-            painter.drawEllipse(2, 2, 8, 8)  # ●
-        painter.end()
-        return QIcon(pixmap)
+        return self.__guidance.amberArrowIcon()
 
     def __emitGuidance(self, text):
         # Plugin/guidance text → muted-amber font, no progress bar. A None/empty text rests the bar instead.
-        if not text:
-            self.__clearStatus()
-            return
-        signal = ApplicationStatusSignal()
-        signal.isStatusReset = False
-        signal.guidance = True
-        signal.text = text
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+        self.__guidance.emit(text)
 
     def __plotRoleSpectrum(self, role, spectrum):
         # Plot a role's per-frame traces + running mean on the shared spectrum plot. Called live per frame
@@ -1147,9 +1121,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     def __clearStatus(self):
-        signal = ApplicationStatusSignal()
-        signal.isStatusReset = True
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+        self.__guidance.emit(None)
 
     def __pumpFrames(self, milliseconds):
         loop = QEventLoop()
