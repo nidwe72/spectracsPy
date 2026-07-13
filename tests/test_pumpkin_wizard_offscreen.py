@@ -78,7 +78,9 @@ class PumpkinWizardOffscreenTest(unittest.TestCase):
         self.__next()
         self.assertEqual(wizard._WizardViewModule__shownPhases[wizard._WizardViewModule__cursor],
                          SpectralWorkflowPhaseType.EVALUATION)
-        self.assertEqual(wizard._WizardViewModule__nextButton.text(), "Next ▶")  # METADATA phase follows
+        # Non-terminal proceed: text is "Next" + a permanent amber ▶ ICON (SPEC_acquisition_guidance); METADATA follows.
+        self.assertEqual(wizard._WizardViewModule__nextButton.text(), "Next")
+        self.assertFalse(wizard._WizardViewModule__nextButton.icon().isNull())
         self.__next()
         self.assertEqual(wizard._WizardViewModule__shownPhases[wizard._WizardViewModule__cursor],
                          SpectralWorkflowPhaseType.METADATA)

@@ -1,11 +1,14 @@
 import datetime
 
-from PySide6.QtCore import QDate
+from PySide6.QtCore import QDate, QPoint, Qt
+from PySide6.QtGui import QIcon, QPainter, QPixmap, QPolygon
 from PySide6.QtWidgets import (QPushButton, QTabWidget, QLabel, QWidget, QVBoxLayout, QLineEdit,
                                QDateEdit)
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.logic.persistence.database.spectral.PersistSpectralWorkflowLogicModule import PersistSpectralWorkflowLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
@@ -51,6 +54,10 @@ class WizardViewModule(PageWidget):
     __nextButton: QPushButton = None
     __mode = "new"
     __viewWorkflowId = None
+    # SPEC_acquisition_guidance.md — per-render guidance state (NEW+ACQUISITION only). Rebuilt each render.
+    __rendering = False
+    __amberDot: QIcon = None
+    __amberArrow: QIcon = None
 
     def _getPageTitle(self):
         return "Measurement"
@@ -71,6 +78,12 @@ class WizardViewModule(PageWidget):
         result['stepBar'] = self.__stepBar
         self.__tabWidget = QTabWidget()
         self.__tabWidget.setObjectName("WizardViewModule.tabWidget")  # SPEC_doc_automation §7.2
+        # SPEC_acquisition_guidance §3: the amber target depends on the ACTIVE tab, so re-derive on tab change
+        # (not only after a capture). Guarded by __rendering so the churn during a re-render is ignored.
+        self.__tabWidget.currentChanged.connect(self.__onTabChanged)
+        self.__acqSteps = []            # ordered role-bearing ACQUISITION steps for the current render
+        self.__measureButtons = {}      # role -> its Measure QPushButton
+        self.__stepTabIndexByRole = {}  # role -> its tab index
         result['tabs'] = self.__tabWidget
         return result
 
@@ -219,8 +232,16 @@ class WizardViewModule(PageWidget):
     # --- rendering ---
 
     def __renderCurrentPhase(self):
+        # Reset the guidance refs BEFORE clear() so the currentChanged churn from clear()/addTab is ignored.
+        self.__rendering = True
+        self.__acqSteps = []
+        self.__measureButtons = {}
+        self.__stepTabIndexByRole = {}
         self.__tabWidget.clear()
         if not self.__shownPhases:
+            self.__rendering = False
+            self.__setGuidanceProperty(self.__nextButton, False)
+            self.__emitStatusReset()
             return
         phaseType = self.__shownPhases[self.__cursor]
         if phaseType == SpectralWorkflowPhaseType.METADATA:
@@ -228,14 +249,20 @@ class WizardViewModule(PageWidget):
         else:
             phase = self.__workflow().getPhase(phaseType)
             for step in phase.getSteps().values():
-                if phaseType == SpectralWorkflowPhaseType.ACQUISITION and step.getRole() is not None:
+                isAcquisitionStep = (phaseType == SpectralWorkflowPhaseType.ACQUISITION
+                                     and step.getRole() is not None)
+                if isAcquisitionStep:
                     widget = self.__acquisitionPanel(step)
                 else:
                     widget = self.__computedPanel(step)
                 if widget is not None:
-                    self.__tabWidget.addTab(widget, step.getLabel() or _PHASE_TITLES.get(phaseType, ""))
+                    index = self.__tabWidget.addTab(widget, step.getLabel() or _PHASE_TITLES.get(phaseType, ""))
+                    if isAcquisitionStep and not self.__isView():
+                        self.__acqSteps.append(step)
+                        self.__stepTabIndexByRole[step.getRole()] = index
         if phaseType in self.__fullSequence:
             self.__stepBar.setCurrentIndex(self.__fullSequence.index(phaseType))
+        self.__rendering = False
         self.__refreshNav()
 
     def __refreshNav(self):
@@ -243,15 +270,142 @@ class WizardViewModule(PageWidget):
         self.__backButton.setEnabled(self.__cursor > 0)
         self.__deleteButton.setVisible(self.__isView())  # Delete only exists for a saved run
         if self.__isView():
-            self.__nextButton.setText("Save changes" if terminal else "Next →")
+            self.__setNextButtonLabel("Save changes", terminal)
             self.__nextButton.setEnabled(True)
         else:
-            self.__nextButton.setText("Save" if terminal else "Next →")
+            self.__setNextButtonLabel("Save", terminal)
             phaseType = self.__shownPhases[self.__cursor]
             if phaseType == SpectralWorkflowPhaseType.ACQUISITION:
                 self.__nextButton.setEnabled(self.__acquisitionComplete())
             else:
                 self.__nextButton.setEnabled(True)
+        self.__refreshGuidance()
+
+    def __setNextButtonLabel(self, terminalText, terminal):
+        # The proceed action carries a permanent muted-amber ▶ (dims automatically when the button is disabled,
+        # brightens when enabled). Terminal actions (Save / Close / Save changes) drop the arrow.
+        if terminal:
+            self.__nextButton.setText(terminalText)
+            self.__nextButton.setIcon(QIcon())
+        else:
+            self.__nextButton.setText("Next")
+            self.__nextButton.setIcon(self.__amberArrowIcon())
+
+    # --- acquisition guidance (SPEC_acquisition_guidance.md) ---
+
+    def __onTabChanged(self, _index):
+        # The amber target moves when the user switches tabs; ignore the churn during a re-render.
+        if not self.__rendering:
+            self.__refreshGuidance()
+
+    def __refreshGuidance(self):
+        # NEW-mode ACQUISITION → the next-action coach + amber cues. NEW-mode later phases → the plugin's
+        # phase hint (if any). VIEW mode / no run → nothing.
+        if self.__isView() or not self.__shownPhases:
+            self.__emitStatusReset()
+            return
+        phaseType = self.__shownPhases[self.__cursor]
+        if phaseType == SpectralWorkflowPhaseType.ACQUISITION and self.__acqSteps:
+            action = self.__deriveNextAction()
+            self.__applyGuidanceHighlights(action)
+            self.__emitGuidance(action["coach"])  # verbatim plugin prompt, or None -> resting when all captured
+            return
+        # A computed phase — no amber (nothing to act on), just the plugin's authored phase hint (or resting).
+        self.__emitGuidance(self.__currentPhaseHint(phaseType))
+
+    def __currentPhaseHint(self, phaseType):
+        workflow = self.__workflow()
+        phase = workflow.getPhase(phaseType) if workflow is not None else None
+        return phase.getHint() if phase is not None else None
+
+    def __deriveNextAction(self):
+        # The single source of truth: the first still-uncaptured acquisition step (order-independent).
+        steps = self.__acqSteps
+        total = len(steps)
+        capturedCount = sum(1 for step in steps if step.getContainer() is not None)
+        nextStep = next((step for step in steps if step.getContainer() is None), None)
+        if nextStep is not None:
+            view = nextStep.getView()
+            hint = getattr(view, "prompt", None) if view is not None else None
+            if not hint:
+                hint = "Press %s" % (getattr(view, "captureLabel", "Measure") if view is not None else "Measure")
+            coach = hint  # the plugin's prompt, verbatim — no "Step N of M" wrapper (Edwin, 2026-07-13)
+        else:
+            phase = self.__workflow().getPhase(SpectralWorkflowPhaseType.ACQUISITION)  # all captured
+            coach = phase.getHint() if phase is not None else None  # plugin's "measurement complete" (or resting)
+        return {"steps": steps, "total": total, "capturedCount": capturedCount,
+                "nextStep": nextStep, "coach": coach}
+
+    def __applyGuidanceHighlights(self, action):
+        # Exactly ONE amber target at a time. Reset every acquisition tab/button to baseline first, then paint it.
+        bar = self.__tabWidget.tabBar()
+        currentIndex = self.__tabWidget.currentIndex()
+        for step in action["steps"]:
+            index = self.__stepTabIndexByRole.get(step.getRole())
+            if index is None:
+                continue
+            button = self.__measureButtons.get(step.getRole())
+            self.__setButtonDot(button, False)
+            baseLabel = step.getLabel() or ""
+            # ✓ glyph (not colour) marks done, so it never clashes with the green selected-tab.
+            self.__tabWidget.setTabText(index, ("✓ " + baseLabel) if step.getContainer() is not None else baseLabel)
+            bar.setTabIcon(index, QIcon())
+        # The Next arrow is a permanent part of the button (set in __refreshNav), not a per-state cue.
+        nextStep = action["nextStep"]
+        if nextStep is None:
+            return
+        index = self.__stepTabIndexByRole.get(nextStep.getRole())
+        if index is None:
+            return
+        if index == currentIndex:
+            self.__setButtonDot(self.__measureButtons.get(nextStep.getRole()), True)  # on tab -> amber ● Measure
+        else:
+            bar.setTabIcon(index, self.__amberDotIcon())  # wrong tab -> amber ● on the tab to switch to
+
+    # --- the amber cue icons: ● (act-here, on capture buttons / target tabs) and ▶ (permanent, on Next). ---
+
+    def __setButtonDot(self, button, on):
+        if button is not None:
+            button.setIcon(self.__amberDotIcon() if on else QIcon())
+
+    def __amberDotIcon(self):
+        if self.__amberDot is None:
+            self.__amberDot = self.__paintGuidanceIcon("dot")
+        return self.__amberDot
+
+    def __amberArrowIcon(self):
+        if self.__amberArrow is None:
+            self.__amberArrow = self.__paintGuidanceIcon("arrow")
+        return self.__amberArrow
+
+    def __paintGuidanceIcon(self, shape):
+        pixmap = QPixmap(12, 12)
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(ApplicationStyleLogicModule().getGuidanceColor())
+        if shape == "arrow":
+            painter.drawPolygon(QPolygon([QPoint(3, 2), QPoint(10, 6), QPoint(3, 10)]))  # right-pointing ▶
+        else:
+            painter.drawEllipse(2, 2, 8, 8)  # ●
+        painter.end()
+        return QIcon(pixmap)
+
+    def __emitGuidance(self, text):
+        # Plugin/guidance text → muted-amber font, no progress bar. A None/empty text rests the bar instead.
+        if not text:
+            self.__emitStatusReset()
+            return
+        signal = ApplicationStatusSignal()
+        signal.text = text
+        signal.guidance = True
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+
+    def __emitStatusReset(self):
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = True
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     def __acquisitionPanel(self, step):
         panel = QWidget()
@@ -266,6 +420,7 @@ class WizardViewModule(PageWidget):
             # SPEC_doc_automation §7.2: role-qualified so both acquisition tabs' Measure buttons (which
             # coexist in the tree) are individually resolvable by the Director's locate.
             measureButton.setObjectName("WizardViewModule.measureButton.%s" % step.getRole().lower())
+            self.__measureButtons[step.getRole()] = measureButton  # SPEC_acquisition_guidance: amber cue target
             statusLabel = QLabel("Not measured")
             layout.addWidget(measureButton)
             layout.addWidget(statusLabel)
@@ -417,6 +572,7 @@ class WizardViewModule(PageWidget):
         self.__goHome()
 
     def __goHome(self):
+        self.__emitStatusReset()  # SPEC_acquisition_guidance §4.1: don't leave a stale coach line on Home
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
         signal = NavigationSignal(None)

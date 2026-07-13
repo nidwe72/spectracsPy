@@ -27,6 +27,14 @@ the footer **Back** button is hidden on the first phase (ACQUISITION) — use Ca
 unused for the bench); `CaptureView.prompt` has no display home yet (S7 removed the hint label), so the declared prompt
 is not shown; the pre-existing `Next →`/`Next ▶` nav-glyph test assertion.
 
+> **P6 is now the ▶ NEXT plugin-platform item (see ROADMAP).** Since this was written, an **acquisition-guidance** layer
+> (coach line + amber next-action cue) was built that gives `CaptureView.prompt` a home — see
+> [`SPEC_acquisition_guidance.md`](SPEC_acquisition_guidance.md). It is implemented in **both** hosts (Decision B):
+> `WizardViewModule` and `DevMeasurementBenchViewModule`, with the derive/coach/highlight logic **mirrored** (~90 lines)
+> because their acquisition panels are still separate. **The main prize of P6 is now deduplication:** once ACQUISITION
+> routes through this shared capture path, collapse the two mirrored guidance implementations into one. Edwin flagged a
+> "tight discussion" before starting P6.
+
 Grounded in the verified architecture: `plugin_sdk/base/SpectralPlugin.py` (per-phase hooks), the Qt-free view-models
 in `spectracsPy-model/.../model/spectral/evaluation/`, the shared `view/spectral/workflow/EvaluationResultRenderer.py`,
 `SpectralWorkflowEngine`, and the two hosts `DevMeasurementBenchViewModule` (dev bench) + `WizardViewModule`

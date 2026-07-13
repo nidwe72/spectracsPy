@@ -7,6 +7,7 @@ from PySide6 import QtCore
 
 from sciens.base.PlatformUtil import is_android
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
@@ -292,14 +293,27 @@ class MainStatusBarViewModule(QWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
 
     def resetProgressBar(self):
+        self.progressBar.setStyleSheet("")  # back to the app-global progress-bar style
         self.progressBar.setValue(0)
         self.progressBar.setFormat('ready for action...')
+
+    def __guidanceStyleSheet(self):
+        # SPEC_acquisition_guidance: plugin/guidance text = plain muted-amber label — no fill, no groove.
+        amber = ApplicationStyleLogicModule().getGuidanceColor().name()
+        return ("QProgressBar { color: %s; background: transparent; border: none; text-align: center; }"
+                "QProgressBar::chunk { background: transparent; }" % amber)
 
     def handleApplicationStatusSignal(self,applicationStatusSignal:ApplicationStatusSignal):
 
         if applicationStatusSignal.isStatusReset:
             self.resetProgressBar()
+        elif getattr(applicationStatusSignal, "guidance", False):
+            # Plugin/guidance text: muted-amber font, no progress bar.
+            self.progressBar.setStyleSheet(self.__guidanceStyleSheet())
+            self.progressBar.setValue(0)
+            self.progressBar.setFormat(applicationStatusSignal.text)
         else:
+            self.progressBar.setStyleSheet("")  # operational progress: app-global style + real fill
             self.progressBar.setFormat(applicationStatusSignal.text)
             percents = applicationStatusSignal.currentStepIndex / float(applicationStatusSignal.stepsCount) * 100.0
             self.progressBar.setValue(percents)

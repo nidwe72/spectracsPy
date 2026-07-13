@@ -1,13 +1,14 @@
 import numpy as np
 import pyqtgraph as pg
 
-from PySide6.QtCore import Qt, QEventLoop, QTimer, QRect
-from PySide6.QtGui import QPixmap, QColor, QPainter
+from PySide6.QtCore import Qt, QEventLoop, QTimer, QRect, QPoint
+from PySide6.QtGui import QPixmap, QColor, QPainter, QIcon, QPolygon
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
                                QSlider, QCheckBox, QTabWidget, QStackedWidget, QScrollArea,
                                QFrame, QSizePolicy, QFileDialog)
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
 from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
@@ -115,6 +116,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__autoExposureCheckBox = None
         self.__captureButton = None
         self.__captureTotal = 1         # frame count of the in-flight capture (S2: status-bar progress)
+        self.__amberDot = None          # SPEC_acquisition_guidance: lazily-painted amber ● cue icon
+        self.__amberArrow = None        # SPEC_acquisition_guidance: lazily-painted amber ▶ Next-button cue icon
         self.__processingTabs = None
         self.__evaluationTabs = None    # QTabWidget: Metrics | Spectrum (S4)
         self.__publishingTabs = None    # QTabWidget: Send to LIMS (L6)
@@ -441,12 +444,23 @@ class DevMeasurementBenchViewModule(PageWidget):
         # to go back to; use Cancel to leave (Edwin).
         self.__backButton.setVisible(self.__cursor > 0)
         self.__backButton.setEnabled(self.__cursor > 0)
-        self.__nextButton.setText("Close" if terminal else "Next →")
+        self.__setNextButtonLabel("Close", terminal)
         if terminal:
             self.__nextButton.setEnabled(True)
         else:
             self.__nextButton.setEnabled(self.__acquisitionComplete())
         self.__updateControls()
+        self.__refreshGuidance()
+
+    def __setNextButtonLabel(self, terminalText, terminal):
+        # Permanent muted-amber ▶ on the proceed action (dims when disabled, brightens when enabled); terminal
+        # actions (Close) drop the arrow. See SPEC_acquisition_guidance.
+        if terminal:
+            self.__nextButton.setText(terminalText)
+            self.__nextButton.setIcon(QIcon())
+        else:
+            self.__nextButton.setText("Next")
+            self.__nextButton.setIcon(self.__amberArrowIcon())
 
     def __acquisitionComplete(self):
         return REFERENCE in self.__roleSpectra and SAMPLE in self.__roleSpectra
@@ -586,6 +600,106 @@ class DevMeasurementBenchViewModule(PageWidget):
 
     def __plotActiveRole(self):
         self.__plotRoleSpectrum(self.__activeRole, self.__roleSpectra.get(self.__activeRole))
+
+    # --- acquisition guidance (SPEC_acquisition_guidance.md — Decision B: the bench host renders it too, until
+    # the capture-panel convergence lets both hosts share ONE path). Mirrors WizardViewModule, bound to the
+    # bench's single capture button + Reference/Sample role-tabs. Reuses `__clearStatus` as the coach reset. ---
+
+    def __refreshGuidance(self):
+        inAcquisition = (self.__workflow is not None
+                         and self.__phases[self.__cursor] == SpectralWorkflowPhaseType.ACQUISITION)
+        if inAcquisition:
+            if self.__resolvedIndex is None:
+                # Camera not ready — leave __resolveCamera's not-connected diagnostic in place; no coach/amber.
+                self.__setButtonDot(self.__captureButton, False)
+                return
+            action = self.__guidanceAction()
+            self.__applyGuidanceHighlights(action)
+            self.__emitGuidance(action["coach"])  # verbatim plugin prompt, or None -> resting when all captured
+            return
+        # A computed phase — no amber; show the plugin's authored phase hint (if any), else clear the coach line.
+        self.__setButtonDot(self.__captureButton, False)
+        phase = self.__workflow.getPhase(self.__phases[self.__cursor]) if self.__workflow is not None else None
+        self.__emitGuidance(phase.getHint() if phase is not None else None)
+
+    def __guidanceAction(self):
+        roles = [REFERENCE, SAMPLE]
+        capturedCount = sum(1 for role in roles if role in self.__roleSpectra)
+        nextRole = next((role for role in roles if role not in self.__roleSpectra), None)
+        if nextRole is not None:
+            step = self.__stepForRole(nextRole)
+            view = step.getView() if step is not None else None
+            hint = getattr(view, "prompt", None) if view is not None else None
+            if not hint:
+                hint = "Press %s" % self.__captureLabelForRole(nextRole)
+            coach = hint  # the plugin's prompt, verbatim — no "Step N of M" wrapper (Edwin, 2026-07-13)
+        else:
+            phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.ACQUISITION) \
+                if self.__workflow is not None else None  # all captured
+            coach = phase.getHint() if phase is not None else None  # plugin's "measurement complete" (or resting)
+        return {"roles": roles, "total": len(roles), "capturedCount": capturedCount,
+                "nextRole": nextRole, "coach": coach}
+
+    def __applyGuidanceHighlights(self, action):
+        bar = self.__roleTabs.tabBar()
+        for role in action["roles"]:
+            index = 0 if role == REFERENCE else 1
+            step = self.__stepForRole(role)
+            baseLabel = (step.getLabel() if step is not None else None) \
+                or ("Reference" if role == REFERENCE else "Sample")
+            captured = role in self.__roleSpectra
+            self.__roleTabs.setTabText(index, ("✓ " + baseLabel) if captured else baseLabel)
+            bar.setTabIcon(index, QIcon())
+        # The Next arrow is a permanent part of the button (set in __refreshNav), not a per-state cue.
+        self.__setButtonDot(self.__captureButton, False)
+        nextRole = action["nextRole"]
+        if nextRole is None:
+            return
+        if nextRole == self.__activeRole:
+            self.__setButtonDot(self.__captureButton, True)  # on the right role-tab -> amber ● Capture
+        else:
+            bar.setTabIcon(0 if nextRole == REFERENCE else 1, self.__amberDotIcon())  # switch to that role-tab
+
+    # --- the amber cue icons: ● (act-here, on the Capture button / target role-tab) and ▶ (permanent, on Next). ---
+
+    def __setButtonDot(self, button, on):
+        if button is not None:
+            button.setIcon(self.__amberDotIcon() if on else QIcon())
+
+    def __amberDotIcon(self):
+        if self.__amberDot is None:
+            self.__amberDot = self.__paintGuidanceIcon("dot")
+        return self.__amberDot
+
+    def __amberArrowIcon(self):
+        if self.__amberArrow is None:
+            self.__amberArrow = self.__paintGuidanceIcon("arrow")
+        return self.__amberArrow
+
+    def __paintGuidanceIcon(self, shape):
+        pixmap = QPixmap(12, 12)
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(ApplicationStyleLogicModule().getGuidanceColor())
+        if shape == "arrow":
+            painter.drawPolygon(QPolygon([QPoint(3, 2), QPoint(10, 6), QPoint(3, 10)]))  # right-pointing ▶
+        else:
+            painter.drawEllipse(2, 2, 8, 8)  # ●
+        painter.end()
+        return QIcon(pixmap)
+
+    def __emitGuidance(self, text):
+        # Plugin/guidance text → muted-amber font, no progress bar. A None/empty text rests the bar instead.
+        if not text:
+            self.__clearStatus()
+            return
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.guidance = True
+        signal.text = text
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     def __plotRoleSpectrum(self, role, spectrum):
         # Plot a role's per-frame traces + running mean on the shared spectrum plot. Called live per frame
@@ -894,6 +1008,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__captureButton.setText(self.__captureLabelForRole(self.__activeRole))
         self.__plotActiveRole()
         self.__updateControls()
+        self.__refreshGuidance()  # the amber target moves with the active role-tab
 
     def __onExposureChanged(self):
         self.__updateExposureLabel()
@@ -1053,6 +1168,10 @@ class DevMeasurementBenchViewModule(PageWidget):
     # --- navigation ---
 
     def __goToSettings(self):
+        # SPEC_acquisition_guidance §4.1: clear the coach line + capture-button cue so nothing lingers in Settings.
+        # (The Next arrow is a permanent button icon owned by __refreshNav — no need to clear it on leave.)
+        self.__setButtonDot(self.__captureButton, False)
+        self.__clearStatus()
         self.__stopStream()
         ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
             ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)

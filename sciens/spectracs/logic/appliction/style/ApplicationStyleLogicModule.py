@@ -61,6 +61,13 @@ class ApplicationStyleLogicModule(Singleton):
         result=QColor.fromRgb(201, 148, 46)
         return result
 
+    def getGuidanceColor(self):
+        # SPEC_acquisition_guidance.md §5 — the "act here" next-action cue (coach line + amber highlight on
+        # the control the user should touch next). Muted amber #C9942E; kept a DEDICATED token (not reusing
+        # warning/danger — a helpful cue is not a problem), so a real warning amber can diverge later.
+        result=QColor.fromRgb(201, 148, 46)
+        return result
+
     def getDangerColor(self):
         # Muted red. #B0544E
         result=QColor.fromRgb(176, 84, 78)
