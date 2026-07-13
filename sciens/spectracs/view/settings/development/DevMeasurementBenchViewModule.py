@@ -27,6 +27,7 @@ from sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin import Pump
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
+from sciens.spectracs.view.spectral.workflow.CapturePanel import CapturePanel
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
 from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
@@ -102,6 +103,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__messageLabel = None
         self.__stepBar = None
         self.__stack = None
+        self.__capturePanel = None          # S2c: the shared CapturePanel (built per run in __startRun)
+        self.__acquisitionContainer = None  # its host page in the phase stack
         self.__videoViewModule = None
         self.__roleTabs = None          # QTabWidget wrapping the Reference/Sample steps (S1)
         self.__referencePage = None
@@ -181,6 +184,17 @@ class DevMeasurementBenchViewModule(PageWidget):
     __SPECTRUM_TAB = 1
 
     def __buildAcquisitionPanel(self):
+        # S2c: the acquisition UI is the shared CapturePanel now, built per run in __startRun (it needs the
+        # plugin's declared steps). This returns just its host container in the phase stack; the legacy inline
+        # capture UI below is dead (renamed, never called — S4b removes it).
+        self.__acquisitionContainer = QWidget()
+        containerLayout = QVBoxLayout()
+        containerLayout.setContentsMargins(0, Metrics.S, 0, 0)
+        containerLayout.setSpacing(Metrics.S)
+        self.__acquisitionContainer.setLayout(containerLayout)
+        return self.__acquisitionContainer
+
+    def __buildAcquisitionPanelLegacy(self):
         panel = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(0, Metrics.S, 0, 0)
@@ -379,17 +393,36 @@ class DevMeasurementBenchViewModule(PageWidget):
             self.__phases.append(SpectralWorkflowPhaseType.PUBLISHING)
             labels.append("Publishing")
         self.__stepBar.setSteps(labels)
-        self.__syncExposureToSensor()
-        self.__roleTabs.blockSignals(True)
-        self.__roleTabs.setCurrentIndex(0)  # start on Reference
-        self.__roleTabs.blockSignals(False)
-        self.__attachStepContent(0)  # defensive: ensure the shared content sits in the Reference page
-        self.__applyPluginAcquisitionLabels()  # P6-lite: role-tab + capture-button wording from the plugin's steps
-        self.__applyCaptureControlVisibility()  # plugin decides if frame/exposure controls are shown (Edwin)
-        self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)  # start on the live camera image
-        self.__spectrumPlot.plotSpectrum(None, title="Reference")
+        self.__buildCapturePanel()   # S2c: the shared CapturePanel replaces the bench's inline capture UI
         self.__renderPhase()
-        self.__startStream()
+        self.__capturePanel.startStream()
+
+    def __buildCapturePanel(self):
+        # S2c: (re)build the shared CapturePanel for this run's acquisition steps and swap it into the phase
+        # stack's acquisition page. One panel per run; the plugin's CaptureView flags drive its dev-chrome.
+        self.__capturePanel = CapturePanel(
+            self.__acquisitionSteps(), self.__engine,
+            onCaptured=self.__onCaptured, onRoleChanged=self.__refreshGuidance,
+            onCaptureFailed=self.__onCaptureFailed)
+        layout = self.__acquisitionContainer.layout()
+        while layout.count():
+            widget = layout.takeAt(0).widget()
+            if widget is not None:
+                widget.deleteLater()
+        layout.addWidget(self.__capturePanel)
+
+    def __acquisitionSteps(self):
+        if self.__workflow is None:
+            return []
+        phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.ACQUISITION)
+        return [step for step in phase.getSteps().values() if step.getRole() is not None]
+
+    def __onCaptured(self, step):
+        # A role finished capturing (CapturePanel callback) — refresh nav (Next enables once both captured) + guidance.
+        self.__refreshNav()
+
+    def __onCaptureFailed(self):
+        InWindowDialog.notify(self, "Capture failed", "No frames were delivered by the camera.")
 
     def __hasCalibratedSetup(self):
         profile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
@@ -463,7 +496,8 @@ class DevMeasurementBenchViewModule(PageWidget):
             self.__nextButton.setIcon(self.__amberArrowIcon())
 
     def __acquisitionComplete(self):
-        return REFERENCE in self.__roleSpectra and SAMPLE in self.__roleSpectra
+        steps = self.__acquisitionSteps()
+        return len(steps) > 0 and all(step.getContainer() is not None for step in steps)
 
     def onClickedBack(self):
         if self.__cursor > 0:
@@ -599,66 +633,72 @@ class DevMeasurementBenchViewModule(PageWidget):
             self.__exposureControl.setVisible(showExposure)
 
     def __plotActiveRole(self):
-        self.__plotRoleSpectrum(self.__activeRole, self.__roleSpectra.get(self.__activeRole))
+        if self.__capturePanel is not None:
+            self.__capturePanel.plotActiveRole()
 
     # --- acquisition guidance (SPEC_acquisition_guidance.md — Decision B: the bench host renders it too, until
     # the capture-panel convergence lets both hosts share ONE path). Mirrors WizardViewModule, bound to the
     # bench's single capture button + Reference/Sample role-tabs. Reuses `__clearStatus` as the coach reset. ---
 
     def __refreshGuidance(self):
+        panel = self.__capturePanel
         inAcquisition = (self.__workflow is not None
                          and self.__phases[self.__cursor] == SpectralWorkflowPhaseType.ACQUISITION)
         if inAcquisition:
-            if self.__resolvedIndex is None:
-                # Camera not ready — leave __resolveCamera's not-connected diagnostic in place; no coach/amber.
-                self.__setButtonDot(self.__captureButton, False)
+            if panel is None or not panel.isCameraReady():
+                # Camera not ready — leave the not-connected diagnostic in place; no coach/amber.
+                if panel is not None:
+                    self.__setButtonDot(panel.getCaptureButton(), False)
                 return
             action = self.__guidanceAction()
             self.__applyGuidanceHighlights(action)
             self.__emitGuidance(action["coach"])  # verbatim plugin prompt, or None -> resting when all captured
             return
         # A computed phase — no amber; show the plugin's authored phase hint (if any), else clear the coach line.
-        self.__setButtonDot(self.__captureButton, False)
+        if panel is not None:
+            self.__setButtonDot(panel.getCaptureButton(), False)
         phase = self.__workflow.getPhase(self.__phases[self.__cursor]) if self.__workflow is not None else None
         self.__emitGuidance(phase.getHint() if phase is not None else None)
 
     def __guidanceAction(self):
-        roles = [REFERENCE, SAMPLE]
-        capturedCount = sum(1 for role in roles if role in self.__roleSpectra)
-        nextRole = next((role for role in roles if role not in self.__roleSpectra), None)
-        if nextRole is not None:
-            step = self.__stepForRole(nextRole)
-            view = step.getView() if step is not None else None
+        # "measured?" is now the workflow model (step.getContainer()), shared with the wizard (D4).
+        steps = self.__acquisitionSteps()
+        nextStep = next((step for step in steps if step.getContainer() is None), None)
+        if nextStep is not None:
+            view = nextStep.getView()
             hint = getattr(view, "prompt", None) if view is not None else None
             if not hint:
-                hint = "Press %s" % self.__captureLabelForRole(nextRole)
+                label = getattr(view, "captureLabel", None) if view is not None else None
+                hint = "Press %s" % (label or "Capture")
             coach = hint  # the plugin's prompt, verbatim — no "Step N of M" wrapper (Edwin, 2026-07-13)
         else:
             phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.ACQUISITION) \
                 if self.__workflow is not None else None  # all captured
             coach = phase.getHint() if phase is not None else None  # plugin's "measurement complete" (or resting)
-        return {"roles": roles, "total": len(roles), "capturedCount": capturedCount,
-                "nextRole": nextRole, "coach": coach}
+        return {"steps": steps, "nextStep": nextStep, "coach": coach}
 
     def __applyGuidanceHighlights(self, action):
-        bar = self.__roleTabs.tabBar()
-        for role in action["roles"]:
-            index = 0 if role == REFERENCE else 1
-            step = self.__stepForRole(role)
-            baseLabel = (step.getLabel() if step is not None else None) \
-                or ("Reference" if role == REFERENCE else "Sample")
-            captured = role in self.__roleSpectra
-            self.__roleTabs.setTabText(index, ("✓ " + baseLabel) if captured else baseLabel)
+        panel = self.__capturePanel
+        if panel is None:
+            return
+        tabs = panel.getRoleTabs()
+        bar = tabs.tabBar()
+        steps = action["steps"]
+        for index, step in enumerate(steps):
+            baseLabel = step.getLabel() or (step.getRole() or "")
+            captured = step.getContainer() is not None
+            tabs.setTabText(index, ("✓ " + baseLabel) if captured else baseLabel)
             bar.setTabIcon(index, QIcon())
         # The Next arrow is a permanent part of the button (set in __refreshNav), not a per-state cue.
-        self.__setButtonDot(self.__captureButton, False)
-        nextRole = action["nextRole"]
-        if nextRole is None:
+        self.__setButtonDot(panel.getCaptureButton(), False)
+        nextStep = action["nextStep"]
+        if nextStep is None:
             return
-        if nextRole == self.__activeRole:
-            self.__setButtonDot(self.__captureButton, True)  # on the right role-tab -> amber ● Capture
+        nextIndex = steps.index(nextStep)
+        if nextStep is panel.getActiveStep():
+            self.__setButtonDot(panel.getCaptureButton(), True)  # on the right role-tab -> amber ● Capture
         else:
-            bar.setTabIcon(0 if nextRole == REFERENCE else 1, self.__amberDotIcon())  # switch to that role-tab
+            bar.setTabIcon(nextIndex, self.__amberDotIcon())  # switch to that role-tab
 
     # --- the amber cue icons: delegated to the shared AcquisitionGuidance util (S1a). ---
 
@@ -780,8 +820,9 @@ class DevMeasurementBenchViewModule(PageWidget):
         roi = self.__roi()
         for step in acquisition.getSteps().values():
             role = step.getRole()
-            frame = self.__representativeFrames.get(role)
-            spectrum = self.__roleSpectra.get(role)
+            frame = self.__capturePanel.getRepresentativeFrame(role) if self.__capturePanel is not None else None
+            container = step.getContainer()
+            spectrum = container.getSpectra().get(role) if container is not None else None
             result = step.getEvaluationResult()
             if result is None:
                 continue
@@ -877,7 +918,7 @@ class DevMeasurementBenchViewModule(PageWidget):
     def __rasterTab(self, role):
         # I1: the full masked frame and the cropped ROI go into TWO sub-tabs (one image each → fits the
         # panel width AND height, no scrollbar) instead of stacking both in a scrolled column.
-        image = self.__representativeFrames.get(role)
+        image = self.__capturePanel.getRepresentativeFrame(role) if self.__capturePanel is not None else None
         if image is None:
             return QLabel("No captured frame.")
         roi = self.__roi()
@@ -938,12 +979,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         # S6: the "Analysis window: N–N nm" readout was removed (not wanted); the ROI clamp itself stays.
 
     def __restoreRoi(self):
-        if self.__savedRoiX is None:
-            return
-        calibration = self.__calibration()
-        if calibration is not None:
-            calibration.regionOfInterestX1, calibration.regionOfInterestX2 = self.__savedRoiX
-        self.__savedRoiX = None
+        if self.__capturePanel is not None:
+            self.__capturePanel.restoreRoi()
 
     def __maskOutsideRoi(self, image, roi):
         masked = image.copy()
@@ -1004,54 +1041,18 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__updateExposureLabel()
 
     def __updateControls(self):
-        onAcquisition = self.__phases[self.__cursor] == SpectralWorkflowPhaseType.ACQUISITION
-        connected = self.__resolvedIndex is not None
-        streaming = self.__videoThread is not None
-        busy = self.__autoExposing
-        # Sample role reuses the locked reference exposure: no auto-expose, no manual slider (correctness).
-        sampleLocked = self.__activeRole == SAMPLE and self.__lockedExposure is not None
-        autoOn = self.__autoExposureCheckBox is not None and self.__autoExposureCheckBox.isChecked()
-
-        self.__captureButton.setEnabled(onAcquisition and connected and streaming and not busy)
-        if self.__autoExposureCheckBox is not None:
-            self.__autoExposureCheckBox.setEnabled(onAcquisition and not busy and not sampleLocked)
-        if self.__exposureSlider is not None:
-            self.__exposureSlider.setEnabled(onAcquisition and streaming and not busy
-                                             and not autoOn and not sampleLocked)
-        if self.__roleTabs is not None:
-            # Disable only the TAB BAR (role switching), not the QTabWidget — the page content stays usable.
-            self.__roleTabs.tabBar().setEnabled(onAcquisition and not busy)
-        if self.__framesComboBox is not None:
-            self.__framesComboBox.setEnabled(onAcquisition and not busy)
+        # S2c: the CapturePanel self-manages its own capture/exposure controls now — nothing host-side to do.
+        pass
 
     # --- streaming ---
 
     def __startStream(self):
-        if self.__videoThread is not None or self.__resolvedIndex is None:
-            self.__updateControls()
-            return
-        self.__latestImage = None
-        thread = DevCaptureVideoThread()
-        thread.setIsVirtual(False)
-        thread.setDeviceId(self.__resolvedIndex)
-        exposure = self.__lockedExposure if (self.__activeRole == SAMPLE and self.__lockedExposure is not None) \
-            else self.__exposureSlider.value()
-        thread.setExposure(exposure)
-        thread.setLiveExposure(exposure)
-        thread.setFrameCount(0)  # continuous until stop()
-        thread.videoThreadSignal.connect(self.handleVideoThreadSignal)
-        thread.finished.connect(self.__onThreadFinished)
-        self.__videoThread = thread
-        thread.start()
-        self.__updateControls()
-        # NOTE: auto-exposure runs on the Capture click (a user action), NOT here — running the
-        # nested-event-loop bisection inside showEvent re-enters the view lifecycle and corrupts the
-        # stream thread. The live preview opens at the seeded exposure; Capture auto-exposes then grabs.
+        if self.__capturePanel is not None:
+            self.__capturePanel.startStream()
 
     def __stopStream(self):
-        if self.__videoThread is not None:
-            self.__videoThread.stop()
-        self.__updateControls()
+        if self.__capturePanel is not None:
+            self.__capturePanel.stopStream()
 
     def __onThreadFinished(self):
         self.__videoThread = None
