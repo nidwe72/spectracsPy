@@ -1,0 +1,560 @@
+import numpy as np
+
+from PySide6.QtCore import Qt, QEventLoop, QTimer
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
+                               QSlider, QCheckBox, QTabWidget, QSizePolicy)
+
+from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
+from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
+from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
+from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import ExtendedRoiLogicModule
+from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
+from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModule import MeanSpectrumLogicModule
+from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModuleParameters import MeanSpectrumLogicModuleParameters
+from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.model.spectral.Spectrum import Spectrum
+from sciens.spectracs.plugin_sdk.roles import REFERENCE, SAMPLE
+from sciens.spectracs.view.settings.development.DevCaptureVideoViewModule import DevCaptureVideoViewModule
+from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
+
+
+class CapturePanel(QWidget):
+    """Shared live-capture acquisition panel (SPEC_plugin_driven_convergence.md §9, S2a — Option A).
+
+    The ONE place the real-camera acquisition UI + machinery lives, so BOTH hosts — the dev measurement bench
+    and (on a real device) the end-user wizard — use it instead of the bench-private copy. It mirrors the
+    bench's proven "Option A" model: Reference/Sample role step-tabs with ONE live-video widget + ONE spectrum
+    plot reparented into the active step's page (never two camera streams). The numeric burst runs through the
+    HEADLESS engine seam — `engine.captureAcquisitionStep(step, frameProvider, frames, onFrame)` (§9.1) — so
+    this panel owns only the Qt/camera side; the extraction maths stays in the engine.
+
+    Host-generic. Constructed with the ordered role-bearing acquisition `steps`, the `engine`, and callbacks:
+      onCaptured(step)   — a role finished capturing (host refreshes nav + guidance)
+      onRoleChanged()    — the active role-tab changed (host re-derives the amber cue)
+      onCaptureFailed()  — no frames delivered (host shows its own dialog)
+    It exposes `getCaptureButton()` / `getRoleTabs()` so the host can paint acquisition-guidance cues on them
+    (D4 — highlight targets stay host-side). It owns NO navigation, guidance derivation, or failure dialog.
+
+    NOTE: the live-camera behaviour is rig-verified (golden-frame + live smoke, §9.5) — it cannot run offscreen.
+    """
+
+    __EXPOSURE_MIN = 1
+    __EXPOSURE_MAX = 500
+    __EXPOSURE_FALLBACK = 150
+    __AUTO_EXPOSE_MAX_PROBES = 8
+    __FRAME_CHOICES = ["10", "20", "50"]
+    __DEFAULT_FRAMES = "20"
+    __NM_MIN = 400.0
+    __NM_MAX = 700.0
+    __FRAME_COLOR = "#777777"   # per-frame traces (gray)
+    __MEAN_COLOR = "#2ECC71"    # mean spectrum (green)
+    __IMAGE_TAB = 0
+    __SPECTRUM_TAB = 1
+
+    def __init__(self, steps, engine, onCaptured=None, onRoleChanged=None, onCaptureFailed=None):
+        super().__init__()
+        self.__steps = list(steps)          # ordered role-bearing ACQUISITION steps
+        self.__engine = engine
+        self.__onCaptured = onCaptured or (lambda step: None)
+        self.__onRoleChanged = onRoleChanged or (lambda: None)
+        self.__onCaptureFailed = onCaptureFailed or (lambda: None)
+
+        self.__resolver = SensorCaptureIndexResolver()
+        self.__sensor = None
+        self.__resolvedIndex = None
+        self.__videoThread = None
+        self.__latestImage = None
+        self.__autoExposing = False
+        self.__lockedExposure = None
+        self.__savedRoiX = None
+        self.__captureTotal = 1
+        self.__previewRoiWidth = None
+        self.__representativeFrames = {}    # role -> QImage (preview-only middle frame)
+        self.__activeStep = self.__steps[0] if self.__steps else None
+
+        self.__build()
+        self.__resolveCamera()
+        self.__applyControlVisibility()
+        self.__applyLabels()
+        self.__updateControls()
+
+    # --- public API for the host ---
+
+    def getCaptureButton(self):
+        return self.__captureButton
+
+    def getRoleTabs(self):
+        return self.__roleTabs
+
+    def getActiveStep(self):
+        return self.__activeStep
+
+    def isCameraReady(self):
+        return self.__resolvedIndex is not None
+
+    def getRepresentativeFrame(self, role):
+        return self.__representativeFrames.get(role)
+
+    def startStream(self):
+        self.__startStream()
+
+    def stopStream(self):
+        self.__stopStream()
+
+    def plotActiveRole(self):
+        self.__plotActiveRole()
+
+    # --- build ---
+
+    def __build(self):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, Metrics.S, 0, 0)
+        layout.setSpacing(Metrics.S)
+        self.setLayout(layout)
+
+        self.__videoViewModule = DevCaptureVideoViewModule()
+        self.__videoViewModule.setObjectName("CapturePanel.videoViewModule")
+        self.__videoViewModule.setStyleSheet("BaseVideoViewModule { border: none; }")
+        self.__spectrumPlot = SpectrumPlotWidget()
+        self.__innerTabs = QTabWidget()
+        self.__innerTabs.setObjectName("CapturePanel.innerTabs")
+        self.__innerTabs.addTab(self.__videoViewModule, "Captured image")   # __IMAGE_TAB
+        self.__innerTabs.addTab(self.__spectrumPlot, "Spectrum")            # __SPECTRUM_TAB
+
+        controls = QWidget()
+        controls.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        controlsLayout = QGridLayout()
+        controlsLayout.setContentsMargins(0, 0, 0, 0)
+        controlsLayout.setSpacing(Metrics.S)
+        controls.setLayout(controlsLayout)
+
+        self.__framesComboBox = QComboBox()
+        self.__framesComboBox.addItems(self.__FRAME_CHOICES)
+        self.__framesComboBox.setCurrentText(self.__DEFAULT_FRAMES)
+        self.__framesControl = self.__labeled("Frames", self.__framesComboBox)
+        controlsLayout.addWidget(self.__framesControl, 0, 0, 1, 2)
+
+        self.__exposureSlider = QSlider(Qt.Orientation.Horizontal)
+        self.__exposureSlider.setMinimum(self.__EXPOSURE_MIN)
+        self.__exposureSlider.setMaximum(self.__EXPOSURE_MAX)
+        self.__exposureSlider.valueChanged.connect(self.__onExposureChanged)
+        self.__exposureLabel = QLabel("")
+        self.__autoExposureCheckBox = QCheckBox("auto-exposure")
+        self.__autoExposureCheckBox.setChecked(True)
+        self.__autoExposureCheckBox.toggled.connect(self.__updateControls)
+        exposureRow = QWidget()
+        exposureRowLayout = QGridLayout()
+        exposureRowLayout.setContentsMargins(0, 0, 0, 0)
+        exposureRowLayout.setSpacing(Metrics.S)
+        exposureRow.setLayout(exposureRowLayout)
+        exposureRowLayout.addWidget(self.__exposureSlider, 0, 0, 1, 1)
+        exposureRowLayout.addWidget(self.__exposureLabel, 0, 1, 1, 1)
+        exposureRowLayout.addWidget(self.__autoExposureCheckBox, 1, 0, 1, 2)
+        exposureRowLayout.setColumnStretch(0, 85)
+        exposureRowLayout.setColumnStretch(1, 15)
+        self.__exposureControl = self.__labeled("Exposure", exposureRow)
+        controlsLayout.addWidget(self.__exposureControl, 1, 0, 1, 2)
+
+        self.__captureButton = QPushButton("Capture reference")
+        self.__captureButton.setObjectName("CapturePanel.captureButton")
+        self.__captureButton.clicked.connect(self.__onClickedCapture)
+        controlsLayout.addWidget(self.__captureButton, 2, 0, 1, 2)
+
+        self.__stepContent = QWidget()
+        stepContentLayout = QVBoxLayout()
+        stepContentLayout.setContentsMargins(0, 0, 0, 0)
+        stepContentLayout.setSpacing(Metrics.S)
+        self.__stepContent.setLayout(stepContentLayout)
+        stepContentLayout.addWidget(self.__innerTabs)
+        stepContentLayout.addWidget(controls)
+
+        self.__roleTabs = QTabWidget()
+        self.__roleTabs.setObjectName("CapturePanel.roleTabs")
+        self.__pages = []
+        for step in self.__steps:
+            page = self.__stepPage()
+            self.__pages.append(page)
+            self.__roleTabs.addTab(page, step.getLabel() or (step.getRole() or ""))
+        self.__roleTabs.tabBar().setDrawBase(False)
+        if self.__pages:
+            self.__pages[0].layout().addWidget(self.__stepContent)  # start on the first step
+        self.__syncExposureToSensor()
+        self.__roleTabs.currentChanged.connect(self.__onRoleTabChanged)
+        layout.addWidget(self.__roleTabs)
+
+    def __labeled(self, text, component):
+        # A minimal label-above-component holder (the panel is a plain QWidget, so it has no PageWidget
+        # createLabeledComponent). Visual detail is rig-tunable.
+        holder = QWidget()
+        holderLayout = QVBoxLayout()
+        holderLayout.setContentsMargins(0, 0, 0, 0)
+        holderLayout.setSpacing(2)
+        holder.setLayout(holderLayout)
+        holderLayout.addWidget(QLabel(text))
+        holderLayout.addWidget(component)
+        return holder
+
+    def __stepPage(self):
+        page = QWidget()
+        pageLayout = QVBoxLayout()
+        pageLayout.setContentsMargins(0, Metrics.S, 0, 0)
+        pageLayout.setSpacing(Metrics.S)
+        page.setLayout(pageLayout)
+        return page
+
+    def __attachStepContent(self, index):
+        if not (0 <= index < len(self.__pages)):
+            return
+        page = self.__pages[index]
+        if self.__stepContent is not None and self.__stepContent.parentWidget() is not page:
+            page.layout().addWidget(self.__stepContent)
+
+    def __stepForRole(self, role):
+        for step in self.__steps:
+            if step.getRole() == role:
+                return step
+        return None
+
+    # --- role / labels ---
+
+    def __onRoleTabChanged(self):
+        index = self.__roleTabs.currentIndex()
+        self.__attachStepContent(index)
+        if 0 <= index < len(self.__steps):
+            self.__activeStep = self.__steps[index]
+        role = self.__activeStep.getRole() if self.__activeStep is not None else None
+        if role == SAMPLE and self.__lockedExposure is not None:
+            self.__exposureSlider.blockSignals(True)
+            self.__exposureSlider.setValue(self.__lockedExposure)
+            self.__exposureSlider.blockSignals(False)
+            self.__updateExposureLabel()
+            if self.__videoThread is not None:
+                self.__videoThread.setLiveExposure(self.__lockedExposure)
+        self.__captureButton.setText(self.__captureLabelForStep(self.__activeStep))
+        self.__plotActiveRole()
+        self.__updateControls()
+        self.__onRoleChanged()
+
+    def __captureLabelForStep(self, step):
+        view = step.getView() if step is not None else None
+        label = getattr(view, "captureLabel", None) if view is not None else None
+        if label:
+            return label
+        role = step.getRole() if step is not None else None
+        return "Capture reference" if role == REFERENCE else "Capture sample"
+
+    def __applyLabels(self):
+        for index, step in enumerate(self.__steps):
+            if step.getLabel():
+                self.__roleTabs.setTabText(index, step.getLabel())
+        if self.__activeStep is not None:
+            self.__captureButton.setText(self.__captureLabelForStep(self.__activeStep))
+
+    def __applyControlVisibility(self):
+        # The plugin's CaptureView decides whether the dev capture chrome shows (both steps carry the same flags).
+        view = self.__steps[0].getView() if self.__steps else None
+        self.__framesControl.setVisible(bool(getattr(view, "showFramesControl", False)))
+        self.__exposureControl.setVisible(bool(getattr(view, "showExposureControls", False)))
+
+    # --- camera resolution ---
+
+    def __resolveCamera(self):
+        profile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
+        try:
+            self.__sensor = profile.spectrometer.spectrometerSensor
+        except AttributeError:
+            self.__sensor = None
+        self.__resolvedIndex = self.__resolver.resolveCaptureIndex(self.__sensor)
+
+    def __calibration(self):
+        profile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
+        return getattr(profile, "spectrometerCalibrationProfile", None) if profile is not None else None
+
+    # --- controls / exposure ---
+
+    def __onExposureChanged(self):
+        self.__updateExposureLabel()
+        if self.__videoThread is not None:
+            self.__videoThread.setLiveExposure(self.__exposureSlider.value())
+
+    def __updateExposureLabel(self):
+        if self.__exposureLabel is not None:
+            self.__exposureLabel.setText(str(self.__exposureSlider.value()))
+
+    def __syncExposureToSensor(self):
+        settings = SpectrometerSensorUtil().getSensorSettings(self.__sensor) if self.__sensor is not None else None
+        value = settings.calibrationExposure if settings is not None and settings.calibrationExposure is not None \
+            else self.__EXPOSURE_FALLBACK
+        value = max(self.__EXPOSURE_MIN, min(self.__EXPOSURE_MAX, value))
+        self.__exposureSlider.blockSignals(True)
+        self.__exposureSlider.setValue(value)
+        self.__exposureSlider.blockSignals(False)
+        self.__updateExposureLabel()
+
+    def __updateControls(self):
+        connected = self.__resolvedIndex is not None
+        streaming = self.__videoThread is not None
+        busy = self.__autoExposing
+        role = self.__activeStep.getRole() if self.__activeStep is not None else None
+        sampleLocked = role == SAMPLE and self.__lockedExposure is not None
+        autoOn = self.__autoExposureCheckBox is not None and self.__autoExposureCheckBox.isChecked()
+        self.__captureButton.setEnabled(connected and streaming and not busy)
+        if self.__autoExposureCheckBox is not None:
+            self.__autoExposureCheckBox.setEnabled(not busy and not sampleLocked)
+        if self.__exposureSlider is not None:
+            self.__exposureSlider.setEnabled(streaming and not busy and not autoOn and not sampleLocked)
+        if self.__roleTabs is not None:
+            self.__roleTabs.tabBar().setEnabled(not busy)
+        if self.__framesComboBox is not None:
+            self.__framesComboBox.setEnabled(not busy)
+
+    # --- streaming ---
+
+    def __startStream(self):
+        if self.__videoThread is not None or self.__resolvedIndex is None:
+            self.__updateControls()
+            return
+        self.__latestImage = None
+        thread = DevCaptureVideoThread()
+        thread.setIsVirtual(False)
+        thread.setDeviceId(self.__resolvedIndex)
+        role = self.__activeStep.getRole() if self.__activeStep is not None else None
+        exposure = self.__lockedExposure if (role == SAMPLE and self.__lockedExposure is not None) \
+            else self.__exposureSlider.value()
+        thread.setExposure(exposure)
+        thread.setLiveExposure(exposure)
+        thread.setFrameCount(0)  # continuous until stop()
+        thread.videoThreadSignal.connect(self.handleVideoThreadSignal)
+        thread.finished.connect(self.__onThreadFinished)
+        self.__videoThread = thread
+        thread.start()
+        self.__updateControls()
+
+    def __stopStream(self):
+        if self.__videoThread is not None:
+            self.__videoThread.stop()
+        self.__updateControls()
+
+    def __onThreadFinished(self):
+        self.__videoThread = None
+        self.__updateControls()
+
+    def handleVideoThreadSignal(self, event, videoSignal):
+        self.__latestImage = videoSignal.image
+        if self.__videoViewModule is not None:
+            self.__videoViewModule.handleVideoThreadSignal(videoSignal)
+            width = videoSignal.image.width() if videoSignal.image is not None else None
+            if width is not None and width != self.__previewRoiWidth:
+                self.__previewRoiWidth = width
+                self.__applyPreviewRoiOverlay(width)
+        event.set()
+
+    def __applyPreviewRoiOverlay(self, imageWidth):
+        calibration = self.__calibration()
+        extended = ExtendedRoiLogicModule().extendedRoi(calibration, imageWidth) if calibration is not None else None
+        if extended is None:
+            self.__videoViewModule.clearRoi()
+        else:
+            self.__videoViewModule.setRoi(*extended)
+
+    # --- auto-exposure ---
+
+    def __runAutoExposure(self):
+        if self.__videoThread is None or self.__autoExposing:
+            return
+        self.__autoExposing = True
+        if self.__innerTabs is not None:
+            self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)
+        self.__updateControls()
+        self.__waitForFirstFrame()
+        probe = {"i": 0}
+
+        def measure(exposure):
+            probe["i"] += 1
+            self.__emitAutoExposeProgress(probe["i"])
+            self.__exposureSlider.setValue(exposure)
+            self.__pumpFrames(350)
+            return self.__brightness(self.__latestImage)
+
+        try:
+            result = AutoExposureLogicModule().findExposure(
+                measure, self.__EXPOSURE_MIN, self.__EXPOSURE_MAX, iterations=self.__AUTO_EXPOSE_MAX_PROBES)
+            self.__exposureSlider.setValue(result)
+        finally:
+            self.__autoExposing = False
+            self.__clearStatus()
+            self.__updateControls()
+
+    def __waitForFirstFrame(self):
+        for _ in range(12):
+            if self.__latestImage is not None:
+                return
+            self.__pumpFrames(150)
+
+    def __emitAutoExposeProgress(self, probeIndex):
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = self.__AUTO_EXPOSE_MAX_PROBES
+        signal.currentStepIndex = min(probeIndex, self.__AUTO_EXPOSE_MAX_PROBES)
+        signal.text = "Auto-exposing… finding best exposure [%d/%d]" % (signal.currentStepIndex,
+                                                                        self.__AUTO_EXPOSE_MAX_PROBES)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+
+    def __pumpFrames(self, milliseconds):
+        loop = QEventLoop()
+        QTimer.singleShot(milliseconds, loop.quit)
+        loop.exec()
+
+    def __brightness(self, image):
+        if image is None:
+            return 0
+        img = image.convertToFormat(image.format())
+        width, height = img.width(), img.height()
+        ptr = img.constBits()
+        arr = np.frombuffer(ptr, np.uint8).reshape(height, img.bytesPerLine())[:, :width * 3].reshape(height, width, 3)
+        return float(np.percentile(arr.max(axis=2), 99.9))
+
+    # --- capture (routes the burst through the headless engine seam) ---
+
+    def __onClickedCapture(self):
+        if self.__resolvedIndex is None or self.__videoThread is None or self.__autoExposing:
+            return
+        step = self.__activeStep
+        if step is None:
+            return
+        role = step.getRole()
+        if role == REFERENCE and self.__autoExposureCheckBox.isChecked():
+            self.__runAutoExposure()
+
+        frameCount = int(self.__framesComboBox.currentText())
+        self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)
+        self.__beginCaptureProgress(frameCount)
+        self.__waitForFirstFrame()
+
+        images = []
+        state = {"roiApplied": False}
+
+        def provider():
+            self.__pumpFrames(120)  # let the stream advance a frame
+            if self.__latestImage is None:
+                return None
+            image = self.__latestImage.copy()  # detach from the live numpy buffer
+            if not state["roiApplied"]:
+                self.__applyExtendedRoi(image.width())  # widen to the analysis window before the FIRST extraction
+                state["roiApplied"] = True
+            images.append(image)
+            return image
+
+        def onFrame(spectrum, index, total):
+            self.__plotRoleSpectrum(role, spectrum)     # live: frame traces so far + running mean
+            self.__stepCaptureProgress(index + 1)
+
+        spectrum = self.__engine.captureAcquisitionStep(
+            step, frameProvider=provider, frames=frameCount, onFrame=onFrame)
+        self.__endCaptureProgress()
+
+        if spectrum is None or not images:
+            self.__onCaptureFailed()
+            return
+
+        self.__representativeFrames[role] = images[len(images) // 2]
+
+        if role == REFERENCE:
+            self.__lockedExposure = self.__exposureSlider.value()
+            # A fresh reference re-locks exposure; an earlier sample no longer matches — drop it.
+            sampleStep = self.__stepForRole(SAMPLE)
+            if sampleStep is not None and sampleStep is not step and sampleStep.getContainer() is not None:
+                sampleStep.setContainer(None)
+                self.__representativeFrames.pop(SAMPLE, None)
+
+        self.__plotActiveRole()
+        self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)
+        self.__onCaptured(step)
+
+    # --- plotting ---
+
+    def __plotActiveRole(self):
+        step = self.__activeStep
+        role = step.getRole() if step is not None else None
+        self.__plotRoleSpectrum(role, self.__spectrumForStep(step))
+
+    def __spectrumForStep(self, step):
+        if step is None:
+            return None
+        container = step.getContainer()
+        if container is None:
+            return None
+        return container.getSpectra().get(step.getRole())
+
+    def __plotRoleSpectrum(self, role, spectrum):
+        plot = self.__spectrumPlot
+        if plot is None:
+            return
+        title = "Reference" if role == REFERENCE else "Sample"
+        if spectrum is None:
+            plot.plotSpectrum(None, title=title)
+            return
+        frames = spectrum.getCapturedValuesByNanometers()
+        plot.plotSpectrum(None, title=title)  # clear + set title
+        for values in frames:
+            frameSpectrum = Spectrum()
+            frameSpectrum.setValuesByNanometers(dict(values))
+            plot.addTrace(frameSpectrum, color=self.__FRAME_COLOR, width=1)
+        plot.addTrace(self.__meanSpectrum(spectrum), color=self.__MEAN_COLOR, width=2)
+
+    def __meanSpectrum(self, spectrum):
+        parameters = MeanSpectrumLogicModuleParameters()
+        parameters.setSpectrum(spectrum)
+        return MeanSpectrumLogicModule().meanSpectrum(parameters).getSpectrum()
+
+    # --- capture progress (to the app status bar) ---
+
+    def __beginCaptureProgress(self, total):
+        self.__captureTotal = max(1, total)
+
+    def __stepCaptureProgress(self, value):
+        role = self.__activeStep.getRole() if self.__activeStep is not None else None
+        roleText = "reference" if role == REFERENCE else "sample"
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = self.__captureTotal
+        signal.currentStepIndex = min(value, self.__captureTotal)
+        signal.text = "Capturing %s frame %d / %d" % (roleText, signal.currentStepIndex, self.__captureTotal)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+
+    def __endCaptureProgress(self):
+        self.__clearStatus()
+
+    def __clearStatus(self):
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = True
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+
+    # --- ROI widen / restore (idempotent per session) ---
+
+    def __applyExtendedRoi(self, imageWidth):
+        if self.__savedRoiX is not None:
+            return
+        calibration = self.__calibration()
+        if calibration is None:
+            return
+        x1, x2 = calibration.regionOfInterestX1, calibration.regionOfInterestX2
+        if x1 is None or x2 is None:
+            return
+        newX1, newX2 = ExtendedRoiLogicModule().extendedXBounds(calibration, imageWidth, self.__NM_MIN, self.__NM_MAX)
+        if newX1 is None or newX2 is None:
+            return
+        self.__savedRoiX = (x1, x2)
+        calibration.regionOfInterestX1 = int(newX1)
+        calibration.regionOfInterestX2 = int(newX2)
+
+    def restoreRoi(self):
+        if self.__savedRoiX is None:
+            return
+        calibration = self.__calibration()
+        if calibration is not None:
+            calibration.regionOfInterestX1, calibration.regionOfInterestX2 = self.__savedRoiX
+        self.__savedRoiX = None
