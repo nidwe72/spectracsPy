@@ -10,6 +10,7 @@ from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import 
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
+from sciens.spectracs.view.spectral.workflow.CapturePanel import CapturePanel
 from sciens.spectracs.logic.persistence.database.spectral.PersistSpectralWorkflowLogicModule import PersistSpectralWorkflowLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
@@ -58,6 +59,7 @@ class WizardViewModule(PageWidget):
     # SPEC_acquisition_guidance.md — per-render guidance state (NEW+ACQUISITION only). Rebuilt each render.
     __rendering = False
     __guidanceHelper = None   # shared AcquisitionGuidance primitives (S1a), lazily created
+    __capturePanel = None     # S3: shared CapturePanel for real-device acquisition (None in virtual/VIEW)
 
     def _getPageTitle(self):
         return "Measurement"
@@ -116,6 +118,13 @@ class WizardViewModule(PageWidget):
         # wizard to ACQUISITION or discard the in-progress workflow (Edwin's desktop-switch bug).
         if not event.spontaneous():
             self.__startRun()
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        # Free the camera + restore the ROI only on real navigation AWAY (non-spontaneous) — mirrors the bench.
+        if not event.spontaneous() and self.__capturePanel is not None:
+            self.__capturePanel.stopStream()
+            self.__capturePanel.restoreRoi()
 
     # --- setup ---
 
@@ -237,7 +246,12 @@ class WizardViewModule(PageWidget):
         self.__acqSteps = []
         self.__measureButtons = {}
         self.__stepTabIndexByRole = {}
+        if self.__capturePanel is not None:
+            self.__capturePanel.stopStream()   # leaving / re-rendering acquisition — free the camera
+            self.__capturePanel.restoreRoi()
+            self.__capturePanel = None
         self.__tabWidget.clear()
+        self.__tabWidget.tabBar().setVisible(True)   # real-acquisition hides it; restore for every other phase
         if not self.__shownPhases:
             self.__rendering = False
             self.__setGuidanceProperty(self.__nextButton, False)
@@ -246,6 +260,11 @@ class WizardViewModule(PageWidget):
         phaseType = self.__shownPhases[self.__cursor]
         if phaseType == SpectralWorkflowPhaseType.METADATA:
             self.__tabWidget.addTab(self.__metadataPanel(), _METADATA_TAB)
+        elif (phaseType == SpectralWorkflowPhaseType.ACQUISITION and not self.__isView()
+              and self.__useRealCapture()):
+            # S3: on a REAL device the wizard shares the bench's CapturePanel (live camera) instead of the
+            # virtual per-step Measure panels — the SM3 path.
+            self.__renderRealAcquisition(self.__workflow().getPhase(phaseType))
         else:
             phase = self.__workflow().getPhase(phaseType)
             # S1c: acquisition steps flow through the SHARED capture seam — a CaptureView step routes to the
@@ -256,9 +275,11 @@ class WizardViewModule(PageWidget):
             for step in phase.getSteps().values():
                 isAcquisitionStep = (phaseType == SpectralWorkflowPhaseType.ACQUISITION
                                      and step.getRole() is not None)
-                if isAcquisitionStep:
-                    widget = renderer.renderStep(step)
+                if isAcquisitionStep and not self.__isView():
+                    widget = renderer.renderStep(step)   # NEW mode: live capture seam (step carries a CaptureView)
                 else:
+                    # VIEW mode acquisition has no transient CaptureView — __computedPanel plots from the saved
+                    # container (its fallback); computed steps use it in both modes.
                     widget = self.__computedPanel(step)
                 if widget is not None:
                     index = self.__tabWidget.addTab(widget, step.getLabel() or _PHASE_TITLES.get(phaseType, ""))
@@ -269,6 +290,36 @@ class WizardViewModule(PageWidget):
             self.__stepBar.setCurrentIndex(self.__fullSequence.index(phaseType))
         self.__rendering = False
         self.__refreshNav()
+
+    def __useRealCapture(self):
+        # S3 gate: use the shared live-camera CapturePanel when the active setup is a REAL (non-virtual)
+        # device. Virtual devices (dev / offscreen) keep the per-step engine capture (S1c). The camera's own
+        # readiness (resolvable index, calibration) is handled inside the panel.
+        profile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
+        try:
+            sensor = profile.spectrometer.spectrometerSensor
+        except AttributeError:
+            return False
+        return sensor is not None and not sensor.isVirtual
+
+    def __renderRealAcquisition(self, phase):
+        steps = [step for step in phase.getSteps().values() if step.getRole() is not None]
+        self.__acqSteps = steps
+        self.__capturePanel = CapturePanel(
+            steps, self.__engine,
+            onCaptured=self.__onRealCaptured, onRoleChanged=self.__refreshGuidance,
+            onCaptureFailed=self.__onRealCaptureFailed)
+        self.__tabWidget.addTab(self.__capturePanel,
+                                _PHASE_TITLES.get(SpectralWorkflowPhaseType.ACQUISITION, "Acquisition"))
+        self.__tabWidget.tabBar().setVisible(False)  # one tab; the panel has its own Reference/Sample role-tabs
+        self.__capturePanel.startStream()
+        self.__capturePanel.plotActiveRole()  # show any already-captured spectrum on re-entry
+
+    def __onRealCaptured(self, step):
+        self.__refreshNav()
+
+    def __onRealCaptureFailed(self):
+        self.__messageLabel.setText("Capture failed — no frames were delivered by the camera.")
 
     def __refreshNav(self):
         terminal = self.__isTerminalCursor()
@@ -343,6 +394,9 @@ class WizardViewModule(PageWidget):
 
     def __applyGuidanceHighlights(self, action):
         # Exactly ONE amber target at a time. Reset every acquisition tab/button to baseline first, then paint it.
+        if self.__capturePanel is not None:
+            self.__applyRealGuidanceHighlights(action)   # S3: paint the CapturePanel's button + role-tabs
+            return
         bar = self.__tabWidget.tabBar()
         currentIndex = self.__tabWidget.currentIndex()
         for step in action["steps"]:
@@ -366,6 +420,28 @@ class WizardViewModule(PageWidget):
             self.__setButtonDot(self.__measureButtons.get(nextStep.getRole()), True)  # on tab -> amber ● Measure
         else:
             bar.setTabIcon(index, self.__amberDotIcon())  # wrong tab -> amber ● on the tab to switch to
+
+    def __applyRealGuidanceHighlights(self, action):
+        # S3: the real-device acquisition uses CapturePanel, so the amber cue targets its capture button +
+        # role-tabs (mirrors the bench — D4 keeps highlight targets host-side).
+        panel = self.__capturePanel
+        tabs = panel.getRoleTabs()
+        bar = tabs.tabBar()
+        steps = action["steps"]
+        for index, step in enumerate(steps):
+            baseLabel = step.getLabel() or (step.getRole() or "")
+            captured = step.getContainer() is not None
+            tabs.setTabText(index, ("✓ " + baseLabel) if captured else baseLabel)
+            bar.setTabIcon(index, QIcon())
+        self.__setButtonDot(panel.getCaptureButton(), False)
+        nextStep = action["nextStep"]
+        if nextStep is None:
+            return
+        nextIndex = steps.index(nextStep)
+        if nextStep is panel.getActiveStep():
+            self.__setButtonDot(panel.getCaptureButton(), True)
+        else:
+            bar.setTabIcon(nextIndex, self.__amberDotIcon())
 
     # --- the amber cue icons: delegated to the shared AcquisitionGuidance util (S1a). The derivation +
     #     highlight application above stay host-specific (S4a folds them in). ---
