@@ -312,11 +312,12 @@ and the *camera mechanics* (live feed, burst, exposure, ROI) — those stay host
 
 ## 9. Milestone 3 — ACQUISITION convergence & shared capture (unblocks SM3)
 
-Status: **DESIGN — decisions locked 2026-07-13 (Edwin).** ACQUISITION is the last un-converged phase (bespoke in
-**both** hosts, differently). This milestone routes it through the shared render seam, **extracts the real-capture
-mechanism into the engine so the wizard gains real capture (SM3)**, and collapses the ~100-line mirrored
-acquisition-guidance. Design-only; Stages S2–S3 are **rig-gated**. Grounded in the acquisition map of both hosts
-(2026-07-13).
+Status: **IMPLEMENTED (2026-07-13).** All phases S1a–S4b landed (commits `05bb3c6`…`e71bd80`); the offscreen
+suite is green throughout and **S2c (bench) + S3 (wizard real capture = SM3) were rig-verified by Edwin on the
+real device**. ACQUISITION — the last un-converged phase — now runs through the shared **`CapturePanel`** in
+**both** hosts; the engine gained a headless **frame-provider seam** so the wizard does real capture without
+duplicating the bench; the mirrored ~100-line acquisition-guidance collapsed into `AcquisitionGuidance`; and the
+bench shed ~460 net lines (its bespoke camera machinery is gone). The design below records the shape as built.
 
 **Where each host stands today (the divergence to remove):**
 - **Bench:** real camera; **one** `DevCaptureVideoViewModule` reparented across Reference/Sample role-tabs; **one**
@@ -386,7 +387,15 @@ New boundary: **the engine owns the burst maths; the host owns the frame source,
 - **Exposure-lock-on-sample + ROI widening** are not lost — they survive as **capture-context parameters** (real
   provider) + bench dev-chrome, not bespoke view logic.
 
-### 9.4 Implementation phases (staged; S2–S3 rig-gated)
+### 9.4 Implementation phases — ALL SHIPPED ✅ (S2c/S3 rig-verified)
+
+Every row below landed (commits `05bb3c6`, `296b22f`, `146bf36`, `24ad1c5`, `cf8ab5b`, `37f3fc2`, `e71bd80`).
+**As-built deltas from the plan:** S2b landed with S1 (engine seam is one change); S2a/S2c collapsed into **one
+host-owned reparented `CapturePanel` singleton** (Option A, Edwin's call — a single camera reparented across
+role-tabs, *not* the per-step `captureHandler` seam, which can't host one shared camera); the S1d synthetic-frame
+provider **is** the "golden-frame" acceptance (identical input frames → identical spectrum, offscreen); S4b also
+lint-swept the bench (−~460 net lines). A latent S1c bug (VIEW-mode acquisition rendered no tab) was found by
+`test_workflow_wizard_persistence_offscreen` and fixed in S3.
 
 | # | Phase | Impl tasks | Rig | Acceptance |
 |---|---|---|---|---|
