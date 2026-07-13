@@ -687,3 +687,267 @@ Captured for a later spec pass (video capture essentially works; these are refin
 8. **Stale test assertion** — `tests/test_pumpkin_wizard_offscreen.py` expects `"Next ▶"` but the button
    is `"Next →"` (pre-existing; unrelated to this work). Fix or update.
 9. **Wayland / Android** — still out of scope (needs `ydotool` / on-device path).
+
+---
+
+## 16. M3 — the narrated feature tour (refinements)
+
+Status: **DESIGN (2026-07-13).** Requested by Edwin after the M1/M2 harness ran well on his machine; nothing
+is built until an explicit "go". This pass turns the harness from hand-authored click-lists into a
+**structure-driven, Claude-narrated tour**: a format-aware doc panel, reading-paced progressive text,
+keyboard-only advancing, scripted login from an unversioned config, and artifacts written outside the code
+repo. Load-bearing facts below were verified against the code (rubber-duck pass, 2026-07-13).
+
+### 16.0 Scope & sequencing — bench-first (2026-07-13)
+
+**The one near-term deliverable is a narrated screencast of the dev measurement BENCH**
+(`DevMeasurementBenchViewModule`). The pumpkin-wizard chapter, saved-runs, account/payment, master-admin and
+the `_tour` playlist are **postponed**.
+
+A final rubber-duck pass (2026-07-13, verified against code) fixed the build shape for this scope:
+
+- **The generic `describe` / `walk_workflow` (16.1–16.3) is DEFERRED, not built now.** Two reasons: (a) it needs
+  new app plumbing that does **not** exist — no view exposes a public `getWorkflow()` (the bench keeps a private
+  name-mangled `__workflow`; the wizard's is a private `__workflow()` method), and the UDP service holds only
+  the root container, never resolving `currentWidget()`; (b) the bench acquisition is **structurally unlike**
+  the wizard — a **single** `captureButton` whose label flips by role **plus** a `roleTabs` tab-switch, **not**
+  one Measure button per step — so the wizard-shaped loop `click("measureButton.<role>")` has no target on the
+  bench. With only one workflow in scope, the generic abstraction is speculative generality; it pays off at the
+  2nd plugin (the wizard), which is postponed.
+- **The bench screencast is HAND-AUTHORED**, extending the existing `automation/scenarios/measurement_bench.py`
+  (8-beat) with a narration table + the refinements below — not rewritten as a walker.
+- **The refinements (16.4–16.9) are orthogonal to generic-vs-hand-authored and are built regardless**: the
+  3-zone panel, progressive reveal, reading-time pacing, `Ctrl+Shift+ß` hotkey, `director.ini` login, artifacts
+  relocation. A hand-authored bench scenario consumes them directly.
+- **Sequencing — the capture-panel convergence (roadmap Frontier #1) is the natural predecessor.** It routes
+  ACQUISITION through the shared capture path and **dedupes the guidance logic mirrored across the bench AND the
+  wizard**, i.e. it reshapes the bench's acquisition UI too. *Verified 2026-07-13:* `SPEC_plugin_driven_convergence.md`
+  scopes the bench in explicitly (P7 = "both delegate ALL phase content to WorkflowPhaseRenderer"); the bench's
+  `__buildAcquisitionPanel` (DevMeasurementBenchViewModule.py:183-274) is still bespoke (bypasses the shared
+  renderer); and the ~98-line mirrored guidance block lives at `DevMeasurementBenchViewModule.py:604-702`
+  (near-verbatim of `WizardViewModule.py:294-403`), whose collapse is "the main prize of P6". Recording the
+  bench screencast *before* the
+  convergence means authoring against a capture UI about to change (rework risk); doing the convergence *first*
+  stabilizes one shared capture panel **and** is exactly what makes the deferred generic `walk_workflow` viable
+  (a uniform step→button mapping across both hosts). The UI-independent refinements (B0–B4, §16.13) are safe to
+  build either way; only the bench scenario + recording (B5–B6) should follow the converged UI.
+
+The narration table (16.2) is still keyed by phase/step/role so it transfers unchanged when the generic walker
+is un-deferred.
+
+### 16.1 Principle — structure is introspected, words are authored
+
+The M1 scenarios hard-code every click. The new asks (use-case heading → phase sub-headings → step walk →
+metric descriptions) are all "**walk the live workflow**", which the app already declares
+(plugin → phases → steps → view-models). So the two concerns are split:
+
+- **STRUCTURE (what to click, in what order, which metrics exist) is read from the running app** via a new
+  `describe` command — generic, always in sync with whatever the plugin declares.
+- **WORDS (headings, step captions, metric prose) are authored by Claude** in a per-scenario **narration
+  table**, because good screencast narration is an editorial judgement, not a data dump. The metric
+  `tooltip` is the **fallback** when the table omits an entry.
+
+This is the hybrid Edwin asked for ("tend to generic … but texts should come from Claude"). A new plugin
+needs only a new (small) narration table; the generic driver is untouched.
+
+> **Deferred (see 16.0).** The reply shape below is the *target* for when the generic walker lands — it is
+> **not reachable today**. `MainViewModule` is a `QStackedWidget` so `currentWidget()` resolves the current
+> page, but no view exposes a public `getWorkflow()` (bench = private `__workflow`; wizard = private
+> `__workflow()`), and the UDP service does not resolve the current view. Both are new app plumbing to add when
+> this is un-deferred.
+
+`describe` reply — the app would walk the current view's live workflow:
+
+```json
+{ "ok": true,
+  "useCase": "Pumpkin-oil measurement",
+  "phases": [ { "key": "ACQUISITION", "label": "Acquisition",
+                "steps": [ {"role":"REFERENCE","label":"Reference"},
+                           {"role":"SAMPLE","label":"Sample"} ] },
+              { "key": "EVALUATION", "label": "Evaluation", "steps": [] } ],
+  "evaluation": [ { "label":"Greenness index",
+                    "description":"D_Q ÷ A_green — headline quality index; higher = greener/fresher oil." } ] }
+```
+
+`evaluation[].description` = the `MetricFieldView.tooltip`, which is **already populated** in the plugins
+(verified) — so "describe each metric field" needs **no new content authored into the app**.
+
+### 16.2 The narration table (Claude-authored, per scenario)
+
+A scenario supplies a dict keyed by structural id; the generic walker looks up each id, falling back to the
+introspected label/tooltip when a key is missing:
+
+```python
+NARRATION = {
+  "useCase":                 "Measuring pumpkin-seed oil",
+  "phase:ACQUISITION":       "First we capture two spectra — a reference, then the sample.",
+  "step:REFERENCE":          "The reference: the lamp through a blank. Our 100 % baseline.",
+  "step:SAMPLE":             "Now the sample. The Director measures it on the virtual device.",
+  "phase:EVALUATION":        "The plugin turns the two spectra into quality metrics.",
+  "metric:Greenness index":  "Greenness — the headline number. Higher means fresher, greener oil.",
+}
+```
+
+Keys: `useCase`, `phase:<KEY>`, `step:<ROLE>`, `metric:<label>`. This table is the **only** thing regenerated
+per plugin.
+
+### 16.3 The generic walker
+
+```python
+def walk_workflow(d, narration):
+    wf = d.describe()                                     # UDP describe
+    d.doc(use_case=narration.get("useCase", wf["useCase"]))
+    d.doc(outline=[p["label"] for p in wf["phases"]])
+    for phase in wf["phases"]:
+        d.doc(phase=phase["key"])                         # highlight in outline; mark prior done
+        d.narrate(text_for("phase", phase, narration))
+        if phase["key"] == "ACQUISITION":
+            for step in phase["steps"]:
+                d.narrate(text_for("step", step, narration))
+                d.click("WizardViewModule.measureButton.%s" % step["role"].lower())
+            d.wait_ready("WizardViewModule.nextButton", enabled=True)
+        d.click("WizardViewModule.nextButton")
+    for metric in wf["evaluation"]:                       # inside the EVALUATION phase
+        d.narrate(text_for("metric", metric, narration))
+        # optional: d.highlight(<metric field>)  — see 16.6
+```
+
+Click targets still come from the §5 objectName convention; introspection supplies the **sequence**, not the
+widget names.
+
+### 16.4 The doc panel — three zones + progressive reveal (asks 3, 4, 5, 7, 8)
+
+`DocHintPanelViewModule` replaces its single label with three stacked zones mapping to the heading hierarchy:
+
+```
+┌ DOCUMENTATION ─────────────┐
+│ Bench                      │ ← 1. use-case  (H1, persistent)      ask #4
+│ ────────────────────────── │
+│ ▸ Acquisition              │ ← 2. phase outline: current = bold/  ask #5
+│   Processing               │      accent, done = ✓, upcoming = dim
+│   Evaluation               │
+│   Publishing               │
+│ ────────────────────────── │
+│ Capture the reference —    │ ← 3. caption: current step, or       asks #6/#7
+│ shine the lamp on the      │      (in EVALUATION) each metric's
+│ slit, then Capture.        │      authored description
+└────────────────────────────┘
+```
+
+Protocol: a structured `doc` command, each field updating only its zone (keep `set_hint` as a caption-only
+alias): `doc { use_case?, outline?:[labels], phase?:key, caption?, reveal?, wpm? }`.
+
+**Progressive reveal (Edwin's "sentence and/or word by word"):** the caption zone renders **app-side** with a
+`QTimer` typewriter — **sentence-by-sentence**, dropping to **word-by-word when a sentence exceeds ~12 words**
+— at `DOC_WPM` cadence. Keeping the reveal inside the panel (not as a UDP stream) keeps the wire light and the
+animation smooth. The Director's dwell after `narrate()` = `reveal_time + tail_pause`, both derived from the
+same `DOC_WPM`, so the two stay in lock-step.
+
+### 16.5 Reading-time pacing (ask 8)
+
+`narrate(text)` = `doc(caption=text, reveal="auto")` then hold `max(MIN_DWELL, words / DOC_WPM * 60) * DOC_SPEED`.
+Knobs (from `director.ini [default]` or env): **`DOC_WPM`** (default 180 — deliberately slower than silent
+reading, tuned for YouTube legibility), **`DOC_SPEED`** global multiplier, **`MIN_DWELL`** floor. Long metric
+prose lingers; short captions don't overstay. Cursor glide `duration` also scales with `DOC_SPEED`.
+
+### 16.6 (optional) In-app metric highlight
+
+To make "describe each metric field" *visual*, an optional `highlight {name}` command flashes the metric's
+widget (transient stylesheet border) while its caption is on screen. Requires key-qualified objectNames on the
+metric rows (add in `QtWorkflowRenderer.visitMetricField`, e.g. `metricField.<label-slug>`, per §5). Deferrable
+— narration reads fine without it; include only if the panel-only cut looks flat.
+
+### 16.7 Keyboard-advance Prompter (ask 2)
+
+Advance gates by keyboard, never the mouse — the left-monitor Prompter and its focus changes are invisible to
+the app-window recording (`__app_window_region` grabs only the app rect, verified).
+
+- **Primary: a global hotkey `Ctrl+Shift+ß`** (Edwin's pick) via `pynput.keyboard.GlobalHotKeys` (X11, no root)
+  — works regardless of focus; its callback sets the existing `threading.Event` gate. `pynput` is a dev-only
+  dep alongside `pyautogui`.
+- **Fallback (no new dep):** a `QShortcut` (Space / Enter) on the Prompter, which `raise_()+activateWindow()`s
+  at each gate; used if `pynput` is absent.
+- PyAutoGUI corner **FAILSAFE stays on**. The exact `ß` keysym under X11+pynput is confirmed at build; the
+  chord is config-overridable.
+
+### 16.8 Scripted login + config (ask 1)
+
+- New **sibling `/home/nidwe72/development/spectracs/spectracsPy-config/director.ini`** — **unversioned,
+  outside every repo** — parsed with stdlib `configparser` (no dep). **Per-scenario `[sections]`** (Edwin's
+  "prefixed section … script as prefix"):
+
+  ```ini
+  [default]
+  wpm = 180
+  [bench]
+  username = masterUserExakta
+  password = ••••••
+  [wizard]
+  username = edwin
+  password = ••••••
+  ```
+
+- A **`login(scenario)`** chapter drives the **visible** form (nav `LoginViewModule` → type `[scenario]`
+  username → type password → click Login → `wait_ready` Home/Wizard), so login appears *on* the tour and
+  replaces the manual gate for virtual runs. The **bench** reads `[bench]` = **masterUserExakta**; it still
+  keeps its human "calibrated master + registered serial" gate (hardware/enrolment reality, §15.2).
+- **Bench pairing (attach-mode).** The bench's `showEvent` auto-starts a run and **bounces to Settings** if no
+  calibrated serial is active, so scripted login is paired with the existing **attach-mode** (drive an
+  already-prepared master session) rather than a fresh `launch_app`: the *login click* is scripted; the
+  calibrated-setup prep is arranged before nav-in.
+- **New objectNames** (§5): `LoginViewModule.usernameField`, `.passwordField`, `.loginButton`. Server must be
+  up (`SpectracsPyServerClient().login`).
+
+### 16.9 Artifacts outside the code repo (ask 10)
+
+- Run output → **`/home/nidwe72/development/spectracs/spectracs-references/director/{recordings,screenshots}`**.
+  `spectracs-references/` is **not a git repo** (verified), so heavy mp4s never touch version control. This
+  **supersedes** the earlier `spectracs-docs/director` location for raw run output.
+- `SHOTS_DIR` / `RECORDINGS_DIR` default there, overridable via `DOC_ARTIFACTS_DIR`.
+- Director **code** stays in `spectracsPy/automation/` (tooling; nothing app-side imports it — verified).
+
+### 16.10 More use-cases / the tour (ask 9)
+
+`_tour` playlist via the existing `main_chapters`: **`login → [walk_workflow per plugin] → non-workflow
+chapters`**. Non-workflow chapters stay short hand-authored files reusing the panel primitives:
+
+- **saved runs** — Home list → open one read-only.
+- **account / payment** — nav `AppUserSettingsViewModule` → PayPal tab → narrate the €1 checkout.
+- **master admin** — `PluginListViewModule` / `UserListViewModule`.
+
+### 16.11 Protocol delta (adds to §4)
+
+| cmd | fields | effect |
+|-----|--------|--------|
+| `describe` | — | reply `{useCase, phases[], evaluation[]}` from the current view's workflow |
+| `doc` | `use_case? / outline? / phase? / caption? / reveal? / wpm?` | update the 3-zone panel; `caption` animates (reveal) |
+| `highlight` (opt) | `name` | transient flash of a metric widget |
+
+`set_hint` stays as a `doc(caption=…)` alias (back-compat with M1 scenarios).
+
+### 16.12 Incremental objectNames this milestone adds
+
+`LoginViewModule.usernameField / .passwordField / .loginButton`; (optional) `metricField.<slug>` in
+`QtWorkflowRenderer.visitMetricField`. Everything else reuses the M1 names.
+
+### 16.13 Build order — bench-first (when Edwin says go)
+
+B0–B4 are independent / parallelizable; **B5 depends on B0–B4**; **B6 depends on B5 + the rig**. If the
+capture-panel convergence is done first (§16.0), B5–B6 follow the converged capture UI.
+
+| Ph | Deliverable | Side | HW |
+|----|-------------|------|----|
+| B0 | 3-zone doc panel (use-case / phase-outline / caption) + `doc` cmd w/ progressive reveal; `set_hint` = caption alias | app | no |
+| B1 | Director `doc()` / `narrate()` + reading-time dwell; `DOC_WPM` / `DOC_SPEED` / `MIN_DWELL` | director | no |
+| B2 | `Ctrl+Shift+ß` global hotkey (pynput) → continue gate; Space-on-Prompter fallback; FAILSAFE kept | director | no |
+| B3 | `director.ini` loader (`[bench]` = masterUserExakta) + scripted-login chapter; **+3** objectNames (`LoginViewModule.usernameField/.passwordField/.loginButton`) | app + director | no |
+| B4 | Artifacts → `spectracs-references/director/{recordings,screenshots}`; `DOC_ARTIFACTS_DIR` override | director | no |
+| B5 | **Bench narrated scenario** — extend `measurement_bench.py`: narration table (`useCase` / `phase:*` / `step:REFERENCE\|SAMPLE` / `metric:*` incl. `color`); hand-authored clicks (roleTabs ↔ single `captureButton`, **reference-then-sample**, `wait_ready` Next, `dismiss` on capture-fail, screenshot **before** the terminal click); **attach-mode**, hardware beats as `wait_for_human` | scenario | no (to author) |
+| B6 | **Live rig recording** → the deliverable mp4 (prepared calibrated master + real ELP + lamp; human-gated captures) | rig | **yes** |
+| — | *Deferred (un-defer with the wizard):* `describe` cmd + `getWorkflow()` plumbing + current-view resolution, generic `walk_workflow`, pumpkin / saved-runs / payment / master chapters, `_tour` playlist | — | — |
+
+### 16.14 Open confirmations (tune against the first cut)
+
+- Progressive-reveal threshold (word-wise beyond a ~12-word sentence) and `DOC_WPM` default (180) are starting
+  points, tuned once the first clip is watched.
+- The in-app metric highlight (16.6) is optional — decide after seeing the panel-only version.
