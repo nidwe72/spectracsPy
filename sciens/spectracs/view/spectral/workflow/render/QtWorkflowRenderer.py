@@ -69,10 +69,20 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
             font = label.font()
             font.setBold(True)
             label.setFont(font)
-        field = QLineEdit(str(view.value))
-        field.setReadOnly(True)
         grid.addWidget(label, row, 0, 1, 1)
-        grid.addWidget(field, row, 1, 1, 1)
+        color = getattr(view, "color", None)
+        if color is not None:
+            # ‡ extended: the value cell renders a swatch instead of a text field. Fixed to the value-field
+            # height so the row height matches the text metrics sharing this grid (aligned label column).
+            swatch = QLabel()
+            red, green, blue = color
+            swatch.setStyleSheet("background-color: rgb(%d,%d,%d); border: 1px solid #444;" % (red, green, blue))
+            swatch.setFixedHeight(QLineEdit().sizeHint().height())
+            grid.addWidget(swatch, row, 1, 1, 1)
+        else:
+            field = QLineEdit(str(view.value))
+            field.setReadOnly(True)
+            grid.addWidget(field, row, 1, 1, 1)
         self.__metricGrid[2] = row + 1
 
     def visitSpectrumPlot(self, view):

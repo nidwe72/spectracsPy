@@ -166,13 +166,21 @@ the internal package can be re-homed transparently (see **Namespace** below).
 |---|---|---|---|---|---|
 | `EvaluationResult` | ordered list of items | — | container (walked) | — | any |
 | `LabelView(text)` | text | — | caption | `visitLabel` | any |
-| `MetricFieldView(label, value, tooltip, style)` | all | — | label chip + read-only field | `visitMetricField` | evaluation |
+| `MetricFieldView(label, value, tooltip, style, color)` **¶** | all | — | label chip + read-only field (or swatch when `color` set) | `visitMetricField` | evaluation |
 | `MetricFieldViewStyle(labelBold)` | all | — | bold label | (on metric) | evaluation |
 | `ColorSwatchView(rgb, label)` | all | — | filled swatch | `visitColorSwatch` | evaluation |
 | `VerdictView(roastState, hueDegrees)` | all | — | headline | `visitVerdict` | evaluation |
 | `SpectrumPlotView(traces[], bands[], title)` **†** | traces, bands, title | (spectra already in model) | plot (curves + band overlays) | `visitSpectrumPlot` | processing, evaluation |
 | `SpectrumCaptureView(caption, cropped, roiOverlay)` **‡** | caption, `cropped`, `roiOverlay`, *its presence = "show it"* | **`image`** (masked/cropped frame) | scaled raster image | `visitSpectrumCapture` | acquisition, processing |
 | `CaptureView(prompt, captureLabel, showLivePreview, geometry, showFramesControl, showExposureControls)` **‡** | shell params + dev-chrome flags | live video, burst, progress | capture panel | **host capture path** (not visitor) | acquisition |
+
+**¶ extended** (2026-07-13): `MetricFieldView` gained an optional `color` (a plain `(r,g,b)` 0-255 tuple). When set,
+`value` is unused and the value cell renders a filled swatch at field height instead of the read-only text field — a
+labeled colour row that aligns in the **same metric grid** as the text metrics (the shape is identical; only the value
+cell differs, so it needs no new view-model type and no accumulator change). The plugin computes the colour (e.g. via
+`EvaluationColorUtil`). Both render targets branch inside `visitMetricField` (Qt swatch / matplotlib patch). Used by
+`DevSpectralPlugin` evaluation ("color" row, no target); `PumpkinOilPlugin` keeps its `ColorSwatchView` measured/target
+comparison blocks (unchanged).
 
 **‡ extended** (M2, 2026-07-11): `CaptureView` gained `showFramesControl` / `showExposureControls` (+ fluent setters),
 **hidden by default** — the plugin decides whether the bench's frame-count + exposure/auto-exposure dev chrome is

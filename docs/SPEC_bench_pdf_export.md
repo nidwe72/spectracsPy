@@ -75,7 +75,7 @@ The plugin creates a PDF report as a **step of the EVALUATION phase**, driven by
 | **Logo** | **`resource/logo.png`** placed in **every page header** (matplotlib + PIL, Qt-free; the app-header logo itself is an inline SVG, so we use the committed raster) |
 | **Save UX** | native `QFileDialog` save (same convention as "save PNG" in the capture dev view) — bench is desktop/master-only |
 | **Scope this milestone** | **bench + `DevSpectralPlugin` only**; Pumpkin plugin + end-user wizard are free-but-verify-later follow-ups (§9) |
-| **Style fidelity** | the generic serializer round-trips `MetricFieldViewStyle.isLabelBold` (also fixes persisted-run reloads losing bold) |
+| **Style fidelity** | the generic serializer round-trips `MetricFieldViewStyle.isLabelBold` **and** `MetricFieldView.color` (the swatch survives report JSON + persisted-run reload — the owning model serializes its own field, §5) |
 | **LIS/LIMS send** | **deferred** (the embedded JSON is its forward-compatible hook; concrete target SENAITE, §7) |
 
 **Why it's cheap:** a PDF is a **second render target for the same view-models** the plugin already declares. M1 gives
@@ -137,7 +137,7 @@ selection across phases**, independent of what each phase's GUI shows.
 (via the M1 `dispatchItem` seam) and includes **only those with `isShownInReport == True`**, in workflow order, grouped
 by phase. Each is drawn by the **matplotlib** implementation of the visitor:
 
-- `MetricFieldView` → a label/value row (bold label when `style.isLabelBold`).
+- `MetricFieldView` → a label/value row (bold label when `style.isLabelBold`); the value cell is a **filled swatch** instead of text when `color` is set.
 - `ColorSwatchView` → a filled rectangle + caption.
 - `VerdictView` → a headline line.
 - `LabelView` → a paragraph.

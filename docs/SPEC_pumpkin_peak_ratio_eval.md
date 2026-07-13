@@ -232,6 +232,10 @@ edges are today.
 **Phase 1 — bench (plugin-driven EVALUATION tab).** `DevSpectralPlugin.evaluation` produces an
 `EvaluationResult`; the bench renders it as a new **Evaluation tab** alongside the existing processing tabs.
 It shows:
+- a **`color` row** (2026-07-13): the sample's perceived colour as a metric-grid **swatch** (no target), computed
+  by the plugin from the transmission via `EvaluationColorUtil` and emitted as a `MetricFieldView("color", color=rgb)`
+  — the value cell renders a swatch instead of text, aligning in the same metric grid (SPEC_plugin_driven_convergence
+  §3 ¶). Flagged `isShownInReport` so it also appears on the PDF;
 - the three-axis features `D_Q`, `A_blue`, `A_green`, the ratio `G` (and the confidence flag), plus the
   provisional verdict band;
 - **the three bands shaded on the Absorption plot** — the Q-band at ~575 (with its 555–600 baseline), the

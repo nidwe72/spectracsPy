@@ -136,7 +136,21 @@ class MatplotlibWorkflowRenderer(WorkflowItemVisitor):
         yTop = rect[1] + rect[3]
         self.__fig.text(rect[0], yTop, str(view.label), ha="left", va="top", fontsize=10,
                         fontweight=("bold" if bold else "normal"))
-        self.__fig.text(rect[0] + 0.42 * rect[2], yTop, str(view.value), ha="left", va="top", fontsize=10)
+        color = getattr(view, "color", None)
+        if color is not None:
+            # ‡ extended: value cell = a small filled swatch instead of text (mirrors QtWorkflowRenderer so
+            # screen and paper match). Height-corrected for the A4 aspect so the patch reads square.
+            red, green, blue = color
+            side = min(rect[3], 0.12 * rect[2])
+            ax = self.__fig.add_axes([rect[0] + 0.42 * rect[2], rect[1] + (rect[3] - side),
+                                      side * (self.__PAGE_H_IN / self.__PAGE_W_IN), side])
+            ax.add_patch(Rectangle((0, 0), 1, 1, facecolor=(red / 255.0, green / 255.0, blue / 255.0),
+                                   edgecolor="0.4"))
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.axis("off")
+        else:
+            self.__fig.text(rect[0] + 0.42 * rect[2], yTop, str(view.value), ha="left", va="top", fontsize=10)
 
     def visitColorSwatch(self, view):
         rect = self.__reserve(self.__H_SWATCH_IN)
