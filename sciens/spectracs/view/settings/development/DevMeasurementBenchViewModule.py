@@ -661,44 +661,17 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__emitGuidance(phase.getHint() if phase is not None else None)
 
     def __guidanceAction(self):
-        # "measured?" is now the workflow model (step.getContainer()), shared with the wizard (D4).
-        steps = self.__acquisitionSteps()
-        nextStep = next((step for step in steps if step.getContainer() is None), None)
-        if nextStep is not None:
-            view = nextStep.getView()
-            hint = getattr(view, "prompt", None) if view is not None else None
-            if not hint:
-                label = getattr(view, "captureLabel", None) if view is not None else None
-                hint = "Press %s" % (label or "Capture")
-            coach = hint  # the plugin's prompt, verbatim — no "Step N of M" wrapper (Edwin, 2026-07-13)
-        else:
-            phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.ACQUISITION) \
-                if self.__workflow is not None else None  # all captured
-            coach = phase.getHint() if phase is not None else None  # plugin's "measurement complete" (or resting)
-        return {"steps": steps, "nextStep": nextStep, "coach": coach}
+        # S4a: the derivation is shared (AcquisitionGuidance.deriveAction). Host only supplies the steps + the
+        # "all captured" completion hint.
+        phase = self.__workflow.getPhase(SpectralWorkflowPhaseType.ACQUISITION) \
+            if self.__workflow is not None else None
+        completeHint = phase.getHint() if phase is not None else None
+        return self.__guidance.deriveAction(self.__acquisitionSteps(), completeHint)
 
     def __applyGuidanceHighlights(self, action):
-        panel = self.__capturePanel
-        if panel is None:
-            return
-        tabs = panel.getRoleTabs()
-        bar = tabs.tabBar()
-        steps = action["steps"]
-        for index, step in enumerate(steps):
-            baseLabel = step.getLabel() or (step.getRole() or "")
-            captured = step.getContainer() is not None
-            tabs.setTabText(index, ("✓ " + baseLabel) if captured else baseLabel)
-            bar.setTabIcon(index, QIcon())
-        # The Next arrow is a permanent part of the button (set in __refreshNav), not a per-state cue.
-        self.__setButtonDot(panel.getCaptureButton(), False)
-        nextStep = action["nextStep"]
-        if nextStep is None:
-            return
-        nextIndex = steps.index(nextStep)
-        if nextStep is panel.getActiveStep():
-            self.__setButtonDot(panel.getCaptureButton(), True)  # on the right role-tab -> amber ● Capture
-        else:
-            bar.setTabIcon(nextIndex, self.__amberDotIcon())  # switch to that role-tab
+        # S4a: shared CapturePanel highlight logic (the amber cue targets the panel's button + role-tabs).
+        if self.__capturePanel is not None:
+            self.__guidance.applyPanelHighlights(self.__capturePanel, action)
 
     # --- the amber cue icons: delegated to the shared AcquisitionGuidance util (S1a). ---
 

@@ -37,6 +37,44 @@ class AcquisitionGuidance:
         if button is not None:
             button.setIcon(self.amberDotIcon() if on else QIcon())
 
+    def deriveAction(self, steps, completeHint):
+        # Shared next-action derivation (S4a): the first still-uncaptured step + its coach text — the plugin's
+        # prompt verbatim, else "Press <captureLabel>". All captured -> the phase's completion hint (or None).
+        # "measured?" is the workflow model (step.getContainer()), identical for both hosts (D4).
+        nextStep = next((step for step in steps if step.getContainer() is None), None)
+        if nextStep is not None:
+            view = nextStep.getView()
+            hint = getattr(view, "prompt", None) if view is not None else None
+            if not hint:
+                label = getattr(view, "captureLabel", None) if view is not None else None
+                hint = "Press %s" % (label or "Capture")
+            coach = hint
+        else:
+            coach = completeHint
+        return {"steps": steps, "nextStep": nextStep, "coach": coach}
+
+    def applyPanelHighlights(self, panel, action):
+        # Shared amber-cue application for a CapturePanel (S4a): ✓ on captured role-tabs, amber ● on the active
+        # capture button or the target role-tab. Identical for the bench and the wizard-real path (D4 keeps the
+        # highlight TARGETS host-side — a CapturePanel — but the logic is one place now).
+        tabs = panel.getRoleTabs()
+        bar = tabs.tabBar()
+        steps = action["steps"]
+        for index, step in enumerate(steps):
+            baseLabel = step.getLabel() or (step.getRole() or "")
+            captured = step.getContainer() is not None
+            tabs.setTabText(index, ("✓ " + baseLabel) if captured else baseLabel)
+            bar.setTabIcon(index, QIcon())
+        self.setButtonDot(panel.getCaptureButton(), False)
+        nextStep = action["nextStep"]
+        if nextStep is None:
+            return
+        nextIndex = steps.index(nextStep)
+        if nextStep is panel.getActiveStep():
+            self.setButtonDot(panel.getCaptureButton(), True)
+        else:
+            bar.setTabIcon(nextIndex, self.amberDotIcon())
+
     def emit(self, text):
         # Guidance text → muted-amber font, no progress bar. A None/empty text rests the bar instead
         # (equivalent to the hosts' former __emitStatusReset / __clearStatus).

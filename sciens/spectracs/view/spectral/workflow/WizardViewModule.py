@@ -375,22 +375,10 @@ class WizardViewModule(PageWidget):
         return phase.getHint() if phase is not None else None
 
     def __deriveNextAction(self):
-        # The single source of truth: the first still-uncaptured acquisition step (order-independent).
-        steps = self.__acqSteps
-        total = len(steps)
-        capturedCount = sum(1 for step in steps if step.getContainer() is not None)
-        nextStep = next((step for step in steps if step.getContainer() is None), None)
-        if nextStep is not None:
-            view = nextStep.getView()
-            hint = getattr(view, "prompt", None) if view is not None else None
-            if not hint:
-                hint = "Press %s" % (getattr(view, "captureLabel", "Measure") if view is not None else "Measure")
-            coach = hint  # the plugin's prompt, verbatim — no "Step N of M" wrapper (Edwin, 2026-07-13)
-        else:
-            phase = self.__workflow().getPhase(SpectralWorkflowPhaseType.ACQUISITION)  # all captured
-            coach = phase.getHint() if phase is not None else None  # plugin's "measurement complete" (or resting)
-        return {"steps": steps, "total": total, "capturedCount": capturedCount,
-                "nextStep": nextStep, "coach": coach}
+        # S4a: shared derivation (AcquisitionGuidance.deriveAction) — the first still-uncaptured step + coach.
+        phase = self.__workflow().getPhase(SpectralWorkflowPhaseType.ACQUISITION)
+        completeHint = phase.getHint() if phase is not None else None
+        return self.__guidance().deriveAction(self.__acqSteps, completeHint)
 
     def __applyGuidanceHighlights(self, action):
         # Exactly ONE amber target at a time. Reset every acquisition tab/button to baseline first, then paint it.
@@ -422,26 +410,8 @@ class WizardViewModule(PageWidget):
             bar.setTabIcon(index, self.__amberDotIcon())  # wrong tab -> amber ● on the tab to switch to
 
     def __applyRealGuidanceHighlights(self, action):
-        # S3: the real-device acquisition uses CapturePanel, so the amber cue targets its capture button +
-        # role-tabs (mirrors the bench — D4 keeps highlight targets host-side).
-        panel = self.__capturePanel
-        tabs = panel.getRoleTabs()
-        bar = tabs.tabBar()
-        steps = action["steps"]
-        for index, step in enumerate(steps):
-            baseLabel = step.getLabel() or (step.getRole() or "")
-            captured = step.getContainer() is not None
-            tabs.setTabText(index, ("✓ " + baseLabel) if captured else baseLabel)
-            bar.setTabIcon(index, QIcon())
-        self.__setButtonDot(panel.getCaptureButton(), False)
-        nextStep = action["nextStep"]
-        if nextStep is None:
-            return
-        nextIndex = steps.index(nextStep)
-        if nextStep is panel.getActiveStep():
-            self.__setButtonDot(panel.getCaptureButton(), True)
-        else:
-            bar.setTabIcon(nextIndex, self.__amberDotIcon())
+        # S4a: shared CapturePanel highlight logic (same as the bench).
+        self.__guidance().applyPanelHighlights(self.__capturePanel, action)
 
     # --- the amber cue icons: delegated to the shared AcquisitionGuidance util (S1a). The derivation +
     #     highlight application above stay host-specific (S4a folds them in). ---
