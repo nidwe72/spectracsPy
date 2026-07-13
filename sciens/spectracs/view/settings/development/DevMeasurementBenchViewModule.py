@@ -1,24 +1,16 @@
 import numpy as np
 import pyqtgraph as pg
 
-from PySide6.QtCore import Qt, QEventLoop, QTimer, QRect, QPoint
-from PySide6.QtGui import QPixmap, QColor, QPainter, QIcon, QPolygon
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
-                               QSlider, QCheckBox, QTabWidget, QStackedWidget, QScrollArea,
-                               QFrame, QSizePolicy, QFileDialog)
+from PySide6.QtCore import QRect
+from PySide6.QtGui import QPixmap, QColor, QPainter, QIcon
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QSlider, QCheckBox, QTabWidget, QStackedWidget, QScrollArea, QFrame, QSizePolicy, QFileDialog
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
-from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
-from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
-from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import ExtendedRoiLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
-from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModule import MeanSpectrumLogicModule
 from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModuleParameters import MeanSpectrumLogicModuleParameters
-from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.logic.session.ActiveSpectrometerProfileLogicModule import ActiveSpectrometerProfileLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
@@ -29,24 +21,18 @@ from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSigna
 from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
 from sciens.spectracs.view.spectral.workflow.CapturePanel import CapturePanel
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
-from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
 from sciens.spectracs.model.spectral.plugin.view.ReportView import ReportView
 from sciens.spectracs.model.spectral.plugin.view.LimsPublishView import LimsPublishView
 from sciens.spectracs.model.spectral.plugin.view.SpectrumCaptureView import SpectrumCaptureView
 from sciens.spectracs.model.spectral.plugin.view.SpectrumPlotView import SpectrumPlotView
-from sciens.spectracs.plugin_sdk import SpectrumFeatureUtil
-from sciens.spectracs.plugin_sdk.roles import REFERENCE, SAMPLE, TRANSMISSION, ABSORPTION
+from sciens.spectracs.plugin_sdk.roles import REFERENCE, SAMPLE
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 from sciens.spectracs.view.application.widgets.ScaledImageLabel import ScaledImageLabel
 from sciens.spectracs.view.application.widgets.PdfPreviewWidget import PdfPreviewWidget
-from sciens.spectracs.view.spectral.workflow.EvaluationResultRenderer import EvaluationResultRenderer
 from sciens.spectracs.view.application.widgets.StepBarWidget import StepBarWidget
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
-from sciens.spectracs.view.settings.development.DevCaptureVideoViewModule import DevCaptureVideoViewModule
-from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
 from sciens.spectracs.view.spectral.workflow.render.WorkflowPhaseRenderer import WorkflowPhaseRenderer
 
 
@@ -79,9 +65,6 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__resolver = SensorCaptureIndexResolver()
         self.__sensor = None
         self.__resolvedIndex = None
-        self.__videoThread = None
-        self.__latestImage = None
-        self.__autoExposing = False
 
         self.__engine = None
         self.__workflow = None
@@ -93,11 +76,6 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__phases = [SpectralWorkflowPhaseType.ACQUISITION, SpectralWorkflowPhaseType.PROCESSING,
                          SpectralWorkflowPhaseType.EVALUATION]
 
-        self.__activeRole = REFERENCE
-        self.__lockedExposure = None
-        self.__roleSpectra = {}            # role -> extracted Spectrum (with N captured frames)
-        self.__representativeFrames = {}   # role -> QImage (preview-only middle frame)
-        self.__savedRoiX = None            # (x1, x2) authored originals while the extended window is applied
 
         # widgets
         self.__messageLabel = None
@@ -105,21 +83,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__stack = None
         self.__capturePanel = None          # S2c: the shared CapturePanel (built per run in __startRun)
         self.__acquisitionContainer = None  # its host page in the phase stack
-        self.__videoViewModule = None
-        self.__roleTabs = None          # QTabWidget wrapping the Reference/Sample steps (S1)
-        self.__referencePage = None
-        self.__samplePage = None
-        self.__stepContent = None       # the ONE shared inner-tabs + controls widget, reparented per role (S1)
-        self.__innerTabs = None
-        self.__spectrumPlot = None
-        self.__framesComboBox = None
-        self.__framesControl = None     # labeled "Frames" component (plugin may hide it)
-        self.__exposureControl = None   # labeled "Exposure" component (plugin may hide it)
-        self.__exposureSlider = None
-        self.__exposureLabel = None
-        self.__autoExposureCheckBox = None
         self.__captureButton = None
-        self.__captureTotal = 1         # frame count of the in-flight capture (S2: status-bar progress)
         self.__guidance = AcquisitionGuidance()   # shared guidance primitives (S1a); painters/emit live here
         self.__processingTabs = None
         self.__evaluationTabs = None    # QTabWidget: Metrics | Spectrum (S4)
@@ -248,11 +212,6 @@ class DevMeasurementBenchViewModule(PageWidget):
         # Reset run state.
         self.__restoreRoi()  # defensive: never start a run with a leftover widened ROI
         self.__cursor = 0
-        self.__activeRole = REFERENCE
-        self.__lockedExposure = None
-        self.__roleSpectra = {}
-        self.__representativeFrames = {}
-        self.__latestImage = None
 
         # The user may have just authored the calibration (Save writes it on the server and does NOT
         # refresh the in-memory active profile). Re-fetch the current profile from the server by the
