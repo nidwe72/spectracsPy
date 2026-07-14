@@ -309,6 +309,29 @@ master-data must pre-exist.
 
 - SENAITE = Docker `senaite/senaite:v2.6.0`, Plone 5.2 / **Python 2.7**; Edwin maps `-p 6090:8080`. `--rm` wipes data
   unless a Docker volume is mounted.
+
+### 12.1 Runbook — a fresh SENAITE that actually accepts a publish (verified 2026-07-14)
+
+A first-boot `senaite/senaite` container is **not** publish-ready; three things bit us in order, each surfacing
+as a *different* error, so the setup is worth writing down:
+
+1. **Persist the data.** The image declares `VOLUME /data`; without an explicit mount each `docker run` gets a
+   **fresh anonymous volume** → the site "disappears" on every recreate. Run with a **named volume or a bind
+   mount**, e.g. `docker run -d --name senaite -p 6090:8080 -v ~/.../senaite-data:/data senaite/senaite:v2.6.0`
+   (a bind-mount folder must be writable by container uid **500** → `chown -R 500:500`).
+2. **Create the SENAITE site.** A bare container serves Zope but has *no Plone site* → the API 404s
+   (`/senaite/@@API/… → 404`). Create it once at `http://localhost:6090` → "Create a new SENAITE site"
+   (`site_id=senaite`), admin `admin/admin`.
+3. **Create the service user WITH the right role AND a matching password.** The app authenticates as
+   `LIMS_SENAITE_USER` (`spectracs_app_service`) with `LIMS_SENAITE_PASSWORD`. Two gotchas:
+   - **Password must match the `.env` exactly** — a mismatch does **not** 401; SENAITE silently falls back to
+     **Anonymous**, so `users/current` shows `authenticated:false` and the publish fails as if unauthorized.
+     Set/reset it in the ZMI: `…/senaite/acl_users/source_users/manage_users`.
+   - **Role must be `Manager`, not just `LabManager`.** The publish auto-creates setup objects under
+     `/senaite/setup/…` (InstrumentType, Manufacturer, Supplier, SampleType, …); `LabManager` gets
+     *"You are not allowed to access 'setup' in this context"*. `Manager` clears the whole ensure-or-create
+     chain. (For least-privilege later, scope the exact setup add-permission instead.)
+   - Verify green: `curl -u user:pass …/v1/users/current` → `authenticated:true`, roles include `Manager`.
 - No cross-LIMS abstraction library exists; standards (SiLA 2, AnIML, HL7/ASTM) are instrument/data-level → we own a
   thin `LimsGateway` seam.
 - `senaite.jsonapi` create/search confirmed vs the **2.x doctests** (`…/tests/doctests/create.rst`) + `api.html`.

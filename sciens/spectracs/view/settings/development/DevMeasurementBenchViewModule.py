@@ -166,6 +166,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         layout.setContentsMargins(0, Metrics.S, 0, 0)
         page.setLayout(layout)
         self.__evaluationTabs = QTabWidget()
+        self.__evaluationTabs.setObjectName("DevMeasurementBenchViewModule.evaluationTabs")  # doc-automation §16
         layout.addWidget(self.__evaluationTabs)
         return page
 
@@ -175,6 +176,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         layout.setContentsMargins(0, Metrics.S, 0, 0)
         page.setLayout(layout)
         self.__processingTabs = QTabWidget()
+        self.__processingTabs.setObjectName("DevMeasurementBenchViewModule.processingTabs")  # doc-automation §16
         layout.addWidget(self.__processingTabs)
         return page
 
@@ -186,6 +188,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         layout.setContentsMargins(0, Metrics.S, 0, 0)
         page.setLayout(layout)
         self.__publishingTabs = QTabWidget()
+        self.__publishingTabs.setObjectName("DevMeasurementBenchViewModule.publishingTabs")  # doc-automation §16
         layout.addWidget(self.__publishingTabs)
         return page
 

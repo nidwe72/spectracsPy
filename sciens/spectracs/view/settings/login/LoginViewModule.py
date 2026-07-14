@@ -49,11 +49,13 @@ class LoginViewModule(PageWidget):
     def getUsernameComponent(self):
         if self.__usernameComponent is None:
             self.__usernameComponent = QLineEdit()
+            self.__usernameComponent.setObjectName("LoginViewModule.usernameField")  # SPEC_doc_automation §16.8
         return self.__usernameComponent
 
     def getPasswordComponent(self):
         if self.__passwordComponent is None:
             self.__passwordComponent = QLineEdit()
+            self.__passwordComponent.setObjectName("LoginViewModule.passwordField")  # SPEC_doc_automation §16.8
             self.__passwordComponent.setEchoMode(QLineEdit.EchoMode.Password)
             self.__passwordComponent.returnPressed.connect(self.onClickedLoginButton)
         return self.__passwordComponent
@@ -98,6 +100,7 @@ class LoginViewModule(PageWidget):
         result.setLayout(layout)
 
         loginButton = QPushButton("Login")
+        loginButton.setObjectName("LoginViewModule.loginButton")  # SPEC_doc_automation §16.8
         loginButton.clicked.connect(self.onClickedLoginButton)
         layout.addWidget(loginButton, 0, 0, 1, 1)
 

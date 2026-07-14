@@ -692,7 +692,12 @@ Captured for a later spec pass (video capture essentially works; these are refin
 
 ## 16. M3 — the narrated feature tour (refinements)
 
-Status: **DESIGN (2026-07-13).** Requested by Edwin after the M1/M2 harness ran well on his machine; nothing
+Status: **IMPLEMENTED (bench, 2026-07-14).** B0–B5 shipped and were driven live on the rig — the narrated
+bench screencast records end-to-end (login → capture → every phase's steps → LIMS publish), rig-verified.
+As-built deltas and the rig-driven fixes are in §16.15. The generic `describe`/`walk_workflow` and the other
+chapters remain deferred (§17). Original design below.
+
+Status (design, superseded by §16.15): **DESIGN (2026-07-13).** Requested by Edwin after the M1/M2 harness ran well on his machine; nothing
 is built until an explicit "go". This pass turns the harness from hand-authored click-lists into a
 **structure-driven, Claude-narrated tour**: a format-aware doc panel, reading-paced progressive text,
 keyboard-only advancing, scripted login from an unversioned config, and artifacts written outside the code
@@ -703,6 +708,27 @@ repo. Load-bearing facts below were verified against the code (rubber-duck pass,
 **The one near-term deliverable is a narrated screencast of the dev measurement BENCH**
 (`DevMeasurementBenchViewModule`). The pumpkin-wizard chapter, saved-runs, account/payment, master-admin and
 the `_tour` playlist are **postponed**.
+
+> **Post-convergence update (2026-07-13).** The capture-panel convergence named below as this milestone's
+> predecessor is now **DONE** (SPEC_plugin_driven_convergence §9, M3 — rig-verified). Four consequences:
+> 1. **B5/B6 unblocked.** ACQUISITION on the bench now runs through the shared `CapturePanel`, so the
+>    screencast is authored against a stable, converged UI — the rework risk this section warned about is gone.
+> 2. **The capture objectNames MOVED.** The bench no longer owns `captureButton` / `roleTabs` / `innerTabs` —
+>    they now live on the shared panel as `CapturePanel.captureButton` / `.roleTabs` / `.innerTabs` /
+>    `.videoViewModule`, already set during the convergence. The §7.1 scenario must **retarget** to those
+>    (`DevMeasurementBenchViewModule.*` → `CapturePanel.*`). Convergence dividend: almost no new objectNames
+>    to add for B5, and the same names will later drive the wizard's real-capture path.
+> 3. **Both narration layers coexist (Edwin, 2026-07-13).** The bench now shows its **own** in-app coach line
+>    (status bar, from the plugin `CaptureView.prompt`) plus amber ●/▶ cues during ACQUISITION. The doc panel
+>    (§16.4) is a *second* layer. Decision: **show both** — no suppression. They occupy disjoint zones
+>    (status bar vs right column) and self-sync (the Director drives the same role/capture events the guidance
+>    reacts to). The one obligation this creates: the narration table (§16.2, B5) must be authored in a
+>    **different register** from the plugin prompt — the coach line is the terse imperative ("Capture
+>    reference"), the doc caption is the narrated *why* ("the reference is our 100% baseline") — so the frame
+>    never shows the same sentence twice.
+> 4. **`getWorkflow()` correction.** A public `getWorkflow()` **already exists on the engine** (both hosts call
+>    `self.__engine.getWorkflow()`); only a *view-level* accessor + current-view resolution in the UDP service
+>    are missing. The deferred generic walker is therefore a lighter lift than the notes below imply. See §17.
 
 A final rubber-duck pass (2026-07-13, verified against code) fixed the build shape for this scope:
 
@@ -752,8 +778,9 @@ needs only a new (small) narration table; the generic driver is untouched.
 
 > **Deferred (see 16.0).** The reply shape below is the *target* for when the generic walker lands — it is
 > **not reachable today**. `MainViewModule` is a `QStackedWidget` so `currentWidget()` resolves the current
-> page, but no view exposes a public `getWorkflow()` (bench = private `__workflow`; wizard = private
-> `__workflow()`), and the UDP service does not resolve the current view. Both are new app plumbing to add when
+> page, and while the *engine* exposes a public `getWorkflow()` (both hosts call it), no *view* re-exposes it
+> (bench caches a private `__workflow`; wizard wraps a private `__workflow()`), and the UDP service does not
+> resolve the current view. The missing plumbing is a view-level accessor + current-view resolution, added when
 > this is un-deferred.
 
 `describe` reply — the app would walk the current view's live workflow:
@@ -951,3 +978,93 @@ capture-panel convergence is done first (§16.0), B5–B6 follow the converged c
 - Progressive-reveal threshold (word-wise beyond a ~12-word sentence) and `DOC_WPM` default (180) are starting
   points, tuned once the first clip is watched.
 - The in-app metric highlight (16.6) is optional — decide after seeing the panel-only version.
+
+### 16.15 As-built (2026-07-14) — what shipped for the bench, and the rig-driven fixes
+
+**B0–B5 delivered** (all app-side changes gated on `--doc-mode`; Director is dev-only tooling):
+- **B0** `DocHintPanelViewModule` = 3 zones (use-case H1 / phase-outline with ✓/▸/dim / caption) + progressive
+  reveal (`QTimer`, sentence-by-sentence, word-wise past ~12 words). New `doc` UDP command; `set_hint` = caption
+  alias.
+- **B1** Director `doc()` / `narrate()` + reading-time dwell (`DOC_WPM` 180 / `DOC_SPEED` / `DOC_MIN_DWELL`);
+  cursor glide scales with `DOC_SPEED`.
+- **B2** global advance hotkey via pynput — registers `<ctrl>+<shift>+ß` **plus reliable alternates
+  `<ctrl>+ß` and `<f9>`** (Shift+ß emits a different keysym on a German layout, so the original chord alone
+  often never fires). Space/Enter on the Prompter is the no-dep fallback; the Prompter raises + focuses at each
+  gate so keyboard advance is reliable.
+- **B3** `director.ini` loader in the unversioned sibling `spectracsPy-config/`; scripted `login(scenario)`
+  (human-gate fallback when a password is blank); Login objectNames.
+- **B4** artifacts → `spectracs-references/director/{recordings,screenshots}` (`DOC_ARTIFACTS_DIR` override).
+- **B5** the bench scenario walks the WHOLE workflow: acquisition step-tabs (Reference/Sample) with human
+  capture beats, then **every step-tab of PROCESSING (rasters, Spectra, Transmission, Absorption) and
+  EVALUATION (Metrics + each metric field, Spectrum, Report) and PUBLISHING** — each clicked and described.
+
+**Rig-driven fixes (2026-07-14), all found by driving it live:**
+- **Text-field activation.** `activate` only clicked buttons / switched tabs; a login `QLineEdit` needs
+  **focus** (`setFocus` + `selectAll`) so a following `type_text` lands in it.
+- **Duplicate objectNames across hosts.** Post-convergence BOTH hosts use `CapturePanel.*`; a plugin-bound
+  login lands in the wizard (which builds its own hidden CapturePanel), so a root-wide `findChild` returned the
+  wizard's hidden button. Fix: `locate`/`activate`/`wait`/`tabs` resolve **scoped to the current MainView page**
+  first (the §17 current-view slice, arrived early), root as fallback.
+- **`tabs` command + `walk_tabs()`.** New UDP `tabs` enumerates a QTabWidget's step-tabs so the Director walks
+  every step of a phase without hard-coding counts — auto-covers whatever the plugin declares.
+- **Camera handoff.** The wizard opens `/dev/video0`; `stopStream()` doesn't block on release, so navigating
+  straight to the bench found "no camera". The scenario bounces via **Home + a short sleep** so the wizard's
+  stream releases before the bench reopens the device.
+- **Recording/Prompter geometry.** (a) `xdotool search --name "^Spectracs"` is case-**in**sensitive → matched
+  Geany's `spectracsNotes.txt`; match the title **case-sensitively**. (b) `xdotool getwindowgeometry` reports Y
+  off by the title-bar height → the clip clipped the top; read geometry from **`xwininfo`** (absolute coords).
+  (c) the Prompter is moved onto a monitor that does **not** contain the app window so it's never filmed.
+- **No orphaned recorder.** ffmpeg is stopped on any Director exit (`atexit` + SIGINT/SIGTERM/SIGHUP handlers +
+  a QTimer to deliver signals under Qt); `bench.sh` also kills stray recorders on start.
+- **Prompter CONTINUE** is disabled except while a gate is actually open (enabled on gate-open, disabled on any
+  advance path — button, shortcut, or hotkey).
+- Narration corrected: the reference "blank" is the **isopropanol solvent** (not an empty beam); the sample is
+  isopropanol **with** the oil.
+
+**Not done (deferred, §17):** the generic `describe`/`walk_workflow`, the wizard/saved-runs/payment/master
+chapters, and the `_tour` playlist. The `tabs` command is the first concrete slice of that generic direction.
+
+---
+
+## 17. Future change request — generic, AI-rendered scenario driving
+
+Status: **CHANGE REQUEST (2026-07-13, Edwin).** Recorded for a later milestone; **not scheduled**. The
+hand-authored bench scenario (§16.0, B5) is the accepted near-term lean — for a single stable workflow a
+hand-written click-list is clearer and the generic machinery pays nothing back. This CR is the direction that
+lean evolves toward **once a second workflow exists** and per-scenario click-lists stop paying.
+
+**Intent.** Sooner or later **every upcoming scenario should render generically, with "more or less" AI
+contribution.** The external driver walks the *live* workflow (the deferred `describe` / `walk_workflow`,
+§16.1–16.3, and the last row of §16.13) instead of a hand-written click sequence, so a new plugin costs little
+or no bespoke script. The genericity carries the **structure** (the click sequence, which steps exist, which
+metrics exist); authoring supplies only the **words**. This is the "structure introspected, words authored"
+seam of §16.1, elevated from a deferred detail to the intended end-state for all scenarios.
+
+**Three content sources for the narration** (evolves the §16.1 hybrid — this is what "more or less AI" means):
+1. **Plugin-supplied prose (NEW — Edwin, 2026-07-13).** The plugin itself declares narration/description text
+   for its use-case, phases, steps and metrics, so a plugin **ships its own tour copy**. Where the plugin
+   supplies good prose the AI contribution drops to light touch-up; where it is silent the AI authors fully —
+   hence "more or less". The metric `MetricFieldView.tooltip` already **prototypes** this: a plugin-declared
+   string the tour reuses verbatim (§16.1). Generalise it to the whole workflow (use-case / phase / step
+   captions), so the narration table (source 2) becomes an *override*, not the only voice.
+2. **AI-authored narration table** (§16.2) — the editorial voice, per scenario, filling or overriding where the
+   plugin is silent or where a screencast wants a different register than the in-app prose.
+3. **Introspected label / tooltip fallback** — when neither of the above supplies text.
+
+**The external-Director / real-cursor architecture is explicitly re-openable (Edwin, 2026-07-13).** The current
+two-process split (§1, §3) exists for one reason: put a *visibly gliding* OS cursor on camera while keeping the
+operator cockpit (Prompter, gates, hotkey) off it. The new version **need not keep that split** — moving the
+mouse "can certainly be managed" another way in the anticipated version, e.g. an **in-app synthetic cursor
+overlay** animated only in doc-mode, or a driver that runs **in-process**. Either would dissolve the UDP
+keyhole and let the walker read the workflow **directly** (no `describe` round-trip needed), simplifying the
+whole harness. So this CR leaves the process boundary open for reconsideration rather than treating it as fixed.
+
+**Carries the deferred plumbing** (from §16.13's last row, with the §16.2 wording correction): a `describe`
+command **or its in-process equivalent**; **current-view resolution** (today the UDP service holds only the
+root container and `findChild`s by name — `MainViewModule` is a `QStackedWidget`, so the active page is one
+`currentWidget()` call away); and a **view-level workflow accessor** — small, because the *engine* already
+exposes a public `getWorkflow()` (both hosts use it); only the view→driver hop is missing. Plus the generic
+`walk_workflow` and the per-plugin prose (sources 1–2 above).
+
+**Trigger.** The second workflow (the pumpkin wizard) coming back into scope, **or** the scenario count growing
+enough that per-scenario click-lists stop paying — whichever comes first. Until then: hand-authored (§16.0).

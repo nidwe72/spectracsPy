@@ -13,8 +13,10 @@ if [ "${1:-}" != "norecord" ]; then
   export DOC_RECORD=1 DOC_RECORD_NAME=bench
 fi
 
-# fresh start: clear any stale --doc-mode app (never touches a normal Spectracs window)
+# fresh start: clear any stale --doc-mode app (never touches a normal Spectracs window) and any orphaned
+# screen recorder left behind by a hard-killed prior run (else it keeps grabbing the screen forever).
 pkill -f "spectracsMain.py --doc-mode" 2>/dev/null || true
+pkill -f "ffmpeg -y -f x11grab" 2>/dev/null || true
 sleep 1
 
 # launch the app detached; its log goes to a temp file

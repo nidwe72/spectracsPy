@@ -3,7 +3,7 @@ import sys
 
 from PySide6.QtCore import QObject
 from PySide6.QtNetwork import QUdpSocket, QHostAddress
-from PySide6.QtWidgets import QWidget, QTabWidget
+from PySide6.QtWidgets import QWidget, QTabWidget, QLineEdit
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
@@ -21,7 +21,8 @@ class DocModeUdpService(QObject):
     no cross-thread marshalling. Every reply goes back to the datagram's sender address/port.
 
     Commands (see §4):
-      set_hint {text}                      -> update the hint panel (no reply)
+      set_hint {text}                      -> set the caption zone (no reply; alias of doc{caption})
+      doc {use_case?,outline?,phase?,caption?,reveal?,wpm?} -> update the 3-zone panel (no reply, §16.4)
       ping                                 -> {ok:true}
       nav {view}                           -> fire a NavigationSignal to that view; {ok:true}
       locate {name, tab?}                  -> {ok, cx, cy, x, y, w, h} global px, or {ok:false}
@@ -82,6 +83,17 @@ class DocModeUdpService(QObject):
         if command == "set_hint":
             self.__hintPanel.setHint(message.get("text", ""))
             return None
+        if command == "doc":
+            # §16.4/§16.11: update the 3-zone panel; only the fields present change. `caption` animates
+            # (progressive reveal) app-side. Fire-and-forget like set_hint (no reply).
+            self.__hintPanel.applyDoc(
+                use_case=message.get("use_case"),
+                outline=message.get("outline"),
+                phase=message.get("phase"),
+                caption=message.get("caption"),
+                reveal=message.get("reveal"),
+                wpm=message.get("wpm"))
+            return None
         if command == "ping":
             return {"ok": True}
         if command == "nav":
@@ -90,6 +102,8 @@ class DocModeUdpService(QObject):
             return self.__locate(message.get("name"), message.get("tab"))
         if command == "activate":
             return self.__activate(message.get("name"), message.get("tab"))
+        if command == "tabs":
+            return self.__tabs(message.get("name"))
         if command == "wait":
             return self.__wait(message)
         if command == "dismiss":
@@ -103,18 +117,68 @@ class DocModeUdpService(QObject):
         ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal(signal)
         return {"ok": True}
 
-    def __find(self, name):
+    def __hiddenChain(self, widget):
+        # Walk up from a present-but-invisible widget and report the ancestor chain up to (and including) the
+        # first EXPLICITLY hidden node — that node (a non-current stacked/tab page, or a hidden container) is
+        # what suppresses visibility. Pinpoints "found but hidden" in one run instead of guessing.
+        chain = []
+        node = widget
+        for _ in range(20):
+            if node is None:
+                break
+            name = node.objectName() or type(node).__name__
+            chain.append("%s[vis=%d,hidden=%d]" % (name, node.isVisible(), node.isHidden()))
+            if node.isHidden():
+                break
+            node = node.parentWidget()
+        return " < ".join(chain)
+
+    def __currentViewName(self):
+        # The active MainView page — so a failed locate says whether we're even on the expected view
+        # (e.g. the bench bounces to Settings when there's no calibrated setup). A thin slice of the
+        # current-view resolution the deferred generic walker will need (§17).
+        try:
+            return type(self.__root.mainViewModule.currentWidget()).__name__
+        except Exception:
+            return "?"
+
+    def __lookup(self, name):
+        # Resolve an objectName scoped to the CURRENT view first. Post-convergence BOTH hosts share the same
+        # CapturePanel.* objectNames, so a hidden wizard CapturePanel and the visible bench one can coexist in
+        # the tree (e.g. a plugin-bound login lands in the wizard, then we nav to the bench). A root-wide
+        # findChild returns whichever comes first — often the wrong, hidden one. Searching the active MainView
+        # page first returns the on-screen widget; fall back to the root for anything global.
         if not name:
             return None
-        widget = self.__root.findChild(QWidget, name)
+        try:
+            current = self.__root.mainViewModule.currentWidget()
+        except Exception:
+            current = None
+        if current is not None:
+            if current.objectName() == name:
+                return current
+            found = current.findChild(QWidget, name)
+            if found is not None:
+                return found
+        return self.__root.findChild(QWidget, name)
+
+    def __find(self, name):
+        widget = self.__lookup(name)
         if widget is None or not widget.isVisible():
             return None
         return widget
 
     def __locate(self, name, tab):
-        widget = self.__find(name)
-        if widget is None:
-            return {"ok": False, "error": "not found/visible: %r" % name}
+        # Distinguish the two failure modes explicitly: not-in-tree (wrong view / not built) vs present but
+        # hidden (wrong tab / not yet shown). Both name the current view to speed up diagnosis.
+        raw = self.__lookup(name)
+        if raw is None:
+            return {"ok": False, "error": "not found: %r (current view: %s)" % (name, self.__currentViewName())}
+        if not raw.isVisible():
+            return {"ok": False,
+                    "error": "found but hidden: %r (current view: %s) chain: %s"
+                             % (name, self.__currentViewName(), self.__hiddenChain(raw))}
+        widget = raw
         if tab is not None and isinstance(widget, QTabWidget):
             rect = widget.tabBar().tabRect(int(tab))
             topLeft = widget.tabBar().mapToGlobal(rect.topLeft())
@@ -134,6 +198,12 @@ class DocModeUdpService(QObject):
         if tab is not None and isinstance(widget, QTabWidget):
             widget.setCurrentIndex(int(tab))
             return {"ok": True}
+        if isinstance(widget, QLineEdit):
+            # A text field is "activated" by giving it keyboard focus, so a following type_text lands here.
+            # The Director has already raised the app window, so focus goes to the right input (§16.8 login).
+            widget.setFocus()
+            widget.selectAll()   # so type_text replaces any stale content
+            return {"ok": True}
         if hasattr(widget, "animateClick"):
             widget.animateClick()   # visible press feedback + emits clicked
             return {"ok": True}
@@ -141,6 +211,19 @@ class DocModeUdpService(QObject):
             widget.click()
             return {"ok": True}
         return {"ok": False, "error": "widget %r is not activatable" % name}
+
+    def __tabs(self, name):
+        # Enumerate a QTabWidget's step-tabs so the Director can walk (click + describe) every step of a
+        # phase without hard-coding counts/labels — a thin slice of the §17 introspection. Scoped to the
+        # current view like locate.
+        widget = self.__lookup(name)
+        if widget is None or not widget.isVisible():
+            return {"ok": False, "error": "not found/visible: %r (current view: %s)"
+                                          % (name, self.__currentViewName())}
+        if not isinstance(widget, QTabWidget):
+            return {"ok": False, "error": "%r is not a QTabWidget" % name}
+        labels = [widget.tabText(i) for i in range(widget.count())]
+        return {"ok": True, "count": widget.count(), "labels": labels, "current": widget.currentIndex()}
 
     def __wait(self, message):
         widget = self.__find(message.get("name"))

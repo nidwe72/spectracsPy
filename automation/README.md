@@ -14,12 +14,26 @@ stays robust because the app resolves its own widget coordinates.
 ## One-time setup
 
 ```bash
-./venv/bin/pip install pyautogui        # dev-only; never a runtime dependency of the app
-# optional: sudo apt install scrot       # screenshots fall back to Pillow ImageGrab if absent
+./venv/bin/pip install pyautogui pynput   # dev-only; never runtime deps of the app
+# optional: sudo apt install scrot          # screenshots fall back to Pillow ImageGrab if absent
 ```
 
-`wmctrl` + `xdotool` (used to raise the app window before each click) are already present on this box.
+`pynput` powers the global **Ctrl+Shift+ß** advance hotkey (§16.7); if it's absent the Director prints a
+notice and you advance with **Space/Enter on the Prompter** instead. `wmctrl` + `xdotool` (used to raise the
+app window before each click, and to record the app-window rect) are already present on this box.
 X11 only — on Wayland PyAutoGUI can't move the cursor (see spec §9).
+
+## Config (unversioned) — `spectracsPy-config/director.ini`
+
+A sibling of the repo, **not under git** (§16.8). `[default]` sets pacing (`wpm` / `speed` / `min_dwell`);
+each `[scenario]` section holds `username` + `password` for scripted login. Leave `password` blank to fall
+back to a human login gate. Override the path with `DOC_CONFIG=...`. Env vars `DOC_WPM` / `DOC_SPEED` /
+`DOC_MIN_DWELL` override `[default]`.
+
+## Artifacts (outside the code repo)
+
+Recordings + screenshots write to `../spectracs-references/director/{recordings,screenshots}` (unversioned,
+so heavy mp4s never touch git — §16.9). Override the base with `DOC_ARTIFACTS_DIR=...`.
 
 ## Run a scenario
 
@@ -68,9 +82,11 @@ App side lives in the app tree: the `--doc-mode` flag (`spectracsMain.py`),
 
 | cmd | fields | reply |
 |-----|--------|-------|
-| `set_hint` | `text` | — |
+| `set_hint` | `text` | — (alias of `doc{caption}`) |
+| `doc` | `use_case?`,`outline?`,`phase?`,`caption?`,`reveal?`,`wpm?` | — (updates the 3-zone panel; caption animates) |
 | `locate` | `name`, opt `tab` | `{ok,cx,cy,x,y,w,h}` global px (tab → tab-header rect) or `{ok:false}` |
 | `nav` | `view` | `{ok:true}` — reach a view whose menu entry is a `QAction` |
+| `tabs` | `name` | `{ok,count,labels[],current}` for a QTabWidget — lets the Director walk every step-tab |
 | `wait` | `name`, `enabled`/`visible`/`text` | `{ok:true}` if it matches now (Director polls) |
 | `dismiss` | — | click an open in-window dialog's OK; `{ok,dismissed}` |
 | `ping` | — | `{ok:true}` |
