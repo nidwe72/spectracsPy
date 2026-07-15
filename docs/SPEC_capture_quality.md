@@ -1,9 +1,21 @@
 # SPEC — Capture quality & fidelity (ROI clamp · robust reduction · dark level · normalization)
 
-Status: **DESIGN (2026-07-15)** — M0 probe **BUILT + run on the rig**; it surfaced a **production-breaking resolution
-mismatch (§4.8) that now outranks the original topics**. M1/M2/M3 spec-only. Source: Edwin. Investigated with two code-map
-sweeps + web research (astronomy CCD reduction) + a rubber-duck adversarial pass. Governs the capture→spectrum path
-shared by both hosts (`WizardViewModule`, `DevMeasurementBenchViewModule`) via `CapturePanel`. Relates to
+Status: **MIXED (2026-07-15)** — the M0 probe surfaced a production-breaking resolution mismatch that outranked the
+original topics, and the work that followed is **IMPLEMENTED + RIG-VERIFIED + committed+pushed**:
+- **§4.9 M0.5** — capture pinned to 2592×1944 + ROI⊆frame tripwire.
+- **§13 / §14.1–14.3** — colour-constrained calibration line detection (green no longer mislabelled as Eu red at
+  high resolution) + advanced/consensus anchor fix + resolution-aware calibration exposure.
+- **§14.5–14.7** — shared **synchronous in-thread auto-exposure** with a per-channel (no-saturation) metric and a
+  fixed settle; the dev bench, measurement `CapturePanel`, AND calibration all use it (fixed-exposure paths retired).
+  §14.7 lists the tuned timing constants and known fragilities.
+
+Still **DESIGN-only** (the original operator topics, not yet built): **M1** (Topic 1, plugin-driven ROI clamp §9),
+**M2** (Topic 2, robust spatial/temporal reduction §6), **M3** (Topic 4, dark-frame subtraction §5). Topic 3
+(normalization) = documented no-op (§7).
+
+Source: Edwin. Investigated with two code-map sweeps + web research (astronomy CCD reduction) + rubber-duck
+adversarial passes, then measured-then-built on the rig throughout. Governs the capture→spectrum path shared by both
+hosts (`WizardViewModule`, `DevMeasurementBenchViewModule`) via `CapturePanel`. Relates to
 [`SPEC_dev_capture_view.md`](SPEC_dev_capture_view.md), [`SPEC_dev_measure_bench.md`](SPEC_dev_measure_bench.md),
 [`SPEC_spectrum_processing.md`](SPEC_spectrum_processing.md), [`SPEC_real_camera_capture.md`](SPEC_real_camera_capture.md).
 
