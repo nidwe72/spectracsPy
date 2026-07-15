@@ -212,6 +212,7 @@ class Director:
         self.__host = ("127.0.0.1", port)
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.__sock.settimeout(0.5)
+        self.__seq = 0                 # monotonic request id → match replies, discard stale ones (see __rpc)
         self.__continue = continue_event
         self.__prompt_emit = lambda text: None
         self.__gate_emit = lambda: None
@@ -336,17 +337,31 @@ class Director:
     # --- UDP transport ---
 
     def __rpc(self, message, expect_reply=True, retries=4, settle=0.15):
-        payload = json.dumps(message).encode("utf-8")
+        # Tag each request with a monotonic id and only accept the reply carrying THAT id. UDP has no
+        # request/reply correlation, so a late reply to an earlier timed-out poll can sit buffered in the
+        # socket and be read by the next __rpc — mismatching e.g. a wait_ready button-state reply (no "cx")
+        # onto a locate, which is what produced the "KeyError 'cx'" desync during the long auto-exposure
+        # capture. The app echoes the id (DocModeUdpService); stale replies are discarded here.
+        self.__seq += 1
+        request_id = self.__seq
+        payload = json.dumps(dict(message, id=request_id)).encode("utf-8")
         for _ in range(retries):
             self.__sock.sendto(payload, self.__host)
             if not expect_reply:
                 time.sleep(settle)
                 return None
-            try:
-                data, _ = self.__sock.recvfrom(8192)
-                return json.loads(data)
-            except socket.timeout:
-                continue
+            while True:   # drain until OUR reply arrives; on socket timeout, resend
+                try:
+                    data, _ = self.__sock.recvfrom(8192)
+                except socket.timeout:
+                    break
+                try:
+                    reply = json.loads(data)
+                except ValueError:
+                    continue
+                if reply.get("id") == request_id:
+                    return reply
+                # else: a stale reply to an earlier request — discard and keep reading
         return None
 
     # --- app lifecycle ---

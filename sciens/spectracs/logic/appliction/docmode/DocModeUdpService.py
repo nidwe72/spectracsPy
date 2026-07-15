@@ -73,6 +73,10 @@ class DocModeUdpService(QObject):
             except Exception as exception:  # never let a bad command wedge the app
                 reply = {"ok": False, "error": str(exception)}
             if reply is not None:
+                # Echo the request id so the Director can match this reply to its request and discard STALE late
+                # replies to earlier, timed-out polls (UDP has no request/reply correlation of its own — a
+                # mismatched reply is what produced the "KeyError 'cx'" desync during long captures).
+                reply["id"] = message.get("id")
                 self.__reply(datagram.senderAddress(), datagram.senderPort(), reply)
 
     def __reply(self, host, port, payload):
