@@ -14,6 +14,7 @@ If the lines land correctly here, we port the color constraint into the app.
 import math
 import os
 import sys
+import time
 import numpy as np
 
 ROI = (558, 902, 2191, 1785)   # the app's FRESH ROI detection (camera moved; stored 665,794,2226,1658 was stale)
@@ -70,19 +71,56 @@ def qimage_to_rgb(q):
 LINE_NM = {"violet": 404.7, "blue": 435.8, "aqua": 487.7, "green": 546.5, "green_left": 542.4, "red(Eu)": 611.6}
 
 
+def drain(backend, milliseconds):
+    """Actively read+discard frames for `milliseconds` of wall-clock so an exposure change turns over and stale
+    buffered frames flush (mirrors diagnostics/capture_quality_probe.drain and VideoThread.__drainSync). Returns
+    the last good frame."""
+    end = time.monotonic() + milliseconds / 1000.0
+    last = backend.read()
+    while time.monotonic() < end:
+        frame = backend.read()
+        if frame is not None:
+            last = frame
+    return last
+
+
+def auto_expose(backend, min_exposure=2, max_exposure=500):
+    """Synchronous auto-exposure on the rig — the SAME method the app's VideoThread now uses (SPEC §14.6): a
+    warm-up drain to transition off the open() exposure, then per-probe setExposure + drain + qGray-peak, with the
+    direction-agnostic AutoExposureLogicModule choosing the winner. So the live test mirrors a real acquisition
+    (adapts to the lamp / warm-up) instead of a hard-coded exposure."""
+    from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
+    backend.setExposure(min_exposure)
+    drain(backend, 1200)                                  # warm-up: fully leave the open() exposure
+
+    def measure(exposure):
+        backend.setExposure(exposure)
+        peak = AutoExposureLogicModule.qGrayPeak(drain(backend, 600))
+        print("  [auto-exposure] exp=%3d -> qGray peak %.1f" % (exposure, peak))
+        return peak
+
+    best = AutoExposureLogicModule().findExposure(measure, min_exposure, max_exposure)
+    backend.setExposure(best)
+    drain(backend, 600)
+    print("  [auto-exposure] chosen exposure = %d" % best)
+    return best
+
+
 def load_frame(image_path, exposure, save_path):
-    """Get a QImage frame — either replay a saved PNG (--image, deterministic / CI) or capture live from the rig."""
+    """Get a QImage frame + the exposure it was captured at. Replay a saved PNG (--image, deterministic / CI) or
+    capture live from the rig — auto-exposing when no fixed --exposure was given (mirrors a real acquisition)."""
     from PySide6.QtGui import QImage
     if image_path:
         qimg = QImage(image_path)
         if qimg.isNull():
             raise SystemExit("could not load --image %s" % image_path)
         print("  REPLAY saved frame: %s (%dx%d)" % (image_path, qimg.width(), qimg.height()))
-        return qimg
+        return qimg, None
     from sciens.spectracs.logic.appliction.video.capture.CaptureBackend import getCaptureBackend
     backend = getCaptureBackend()
-    backend.open(deviceId=0, exposure=exposure)
+    backend.open(deviceId=0, exposure=(exposure if exposure is not None else EXPOSURE))
     try:
+        used = exposure if exposure is not None else auto_expose(backend)  # fixed --exposure, else auto-expose
         for _ in range(12):
             backend.read()
         qimg = backend.read()
@@ -94,7 +132,7 @@ def load_frame(image_path, exposure, save_path):
         os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
         qimg.save(save_path)
         print("  saved captured frame -> %s   (replay it with:  --replay)" % save_path)
-    return qimg
+    return qimg, used
 
 
 def main():
@@ -105,7 +143,8 @@ def main():
     ap.add_argument("--image", help="replay a SPECIFIC saved frame PNG instead of capturing")
     ap.add_argument("--save-frame", dest="save_frame", nargs="?", const=DEFAULT_FIXTURE,
                     help="capture live and SAVE the raw frame as a fixture (default: the standard path), then run")
-    ap.add_argument("--exposure", type=int, default=EXPOSURE)
+    ap.add_argument("--exposure", type=int, default=None,
+                    help="force a FIXED exposure for live capture (skip auto-exposure); default: auto-expose")
     args = ap.parse_args()
     image = args.image or (DEFAULT_FIXTURE if args.replay else None)
 
@@ -119,7 +158,8 @@ def main():
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
 
-    qimg = load_frame(image, args.exposure, args.save_frame)
+    qimg, used_exposure = load_frame(image, args.exposure, args.save_frame)
+    exposure_label = "replay" if used_exposure is None else str(used_exposure)
 
     detected = detect_roi(qimg)                                  # <-- REAL app ROI detection on the live frame
     if detected:
@@ -166,7 +206,7 @@ def main():
     err = None if "green" in lines else "NO GREEN PEAK"
 
     # --- report table ---
-    print("Output:", OUTDIR, "| frame %dx%d | exposure %d" % (w, h, EXPOSURE))
+    print("Output:", OUTDIR, "| frame %dx%d | exposure %s" % (w, h, exposure_label))
     if err:
         print("!! " + err)
     print("  line        found_col  found_nm  target_nm  hueScore  chanScore  (selector: colour-gated / *prominence)")
@@ -190,7 +230,7 @@ def main():
         plt.text(nm[p], intensities.max() * (0.98 if name != "green_left" else 0.80), "%s\n%.1f" % (name, nm[p]),
                  rotation=90, va="top", ha="right", fontsize=8, color=line_color.get(name, "black"))
     plt.xlabel("wavelength (nm) via stored cubic"); plt.ylabel("intensity (qGray)")
-    plt.title("Color-constrained line detection (exp=%d) — found lines marked" % EXPOSURE)
+    plt.title("Color-constrained line detection (exp=%s) — found lines marked" % exposure_label)
     plt.savefig(os.path.join(OUTDIR, "lines_spectrum.png"), dpi=120, bbox_inches="tight"); plt.close()
 
     # --- REFIT: assign each detected line its TARGET wavelength (resource/expectedDetection.png) and fit a new
