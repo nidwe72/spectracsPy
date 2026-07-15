@@ -544,16 +544,59 @@ fixed and confirmed by Edwin on the rig. All uncommitted at time of writing; thi
 ### 14.4 Auto-exposure now — where it runs
 | Path | Strategy |
 |---|---|
-| Calibration ROI/Hough + wavelength peak-detect | **Fixed** stored exposure (150), no auto-exposure |
-| Dev capture bench (`DevCaptureViewModule`) | Still auto-exposes (bisection `AutoExposureLogicModule`) |
-| Measurement capture (`CapturePanel`) | Still auto-exposes (bisection) |
+| Calibration ROI/Hough + wavelength peak-detect | **Fixed** stored exposure (150), no auto-exposure (§14.1) |
+| Dev capture bench (`DevCaptureViewModule`) | **Synchronous in-thread** direction-agnostic sweep (§14.5–14.6) |
+| Measurement capture (`CapturePanel`) | **Synchronous in-thread** sweep (same); capture blocks on it first |
 
 `AutoExposureCaptureHelper.autoExposeForSensor` / `findBestExposure` now have **zero callers** (dead code — only
 `resolveFixedExposureCapture` + `__seedExposure` are live). Removal is a pending cleanup.
 
-### 14.5 Deferred — next task (Edwin's request)
-- **Live-rig unit test should auto-expose.** `diagnostics/calibration_fix_test.py` currently opens at a fixed
-  exposure (150) in live-rig mode; make the rig path auto-expose (so the test mirrors a real acquisition and adapts
-  to lamp/warmup) while `--replay` stays deterministic against the saved fixture.
-- **Direction-agnostic auto-exposure rewrite** for the dev bench + measurement `CapturePanel` (still on the broken
-  §4.8 bisection). This is the fidelity-relevant one for actual samples.
+### 14.5 Shared direction-agnostic auto-exposure — the decision logic
+`AutoExposureLogicModule.findExposure` rewritten from a monotonic low→high bisection (which assumed brightness
+rises with the exposure VALUE — false on the inverted-seeming ELP) to a **direction-agnostic sweep-and-select**:
+- **Phase 1** probes a coarse geometric ladder across [min,max] and measures delivered brightness of each.
+- **Phase 2** finds the first adjacent probe pair that straddles the target (one ≤target, one >target) and bisects
+  that interval, tracking the crossing by the ≤target/>target SIGN (not by which side is brighter) — so it
+  converges whether the exposure axis rises OR falls, and tolerates clamped/plateau regions a bisection can't.
+- Selection: brightest measured exposure that stays ≤target (brightest capture without clipping); if all clip, the
+  dimmest; direction-agnostic because the winner is chosen purely by measured brightness.
+- Excludes exposure=1 (a UVC edge artifact that reads ~255, `MIN_SEARCH_EXPOSURE`).
+- Signature unchanged; both callers share this one decision module (DRY). Offscreen self-test (synthetic normal /
+  inverted / clamped / underexposed curves) all PASS within an 8-probe budget — never selects a clipping exposure
+  when a non-clipping one exists.
+
+### 14.6 The real bug was MEASUREMENT, not the search — synchronous in-thread AE (RIG-VERIFIED 2026-07-15)
+The decision logic (§14.5) was never the problem; **measuring brightness through the async live stream was**. The
+saga, because the lesson is expensive:
+- **What we saw:** the live AE returned garbage — probes reading a false 255 at low exposure, exp 22 and exp 500
+  reading the *same* value, the search landing on exp 1 (dark) or maxing out at random. Tuning the settle
+  (350 ms → frame-count → 700 ms wall-clock) never fully fixed it; readings stayed run-to-run inconsistent.
+- **Why:** a UVC exposure change takes a fixed **wall-clock** time (~0.5 s on this ELP) to take effect, and the
+  camera's **frame rate depends on exposure** (short exposure → fast readout). Measuring off the async streaming
+  thread (poke the slider, read whatever `__latestImage` the Qt pipeline last pushed) means at low exposure the
+  fast stream delivers frames *before the change applied* → a stale, brighter frame. Frame-count settles fail
+  (fps varies); even wall-clock settles fought display/event-loop lag.
+- **The tell:** `diagnostics/capture_quality_probe.py --diagnose` produced a perfectly clean monotonic curve at
+  every exposure — because it reads the backend **directly and synchronously** (set exposure → actively drain
+  frames for 600 ms → measure). That is the method; the live path was doing the opposite.
+- **The fix (as-built):** run the sweep **synchronously inside the capture thread** (`VideoThread`), which owns the
+  backend. `requestAutoExpose()` sets a request the run loop picks up before the next grab; `__runAutoExposeSync`
+  does, per probe: `setExposure` → `__drainSync` (actively read+discard for a wall-clock window, mirroring the
+  probe) → measure. Progress/result return via `autoExposureProgress` / `autoExposureFinished` signals. No Qt event
+  loop, no async reads → the entire lag class is gone. Both views request it; `CapturePanel`'s capture sequence
+  blocks on `__waitForAutoExposure()` so the reference burst runs *after* the sweep.
+- **Metric:** `AutoExposureLogicModule.qGrayPeak` (high percentile of qGray) replaces max-over-channels, which pegs
+  at 255 from a few saturated coloured-line pixels. qGray is what --diagnose used; it responds smoothly.
+- **Warm-up:** before the sweep, move to the low end and drain **1200 ms** (discard). Without it the *first* probe
+  is contaminated by the pre-AE (live-slider) exposure — a large first jump doesn't fully transition in one drain —
+  so it read stale-bright and the search sometimes chose the wrong end. With it, all probes are clean.
+- **Verified:** dev bench + measurement capture, four consecutive toggles, all clean/monotonic/consistent (exp 2 →
+  ~20 dark, exp 500 → ~122, chose 500 every time — the lamp is dim so maxing out is correct). The display simply
+  freezes on "Auto-exposing…" during the ~5 s sweep, then resumes.
+- **Lesson:** never auto-expose by reading an async live stream. Drive the sensor synchronously and drain by
+  wall-clock; frame-count is meaningless when fps tracks exposure.
+
+**Still deferred — next task:** wire `diagnostics/calibration_fix_test.py` live-rig mode to auto-expose via this
+same path (mirror a real acquisition; adapt to lamp/warmup) while `--replay` stays deterministic on the fixture.
+And the **ROI-misplacement** issue in the measurement bench (dark/noisy extracted spectrum despite a well-exposed
+image — the ROI sits over black above the band; likely a resolution/ROI-coordinate mismatch, §4.9).

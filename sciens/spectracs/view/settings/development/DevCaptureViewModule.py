@@ -1,6 +1,4 @@
-import numpy as np
-
-from PySide6.QtCore import Qt, QEventLoop, QTimer
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QComboBox, QPushButton, QLabel, QFileDialog, \
     QSizePolicy, QSlider, QCheckBox
 
@@ -9,7 +7,6 @@ from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSigna
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
-from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import ExtendedRoiLogicModule
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
@@ -328,6 +325,10 @@ class DevCaptureViewModule(PageWidget):
         # noinspection PyUnresolvedReferences
         thread.videoThreadSignal.connect(self.handleVideoThreadSignal)
         # noinspection PyUnresolvedReferences
+        thread.autoExposureProgress.connect(self.__onAutoExposeProgress)
+        # noinspection PyUnresolvedReferences
+        thread.autoExposureFinished.connect(self.__onAutoExposeFinished)
+        # noinspection PyUnresolvedReferences
         thread.finished.connect(self.__onThreadFinished)
         self.__videoThread = thread
         thread.start()
@@ -373,68 +374,35 @@ class DevCaptureViewModule(PageWidget):
     __AUTO_EXPOSE_MAX_PROBES = 8
 
     def __runAutoExposure(self):
-        # Drive our bisection over the LIVE stream: apply a candidate exposure via the slider, let the
-        # stream settle, measure the delivered frame's brightness. Reuses the running capture (no second
-        # camera handle). Brief GUI block (~2 s) while it converges — progress shown in the app status bar.
+        # Hand the sweep to the capture thread, which runs it SYNCHRONOUSLY on the backend (set exposure -> drain
+        # -> measure qGray peak) — no async live-stream reads, so no stale-frame lag (SPEC_capture_quality.md
+        # §14.6). Progress + result come back on the thread's autoExposure* signals; the display simply freezes on
+        # the "Auto-exposing…" status until it finishes.
         if self.__videoThread is None or self.__autoExposing:
             return
         self.__autoExposing = True
         self.__updateButtons()
-        self.__waitForFirstFrame()
-        probe = {'i': 0}
+        self.__videoThread.requestAutoExpose(
+            self.__EXPOSURE_MIN, self.__EXPOSURE_MAX, iterations=self.__AUTO_EXPOSE_MAX_PROBES)
 
-        def measure(exposure):
-            probe['i'] += 1
-            self.__emitAutoExposeProgress(probe['i'])
-            self.exposureSlider.setValue(exposure)  # applied live via __onExposureChanged
-            self.__pumpFrames(350)                   # let the UVC stream settle (a few frames on V4L2)
-            return self.__brightness(self.__latestImage)
-
-        try:
-            result = AutoExposureLogicModule().findExposure(
-                measure, self.__EXPOSURE_MIN, self.__EXPOSURE_MAX, iterations=self.__AUTO_EXPOSE_MAX_PROBES)
-            self.exposureSlider.setValue(result)  # applies live + updates label
-        finally:
-            self.__autoExposing = False
-            self.__clearStatus()
-            self.__resolve()  # restore the connection status text + button states
-
-    def __waitForFirstFrame(self):
-        # After Start there is a short warm-up; wait (bounded) until a real frame has been delivered.
-        for _ in range(12):
-            if self.__latestImage is not None:
-                return
-            self.__pumpFrames(150)
-
-    def __emitAutoExposeProgress(self, probeIndex):
+    def __onAutoExposeProgress(self, probeIndex, totalProbes):
         signal = ApplicationStatusSignal()
         signal.isStatusReset = False
-        signal.stepsCount = self.__AUTO_EXPOSE_MAX_PROBES
-        signal.currentStepIndex = min(probeIndex, self.__AUTO_EXPOSE_MAX_PROBES)
-        signal.text = 'Auto-exposing… finding best exposure [%d/%d]' % (signal.currentStepIndex,
-                                                                        self.__AUTO_EXPOSE_MAX_PROBES)
+        signal.stepsCount = totalProbes
+        signal.currentStepIndex = min(probeIndex, totalProbes)
+        signal.text = 'Auto-exposing… finding best exposure [%d/%d]' % (signal.currentStepIndex, totalProbes)
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+
+    def __onAutoExposeFinished(self, exposure):
+        self.exposureSlider.setValue(exposure)  # applies live + updates label (thread already applied it)
+        self.__autoExposing = False
+        self.__clearStatus()
+        self.__resolve()  # restore the connection status text + button states
 
     def __clearStatus(self):
         signal = ApplicationStatusSignal()
         signal.isStatusReset = True
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
-
-    def __pumpFrames(self, milliseconds):
-        # Spin the event loop so the worker delivers fresh frames (and updates __latestImage) while we wait.
-        loop = QEventLoop()
-        QTimer.singleShot(milliseconds, loop.quit)
-        loop.exec()
-
-    def __brightness(self, image):
-        if image is None:
-            return 0
-        img = image.convertToFormat(image.format())
-        width, height = img.width(), img.height()
-        ptr = img.constBits()
-        arr = np.frombuffer(ptr, np.uint8).reshape(height, img.bytesPerLine())[:, :width * 3].reshape(height, width, 3)
-        # High percentile of the brightest channel — the emission line peak, robust to a few hot pixels.
-        return float(np.percentile(arr.max(axis=2), 99.9))
 
     def onClickedSave(self):
         image = self.__latestImage

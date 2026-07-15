@@ -1,9 +1,11 @@
 import os
+import time
 from typing import Generic, TypeVar
 
-from PySide6.QtCore import QThread
+from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QImage
 
+from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.appliction.video.capture.CaptureBackend import getCaptureBackend
 from sciens.spectracs.model.databaseEntity.AppDataPathUtil import get_app_data_dir
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
@@ -15,10 +17,19 @@ class VideoThread(QThread,Generic[S]):
     qImage: QImage
     _isVirtual:bool=False
 
+    # Auto-exposure runs SYNCHRONOUSLY inside this thread (which owns the backend), mirroring the proven
+    # diagnostics drain — no async live-stream / event-loop lag (SPEC_capture_quality.md §14.6).
+    autoExposureProgress = Signal(int, int)   # (probeIndex, totalProbes) — drives the status bar
+    autoExposureFinished = Signal(int)        # chosen exposure — the view applies it to its slider
+    __AUTO_EXPOSE_DRAIN_MS = 600              # wall-clock drain per probe (what --diagnose validated)
+    __AUTO_EXPOSE_WARMUP_MS = 1200            # longer drain BEFORE the sweep: fully transition off the pre-AE
+                                              # (live-slider) exposure so the first measured probe isn't stale
+
     def __init__(self):
         super().__init__()
         self._runFlag = True
         self.qImage = None
+        self._autoExposeRequest = None        # (minExposure, maxExposure, target, iterations) or None
 
         # Real capture is routed through a platform CaptureBackend (owns cv2). _deviceId defaults to 0,
         # preserving today's behaviour; the resolver sets the correct index via setDeviceId (SM2).
@@ -44,6 +55,55 @@ class VideoThread(QThread,Generic[S]):
     def setLiveExposure(self, exposure: int):
         # Thread-safe enough: a plain int assignment; the capture loop applies it before the next grab.
         self._liveExposure = exposure
+
+    def requestAutoExpose(self, minExposure: int, maxExposure: int, target: int = None, iterations: int = 8):
+        """Ask the capture thread to run a synchronous auto-exposure sweep (picked up before the next grab).
+        Thread-safe: a single attribute assignment. Progress + result come back via the autoExposure* signals."""
+        self._autoExposeRequest = (minExposure, maxExposure, target, iterations)
+
+    def __runAutoExposeSync(self):
+        # Synchronous sweep INSIDE the capture thread: set exposure -> drain frames for a wall-clock window so the
+        # UVC change actually takes effect and stale frames flush -> measure qGray peak. This is exactly what the
+        # diagnostics probe does (and why its curve is clean), with the direction-agnostic AutoExposureLogicModule
+        # choosing the winner. No Qt event loop, no async live-stream reads => none of the stale-frame lag.
+        minExposure, maxExposure, target, iterations = self._autoExposeRequest
+        if target is None:
+            target = AutoExposureLogicModule.DEFAULT_TARGET
+
+        # Warm-up: the live stream was at some (possibly bright) exposure; a single per-probe drain isn't enough to
+        # fully transition off a LARGE first jump, so the first probe would read a stale half-bright frame (§14.6).
+        # Move to the low end and drain longer, discarding, so every measured probe below is clean.
+        warmExposure = max(int(minExposure), AutoExposureLogicModule.MIN_SEARCH_EXPOSURE)
+        self._backend.setExposure(warmExposure)
+        self._appliedExposure = warmExposure
+        self.__drainSync(self.__AUTO_EXPOSE_WARMUP_MS)
+
+        probe = {"i": 0}
+
+        def measure(exposure):
+            probe["i"] += 1
+            self.autoExposureProgress.emit(probe["i"], iterations)
+            self._backend.setExposure(exposure)
+            self._appliedExposure = exposure
+            frame = self.__drainSync(self.__AUTO_EXPOSE_DRAIN_MS)
+            return AutoExposureLogicModule.qGrayPeak(frame)
+
+        best = AutoExposureLogicModule().findExposure(measure, minExposure, maxExposure, target, iterations)
+        self._backend.setExposure(best)
+        self._appliedExposure = best
+        self._liveExposure = best     # keep the normal loop from re-applying a stale slider value
+        self.autoExposureFinished.emit(int(best))
+
+    def __drainSync(self, milliseconds):
+        # Actively read+discard frames for `milliseconds` of wall-clock (mirrors diagnostics drain): buffered reads
+        # return near-instantly, so draining over real time lets the exposure change turn over. Returns the last.
+        end = time.monotonic() + milliseconds / 1000.0
+        last = self._backend.read()
+        while time.monotonic() < end:
+            frame = self._backend.read()
+            if frame is not None:
+                last = frame
+        return last
 
 
     def setFrameCount(self, spectraCount: int):
@@ -86,6 +146,13 @@ class VideoThread(QThread,Generic[S]):
                     break
 
         while self._runFlag:
+
+            # A pending auto-exposure request runs synchronously here (backend is single-threaded and ours),
+            # pausing normal streaming — no display/event-loop lag while sweeping.
+            if self._backend is not None and self._autoExposeRequest is not None:
+                self.__runAutoExposeSync()
+                self._autoExposeRequest = None
+                continue
 
             # Apply a pending live-exposure change (dev-view slider) before grabbing the next frame.
             if self._backend is not None and self._liveExposure is not None \

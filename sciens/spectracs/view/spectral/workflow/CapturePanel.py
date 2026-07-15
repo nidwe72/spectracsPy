@@ -1,5 +1,3 @@
-import numpy as np
-
 from PySide6.QtCore import Qt, QEventLoop, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
@@ -8,7 +6,6 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QPushB
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.Metrics import Metrics
 from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
-from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import ExtendedRoiLogicModule
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
@@ -335,6 +332,8 @@ class CapturePanel(QWidget):
         thread.setLiveExposure(exposure)
         thread.setFrameCount(0)  # continuous until stop()
         thread.videoThreadSignal.connect(self.handleVideoThreadSignal)
+        thread.autoExposureProgress.connect(self.__onAutoExposeProgress)
+        thread.autoExposureFinished.connect(self.__onAutoExposeFinished)
         thread.finished.connect(self.__onThreadFinished)
         self.__videoThread = thread
         thread.start()
@@ -370,30 +369,41 @@ class CapturePanel(QWidget):
     # --- auto-exposure ---
 
     def __runAutoExposure(self):
+        # Hand the sweep to the capture thread, which runs it SYNCHRONOUSLY on the backend (set exposure -> drain
+        # -> measure qGray peak) — no async live-stream reads, so no stale-frame lag (SPEC_capture_quality.md
+        # §14.6). Progress + result come back on the thread's autoExposure* signals.
         if self.__videoThread is None or self.__autoExposing:
             return
         self.__autoExposing = True
         if self.__innerTabs is not None:
             self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)
         self.__updateControls()
-        self.__waitForFirstFrame()
-        probe = {"i": 0}
+        self.__videoThread.requestAutoExpose(
+            self.__EXPOSURE_MIN, self.__EXPOSURE_MAX, iterations=self.__AUTO_EXPOSE_MAX_PROBES)
 
-        def measure(exposure):
-            probe["i"] += 1
-            self.__emitAutoExposeProgress(probe["i"])
-            self.__exposureSlider.setValue(exposure)
-            self.__pumpFrames(350)
-            return self.__brightness(self.__latestImage)
+    def __onAutoExposeProgress(self, probeIndex, totalProbes):
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = totalProbes
+        signal.currentStepIndex = min(probeIndex, totalProbes)
+        signal.text = "Auto-exposing… finding best exposure [%d/%d]" % (signal.currentStepIndex, totalProbes)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
-        try:
-            result = AutoExposureLogicModule().findExposure(
-                measure, self.__EXPOSURE_MIN, self.__EXPOSURE_MAX, iterations=self.__AUTO_EXPOSE_MAX_PROBES)
-            self.__exposureSlider.setValue(result)
-        finally:
-            self.__autoExposing = False
-            self.__clearStatus()
-            self.__updateControls()
+    def __onAutoExposeFinished(self, exposure):
+        self.__exposureSlider.setValue(exposure)  # thread already applied it; this updates the UI + label
+        self.__autoExposing = False
+        self.__clearStatus()
+        self.__updateControls()
+
+    def __waitForAutoExposure(self):
+        # The capture sequence (auto-expose THEN burst) needs the async in-thread sweep to FINISH before it grabs
+        # the reference frames. Spin the event loop until the autoExposureFinished signal has cleared __autoExposing
+        # (bounded so a stuck sweep can't hang the capture). We're only WAITING for the result here — the brightness
+        # measuring happens synchronously in the thread, so there is no stale-frame lag.
+        waited = 0
+        while self.__autoExposing and waited < 15000:
+            self.__pumpFrames(100)
+            waited += 100
 
     def __waitForFirstFrame(self):
         for _ in range(12):
@@ -401,28 +411,10 @@ class CapturePanel(QWidget):
                 return
             self.__pumpFrames(150)
 
-    def __emitAutoExposeProgress(self, probeIndex):
-        signal = ApplicationStatusSignal()
-        signal.isStatusReset = False
-        signal.stepsCount = self.__AUTO_EXPOSE_MAX_PROBES
-        signal.currentStepIndex = min(probeIndex, self.__AUTO_EXPOSE_MAX_PROBES)
-        signal.text = "Auto-exposing… finding best exposure [%d/%d]" % (signal.currentStepIndex,
-                                                                        self.__AUTO_EXPOSE_MAX_PROBES)
-        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
-
     def __pumpFrames(self, milliseconds):
         loop = QEventLoop()
         QTimer.singleShot(milliseconds, loop.quit)
         loop.exec()
-
-    def __brightness(self, image):
-        if image is None:
-            return 0
-        img = image.convertToFormat(image.format())
-        width, height = img.width(), img.height()
-        ptr = img.constBits()
-        arr = np.frombuffer(ptr, np.uint8).reshape(height, img.bytesPerLine())[:, :width * 3].reshape(height, width, 3)
-        return float(np.percentile(arr.max(axis=2), 99.9))
 
     # --- capture (routes the burst through the headless engine seam) ---
 
@@ -442,7 +434,8 @@ class CapturePanel(QWidget):
         try:
             role = step.getRole()
             if role == REFERENCE and self.__autoExposureCheckBox.isChecked():
-                self.__runAutoExposure()
+                self.__runAutoExposure()      # async: hands the sweep to the capture thread
+                self.__waitForAutoExposure()  # ...block until it finishes before grabbing the reference burst
 
             frameCount = int(self.__framesComboBox.currentText())
             self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)
