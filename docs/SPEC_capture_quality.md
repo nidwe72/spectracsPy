@@ -548,7 +548,7 @@ fixed and confirmed by Edwin on the rig. All uncommitted at time of writing; thi
 | Dev capture bench (`DevCaptureViewModule`) | **Synchronous in-thread** sweep (§14.5–14.6) |
 | Measurement capture (`CapturePanel`) | **Synchronous in-thread** sweep; capture blocks on it, drops the first post-sweep frame (§14.6 Fix 5) |
 
-`AutoExposureCaptureHelper` now has **zero callers** — fully dead code, pending deletion.
+`AutoExposureCaptureHelper` had zero callers and has been **deleted**.
 
 ### 14.5 Shared direction-agnostic auto-exposure — the decision logic
 `AutoExposureLogicModule.findExposure` rewritten from a monotonic low→high bisection (which assumed brightness
@@ -609,7 +609,7 @@ stored exposure (§14.1) because the *broken* AE over-exposed. Once the AE relia
 became the liability Edwin warned about: as the CFL **warms up brighter**, 150 clips → green plateau → detection
 fails. Both calibration views (`...WavelengthCalibrationViewModule`, `...HoughLinesViewModule`) now call
 `requestAutoExpose` before their burst (device index via `SensorCaptureIndexResolver`). `AutoExposureCaptureHelper`
-is now fully dead. Rig: AE chose exp 32 on the warm lamp, green anchored correctly, **0.66 nm PASS**.
+(the old fixed/bisection pre-pass) is deleted. Rig: AE chose exp 32 on the warm lamp, green anchored correctly, **0.66 nm PASS**.
 
 **Fix 5 — reference-only first-frame outliers.** After the sweep, two view-side hazards produced outlier frames at
 the *start* of the reference burst (sample never sweeps, so never showed them): (a) the chosen exposure is a fresh
@@ -640,4 +640,4 @@ cap. That removes the magic numbers and the false-convergence trap. Also possibl
 (fast fps → fast settle) then switch to 2592 for the final capture — kills most of the timing pain, at the cost of
 resolution-switch complexity and verifying exposure carries across modes.
 
-**Remaining cleanup:** delete the now-dead `AutoExposureCaptureHelper`.
+**Cleanup done:** the dead `AutoExposureCaptureHelper` has been deleted.
