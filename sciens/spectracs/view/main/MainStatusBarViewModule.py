@@ -8,6 +8,7 @@ from PySide6 import QtCore
 from sciens.base.PlatformUtil import is_android
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.appliction.style.LogoRenderer import renderLogoPixmap
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
@@ -156,17 +157,9 @@ class MainStatusBarViewModule(QWidget):
 
     def _renderLogoSource(self):
         """Render the logo SVG once into a high-res pixmap at its native aspect (no distortion).
-        _AspectLogoLabel scales this down to fit the header box (R6)."""
-        srcHeight = 120
-        srcWidth = int(srcHeight * self.LOGO_ASPECT)
-        pixmap = QPixmap(srcWidth, srcHeight)
-        pixmap.fill(QtCore.Qt.GlobalColor.transparent)
-        painter = QPainter(pixmap)
-        renderer = QSvgRenderer()
-        renderer.load(bytearray(self.logo_png, 'utf-8'))
-        renderer.render(painter, pixmap.rect())
-        painter.end()
-        return pixmap
+        _AspectLogoLabel scales this down to fit the header box (R6). Delegates to the shared
+        LogoRenderer so the header and the doc-mode cover render the wordmark identically (C1a)."""
+        return renderLogoPixmap(self.logo_png, 120)
 
     def renderSvgPixmap(self, svgString):
         size = self.HEADER_CONTENT_HEIGHT

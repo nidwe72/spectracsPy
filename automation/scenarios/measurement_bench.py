@@ -43,6 +43,14 @@ REFERENCE_TAB = 0  # role tabs: 0 = Reference, 1 = Sample
 SAMPLE_TAB = 1
 OUTLINE = ["Acquisition", "Processing", "Evaluation", "Publishing"]
 
+# The overview typed onto the SECOND cover card (§18.7 CR-B) — what the viewer is about to see.
+AGENDA = [
+    "Measurement on a real spectrometer of real oil.",
+    "Evaluations create some metrics.",
+    "A PDF is created for viewing, with all spectral data embedded.",
+    "The PDF can be sent to a laboratory information management system (LIMS).",
+]
+
 # Every evaluation metric, in the grid order the Dev plugin emits them (DevSpectralPlugin) — Edwin: describe
 # them ALL, including 'color'.
 EVAL_METRICS = ["color", "Greenness G", "Pigment D_Q", "Browning A_blue",
@@ -107,14 +115,19 @@ def run(d):
     d.launch_app()   # attach mode (bench.sh): drives the app the operator already started with --doc-mode
     d.doc(use_case=NARRATION["useCase"], outline=OUTLINE)
 
-    # Login — scripted from director.ini [bench] if credentials are filled, else a human gate. The bench
-    # additionally needs a CALIBRATED real setup, which the harness can't synthesize — so that stays human.
+    # Order (SPEC §18.1, C1c): logo card → visible login → bench. The card is a page in the MainViewModule
+    # stack, so it stands in for Home — the measurements-overview is never filmed. hold=3 so card #1 is
+    # readable before login replaces it (§18.7 CR-A).
+    d.cover("measurement bench", hold=3)     # opening frame: Documentation › measurement bench
+
+    # Login — scripted from director.ini [bench] if credentials are filled, else a human gate; VISIBLE on
+    # camera (the login page replaces the card). The bench additionally needs a CALIBRATED real setup, which
+    # the harness can't synthesize — so that stays a human gate.
     d.login("bench")
-    # masterUserExakta is plugin-bound, so login lands in the WIZARD, which opens the camera. Bounce via Home
-    # so the wizard's hideEvent releases /dev/video0 BEFORE the bench reopens it — else the bench sees "no
-    # camera" (the wizard's stream thread is still holding the device). The sleep lets the release complete.
-    d.nav("Home")
-    d.sleep(2)
+    # Logo card #2 — the agenda (§18.7 CR-B), typed in char-by-char (its computed hold lets the whole
+    # overview type out on camera). In --doc-mode login does NOT auto-jump to the wizard (§18.8), so the
+    # measurement view never flashes and never opens the camera — the bench opens it fresh at step (4).
+    d.cover("measurement bench", points=AGENDA)
     d.wait_for_human("Confirm a CALIBRATED real spectrometer setup is active, then press Ctrl+Shift+ß.")
     d.nav("DevMeasurementBenchViewModule")   # menu entry is a QAction → nav, not a click
 
@@ -122,23 +135,24 @@ def run(d):
     d.doc(phase="Acquisition")
     d.narrate(NARRATION["phase:Acquisition"])
 
-    # Reference — click the Reference step-tab explicitly (on camera) and describe it.
-    d.click(ROLE_TABS, tab=REFERENCE_TAB)
+    # Reference — the Reference step-tab is already active on entry (CapturePanel opens on step 0), so
+    # glide-to-point it (cursor visits, no no-op click — C2b) and describe it.
+    d.go_to_tab(ROLE_TABS, REFERENCE_TAB, activate=False)
     d.narrate(NARRATION["step:REFERENCE"])
     d.wait_for_human("Place the REFERENCE (isopropanol blank) in the beam, illuminate the slit, then press "
                      "Ctrl+Shift+ß.")
     d.click(CAPTURE)                              # "Capture reference" (auto-exposes first)
-    d.wait_ready(CAPTURE, enabled=True, timeout=60)
+    d.wait_capture(CAPTURE)                       # wait for auto-expose + the WHOLE frame burst to finish (C3b)
     d.dismiss()                                  # clear a capture-fail modal if one popped (no-op otherwise)
     d.click(INNER_TABS, tab=SPECTRUM_TAB)        # reveal the extracted reference spectrum
     d.screenshot("bench_01_reference")
 
-    # Sample — click the Sample step-tab and describe it.
-    d.click(ROLE_TABS, tab=SAMPLE_TAB)
+    # Sample — switch to the Sample step-tab (a real switch) and describe it.
+    d.go_to_tab(ROLE_TABS, SAMPLE_TAB, activate=True)
     d.narrate(NARRATION["step:SAMPLE"])
     d.wait_for_human("Swap in the SAMPLE (oil in isopropanol), then press Ctrl+Shift+ß.")
     d.click(CAPTURE)                             # "Capture sample"
-    d.wait_ready(CAPTURE, enabled=True, timeout=60)
+    d.wait_capture(CAPTURE)                      # sample has no auto-expose leg — __capturing is its only gate (C3b)
     d.dismiss()
     d.click(INNER_TABS, tab=SPECTRUM_TAB)
     d.screenshot("bench_02_sample")

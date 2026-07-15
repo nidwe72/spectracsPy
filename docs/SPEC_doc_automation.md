@@ -1068,3 +1068,360 @@ exposes a public `getWorkflow()` (both hosts use it); only the view→driver hop
 
 **Trigger.** The second workflow (the pumpkin wizard) coming back into scope, **or** the scenario count growing
 enough that per-scenario click-lists stop paying — whichever comes first. Until then: hand-authored (§16.0).
+
+---
+
+## 18. M4 — bench-screencast refinements (three asks, 2026-07-14)
+
+Status: **COMPLETE (2026-07-15) — the Director task is closed (Edwin).** All of M4 shipped and was driven live on
+Edwin's machine across several iterations: the three original tracks (C1 cover / C2 skip-tab / C3 capture-wait,
+§18.1–§18.6), the post-first-cut cover refinements (CR-A hold + CR-B typed agenda, §18.7), the post-login
+wizard-flash suppression (§18.8), and the 150-frame bench burst (§18.9). Sequence confirmed on camera:
+`logo → login → logo+agenda → bench`. Remaining Tier-A chapters / the generic walker stay deferred (§17).
+Load-bearing facts below verified against the code.
+
+The three asks:
+1. **A branded base/title screen at record start** — the opening frame is the Spectracs logo above a
+   "Documentation" label, not a flash of the login/app.
+2. **Never re-click a step-tab that is already active** when the phase is entered — clicking the already-selected
+   `SpectralWorkflowStep` tab is a visible no-op on camera (the cursor glides and "clicks" but nothing changes).
+3. **Wait for the whole capture to finish** — auto-exposure *and* the multi-frame burst — before the next
+   automated click. Today the next click fires mid-burst.
+
+### 18.0 Expected rendering (ASCII, common understanding)
+
+Cover shown — it is a **page in the `MainViewModule` stack** (row 1, col 0), so the **status bar (row 0)** and the
+**doc panel (col 1)** stay visible; only the main content area (where the overview lives) becomes the card. Label is
+a **breadcrumb** `Documentation › <use case>`, reshown at each use case:
+
+```
+ ┌─ [logo]  Spectracs  ·············································  edwin ▾ ┐  ← status bar (row 0) STAYS
+ ├────────────────────────────────────────────────────────────────┬─ doc panel ─┤
+ │                                                                 │ DOCUMENTATION│
+ │                 ┌────────────────────────────────┐              │ ──────────── │
+ │                 │      ▄▄  S P E C T R A C S  ▄▄  │  ← logo(SVG) │ Measuring a  │
+ │                 └────────────────────────────────┘              │ real sample  │
+ │              Documentation › measurement bench    ← breadcrumb   │ ──────────── │
+ │                                                                 │ ▸ Acquisition│
+ │   COVER = a stacked-view PAGE. setCurrentWidget(cover) hides the │   Processing │
+ │   prior view (fires its hideEvent → releases /dev/video0) AND    │   Evaluation │
+ │   shows this card. Home is never navigated to → never filmed.    │   Publishing │
+ └──────────────────── MainViewModule (row 1, col 0) ──────────────┴─────────────┘
+```
+
+C3 capture-state timeline (one Capture press):
+
+```
+  press ─┬─ auto-expose (REFERENCE only) ─┬─ multi-frame burst ─┐
+         ▼                                ▼                     ▼
+  TODAY: DISABLED ────────────────────────╳ RE-ENABLED (bug) ──   done   ← wait returns mid-burst
+         (and for SAMPLE: never disabled at all — no auto-expose leg)
+  FIXED: DISABLED ─────────────────────────────────────────────╳ done   ← busy = __autoExposing OR __capturing
+  Director: wait enabled=False (started, non-raising) → wait enabled=True (done) → then reveal/next
+```
+
+### 18.1 Ask 1 — doc-mode cover / use-case title card (C1)
+
+**What & why (Edwin, 2026-07-14).** A doc-mode-only cover surface: the Spectracs logo centred with a **breadcrumb
+label** below it (`Documentation › <use case>`, e.g. `Documentation › measurement bench`), on the panel background.
+Its **goal is to keep the measurements-overview (Home) out of the film**: at startup, and again at the start of
+**each use case / chapter**, the cover stands in place of Home so the overview is never the framed content. It is
+therefore **reshown per chapter** (not a one-shot opening card), each time with that chapter's breadcrumb.
+
+**Where it lives — a page in the existing stacked view (Edwin, 2026-07-14).** `MainViewModule` is a
+`QStackedWidget` (verified: `MainViewModule.py`, ~19 view pages; navigation is `setCurrentIndex`,
+`NavigationHandlerLogicModule.py:12-119`). The cover is a **new page in that stack**, not a floating overlay — the
+same mechanism the app already uses to swap views. A `DocCoverViewModule(QFrame)` (repo `*ViewModule` convention,
+mirrors `DocHintPanelViewModule`) is added to `MainViewModule` **only in doc-mode**, from `MainContainerViewModule`
+(which holds the `docMode` flag) via `self.mainViewModule.addWidget(cover)` after construction — so `MainViewModule`
+itself stays flag-agnostic and the app is untouched without the flag.
+
+**Why a stack page beats the overlay (supersedes rubber-duck C1.2's manual-geometry child):** switching the stack
+to the cover page (a) **hides whatever view was showing — firing its `hideEvent`**, which is precisely what
+releases `/dev/video0` today (the post-login wizard holds the camera; the current scenario bounces via `nav("Home")`
++ sleep for exactly this, §16.15), and (b) shows the branded card. So the cover page **replaces the Home
+camera-release bounce**: the measurements-overview (Home) is **never navigated to at all**. No `resizeEvent`/`raise_`
+overlay bookkeeping either — the stack already manages geometry.
+
+**Scope (falls out of the mechanism):** the stack is `MainViewModule` = grid **row 1, col 0**, so the cover page
+occupies the **main content area only**; the **status bar (row 0)** and the **doc panel (col 1)** stay visible
+above/beside it. Good: the status bar shows the app chrome (and, after login, the signed-in user) while the card
+names the use case, and the doc panel keeps narrating. The overview lives in `MainViewModule`, so covering exactly
+that page is what the goal needs.
+
+**Logo source.** Reuse the existing logo, not a new asset. `logo_png` is a **class-attribute SVG string**
+(`MainStatusBarViewModule.py:351`) and `_renderLogoSource()` a **side-effect-free** QPixmap render — factor both
+into a tiny shared helper used by the status bar and the cover. The SVG scales cleanly to a large centred card (its
+green `#3D7848` strokes read fine on the `#2B2B2B` ground). `resource/logo.png` (606×59) is a low banner — not it.
+
+**Order (Edwin, 2026-07-14): logo → visible login → bench.** The card names the use case up front, login is
+**filmed**, then the bench. There is no separate "Sign in" card — the one `measurement bench` card bookends the
+login, and its second showing is the camera handoff (the ▸ steps are what the camera sees):
+
+1. **record starts** → `cover("measurement bench")` = `mainViewModule.setCurrentWidget(coverPage)` → **card shown**
+   (status bar shows logged-out; main area = `Documentation › measurement bench`).
+2. `nav("LoginViewModule")` → the login page replaces the card → **▸ login form visible** & submitted (scripted
+   from `[bench]` creds *or* a human login into the shown form; the off-camera Prompter "confirm calibrated setup"
+   gate runs here). Login lands in the wizard (masterUserExakta is plugin-bound → `/dev/video0` opens).
+3. `cover("measurement bench")` again → the stack leaves the wizard (**its `hideEvent` releases the camera**) and
+   shows the card; a short `sleep` lets the device release. This is the **camera handoff** — and it means **Home is
+   never shown**. The viewer sees the branded card during the ~2 s load, not the measurements-overview.
+4. `nav("DevMeasurementBenchViewModule")` → **▸ bench (ACQUISITION) on camera** → run the use case.
+5. **next chapter** (`main_chapters` runs `nav("Home")` to reset): show the cover page *first*, so the reset never
+   films the overview.
+
+Home is thus **only ever replaced by the cover page, never navigated to**; **login is always filmed** (step 2).
+
+**Protocol + Director.**
+- New UDP command **`cover { show: bool, label?: str }`** → in doc-mode, `show:true` does
+  `mainViewModule.setCurrentWidget(coverPage)` and sets the breadcrumb (the page renders the `Documentation › `
+  prefix; `label` is the use-case name). There is **no explicit hide** — the next `nav` switches the stack away
+  naturally (`show:false` is accepted as a no-op / return-to-previous for symmetry). Route via a cover reference the
+  service holds (today `DocModeUdpService` holds `__root` + `__hintPanel`; add `__root.docCoverViewModule`), gated on
+  `docMode`. Note: while the cover page is current, `__lookup`'s current-view scoping resolves to it — fine, the
+  Director drives no view widgets until after the next `nav`.
+- Director method **`cover(label=None)`** (thin: send `cover{show:true,label}`); the scenario navs away to lower it.
+  `main_chapters.run_all` shows the cover with the chapter title before each chapter's reset nav.
+
+### 18.2 Ask 2 — never re-click the already-active step-tab (C2)
+
+**Verified cause.** On entering a `SpectralWorkflowPhase` the phase's step-tab `QTabWidget` already has a current
+tab (index 0, or wherever it was left). `walk_tabs` (`automation_director.py:532`) clicks **every** tab including
+that one; `setCurrentIndex(sameIndex)` emits nothing, so the cursor glides and "clicks" with no visible change —
+reads as broken. Same for ACQUISITION: `CapturePanel` starts on step 0 = **Reference** (`__activeStep =
+steps[0]`), so the scenario's explicit `click(ROLE_TABS, tab=REFERENCE_TAB)` (measurement_bench.py:126) is a
+redundant no-op.
+
+**Change.** The `tabs` command **already returns `current`** (`DocModeUdpService.__tabs`, line 226); today the
+Director's `tabs()` drops it — surface it.
+
+- **Track the currently-shown index, don't skip a fixed entry-current (rubber-duck C2.5, CONFIRMED bug).** A naive
+  "skip whatever was current on entry" fails when a phase opens on a **non-zero** tab: walking 0,1,2,3 with
+  entry-current=2 you'd click 0, click 1, then skip 2 while sitting on 1 → tab 2 is **narrated but never shown**.
+  Correct rule (no extra RPC):
+  ```python
+  shown = entry_current           # from tabs()['current']
+  for i, label in enumerate(labels):
+      if i != shown:              # the displayed tab needs no activation
+          go_to_tab(name, i); shown = i
+      narrate(label); on_tab(...); screenshot(...)
+  ```
+- **Skipped tab still gets a cursor visit — glide-to-point, no click (was open; my lean).** "No click" must not mean
+  "no cursor motion" (the viewer would see narration with a frozen pointer on the first tab). So the skip path
+  **glides the visible cursor to the tab header** (`locate` → `pyautogui.moveTo`) but issues **no `activate`** — a
+  `go_to_tab(name, index, activate=True|False)` / `point(name, tab)` primitive. Cursor continuity, zero redundant
+  no-op click.
+- Same rule for the ACQUISITION role tabs: `CapturePanel` opens on step 0 = **Reference** (`__activeStep =
+  steps[0]`), so the Reference role-tab is glide-to-point-only on entry; the **Sample** switch clicks. (roleTabs is
+  disabled while capturing, but the Reference visit is pre-capture and the Sample switch runs after `wait_capture`,
+  so the tab-bar disable never interferes — C2.6.)
+- Rationale is purely cosmetic-for-video; the workflow logic is unchanged.
+
+### 18.3 Ask 3 — wait for the FULL capture (auto-expose + burst) before the next click (C3)
+
+**Verified cause.** `CapturePanel.__onClickedCapture` (CapturePanel.py:422-475) runs the capture **synchronously on
+the GUI thread** via nested `QEventLoop`s (`__pumpFrames`, line 406 — which keep servicing the UDP socket, so the
+Director's `wait` polling is answered throughout, C3.10). It disables the capture button **only while
+auto-exposing**: `__updateControls` sets `busy = self.__autoExposing` (line 300) → `captureButton.setEnabled(… and
+not busy)` (line 304). The `__autoExposing` flag is cleared in the auto-exposure `finally` (line 387) **before**
+the multi-frame burst (`captureAcquisitionStep`, line 455) runs — so during the burst the button is **re-enabled**.
+`wait_ready(CAPTURE, enabled=True)` (measurement_bench.py:131,141) therefore returns the moment auto-exposure ends,
+**mid-burst**, and the next click fires too early.
+
+**Stronger for SAMPLE (rubber-duck C3.7).** Auto-exposure runs for **REFERENCE only** (line 429 gates
+`role == REFERENCE and …isChecked()`). For the **sample** capture `__autoExposing` is **never set** → the button is
+**never disabled at all** during the sample burst → the sample wait returns *instantly*. So `__capturing` is not
+merely better — for the sample capture it is the **only** gating there is.
+
+**App fix (also a genuine robustness fix outside doc-mode).** Add a `__capturing` flag spanning the **whole**
+`__onClickedCapture` (auto-expose + burst), and fold it into `busy`: `busy = self.__autoExposing or self.__capturing`.
+**Set/reset via try/finally (rubber-duck C3.8, CONFIRMED):** the failure branch `if spectrum is None or not images:
+self.__onCaptureFailed(); return` (lines 459-461) returns **early** — a reset only at method end would leave the
+button **permanently disabled** on a failed capture. So: set `__capturing = True` **after** the `step is None`
+guard, then `try: … finally: self.__capturing = False; self.__updateControls()`. The capture button (and role tabs
+/ frames combo) then stay disabled for the entire capture and re-enable on **every** exit path. Fix lives in
+`CapturePanel`, so it covers **both** hosts (bench + wizard's real-capture path); the pumpkin wizard's *virtual*
+Measure is a different path (`WizardViewModule.measureButton` → engine round-trip) and is out of this scope.
+
+**Director fix (close the start race, gracefully).** `activate` triggers the capture via `animateClick()`
+(~100 ms delayed), so a bare `wait_ready(enabled=True)` could sample *before* the click even fires. Wait for capture
+to **start then finish** — `enabled=False` (began) → `enabled=True` (done) — wrapped as **`wait_capture(name)`**.
+Real captures are seconds long (reference ≈ 8×~350 ms auto-expose + 20×~120 ms ≈ 4–5 s; sample ≈ 20×~120 ms ≈ 2.4 s)
+so the disabled edge is easily observable. But **the "wait for started" leg must NOT raise on timeout** (rubber-duck
+C3.9): `wait_ready` raises `RuntimeError` on timeout (automation_director.py:557), which aborts the scenario — so if
+a future faster capture misses the disabled edge, `wait_capture` swallows that short timeout and **falls straight
+through to the long-timeout `enabled=True` leg**. Reveal the spectrum / screenshot only after it returns.
+
+### 18.4 Deltas summary
+
+| Area | Add |
+|------|-----|
+| App — shared logo helper | factor `logo_png` + a static SVG→pixmap render out of `MainStatusBarViewModule` into a tiny util reused by the status bar and the cover |
+| App — `DocCoverViewModule` (new) | doc-mode-only QFrame: centred logo + breadcrumb `Documentation › <label>` on `#2B2B2B`; `setLabel(useCase)` |
+| App — `MainViewModule` / `MainContainerViewModule` | in `docMode`, `mainViewModule.addWidget(cover)` as a stack page + keep a ref; no overlay/`resizeEvent` |
+| App — `DocModeUdpService` | `cover {show, label?}` → `mainViewModule.setCurrentWidget(coverPage)` + `setLabel`; (`tabs` already returns `current` — no change) |
+| App — `CapturePanel` | `__capturing` flag spanning the whole capture via try/finally; `busy = __autoExposing or __capturing` |
+| Director | `cover(label)` (→ `cover{show,label}`, scenario navs away to lower); `go_to_tab(name, index, activate)` + `point`; `wait_capture(name)` (non-raising "started" leg); `tabs()` surfaces `current`; `walk_tabs` tracks the shown index + glide-to-point on the shown tab |
+| Scenario `measurement_bench.py` | `cover("measurement bench")` → `nav(Login)` (visible login) → `cover("measurement bench")` again (camera handoff, replaces the Home bounce) → `nav(Bench)`; Reference role-tab → glide-to-point-only; both capture waits → `wait_capture` |
+
+### 18.5 Implementation phases (when Edwin says "go")
+
+Three independent tracks; **C3 is the only one touching non-doc-mode app code** (`CapturePanel`) and is the
+highest-value (fixes a real mid-burst race, incl. the sample capture which is ungated today). C1 and C2 are
+doc-mode-only and cosmetic-for-video. All app-side changes stay gated on `--doc-mode` except the `CapturePanel`
+`__capturing` fix, which is a legitimate always-on robustness improvement.
+
+| Ph | Track | Deliverable | Side | Depends | Verify |
+|----|-------|-------------|------|---------|--------|
+| C3a | capture-wait | `CapturePanel.__capturing` + `busy = __autoExposing or __capturing`, set/reset in try/finally (covers the capture-failed early return) | app (always-on) | — | offscreen: button stays disabled across a full capture incl. failed frames |
+| C3b | capture-wait | Director `wait_capture(name)` = wait `enabled=False` (non-raising short) → `enabled=True` (long); swap `measurement_bench.py` waits | director + scenario | C3a | rig: next click fires only after the burst ends |
+| C1a | cover | shared logo-render helper (factor `logo_png` + render out of `MainStatusBarViewModule`); status bar still renders identically | app (always-on refactor) | — | app looks unchanged (logo pixel-identical) |
+| C1b | cover | `DocCoverViewModule` (logo + breadcrumb `Documentation › <label>`, `setLabel`) + added as a `MainViewModule` stack page in `docMode` + `cover {show, label?}` → `setCurrentWidget` UDP cmd | app (doc-mode) | C1a | offscreen: `cover{show:true,label:"measurement bench"}` makes the cover page current; status bar + doc panel stay |
+| C1c | cover | Director `cover(label)`; scenario: `cover("measurement bench")` → `nav(Login)` **visible login** → `cover(...)` again (camera handoff, replaces Home bounce) → `nav(Bench)`; `main_chapters.run_all` shows the cover before each chapter's reset nav | director + scenario | C1b | rig: login filmed; Home never navigated to / never filmed; card bookends login |
+| C2a | skip-tab | Director `tabs()` surfaces `current`; `go_to_tab(name, index, activate)`/`point`; `walk_tabs` tracks the shown index + glide-to-point on it | director | — | offscreen: walking a 5-tab phase entered on idx 0 and on idx≠0 shows every tab, clicks none twice |
+| C2b | skip-tab | `measurement_bench.py`: Reference role-tab → glide-to-point-only | scenario | C2a | rig: no visible no-op click on the already-active tab |
+| C4 | recording | **live-rig re-record** the bench screencast with all three landed | rig | C1c,C2b,C3b | the deliverable mp4 |
+
+**Rubber-duck pass (2026-07-14, fork against the code) folded in:** C1.1 auto-show→Director-driven (attach-mode
+login), C1.2 manual-geometry child (**later superseded** — the cover is a `MainViewModule` stack page per Edwin,
+which also makes the Home camera-release bounce disappear), C2.4 glide-to-point (not narrate-only), C2.5 track shown
+index (fixed entry-current mis-skips a non-zero-entry phase), C3.7 sample burst is ungated today (stronger case),
+C3.8 try/finally around the capture-failed early return, C3.9 non-raising "started" leg. All CONFIRMED against
+`CapturePanel.py` / `DocModeUdpService.py` / `automation_director.py` / `measurement_bench.py` / `bench.sh`.
+
+### 18.6 As-built (2026-07-14) — the one-sweep implementation
+
+All C phases shipped together. Files:
+- **C1a** — new `sciens/spectracs/logic/appliction/style/LogoRenderer.py` (`LOGO_ASPECT` + `renderLogoPixmap(svg,
+  height)`); `MainStatusBarViewModule._renderLogoSource` delegates to it (logo pixel-identical). The SVG string
+  stays the single source (the status bar class attr `logo_png`) — the *renderer* is shared, not the asset moved.
+- **C1b** — new `sciens/spectracs/view/main/DocCoverViewModule.py` (QFrame: centred wordmark via `LogoRenderer` +
+  `Documentation › <label>` breadcrumb, `setLabel`). `MainContainerViewModule`, in `docMode` only, does
+  `mainViewModule.addWidget(self.docCoverViewModule)` and keeps the ref. `DocModeUdpService.__cover` handles
+  `cover {show, label?}` → `docCoverViewModule.setLabel` + `mainViewModule.setCurrentWidget(cover)` (which fires
+  the prior view's `hideEvent` → camera release); returns `{ok:true}`.
+- **C1c** — Director `cover(label)`; `measurement_bench.run` order is now `cover("measurement bench")` →
+  `login("bench")` (visible) → `cover("measurement bench")` (camera handoff, **replaced** the old `nav("Home")`) →
+  `nav(Bench)`. `login()`'s human fallback now navs to the login form first (so the cover can't hide it).
+- **C2a** — Director `__tabs_state` surfaces `current`; new `go_to_tab(name, index, activate=True)` (glide always,
+  click only if `activate`); `walk_tabs` tracks the shown index and glide-to-points the already-shown tab.
+- **C2b** — `measurement_bench` Reference role-tab → `go_to_tab(..., activate=False)`; Sample → `activate=True`.
+- **C3a** — `CapturePanel.__capturing` flag set/reset in a try/finally over the whole `__onClickedCapture`;
+  `busy = self.__autoExposing or self.__capturing`. Always-on (also fixes the previously-ungated sample burst and a
+  re-entrant-click hole outside doc-mode).
+- **C3b** — Director `wait_capture(name)` (non-raising `enabled=False` "started" leg → `enabled=True` "done" leg);
+  `measurement_bench` swaps both `wait_ready(CAPTURE, enabled=True)` calls to `wait_capture(CAPTURE)`.
+
+**Verified offscreen:** every changed file byte-compiles; `LogoRenderer`/`DocCoverViewModule`/`DocModeUdpService`
+import under `QT_QPA_PLATFORM=offscreen`; the cover constructs and renders the wordmark (917×90 px). **Pending the
+rig (C4):** the live cursor behaviour (glide-to-point on the active tab), the capture-timing wait, and the on-camera
+cover/login/bench sequence — then the re-record.
+
+### 18.7 Change requests after the first cut (2026-07-14, Edwin) — DESIGN
+
+Status: **IMPLEMENTED (code, 2026-07-14) — awaiting rig re-record.** Edwin drove the first cut and asked for two
+cover refinements; both landed in one sweep (compiles + the agenda types progressively offscreen). As-built note at
+the end of this section. Load-bearing facts verified against the code.
+
+**CR-A — the first logo card disappears too fast.** `cover()` sends the command then `time.sleep(0.8)`
+(`automation_director.py`); the very next scenario line is `login("bench")`, whose scripted path immediately
+`nav("LoginViewModule")` swaps the card out — so card #1 shows ~0.8 s. **Fix:** add a `hold` param to
+`cover(label, hold=None)` (Director-side `time.sleep(hold or 0.8)`; a static-card sleep, the app keeps painting).
+Scenario: first call `cover("measurement bench", hold=3)`.
+
+**CR-B — the second logo card shows a typed "agenda".** Below the breadcrumb, type out (letter-by-letter) an overview
+of what the video will show, so the viewer knows the arc up front. The four points (Edwin's wording, tunable):
+1. Measurement on a real spectrometer of real oil.
+2. Evaluations create some metrics.
+3. A PDF is created for viewing, with all spectral data embedded.
+4. The PDF can be sent to a laboratory information management system (LIMS).
+
+Design, with the rubber-duck findings folded in:
+
+- **Typewriter = a NEW shared `TypewriterLabel(QLabel)`, char-by-char — NOT the panel's `__buildChunks` (CONFIRMED
+  trap).** `DocHintPanelViewModule.__buildChunks` splits on sentence punctuation (`[^.!?]+[.!?]?\s*`); the agenda
+  points have **no periods**, so a joined block becomes a **single** chunk revealed *word-wise* (its `\s` even spans
+  the `\n`, so a word straddling a line-break types as one token) — not the "letter-typing" Edwin asked for. So
+  factor the reveal *engine* (QTimer tick + stop-guard) into a small `TypewriterLabel` with **explicit char
+  granularity**, fed the point **list**. The cover uses it now; refactoring the (working) doc-panel caption to adopt
+  it is **deferred** — keeps this change surgical.
+- **`DocCoverViewModule` gains an agenda zone.** A max-width (~720 px), word-wrapped, left-aligned bullet block
+  centred under the breadcrumb, font ~18 px (below the 22 px breadcrumb) — fits at 1080p under the 90 px logo with
+  the existing top/bottom stretches (`--phone` 412 dp gets tall but the card is full-height → acceptable; tune on the
+  rig). `setPoints(points, wpm)`: **None/empty ⇒ clear** (stop timer, `setText("")`, hide the zone) so card #1 shows
+  no stale agenda (CR-B.4); a list ⇒ build `• …` lines and type them char-by-char. **Stop the running timer at the
+  top of every `setPoints`/`setText`** and on `hideEvent` (CR-B.3) so a re-show or nav-away never double-runs a timer
+  or ticks a hidden label.
+- **Protocol:** `cover { show, label?, points?, wpm? }`. `__cover` calls `setLabel(label)` **and always**
+  `setPoints(points, wpm)` (clearing when `points` absent). `wpm` is plumbed end-to-end so the agenda paces with the
+  doc panel (CR-B.7). Reply stays `{ok:true}`.
+- **Director:** `cover(label=None, points=None, hold=None, wpm=None)` — payload carries `wpm` (default `self.__wpm`);
+  then sleeps `hold`. **If `points` and no explicit `hold`, compute the dwell** from the agenda's reading time
+  (`words / wpm × 60`, floored), so the agenda reliably finishes typing on camera **before** the following
+  `wait_for_human` gate opens (CR-B.6) rather than relying on the operator not continuing early.
+- **Timing is cross-process (CR-B.1, not-a-problem):** the app is a separate process from the Director
+  (`launch_app` → `subprocess.Popen`); the app's `QTimer` types the agenda in its own GUI loop regardless of the
+  Director thread being blocked in `wait_for_human`. The `cover(hold=…)` dwell just keeps the two paced together.
+
+Scenario delta (`measurement_bench.run`): card #1 → `cover("measurement bench", hold=3)`; card #2 →
+`cover("measurement bench", points=[…the 4…])` (auto-computed dwell). No other flow change.
+
+| Ph | Deliverable | Side | Depends |
+|----|-------------|------|---------|
+| D1 | shared `TypewriterLabel(QLabel)` — char-by-char reveal at a wpm, stop-on-set + `hideEvent` stop | app | — |
+| D2 | `DocCoverViewModule` agenda zone (`setPoints(points, wpm)`, clear-on-None, max-width container) | app (doc-mode) | D1 |
+| D3 | `cover {points?, wpm?}` in `DocModeUdpService.__cover` (always `setPoints`, plumb `wpm`) | app (doc-mode) | D2 |
+| D4 | Director `cover(label, points, hold, wpm)` — `hold` sleep + computed dwell from points | director | D3 |
+| D5 | `measurement_bench`: card #1 `hold=3`; card #2 `points=[…]` | scenario | D4 |
+| D6 | rig re-record (folds into C4) | rig | D5 |
+
+**As-built (2026-07-14):** D1 `view/application/widgets/TypewriterLabel.py` (char-by-char QLabel, `type(text,wpm)` /
+`clear()`, stop-on-set + `hideEvent` stop). D2 `DocCoverViewModule.setPoints(points, wpm)` — bulleted `TypewriterLabel`
+in a 720 px max-width column, hidden/cleared when points are falsy. D3 `__cover` always calls `setPoints` (plumbs
+`points`+`wpm`). D4 Director `cover(label, points, hold, wpm)` + `__agenda_dwell` (mirrors the TypewriterLabel cadence
+so the hold ≈ the typing time + read tail). D5 `measurement_bench` `AGENDA` list; card #1 `hold=3`, card #2
+`points=AGENDA`. **Verified offscreen:** all compile; card #1 hides the agenda, card #2 types it progressively
+(9 chars in ~0.5 s of a 229-char block). Pending rig: on-camera pacing/fit + the re-record.
+
+### 18.8 Suppress the post-login wizard flash in doc-mode (2026-07-15) — IMPLEMENTED
+
+Status: **IMPLEMENTED (code, 2026-07-15) — awaiting rig re-record.** Edwin's first cut showed
+`(1) logo → (2) login → (3) the measurement WIZARD → (4) agenda card → bench`; he wants the desired sequence
+`(1) logo → (2) login → (3) agenda card → (4) bench` with **no wizard flash**.
+
+**Cause (verified):** the app's normal launch seam — `LoginViewModule.onClickedLoginButton`
+(`LoginViewModule.py:127-129`) navigates a plugin-bound user (`masterUserExakta`) to `WizardViewModule` right
+after login. That wizard both *flashes* between login and the agenda card and *opens `/dev/video0`* (which is why
+the second cover was doing a "camera handoff").
+
+**Fix (one app change, doc-mode-gated):** skip the launch-seam `__navigateTo(target)` when `--doc-mode` is set
+(`"--doc-mode" not in sys.argv`, the same signal `DocModeUdpService` uses for its port). The Director drives all
+navigation itself, so nothing needs to auto-land. Gated on the flag → the normal app's launch seam is untouched.
+
+**Consequences (both good):** the wizard never becomes current → **no flash**; and it never opens the camera → **no
+contention**, so the second cover is now *only* the agenda card (its former camera-handoff role is gone) and the
+scenario's vestigial `sleep(2)` camera-release wait is dropped. In doc-mode the app simply stays on the login view
+between login-success and the Director's next `cover()` (harmless — same screen already filmed; the card covers it).
+
+**As-built files:** `LoginViewModule.py` (+`import sys`; the gated launch-seam skip); `measurement_bench.py` (drop
+`sleep(2)`; second-cover comment updated). Compiles + imports offscreen. Pending rig: confirm the 4-step sequence
+on camera, then the re-record.
+
+### 18.9 Bench capture burst → 150 frames (2026-07-15) — IMPLEMENTED
+
+Status: **IMPLEMENTED (code, 2026-07-15).** Edwin: "update the measurement-bench plugin to use 150 frames at
+capturing." The bench averages more frames for a cleaner spectrum.
+
+**Cause of the disconnect (verified):** `DevSpectralPlugin.FRAMES` was declared (20) and applied via
+`step.setFrames`, but **real** capture through `CapturePanel` read its own **hardcoded** frame-count combo
+(`__DEFAULT_FRAMES = "20"`), ignoring the plugin — so the plugin's `FRAMES` only affected the *virtual* path
+(`SpectralWorkflowEngine.captureAcquisitionStep` falls back to `step.getFrames()` when no `frames` arg is passed).
+
+**Fix:** `DevSpectralPlugin.FRAMES = 150`, and `CapturePanel` now **seeds its frame-count combo from the active
+step's plugin-declared `getFrames()`** (added to the choices, set as default) instead of the hardcoded 20 — so a
+plugin's declared burst actually drives real capture; the dropdown (when a plugin shows it) still overrides.
+
+**Notes:** (a) 150 frames ≈ ~18 s per capture (150 × ~120 ms) + reference auto-exposure; `wait_capture`'s 90 s
+done-timeout covers it. (b) Side effect: the pumpkin plugin's **real-device** capture now follows its own declared
+`FRAMES = 5` (was an incidental 20); the pumpkin **virtual** demo already used 5, so it is unchanged. **Files:**
+`DevSpectralPlugin.py`, `CapturePanel.py`.

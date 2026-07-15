@@ -36,13 +36,21 @@ class MainContainerViewModule(QFrame):
         # by an external Director script over UDP, plus the UDP listener itself. Everything is gated on
         # docMode, so the normal app is untouched when the flag is absent.
         self.docHintPanelViewModule = None
+        self.docCoverViewModule = None
         self.docModeUdpService = None
         if docMode:
             from sciens.spectracs.view.main.DocHintPanelViewModule import DocHintPanelViewModule
+            from sciens.spectracs.view.main.DocCoverViewModule import DocCoverViewModule
             from sciens.spectracs.logic.appliction.docmode.DocModeUdpService import DocModeUdpService
             self.docHintPanelViewModule = DocHintPanelViewModule()
             layout.addWidget(self.docHintPanelViewModule, 0, 1, 2, 1)
             layout.setColumnStretch(0, 100)  # app content keeps (almost) all the width
+            # SPEC_doc_automation §18.1 (C1b): the title card is a PAGE in the MainViewModule stack, so making
+            # it current both shows the card AND fires the prior view's hideEvent (releases the camera). Added
+            # here (not in MainViewModule) so MainViewModule stays flag-agnostic and the app is untouched
+            # without --doc-mode.
+            self.docCoverViewModule = DocCoverViewModule()
+            self.mainViewModule.addWidget(self.docCoverViewModule)
             self.docModeUdpService = DocModeUdpService(self, self.docHintPanelViewModule)
 
 

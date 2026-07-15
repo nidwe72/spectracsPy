@@ -1,3 +1,5 @@
+import sys
+
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QGridLayout, QGroupBox, QLabel, QLineEdit, QPushButton, QWidget
 
@@ -126,7 +128,12 @@ class LoginViewModule(PageWidget):
             self.getPasswordComponent().clear()
             # Launch seam: a user bound to a plugin lands in its wizard; otherwise Home.
             target = "WizardViewModule" if CurrentUserSession().getPluginCodeRef() else "Home"
-            self.__navigateTo(target)
+            # In --doc-mode the screencast Director drives navigation itself (login → agenda card → bench),
+            # so DON'T auto-jump to the plugin wizard / Home — that flashes the measurement view between
+            # login and the second logo card, and opens the camera the bench then needs
+            # (SPEC_doc_automation §18.8). Gated on the flag, so the normal app's launch seam is untouched.
+            if "--doc-mode" not in sys.argv:
+                self.__navigateTo(target)
         else:
             message = result.get("message") or "invalid credentials"
             self.getErrorLabel().setText(message)

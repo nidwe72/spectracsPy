@@ -476,6 +476,9 @@ class Director:
         when no username/password is configured (e.g. before the operator fills the unversioned ini)."""
         username, password = self.credentials(scenario)
         if not username or not password:
+            # Human-login fallback: nav to the login form first so it's visible for the operator — the cover
+            # card may be current at this point (§18.1 order), which would otherwise hide the form.
+            self.nav("LoginViewModule")
             self.wait_for_human("Log in to the app, then press Ctrl+Shift+ß to continue.")
             return
         self.nav("LoginViewModule")
@@ -498,6 +501,32 @@ class Director:
             raise RuntimeError("nav to %r failed: %r" % (view, reply))
         time.sleep(0.8)
 
+    def cover(self, label=None, points=None, hold=None, wpm=None):
+        """Show the doc title card — a page in the MainViewModule stack — with breadcrumb
+        `Documentation › <label>` (SPEC_doc_automation §18.1, C1c). No explicit hide: the scenario's next
+        `nav` switches the stack away. Showing it after login also performs the CAMERA HANDOFF — the prior
+        view's hideEvent releases /dev/video0 — so the measurements-overview (Home) is never filmed.
+
+        `points` (list) types an overview agenda in char-by-char, app-side, at `wpm` (§18.7 CR-B). `hold`
+        blocks this thread so the card stays on screen; if omitted it defaults to a short settle, OR — when
+        `points` are given — to the agenda's typing time (so the agenda reliably finishes before the next
+        step), keeping the Director paced with the app-side typewriter."""
+        wpm = wpm or self.__wpm
+        reply = self.__rpc({"cmd": "cover", "show": True, "label": label, "points": points, "wpm": wpm})
+        if not (reply and reply.get("ok")):
+            raise RuntimeError("cover %r failed: %r" % (label, reply))
+        if hold is None:
+            hold = self.__agenda_dwell(points, wpm) if points else 0.8
+        time.sleep(hold)
+
+    def __agenda_dwell(self, points, wpm):
+        # Mirror the app-side typewriter cadence (TypewriterLabel: 60000/wpm/CHARS_PER_WORD ms per char, with
+        # a 20 ms floor) so the Director waits ~exactly as long as the agenda takes to type, plus a read tail.
+        lines = ["•  %s" % str(point).strip() for point in points]
+        chars = sum(len(line) for line in lines) + max(0, len(lines) - 1)  # + the joining newlines
+        per_char_s = max(0.020, 60.0 / max(60.0, wpm) / 5.0)
+        return max(3.0, chars * per_char_s + 1.5)
+
     def click(self, name, tab=None, duration=1.1):
         # Glide the REAL cursor to the widget (visible, for the video), then trigger it programmatically
         # over UDP (reliable — never depends on pixel-precise landing or window focus). SPEC §3.
@@ -517,6 +546,25 @@ class Director:
             raise RuntimeError("activate %r failed: %r" % (name, activated))
         time.sleep(0.4)
 
+    def go_to_tab(self, name, index, activate=True, duration=1.1):
+        """Glide the visible cursor to a tab HEADER; SWITCH to it only if `activate` (SPEC §18.2, C2a).
+        With activate=False the cursor visits the tab for continuity but issues no click — used for the tab
+        already shown on phase entry, where a click would be a visible no-op. This is the `point` primitive
+        the spec mentions (glide, don't activate)."""
+        reply = self.__rpc({"cmd": "locate", "name": name, "tab": index})
+        if not (reply and reply.get("ok")):
+            raise RuntimeError("locate %r tab %r failed: %r" % (name, index, reply))
+        self.__raise_app()
+        time.sleep(0.2)
+        glide = max(0.2, duration * self.__speed)
+        pyautogui.moveTo(reply["cx"], reply["cy"], duration=glide, tween=pyautogui.easeInOutQuad)
+        time.sleep(0.2)
+        if activate:
+            activated = self.__rpc({"cmd": "activate", "name": name, "tab": index})
+            if not (activated and activated.get("ok")):
+                raise RuntimeError("activate %r tab %r failed: %r" % (name, index, activated))
+        time.sleep(0.4)
+
     def dismiss(self):
         """Dismiss any open in-window dialog (e.g. a capture-fail modal) so it can't wedge the run (§7.1).
         Harmless when nothing is open — returns {dismissed:false}."""
@@ -524,18 +572,29 @@ class Director:
 
     def tabs(self, name):
         """Return the step-tab labels of the named QTabWidget (in order), or [] (§16 `tabs` command)."""
+        labels, _current = self.__tabs_state(name)
+        return labels
+
+    def __tabs_state(self, name):
+        """(labels, current_index) of the named QTabWidget, or ([], 0). The `tabs` reply already carries
+        `current` (C2a) — surface it so walk_tabs can skip the already-shown tab."""
         reply = self.__rpc({"cmd": "tabs", "name": name})
         if reply and reply.get("ok"):
-            return reply.get("labels", [])
-        return []
+            return reply.get("labels", []), reply.get("current", 0)
+        return [], 0
 
     def walk_tabs(self, name, narration=None, on_tab=None, screenshot=None):
-        """Click through EVERY step-tab of the named QTabWidget, describing each — so a whole phase's steps
-        are shown, not just the first (Edwin). Caption per tab = narration[label], else the label itself.
-        `on_tab(label, index)` runs after each tab is shown (e.g. to describe the metric fields on Metrics)."""
-        labels = self.tabs(name)
+        """Walk EVERY step-tab of the named QTabWidget, describing each — so a whole phase's steps are shown,
+        not just the first (Edwin). Caption per tab = narration[label], else the label itself. `on_tab(label,
+        index)` runs after each tab is shown (e.g. to describe the metric fields on Metrics).
+
+        C2a: the tab already shown on entry is glide-to-pointed (cursor visits, no click) — clicking the
+        active tab is a visible no-op. `shown` is tracked (not fixed to the entry index) so a phase entered on
+        a non-zero tab still shows every tab."""
+        labels, shown = self.__tabs_state(name)
         for index, label in enumerate(labels):
-            self.click(name, tab=index)
+            self.go_to_tab(name, index, activate=(index != shown))
+            shown = index
             self.narrate((narration or {}).get(label, label))
             if on_tab is not None:
                 on_tab(label, index)
@@ -555,6 +614,20 @@ class Director:
                 return
             time.sleep(poll)
         raise RuntimeError("wait_ready(%r, %r) timed out after %ss" % (name, state, timeout))
+
+    def wait_capture(self, name, started_timeout=6, done_timeout=90):
+        """Block until a capture — auto-exposure AND the multi-frame burst — FULLY completes (SPEC §18.3, C3b).
+
+        The capture button disables for the whole capture (CapturePanel `__capturing`, C3a): wait for it to go
+        disabled (capture STARTED), then enabled (DONE). The 'started' wait is short and NON-raising because a
+        very fast capture can finish before we sample the disabled edge — in that case we fall straight through
+        to the 'done' wait rather than aborting the scenario. Fixes the old `wait_ready(enabled=True)`, which
+        returned mid-burst (or instantly, for the never-disabled SAMPLE capture)."""
+        try:
+            self.wait_ready(name, enabled=False, timeout=started_timeout)
+        except RuntimeError:
+            pass   # never caught the disabled edge (capture already finished) — proceed to the done wait
+        self.wait_ready(name, enabled=True, timeout=done_timeout)
 
     def sleep(self, seconds):
         time.sleep(seconds)

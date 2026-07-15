@@ -23,6 +23,8 @@ class DocModeUdpService(QObject):
     Commands (see §4):
       set_hint {text}                      -> set the caption zone (no reply; alias of doc{caption})
       doc {use_case?,outline?,phase?,caption?,reveal?,wpm?} -> update the 3-zone panel (no reply, §16.4)
+      cover {show, label?, points?, wpm?}  -> show the doc title card (MainViewModule stack page); points type
+                                              in char-by-char (§18.1/§18.7); {ok:true}
       ping                                 -> {ok:true}
       nav {view}                           -> fire a NavigationSignal to that view; {ok:true}
       locate {name, tab?}                  -> {ok, cx, cy, x, y, w, h} global px, or {ok:false}
@@ -83,6 +85,8 @@ class DocModeUdpService(QObject):
         if command == "set_hint":
             self.__hintPanel.setHint(message.get("text", ""))
             return None
+        if command == "cover":
+            return self.__cover(message)
         if command == "doc":
             # §16.4/§16.11: update the 3-zone panel; only the fields present change. `caption` animates
             # (progressive reveal) app-side. Fire-and-forget like set_hint (no reply).
@@ -109,6 +113,20 @@ class DocModeUdpService(QObject):
         if command == "dismiss":
             return self.__dismiss()
         return {"ok": False, "error": "unknown cmd: %r" % command}
+
+    def __cover(self, message):
+        # SPEC_doc_automation §18.1 (C1b): show the doc-mode title card by making it the current page in the
+        # MainViewModule stack — which also fires the previously-current view's hideEvent (releasing the camera,
+        # the post-login handoff). There is no explicit "hide": the Director's next `nav` switches the stack away.
+        cover = getattr(self.__root, "docCoverViewModule", None)
+        if cover is None:
+            return {"ok": False, "error": "no cover (not doc-mode?)"}
+        if message.get("show", True):
+            cover.setLabel(message.get("label"))
+            # Always call setPoints so a card shown without points clears any prior agenda (§18.7 CR-B.4).
+            cover.setPoints(message.get("points"), message.get("wpm"))
+            self.__root.mainViewModule.setCurrentWidget(cover)
+        return {"ok": True}
 
     def __nav(self, view):
         if not view:

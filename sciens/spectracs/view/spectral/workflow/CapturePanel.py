@@ -68,6 +68,7 @@ class CapturePanel(QWidget):
         self.__videoThread = None
         self.__latestImage = None
         self.__autoExposing = False
+        self.__capturing = False
         self.__lockedExposure = None
         self.__savedRoiX = None
         self.__captureTotal = 1
@@ -132,8 +133,14 @@ class CapturePanel(QWidget):
         controls.setLayout(controlsLayout)
 
         self.__framesComboBox = QComboBox()
-        self.__framesComboBox.addItems(self.__FRAME_CHOICES)
-        self.__framesComboBox.setCurrentText(self.__DEFAULT_FRAMES)
+        # Seed the frame count from the PLUGIN-declared burst (step.getFrames()), not a hardcoded default —
+        # the capture reads this combo, so this is what makes a plugin's FRAMES actually take effect for real
+        # capture (e.g. the dev bench's 150). The dropdown (when the plugin shows it) still overrides.
+        declaredFrames = self.__steps[0].getFrames() if self.__steps else None
+        default = str(declaredFrames) if declaredFrames else self.__DEFAULT_FRAMES
+        choices = sorted(set(self.__FRAME_CHOICES + [default]), key=int)
+        self.__framesComboBox.addItems(choices)
+        self.__framesComboBox.setCurrentText(default)
         self.__framesControl = self.__labeled("Frames", self.__framesComboBox)
         controlsLayout.addWidget(self.__framesControl, 0, 0, 1, 2)
 
@@ -297,7 +304,7 @@ class CapturePanel(QWidget):
     def __updateControls(self):
         connected = self.__resolvedIndex is not None
         streaming = self.__videoThread is not None
-        busy = self.__autoExposing
+        busy = self.__autoExposing or self.__capturing   # capture (auto-expose + burst) keeps controls disabled (C3a)
         role = self.__activeStep.getRole() if self.__activeStep is not None else None
         sampleLocked = role == SAMPLE and self.__lockedExposure is not None
         autoOn = self.__autoExposureCheckBox is not None and self.__autoExposureCheckBox.isChecked()
@@ -425,54 +432,65 @@ class CapturePanel(QWidget):
         step = self.__activeStep
         if step is None:
             return
-        role = step.getRole()
-        if role == REFERENCE and self.__autoExposureCheckBox.isChecked():
-            self.__runAutoExposure()
+        # SPEC_doc_automation §18.3 (C3a): mark the WHOLE capture busy — auto-exposure AND the multi-frame
+        # burst — so the capture button (and role tabs / frames combo, via __updateControls) stay disabled
+        # for its entire duration. Previously only auto-exposure set busy, so the button re-enabled mid-burst
+        # (and for the SAMPLE role, which never auto-exposes, it was never disabled at all). set/reset in
+        # try/finally so the capture-failed early return below can't leave the button stuck disabled.
+        self.__capturing = True
+        self.__updateControls()
+        try:
+            role = step.getRole()
+            if role == REFERENCE and self.__autoExposureCheckBox.isChecked():
+                self.__runAutoExposure()
 
-        frameCount = int(self.__framesComboBox.currentText())
-        self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)
-        self.__beginCaptureProgress(frameCount)
-        self.__waitForFirstFrame()
+            frameCount = int(self.__framesComboBox.currentText())
+            self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)
+            self.__beginCaptureProgress(frameCount)
+            self.__waitForFirstFrame()
 
-        images = []
-        state = {"roiApplied": False}
+            images = []
+            state = {"roiApplied": False}
 
-        def provider():
-            self.__pumpFrames(120)  # let the stream advance a frame
-            if self.__latestImage is None:
-                return None
-            image = self.__latestImage.copy()  # detach from the live numpy buffer
-            if not state["roiApplied"]:
-                self.__applyExtendedRoi(image.width())  # widen to the analysis window before the FIRST extraction
-                state["roiApplied"] = True
-            images.append(image)
-            return image
+            def provider():
+                self.__pumpFrames(120)  # let the stream advance a frame
+                if self.__latestImage is None:
+                    return None
+                image = self.__latestImage.copy()  # detach from the live numpy buffer
+                if not state["roiApplied"]:
+                    self.__applyExtendedRoi(image.width())  # widen to the analysis window before the FIRST extraction
+                    state["roiApplied"] = True
+                images.append(image)
+                return image
 
-        def onFrame(spectrum, index, total):
-            self.__plotRoleSpectrum(role, spectrum)     # live: frame traces so far + running mean
-            self.__stepCaptureProgress(index + 1)
+            def onFrame(spectrum, index, total):
+                self.__plotRoleSpectrum(role, spectrum)     # live: frame traces so far + running mean
+                self.__stepCaptureProgress(index + 1)
 
-        spectrum = self.__engine.captureAcquisitionStep(
-            step, frameProvider=provider, frames=frameCount, onFrame=onFrame)
-        self.__endCaptureProgress()
+            spectrum = self.__engine.captureAcquisitionStep(
+                step, frameProvider=provider, frames=frameCount, onFrame=onFrame)
+            self.__endCaptureProgress()
 
-        if spectrum is None or not images:
-            self.__onCaptureFailed()
-            return
+            if spectrum is None or not images:
+                self.__onCaptureFailed()
+                return
 
-        self.__representativeFrames[role] = images[len(images) // 2]
+            self.__representativeFrames[role] = images[len(images) // 2]
 
-        if role == REFERENCE:
-            self.__lockedExposure = self.__exposureSlider.value()
-            # A fresh reference re-locks exposure; an earlier sample no longer matches — drop it.
-            sampleStep = self.__stepForRole(SAMPLE)
-            if sampleStep is not None and sampleStep is not step and sampleStep.getContainer() is not None:
-                sampleStep.setContainer(None)
-                self.__representativeFrames.pop(SAMPLE, None)
+            if role == REFERENCE:
+                self.__lockedExposure = self.__exposureSlider.value()
+                # A fresh reference re-locks exposure; an earlier sample no longer matches — drop it.
+                sampleStep = self.__stepForRole(SAMPLE)
+                if sampleStep is not None and sampleStep is not step and sampleStep.getContainer() is not None:
+                    sampleStep.setContainer(None)
+                    self.__representativeFrames.pop(SAMPLE, None)
 
-        self.__plotActiveRole()
-        self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)
-        self.__onCaptured(step)
+            self.__plotActiveRole()
+            self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)
+            self.__onCaptured(step)
+        finally:
+            self.__capturing = False
+            self.__updateControls()
 
     # --- plotting ---
 
