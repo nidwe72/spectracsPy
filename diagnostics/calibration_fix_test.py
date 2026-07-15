@@ -86,17 +86,17 @@ def drain(backend, milliseconds):
 
 def auto_expose(backend, min_exposure=2, max_exposure=500):
     """Synchronous auto-exposure on the rig — the SAME method the app's VideoThread now uses (SPEC §14.6): a
-    warm-up drain to transition off the open() exposure, then per-probe setExposure + drain + qGray-peak, with the
-    direction-agnostic AutoExposureLogicModule choosing the winner. So the live test mirrors a real acquisition
-    (adapts to the lamp / warm-up) instead of a hard-coded exposure."""
+    warm-up drain to transition off the open() exposure, then per-probe setExposure + STABILIZE-drain (drain in
+    chunks until the channel peak stops changing, so a big jump is fully applied before we read it) + the
+    per-channel peak metric (keeps every channel below the 255 clip so no line saturates to white), with the
+    direction-agnostic AutoExposureLogicModule choosing the winner. Mirrors a real acquisition — no hard-coded
+    exposure."""
     from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
-    backend.setExposure(min_exposure)
-    drain(backend, 1200)                                  # warm-up: fully leave the open() exposure
 
     def measure(exposure):
         backend.setExposure(exposure)
-        peak = AutoExposureLogicModule.qGrayPeak(drain(backend, 600))
-        print("  [auto-exposure] exp=%3d -> qGray peak %.1f" % (exposure, peak))
+        peak = AutoExposureLogicModule.channelPeak(drain(backend, 1800))  # drain past the ~1.5 s settle
+        print("  [auto-exposure] exp=%3d -> channel peak %.1f" % (exposure, peak))
         return peak
 
     best = AutoExposureLogicModule().findExposure(measure, min_exposure, max_exposure)

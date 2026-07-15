@@ -14,7 +14,7 @@ from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicMo
     ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
-from sciens.spectracs.logic.appliction.video.capture.AutoExposureCaptureHelper import AutoExposureCaptureHelper
+from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
@@ -149,18 +149,17 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         isVirtual = sensor.isVirtual
         self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
 
-        # Real camera: capture the CFL peak-detection burst at the sensor's authored calibration exposure —
-        # NOT auto-exposed. The bisection pre-pass assumes brightness rises monotonically with the exposure
-        # value, but this ELP's control is INVERTED and clamps above ~16 (SPEC_capture_quality.md §4.8), so
-        # it walked the burst to a wrong level and the mercury green doublet collapsed. A fixed stored
-        # exposure (validated by diagnostics/calibration_fix_test.py against the cfl_2592 fixture) resolves
-        # the doublet reliably. Direction-agnostic auto-exposure is a separate milestone for dev captures.
+        # Real camera: AUTO-EXPOSE the peak-detection burst so it adapts to the lamp (brightness drifts as the CFL
+        # warms up) and — crucially — keeps the emission lines UNCLIPPED. A saturated line desaturates to white and
+        # loses the colour the anchor detection depends on (SPEC_capture_quality.md §14.6), so the detection then
+        # mis-anchors green onto the yellow line; a FIXED exposure clips once the lamp warms past it. The sweep runs
+        # synchronously in the capture thread BEFORE the 50-frame burst (the base run loop picks up the request).
         if not isVirtual:
-            deviceIndex, exposure = AutoExposureCaptureHelper().resolveFixedExposureCapture(sensor)
+            deviceIndex = SensorCaptureIndexResolver().resolveCaptureIndex(sensor)
             if deviceIndex is not None:
                 self.wavelengthCalibrationVideoThread.setDeviceId(deviceIndex)
-            if exposure is not None:
-                self.wavelengthCalibrationVideoThread.setExposure(exposure)
+            self.wavelengthCalibrationVideoThread.autoExposureProgress.connect(self.__onAutoExposeProgress)
+            self.wavelengthCalibrationVideoThread.requestAutoExpose(1, 500)
 
         self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
         self.wavelengthCalibrationVideoThread.setFrameCount(50)
@@ -168,6 +167,14 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         self.detectionStarted.emit()
         self.wavelengthCalibrationVideoThread.start()
 
+
+    def __onAutoExposeProgress(self, probeIndex, totalProbes):
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = totalProbes
+        signal.currentStepIndex = min(probeIndex, totalProbes)
+        signal.text = "Auto-exposing… [%d/%d]" % (signal.currentStepIndex, totalProbes)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     def handleWavelengthCalibrationVideoSignal(self, event: threading.Event,
                                                videoSignal: SpectrometerCalibrationProfileWavelengthCalibrationVideoSignal):

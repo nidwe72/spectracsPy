@@ -12,14 +12,15 @@ spectrum uses the full dynamic range without clipping (clipping merges close lin
 doublet). Pure decision logic: it is handed a `measure(exposure) -> brightness` callable and knows nothing about
 how the frame is grabbed — so the same module serves the dev-view live stream, the measurement CapturePanel, the
 calibration bursts, and the calibration unit test. `measure` MUST apply the exposure, let the stream settle, and
-return the brightness metric — use `qGrayPeak` (below) for that."""
+return the brightness metric — use `channelPeak` (below) for that."""
 import numpy as np
 
 
 class AutoExposureLogicModule:
 
-    # Target ~92% of full-scale: high enough to use the range, with headroom so the peak channel does not clip.
-    DEFAULT_TARGET = 235
+    # Keep the brightest CHANNEL just below the 255 clip: high enough to use the range, low enough that no channel
+    # saturates to white (which destroys a spectral line's colour — SPEC_capture_quality.md §14.6).
+    DEFAULT_TARGET = 245
     # Lowest exposure the sweep will probe — exposure=1 is a UVC edge artifact on the ELP (reads ~255, §14.6).
     MIN_SEARCH_EXPOSURE = 2
 
@@ -89,21 +90,21 @@ class AutoExposureLogicModule:
         return result
 
     @staticmethod
-    def qGrayPeak(image, percentile: float = 99.9) -> float:
-        """Shared brightness metric for the auto-exposure sweep: a high percentile of qGray luminance
-        ((11R+16G+5B)/32) over the frame — the spectrum's peak. qGray (not max-over-channels) is used because on a
-        coloured emission-line source max-over-channels pegs at 255 from a few saturated line pixels and defeats
-        the search; qGray responds smoothly and monotonically to exposure (proven by the --diagnose sweep,
-        SPEC_capture_quality.md §14.6). `image` is a detached RGB888 QImage; returns 0.0 for a missing frame."""
+    def channelPeak(image, percentile: float = 99.9) -> float:
+        """Shared brightness metric for the auto-exposure sweep: a high percentile of the BRIGHTEST channel
+        (max over R,G,B) across the frame — the per-channel clip detector. Auto-exposure targets this just below
+        255 so NO channel saturates: a green line whose G (and B) clip to white reads only ~246 in qGray but 255
+        here, and only this metric keeps it chromatic enough for the colour-anchored calibration to find it
+        (SPEC_capture_quality.md §14.6). p99.9 (not the raw max) so a handful of hot pixels can't peg it; real
+        line clipping is far more than 0.1% of pixels. `image` is a detached RGB888 QImage; 0.0 if missing."""
         if image is None:
             return 0.0
         converted = image.convertToFormat(image.format())
         width, height = converted.width(), converted.height()
         pointer = converted.constBits()
         pixels = np.frombuffer(pointer, np.uint8).reshape(height, converted.bytesPerLine())
-        rgb = pixels[:, :width * 3].reshape(height, width, 3).astype(np.float32)
-        qgray = (11.0 * rgb[:, :, 0] + 16.0 * rgb[:, :, 1] + 5.0 * rgb[:, :, 2]) / 32.0
-        return float(np.percentile(qgray, percentile))
+        rgb = pixels[:, :width * 3].reshape(height, width, 3)
+        return float(np.percentile(rgb.max(axis=2), percentile))
 
     def __select(self, measured: dict, target: int, fallback: int) -> int:
         """Brightest exposure whose measured brightness stays <= target; if every probe clips (all > target),

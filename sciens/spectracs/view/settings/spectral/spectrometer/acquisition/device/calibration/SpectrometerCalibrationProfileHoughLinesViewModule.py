@@ -11,7 +11,7 @@ from sciens.spectracs.logic.spectral.acquisition.device.calibration.Spectrometer
     SpectrometerRegionOfInterestLogicModule
 from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
     SpectrometerCalibrationProfileHoughLinesVideoThread
-from sciens.spectracs.logic.appliction.video.capture.AutoExposureCaptureHelper import AutoExposureCaptureHelper
+from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
@@ -112,17 +112,16 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         self.videoThread = SpectrometerCalibrationProfileHoughLinesVideoThread()
         self.videoThread.setIsVirtual(isVirtual)
 
-        # Real camera: capture the ROI burst at the sensor's authored calibration exposure — NOT auto-exposed.
-        # The bisection pre-pass assumes brightness rises monotonically with the exposure value, but this ELP's
-        # control is INVERTED and clamps above ~16 (SPEC_capture_quality.md §4.8), so it nondeterministically
-        # walked the burst to a wrong (too-dark or bloomed) level and Hough/edge detection failed. A fixed
-        # stored exposure is the same value the peak-detection step uses.
+        # Real camera: AUTO-EXPOSE the ROI burst (same as the peak-detection step) so it adapts to the lamp and
+        # keeps the band UNCLIPPED — a fixed exposure clips as the CFL warms up, blooming the band and throwing off
+        # Hough/edge detection (SPEC_capture_quality.md §14.6). The sweep runs synchronously in the capture thread
+        # BEFORE the 50-frame burst.
         if not isVirtual:
-            deviceIndex, exposure = AutoExposureCaptureHelper().resolveFixedExposureCapture(sensor)
+            deviceIndex = SensorCaptureIndexResolver().resolveCaptureIndex(sensor)
             if deviceIndex is not None:
                 self.videoThread.setDeviceId(deviceIndex)
-            if exposure is not None:
-                self.videoThread.setExposure(exposure)
+            self.videoThread.autoExposureProgress.connect(self.__onAutoExposeProgress)
+            self.videoThread.requestAutoExpose(1, 500)
 
         self.videoThread.videoThreadSignal.connect(self.handleVideoThreadSignal)
         self.videoThread.setFrameCount(50)
@@ -149,6 +148,14 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         layout.addWidget(self.createLabeledComponent('y2', self.y2Component), 1, 1, 1, 1)
 
         return result
+
+    def __onAutoExposeProgress(self, probeIndex, totalProbes):
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = totalProbes
+        signal.currentStepIndex = min(probeIndex, totalProbes)
+        signal.text = "Auto-exposing… [%d/%d]" % (signal.currentStepIndex, totalProbes)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     def handleVideoThreadSignal(self, event: threading.Event,
                                 videoSignal: SpectrometerCalibrationProfileHoughLinesVideoSignal):

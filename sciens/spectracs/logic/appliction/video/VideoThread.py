@@ -21,9 +21,10 @@ class VideoThread(QThread,Generic[S]):
     # diagnostics drain — no async live-stream / event-loop lag (SPEC_capture_quality.md §14.6).
     autoExposureProgress = Signal(int, int)   # (probeIndex, totalProbes) — drives the status bar
     autoExposureFinished = Signal(int)        # chosen exposure — the view applies it to its slider
-    __AUTO_EXPOSE_DRAIN_MS = 600              # wall-clock drain per probe (what --diagnose validated)
-    __AUTO_EXPOSE_WARMUP_MS = 1200            # longer drain BEFORE the sweep: fully transition off the pre-AE
-                                              # (live-slider) exposure so the first measured probe isn't stale
+    # Fixed drain per probe, safely past the ELP's exposure-change settle (~1.2 s latency then jump; steady by
+    # ~1.5 s — measured, SPEC_capture_quality.md §14.6). A shorter/adaptive drain under-reads a big jump (the
+    # sensor is still ramping) → the sweep picks an over-bright, clipping exposure. A flat fixed wait can't misfire.
+    __AUTO_EXPOSE_SETTLE_MS = 1800
 
     def __init__(self):
         super().__init__()
@@ -69,15 +70,6 @@ class VideoThread(QThread,Generic[S]):
         minExposure, maxExposure, target, iterations = self._autoExposeRequest
         if target is None:
             target = AutoExposureLogicModule.DEFAULT_TARGET
-
-        # Warm-up: the live stream was at some (possibly bright) exposure; a single per-probe drain isn't enough to
-        # fully transition off a LARGE first jump, so the first probe would read a stale half-bright frame (§14.6).
-        # Move to the low end and drain longer, discarding, so every measured probe below is clean.
-        warmExposure = max(int(minExposure), AutoExposureLogicModule.MIN_SEARCH_EXPOSURE)
-        self._backend.setExposure(warmExposure)
-        self._appliedExposure = warmExposure
-        self.__drainSync(self.__AUTO_EXPOSE_WARMUP_MS)
-
         probe = {"i": 0}
 
         def measure(exposure):
@@ -85,13 +77,19 @@ class VideoThread(QThread,Generic[S]):
             self.autoExposureProgress.emit(probe["i"], iterations)
             self._backend.setExposure(exposure)
             self._appliedExposure = exposure
-            frame = self.__drainSync(self.__AUTO_EXPOSE_DRAIN_MS)
-            return AutoExposureLogicModule.qGrayPeak(frame)
+            # Fixed drain past the settle so a big jump has fully ramped before we measure (each probe self-settles;
+            # no separate warm-up needed).
+            return AutoExposureLogicModule.channelPeak(self.__drainSync(self.__AUTO_EXPOSE_SETTLE_MS))
 
         best = AutoExposureLogicModule().findExposure(measure, minExposure, maxExposure, target, iterations)
         self._backend.setExposure(best)
         self._appliedExposure = best
         self._liveExposure = best     # keep the normal loop from re-applying a stale slider value
+        # Settle at the CHOSEN exposure before we hand back to the burst: `best` is a fresh change from the last
+        # probe, and the ELP takes ~1.2-1.5 s to ramp — without this the first burst frames would be captured
+        # mid-ramp (the reference-only outliers, SPEC_capture_quality.md §14.6). Sample capture reuses an already
+        # settled exposure, which is why it never showed them.
+        self.__drainSync(self.__AUTO_EXPOSE_SETTLE_MS)
         self.autoExposureFinished.emit(int(best))
 
     def __drainSync(self, milliseconds):

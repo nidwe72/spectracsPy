@@ -375,6 +375,11 @@ class CapturePanel(QWidget):
         if self.__videoThread is None or self.__autoExposing:
             return
         self.__autoExposing = True
+        # Drop the last streamed frame: the thread emits NOTHING during the ~15 s sweep, so __latestImage would
+        # otherwise stay stale (a pre-sweep, old-exposure frame) and the reference burst would grab it as its first
+        # frame(s) — the reference-only outliers (SPEC_capture_quality.md §14.6). Nulling it forces
+        # __waitForFirstFrame to wait for a genuinely fresh post-AE frame before the burst starts.
+        self.__latestImage = None
         if self.__innerTabs is not None:
             self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)
         self.__updateControls()
@@ -436,6 +441,11 @@ class CapturePanel(QWidget):
             if role == REFERENCE and self.__autoExposureCheckBox.isChecked():
                 self.__runAutoExposure()      # async: hands the sweep to the capture thread
                 self.__waitForAutoExposure()  # ...block until it finishes before grabbing the reference burst
+                # The FIRST frame the stream delivers after the sweep resumes is a one-off outlier on this ELP
+                # (its recurring first-frame quirk — §14.6). Wait for it, then drop it, so the reference burst
+                # starts on the second, clean frame. Sample never sweeps, so its warm stream never shows this.
+                self.__waitForFirstFrame()
+                self.__latestImage = None
 
             frameCount = int(self.__framesComboBox.currentText())
             self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)

@@ -506,7 +506,7 @@ robust selector** and hue the softer confidence. **Ready to port** (`Spectromete
 Running the ported §13 detection in the app on masterUserExakta's ELP surfaced three real bugs, each measured then
 fixed and confirmed by Edwin on the rig. All uncommitted at time of writing; this section is the design-of-record.
 
-### 14.1 Calibration no longer auto-exposes — fixed stored exposure
+### 14.1 Calibration no longer auto-exposes — fixed stored exposure  ⚠ SUPERSEDED by §14.6 Fix 4 (now auto-exposes)
 - **Symptom:** both calibration steps captured a wrong-brightness burst — first bloomed, then dark — so the mercury
   green doublet collapsed and peak detection failed.
 - **Root cause:** both steps ran an auto-exposure *pre-pass* (`AutoExposureCaptureHelper.autoExposeForSensor` →
@@ -541,15 +541,14 @@ fixed and confirmed by Edwin on the rig. All uncommitted at time of writing; thi
   (y≈906/1782) and the doublet resolves. **Lesson:** calibrationExposure must be re-judged whenever capture
   resolution changes.
 
-### 14.4 Auto-exposure now — where it runs
+### 14.4 Auto-exposure now — where it runs (FINAL, see §14.6)
 | Path | Strategy |
 |---|---|
-| Calibration ROI/Hough + wavelength peak-detect | **Fixed** stored exposure (150), no auto-exposure (§14.1) |
-| Dev capture bench (`DevCaptureViewModule`) | **Synchronous in-thread** direction-agnostic sweep (§14.5–14.6) |
-| Measurement capture (`CapturePanel`) | **Synchronous in-thread** sweep (same); capture blocks on it first |
+| Calibration ROI/Hough + wavelength peak-detect | **Synchronous in-thread** sweep before the burst (§14.6 Fix 4) — the fixed-150 of §14.1 is RETIRED |
+| Dev capture bench (`DevCaptureViewModule`) | **Synchronous in-thread** sweep (§14.5–14.6) |
+| Measurement capture (`CapturePanel`) | **Synchronous in-thread** sweep; capture blocks on it, drops the first post-sweep frame (§14.6 Fix 5) |
 
-`AutoExposureCaptureHelper.autoExposeForSensor` / `findBestExposure` now have **zero callers** (dead code — only
-`resolveFixedExposureCapture` + `__seedExposure` are live). Removal is a pending cleanup.
+`AutoExposureCaptureHelper` now has **zero callers** — fully dead code, pending deletion.
 
 ### 14.5 Shared direction-agnostic auto-exposure — the decision logic
 `AutoExposureLogicModule.findExposure` rewritten from a monotonic low→high bisection (which assumed brightness
@@ -567,36 +566,78 @@ rises with the exposure VALUE — false on the inverted-seeming ELP) to a **dire
 
 ### 14.6 The real bug was MEASUREMENT, not the search — synchronous in-thread AE (RIG-VERIFIED 2026-07-15)
 The decision logic (§14.5) was never the problem; **measuring brightness through the async live stream was**. The
-saga, because the lesson is expensive:
-- **What we saw:** the live AE returned garbage — probes reading a false 255 at low exposure, exp 22 and exp 500
-  reading the *same* value, the search landing on exp 1 (dark) or maxing out at random. Tuning the settle
-  (350 ms → frame-count → 700 ms wall-clock) never fully fixed it; readings stayed run-to-run inconsistent.
-- **Why:** a UVC exposure change takes a fixed **wall-clock** time (~0.5 s on this ELP) to take effect, and the
-  camera's **frame rate depends on exposure** (short exposure → fast readout). Measuring off the async streaming
-  thread (poke the slider, read whatever `__latestImage` the Qt pipeline last pushed) means at low exposure the
-  fast stream delivers frames *before the change applied* → a stale, brighter frame. Frame-count settles fail
-  (fps varies); even wall-clock settles fought display/event-loop lag.
-- **The tell:** `diagnostics/capture_quality_probe.py --diagnose` produced a perfectly clean monotonic curve at
-  every exposure — because it reads the backend **directly and synchronously** (set exposure → actively drain
-  frames for 600 ms → measure). That is the method; the live path was doing the opposite.
-- **The fix (as-built):** run the sweep **synchronously inside the capture thread** (`VideoThread`), which owns the
-  backend. `requestAutoExpose()` sets a request the run loop picks up before the next grab; `__runAutoExposeSync`
-  does, per probe: `setExposure` → `__drainSync` (actively read+discard for a wall-clock window, mirroring the
-  probe) → measure. Progress/result return via `autoExposureProgress` / `autoExposureFinished` signals. No Qt event
-  loop, no async reads → the entire lag class is gone. Both views request it; `CapturePanel`'s capture sequence
-  blocks on `__waitForAutoExposure()` so the reference burst runs *after* the sweep.
-- **Metric:** `AutoExposureLogicModule.qGrayPeak` (high percentile of qGray) replaces max-over-channels, which pegs
-  at 255 from a few saturated coloured-line pixels. qGray is what --diagnose used; it responds smoothly.
-- **Warm-up:** before the sweep, move to the low end and drain **1200 ms** (discard). Without it the *first* probe
-  is contaminated by the pre-AE (live-slider) exposure — a large first jump doesn't fully transition in one drain —
-  so it read stale-bright and the search sometimes chose the wrong end. With it, all probes are clean.
-- **Verified:** dev bench + measurement capture, four consecutive toggles, all clean/monotonic/consistent (exp 2 →
-  ~20 dark, exp 500 → ~122, chose 500 every time — the lamp is dim so maxing out is correct). The display simply
-  freezes on "Auto-exposing…" during the ~5 s sweep, then resumes.
-- **Lesson:** never auto-expose by reading an async live stream. Drive the sensor synchronously and drain by
-  wall-clock; frame-count is meaningless when fps tracks exposure.
+full saga (the lesson is expensive, and every fix below was measured then rig-verified):
 
-**Still deferred — next task:** wire `diagnostics/calibration_fix_test.py` live-rig mode to auto-expose via this
-same path (mirror a real acquisition; adapt to lamp/warmup) while `--replay` stays deterministic on the fixture.
-And the **ROI-misplacement** issue in the measurement bench (dark/noisy extracted spectrum despite a well-exposed
-image — the ROI sits over black above the band; likely a resolution/ROI-coordinate mismatch, §4.9).
+- **What we saw:** the live AE returned garbage — probes reading a false 255 at low exposure, exp 22 and exp 500
+  reading the *same* value, the search landing on exp 1 (dark) or maxing out at random, run-to-run inconsistent.
+- **Root — async measurement + low fps.** Pinning 2592×1944 (§4.9) drops the ELP to ~1–2 fps. A manual exposure
+  change then takes ~1.2–1.5 s of wall-clock to take effect (looks like a fixed *frame-count* of sensor latency,
+  stretched long by the low fps). Measuring off the async streaming thread — read whatever `__latestImage` the Qt
+  pipeline last pushed — reads frames from *before* the change applied → stale/wrong brightness. Frame-count
+  settles fail (fps itself tracks exposure); wall-clock settles fought display/event-loop lag. **At a normal
+  ~30 fps this latency is ~50–100 ms and the async approach would mostly have gotten away with it — the high
+  resolution didn't create the fragility, it stretched every transient long enough to fail reliably.**
+- **The tell:** `capture_quality_probe.py --diagnose` produced a clean monotonic curve at every exposure — because
+  it reads the backend **directly and synchronously** (set exposure → actively drain → measure). The live path did
+  the opposite.
+
+**Fix 1 — synchronous in-thread sweep.** Run the sweep **inside the capture thread** (`VideoThread`, which owns the
+backend). `requestAutoExpose()` sets a request the run loop picks up before the next grab; `__runAutoExposeSync`
+does per probe: `setExposure` → `__drainSync` (actively read+discard for a fixed wall-clock window) → measure.
+Progress/result return via `autoExposureProgress`/`autoExposureFinished`. No Qt event loop, no async reads → the
+lag class is gone. Calibration burst threads inherit it (auto-expose runs before the 50-frame burst); `CapturePanel`
+blocks on `__waitForAutoExposure()` so the reference burst runs after the sweep.
+
+**Fix 2 — per-channel metric (`channelPeak`), NOT qGray.** First tried qGray (high percentile of luminance) to dodge
+the max-over-channels "255 peg". That was wrong: qGray *averages the channels*, so a green line whose G and B clip
+to white reads only ~246 — invisible as saturation. The AE then over-exposed until the strong green line clipped to
+a white plateau (R≈G≈B), its green-channel dominance (`G−max(R,B)`) collapsed to ~0, and the colour-anchored
+detection (§13) mis-anchored green onto the yellow line → calibration failed (8.6 nm). `channelPeak` = p99.9 of
+`max(R,G,B)`, target **245** just below the 255 clip → *guarantees no channel saturates*, so lines stay chromatic.
+(p99.9 not raw max, so a handful of hot pixels can't peg it; real line clipping is ≫0.1% of pixels.)
+
+**Fix 3 — fixed settle drain, not adaptive.** A big exposure jump under-reads if measured too early (the sensor is
+still ramping). First tried an *adaptive* stabilize-drain (drain in chunks until the reading stops changing) — it
+**false-converged** in the ramp's flat ~1.2 s latency window (two similar chunks → "settled" at 225 when the true
+value was 255), so the AE still picked the over-bright exposure. Measured the ramp directly (`--diagnose`-style
+loop at fixed exp): ~1.2 s latency then a jump, steady by ~1.5 s. So each probe now drains a **fixed 1.8 s**
+(`__AUTO_EXPOSE_SETTLE_MS`) — a flat wait past the settle can't misfire. Simpler and reliable; the cost is a ~15 s
+sweep at low fps.
+
+**Fix 4 — calibration auto-exposes (retired the fixed-150 path).** We first made calibration capture at a fixed
+stored exposure (§14.1) because the *broken* AE over-exposed. Once the AE reliably prevents saturation, fixed-150
+became the liability Edwin warned about: as the CFL **warms up brighter**, 150 clips → green plateau → detection
+fails. Both calibration views (`...WavelengthCalibrationViewModule`, `...HoughLinesViewModule`) now call
+`requestAutoExpose` before their burst (device index via `SensorCaptureIndexResolver`). `AutoExposureCaptureHelper`
+is now fully dead. Rig: AE chose exp 32 on the warm lamp, green anchored correctly, **0.66 nm PASS**.
+
+**Fix 5 — reference-only first-frame outliers.** After the sweep, two view-side hazards produced outlier frames at
+the *start* of the reference burst (sample never sweeps, so never showed them): (a) the chosen exposure is a fresh
+change → ramping — so `__runAutoExposeSync` now drains 1.8 s at `best` *before* handing back; (b) the thread emits
+nothing during the ~15 s sweep, so `CapturePanel.__latestImage` stays stale (pre-sweep frame) — so `__runAutoExposure`
+nulls it, and the reference path additionally **waits for the first post-sweep frame and discards it** (this ELP's
+recurring first-frame quirk) so the burst starts on the second, clean frame.
+
+- **Lesson:** never auto-expose by reading an async live stream. Drive the sensor synchronously; drain by
+  wall-clock past the settle; measure per-channel so nothing clips; and don't trust the first frame after a change.
+
+### 14.7 Tuning constants & known fragilities (READ BEFORE porting to another camera/resolution)
+The AE is robust *for this ELP at 2592×1944 under the CFL/LED lamps*, but several constants are **measured against
+that specific setup**, not adaptive. If the camera, resolution (→ fps), or lamp changes materially, revisit these:
+
+| Constant | Where | Value | Why / how it could break |
+|---|---|---|---|
+| `__AUTO_EXPOSE_SETTLE_MS` | `VideoThread` | 1800 ms | Sized to the measured ~1.5 s exposure ramp. Ramp is ~frame-count latency → its wall-clock scales with **fps**; at higher fps it's wasteful, at slower it could under-settle. |
+| `DEFAULT_TARGET` | `AutoExposureLogicModule` | 245 | Per-channel clip headroom below 255. Fine for 8-bit; revisit if a channel needs more margin. |
+| `MIN_SEARCH_EXPOSURE` | `AutoExposureLogicModule` | 2 | Excludes the exp=1 UVC edge artifact (reads ~255). Camera-specific. |
+| iterations / ladder | callers pass 8 | 8 probes | 3 coarse + up to 5 refine. Each probe = one 1.8 s drain → ~15 s total (the UX cost). |
+| first-frame discard | `CapturePanel` | drop 1 | Assumes exactly ONE bad frame after a sweep. If the camera emits >1, this wouldn't catch it. |
+| drain window (test) | `calibration_fix_test.auto_expose` | 1800 ms | Mirrors the app; same fps assumption. |
+
+**The real hardening (deferred):** replace the fixed settle with a *properly robust* adaptive one — drain until the
+reading is stable for **K consecutive reads** AND a **minimum wait** has elapsed (past the latency window), with a
+cap. That removes the magic numbers and the false-convergence trap. Also possible: run the AE at a **low resolution**
+(fast fps → fast settle) then switch to 2592 for the final capture — kills most of the timing pain, at the cost of
+resolution-switch complexity and verifying exposure carries across modes.
+
+**Remaining cleanup:** delete the now-dead `AutoExposureCaptureHelper`.
