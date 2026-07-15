@@ -360,7 +360,9 @@ class CapturePanel(QWidget):
 
     def __applyPreviewRoiOverlay(self, imageWidth):
         calibration = self.__calibration()
-        extended = ExtendedRoiLogicModule().extendedRoi(calibration, imageWidth) if calibration is not None else None
+        nmMin, nmMax = self.__captureWindow()  # overlay reflects the plugin's clamped window (§9 M1), not 400–700
+        extended = ExtendedRoiLogicModule().extendedRoi(calibration, imageWidth, nmMin, nmMax) \
+            if calibration is not None else None
         if extended is None:
             self.__videoViewModule.clearRoi()
         else:
@@ -556,6 +558,16 @@ class CapturePanel(QWidget):
 
     # --- ROI widen / restore (idempotent per session) ---
 
+    def __captureWindow(self):
+        # SPEC_capture_quality.md §9 (M1): the plugin's declared usable wavelength window (from the active step's
+        # CaptureView), or the legacy 400–700 default when the plugin declares none. Same window on every step
+        # (Reference/Sample) — the plugin sets one constant on all of them — so T=S/R divides matching domains.
+        view = self.__activeStep.getView() if self.__activeStep is not None else None
+        nmMin = getattr(view, "wavelengthMinNm", None)
+        nmMax = getattr(view, "wavelengthMaxNm", None)
+        return (nmMin if nmMin is not None else self.__NM_MIN,
+                nmMax if nmMax is not None else self.__NM_MAX)
+
     def __applyExtendedRoi(self, imageWidth):
         if self.__savedRoiX is not None:
             return
@@ -565,12 +577,32 @@ class CapturePanel(QWidget):
         x1, x2 = calibration.regionOfInterestX1, calibration.regionOfInterestX2
         if x1 is None or x2 is None:
             return
-        newX1, newX2 = ExtendedRoiLogicModule().extendedXBounds(calibration, imageWidth, self.__NM_MIN, self.__NM_MAX)
+        nmMin, nmMax = self.__captureWindow()
+        newX1, newX2 = ExtendedRoiLogicModule().extendedXBounds(calibration, imageWidth, nmMin, nmMax)
         if newX1 is None or newX2 is None:
             return
+        self.__warnIfWindowShortfall(calibration, newX1, newX2, nmMin, nmMax)
         self.__savedRoiX = (x1, x2)
         calibration.regionOfInterestX1 = int(newX1)
         calibration.regionOfInterestX2 = int(newX2)
+
+    def __warnIfWindowShortfall(self, calibration, x1, x2, nmMin, nmMax):
+        # SPEC §9 (M1) guard: extendedXBounds silently clamps to the raster, so if the calibration can't physically
+        # reach nmMin/nmMax the achieved window is NARROWER than requested with no notice. Compare the achieved nm
+        # at the clamped columns and flag the shortfall (an operator-confidence signal).
+        coeffs = [getattr(calibration, n, None) for n in
+                  ("interpolationCoefficientA", "interpolationCoefficientB",
+                   "interpolationCoefficientC", "interpolationCoefficientD")]
+        if any(c is None for c in coeffs):
+            return
+        a, b, c, d = (float(v) for v in coeffs)
+        nmAt = lambda px: a * px ** 3 + b * px ** 2 + c * px + d
+        achievedLo, achievedHi = sorted((nmAt(int(x1)), nmAt(int(x2))))
+        tol = 2.0
+        if achievedLo > nmMin + tol or achievedHi < nmMax - tol:
+            print("WARNING CapturePanel: capture window shortfall — requested %.0f–%.0f nm, calibration reaches "
+                  "only %.0f–%.0f nm (raster-clamped). SPEC_capture_quality.md §9."
+                  % (nmMin, nmMax, achievedLo, achievedHi))
 
     def restoreRoi(self):
         if self.__savedRoiX is None:

@@ -1,9 +1,11 @@
 from typing import Dict
 
-from PySide6.QtGui import qGray, QColor
+import numpy as np
+from PySide6.QtGui import qGray, QColor, QImage
 from numpy import poly1d
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.spectral.acquisition.RobustReductionLogicModule import RobustReductionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleResult import \
@@ -19,6 +21,11 @@ class ImageSpectrumAcquisitionLogicModule:
     # Drift tripwire (SPEC_capture_quality.md §4.9): remember which (frame,ROI) mismatches we've already warned about,
     # so a resolution/calibration mismatch warns ONCE per unique shape instead of 150x per burst.
     _warnedRoiMismatch = set()
+
+    # SPEC §6 (M2): fraction of the ROI band height dropped at the TOP and BOTTOM before the per-column reduction.
+    # The edge rows bleed the dark border outside the slit and carry the worst smile-λ error. Tunable; finalize
+    # on the rig (M2.4). The measurement is broadband, so a generous central band helps and smile barely matters.
+    __INSET_FRACTION = 0.2
 
     def execute(self,moduleParameters:ImageSpectrumAcquisitionLogicModuleParameters)->ImageSpectrumAcquisitionLogicModuleResult:
 
@@ -68,46 +75,60 @@ class ImageSpectrumAcquisitionLogicModule:
 
             y1= calibrationProfile.regionOfInterestY1
             y2= calibrationProfile.regionOfInterestY2
-            y= int(y1 + (y2 - y1) / 2.0)
 
             x1= calibrationProfile.regionOfInterestX1
             x2= calibrationProfile.regionOfInterestX2
 
-            # print(f"x1:{x1};x2:{x2}")
-
             # Drift tripwire (SPEC_capture_quality.md §4.9): the calibration ROI must fit inside the captured frame.
             # If capture resolution ever drifts below the calibration resolution (firmware/USB/cv2 change), the px->nm
             # cubic mis-maps and eval bands fall off-frame — the exact silent regression the probe found. Warn once
-            # per unique mismatch and clamp the reads so we never sample outside the frame (undefined QImage.pixel).
+            # per unique mismatch and clamp the reads so we never sample outside the frame.
             imageHeight = image.height()
-            if x2 > imageWidth or y2 > imageHeight or y >= imageHeight:
+            if x2 > imageWidth or y2 > imageHeight:
                 key = (imageWidth, imageHeight, int(x2), int(y2))
                 if key not in ImageSpectrumAcquisitionLogicModule._warnedRoiMismatch:
                     ImageSpectrumAcquisitionLogicModule._warnedRoiMismatch.add(key)
                     print("WARNING ImageSpectrumAcquisitionLogicModule: calibration ROI (x2=%d,y2=%d) exceeds the "
                           "captured frame (%dx%d) — capture resolution likely does not match the calibration "
                           "(SPEC_capture_quality.md §4.9); spectrum will be clipped/mis-mapped." % (x2, y2, imageWidth, imageHeight))
-            y = min(y, imageHeight - 1)
             x2 = min(x2, imageWidth)
+            y2 = min(y2, imageHeight)
 
+            # M2 spatial reduction (SPEC §6): a robust per-column estimate over an INSET band of rows, replacing the
+            # single-centre-row read — so a hot/dead pixel or a smile-blurred edge row can't skew the spectrum.
+            reduced = self.__reducedColumnValues(image, x1, x2, y1, y2)
             valuesByNanometers={}
-            for pixelIndex in range(x1,x2):
-                nanometer=polynomial(pixelIndex)
-                gray = qGray(image.pixel(pixelIndex, y))
-                # print(f"gray:{gray}")
-                valuesByNanometers[nanometer]= gray
-                # if moduleParameters.getAcquireColors():
-                #     colorsByPixelIndices[pixelIndex]=image.pixelColor(pixelIndex,y)
+            for offset, pixelIndex in enumerate(range(x1, x2)):
+                valuesByNanometers[polynomial(pixelIndex)] = float(reduced[offset])
 
             spectrum.setValuesByNanometers(valuesByNanometers)
             spectrum.addToCapturedValuesByNanometers(valuesByNanometers)
-
-            # print(f"valuesByNanometers:{valuesByNanometers}")
-
-            pass
 
         if moduleParameters.getAcquireColors():
             spectrum.setColorsByPixelIndices(colorsByPixelIndices)
 
         return result
+
+    def __reducedColumnValues(self, image, x1, x2, y1, y2):
+        """One robust qGray value per column x1..x2, reduced over an INSET band of rows (SPEC §6). Saturated
+        (any channel==255) and dead (all channels==0) pixels are masked to NaN BEFORE qGray is formed —
+        saturation is a per-channel fact that qGray would hide — then Tukey-biweight per column. An all-masked
+        column falls back to its plain median (so a fully-clipped column still reports a value)."""
+        inset = int(round((y2 - y1) * self.__INSET_FRACTION))
+        yLo = max(0, int(y1) + inset)
+        yHi = max(yLo + 1, min(int(y2) - inset, image.height()))
+
+        img = image.convertToFormat(QImage.Format.Format_RGB888)
+        width = img.width()
+        frame = np.frombuffer(img.constBits(), np.uint8).reshape(img.height(), img.bytesPerLine())
+        frame = frame[:, :width * 3].reshape(img.height(), width, 3)[yLo:yHi, int(x1):int(x2), :].astype(np.float32)
+
+        r, g, b = frame[:, :, 0], frame[:, :, 1], frame[:, :, 2]
+        qgray = (11.0 * r + 16.0 * g + 5.0 * b) / 32.0
+        maxChannel = np.maximum(np.maximum(r, g), b)
+        valid = (maxChannel < 255.0) & (maxChannel > 0.0)
+
+        reduced = RobustReductionLogicModule().tukeyBiweightPerColumn(np.where(valid, qgray, np.nan))
+        fallback = np.median(qgray, axis=0)                    # all-clipped/dead column -> plain median (keeps 255/0)
+        return np.where(np.isnan(reduced), fallback, reduced)
 

@@ -8,10 +8,12 @@ original topics, and the work that followed is **IMPLEMENTED + RIG-VERIFIED + co
 - **§14.5–14.7** — shared **synchronous in-thread auto-exposure** with a per-channel (no-saturation) metric and a
   fixed settle; the dev bench, measurement `CapturePanel`, AND calibration all use it (fixed-exposure paths retired).
   §14.7 lists the tuned timing constants and known fragilities.
+- **§9 (M1)** — plugin-driven wavelength ROI clamp (window **450–630 nm**, plugin-declared, host hard-clamps).
+- **§6 (M2)** — robust reduction: spatial Tukey-biweight over an inset band + temporal sigma-clipped mean.
 
-Still **DESIGN-only** (the original operator topics, not yet built): **M1** (Topic 1, plugin-driven ROI clamp §9),
-**M2** (Topic 2, robust spatial/temporal reduction §6), **M3** (Topic 4, dark-frame subtraction §5). Topic 3
-(normalization) = documented no-op (§7).
+Still **DESIGN-only / not needed**: Topic 3 (normalization) = documented no-op (§7); **M3** (Topic 4, dark-frame
+subtraction §5) = **not needed** — the dark was measured near-zero, and the M2 spatial Tukey already discards the
+rare hot pixel (so no bad-pixel map either).
 
 Source: Edwin. Investigated with two code-map sweeps + web research (astronomy CCD reduction) + rubber-duck
 adversarial passes, then measured-then-built on the rig throughout. Governs the capture→spectrum path shared by both
@@ -56,8 +58,9 @@ numbers justify. No blind implementation.
 ## 3. Milestones (ordered by fidelity impact)
 
 **M0 (probe) → M1 (Topic 1 ROI clamp) → M2 (Topic 2 robust reduction) → M3 (Topic 4 dark, scoped by M0).**
-Topic 3 = documented no-op (§7). Warmup protocol note (§8). M1 is independently shippable; M2/M3 depend on M0's
-evidence.
+Topic 3 = documented no-op (§7). Warmup protocol note (§8). **As-built: M1 ✅ IMPLEMENTED (§9), M2 ✅ IMPLEMENTED
+(§6), M3 ✅ NOT NEEDED** (dark measured near-zero; Tukey covers hot pixels). All shipped after the §4/§13/§14
+resolution+calibration+auto-exposure cascade.
 
 ---
 
@@ -307,6 +310,15 @@ deterministic kill for column-constant hot pixels (§6). Both gated on M0 showin
 
 ## 6. Topic 2 (M2) — robust reduction: spatial ≠ temporal
 
+**STATUS: IMPLEMENTED + rig-verified (2026-07-15).** Estimators in a new pure-numpy `RobustReductionLogicModule`
+(unit-tested, `diagnostics/robust_reduction_selftest.py`): **spatial** Tukey-biweight per column over an inset band
+in `ImageSpectrumAcquisitionLogicModule` (measurement branch only — calibration branch untouched), masking
+per-channel saturation to NaN before qGray; **temporal** sigma-clipped mean in `MeanSpectrumLogicModule` (rewritten:
+align-by-key, tolerates N<150), which `MeanOp` delegates to → both the live display and the processing pipeline get
+it. Inset drop = `__INSET_FRACTION` (0.2, tunable). Bad-pixel map NOT built (dark near-zero; Tukey covers the rare
+hot pixel). Design below as-built.
+
+
 **Load-bearing subtlety (confirmed by research + duck):** a hot pixel is at the *same location in every frame*, so
 **no temporal combine over frames removes it** — it's the consistent value, not an outlier. Only **spatial** rejection
 across rows, or a **bad-pixel mask**, kills it. Conversely, a glitch/cosmic-ray-like frame is transient — only the
@@ -369,7 +381,13 @@ is captured cold and the **sample** later warm, `R` has shifted and `T = S/R` is
 M0 measures the drift curve. **Open (decide after M0):** enforced warmup wait before reference capture vs a displayed
 "let it warm up" coach line.
 
-## 9. Topic 1 (M1) — plugin-driven wavelength ROI (450–620 nm)
+## 9. Topic 1 (M1) — plugin-driven wavelength ROI (450–630 nm)
+
+**STATUS: IMPLEMENTED + rig-verified (2026-07-15).** As-built: `CaptureView.wavelengthMin/MaxNm` (None → legacy
+400–700); `DevSpectralPlugin` declares the window (currently **450–630**, adjusted from the wire's monitor) on
+every capture step + exposes `declaredEvalBands()` + asserts at build that the window ⊇ all eval bands (D1);
+`CapturePanel.__captureWindow()` feeds it into the ROI clamp AND the preview overlay, with a shortfall warning
+when the calibration can't physically reach the requested edge (D3). Design below as-built.
 
 **Decision (Edwin 2026-07-15): HARD capture clamp, plugin-declared, for now.** The stored spectrum is truly limited
 to the plugin's window; the dead lamp bands never enter the data (they'd only feed the S/R floor-guard garbage). The
