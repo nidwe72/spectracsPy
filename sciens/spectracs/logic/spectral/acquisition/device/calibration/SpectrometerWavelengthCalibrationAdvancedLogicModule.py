@@ -1,10 +1,14 @@
 from typing import List
 
 import numpy as np
-from scipy.signal import find_peaks, peak_prominences
+from scipy.signal import find_peaks
 
+from sciens.spectracs.logic.spectral.acquisition.device.calibration.WavelengthLineDetectionLogicModule import \
+    WavelengthLineDetectionLogicModule
 from sciens.spectracs.logic.spectral.util.SpectralLineMasterDataUtil import SpectralLineMasterDataUtil
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectralLine import SpectralLine
+from sciens.spectracs.model.databaseEntity.spectral.device.SpectralLineMasterDataColorName import \
+    SpectralLineMasterDataColorName as Name
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
 
 
@@ -50,15 +54,6 @@ class SpectrometerWavelengthCalibrationAdvancedLogicModule:
         masterDatas.sort(key=lambda md: md.nanometer)
         return masterDatas
 
-    def _anchorPixel(self, intensities, count, leftBound=None, rightBound=None):
-        for prominence in range(1, 255):
-            peaks = find_peaks(intensities, distance=3, width=2, rel_height=0.5, prominence=prominence)[0]
-            matching = [p for p in peaks
-                        if (leftBound is None or p > leftBound) and (rightBound is None or p < rightBound)]
-            if len(matching) <= count:
-                break
-        return sorted(int(p) for p in matching)
-
     def _bucket(self, colorName):
         if colorName is None:
             return None
@@ -73,14 +68,19 @@ class SpectrometerWavelengthCalibrationAdvancedLogicModule:
 
         peaks = find_peaks(intensities, distance=3, width=2, rel_height=0.5, prominence=5)[0]
 
-        greenCandidates = self._anchorPixel(intensities, 1)
-        if not greenCandidates:
+        # Anchor green + red via the SAME colour-constrained detector the basic heuristic uses
+        # (WavelengthLineDetectionLogicModule — the single source of truth). The old "most prominent peak"
+        # anchor mislabelled the Europium red line as green at high capture resolution (the green Hg doublet
+        # splits and Eu out-prominences it), so this predict-and-snap cubic came out wrong and the consensus
+        # then fired "methods disagree" against the now-correct basic detection. The second opinion's
+        # independence lives in the predict-and-snap of the OTHER lines, which by design shares these anchors.
+        detected = WavelengthLineDetectionLogicModule().detect(spectrum)
+        greenLine = detected.get(Name.MERCURY_MANGO_GREEN)
+        redLine = detected.get(Name.EUROPIUM_VIVID_GAMBOGE)
+        if greenLine is None or redLine is None:
             return AdvancedCalibrationResult()
-        green = greenCandidates[0]
-        redCandidates = self._anchorPixel(intensities, 1, leftBound=green)
-        if not redCandidates:
-            return AdvancedCalibrationResult()
-        red = redCandidates[0]
+        green = greenLine.pixelIndex
+        red = redLine.pixelIndex
         if red <= green:
             return AdvancedCalibrationResult()
 

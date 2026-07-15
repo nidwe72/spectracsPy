@@ -112,14 +112,17 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         self.videoThread = SpectrometerCalibrationProfileHoughLinesVideoThread()
         self.videoThread.setIsVirtual(isVirtual)
 
-        # Real camera: auto-expose FIRST (a live pre-pass) so the ROI burst is not bloomed — a clipped
-        # capture merges the CFL lines and Hough/edge detection fails (SPEC_dev_measure_bench D6).
+        # Real camera: capture the ROI burst at the sensor's authored calibration exposure — NOT auto-exposed.
+        # The bisection pre-pass assumes brightness rises monotonically with the exposure value, but this ELP's
+        # control is INVERTED and clamps above ~16 (SPEC_capture_quality.md §4.8), so it nondeterministically
+        # walked the burst to a wrong (too-dark or bloomed) level and Hough/edge detection failed. A fixed
+        # stored exposure is the same value the peak-detection step uses.
         if not isVirtual:
-            deviceIndex, bestExposure = AutoExposureCaptureHelper().autoExposeForSensor(sensor)
+            deviceIndex, exposure = AutoExposureCaptureHelper().resolveFixedExposureCapture(sensor)
             if deviceIndex is not None:
                 self.videoThread.setDeviceId(deviceIndex)
-            if bestExposure is not None:
-                self.videoThread.setExposure(bestExposure)
+            if exposure is not None:
+                self.videoThread.setExposure(exposure)
 
         self.videoThread.videoThreadSignal.connect(self.handleVideoThreadSignal)
         self.videoThread.setFrameCount(50)

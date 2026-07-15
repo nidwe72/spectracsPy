@@ -16,6 +16,10 @@ from sciens.spectracs.model.spectral.Spectrum import Spectrum
 
 class ImageSpectrumAcquisitionLogicModule:
 
+    # Drift tripwire (SPEC_capture_quality.md §4.9): remember which (frame,ROI) mismatches we've already warned about,
+    # so a resolution/calibration mismatch warns ONCE per unique shape instead of 150x per burst.
+    _warnedRoiMismatch = set()
+
     def execute(self,moduleParameters:ImageSpectrumAcquisitionLogicModuleParameters)->ImageSpectrumAcquisitionLogicModuleResult:
 
         # print('ImageSpectrumAcquisitionLogicModule.execute()')
@@ -70,6 +74,21 @@ class ImageSpectrumAcquisitionLogicModule:
             x2= calibrationProfile.regionOfInterestX2
 
             # print(f"x1:{x1};x2:{x2}")
+
+            # Drift tripwire (SPEC_capture_quality.md §4.9): the calibration ROI must fit inside the captured frame.
+            # If capture resolution ever drifts below the calibration resolution (firmware/USB/cv2 change), the px->nm
+            # cubic mis-maps and eval bands fall off-frame — the exact silent regression the probe found. Warn once
+            # per unique mismatch and clamp the reads so we never sample outside the frame (undefined QImage.pixel).
+            imageHeight = image.height()
+            if x2 > imageWidth or y2 > imageHeight or y >= imageHeight:
+                key = (imageWidth, imageHeight, int(x2), int(y2))
+                if key not in ImageSpectrumAcquisitionLogicModule._warnedRoiMismatch:
+                    ImageSpectrumAcquisitionLogicModule._warnedRoiMismatch.add(key)
+                    print("WARNING ImageSpectrumAcquisitionLogicModule: calibration ROI (x2=%d,y2=%d) exceeds the "
+                          "captured frame (%dx%d) — capture resolution likely does not match the calibration "
+                          "(SPEC_capture_quality.md §4.9); spectrum will be clipped/mis-mapped." % (x2, y2, imageWidth, imageHeight))
+            y = min(y, imageHeight - 1)
+            x2 = min(x2, imageWidth)
 
             valuesByNanometers={}
             for pixelIndex in range(x1,x2):

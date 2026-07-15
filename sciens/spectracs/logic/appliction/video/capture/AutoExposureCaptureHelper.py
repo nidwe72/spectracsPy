@@ -39,6 +39,19 @@ class AutoExposureCaptureHelper(QObject):
         best = self.findBestExposure(deviceIndex if deviceIndex is not None else 0, seed)
         return (deviceIndex, best)
 
+    def resolveFixedExposureCapture(self, sensor):
+        """Resolve (deviceIndex, storedExposure) WITHOUT running the auto-exposure bisection. The delicate
+        wavelength-calibration burst captures at the authored calibration exposure instead of searching:
+        this ELP's exposure control is INVERTED and clamps above ~16 (SPEC_capture_quality.md §4.8), which
+        violates AutoExposureLogicModule's monotonic-brightness assumption, so the pre-pass walked the burst
+        to a wrong level and the mercury green doublet collapsed. A fixed stored exposure (validated by
+        diagnostics/calibration_fix_test.py against the cfl_2592 fixture) resolves the doublet reliably.
+        Returns (None, None) for a virtual/absent sensor so the caller skips it."""
+        if sensor is None or sensor.isVirtual:
+            return (None, None)
+        deviceIndex = SensorCaptureIndexResolver().resolveCaptureIndex(sensor)
+        return (deviceIndex, self.__seedExposure(sensor))
+
     def findBestExposure(self, deviceIndex, seedExposure):
         thread = DevCaptureVideoThread()
         thread.setIsVirtual(False)

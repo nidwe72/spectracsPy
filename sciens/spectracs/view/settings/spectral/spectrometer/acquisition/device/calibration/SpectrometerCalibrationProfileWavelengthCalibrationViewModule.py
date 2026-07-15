@@ -149,14 +149,18 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         isVirtual = sensor.isVirtual
         self.wavelengthCalibrationVideoThread.setIsVirtual(isVirtual)
 
-        # Real camera: auto-expose FIRST so the peak-detection burst is not bloomed (clipping merges the
-        # CFL emission lines and the anchor-matching fails) — same pre-pass as the ROI step (D6).
+        # Real camera: capture the CFL peak-detection burst at the sensor's authored calibration exposure —
+        # NOT auto-exposed. The bisection pre-pass assumes brightness rises monotonically with the exposure
+        # value, but this ELP's control is INVERTED and clamps above ~16 (SPEC_capture_quality.md §4.8), so
+        # it walked the burst to a wrong level and the mercury green doublet collapsed. A fixed stored
+        # exposure (validated by diagnostics/calibration_fix_test.py against the cfl_2592 fixture) resolves
+        # the doublet reliably. Direction-agnostic auto-exposure is a separate milestone for dev captures.
         if not isVirtual:
-            deviceIndex, bestExposure = AutoExposureCaptureHelper().autoExposeForSensor(sensor)
+            deviceIndex, exposure = AutoExposureCaptureHelper().resolveFixedExposureCapture(sensor)
             if deviceIndex is not None:
                 self.wavelengthCalibrationVideoThread.setDeviceId(deviceIndex)
-            if bestExposure is not None:
-                self.wavelengthCalibrationVideoThread.setExposure(bestExposure)
+            if exposure is not None:
+                self.wavelengthCalibrationVideoThread.setExposure(exposure)
 
         self.wavelengthCalibrationVideoThread.videoThreadSignal.connect(self.handleWavelengthCalibrationVideoSignal)
         self.wavelengthCalibrationVideoThread.setFrameCount(50)
