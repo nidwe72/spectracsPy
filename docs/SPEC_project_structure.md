@@ -1,6 +1,6 @@
 # SPEC — Project structure & tiering (`spectracsPy-core`)
 
-Status: **S0 · S1a · S1b · S2 · S3a IMPLEMENTED (2026-07-16/17) — the core seam is proven in-tree (67 files, 0 violations, 0 Qt); S3b–S5 DESIGN** (spec-first; implement on explicit request only). Source:
+Status: **S0 · S1a · S1b · S2 · S3a · S3b IMPLEMENTED (2026-07-16/17) — `spectracsPy-core` EXISTS and is Qt-free; S4–S5 DESIGN** (spec-first; implement on explicit request only). Source:
 Edwin (2026-07-16), split out of [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md) — it outgrew being a
 track inside M3. Naming **settled: `spectracsPy-core`** (matches the existing layer-name pattern base / model /
 server; `-sciens` was rejected because `sciens` is the org root in *every* repo).
@@ -393,6 +393,20 @@ touched the Playground; one navigation found it. Fixed in the **view** — `mkPe
 `QColor::lighter` (HSV value scaling with its saturation-overflow quirk). Qt adapters belong in the host (S2's rule).
 A re-run of the inventory across *all* tracked files confirms `.lighter()` was **the only** missing accessor.
 
+### Retracted by S3b: "tests move with their subject"
+
+S3b originally said the 12-of-17 tests that import the moving science would follow it into `-core`. **Wrong — it
+contradicts this project's own convention.** Every tier's tests already live in `spectracsPy/tests/`: `-model` owns
+`Spectrum`, `SpectralWorkflow`, `DbPlugin` and every view-model, and has **zero** tests; `-base` and `-server` have
+none either. All 16 suites are in the app and test all tiers from there.
+
+So the tests stayed. Consequences, all good: `-core` needs no venv, no `requirements.txt` and no runner — and the
+QColor-vs-`SpectralColor` characterisation suite, which **inherently needs Qt** (its whole point is proving the two
+dialects agree), has no Qt-free repo to be awkward in. That question consumed two rounds of analysis and was
+dissolved by one `ls`.
+
+Revisit only if `-core` gains its own CI. Note the spec only ever planned CI for **`spectracs-plugins`** (S5).
+
 ### Dead chain found by S1b's duck (2026-07-17) — record, don't fix here
 
 One unfinished method keeps an entire dependency alive:
@@ -438,7 +452,7 @@ mechanically to `SpectralColor` and changes nothing else. The deletion is its ow
 | **S1b** ✅ | **DONE 2026-07-17.** `SpectralColor` (Qt-free, in `-model`) replaces QColor in `SpectralColorUtil`, `SpectrumToColorLogicModule(+Result)` and `SpectralLine.color`. Deliberately **QColor-shaped** (Option A): the camera still hands `hueSimilarity` a QColor from the app-side calibration path, so the two dialects must be interchangeable — incl. `hueF() == -1` for achromatic. | `-model` (new type + `SpectralLine`) + `logic/spectral/util` + `/spectrumToColor` | ✅ **S1a's 63 tests passed UNCHANGED** — the proof; then parametrised over **both** dialects (75 tests) because passing unchanged only proved *QColor-in* still works. ✅ **13 mutants die**, incl. the achromatic trap on the new type. ✅ 4096-colour RGB-cube sweep vs QColor: **0 mismatches**. ✅ `-model`+`-base` import with **PySide6 blocked**. ✅ 106 tests; ✅ Qt renders a stylesheet from `SpectralColor.name()`. |
 | **S2** ✅ | **DONE 2026-07-17.** Not a de-Qt — a **split**. The class declared itself the host bridge (*"Runs on the host side (Qt allowed)"*) and had **two Qt ends pointing opposite ways**: `__qImageToPil` (QImage **in**) and `previewPixmaps()` (QPixmap **out**). Both moved to the host; the Qt-free ~80% stayed. The conversion now happens where `.image` is set (bench view :531) — which is what `SpectrumCaptureView`'s docstring always said: *"reportImage is the Qt-free rendition the host derives from .image"*. `previewPixmaps()` was **deleted, not ported** — `rasterize()` is already Qt-free, so the host wraps it in 3 lines via the new `figures()`. | `view/../render/WorkflowReportBuilder` → Qt-free; `DevMeasurementBenchViewModule` gains both Qt ends | ✅ **A full PDF built with PySide6 BLOCKED from the import system — the LIMS-addon scenario, proven not argued.** ✅ M2's gate holds: pages render, `workflow.json` + `capture_sample.png` still embed. ✅ preview renders page-for-page. ✅ 107 tests. |
 | **S3a** ✅ | **DONE 2026-07-17.** Re-derived the move list by grep and **enforced the seam in-tree**: the core-bound set is **67 files** and now imports only `-model`, `-base`, itself and externals — **0 violations, 0 Qt**. Renamed `logic/appliction` → `logic/application` (52 files; every occurrence was the dotted module path). No files moved between packages: paths are already final (S3b only changes *repos*), so S3a's real work was **severing core→app edges**. | `spectracsPy` | ✅ **§5 was wrong and the grep caught it** (below). ✅ 197/198 modules import (the 1 is pre-existing dead `Polisher`). ✅ app boots; Settings/Playground/Home navigate. ✅ 112 tests. |
-| **S3b** | **RELOCATE — mechanical, irreversible.** `git filter-repo` the subtree into **`spectracsPy-core`** (**keep history**); add **one line** to `stage_app_src.sh`'s repo loop; extend the PYTHONPATH run recipe. **Tests move with their subject** (12 of 17 import the moving science). | new repo + `android/*/stage_app_src.sh` + run recipe | a fresh clone + PYTHONPATH boots; the APK stages and launches; `git log` still follows a moved file; tests green in their new home |
+| **S3b** ✅ | **DONE 2026-07-17.** `spectracsPy-core` exists: **67 files, 24 commits, history intact** (`clone` + `filter-repo --path`×67; `git log --follow`/`blame` reach back through S1b to 2026). Deleted the matched 67 from the app. Phase 0 first (f203ed0): re-homed the render trio out of `view/` → `logic/spectral/report/`, and taught **26 files** the `-core` path — the spec said "ONE line in stage_app_src.sh"; that line is real, the other 26 weren't in the plan. | new repo + `stage_app_src.sh` + 26 PYTHONPATH sites | ✅ **fresh clones of all 5 repos boot the app** (131 modules, only pre-existing dead `Polisher` fails). ✅ all 67 `-core` modules import with **PySide6 blocked**; `-core` has **no `view/`**. ✅ app navigates Settings→Playground→Home, no uncaught exceptions. ✅ 112 tests. |
 | **S4** | App depends on `-core`; keeps `QtWorkflowRenderer` | `spectracsPy` | app boots; bench runs; PDF exports; wizard runs |
 | **S5** | **`spectracs-plugins`** repo — plugins move; depends on `-core`; CI runs headless `engine.runAll` + tests; add to `stage_app_src.sh` so they still ship. **Not blocked by M3** (§8b) | new repo + staging + CI | open it in PyCharm: SDK present, **app code absent** — *dev-time only; runtime is one merged tree* (§8b). Plugins proven headlessly; the app still loads them |
 
