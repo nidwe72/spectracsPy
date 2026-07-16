@@ -1,6 +1,6 @@
 import pyqtgraph as pg
 
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 
 
 class ChartThemeUtil:

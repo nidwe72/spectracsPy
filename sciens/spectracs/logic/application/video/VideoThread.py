@@ -5,8 +5,8 @@ from typing import Generic, TypeVar
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QImage
 
-from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
-from sciens.spectracs.logic.appliction.video.capture.CaptureBackend import getCaptureBackend
+from sciens.spectracs.logic.application.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
+from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
 from sciens.spectracs.model.databaseEntity.AppDataPathUtil import get_app_data_dir
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 

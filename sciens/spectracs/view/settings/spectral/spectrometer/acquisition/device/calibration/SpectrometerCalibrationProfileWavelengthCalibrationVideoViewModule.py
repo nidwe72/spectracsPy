@@ -3,7 +3,7 @@ from PySide6.QtGui import QPixmap, QPen, QBrush
 from PySide6.QtWidgets import QApplication
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \

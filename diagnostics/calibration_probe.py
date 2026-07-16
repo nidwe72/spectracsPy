@@ -59,7 +59,7 @@ def main():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from sciens.spectracs.logic.appliction.video.capture.CaptureBackend import getCaptureBackend
+    from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
 
     x1, y1, x2, y2 = ROI
     yc = (y1 + y2) // 2

@@ -7,7 +7,7 @@ from sciens.spectracs.controller.application.ApplicationContextLogicModule impor
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.view.spectral.spectralJob.overview.SpectralJobsOverviewViewModule import SpectralJobsOverviewViewModule
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 
 # from PySide6.QtCore import pyqtSignal

@@ -9,7 +9,7 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.logic.spectral.util.SpectralWorkflowUtil import SpectralWorkflowUtil
 from sciens.spectracs.model.spectral.SpectrumSampleType import SpectrumSampleType
 from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobsWidgetViewModule import SpectralJobsWidgetViewModule
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 
 class SpectralJobViewModule(QWidget):

@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout
 
-from sciens.spectracs.logic.appliction.style.LogoRenderer import renderLogoPixmap
+from sciens.spectracs.logic.application.style.LogoRenderer import renderLogoPixmap
 from sciens.spectracs.view.application.widgets.TypewriterLabel import TypewriterLabel
 from sciens.spectracs.view.main.MainStatusBarViewModule import MainStatusBarViewModule
 

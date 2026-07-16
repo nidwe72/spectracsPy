@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QGridLayout
 
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 
 class ResponsiveRow(QWidget):

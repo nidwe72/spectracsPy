@@ -10,7 +10,7 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.model.databaseEntity.application.user.UserRoleType import UserRoleType
 from sciens.spectracs.view.application.widgets.image.BaseImageViewModule import BaseImageViewModule
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 class VirtualSpectrometerViewModule(PageWidget):
 
@@ -85,7 +85,7 @@ class VirtualSpectrometerViewModule(PageWidget):
         # P4g: on Android the native SAF folder picker backgrounds this heavy app, which the system
         # then reclaims (losing the result). A same-process foreground service keeps the process alive
         # across the picker. No-op on desktop. See docs/SPEC_android_port.md §3.2.
-        from sciens.spectracs.logic.appliction.android import AndroidForegroundKeepAlive
+        from sciens.spectracs.logic.application.android import AndroidForegroundKeepAlive
         from PySide6.QtWidgets import QApplication
         AndroidForegroundKeepAlive.start()
         QApplication.processEvents()  # let the service reach startForeground before the picker opens

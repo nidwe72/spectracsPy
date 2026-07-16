@@ -2,7 +2,7 @@ import threading
 
 from PySide6.QtCore import Signal
 
-from sciens.spectracs.logic.appliction.video.VideoThread import VideoThread
+from sciens.spectracs.logic.application.video.VideoThread import VideoThread
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters

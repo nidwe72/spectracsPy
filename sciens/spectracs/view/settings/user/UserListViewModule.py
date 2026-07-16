@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QTableView, Q
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal

@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor, QImage, QPixmap
 from PySide6.QtWidgets import QGroupBox, QGridLayout, QPushButton, QTabWidget, QWidget, QLabel, QVBoxLayout, QScrollArea
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 from sciens.spectracs.logic.playground.CameraCaptureRenderUtil import CameraCaptureRenderUtil
 from sciens.spectracs.logic.playground.PlaygroundCalibrationLogicModule import PlaygroundCalibrationLogicModule
 from sciens.spectracs.logic.spectral.synthesis.LedReferenceSynthesisLogicModule import LedReferenceSynthesisLogicModule
@@ -153,7 +153,11 @@ class PlaygroundViewModule(PageWidget):
             verdictParameters = VerdictLogicModuleParameters(); verdictParameters.setHue(measuredHue)
             roastState = VerdictLogicModule().verdict(verdictParameters).getRoastState()
 
-            penColor = measuredColor.lighter(160)
+            # S1b: spectrumToColor now returns a Qt-free SpectralColor. `lighter()` is a Qt colour-manipulation
+            # convenience and mkPen wants a QColor regardless, so the VIEW converts — rather than SpectralColor
+            # growing a faithful port of QColor::lighter (HSV value scaling with its saturation-overflow quirk).
+            # Qt adapters belong in the host; the value type stays minimal.
+            penColor = QColor.fromRgb(measuredColor.red(), measuredColor.green(), measuredColor.blue()).lighter(160)
             sampleNanometers = sorted(sample.valuesByNanometers.keys())
             self.oilPlot.plot(sampleNanometers, [sample.valuesByNanometers[nm] for nm in sampleNanometers],
                               pen=pyqtgraph.mkPen(penColor, width=2), name=demoOil.label)
@@ -192,7 +196,8 @@ class PlaygroundViewModule(PageWidget):
         label = QLabel(text); label.setProperty("sectionLabel", True)
         return label
 
-    def __swatch(self, color: QColor):
+    def __swatch(self, color):
+        # QColor or SpectralColor — both expose name() (S1b).
         label = QLabel(); label.setFixedSize(120, 36)
         label.setStyleSheet("background-color: %s; border: 1px solid #5A5A5A;" % color.name())
         return label

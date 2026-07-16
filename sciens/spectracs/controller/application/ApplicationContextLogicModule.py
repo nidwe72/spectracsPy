@@ -2,7 +2,7 @@ from sciens.base.Singleton import Singleton
 from sciens.spectracs.controller.application.ApplicationSignalsProviderLogicModule import ApplicationSignalsProviderLogicModule
 from sciens.spectracs.controller.application.navigationHandler.NavigationHandlerLogicModule import NavigationHandlerLogicModule
 from sciens.spectracs.controller.application.setting.ApplicationSettings import ApplicationSettings
-from sciens.spectracs.logic.appliction.util.ApplicationConfigUtil import ApplicationConfigUtil
+from sciens.spectracs.logic.application.util.ApplicationConfigUtil import ApplicationConfigUtil
 from sciens.spectracs.model.databaseEntity.application.ApplicationConfig import ApplicationConfig
 
 

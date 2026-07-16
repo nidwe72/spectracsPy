@@ -3,7 +3,7 @@ from PySide6.QtGui import QPainter, QPolygonF, QColor
 from PySide6.QtWidgets import QWidget
 
 from sciens.base.PlatformUtil import is_android
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 
 
 class StepBarWidget(QWidget):

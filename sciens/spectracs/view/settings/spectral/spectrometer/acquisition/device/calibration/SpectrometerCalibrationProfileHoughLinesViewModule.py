@@ -11,7 +11,7 @@ from sciens.spectracs.logic.spectral.acquisition.device.calibration.Spectrometer
     SpectrometerRegionOfInterestLogicModule
 from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileHoughLinesVideoThread import \
     SpectrometerCalibrationProfileHoughLinesVideoThread
-from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
+from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
@@ -22,7 +22,7 @@ from sciens.spectracs.model.signal.SpectrometerCalibrationProfileHoughLinesVideo
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileHoughLinesVideoViewModule import \
     SpectrometerCalibrationProfileHoughLinesVideoViewModule
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
 

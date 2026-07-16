@@ -39,7 +39,7 @@ from PySide6 import QtWidgets, QtGui
 from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtWidgets import QGroupBox, QPushButton, QLineEdit, QComboBox
 
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.view.main.MainContainerViewModule import MainContainerViewModule
 

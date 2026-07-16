@@ -41,7 +41,7 @@ class MainContainerViewModule(QFrame):
         if docMode:
             from sciens.spectracs.view.main.DocHintPanelViewModule import DocHintPanelViewModule
             from sciens.spectracs.view.main.DocCoverViewModule import DocCoverViewModule
-            from sciens.spectracs.logic.appliction.docmode.DocModeUdpService import DocModeUdpService
+            from sciens.spectracs.logic.application.docmode.DocModeUdpService import DocModeUdpService
             self.docHintPanelViewModule = DocHintPanelViewModule()
             layout.addWidget(self.docHintPanelViewModule, 0, 1, 2, 1)
             layout.setColumnStretch(0, 100)  # app content keeps (almost) all the width

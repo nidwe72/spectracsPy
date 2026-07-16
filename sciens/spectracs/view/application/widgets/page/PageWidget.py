@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QGroupBox, QPus
 from PySide6.QtCore import Qt
 
 from sciens.base.PlatformUtil import is_android
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
 
 class PageWidget(QFrame):

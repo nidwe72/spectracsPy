@@ -6,8 +6,8 @@ from PySide6.QtWidgets import (QPushButton, QTabWidget, QLabel, QWidget, QVBoxLa
                                QDateEdit)
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
 from sciens.spectracs.view.spectral.workflow.CapturePanel import CapturePanel

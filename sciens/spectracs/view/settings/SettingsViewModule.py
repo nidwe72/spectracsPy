@@ -12,7 +12,7 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.model.databaseEntity.application.user.UserRoleType import UserRoleType
 from sciens.spectracs.view.application.widgets.page.PageLabel import PageLabel
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 
 class SettingsViewModule(QWidget):

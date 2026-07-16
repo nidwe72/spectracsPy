@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QRectF
 from PySide6.QtGui import QPixmap, QPen, QBrush
 
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.model.application.video.VideoSignal import VideoSignal
 from sciens.spectracs.view.application.widgets.graphicsScene.BaseGraphicsRectItem import BaseGraphicsRectItem
 from sciens.spectracs.view.application.widgets.video.BaseVideoViewModule import BaseVideoViewModule

@@ -12,7 +12,7 @@ from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.cal
     SpectrometerCalibrationProfileSpectralLinesInterpolationViewModule
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationViewModule
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 _ROI_FIELDS = ("regionOfInterestX1", "regionOfInterestY1", "regionOfInterestX2", "regionOfInterestY2")
 

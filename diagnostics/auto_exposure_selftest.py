@@ -4,7 +4,7 @@ peak brightness at or just below the target (235) and never on a clipping exposu
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # repo root
-from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
+from sciens.spectracs.logic.application.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 
 TARGET = 235
 MIN, MAX = 1, 500

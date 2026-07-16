@@ -250,7 +250,7 @@ def _gate(message):
 
 
 def open_camera(device, exposure):
-    from sciens.spectracs.logic.appliction.video.capture.CaptureBackend import getCaptureBackend
+    from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
     backend = getCaptureBackend()
     backend.open(deviceId=device, exposure=exposure)
     return backend
@@ -683,7 +683,7 @@ def _try_app_context():
     Standalone runs usually have no populated session, so this quietly returns {} — CLI args are the real path."""
     try:
         from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
-        from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
+        from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
         from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
         profile = ApplicationContextLogicModule().getApplicationSettings().getSpectrometerProfile()
         if profile is None:

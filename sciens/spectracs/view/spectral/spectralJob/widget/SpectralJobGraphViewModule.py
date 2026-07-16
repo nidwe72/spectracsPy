@@ -4,7 +4,7 @@ from collections import deque
 import numpy as np
 import pyqtgraph as pg
 
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.model.spectral.SpectralJob import SpectralJob
 from sciens.spectracs.view.application.widgets.chart.ChartThemeUtil import ChartThemeUtil
 from sciens.spectracs.view.spectral.spectralJob.widget.SpectralJobGraphViewModuleParameters import SpectralJobGraphViewModuleParameters

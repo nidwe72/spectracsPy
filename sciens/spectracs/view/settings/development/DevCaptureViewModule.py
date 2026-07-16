@@ -5,9 +5,9 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QGroupBox, QComboBox, QPushB
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
-from sciens.spectracs.logic.appliction.video.DevCaptureVideoThread import DevCaptureVideoThread
-from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
+from sciens.spectracs.logic.application.style.Metrics import Metrics
+from sciens.spectracs.logic.application.video.DevCaptureVideoThread import DevCaptureVideoThread
+from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import ExtendedRoiLogicModule
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget

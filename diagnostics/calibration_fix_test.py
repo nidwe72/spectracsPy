@@ -91,7 +91,7 @@ def auto_expose(backend, min_exposure=2, max_exposure=500):
     per-channel peak metric (keeps every channel below the 255 clip so no line saturates to white), with the
     direction-agnostic AutoExposureLogicModule choosing the winner. Mirrors a real acquisition — no hard-coded
     exposure."""
-    from sciens.spectracs.logic.appliction.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
+    from sciens.spectracs.logic.application.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 
     def measure(exposure):
         backend.setExposure(exposure)
@@ -116,7 +116,7 @@ def load_frame(image_path, exposure, save_path):
             raise SystemExit("could not load --image %s" % image_path)
         print("  REPLAY saved frame: %s (%dx%d)" % (image_path, qimg.width(), qimg.height()))
         return qimg, None
-    from sciens.spectracs.logic.appliction.video.capture.CaptureBackend import getCaptureBackend
+    from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
     backend = getCaptureBackend()
     backend.open(deviceId=0, exposure=(exposure if exposure is not None else EXPOSURE))
     try:

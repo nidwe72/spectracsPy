@@ -14,7 +14,7 @@ from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicMo
     ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.logic.spectral.video.SpectrometerCalibrationProfileWavelengthCalibrationVideoThread import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoThread
-from sciens.spectracs.logic.appliction.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
+from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.databaseEntity.spectral.device.calibration.SpectrometerCalibrationProfile import \
     SpectrometerCalibrationProfile
@@ -24,8 +24,8 @@ from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.cal
     SpectrometerCalibrationProfileSpectralLinesViewModule
 from sciens.spectracs.view.settings.spectral.spectrometer.acquisition.device.calibration.SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule import \
     SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
-from sciens.spectracs.logic.appliction.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
+from sciens.spectracs.logic.application.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 
 
 class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):

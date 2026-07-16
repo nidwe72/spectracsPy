@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QScrollArea, QWidget, QVBoxLayout, QLabel, QFrame
 
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 
 class PdfPreviewWidget(QScrollArea):

@@ -1,7 +1,7 @@
 from PySide6.QtGui import QColor
 
 from sciens.base.Singleton import Singleton
-from sciens.spectracs.logic.appliction.style.Metrics import Metrics
+from sciens.spectracs.logic.application.style.Metrics import Metrics
 
 
 class ApplicationStyleLogicModule(Singleton):
