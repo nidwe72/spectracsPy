@@ -54,6 +54,10 @@ numbers justify. No blind implementation.
   NOT a fidelity gap** — the residual risk collapses onto the *additive* dark level (Topic 4).
 - **All pumpkin eval bands sit inside 450–620:** `BLUE_PEAK=(450,465)`, `BLUE_BAND=(450,490)`, `GREEN_BAND=(510,540)`,
   `Q_SEARCH=(565,590)`, `Q_BASELINE=(555,600)` (`DevSpectralPlugin.py`). Max 600 < 620; the clamp won't starve them.
+  > **⚠ EXPIRES with peak-ratio phase PB** ([`SPEC_pumpkin_peak_ratio_eval.md`](SPEC_pumpkin_peak_ratio_eval.md)
+  > §1b, Edwin 2026-07-16): `BLUE_BAND` becomes **(440, 460)** — **440 < 450**, so this bullet's premise, and any
+  > ROI-clamp reasoning resting on it, **must be re-checked** when PB lands. (The plugin's own clamp is already
+  > `WAVELENGTH_MIN_NM = 430.0`, so the *clamp* is fine; it is this **450 lower bound** that goes stale.)
 
 ## 3. Milestones (ordered by fidelity impact)
 

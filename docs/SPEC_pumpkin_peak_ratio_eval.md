@@ -7,6 +7,12 @@ metrics). **P5** (calibration → verdict edges — needs real-oil measurements)
 **absorption peak-ratio** criterion. Raised 2026-07-05 ([[spectracs-pumpkin-peak-ratio-task]]); physics
 grounded in Fruhwirth & Hermetter (2007) (`KB_led_and_oil_spectra.md` §2, `spectracs-references/articles/`).
 
+> ### ⏭ NEXT PROMINENT TASK — **§1b: the settled, literature-anchored bands** (Edwin, 2026-07-16)
+> **Blue = 440–460 nm** (right-hand slope of the uncapturable 430 nm Soret) · **Green Q-band = 560–580 nm**
+> (literature peak ~570). **DESIGN — implement on explicit request only, and only AFTER the plugin story**
+> ([`SPEC_project_structure.md`](SPEC_project_structure.md) → [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md)).
+> Deltas + the traps in **§1b.1 / §1b.2**.
+
 ---
 
 ## 0. Concept & rationale — *why we did it this way*
@@ -60,15 +66,66 @@ protopheophytin) with a classic **Soret + Q-band** absorption signature; roastin
 Styrian pumpkin-seed oil's green colour comes from tetrapyrrole pigments (protochlorophyll/protopheophytin)
 with a classic **Soret + Q-band** absorption signature (`KB_led_and_oil_spectra.md` §2, Fruhwirth Fig. 3A):
 
-| Band | ~λ | What it is | Specificity |
-|---|---|---|---|
-| **Soret** | ~430 nm | strong blue absorption | **mixture:** pigment Soret **+ carotenoid (~445–475)** **+ Maillard roast-browning** |
-| **Q-band 1** | **~575–580 nm** | weak green-pigment fingerprint | **clean:** intact green pigment only (no carotenoid, ~no browning) |
-| Q-band 2 | ~630 nm | second Q-band | **LOST** with the current optics (see §2) |
+| Band | ~λ | What it is | Specificity | Measured over (**§1b**) |
+|---|---|---|---|---|
+| **Soret** | ~430 nm | strong blue absorption | **mixture:** pigment Soret **+ carotenoid (~445–475)** **+ Maillard roast-browning** | **440–460** — the right-hand **slope**; the 430 peak itself saturates (oil opacity at working dilution) |
+| **Q-band 1** | **~570 nm** | weak green-pigment fingerprint | **clean:** intact green pigment only (no carotenoid, ~no browning) | **560–580** |
+| Q-band 2 | ~630 nm | second Q-band | **LOST** with the current optics (see §2) | — |
 
 The green transmission window (~500–560 nm) sits *between* Soret and Q-bands; roast-browning inflates the
 blue while depleting the specific green pigment → **the two bands move in opposite directions with roast**,
 which is exactly what makes a ratio informative.
+
+## 1b. SETTLED BANDS — literature-anchored (Edwin, 2026-07-16) · **NEXT PROMINENT TASK**
+
+> **Status: DESIGN — the next prominent task to implement, AFTER the plugin story**
+> ([`SPEC_project_structure.md`](SPEC_project_structure.md) → [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md)).
+> Implement on explicit request only.
+
+Edwin's decision, from the literature plus what the rig can actually capture:
+
+| # | Band | **Settled window** | Literature anchor | Why this window |
+|---|---|---|---|---|
+| **1** | **Blue — Soret right-hand slope** | **440–460 nm** | first prominent absorption peak at **430 nm** | **430 itself is NOT capturable** with the lamp + dilution in use — the oil is opaque there, so `T→0` and `A` is noise. The **right-hand slope** is the measurable proxy for the same peak. |
+| **2** | **Green — pigment Q-band** | **560–580 nm** | green peak at **~570 nm** | centred on the literature peak; the clean green-pigment fingerprint. |
+
+**Why these and not the current ones:** the shipped constants were chosen empirically off bench captures
+(`BLUE_BAND=(450,490)`, `Q_SEARCH=(565,590)`). The windows above are anchored to the **published peak positions**
+instead, and Edwin's judgement is that *"these are nice regions [that] give physical/chemical meaningful results."*
+Band 1 moves down and narrows onto the slope of the real 430 nm peak; Band 2 re-centres from ~575 to the
+literature's **570**.
+
+**Recorded fact (2026-07-16):** a new full-spectrum bulb **does** deliver light across **430–650 nm** — matching
+`DevSpectralPlugin.WAVELENGTH_MIN_NM/MAX_NM` exactly. **It does not make 430 nm measurable**: the limit there is
+oil **opacity at the working dilution**, not illumination. This is what settles Band 1 on the slope rather than the
+peak.
+
+### 1b.1 Deltas to implement
+
+| Constant (`DevSpectralPlugin`) | Today | Becomes | Note |
+|---|---|---|---|
+| `BLUE_BAND` | `(450.0, 490.0)` | **`(440.0, 460.0)`** | `A_blue` — the Soret right-hand slope |
+| `Q_SEARCH` | `(565.0, 590.0)` | **`(560.0, 580.0)`** | `λ_Q` local-max search; default λ_Q `575.0` → **`570.0`** |
+
+**Not changed by this decision — flagged so the implementer does not silently move them:**
+- `BLUE_PEAK = (450,465)` is a **different thing**: it searches the **REFERENCE** spectrum for the blue peak as a
+  *saturation gate* (§3.2), not an absorption feature. Edwin's 440–460 is about **absorption**. Leave `BLUE_PEAK`
+  unless separately decided.
+- `GREEN_BAND = (510,540)` is the **green-window anchor** (the transmission window / clarity floor, §3.3) — *not*
+  the "green peak". Edwin's "green" here means the **Q-band**. Unchanged.
+- `Q_BASELINE = (555,600)` — the Q-band baseline anchors. **Watch the clearance:** with `Q_SEARCH` starting at
+  **560**, the lower baseline anchor at **555** is only 5 nm away (was 10). Verify the baseline still sits *outside*
+  the peak's shoulder, or move it (e.g. 550) — see §11.
+
+### 1b.2 Consequences to check when implementing
+
+- **`browning = A_blue / A_green`** and **`gBlue = D_Q / A_blue`** both change meaning slightly, because `A_blue`
+  now samples a narrower, bluer window. Any threshold intuition from the old window does not carry over —
+  which is moot today (P5 has not run, so **no thresholds ship yet**), but must not be forgotten.
+- **Re-check the ROI clamp:** `WAVELENGTH_MIN_NM = 430.0` already covers 440. No clamp change needed.
+- **§9's claim that "all pumpkin eval bands sit inside 450–620"**
+  ([`SPEC_capture_quality.md`](SPEC_capture_quality.md) §9) **becomes false** — `BLUE_BAND` would start at **440**,
+  below 450. That spec's ROI-clamp reasoning must be re-checked against the new window.
 
 ## 2. Hardware constraint driving "two bands only" (Edwin, 2026-07-09)
 
@@ -334,9 +391,21 @@ on *this* rig.
 |    | capture view + bench preview     | (promote BenchRoiLogicModule); | 400-700 box; matches analysed win.|         |
 |    | (draw the 400-700 window)        | TOUCH capture §11 + bench       |                                   |         |
 +----+----------------------------------+--------------------------------+-----------------------------------+---------+
+| PB | ** NEXT PROMINENT TASK ** (§1b)  | TOUCH DevSpectralPlugin only:  | Bench EVALUATION still renders;   | LOW     |
+|    | Literature-anchored bands:       | BLUE_BAND (450,490)->(440,460);| band shading on A(lambda) moves to|         |
+|    | blue = 440-460 (Soret RIGHT-HAND | Q_SEARCH (565,590)->(560,580); | the new windows; D_Q still found  |         |
+|    | SLOPE; 430 peak saturates at the | lambda_Q default 575->570.     | on capture001. CHECK: Q_BASELINE  |         |
+|    | working dilution), green Q-band  | Do NOT touch BLUE_PEAK (that   | lower anchor 555 is now only 5nm  |         |
+|    | = 560-580 (lit. peak ~570).      | gates the REFERENCE) nor       | from Q_SEARCH's 560 -> may need   |         |
+|    | AFTER the plugin story. Edwin,   | GREEN_BAND (that is the 510-540| moving to ~550 (§11). Also fix    |         |
+|    | 2026-07-16. Deltas in §1b.1.     | anchor, not "the green peak"). | capture-quality §9's "all bands   |         |
+|    |                                  |                                | inside 450-620" -> now false.     |         |
 | P5 | LATER: save metrics + test oils  | NEW feature persistence/export;| Metrics saved per oil; quant->qual| MED     |
 |    | -> quant->qual bounds -> real    | PeakRatioVerdictLogicModule    | bounds derived; real verdict edges|         |
 |    | verdict edges (§8 calibration)   | (calibrated edges)             | set. (Edwin's later step.)        |         |
+|    | ** PB MUST LAND FIRST ** — no    |                                | (calibrating the old windows then |         |
+|    | point calibrating windows that   |                                | moving them wastes the oil runs)  |         |
+|    | are about to move.               |                                |                                   |         |
 +----+----------------------------------+--------------------------------+-----------------------------------+---------+
 | P6 | LATER: pumpkin plugin composes   | TOUCH PumpkinOilPlugin (proc + | Independent plugin: add meaned ref| MED     |
 |    | the SAME generic ops; promote    | eval); NEW shared feature-     | to processing; composes ops; may  |         |
@@ -366,6 +435,11 @@ the spectrum tab — **E2/E3**. The P0/P1/P4 logic is unchanged.
 
 ## 11. Open questions
 
+- **`Q_BASELINE`'s lower anchor vs the new `Q_SEARCH` (raised by §1b, 2026-07-16).** `D_Q` is a depth *below a
+  baseline* interpolated between **555** and **600**. With `Q_SEARCH` moving to **560–580**, the lower anchor sits
+  only **5 nm** from the search window's edge (was 10). If 555 lands on the Q-band's own shoulder, the baseline is
+  pulled *down*, `D_Q` is *under*-reported, and every ratio built on it shifts — silently. **Decide at PB:** keep
+  555, or move to ~550. Check against a real A(λ) rather than by eye.
 - **Denominator confirmation** (Edwin): §3.4 leads with **`A_green` (the high-SNR green anchor)** as the `G`
   denominator, `A_blue` as the browning-sensitive alternative. Calibration confirms which separates real
   oils better — and whether the 3-axis `(D_Q, A_blue/A_green, A_green)` beats a single ratio. Also settle
