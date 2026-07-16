@@ -2,7 +2,7 @@ import numpy as np
 import pyqtgraph as pg
 
 from PySide6.QtCore import QRect
-from PySide6.QtGui import QPixmap, QColor, QPainter, QIcon
+from PySide6.QtGui import QPixmap, QImage, QColor, QPainter, QIcon
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QSlider, QCheckBox, QTabWidget, QStackedWidget, QScrollArea, QFrame, QSizePolicy, QFileDialog
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
@@ -530,16 +530,49 @@ class DevMeasurementBenchViewModule(PageWidget):
                 if isinstance(item, SpectrumCaptureView) and frame is not None:
                     item.image = self.__cropToRoi(frame, roi) if item.cropped \
                         else self.__maskOutsideRoi(frame, roi)
+                    # S2: the host owns the QImage → Qt-free hand-off. SpectrumCaptureView always said
+                    # `.reportImage` is "the Qt-free rendition the host derives from .image"; deriving it here,
+                    # where .image is set, is what lets WorkflowReportBuilder stay Qt-free.
+                    item.reportImage = self.__qImageToPil(item.image)
                 elif isinstance(item, SpectrumPlotView) and spectrum is not None:
                     item.spectrum = self.__meanSpectrum(spectrum)
+
+    @staticmethod
+    def __qImageToPil(image):
+        # Moved here from WorkflowReportBuilder (S2) unchanged.
+        if image is None:
+            return None
+        from PIL import Image
+        qimage = image if isinstance(image, QImage) else \
+            (image.toImage() if isinstance(image, QPixmap) else None)
+        if qimage is None:
+            return None
+        qimage = qimage.convertToFormat(QImage.Format.Format_RGBA8888)
+        width, height = qimage.width(), qimage.height()
+        pointer = qimage.constBits()
+        array = np.frombuffer(pointer, np.uint8).reshape(height, qimage.bytesPerLine())
+        array = array[:, :width * 4].reshape(height, width, 4)
+        return Image.fromarray(array.copy(), "RGBA")
 
     def __buildReportTab(self, reportView):
         from sciens.spectracs.view.spectral.workflow.render.WorkflowReportBuilder import WorkflowReportBuilder
         builder = WorkflowReportBuilder(self.__workflow, reportView).build()
-        pixmaps = builder.previewPixmaps()  # rasterise once; reused by the tab preview and the "Open bigger" view
+        pixmaps = self.__previewPixmaps(builder)  # rasterise once; reused by the tab preview and "Open bigger"
         return _ReportTab(pixmaps,
                           onSave=lambda: self.__onSaveReport(builder),
                           onOpenBigger=lambda: self.__openReportBigger(pixmaps))
+
+    @staticmethod
+    def __previewPixmaps(builder):
+        # S2: the builder hands back matplotlib figures; turning them into something Qt can paint is the host's
+        # job. rasterize() is already Qt-free — it returns (width, height, rgba bytes).
+        from sciens.spectracs.view.spectral.workflow.render.MatplotlibWorkflowRenderer import MatplotlibWorkflowRenderer
+        pixmaps = []
+        for figure in builder.figures():
+            width, height, rgba = MatplotlibWorkflowRenderer.rasterize(figure)
+            image = QImage(rgba, width, height, QImage.Format.Format_RGBA8888).copy()
+            pixmaps.append(QPixmap.fromImage(image))
+        return pixmaps
 
     def __openReportBigger(self, pixmaps):
         # Small-device affordance (Edwin): show the PDF preview in a full-window in-window view so it is legible

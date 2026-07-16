@@ -3,20 +3,26 @@ import json
 import os
 import tempfile
 
-import numpy as np
-from PySide6.QtGui import QImage, QPixmap
-
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.model.spectral.plugin.view.SpectrumCaptureView import SpectrumCaptureView
 from sciens.spectracs.view.spectral.workflow.render.MatplotlibWorkflowRenderer import MatplotlibWorkflowRenderer
 
 
 class WorkflowReportBuilder:
-    # SPEC_bench_pdf_export.md §1/§5/§6 (D5/D6) — the host bridge between the workflow and the Qt-free matplotlib
-    # report renderer. Runs on the host side (Qt allowed): it converts host-native QImage captures into Qt-free
-    # PIL renditions the renderer can draw, produces the preview pixmaps (which ARE the PDF pages), and on Save
-    # writes the matplotlib pages to a PDF and embeds — via pypdf — the whole-Workflow JSON plus each flagged
-    # capture as a named /EmbeddedFiles attachment (extractable on command, §5b).
+    # SPEC_bench_pdf_export.md §1/§5/§6 (D5/D6) — builds the report from a workflow: it collects the flagged
+    # items, renders them through the matplotlib renderer, and on Save writes the pages to a PDF and embeds —
+    # via pypdf — the whole-Workflow JSON plus each flagged capture as a named /EmbeddedFiles attachment
+    # (extractable on command, §5b).
+    #
+    # QT-FREE (S2 — SPEC_project_structure.md). It used to be the host bridge as well ("Qt allowed"), doing the
+    # QImage→PIL conversion and handing back preview QPixmaps. Both ends moved to the host:
+    #   - the QImage→PIL conversion now happens where `.image` is set (the bench view), so the host fills BOTH
+    #     `.image` and `.reportImage` — which is what SpectrumCaptureView's docstring always said it would;
+    #   - the preview pixmaps are built by the host from figures() + MatplotlibWorkflowRenderer.rasterize(),
+    #     which is already Qt-free.
+    # This class now reads ONLY `capture.reportImage` (a PIL image) and never `.image`. A LIMS addon can
+    # therefore build a report from a stored workflow with no Qt present at all: toJson() never serializes
+    # pixels, so reportImage is simply absent and the capture is skipped.
     #
     # Visible body = the isShownInReport subset (curated, grouped by phase, workflow order).
     # Hidden payload = workflow.toReportJson() (the complete machine record).
@@ -75,35 +81,19 @@ class WorkflowReportBuilder:
         return items
 
     def __prepareCapture(self, capture, step, index):
-        # Assign the /EmbeddedFiles name (role-based when known, else sequential) and derive the Qt-free PIL
-        # rendition the matplotlib renderer draws + the PNG bytes pypdf attaches. `.image` is a host QImage.
+        # Assign the /EmbeddedFiles name (role-based when known, else sequential) and take the PNG bytes pypdf
+        # attaches from the host-supplied Qt-free rendition. `.reportImage` is a PIL image the host derived from
+        # its QImage (S2); a workflow loaded from JSON has none — captures carry no pixels — so it is skipped.
         if not capture.attachmentName:
             role = step.getRole() if hasattr(step, "getRole") else None
             slug = (role or ("capture_%d" % index))
             capture.attachmentName = "capture_%s.png" % _slug(slug) if role else "capture_%d.png" % index
-        pil = self.__qImageToPil(capture.image)
+        pil = capture.reportImage
         if pil is None:
             return
-        capture.reportImage = pil
         buffer = io.BytesIO()
         pil.convert("RGB").save(buffer, format="PNG")
         self.__captures.append((capture.attachmentName, buffer.getvalue()))
-
-    @staticmethod
-    def __qImageToPil(image):
-        if image is None:
-            return None
-        from PIL import Image
-        qimage = image if isinstance(image, QImage) else \
-            (image.toImage() if isinstance(image, QPixmap) else None)
-        if qimage is None:
-            return None
-        qimage = qimage.convertToFormat(QImage.Format.Format_RGBA8888)
-        width, height = qimage.width(), qimage.height()
-        pointer = qimage.constBits()
-        array = np.frombuffer(pointer, np.uint8).reshape(height, qimage.bytesPerLine())
-        array = array[:, :width * 4].reshape(height, width, 4)
-        return Image.fromarray(array.copy(), "RGBA")
 
     def __loadLogo(self):
         from PIL import Image
@@ -125,15 +115,13 @@ class WorkflowReportBuilder:
             directory = os.path.dirname(directory)
         return None
 
-    # --- preview: figures -> QPixmaps (the preview IS the PDF, page for page) ---
+    # --- the rendered pages (the preview IS the PDF, page for page) ---
 
-    def previewPixmaps(self):
-        pixmaps = []
-        for figure in self.__figures:
-            width, height, rgba = MatplotlibWorkflowRenderer.rasterize(figure)
-            image = QImage(rgba, width, height, QImage.Format.Format_RGBA8888).copy()
-            pixmaps.append(QPixmap.fromImage(image))
-        return pixmaps
+    def figures(self):
+        # The matplotlib figures, in page order. The HOST turns these into whatever it paints with — the bench
+        # rasterises each via MatplotlibWorkflowRenderer.rasterize() (Qt-free: width, height, rgba bytes) and
+        # wraps it in a QPixmap. This class used to do that itself; that was its last Qt dependency (S2).
+        return list(self.__figures)
 
     def pageCount(self):
         return len(self.__figures)

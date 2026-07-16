@@ -1,6 +1,6 @@
 # SPEC — Project structure & tiering (`spectracsPy-core`)
 
-Status: **S0 · S1a · S1b IMPLEMENTED (2026-07-16/17) — `-model` and `-base` are now Qt-free; S2–S5 DESIGN** (spec-first; implement on explicit request only). Source:
+Status: **S0 · S1a · S1b · S2 IMPLEMENTED (2026-07-16/17) — `-model`, `-base` and the whole render seam are Qt-free; S3a–S5 DESIGN** (spec-first; implement on explicit request only). Source:
 Edwin (2026-07-16), split out of [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md) — it outgrew being a
 track inside M3. Naming **settled: `spectracsPy-core`** (matches the existing layer-name pattern base / model /
 server; `-sciens` was rejected because `sciens` is the org root in *every* repo).
@@ -20,6 +20,9 @@ addon all consume — and that none of them can bypass by accident.
 > 3. Incidental: **`NavigationHandlerLogicModule.getPreviousNavigationSignal()` always returns `None`** —
 >    `Singleton` guards `__new__` but not `__init__`, so `self.__previousNavigationSignal=None` re-runs on every
 >    `NavigationHandlerLogicModule()` construction. Latent; out of scope here.
+> 4. **`test_lims_submission_assembly::test_missing_vendor_sensor_are_blank_not_crash` fails** (found during
+>    S2): it asserts a blank `instrument.manufacturer` but gets `'Spectracs'`. Fails **alone** and on committed
+>    code — a stale test, not order-pollution and not the tiering.
 
 
 ---
@@ -218,9 +221,9 @@ Verified against the code 2026-07-16. Three, of decreasing tractability:
   and uses it throughout (`fromRgb`, `hueSimilarity`, `channelDominance`, `getColorDifference`, `spectrumToColor`);
   `SpectrumToColorLogicModule` builds `QColor`s and `SpectrumToColorLogicModuleResult` carries one. It is RGB-triple
   maths that QColor barely earns its keep on — the *reach* is the problem, not the maths. **→ S1a/S1b.**
-- **L2 — the report builder.** `WorkflowReportBuilder` imports `PySide6.QtGui.QImage, QPixmap` (embedding captured
-  frames into the PDF). The report *renderer* is Qt-free while the report *builder* is not. This is the one thing
-  standing between the current code and a LIMS addon that can build a spectrum view. **→ S2.**
+- **L2 — the report builder.** `WorkflowReportBuilder` imported `PySide6.QtGui.QImage, QPixmap`. **✅ CLOSED (S2).**
+  It turned out to be a *split*, not a de-Qt: the class was designed as the host bridge and had Qt at both ends
+  (QImage in, QPixmap out) around a Qt-free middle. Both ends moved to the host.
 - **L3 — `spectracsPy-model` is not Qt-free.** Ten files import PySide6 (nine in `-model`, one in `-base`). The
   **plugin view-models are clean** (`ColorSwatchView` etc.), so nothing breaks at *import* time — but `-core` depends
   on `-model`, so a SENAITE addon carries PySide6 as an *install* dependency it never uses. **Resolved below: nine of
@@ -408,7 +411,7 @@ mechanically to `SpectralColor` and changes nothing else. The deletion is its ow
 | **S0** ✅ | **DONE 2026-07-16.** Moved the Qt app-plumbing out of `-model`/`-base` into the app — **11 files**: `SingletonQObject`, `SpectralJob`, `SpectralVideoThreadSignal`, `DbEntityChangedSignal` (+ `UserSignal`, `SpectrometerProfileSignal`), `HoughLinesVideoSignal`, `NavigationSignal`, `ApplicationStatusSignal`, `VideoSignal`, `VirtualSpectrometerSettings`. Kept their `QObject`; kept their package paths → **zero import changes**. | `-model` → `spectracsPy` | ✅ all 11 import; ✅ `-model`+`-base` import with **PySide6 blocked** (0 dragged); ✅ real `Signal(NavigationSignal)`/`Signal(ApplicationStatusSignal)` still marshal; ✅ real app boots, Home→Settings→Home→Playground→Home, status bar renders text+progress; ✅ 34 targeted tests pass. `grep -rE 'PySide6\|pyqtgraph' -model/ -base/` → **only `SpectralLine`** (S1b takes it). |
 | **S1a** ✅ | **DONE 2026-07-17.** Characterisation tests pinning the **current** QColor behaviour of `SpectralColorUtil.wavelengthToColor` / `hueSimilarity` / `channelDominance`. **63 tests, no production change.** | `tests/test_spectral_color_util_characterisation.py` (NEW) | ✅ 63 pass against today's code; ✅ **verified by mutation — 8/8 mutants die**, incl. the achromatic trap, both gate thresholds, gamma, the clamp and the hue wrap-around. The red-vs-grey trap is pinned: current **0.0**, naive port **1.0**. |
 | **S1b** ✅ | **DONE 2026-07-17.** `SpectralColor` (Qt-free, in `-model`) replaces QColor in `SpectralColorUtil`, `SpectrumToColorLogicModule(+Result)` and `SpectralLine.color`. Deliberately **QColor-shaped** (Option A): the camera still hands `hueSimilarity` a QColor from the app-side calibration path, so the two dialects must be interchangeable — incl. `hueF() == -1` for achromatic. | `-model` (new type + `SpectralLine`) + `logic/spectral/util` + `/spectrumToColor` | ✅ **S1a's 63 tests passed UNCHANGED** — the proof; then parametrised over **both** dialects (75 tests) because passing unchanged only proved *QColor-in* still works. ✅ **13 mutants die**, incl. the achromatic trap on the new type. ✅ 4096-colour RGB-cube sweep vs QColor: **0 mismatches**. ✅ `-model`+`-base` import with **PySide6 blocked**. ✅ 106 tests; ✅ Qt renders a stylesheet from `SpectralColor.name()`. |
-| **S2** | QImage/QPixmap out of `WorkflowReportBuilder` | `view/.../render/` | report path Qt-free; M2 PDF still builds + embeds JSON |
+| **S2** ✅ | **DONE 2026-07-17.** Not a de-Qt — a **split**. The class declared itself the host bridge (*"Runs on the host side (Qt allowed)"*) and had **two Qt ends pointing opposite ways**: `__qImageToPil` (QImage **in**) and `previewPixmaps()` (QPixmap **out**). Both moved to the host; the Qt-free ~80% stayed. The conversion now happens where `.image` is set (bench view :531) — which is what `SpectrumCaptureView`'s docstring always said: *"reportImage is the Qt-free rendition the host derives from .image"*. `previewPixmaps()` was **deleted, not ported** — `rasterize()` is already Qt-free, so the host wraps it in 3 lines via the new `figures()`. | `view/../render/WorkflowReportBuilder` → Qt-free; `DevMeasurementBenchViewModule` gains both Qt ends | ✅ **A full PDF built with PySide6 BLOCKED from the import system — the LIMS-addon scenario, proven not argued.** ✅ M2's gate holds: pages render, `workflow.json` + `capture_sample.png` still embed. ✅ preview renders page-for-page. ✅ 107 tests. |
 | **S3a** | **REORGANISE IN-TREE — no new repo.** Move §5's packages into their target shape inside `spectracsPy`; make the app depend on that subtree. **Re-derive the move list by grep first (§5)** — do not trust the table. **Rename `logic/appliction` → `logic/application` in the same pass (#8)**: this is already a mass import rewrite, and doing it standalone pays the same merge pain twice. | `spectracsPy` (+ `-model`, `-base`) | **All the risk lives here — and it is still a `git mv`.** App boots; bench runs; wizard runs; PDF exports; 17 tests green. `grep -rE 'PySide6\|pyqtgraph\|shiboken'` over the core-shaped subtree → **nothing**. No `appliction` remains. |
 | **S3b** | **RELOCATE — mechanical, irreversible.** `git filter-repo` the subtree into **`spectracsPy-core`** (**keep history**); add **one line** to `stage_app_src.sh`'s repo loop; extend the PYTHONPATH run recipe. **Tests move with their subject** (12 of 17 import the moving science). | new repo + `android/*/stage_app_src.sh` + run recipe | a fresh clone + PYTHONPATH boots; the APK stages and launches; `git log` still follows a moved file; tests green in their new home |
 | **S4** | App depends on `-core`; keeps `QtWorkflowRenderer` | `spectracsPy` | app boots; bench runs; PDF exports; wizard runs |
