@@ -9,5 +9,5 @@
 # when a spectrometer profile is populated). Offscreen self-test (no rig): diagnostics/probe.sh --selftest
 set -e
 cd "$(dirname "$0")/.."
-export PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"
+export PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"
 exec ./venv/bin/python diagnostics/capture_quality_probe.py "$@"

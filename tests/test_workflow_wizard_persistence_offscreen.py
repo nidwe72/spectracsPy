@@ -4,7 +4,7 @@ fill metadata -> Save persists), VIEW mode (loads the saved run, metadata editab
 delete. Complements the headless persist test with the actual widget + engine + navigation wiring.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_workflow_wizard_persistence_offscreen.py -q
 """
 import os

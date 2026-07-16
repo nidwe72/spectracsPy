@@ -3,7 +3,7 @@ Track B (B4/B5) — plugin_sdk import surface, container->container op adapters 
 absorption), and the Qt-free EvaluationResult view-models (SPEC_pumpkin_integration.md B.2/B.3).
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_plugin_sdk_ops.py -q
 """
 import unittest

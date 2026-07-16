@@ -41,7 +41,7 @@ Each scenario launches the app itself (`./runApp.sh --doc-mode`) and drives it:
 
 ```bash
 # from repo root:
-PYTHONPATH=.:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server \
+PYTHONPATH=.:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server \
   ./venv/bin/python automation/scenarios/<name>.py
 ```
 

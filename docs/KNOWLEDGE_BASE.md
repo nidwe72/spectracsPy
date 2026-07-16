@@ -117,13 +117,13 @@ Intended design (calibrate-on-server → download-by-serial) is only half implem
 ```bash
 # Local Pyro server (dev) — terminal 1
 cd /home/nidwe72/development/spectracs/spectracsPy-server
-PYTHONPATH=".:../spectracsPy:../spectracsPy-model:../spectracsPy-base" \
+PYTHONPATH=".:../spectracsPy:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base" \
   ../spectracsPy/venv/bin/python spectracsPyServer.py --local
 #  (or ./runServer.sh)
 
 # The app — terminal 2
 cd /home/nidwe72/development/spectracs/spectracsPy
-PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
   ./venv/bin/python spectracsMain.py
 #  (or ./runApp.sh)
 ```

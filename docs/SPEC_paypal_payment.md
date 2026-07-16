@@ -503,7 +503,7 @@ at the P2 gate so the first real sandbox payment can be watched before any widge
 ### 11.4 Run the P2 gate
 ```
 cd spectracsPy-server
-PYTHONPATH=".:../spectracsPy:../spectracsPy-model:../spectracsPy-base" \
+PYTHONPATH=".:../spectracsPy:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base" \
     ../spectracsPy/venv/bin/python verify_paypal_payment.py --username masterUser
 ```
 Create → open the printed approval URL → log in as the **personal** sandbox buyer → approve → press

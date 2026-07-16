@@ -13,7 +13,7 @@ Decoupled from the (volatile) PlaygroundViewModule: depends only on the logic + 
 CameraCaptureRenderUtil.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_pumpkin_oil_spectrum_to_color_eval.py -q
 """
 import colorsys

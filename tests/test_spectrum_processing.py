@@ -4,7 +4,7 @@ Unit tests for the spectrum-processing chain + spectrum->colour (SPEC_spectrum_p
 Spectrum is a plain non-ORM class, so these construct it directly -- no DB / SQLAlchemy mapper needed.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_spectrum_processing.py -q
 """
 import math

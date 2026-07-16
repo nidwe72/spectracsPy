@@ -4,7 +4,7 @@ graph saves + reloads via PersistSpectralWorkflowLogicModule, with the float-key
 and the metadata EAV rows. Exercises the real app DB.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_workflow_persistence.py -q
 """
 import unittest

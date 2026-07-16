@@ -34,7 +34,7 @@ tests below were added for exactly that. (Run mutations with `python -B` and pur
 stale .pyc from a previous mutant will silently poison the result -- it did.)
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         QT_QPA_PLATFORM=offscreen ./venv/bin/python -m pytest tests/test_spectral_color_util_characterisation.py -q
 """
 import math

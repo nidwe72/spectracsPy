@@ -3,7 +3,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
-from sciens.spectracs.view.spectral.workflow.render.WorkflowItemVisitor import WorkflowItemVisitor, dispatchItem
+from sciens.spectracs.logic.spectral.report.WorkflowItemVisitor import WorkflowItemVisitor, dispatchItem
 
 
 class MatplotlibWorkflowRenderer(WorkflowItemVisitor):

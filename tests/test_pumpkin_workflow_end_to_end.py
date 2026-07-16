@@ -5,7 +5,7 @@ PumpkinOilPlugin end to end (acquisition capture -> mean -> T/A -> colour -> ver
 EVALUATION EvaluationResult's verdict matches the oil's known roast state — no GUI, no Qt event loop.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_pumpkin_workflow_end_to_end.py -q
 """
 import unittest

@@ -4,7 +4,7 @@ Offscreen checks for the chevron StepBarWidget and its wiring into the measureme
   2) inside the wizard, the step bar shows ALL phases at once and the current index tracks navigation.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_step_bar_widget_offscreen.py -q
 """
 import os

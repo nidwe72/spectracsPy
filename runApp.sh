@@ -5,5 +5,5 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$HERE"
-export PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"
+export PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"
 exec ./venv/bin/python spectracsMain.py "$@"

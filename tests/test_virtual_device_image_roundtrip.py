@@ -5,7 +5,7 @@ acquisition reader (ImageSpectrumAcquisitionLogicModule), and assert the recover
 the spectra-only path within +-3 deg. Proves the virtual-device image round-trip end to end, headless.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_virtual_device_image_roundtrip.py -q
 """
 import unittest

@@ -5,7 +5,7 @@
 # reference + lamp, swap sample). Real camera → real frames, so no virtual-image setup needed.
 set -e
 cd "$(dirname "$0")/.."
-export PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"
+export PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"
 
 # record the whole run to automation/recordings/bench_<timestamp>.mp4 (ffmpeg x11grab). Pass "norecord"
 # to skip. The Director starts/stops ffmpeg itself.

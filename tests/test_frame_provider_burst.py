@@ -10,7 +10,7 @@ Asserts the seam is transparent: fed the same frame the virtual default would re
 yields an identical spectrum, and the burst pulls exactly `frames` frames from it.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_frame_provider_burst.py -q
 """
 import unittest

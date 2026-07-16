@@ -9,7 +9,7 @@ the virtual-spectrometer folder picker (A.4) consumes. For each demo oil it writ
         set.json          (provenance)
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python tests/bake_virtual_capture_sets.py
 """
 import json

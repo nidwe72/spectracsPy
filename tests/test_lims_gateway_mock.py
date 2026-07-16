@@ -3,7 +3,7 @@ L1 — the LIMS abstraction seam (LIMS-agnostic, no Docker). Exercises the neutr
 the LimsGateway/LimsGatewayFactory, and MockLimsGateway end-to-end. SPEC_lims_integration.md §3/§4, L1.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_lims_gateway_mock.py -q
 """
 import unittest

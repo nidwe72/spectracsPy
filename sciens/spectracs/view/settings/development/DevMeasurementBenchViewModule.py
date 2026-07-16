@@ -555,7 +555,7 @@ class DevMeasurementBenchViewModule(PageWidget):
         return Image.fromarray(array.copy(), "RGBA")
 
     def __buildReportTab(self, reportView):
-        from sciens.spectracs.view.spectral.workflow.render.WorkflowReportBuilder import WorkflowReportBuilder
+        from sciens.spectracs.logic.spectral.report.WorkflowReportBuilder import WorkflowReportBuilder
         builder = WorkflowReportBuilder(self.__workflow, reportView).build()
         pixmaps = self.__previewPixmaps(builder)  # rasterise once; reused by the tab preview and "Open bigger"
         return _ReportTab(pixmaps,
@@ -566,7 +566,7 @@ class DevMeasurementBenchViewModule(PageWidget):
     def __previewPixmaps(builder):
         # S2: the builder hands back matplotlib figures; turning them into something Qt can paint is the host's
         # job. rasterize() is already Qt-free — it returns (width, height, rgba bytes).
-        from sciens.spectracs.view.spectral.workflow.render.MatplotlibWorkflowRenderer import MatplotlibWorkflowRenderer
+        from sciens.spectracs.logic.spectral.report.MatplotlibWorkflowRenderer import MatplotlibWorkflowRenderer
         pixmaps = []
         for figure in builder.figures():
             width, height, rgba = MatplotlibWorkflowRenderer.rasterize(figure)
@@ -627,7 +627,7 @@ class DevMeasurementBenchViewModule(PageWidget):
     def __buildReportPdfBytes(self):
         # Build the same M2 PDF the Report tab shows, as bytes, for the publish RPC. Reuses the EVALUATION
         # ReportView + fills the acquisition captures first (as the Report tab does).
-        from sciens.spectracs.view.spectral.workflow.render.WorkflowReportBuilder import WorkflowReportBuilder
+        from sciens.spectracs.logic.spectral.report.WorkflowReportBuilder import WorkflowReportBuilder
         evaluation = self.__workflow.getPhase(SpectralWorkflowPhaseType.EVALUATION)
         reportView = None
         for step in evaluation.getSteps().values():

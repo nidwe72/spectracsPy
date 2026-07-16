@@ -8,7 +8,7 @@ new 2592x1944 set — the reader sampled a black row, the spectrum came out empt
 CURRENT calibration image.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_stale_calibration_recovery.py -q
 """
 import os

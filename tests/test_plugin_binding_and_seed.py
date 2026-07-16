@@ -7,7 +7,7 @@ NOTE: exercises the real server DB (spectracsPyServer.db in appdata), exactly as
 seed is idempotent.
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_plugin_binding_and_seed.py -q
 """
 import unittest

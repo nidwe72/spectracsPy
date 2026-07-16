@@ -3,7 +3,7 @@ Runnable usage sample / smoke test for the spectrum-processing + spectrum->colou
 (SPEC_spectrum_processing.md §9.2). Also the template for PumpkinPlugin.evaluation (Roadmap #6).
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python tests/spectrum_to_color_usage_sample.py
 """
 import numpy

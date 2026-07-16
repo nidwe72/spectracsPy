@@ -6,7 +6,7 @@
 #         ./automation/run.sh measurement_bench
 set -e
 cd "$(dirname "$0")/.."
-export PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"
+export PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"
 scenario="${1:?usage: ./automation/run.sh <scenario> [bypass|attach]  (e.g. pumpkin_wizard)}"
 shift || true
 flags=" $* "   # remaining args as space-delimited flags

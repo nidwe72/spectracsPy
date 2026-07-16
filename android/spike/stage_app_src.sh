@@ -13,7 +13,7 @@ ROOT="$(cd "$APP/.." && pwd)"                  # .../spectracs (repo siblings li
 
 mkdir -p "$DST"
 rm -rf "$DST/sciens"
-for repo in spectracsPy-model spectracsPy-base spectracsPy-server spectracsPy; do
+for repo in spectracsPy-model spectracsPy-base spectracsPy-core spectracsPy-server spectracsPy; do
     if [ -d "$ROOT/$repo/sciens" ]; then
         rsync -a --exclude='__pycache__' --exclude='*.pyc' "$ROOT/$repo/sciens/" "$DST/sciens/"
     fi

@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QSizePoli
 from sciens.spectracs.logic.application.style.Metrics import Metrics
 from sciens.spectracs.model.spectral.plugin.view.MetricFieldView import MetricFieldView
 from sciens.spectracs.view.application.widgets.page.TooltipPageLabel import TooltipPageLabel
-from sciens.spectracs.view.spectral.workflow.render.WorkflowItemVisitor import WorkflowItemVisitor, dispatchItem
+from sciens.spectracs.logic.spectral.report.WorkflowItemVisitor import WorkflowItemVisitor, dispatchItem
 
 
 class QtWorkflowRenderer(WorkflowItemVisitor):

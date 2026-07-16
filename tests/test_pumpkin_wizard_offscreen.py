@@ -5,7 +5,7 @@ steps, Next to PROCESSING (absorption plot), Next to EVALUATION (verdict). Asser
 Measure gating (Next disabled until measured), and the correct verdict. (SPEC_pumpkin_integration.md C.3/C.5)
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_pumpkin_wizard_offscreen.py -q
 """
 import os

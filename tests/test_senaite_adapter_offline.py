@@ -5,7 +5,7 @@ sample + attachment are created. SPEC_lims_integration.md §5. (Live behaviour v
 the 6090 Docker.)
 
 Run from the spectracsPy repo root:
-    PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
+    PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server" \
         ./venv/bin/python -m pytest tests/test_senaite_adapter_offline.py -q
 """
 import unittest

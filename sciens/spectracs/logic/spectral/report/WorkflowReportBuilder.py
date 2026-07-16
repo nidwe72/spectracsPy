@@ -5,7 +5,7 @@ import tempfile
 
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.model.spectral.plugin.view.SpectrumCaptureView import SpectrumCaptureView
-from sciens.spectracs.view.spectral.workflow.render.MatplotlibWorkflowRenderer import MatplotlibWorkflowRenderer
+from sciens.spectracs.logic.spectral.report.MatplotlibWorkflowRenderer import MatplotlibWorkflowRenderer
 
 
 class WorkflowReportBuilder:

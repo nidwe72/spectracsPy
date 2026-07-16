@@ -45,7 +45,7 @@ None of these would surface from `import-and-call` tests. They surface from **pi
 ### How (this repo, headless agent)
 The app is PySide6/Qt. An agent drives it offscreen and reads back screenshots:
 
-1. `export PYTHONPATH=".:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"` and
+1. `export PYTHONPATH=".:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server"` and
    `QT_QPA_PLATFORM=offscreen` (see `spectracs-run-recipe`).
 2. Boot the **real** `MainContainerViewModule`, set
    `ApplicationContextLogicModule().getNavigationHandler().mainContainerViewModule = mc`, `mc.show()`.
