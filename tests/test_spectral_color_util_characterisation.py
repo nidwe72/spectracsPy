@@ -43,9 +43,23 @@ import pytest
 from PySide6.QtGui import QColor
 
 from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
+from sciens.spectracs.model.spectral.SpectralColor import SpectralColor
 
 
 GREY = QColor.fromRgb(128, 128, 128)
+
+
+@pytest.fixture(params=[QColor, SpectralColor], ids=["QColor", "SpectralColor"])
+def colourType(request):
+    """Every colour-consuming test runs against BOTH dialects.
+
+    Added by S1b. S1a pinned the behaviour with QColor inputs and those tests passed unchanged against the
+    new code -- but that only proved QColor-in still works, not that SpectralColor-in does. Both matter and
+    both are permanent: the camera hands hueSimilarity a QColor from the app-side calibration path, while
+    wavelengthToColor now hands it a SpectralColor reference. The two dialects meet inside one call, so
+    neither may drift.
+    """
+    return request.param
 
 
 def util():
@@ -138,13 +152,37 @@ def test_hue_similarity_is_symmetric():
     assert subject.hueSimilarity(green, cyan) == pytest.approx(subject.hueSimilarity(cyan, green))
 
 
-def test_hue_similarity_wraps_around_the_hue_circle():
+def test_hue_similarity_wraps_around_the_hue_circle(colourType):
     # Hue is circular: a pair straddling the 0/1 seam must score on the SHORT way round, because
-    # cos() is even and 360-periodic. Guards against a port that subtracts hues linearly.
+    # cos() is even and 360-periodic. Guards against a port that subtracts hues linearly -- which would
+    # score ~0 here instead of ~0.98, so the 1e-3 tolerance kills it just as dead as 1e-6 would.
+    #
+    # Tolerance is 1e-3, not 1e-6, because the two dialects genuinely differ by ~8e-5 on THIS input and
+    # the tighter bound only ever passed by accident: QColor CACHES the H,S,V it was constructed from
+    # (fromHsvF(0.97,..).hueF() gives back 0.97000003), while SpectralColor stores 8-bit RGB and
+    # recomputes (0.96993464). Both produce the identical rgb(255,0,46) -- it is a storage artifact, not
+    # a maths difference, and production never calls fromHsvF anyway (colours arrive as RGB, from camera
+    # pixels or wavelengthToColor). See test_the_two_dialects_agree_on_hue_to_within_quantisation.
     subject = util()
-    nearRed = QColor.fromHsvF(0.97, 1.0, 1.0)   # just below the seam
-    red = QColor.fromHsvF(0.0, 1.0, 1.0)        # on it -- true distance is 0.03 (10.8 deg), not 0.97
-    assert subject.hueSimilarity(nearRed, red) == pytest.approx(math.cos(math.radians(10.8)), abs=1e-6)
+    nearRed = colourType.fromHsvF(0.97, 1.0, 1.0)   # just below the seam
+    red = colourType.fromHsvF(0.0, 1.0, 1.0)        # on it -- true distance is 0.03 (10.8 deg), not 0.97
+    assert subject.hueSimilarity(nearRed, red) == pytest.approx(math.cos(math.radians(10.8)), abs=1e-3)
+
+
+def test_the_two_dialects_agree_on_hue_to_within_quantisation():
+    # Documents the ONE measured difference between QColor and SpectralColor, so it is known rather than
+    # lurking. Qt quantises hue to 1/36000 internally; colorsys is continuous. Built from RGB -- the way
+    # production builds colours -- they agree to ~1e-5, which moves the cosine by ~1e-9: far below any
+    # threshold in this file (the gates sit at 0.10/0.12) or any physical quantity. RGB itself is EXACT:
+    # a 4096-colour sweep of the RGB cube found zero mismatches on every accessor.
+    for red, green, blue in [(255, 0, 20), (10, 200, 60), (0, 255, 0), (255, 255, 0), (200, 210, 200)]:
+        fromQt = QColor.fromRgb(red, green, blue)
+        fromOurs = SpectralColor.fromRgb(red, green, blue)
+        assert (fromOurs.red(), fromOurs.green(), fromOurs.blue()) == (fromQt.red(), fromQt.green(), fromQt.blue())
+        assert fromOurs.hueF() == pytest.approx(fromQt.hueF(), abs=1e-4)
+        assert fromOurs.saturationF() == pytest.approx(fromQt.saturationF(), abs=1e-4)
+        assert fromOurs.valueF() == pytest.approx(fromQt.valueF(), abs=1e-4)
+        assert fromOurs.name() == fromQt.name()
 
 
 @pytest.mark.parametrize("colour,reference", [
@@ -156,17 +194,17 @@ def test_hue_similarity_of_none_is_zero(colour, reference):
     assert util().hueSimilarity(colour, reference) == 0.0
 
 
-def test_hue_similarity_gates_on_low_value():
+def test_hue_similarity_gates_on_low_value(colourType):
     # near-black: valueF < 0.10 -> 0.0, before hue is consulted at all
     subject = util()
-    assert subject.hueSimilarity(QColor.fromRgb(5, 5, 5), subject.wavelengthToColor(510)) == 0.0
+    assert subject.hueSimilarity(colourType.fromRgb(5, 5, 5), subject.wavelengthToColor(510)) == 0.0
 
 
-def test_hue_similarity_gates_on_low_saturation():
+def test_hue_similarity_gates_on_low_saturation(colourType):
     # washed-out: saturationF < 0.12 -> 0.0. This gate is what makes an ACHROMATIC *colour* safe
     # (its hue is never read), which is why only the *reference* needs the hue<0 branch below.
     subject = util()
-    assert subject.hueSimilarity(QColor.fromRgb(200, 210, 200), subject.wavelengthToColor(510)) == 0.0
+    assert subject.hueSimilarity(colourType.fromRgb(200, 210, 200), subject.wavelengthToColor(510)) == 0.0
 
 
 # --- the gate THRESHOLDS, pinned at the boundary ------------------------------
@@ -175,22 +213,22 @@ def test_hue_similarity_gates_on_low_saturation():
 # saturation gate 0.12 -> 0.05 and the value gate 0.10 -> 0.02 left the whole suite green. These
 # straddle each boundary so the numbers themselves are pinned.
 
-def test_hue_similarity_saturation_gate_sits_at_0_12():
+def test_hue_similarity_saturation_gate_sits_at_0_12(colourType):
     subject = util()
     green = subject.wavelengthToColor(510)
-    justBelow = QColor.fromHsvF(1 / 3, 0.115, 1.0)
-    justAbove = QColor.fromHsvF(1 / 3, 0.125, 1.0)
+    justBelow = colourType.fromHsvF(1 / 3, 0.115, 1.0)
+    justAbove = colourType.fromHsvF(1 / 3, 0.125, 1.0)
     assert justBelow.saturationF() < 0.12 <= justAbove.saturationF(), "precondition: colours straddle the gate"
     assert subject.hueSimilarity(justBelow, green) == 0.0
     # same hue as the reference -> cos = 1 -> the result IS the saturation
     assert subject.hueSimilarity(justAbove, green) == pytest.approx(justAbove.saturationF(), abs=1e-6)
 
 
-def test_hue_similarity_value_gate_sits_at_0_10():
+def test_hue_similarity_value_gate_sits_at_0_10(colourType):
     subject = util()
     green = subject.wavelengthToColor(510)
-    justBelow = QColor.fromHsvF(1 / 3, 1.0, 0.09)
-    justAbove = QColor.fromHsvF(1 / 3, 1.0, 0.11)
+    justBelow = colourType.fromHsvF(1 / 3, 1.0, 0.09)
+    justAbove = colourType.fromHsvF(1 / 3, 1.0, 0.11)
     assert justBelow.valueF() < 0.10 <= justAbove.valueF(), "precondition: colours straddle the gate"
     assert subject.hueSimilarity(justBelow, green) == 0.0
     # fully saturated and same hue -> 1.0, dim but not gated
@@ -217,26 +255,27 @@ def test_qcolor_returns_minus_one_hue_for_achromatic_colours():
         assert achromatic.saturationF() == 0.0
 
 
-def test_hue_similarity_of_grey_reference_against_red_is_zero_not_one():
+def test_hue_similarity_of_grey_reference_against_red_is_zero_not_one(colourType):
     # THE regression guard for S1b. Red's hue is 0.0; a naive achromatic hue of 0.0 collides with it
     # exactly, so the two become "identical hues" and score 1.0.
     subject = util()
     red = subject.wavelengthToColor(645)
     assert red.hueF() == 0.0, "precondition: red sits at hue 0.0, where a naive achromatic hue lands"
-    assert subject.hueSimilarity(red, GREY) == 0.0
+    assert subject.hueSimilarity(red, colourType.fromRgb(128, 128, 128)) == 0.0
 
 
-def test_hue_similarity_of_grey_reference_is_zero_for_every_hue():
+def test_hue_similarity_of_grey_reference_is_zero_for_every_hue(colourType):
     # A grey reference is meaningless for every colour, not just red.
     subject = util()
+    grey = colourType.fromRgb(128, 128, 128)
     for nanometer in (440, 490, 510, 580, 645):
-        assert subject.hueSimilarity(subject.wavelengthToColor(nanometer), GREY) == 0.0
+        assert subject.hueSimilarity(subject.wavelengthToColor(nanometer), grey) == 0.0
 
 
-def test_hue_similarity_of_grey_colour_is_zero():
+def test_hue_similarity_of_grey_colour_is_zero(colourType):
     # The other direction: an achromatic colour never matches anything (via the saturation gate).
     subject = util()
-    assert subject.hueSimilarity(GREY, subject.wavelengthToColor(510)) == 0.0
+    assert subject.hueSimilarity(colourType.fromRgb(128, 128, 128), subject.wavelengthToColor(510)) == 0.0
 
 
 # --- channelDominance ---------------------------------------------------------
@@ -268,16 +307,16 @@ def test_channel_dominance_is_never_negative():
             assert subject.channelDominance(subject.wavelengthToColor(nanometer), kind) >= 0.0
 
 
-def test_channel_dominance_of_grey_is_zero_for_every_kind():
+def test_channel_dominance_of_grey_is_zero_for_every_kind(colourType):
     subject = util()
     for kind in ("green", "blue", "cyan", "red"):
-        assert subject.channelDominance(GREY, kind) == 0.0
+        assert subject.channelDominance(colourType.fromRgb(128, 128, 128), kind) == 0.0
 
 
-def test_channel_dominance_formula_is_a_normalised_channel_margin():
+def test_channel_dominance_formula_is_a_normalised_channel_margin(colourType):
     # Pins the actual arithmetic, not just the pure-colour corners: value = (channel - max(others)) / 255.
     subject = util()
-    colour = QColor.fromRgb(10, 200, 60)
+    colour = colourType.fromRgb(10, 200, 60)
     assert subject.channelDominance(colour, "green") == pytest.approx((200 - 60) / 255.0)
     assert subject.channelDominance(colour, "cyan") == pytest.approx((min(200, 60) - 10) / 255.0)
     assert subject.channelDominance(colour, "red") == 0.0
@@ -291,11 +330,11 @@ def test_channel_dominance_of_none_is_zero():
     assert util().channelDominance(None, "green") == 0.0
 
 
-def test_channel_dominance_still_discriminates_at_low_saturation():
+def test_channel_dominance_still_discriminates_at_low_saturation(colourType):
     # Its whole reason to exist: hueSimilarity gates this colour out (saturation < 0.12), yet
     # channelDominance still reports a usable green margin. Guards the division of labour.
     subject = util()
-    barelyGreen = QColor.fromRgb(200, 210, 200)
+    barelyGreen = colourType.fromRgb(200, 210, 200)
     assert barelyGreen.saturationF() < 0.12
     assert subject.hueSimilarity(barelyGreen, subject.wavelengthToColor(510)) == 0.0
     assert subject.channelDominance(barelyGreen, "green") == pytest.approx(10 / 255.0)

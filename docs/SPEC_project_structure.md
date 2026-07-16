@@ -1,6 +1,6 @@
 # SPEC — Project structure & tiering (`spectracsPy-core`)
 
-Status: **S0 IMPLEMENTED (2026-07-16) · S1a IMPLEMENTED (2026-07-17); S1b–S5 DESIGN** (spec-first; implement on explicit request only). Source:
+Status: **S0 · S1a · S1b IMPLEMENTED (2026-07-16/17) — `-model` and `-base` are now Qt-free; S2–S5 DESIGN** (spec-first; implement on explicit request only). Source:
 Edwin (2026-07-16), split out of [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md) — it outgrew being a
 track inside M3. Naming **settled: `spectracsPy-core`** (matches the existing layer-name pattern base / model /
 server; `-sciens` was rejected because `sciens` is the org root in *every* repo).
@@ -53,13 +53,13 @@ proportionate while Edwin is the only plugin author.
 ```
                       +--------------------------+
                       |    spectracsPy-base      |   sciens.base
-                      |    (exists)              |   Singleton, SingletonQObject*
+                      |    (exists)              |   Singleton   (Qt-free since S0)
                       +--------------------------+
                                    ^
                                    |
                       +--------------------------+
-                      |    spectracsPy-model     |   data classes, plugin view-models,
-                      |    (exists)              |   DB entities   + SpectralColor (NEW, S1b)
+                      |    spectracsPy-model     |   data classes, plugin view-models, DB entities
+                      |    (Qt-free since S1b)   |   + SpectralColor (NEW, S1b)
                       +--------------------------+
                           ^                   ^
                           |                   |
@@ -102,7 +102,7 @@ Verified 2026-07-16 against `spectracsPy/requirements.txt` and the actual import
 | Tier | External dependencies |
 |---|---|
 | `spectracsPy-base` | — (stdlib) |
-| `spectracsPy-model` | SQLAlchemy · SQLAlchemy-serializer · marshmallow · marshmallow-sqlalchemy · **(!) PySide6 — the L3 leak** |
+| `spectracsPy-model` | SQLAlchemy · SQLAlchemy-serializer · marshmallow · marshmallow-sqlalchemy — **Qt-free since S1b ✅** |
 | **`spectracsPy-core`** | numpy · **scipy** · colour-science · rgbxy · spectres · matplotlib · Pillow · pypdf |
 | `spectracsPy` (app) | PySide6 · pyqtgraph · scipy · opencv-python-headless · pyusb · psutil · appdata · colormath · luxpy · pyspectra |
 | `spectracsPy-server` | Pyro5 · bcrypt · **PyNaCl** (new — M3 signature verify) |
@@ -112,8 +112,8 @@ Verified 2026-07-16 against `spectracsPy/requirements.txt` and the actual import
 moving in (§2), and it costs nothing: wheels exist everywhere and [`SPEC_android_port.md`](SPEC_android_port.md) P0
 proved real scipy on-device.
 
-The one blemish: `-core` → `-model` → SQLAlchemy + PySide6. Fixing L3 (§4b) removes the PySide6 half; the SQLAlchemy
-half is the `-model` split question in §8.
+`-core` → `-model` used to drag SQLAlchemy **and PySide6**; **S0 + S1b closed the PySide6 half** (§4b). The
+SQLAlchemy half remains — the `-model` split question in §8.
 
 ### 1c. The membership rule — and why the "app conditions / plugin interprets" line moved
 
@@ -241,7 +241,7 @@ mattering — and Qt is entirely fine where they actually live.**
 | Files | Verdict |
 |---|---|
 | `SpectralJob` · `NavigationSignal` · `ApplicationStatusSignal` · `DbEntityChangedSignal` (+ its subclasses `UserSignal`, `SpectrometerProfileSignal`) · `VideoSignal` · `SpectralVideoThreadSignal` · `SpectrometerCalibrationProfileHoughLinesVideoSignal` · `VirtualSpectrometerSettings` · `-base`'s `SingletonQObject` | **Move to the app, keep the Qt. → S0** |
-| `SpectralLine.color: ClassVar[QColor]` | **The only genuine de-Qt.** A real DB entity, so it stays in `-model` and takes S1b's `SpectralColor`. |
+| `SpectralLine.color: ClassVar[QColor]` | **The only genuine de-Qt.** A real DB entity, so it stays in `-model` and takes S1b's `SpectralColor`. **✅ DONE (S1b) — L3 is closed; `grep -rE 'PySide6\|pyqtgraph' -model/ -base/` now returns nothing.** |
 
 **Verified they are movable (2026-07-16):** `NavigationSignal` and `ApplicationStatusSignal` have **zero** consumers
 inside `-model`. `DbEntityChangedSignal` is used only by `UserSignal` / `SpectrometerProfileSignal` — themselves app
@@ -365,6 +365,35 @@ nick. Both were re-run. **A Qt detector must match `PySide6` AND `pyqtgraph` AND
 
 `logic/spectral/plugin/dev/` (`DevSpectralPlugin`) · `logic/spectral/plugin/pumpkin/` (`PumpkinOilPlugin`).
 
+### Dead chain found by S1b's duck (2026-07-17) — record, don't fix here
+
+One unfinished method keeps an entire dependency alive:
+
+```
+SpectralLinesSelectionLogicModule.__validateByColor   #todo:unfinished — UNREACHABLE
+        |  (the only caller of)
+        v
+SpectralColorUtil.getColorDifference                  — therefore DEAD
+        |  (the only importer of)
+        v
+colormath                                             — therefore a DEAD DEPENDENCY in requirements.txt
+```
+
+- **`__validateByColor` is unreachable.** `execute()` dispatches on exactly three parameter types
+  (`…ByProminenceParameter`, `…ByIntensity`, `…ByPixelIndex`) — **there is no `SelectByColorParameter`
+  branch**. The method is name-mangled private, has no other caller, is marked `#todo:unfinished`, ends in
+  `pass`, and would **crash if reached**: it passes `selectedLine.pixelIndex` (an `int`) where a colour goes,
+  and discards the result.
+- **`getColorDifference`** (the colormath/ΔE-2000 path) therefore has no live caller. Its lazy-import defence —
+  the `colormath → networkx → bz2` p4a workaround — guards a path nobody walks.
+- **`colormath`** is imported by `SpectralColorUtil` and nowhere else, so it is dead weight in the app's
+  dependency set. Precedent: [`SPEC_spectrum_processing.md`](SPEC_spectrum_processing.md) §174 already dropped
+  `luxpy` and `pandas` for exactly this reason.
+
+**Deliberately NOT done in S1b.** Deleting dead code inside the phase that rewrites calibration-critical colour
+maths mixes two risks — the very thing S1a/S1b and S3a/S3b were split to avoid. S1b ports `getColorDifference`
+mechanically to `SpectralColor` and changes nothing else. The deletion is its own decision, on its own day.
+
 ### Smells found, not blocking
 
 - **`SpectrometerCalibrationProfileWavelengthCalibrationVideoViewModule` calls `find_peaks` inline** — science in a
@@ -378,7 +407,7 @@ nick. Both were re-run. **A Qt detector must match `PySide6` AND `pyqtgraph` AND
 |---|---|---|---|
 | **S0** ✅ | **DONE 2026-07-16.** Moved the Qt app-plumbing out of `-model`/`-base` into the app — **11 files**: `SingletonQObject`, `SpectralJob`, `SpectralVideoThreadSignal`, `DbEntityChangedSignal` (+ `UserSignal`, `SpectrometerProfileSignal`), `HoughLinesVideoSignal`, `NavigationSignal`, `ApplicationStatusSignal`, `VideoSignal`, `VirtualSpectrometerSettings`. Kept their `QObject`; kept their package paths → **zero import changes**. | `-model` → `spectracsPy` | ✅ all 11 import; ✅ `-model`+`-base` import with **PySide6 blocked** (0 dragged); ✅ real `Signal(NavigationSignal)`/`Signal(ApplicationStatusSignal)` still marshal; ✅ real app boots, Home→Settings→Home→Playground→Home, status bar renders text+progress; ✅ 34 targeted tests pass. `grep -rE 'PySide6\|pyqtgraph' -model/ -base/` → **only `SpectralLine`** (S1b takes it). |
 | **S1a** ✅ | **DONE 2026-07-17.** Characterisation tests pinning the **current** QColor behaviour of `SpectralColorUtil.wavelengthToColor` / `hueSimilarity` / `channelDominance`. **63 tests, no production change.** | `tests/test_spectral_color_util_characterisation.py` (NEW) | ✅ 63 pass against today's code; ✅ **verified by mutation — 8/8 mutants die**, incl. the achromatic trap, both gate thresholds, gamma, the clamp and the hue wrap-around. The red-vs-grey trap is pinned: current **0.0**, naive port **1.0**. |
-| **S1b** | **REPLACE.** `SpectralColor` value type (rgb ints + rgbF floats + hue/saturation/value, **preserving QColor's achromatic hue = −1 convention**); QColor out of `SpectralColorUtil`, `SpectrumToColorLogicModule(+Result)`, and `SpectralLine.color` | `-model` (new type + `SpectralLine`) + `logic/spectral/util` + `/spectrumToColor` | **S1a's tests still pass, unchanged** — that is the proof; science imports no Qt; swatch still renders; `EvaluationColorUtil`'s output **unchanged** (plain rgb tuple + hue°) |
+| **S1b** ✅ | **DONE 2026-07-17.** `SpectralColor` (Qt-free, in `-model`) replaces QColor in `SpectralColorUtil`, `SpectrumToColorLogicModule(+Result)` and `SpectralLine.color`. Deliberately **QColor-shaped** (Option A): the camera still hands `hueSimilarity` a QColor from the app-side calibration path, so the two dialects must be interchangeable — incl. `hueF() == -1` for achromatic. | `-model` (new type + `SpectralLine`) + `logic/spectral/util` + `/spectrumToColor` | ✅ **S1a's 63 tests passed UNCHANGED** — the proof; then parametrised over **both** dialects (75 tests) because passing unchanged only proved *QColor-in* still works. ✅ **13 mutants die**, incl. the achromatic trap on the new type. ✅ 4096-colour RGB-cube sweep vs QColor: **0 mismatches**. ✅ `-model`+`-base` import with **PySide6 blocked**. ✅ 106 tests; ✅ Qt renders a stylesheet from `SpectralColor.name()`. |
 | **S2** | QImage/QPixmap out of `WorkflowReportBuilder` | `view/.../render/` | report path Qt-free; M2 PDF still builds + embeds JSON |
 | **S3a** | **REORGANISE IN-TREE — no new repo.** Move §5's packages into their target shape inside `spectracsPy`; make the app depend on that subtree. **Re-derive the move list by grep first (§5)** — do not trust the table. **Rename `logic/appliction` → `logic/application` in the same pass (#8)**: this is already a mass import rewrite, and doing it standalone pays the same merge pain twice. | `spectracsPy` (+ `-model`, `-base`) | **All the risk lives here — and it is still a `git mv`.** App boots; bench runs; wizard runs; PDF exports; 17 tests green. `grep -rE 'PySide6\|pyqtgraph\|shiboken'` over the core-shaped subtree → **nothing**. No `appliction` remains. |
 | **S3b** | **RELOCATE — mechanical, irreversible.** `git filter-repo` the subtree into **`spectracsPy-core`** (**keep history**); add **one line** to `stage_app_src.sh`'s repo loop; extend the PYTHONPATH run recipe. **Tests move with their subject** (12 of 17 import the moving science). | new repo + `android/*/stage_app_src.sh` + run recipe | a fresh clone + PYTHONPATH boots; the APK stages and launches; `git log` still follows a moved file; tests green in their new home |
