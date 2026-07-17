@@ -6,6 +6,7 @@
     </content>
     <orderEntry type="jdk" jdkName="Python 3.10 (spectracsPy-model)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="spectracsPy-core" />
     <orderEntry type="module" module-name="spectracsPy-model" />
     <orderEntry type="module" module-name="spectracsPy-server" />
     <orderEntry type="module" module-name="spectracsPy-base" />
