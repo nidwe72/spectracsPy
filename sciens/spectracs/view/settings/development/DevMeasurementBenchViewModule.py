@@ -14,8 +14,8 @@ from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModuleParamet
 from sciens.spectracs.logic.session.ActiveSpectrometerProfileLogicModule import ActiveSpectrometerProfileLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
-from sciens.spectracs.logic.spectral.plugin.dev.DevSpectralPlugin import DevSpectralPlugin
-from sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin import PumpkinOilPlugin
+from sciens.spectracs.plugins.dev.DevSpectralPlugin import DevSpectralPlugin
+from sciens.spectracs.plugins.pumpkin.PumpkinOilPlugin import PumpkinOilPlugin
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance

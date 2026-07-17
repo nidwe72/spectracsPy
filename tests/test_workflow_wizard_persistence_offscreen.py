@@ -22,7 +22,7 @@ from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptu
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.view.spectral.workflow.WizardViewModule import WizardViewModule
 
-PLUGIN_CODE_REF = "sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin.PumpkinOilPlugin"
+PLUGIN_CODE_REF = "sciens.spectracs.plugins.pumpkin.PumpkinOilPlugin.PumpkinOilPlugin"
 USER_ID = "test-wizard-persistence"
 
 

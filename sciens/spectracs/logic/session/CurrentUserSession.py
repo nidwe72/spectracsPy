@@ -64,7 +64,7 @@ class CurrentUserSession(Singleton):
             "pluginId": os.environ.get("SPECTRACS_DEV_PLUGIN_ID", "pumpkin-oil"),
             "pluginCodeRef": os.environ.get(
                 "SPECTRACS_DEV_PLUGIN_CODEREF",
-                "sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin"),
+                "sciens.spectracs.plugins.pumpkin.PumpkinOilPlugin"),
             "spectrometerDevice": os.environ.get("SPECTRACS_DEV_DEVICE", "Virtuax"),
         })
         return True

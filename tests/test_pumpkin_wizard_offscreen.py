@@ -23,7 +23,7 @@ from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWo
 from sciens.spectracs.model.spectral.plugin.view.VerdictView import VerdictView
 from sciens.spectracs.view.spectral.workflow.WizardViewModule import WizardViewModule
 
-PLUGIN_CODE_REF = "sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin.PumpkinOilPlugin"
+PLUGIN_CODE_REF = "sciens.spectracs.plugins.pumpkin.PumpkinOilPlugin.PumpkinOilPlugin"
 
 
 class PumpkinWizardOffscreenTest(unittest.TestCase):
