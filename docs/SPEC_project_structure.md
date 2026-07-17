@@ -1,6 +1,6 @@
 # SPEC — Project structure & tiering (`spectracsPy-core`)
 
-Status: **S0 · S1a · S1b · S2 · S3a · S3b · S4 · S5 IMPLEMENTED (2026-07-16/17) — `spectracsPy-core` EXISTS (Qt-free) and `spectracs-plugins` EXISTS (plugin_sdk-only, own repo); S7 (dependency tangle) DESIGN** (spec-first; implement on explicit request only). Source:
+Status: **S0 · S1a · S1b · S2 · S3a · S3b · S4 · S5 IMPLEMENTED (2026-07-16/17) — `spectracsPy-core` EXISTS (Qt-free) and `spectracs-plugins` EXISTS (plugin_sdk-only, own repo); S7 (dependency tangle) IMPLEMENTED 2026-07-17 — `-model`/`-server` stand alone, app↔server thinned (resolution § in §5)** (spec-first; implement on explicit request only). Source:
 Edwin (2026-07-16), split out of [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md) — it outgrew being a
 track inside M3. Naming **settled: `spectracsPy-core`** (matches the existing layer-name pattern base / model /
 server; `-sciens` was rejected because `sciens` is the org root in *every* repo).
@@ -475,6 +475,96 @@ from a direct-import grep and missed transitive Qt (twice: `.lighter()`, and thi
 contaminated by `cwd` on `sys.path` until `""`/`"."` were stripped. The Qt gate matched the word *pyqtgraph* in a
 **comment**, three times. A stale `.pyc` made shipped code look buggy. **The harness has been less reliable than
 the code it checks.** Check every direction, and verify the harness before trusting its verdict.
+
+### S7 — resolution (IMPLEMENTED 2026-07-17)
+
+> **AS BUILT (2026-07-17).** All 4 util moves shipped as designed (files relocated between repos keeping their
+> dotted paths — S0 convention, **zero import-site churn**). **Correction:** the "dead"
+> `initializeSpectrometerCalibrationProfile` is **NOT dead** — it is a *stub* (commented body) still **called by a
+> view** (`SpectrometerCalibrationProfileViewModule.setModel:224`), which the caller-grep missed (it only checked
+> util→util, not view→util — the spec's own "check every direction" lesson, re-earned). Deleting it crashed the app
+> boot with `AttributeError`; **restored verbatim** (call sites unchanged). Net functional change from S7 = zero, as
+> intended for a pure relocation. **Independence matrix now GREEN:** `-model` and `-server` **stand alone** (0
+> failures); `-core` 0 cross-repo leaks (the 2 `InvalidRequestError`s are a SQLAlchemy partial-import artifact —
+> present in the baseline, and T1 end-to-end passes). **Pyro cut — one deviation from the plan, forced by a
+> discovery:** `configure()` is **not** trivially per-side — it registers Pyro serializers for `-model` entities via
+> `SqlAlchemySerializer`, and the client needs it too (to *deserialize* replies). So the "pure `-base` leaf +
+> per-side configure" plan doesn't hold. As built: a **thin `SpectracsServerEndpoint` leaf in `-server`** (constants
+> + `localUri` + `configure`, importing only Pyro5 + `SqlAlchemySerializer` + 2 `-model` entities, **not** the
+> `@expose` impl); `SpectracsPyServer` re-exposes it via aliases so the launchers are untouched; the client imports
+> the endpoint, and **no longer drags `SpectracsPyServer`** (verified: it is absent from the client's `sys.modules`).
+> Consequence: `app→server` is made **thin** (a constants/serializer leaf), not *eliminated* — full elimination
+> would need Pyro5 + `SqlAlchemySerializer` in `-model`, rejected to keep `-model` Pyro-free (Edwin's standing call).
+> The independence matrix (which does not test the app tier) is unaffected. **Not committed** — left in the working
+> tree for Edwin's rig test, then commit.
+
+**Re-measured 2026-07-17 (post-S5): the tangle has shrunk to 4 files / 3 edges** — the map above is stale.
+`server → app` is now **1 file, not 6**: `Login`/`UserAdmin`/`UserSeed`/`SpectrometerUtil` have since moved to
+`-model` and `SqlAlchemySerializer` to `-server`, leaving only `SpectracsPyServer → SpectralLineMasterDataUtil`.
+Current state:
+
+```
+  model → app   3 files   SpectrometerProfileUtil → controller (ApplicationContext)
+                          SpectrometerCalibrationProfileUtil → logic.spectral.util.SpectrallineUtil
+                          InstrumentAuthoringLogicModule → logic.spectral.util.SpectralLineMasterDataUtil
+  server → app  1 file    SpectracsPyServer → logic.spectral.util.SpectralLineMasterDataUtil
+  app → server  1 file    SpectracsPyServerClient → SpectracsPyServer  (config constants only)
+```
+
+**Method-level finding: the tangle is misplacement, not intrinsic — every class is internally coherent, so
+NO class needs splitting** (checked method-by-method; even `SpectrometerProfileUtil`, which *looks* split-worthy
+— 2 DB-CRUD methods + 1 `ApplicationContext` method — is whole once it sits in the app). The one class filed in
+the app whose every method is `-base`+`-model` is `SpectralLineMasterDataUtil`; the one whose 9 methods reach only
+*downward* (1 hits `SpectralColorUtil`+`-model`, 8 are pure `SpectralLine`/numpy) is `SpectralLineUtil`.
+
+**The moves (settled — Edwin, 2026-07-17):**
+
+| util | from → to | why | frees |
+|---|---|---|---|
+| `SpectralLineMasterDataUtil` | app → **`-model`** | whole class is `-base`+`-model` (persistence + entities); the server needs it and can't import the app | `server→app` **and** `InstrumentAuthoring→app` (→ `model→model`) |
+| `SpectralLineUtil` | app → **`-core`** | spectral science; reaches only `-core`(`SpectralColorUtil`)+`-model`. Its **one** DB-touching method, `createSpectralLinesByNames`, is a legal `core→model` | (consolidates line/colour/`polyfit` in `-core`) |
+| `SpectrometerCalibrationProfileUtil` | `-model` → **app** | calibration-profile logic; uses `SpectralLineUtil` → `app→core` | `model→app` (edge #2) |
+| `SpectrometerProfileUtil` | `-model` → **app** | genuine app coupling (`getApplicationConfig`/`getApplicationSettings`); consumers are all-app | `model→app` (edge #1, → `app→app`) |
+| `InstrumentAuthoringLogicModule` | **stays `-model`** | its only reach (`SpectralLineMasterDataUtil`) becomes `model→model` | — |
+
+Free cleanup during the move: **delete `SpectrometerCalibrationProfileUtil.initializeSpectrometerCalibrationProfile`
+— dead** (commented-out body, bare `return`).
+
+**Reversal, recorded consciously:** this overturns **exactly one** prior decision — S3a's *"`SpectrallineUtil`
+stays in the app"* (it goes to `-core`). That decision rested on `SpectralLineMasterDataUtil` being app-bound,
+which we now know is false (it's `-base`+`-model`). §5 #1 *"calibration stays in the app"* is **honored** — the two
+calibration-*profile* utils stay app; only the line/colour/`polyfit` primitive descends. `SpectralLineUtil` in
+`-core` reaching `-model`'s persistence (DB I/O) via `SpectralLineMasterDataUtil` is allowed (`core→model`) — a
+`-core` util that touches the DB, not pure math; accepted.
+
+**The `app ↔ server` cut — the Pyro endpoint.** `SpectracsPyServerClient.getProxy()` imports the whole
+`SpectracsPyServer` *class* purely to read **4 connection values** (`configure()`, `localUri()`, `NAMESERVER_PORT`,
+`DAEMON_NAT_HOST`) — never a Pyro-exposed method (those are called on the returned *proxy*). Importing the impl
+drags the server's own app-imports, so the app can't build without server source. The cut, shaped by the planned
+**user-editable server-URL setting** (default `sciens.at`, local-dev fallback, so if the server moves users are
+emailed to update it):
+- **host/URL → the app** — a default constant by the client now (`'sciens.at'` + the existing local fallback in
+  `getProxy()`); the future setting overrides it. The app never imports its server address from the server repo.
+- **shared protocol kernel → a pure `-base` leaf** — just the Pyro **object-id** + **port numbers** (plain
+  strings/ints, **no `Pyro5` import**, so `-base` stays stdlib-clean). Both client and server import it.
+- **`configure()` stays per-side** — the client already sets `Pyro5.config` inline in `getProxy()`; each side does
+  its own. Nothing to share.
+
+Net: `app→server` severed, `-server` keeps its own bind/NAT config, `-base` stays Pyro-free.
+
+**Verify — the neutral-cwd independence matrix (harness: `indep_probe.py`; fully controls `sys.path`, strips cwd).**
+Each repo must import all its modules with only its allowed tiers on the path. **Baseline measured 2026-07-17 (BEFORE
+S7):**
+
+| repo | allowed path | before | after S7 (target) |
+|---|---|---|---|
+| `-core` | base+model+core | **stands alone** ✅ (control — confirms S3a) | stands alone |
+| `-model` | base+model | **2 leaks** → `controller`, `logic.spectral` | **stands alone** |
+| `-server` | base+model+server | **1 leak** → `logic.spectral` | **stands alone** |
+
+*(The probe reports missing `sciens.*` modules; `-core`'s incidental SQLAlchemy `InvalidRequestError` under partial
+import is a probe artifact, not a leak. `app→server` is not covered by this matrix — the app is top-tier — and is
+verified separately: the client no longer imports `SpectracsPyServer`.)*
 
 ### Dead chain found by S1b's duck (2026-07-17) — record, don't fix here
 
