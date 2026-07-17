@@ -23,5 +23,5 @@ done
 # app_src-specific (not sourced from a repo), so it is preserved as-is.
 cp "$APP/spectracsMain.py" "$DST/spectracsMain.py"
 
-echo "staged app_src/sciens from: model, base, server, app  (+ spectracsMain.py)"
+echo "staged app_src/sciens from: model, base, core, server, app  (+ spectracsMain.py)"
 echo "main.py (p4a shim): $( [ -f "$DST/main.py" ] && echo present || echo MISSING )"

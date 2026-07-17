@@ -11,7 +11,11 @@ pyqtgraph_hiddenimports = collect_submodules('pyqtgraph')
 
 a = Analysis(
     ['spectracsMain.py'],
-    pathex=["../spectracsPy-model"],
+    # Every sibling repo the app imports from. The repos are namespace-merged (PEP 420) rather than
+    # pip-installed, so PyInstaller must be told where each tier lives or the frozen build misses it.
+    # -core is new (SPEC_project_structure.md S3b); -base was already missing and holds sciens.base.Singleton.
+    # NOT verified by a build -- this is "clearly more correct than the status quo", not "proven to build".
+    pathex=["../spectracsPy-core", "../spectracsPy-model", "../spectracsPy-base"],
     binaries=[],
     datas=[ ],
     hiddenimports=["pyi_splash"] + pyqtgraph_hiddenimports,
