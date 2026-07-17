@@ -1,7 +1,12 @@
-# SPEC — Test-suite hygiene debt (pre-existing failures)
+# SPEC — Hygiene debt (pre-existing, non-blocking defects)
 
-Status: **BACKLOG — not blocking any feature.** Catalogues the tests under `spectracsPy/tests/` that do **not**
-pass on `main`, each with its root cause and the fix, so they are tracked rather than rediscovered every run.
+Status: **BACKLOG — not blocking any feature.** Catalogues known defects that are real but gate nothing —
+each with its root cause and the fix, so they are **tracked rather than rediscovered every run**.
+
+**Scope widened 2026-07-17** from test-only (`T*`) to also cover **runtime** debt (`R*`) and **doc drift** (`D*`).
+The trigger: the S0–S4 tiering work re-found **T1 and T2 from scratch** and wrote them into
+[`SPEC_project_structure.md`](SPEC_project_structure.md) a second time — exactly what this file exists to prevent.
+It only works if it is the single place, and if it is read before declaring something "pre-existing".
 Surfaced 2026-07-10 during the M2 (PDF report) verification sweep — **none are caused by M2**; all three predate
 it and live in code M2 never touches (confirmed by the M2 diff having zero overlap with the implicated files).
 
@@ -72,6 +77,60 @@ old glyph. Known since the M1 sweep. Cosmetic/stale-assertion — the button wor
 string to the shipping glyph (or assert on state, not the glyph). **Effort:** trivial (one line).
 
 ---
+
+## R1 — the server cannot find a LAN IP on modern interface names (found 2026-07-17)
+
+`./runServer.sh` dies with an opaque `TypeError: argument must be an int, or have a fileno() method` at
+`spectracsPyServer.py:94`. **Nothing to do with the tiering** — it reproduces identically with and without
+`spectracsPy-core` on the path, and the server repo is untouched.
+
+The cascade, every step confirmed from Edwin's own output:
+
+```
+  NetworkUtil.getLocalIpAddress()  ->  None        <- the bug: it matches only 'wlp*' or 'eth0*'
+        |
+  NAMESERVER_HOST='LOCAL' -> resolves to None      ->  appliedArgs shows nameserverHost: None
+        |
+  Pyro5.api.start_ns(host=None)  ->  binds LOOPBACK  ->  "PYRO:Pyro.NameServer@localhost:8090"
+        |
+  Pyro5 REFUSES a broadcast server on loopback     ->  returns broadcastServer = None
+        |
+  rs=[None] -> select.select([None],...)           ->  TypeError, 20 lines from the cause
+```
+
+**Root cause:** `NetworkUtil.getLocalIpAddress()` (`spectracsPy-base`) hardcodes `startswith('wlp')` (WiFi) and
+`startswith('eth0')` — the *old* kernel naming. Modern systemd predictable names are `eno1` / `enp3s0` / `ens…`,
+which match neither. Edwin's wired interface is **`eno1`**, so on wired it finds nothing; it presumably worked on
+WiFi (`wlp*`). Triggered by a network switch.
+
+**Fix (two parts, both small):**
+1. `NetworkUtil`: accept the `en*` family (`eno`, `enp`, `ens`, `enx`) alongside `wlp`/`eth`. Skip virtual
+   interfaces — this machine also has `virbr0`, `docker0`, `vmnet1`, `vmnet8`, `tun_vpn`, and picking one of those
+   would be worse than picking none.
+2. `spectracsPyServer.py`: **guard `broadcastServer is None`** before putting it in the `select()` list. Pyro5
+   documents returning `None` on loopback, so this is a supported state, not an error — but the missing LAN IP
+   should fail *loudly at startup*, not as a `TypeError` in the event loop.
+
+**Workaround (verified working by Edwin, 2026-07-17):** pass the host explicitly —
+`./runServer.sh --nameserverHost=192.168.1.223 --daemonHost=192.168.1.223`.
+
+## R2 — `runServer.sh` has no `spectracsPy-core` on PYTHONPATH (found 2026-07-17)
+
+```
+export PYTHONPATH=".:../spectracsPy:../spectracsPy-model:../spectracsPy-base"
+```
+
+**Mine.** S3b's phase-0 sweep taught 26 files the `-core` path but ran over `git ls-files` **inside `spectracsPy`
+only**, so it never reached the sibling repos. It did **not** cause R1 (proven: identical crash with `-core` on the
+path) and has not bitten yet — but the server imports app code, and app code reaches into `-core`, so it is a live
+trap. **Fix:** add `../spectracsPy-core`. Check the other sibling repos for the same omission while there.
+
+## D1 — `SPEC_spectrum_processing.md` §174 calls `luxpy` dead; it is live again (found 2026-07-17)
+
+§174 lists `luxpy` as **"drop — dead code"**. That referred to `spd(...)`/`spd_to_xyz(...)` in `SpectrumToColor`,
+since removed. But `synthesis/SpectrumSynthesisUtil` now uses `luxpy.toolboxes.spdbuild.gaussian_spd` for the
+**390–410 nm UV-A LED** (no measured Avonec curve exists there), with a plain-Gaussian fallback. Harmless while
+everything shares one venv; misleading to anyone trimming dependencies. **Fix:** correct §174.
 
 ## Not in scope
 Product behaviour — all three are test-side (stale fixture, un-driven modal, stale assertion). No application code

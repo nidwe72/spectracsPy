@@ -8,21 +8,19 @@ server; `-sciens` was rejected because `sciens` is the org root in *every* repo)
 Theme: **the science is not the app.** Extract a Qt-free shared tier that the app, the plugins, and a future LIMS
 addon all consume — and that none of them can bypass by accident.
 
-> **Three pre-existing issues surfaced by S0's verification — none caused by it; the first two confirmed by
-> re-running against a pristine pre-S0 tree:**
-> 1. **`test_workflow_wizard_persistence_offscreen` hangs** (>100 s, no server involved). Reproduced identically
->    before S0. Unrelated to the tiering; worth its own look.
-> 2. **`test_plugin_binding_and_seed` errors** with `no column named calibrationSpectrumJson`. The app-data DB at
->    `~/.spectracsPy/spectracsPyServer.db` predates that column (landed `dc9500c`, 2026-07-06) and **SQLAlchemy's
->    `create_all` never ALTERs an existing table** — so an old dev DB keeps its schema forever. A fresher DB at
->    `~/.spectracsPy-server/` *does* have the column. Migration gap, not a code fault. Normal runs are unaffected:
->    the server resolves its own app-data dir.
-> 3. Incidental: **`NavigationHandlerLogicModule.getPreviousNavigationSignal()` always returns `None`** —
->    `Singleton` guards `__new__` but not `__init__`, so `self.__previousNavigationSignal=None` re-runs on every
->    `NavigationHandlerLogicModule()` construction. Latent; out of scope here.
-> 4. **`test_lims_submission_assembly::test_missing_vendor_sensor_are_blank_not_crash` fails** (found during
->    S2): it asserts a blank `instrument.manufacturer` but gets `'Spectracs'`. Fails **alone** and on committed
->    code — a stale test, not order-pollution and not the tiering.
+> **Pre-existing issues met during S0–S4 — none caused by the tiering.** They live in
+> [`SPEC_test_hygiene_debt.md`](SPEC_test_hygiene_debt.md), which is the single place for this: **T1** (stale
+> test-DB schema), **T2** (the suite-staller hang), **R1** (the server's `TypeError` — `NetworkUtil` matches only
+> `wlp*`/`eth0*`, so a wired `eno1` yields no LAN IP), **R2** (`runServer.sh` lacks `-core` — mine), **D1**
+> (`luxpy` wrongly listed as dead).
+>
+> **T1 and T2 were already catalogued there, and this work re-found both from scratch and wrote them down a second
+> time** — precisely what that file exists to prevent. It only works if it is read *before* declaring something
+> "pre-existing". Two more found here and still only recorded here, because they are not test/runtime failures but
+> dead code: **`Polisher.py`** (`from base import SingletonQObject` — a path dead since `9dfa957`; invisible
+> because its only caller is a commented-out line) and **`NavigationHandlerLogicModule.getPreviousNavigationSignal()`**
+> (always `None`: `Singleton` guards `__new__` but not `__init__`, so the field re-initialises on every
+> construction).
 
 
 ---
@@ -522,7 +520,7 @@ mechanically to `SpectralColor` and changes nothing else. The deletion is its ow
 | **S2** ✅ | **DONE 2026-07-17.** Not a de-Qt — a **split**. The class declared itself the host bridge (*"Runs on the host side (Qt allowed)"*) and had **two Qt ends pointing opposite ways**: `__qImageToPil` (QImage **in**) and `previewPixmaps()` (QPixmap **out**). Both moved to the host; the Qt-free ~80% stayed. The conversion now happens where `.image` is set (bench view :531) — which is what `SpectrumCaptureView`'s docstring always said: *"reportImage is the Qt-free rendition the host derives from .image"*. `previewPixmaps()` was **deleted, not ported** — `rasterize()` is already Qt-free, so the host wraps it in 3 lines via the new `figures()`. | `view/../render/WorkflowReportBuilder` → Qt-free; `DevMeasurementBenchViewModule` gains both Qt ends | ✅ **A full PDF built with PySide6 BLOCKED from the import system — the LIMS-addon scenario, proven not argued.** ✅ M2's gate holds: pages render, `workflow.json` + `capture_sample.png` still embed. ✅ preview renders page-for-page. ✅ 107 tests. |
 | **S3a** ✅ | **DONE 2026-07-17.** Re-derived the move list by grep and **enforced the seam in-tree**: the core-bound set is **67 files** and now imports only `-model`, `-base`, itself and externals — **0 violations, 0 Qt**. Renamed `logic/appliction` → `logic/application` (52 files; every occurrence was the dotted module path). No files moved between packages: paths are already final (S3b only changes *repos*), so S3a's real work was **severing core→app edges**. | `spectracsPy` | ✅ **§5 was wrong and the grep caught it** (below). ✅ 197/198 modules import (the 1 is pre-existing dead `Polisher`). ✅ app boots; Settings/Playground/Home navigate. ✅ 112 tests. |
 | **S3b** ✅ | **DONE 2026-07-17.** `spectracsPy-core` exists: **67 files, 24 commits, history intact** (`clone` + `filter-repo --path`×67; `git log --follow`/`blame` reach back through S1b to 2026). Deleted the matched 67 from the app. Phase 0 first (f203ed0): re-homed the render trio out of `view/` → `logic/spectral/report/`, and taught **26 files** the `-core` path — the spec said "ONE line in stage_app_src.sh"; that line is real, the other 26 weren't in the plan. | new repo + `stage_app_src.sh` + 26 PYTHONPATH sites | ✅ **fresh clones of all 5 repos boot the app** (131 modules, only pre-existing dead `Polisher` fails). ✅ all 67 `-core` modules import with **PySide6 blocked**; `-core` has **no `view/`**. ✅ app navigates Settings→Playground→Home, no uncaught exceptions. ✅ 112 tests. |
-| **S4** ✅ | **DONE 2026-07-17 — renamed: it is the INTEGRATION GATE, not a change.** S3b already made the app depend on `-core`, and the two Qt renderers never moved; S4's stated content was a no-op. Its real content turned out to be three leftovers: **both PyInstaller specs** (`pathex` named only `-model`; the Windows one was **empty** — my S3b sweep missed them, different syntax), **`stage_app_src.sh`'s message** (staged 5 repos, said 4 — my bug), and **`-core/requirements.txt`** (deps were prose in the README). | `*.spec` · `stage_app_src.sh` · `-core` | ✅ real entrypoint `spectracsMain.py --phone` boots on `-core`; ✅ renders at 412×883, looked at it; ✅ Android staging includes `-core` (316 .py); ✅ 106 tests. **NOT verified — needs the rig:** the bench end-to-end (**it refuses virtual devices**), PDF via the bench UI, the APK, and a PyInstaller build (so the `pathex` fix is *unproven*). |
+| **S4** ✅ | **DONE 2026-07-17 — renamed: it is the INTEGRATION GATE, not a change.** S3b already made the app depend on `-core`, and the two Qt renderers never moved; S4's stated content was a no-op. Its real content turned out to be three leftovers: **both PyInstaller specs** (`pathex` named only `-model`; the Windows one was **empty** — my S3b sweep missed them, different syntax), **`stage_app_src.sh`'s message** (staged 5 repos, said 4 — my bug), and **`-core/requirements.txt`** (deps were prose in the README). | `*.spec` · `stage_app_src.sh` · `-core` | ✅ real entrypoint `spectracsMain.py --phone` boots on `-core`; ✅ renders at 412×883, looked at it; ✅ Android staging includes `-core` (316 .py); ✅ 106 tests. **RIG-VERIFIED by Edwin 2026-07-17: the measurement bench runs end-to-end on `-core`** — the one gate no headless path could reach (the bench refuses virtual devices). Still unverified: the APK (deferred) and a PyInstaller build (unused today, so the `pathex` fix is *unproven*). |
 | **S5** | **`spectracs-plugins`** repo — plugins move; depends on `-core`; CI runs headless `engine.runAll` + tests; add to `stage_app_src.sh` so they still ship. **Not blocked by M3** (§8b) | new repo + staging + CI | open it in PyCharm: SDK present, **app code absent** — *dev-time only; runtime is one merged tree* (§8b). Plugins proven headlessly; the app still loads them |
 
 
