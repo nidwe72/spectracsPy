@@ -1,5 +1,11 @@
 # SPEC — Project structure & tiering (`spectracsPy-core`)
 
+> ## ✅ COMPLETE (2026-07-18) — every phase shipped **and pushed** to GitHub.
+> All 6 repos are remote-backed: `spectracsPy` · `spectracsPy-model` · `spectracsPy-base` · `spectracsPy-server` ·
+> **`spectracsPy-core`** (S3b) · **`spectracs-plugins`** (S5). The tier boundaries hold — `-core` is Qt-free, the
+> plugins import `plugin_sdk` only, and the independence matrix is green (`-core`/`-model`/`-server` stand alone).
+> This **clears the prerequisite for [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md) (M3)**.
+
 Status: **S0 · S1a · S1b · S2 · S3a · S3b · S4 · S5 IMPLEMENTED (2026-07-16/17) — `spectracsPy-core` EXISTS (Qt-free) and `spectracs-plugins` EXISTS (plugin_sdk-only, own repo); S7 (dependency tangle) IMPLEMENTED 2026-07-17 — `-model`/`-server` stand alone, app↔server thinned (resolution § in §5)** (spec-first; implement on explicit request only). Source:
 Edwin (2026-07-16), split out of [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md) — it outgrew being a
 track inside M3. Naming **settled: `spectracsPy-core`** (matches the existing layer-name pattern base / model /
