@@ -12,6 +12,16 @@ grounded in Fruhwirth & Hermetter (2007) (`KB_led_and_oil_spectra.md` §2, `spec
 > (literature peak ~570). **DESIGN — implement on explicit request only, and only AFTER the plugin story**
 > ([`SPEC_project_structure.md`](SPEC_project_structure.md) → [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md)).
 > Deltas + the traps in **§1b.1 / §1b.2**.
+>
+> **→ Supporting evidence + P5 prerequisites: §13 (2026-07-17).** The measurement model (`A = ε·c·l + b`),
+> why the ratio cancels concentration×path but **not** an additive offset, and where dilution actually enters.
+> **Verdict in one line:** the rig reproduces the literature's **band STRUCTURE** — same features, same
+> wavelengths (λ_Q 572.5 vs 573.8, inside the paper's ±5–10 nm) — **not** its shape and **not** its ratios;
+> and **nothing found blocks the metric** (§13.7).
+> **§13 is NOTES ONLY — it changes nothing here and describes no as-is behaviour**; its numbers were computed
+> with these §1b *design* bands, **not** with the shipped `BLUE_BAND=(450,490)` / `Q_SEARCH=(565,590)` (which
+> were tuned on a **different lamp**). **Blocker it raises: dev measures two pots, production will use one
+> (§13.4) — fix before P5.**
 
 ---
 
@@ -551,9 +561,264 @@ Edwin: `PeakRatioLogicModule` is **too specific** — it bakes pumpkin band-cons
 22. **No unit tests for now (Edwin #6).** Verification is drive-and-observe (numbers sane vs `capture001`);
     granular op tests deferred.
 
-## 13. Cross-references
+## 13. Measurement model, dilution & sample presentation (2026-07-17) — **NOTES, not as-is**
 
-- `KB_led_and_oil_spectra.md` §2 — the two-band physics + "our bench reproduces Fig. 3A".
+> ### ⚠ STATUS — DESIGN NOTES. Nothing here is implemented. Nothing here describes the as-is.
+> **Source:** the literature-vs-spectracs comparison in
+> **`spectracs-references/comparisons/fig3A_vs_spectracs/`** (note + 3 plots + digitised CSVs + a script that
+> regenerates all of it). Derived from **one** measurement (`spectracsPumkinOil20260716A`) against a
+> **digitised print figure** — see §13.7 for how little the latter can carry.
+>
+> **⚠ BAND CAVEAT — read before any number below.** Everything in §13 was computed with the **§1b SETTLED
+> (design) bands**: `BLUE_BAND=(440,460)`, `Q_SEARCH=(560,580)`. The **shipped plugin still uses the as-is
+> constants** — `BLUE_BAND=(450,490)`, `Q_SEARCH=(565,590)` — chosen empirically off bench captures **with a
+> different lamp** (§1b). Therefore:
+> - these numbers **do not describe the as-is code or the as-is lamp**;
+> - **§1b, §1b.1 and §3 are unchanged by this section** — the as-is delta table stays exactly as it is;
+> - §13 is **evidence for the §1b decision + a P5 prerequisite list**, nothing more.
+>
+> **Sample (this run):** pumpkin oil dissolved in **isopropanol**, measured against an **isopropanol
+> reference** — i.e. a *dilute alcoholic solution*, the same regime as Fig. 3A's methanol solution. **Not**
+> the neat-oil regime of `capture001`.
+
+### 13.1 The measurement model — where every term comes from
+
+`A = −log₁₀(T)`, and **log turns multiplication into addition**. The detector cannot distinguish "absorbed"
+from "never arrived", so *every* loss multiplies `T` and therefore *adds* to `A`:
+
+```
+T_meas = T_absorb · T_scatter · k
+A_meas = −log₁₀(T_absorb) − log₁₀(T_scatter) − log₁₀(k)  =  ε(λ)·c·l  +  b
+
+  ε(λ) chemistry — the pigment's fingerprint SHAPE, fixed
+  c    concentration      <- dilution changes ONLY this
+  l    path length
+  b    EVERY non-pigment dimming, lumped:  b = −log₁₀(k)
+       scattering (turbidity) · lamp drift between R and S · different/reseated cuvette ·
+       fill level · exposure or gain changed between R and S
+```
+
+**`b` is not a fudge term** — it is the log of any flat light loss, and the pipeline cannot tell it from
+absorption.
+
+### 13.2 Why a ratio works — and exactly where dilution enters
+
+Each band read is `(c·l) × (a pure chemistry number)`:
+
+```
+A_blue  = c·l · ε_blue          A_green = c·l · ε_green
+D_Q     = A(λ_Q) − base(λ_Q) = c·l · Δε_Q      <- a DIFFERENCE of two points on the SAME curve
+
+ideal (b=0):   G = D_Q/A_green = (c·l·Δε_Q)/(c·l·ε_green) = Δε_Q/ε_green    <- no c, no l. EXACT.
+real  (b>0):   D_Q     = c·l·Δε_Q                <- b CANCELS   (a difference)
+               A_green = c·l·ε_green + b         <- b SURVIVES  (a raw mean)
+               G       = (c·l·Δε_Q) / (c·l·ε_green + b)
+```
+
+**The whole thing in one line: a ratio cancels MULTIPLICATION, not ADDITION.** `c·l` multiplies → cancels
+exactly (§0.3's claim holds). `b` adds → never cancels.
+
+**So dilution enters ONLY through `b`.** With `b = 0`, `G` is identical at any dilution. With `b > 0`,
+diluting shrinks the numerator proportionally while `b` stays put → **`G` drifts**. That asymmetry — `D_Q`
+baseline-corrected, `A_blue`/`A_green` raw means — is the single most important property of the current
+feature set (§13.6/F5).
+
+### 13.3 What this means in practice
+
+- **Sloppy dilution is fine; cloudy dilution is not.** `G` cancels *how much oil* — so the amount need not be
+  weighed or pipetted precisely. It cancels *nothing* additive. **Effort belongs on dissolving, not on
+  measuring.** (Edwin's ~2 drops in 3 ml isopropanol ≈ 3% v/v, stirred ~20 s, **visibly clear** — fine as-is.)
+- **A drift-free lamp is NOT required.** What is required: **`R` and `S` captured close together with nothing
+  changed in between.** A slowly drifting lamp is harmless if the reference is re-taken per sample.
+- **Turbidity was excluded for this run** (both directions): fine droplets → Rayleigh `∝λ⁻⁴`, steeply blue —
+  fits *worse* than flat (rms 0.028 vs 0.024), and a joint flat+Rayleigh fit drives the Rayleigh coefficient
+  **negative** (unphysical); big droplets → flat, but would look **milky**, and the solution is clear.
+- **`D_Q` and `λ_Q` are the robust features.** `D_Q` is immune to a flat `b` by construction. The
+  vulnerability is **only** the denominator.
+
+### 13.4 ⭐ Dev rig ≠ production rig — a P5 blocker
+
+**Dev measures two pots** (pot A: 3 ml alcohol = REFERENCE; pot B: 3 ml alcohol + 2 drops oil = SAMPLE).
+**The end user will use one pot** (Edwin, 2026-07-17). `A = −log₁₀(S/R)` then also divides **two different
+pieces of glass**:
+
+```
+dev  (two pots):  A = ε·c·l + b_glass     b_glass = −log₁₀(throughput_potB / throughput_potA)
+prod (one pot):   A = ε·c·l               same glass in both captures  ->  b_glass = 0
+```
+
+**Consequence: any threshold calibrated in P5 on the two-pot rig carries `b_glass` baked in and will not
+transfer to a one-pot end user** — and it lands on `A_green`, the `G_green` denominator, the smallest number
+in the chain. **§0.6/§0.7 already demand the bench be "a faithful rehearsal of the real thing"; two-pots-in-dev
+vs one-pot-in-production breaks that rehearsal at exactly the step whose purpose is transferable numbers.**
+This sharpens §12/R2 ("sample-presentation — DECIDED: fixed concentration + volume; **pin the exact
+cell/geometry**"): the *cell* matters as much as the volume, and **dev's cell must be production's cell**.
+
+→ **Recommendation: switch dev to ONE pot before P5.** 3 ml alcohol → capture `R` → add the drops, stir, put
+it back → capture `S`. Identical glass ⇒ `b_glass` gone. Zero cost; removes the error rather than correcting
+it; makes dev physics-identical to production. If two pots must stay, **measure `b_glass` (§13.5 test P) and
+subtract it — and record that production must NOT apply that correction.**
+
+*Caveat, honestly:* the pots are **cosmetic pots, identical by production**. That is *not* optically matched
+(cosmetic tolerance ≠ optical tolerance; wall thickness varies with mould flow/gate, and even the same pot
+**rotated** differently transmits differently) — but the fitted `b = 0.053` (⇒ 11.4% throughput difference) is
+**a lot** for two same-mould parts. Since that 0.053 is inferred *only* from the literature (unreliable
+precisely in the green window where it was measured, §13.7), **`b` may be far smaller, or zero.** Not
+established. §13.5 settles it.
+
+### 13.5 The blank-vs-blank test — measuring `b` with no oil and no literature
+
+Each test is the real workflow **with the oil left out**; the first that yields a flat non-zero line is the
+culprit. **Test P is the one that matches Edwin's current setup — run it first.**
+
+| test | `R` and `S` are… | isolates |
+|---|---|---|
+| **P** | **both pots, alcohol-only** — pot A as `R`, pot B as `S` | **⭐ pot-to-pot glass difference** |
+| 0 | one pot, captured twice, nothing touched | lamp drift + **noise floor** |
+| 1 | one pot, wait ~2 min (real prep time) between | drift on the workflow's timescale |
+| 2 | one pot, lifted out and put straight back | repositioning (seat/angle → reflection) |
+| 3 | one pot, alcohol tipped out and refilled fresh | fill level / meniscus |
+| 4 | one pot, stirred 20 s as for a real sample | bubbles |
+
+Nothing absorbs in any of these ⇒ **`A` must be 0.000 at every λ.** Any flat line **is `b`, measured
+directly.** *Prediction if §13.4 holds: test P shows ~+0.05, flat — and swapping the pots' roles flips its
+sign.* **Test 0 also yields the noise floor** — compare it against `D_Q ≈ 0.077`: that ratio is the metric's
+real SNR and is worth knowing **before** any threshold work.
+
+**Secondary test — the dilution series** (settles whether `b` scales with the oil): plot `A_green` vs
+concentration; `A_green(c) = (l·ε_green)·c + b` is a straight line whose **intercept at zero oil is `b`**.
+Intercept 0 ⇒ `G` is dilution-proof. If `b ∝ c·l` (haze proportional to oil), `G` is still *stable*, merely
+biased by a constant that P5 thresholds absorb; if `b` is independent of the oil, `G` moves for non-quality
+reasons.
+
+### 13.6 Findings that touch this spec (recorded; **none applied**)
+
+| # | finding | target |
+|---|---|---|
+| **F1** | **Dev two pots vs production one pot** → P5 thresholds won't transfer. **The load-bearing one.** | §13.4, sharpens §12/R2, §8/P5 |
+| **F2** | **§3.2 is stale:** it specifies the reference *"captured once per session and reused for every sample"*; Edwin **re-takes `R` per sample** (better — it kills session drift). §3.2's gated-blue-window argument reasons *from* the once-per-session assumption ("fixed within a comparison set"), so with a per-sample reference the gate is re-evaluated per sample and the window may drift **between** samples in a comparison set. | §3.2 |
+| **F3** | **λ_Q's raw local-max search is baseline-biased.** §3.1/R5 searches the max on `A`; because the Q-band rides the falling Soret tail the raw argmax is pulled **blue-ward** — measured **569.75 nm raw vs 572.50 nm baseline-corrected (2.75 nm)**; the literature curve, flatter there, shifts only −0.25 nm. A 2.75 nm error then drags the `λ_Q ± 5` window off-peak. **→ subtract the local baseline FIRST, then search.** | §3.1, §12/R5 |
+| **F4** | **`Q_BASELINE` anchor clearance — §1b.1's own open warning, now measured.** 555→550→545 moves `D_Q(lit)` 0.034→0.033→0.032 and `D_Q(spx)` 0.074→0.076→0.077: a few percent — **but in *opposite* directions for the two sources**, so it biases comparisons. **→ move the anchor to 550** as §1b.1 suggests, and pin it before threshold work. | §1b.1, §3.1 |
+| **F5** | **Asymmetric baseline robustness (design gap).** `D_Q` is baseline-corrected ⇒ a flat `b` cancels. `A_blue`/`A_green` are **raw means** ⇒ `b` survives. So `G = D_Q/A_denom` divides an offset-**immune** numerator by an offset-**sensitive** denominator — and `A_green ≈ 0.035` (clear solution) is the **smallest number in the pipeline**, so a `b` of +0.05 is **larger than the quantity itself**. §3.4's near-zero-denominator floor guards **divide-by-zero, not offset bias** — a floored `A_green` is still wrong, merely finite. **→ baseline-correct the denominator too, or measure `b` (§13.5) and subtract it, before `G` carries any threshold.** | §3.4, §3.3 |
+| **F6** | **§1b's `BLUE_BAND=(440,460)` conflicts with §3.2's own guardrail** `W_blue=[450,490]` ("below ~450 = **saturated Soret**") — §1b settles the band 10 nm *into* the region §3.2 excludes. §1b.1 flags the knock-on to `SPEC_capture_quality.md` §9's "450–620" claim but **not this direct conflict**. In *this* run A(440)=0.66 — nowhere near saturated (generous isopropanol dilution); but `capture001` had **A≈2.5 at 445** (neat). **Whether 440–460 is safe depends on dilution** ⇒ the §3.2 saturation gate (`A ≤ 1.5`) becomes **load-bearing, not a formality**. **→ keep the gate active and LOG how many nm it trims**; if it routinely eats 440–450, the settled band is fiction at that dilution. | §1b, §3.2 |
+| **F7** | **§2 CONFIRMED by measurement** — the ~630 nm Q-band is absent from the spectracs trace (flat/noisy ~0.03 where the literature shows a clear peak), exactly as §2 predicts from the S-mount red-end roll-off. **No change needed**; §1b's new full-spectrum bulb does **not** rescue it — the constraint is the **lens, not the lamp**. Evidence only. | §2 |
+
+### 13.7 What the literature can — and cannot — validate
+
+**Fig. 3A is a redrawn, print-smoothed illustration. It is a QUALITATIVE anchor only** (Edwin, 2026-07-17).
+
+- **It gives:** three bands exist — Soret ~430, Q-band ~575, Q-band ~630. **That is all.**
+- **It cannot give:** ratios or amplitudes; fine structure (the spectracs shoulders at ~582/593 nm are
+  **not decidable** from it — print smoothing would erase exactly that; decide on the rig instead: does the
+  pattern repeat across captures and oils, and is it above the §13.5 test-0 noise floor?); exact positions
+  (the digest quotes **±5–10 nm**, and the 425/437 doublet may itself be stylised).
+- **What was validated:** `λ_Q` **572.50 nm** (spectracs) vs **573.75 nm** (literature). Read this as *"the
+  rig resolves a Q-band inside the literature's own ±5–10 nm tolerance"* — **not** as ~1 nm accuracy; the
+  ~1 nm is precision between two *digitisations*. **This is the only thing the literature can validate, and
+  it is sufficient.**
+- **Peak WIDTH — nor is resolution comparable.** Baseline-subtracted FWHM: **literature 23.5 nm vs spectracs
+  16.8 nm** — our band is *narrower*, but that reflects the **figure being smoothed** (print smoothing + a
+  3–4 nm-thick printed line digitised at 1.4 nm/px, vs 0.13 nm/px for the spectracs PNG), **not** the rig
+  out-resolving the authors' instrument. All that can be claimed: our band is **no broader than what the
+  figure can show**. *(Aside: the paper's Q-band looks "sharper" mainly for an aspect-ratio reason — a ~40 nm
+  bump spans 10% of Fig. 3A's 400 nm axis but 24% of our 170 nm one, i.e. 2.4× wider on the page at equal
+  height. Same data.)*
+- **What was NOT validated — the ratios.** `G_blue` 0.063 (lit) vs 0.220 (spx) = **3.5× apart**; `G_green`
+  0.977 vs 0.885 = within 12%. **Neither is evidence.** The `G_green` agreement is contingent on the
+  suspected `b` being *left in* (remove 0.056 → `A_green`→0.030, `D_Q` unchanged → `G_green`→2.43, a 2.5×
+  disagreement); and the literature's `A_green` is digitised from the region where the paper's four printed
+  curves **merge into one line** (±0.01 ≈ **±29%** on the denominator). Moreover **`A_blue` is *designed* to
+  vary between oils** — §1's own table calls it a *mixture* (pigment Soret + carotenoid 445–475 + Maillard
+  browning) — so `G_blue`'s gap **is not evidence of an instrument fault**; it may be the browning axis
+  working. **`G_blue` is meaningful only within one rig across comparable samples, never rig-vs-literature.**
+
+- **⚠ "Same peaks within the working window" — TRUE at 610, FALSE at 640. The edge decides it.**
+  - **440–610 nm:** holds. Both show a **Soret flank** and the **~573 nm Q-band**, at the same wavelengths.
+  - **440–640 nm (the stated working range, §1b):** **fails** — the literature's **third peak sits at 630 nm,
+    *inside* that window**, and this rig does not show it (§13.6/F7: documented S-mount red roll-off, §2).
+    Explainable, but it is still a peak in the window that is not in both — and it is **visible in the
+    reproduced inset**, so any "same peaks in the working range" phrasing is contradicted by our own figure.
+  - **Footnote either way:** within 440–610 spectracs shows a **~468 nm bump** and **~582/593 nm shoulders**
+    that the paper's curve does not (§13.6 / open questions). Origin unresolved. So it is *"the same
+    features, plus extra ones in ours"* — not *"identical"*.
+  - **Safe summary line:** *"Within 440–610 nm the rig shows the same characteristics and the same peak as
+    the literature: a Soret flank and the protochlorophyll/protopheophytin Q-band at 572.5 nm vs the
+    literature's 573.8 nm, inside the paper's own ±5–10 nm tolerance. The literature's third peak at 630 nm
+    is outside this rig's optical reach (known lens limitation); absolute heights are not comparable."*
+- **⚠ NOR was "the same shape" validated — a tempting overclaim, so pin it.** *Same shape ⟺ constant ratio*:
+  if two curves differ only by concentration × path, `A_spx/A_lit` is **one number at every λ**. Measured, it
+  runs **0.59 (450) · 1.68 (500) · 2.64 (520) · 2.08 (573) · 0.96 (610)** — a **4.5× swing**. Not constant ⇒
+  **not the same shape** — which is exactly why no `k·A_lit` fit works (rms 0.056), nor `k·A_lit + b`
+  (rms 0.032 on a 0.05–0.66 signal). **What IS validated is the same band STRUCTURE** — a Soret flank, a
+  green window, a Q-band at ~573 nm: **the same features at the same wavelengths**. Shape is what the ratios
+  are *made of*, so "same shape" and "ratios disagree" cannot both hold. **And it would not even be a
+  statement about the device:** different oil, different solvent, unknown dilution — a shape difference
+  between these two curves is compatible with two flawless instruments.
+
+**Conclusion: band POSITION validates; band RATIO does not.** The literature **cannot** calibrate this metric.
+Thresholds must come from **real oils on the rig (§8, P5)** — exactly as this spec already plans. §13
+**confirms that plan rather than shortcutting it**, and adds one prerequisite: **settle `b` first (§13.5),
+else every `G` is denominator-biased.**
+
+### 13.8 Verdict — what 2026-07-17 establishes (Edwin's summary, wording pinned)
+
+1. **What was learned today is essential** — it is the measurement model behind every `G` this spec ships.
+2. **Within 440–610 nm, spectracs shows essentially the same characteristics and peaks as the literature
+   device:** a **Soret flank** and the **Q-band at 572.5 nm** vs the literature's **573.8 nm** — inside the
+   paper's own **±5–10 nm** tolerance.
+   *Window matters (§13.7): true at 610, **false at 640** — the literature's third peak sits at 630 nm,
+   inside the stated 440–640 working range, and this rig cannot reach it (§2, §13.6/F7). "Essentially" also
+   carries the ~468 nm bump and ~582/593 nm shoulders that spectracs shows and the paper's curve does not.*
+3. **Both traces carry the same green-tetrapyrrole pigment fingerprint** (Soret flank + ~573 nm Q-band),
+   confirming **the rig sees the pigment the literature describes**.
+   > **⚠ The inference does not run backwards — do not upgrade this to identification.** A VIS spectrum
+   > **cannot authenticate** the oil as pumpkin: green tetrapyrroles are not unique to *Cucurbita* (olive,
+   > hemp and other green oils carry chlorophyll/pheophytin), so the signature says *"a green tetrapyrrole
+   > is present"*, **not** *"this is pumpkin seed oil"*. This is the project's own standing scope caveat —
+   > `Fruhwirth_Hermetter_2007_SUMMARY.pdf` ("colour alone **cannot authenticate** the oil … keep the
+   > quality verdict and any purity claim separate") and
+   > `spectracs-references/articles/Balbino_2022_…md` ("CIELAB colour alone can't authenticate PSO — only
+   > NIR can"). Also §9 (Caveats / non-goals). **Quality verdict ≠ purity claim.**
+4. **Chances are intact for a reliable, stable peak ratio as the metric.** Nothing found today blocks it:
+   the ratio cancels conc×path **exactly** (§13.2), `D_Q` and `λ_Q` are robust, and the one open risk — an
+   additive `b` — is **measurable without oil** (§13.5) and **removable for free** by using one pot (§13.4).
+   *Not proven; not blocked.* Thresholds still require **P5 on real oils** (§8).
+
+#### What it boils down to — **not a toy; a candidate field tool for the mill**
+
+**Earned today.** A DIY grating spectrometer resolved a **weak vibronic band** — the hardest feature in this
+oil's visible spectrum, ~14× smaller than the Soret beside it — at **572.5 nm**, 1.3 nm from the published
+position, at a clean **16.8 nm FWHM**. That is instrument-grade behaviour, not toy behaviour.
+
+**Why the *field* case is specifically strong.** The metric cancels exactly what a mill cannot control:
+`G = D_Q/A_denom` divides out concentration × path (§13.2), so **nobody has to pipette**. Two drops in 3 ml,
+20 s of stirring, one pot (§13.3/§13.4) is a **mill-floor protocol, not a lab protocol**. This is the §0.3
+design decision paying off — and it is what makes "in the field" credible rather than aspirational.
+
+**The honest boundary.** Today establishes that **the physics and the instrument are not the obstacle**. It
+does **not** establish "deployable". Remaining, in order — **none of them physics**:
+
+| # | gap | why it matters | cost |
+|---|---|---|---|
+| 1 | **No thresholds** (§8, P5) | it can **measure** but not **judge** — the difference between an instrument and a tool | the P5 dataset |
+| 2 | **n = 1** — one oil, one capture. **Repeatability is the real field-readiness question and has not been run:** measure one oil ~5×, does `λ_Q` / `D_Q` / `G` repeat? | a field tool must give **the same answer twice** | an afternoon |
+| 3 | **SNR unknown** — `D_Q ≈ 0.077` vs an unmeasured noise floor | decides whether `D_Q` differences are real | free — §13.5 test 0 |
+| 4 | **`b` / one-pot** (§13.4, §13.5) | else every `G` is denominator-biased, and dev ≠ production | free / 5 min |
+
+**Verdict to quote:** *"Not a toy — an instrument that resolves the right band, with a metric that tolerates
+mill-grade sample prep. Field-readiness is now a calibration and repeatability question, not a physics
+question."*
+
+> **Knock-on for the cross-references below:** `KB_led_and_oil_spectra.md` §2 and
+> `Fruhwirth_Hermetter_2007_SUMMARY.pdf` both say the bench **"reproduces Fig. 3A"**. Per §13.7 that
+> overstates what a smoothed print figure can support — it reproduces the **band positions**, within
+> ±5–10 nm. Wording to be softened when those docs are next touched (**not done here**).
+
+## 14. Cross-references
+
+- `spectracs-references/comparisons/fig3A_vs_spectracs/` — **the source of §13**: literature-vs-spectracs
+  note, overview + 440–610 nm + peak-ratio plots, digitised CSVs, and the script that regenerates them.
+- `KB_led_and_oil_spectra.md` §2 — the two-band physics + "our bench reproduces Fig. 3A" (see §13.7 caveat).
 - `spectracs-references/articles/Fruhwirth_Hermetter_2007_SUMMARY.pdf` — the three peaks / ~575 Q-band digest.
 - `SPEC_pumpkin_integration.md` — the plugin/engine architecture this modifies (Track C, `PumpkinOilPlugin`).
 - `SPEC_measurement_evaluation_concept.md` — the green→brown roast-verdict concept.
