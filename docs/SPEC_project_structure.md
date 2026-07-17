@@ -407,6 +407,49 @@ dissolved by one `ls`.
 
 Revisit only if `-core` gains its own CI. Note the spec only ever planned CI for **`spectracs-plugins`** (S5).
 
+### S7 (NEW, DESIGN) — `-model` imports UP the stack, into the app
+
+Found while ducking S4 (2026-07-17). **The tier diagram in §1 is aspirational, not descriptive.** `-model` is drawn
+at the bottom, depending on nothing but `-base`. It actually reaches into the app — including the **controller** —
+and that closes a cycle across three repos:
+
+```
+  -model/logic/model/util/SpectrometerProfileUtil.py
+        imports  controller.application.ApplicationContextLogicModule   ─────► THE APP
+        imports  SpectrometerCalibrationProfileUtil  (-model)
+                     └─ imports  logic.spectral.util.SpectrallineUtil   ─────► THE APP
+                                      └─ imports  SpectralColorUtil     ─────► -core
+                                                       └─ imports SpectralColor ──► -model   (cycle)
+```
+
+**Proven, not argued** — with only `-model` + `-base` importable, from a neutral cwd:
+
+| `-model` class | |
+|---|---|
+| `Spectrum` · `SpectralColor` · `SpectralWorkflow` · `EvaluationResult` · `DbPlugin` | **import standalone ✅** |
+| `SpectrometerProfileUtil` | **FAIL** → needs `sciens.spectracs.controller` |
+| `SpectrometerCalibrationProfileUtil` | **FAIL** → needs `logic.spectral` |
+| `InstrumentAuthoringLogicModule` | **FAIL** → needs `logic.spectral` |
+
+So **`-model`'s DATA tier stands alone; `-model`'s own LOGIC tier does not.** That split is the whole finding: the
+classes `-core` and a LIMS addon actually consume are clean, which is why nothing has broken — but the tier
+boundary holds by luck of which files get touched, not by structure. `-core` → `-model` is the foundation of the
+tiering, so if `-model` secretly depends on the app, `-core` transitively does too.
+
+**Scope: 3 files, all pre-existing** — `SpectrometerProfileUtil`, `SpectrometerCalibrationProfileUtil`,
+`InstrumentAuthoringLogicModule`. All in `-model`'s `logic/` tree, which is itself misnamed (§5: "`-model` is
+misnamed — it is model *plus* server-side logic"). The likely fix is that this logic isn't `-model`'s at all.
+**A fourth was mine and is FIXED** (S0 follow-up, 6c9be9a/54a1ec9): S0 moved `SpectralVideoThreadSignal` to the app
+and left `…WavelengthCalibrationVideoSignal` in `-model` importing it — invisible to S0's `grep -l PySide6` because
+it inherits Qt through `VideoSignal` rather than importing it.
+
+**Deliberately NOT folded into S4.** S4 is a small integration gate; an architectural repair is its own risk.
+
+**Lesson for the checkers.** Every automated check in this spec has been pointed one way and been wrong for it:
+S3a's asked only *"does **core** import outward?"*, never *"does **model** import upward?"*; S0's move list came
+from a direct-import grep and missed transitive Qt; the isolation probe was contaminated by `cwd` on `sys.path`
+until `""`/`"."` were stripped. **Check both directions, and check the harness before trusting its verdict.**
+
 ### Dead chain found by S1b's duck (2026-07-17) — record, don't fix here
 
 One unfinished method keeps an entire dependency alive:
