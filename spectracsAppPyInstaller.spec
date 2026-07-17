@@ -15,7 +15,7 @@ a = Analysis(
     # pip-installed, so PyInstaller must be told where each tier lives or the frozen build misses it.
     # -core is new (SPEC_project_structure.md S3b); -base was already missing and holds sciens.base.Singleton.
     # NOT verified by a build -- this is "clearly more correct than the status quo", not "proven to build".
-    pathex=["../spectracsPy-core", "../spectracsPy-model", "../spectracsPy-base"],
+    pathex=["../spectracsPy-core", "../spectracsPy-model", "../spectracsPy-base", "../spectracs-plugins"],
     binaries=[],
     datas=[ ],
     hiddenimports=["pyi_splash"] + pyqtgraph_hiddenimports,

@@ -2,7 +2,9 @@
 # Re-stage android/spike/app_src for the MAIN app from the current source repos.
 #
 # app_src is a gitignored build artifact: the p4a shim `main.py`, the real entry `spectracsMain.py`,
-# and a MERGED `sciens/` namespace assembled from all four sibling repos (model/base/server/app).
+# and a MERGED `sciens/` namespace assembled from all sibling repos (model/base/core/server/plugins/app).
+# The `rm -rf $DST/sciens` below rebuilds the tree from scratch each run, so a plugin re-homed to a new
+# path (S5) leaves no stale copy under its old path.
 # Run this before a main-app rebuild so the APK picks up committed source changes. Idempotent.
 set -euo pipefail
 
@@ -13,7 +15,7 @@ ROOT="$(cd "$APP/.." && pwd)"                  # .../spectracs (repo siblings li
 
 mkdir -p "$DST"
 rm -rf "$DST/sciens"
-for repo in spectracsPy-model spectracsPy-base spectracsPy-core spectracsPy-server spectracsPy; do
+for repo in spectracsPy-model spectracsPy-base spectracsPy-core spectracsPy-server spectracs-plugins spectracsPy; do
     if [ -d "$ROOT/$repo/sciens" ]; then
         rsync -a --exclude='__pycache__' --exclude='*.pyc' "$ROOT/$repo/sciens/" "$DST/sciens/"
     fi
@@ -23,5 +25,5 @@ done
 # app_src-specific (not sourced from a repo), so it is preserved as-is.
 cp "$APP/spectracsMain.py" "$DST/spectracsMain.py"
 
-echo "staged app_src/sciens from: model, base, core, server, app  (+ spectracsMain.py)"
+echo "staged app_src/sciens from: model, base, core, server, plugins, app  (+ spectracsMain.py)"
 echo "main.py (p4a shim): $( [ -f "$DST/main.py" ] && echo present || echo MISSING )"

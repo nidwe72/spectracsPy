@@ -13,7 +13,7 @@ a = Analysis(
     ['spectracsMain.py'],
     # See the Linux spec: every sibling repo the app imports from. This one was EMPTY -- it relied entirely
     # on the build-time PYTHONPATH. Same caveat: not verified by a build.
-    pathex=["../spectracsPy-core", "../spectracsPy-model", "../spectracsPy-base"],
+    pathex=["../spectracsPy-core", "../spectracsPy-model", "../spectracsPy-base", "../spectracs-plugins"],
     binaries=[],
     datas=[('C:\\Windows\\System32\\libusb0.dll', '.'),],
     hiddenimports=["pyi_splash"] + pyqtgraph_hiddenimports,
