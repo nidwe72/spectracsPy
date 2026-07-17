@@ -1,6 +1,6 @@
 # SPEC — Project structure & tiering (`spectracsPy-core`)
 
-Status: **S0 · S1a · S1b · S2 · S3a · S3b · S4 IMPLEMENTED (2026-07-16/17) — `spectracsPy-core` EXISTS and is Qt-free; S5 DESIGN · S7 (dependency tangle) DESIGN** (spec-first; implement on explicit request only). Source:
+Status: **S0 · S1a · S1b · S2 · S3a · S3b · S4 IMPLEMENTED (2026-07-16/17) — `spectracsPy-core` EXISTS and is Qt-free; S5 DESIGN — settled 2026-07-17 (§ *"S5 (DESIGN, settled 2026-07-17)"* before §6) · S7 (dependency tangle) DESIGN** (spec-first; implement on explicit request only). Source:
 Edwin (2026-07-16), split out of [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md) — it outgrew being a
 track inside M3. Naming **settled: `spectracsPy-core`** (matches the existing layer-name pattern base / model /
 server; `-sciens` was rejected because `sciens` is the org root in *every* repo).
@@ -365,6 +365,8 @@ nick. Both were re-run. **A Qt detector must match `PySide6` AND `pyqtgraph` AND
 ### → `spectracs-plugins` (S5)
 
 `logic/spectral/plugin/dev/` (`DevSpectralPlugin`) · `logic/spectral/plugin/pumpkin/` (`PumpkinOilPlugin`).
+**Destination path re-homed at S5 (Option B):** `logic/spectral/plugin/*` → **`plugins/*`** — the codeRef stops
+lying about a `logic` tier the file no longer lives in. Rationale + migration in the S5 subsection before §6.
 
 ### What S3a's re-derivation actually caught (2026-07-17)
 
@@ -510,6 +512,129 @@ mechanically to `SpectralColor` and changes nothing else. The deletion is its ow
 - **`logic/appliction` is a typo**, load-bearing across the tree. **#8:** rename to `logic/application` **inside
   S3a**, which is already a mass import rewrite — doing it standalone pays the same merge pain twice.
 
+### S5 (DESIGN, settled 2026-07-17) — extract `spectracs-plugins`
+
+**The code check that reframed S5.** Both plugins already import **`plugin_sdk` only** (+ stdlib `colorsys`):
+`PumpkinOilPlugin`, `DevSpectralPlugin`. The isolation S5 exists to *prove* is already *true* — the lint gate is
+green **before** the move. And they are **2 files**: no shared plugin base in the app, no `__init__` payloads. So
+S5 is mechanically nothing like S3b's 67-file extraction; the real work is the **two decisions the move forces**.
+
+#### Decision 1 (settled: Option B) — the codeRef moves now, because M3 is about to freeze it
+
+The plugin's identity string is not just an import path; it is a **persisted, bound** identity in four places:
+
+| Where | File | Role |
+|---|---|---|
+| **Server DB seed** | `spectracsPy-model/…/user/UserSeedLogicModule.py:26` | seeds `DbPlugin.codeRef` (idempotent, skip-if-exists) |
+| Session dev-bypass fallback | `logic/session/CurrentUserSession.py:67` | resolves the bound plugin at login |
+| Bench selector import | `view/settings/development/DevMeasurementBenchViewModule.py:17-18` | direct `from …plugin.pumpkin… import` |
+| Login binding lookup | `-model/…/instrument/InstrumentAuthoringLogicModule.py:100` | `DbPlugin.codeRef == pluginCodeRef` |
+
+**M3-B0 makes `(codeRef, version)` the immutable, signed DB key** ([`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md)
+§1). The current string embeds **`logic`** — a lie the moment the file leaves the app's logic tier. So this is the
+**last free moment** to fix it: after B0 seals rows, a codeRef change is a breaking *republish*, not a `git mv`.
+Re-home (same shape as §1c's plugin_sdk-export rule — a contract is frozen the instant it is depended on):
+
+```
+old:  sciens.spectracs.logic.spectral.plugin.pumpkin.PumpkinOilPlugin.PumpkinOilPlugin
+new:  sciens.spectracs.plugins.pumpkin.PumpkinOilPlugin.PumpkinOilPlugin
+      sciens.spectracs.plugins.dev.DevSpectralPlugin.DevSpectralPlugin
+```
+
+**The migration Option B carries — a data change, not just a code change.** The seed is idempotent *keyed on
+codeRef*. Change the string alone and the seed **inserts a second row**, orphaning the old one **and any instrument
+setup bound to it** → the binding then resolves a codeRef whose module no longer exists. So the change must
+**UPDATE the existing `DbPlugin.codeRef` in place** (in dev, reset + reseed is equivalent — memory's *"restart
+server to seed"*; the SENAITE runbook means a **persisted** server DB really holds the seeded row, so this is a real
+step, not a paper one). Cheap **only because M3-B0 has not yet made rows immutable** — the same fact that makes B
+now-or-never.
+
+**The rename is a mass path rewrite, not "4 sites" — same shape as S3a's `appliction→application`.** The four in the
+table are the *persisted-identity* sites; a grep for the old dotted path also finds it across **6 test files**
+(`test_frame_provider_burst`, `test_stale_calibration_recovery`, `test_pumpkin_workflow_end_to_end` **import** it;
+`test_step_bar_widget_offscreen`, `test_pumpkin_wizard_offscreen`, `test_workflow_wizard_persistence_offscreen` hold
+it as a `PLUGIN_CODE_REF` **literal**). So step 1 is *"replace every occurrence of the old dotted path across all
+repos, then the in-place DB update"*; `InstrumentAuthoringLogicModule:100` is a query, no literal. `DevSpectralPlugin`
+has **no** seed row (injected transiently, no session codeRef) → its move is a pure import-path change, no migration.
+
+#### Decision 2 (settled: Option A) — plugin CI synthesizes its input from `-core`; it does not run the engine
+
+The existing `test_pumpkin_workflow_end_to_end` chain splits **exactly on the core/app line**:
+
+```
+ synthesize ref Spectrum ─┐   [CORE — pure science, already in -core]
+ synthesize sample Spectrum┘   LedReferenceSynthesis · OilSampleSynthesis · PlaygroundDemoOils
+        │
+        ▼
+ encode → QImage → engine( qGray + CurrentUserSession-calibration + ImageSpectrumAcquisition )   [APP — host]
+        │
+        ▼
+ acquired Spectrum → plugin hooks ( mean→T→A→colour→verdict )   [PLUGIN — plugin_sdk only]
+```
+
+`SpectralWorkflowEngine` is genuinely **host** — `qGray` (Qt), `CurrentUserSession`, the camera-acquisition module;
+`SpectrumToVirtualImageUtil` emits a `QImage`. Neither may move to `-core`, and neither belongs in a plugins-repo
+test. So testing splits in two:
+
+| Tier | Lives in | Feeds the plugin | Depends on |
+|---|---|---|---|
+| **T1 full end-to-end** *(exists)* | **app CI** (`spectracsPy/tests/`) | synthesize → QImage → `engine.runAll` → assert verdict | engine + synthesis = app (fine — plugin is namespace-merged there) |
+| **T2 plugin-boundary** *(new, S5)* | **`spectracs-plugins` CI** | synthesize ref+sample `Spectrum` from `-core`, call the plugin hooks directly → assert `EvaluationResult` | `plugin_sdk` + `-core` synthesis — **app absent** |
+
+This reconciles with **"tests stayed in the app"** (§5, the S3b retraction): `-core`/`-model`/`-base`/`-server` keep
+their tests in `spectracsPy/tests/`, and **`spectracs-plugins` is the one tier the spec always planned to give its
+own CI** — so T2, and only T2, lives in the new repo. T1 stays put; the engine can't leave the host.
+
+**Why Option A is legal against the lint gate.** The gate constrains **plugin production source** (`plugin_sdk`-only);
+it does **not** constrain *tests*. `-core` is a declared dependency of `spectracs-plugins`, and its synthesis
+modules are pure science — so T2 may synthesize its input from `-core` with **no committed fixture** and no app
+import. *(Deferred alternative: a frozen `Spectrum` fixture models an SDK-only **external** author — revisit when
+M3 opens third-party distribution; not needed while the plugins are first-party.)*
+
+#### Mechanize the lint gate — don't leave it a PyCharm property
+
+§8b calls *"app code absent"* a **dev-time** PyCharm property that must not be read as a runtime guarantee (runtime
+is one merged tree). Make it a **CI check**, with the PyCharm view as the human echo:
+
+```
+grep -rE 'from sciens\.spectracs\.' spectracs-plugins/sciens | grep -v 'plugin_sdk'   # MUST be empty
+```
+
+(`colorsys` is stdlib → fine.) This is the enforceable form of the "app code absent" verify.
+
+#### The S4-shaped integration follow-through — the move is done only when the app still loads them
+
+- **`stage_app_src.sh`** — add `spectracs-plugins` to the rsync loop (§8b: literally one line). The `android/server`
+  + `android/spike` `app_src` mirrors are *generated*, so they regenerate; the committed vendored copies refresh.
+  **⚠ Those mirrors are committed *and already stale*** — `android/spike/app_src/…/CurrentUserSession.py` carries the
+  fallback at line 60 vs. the live source's 67, i.e. they drifted before S5. So they must be **re-staged, never
+  hand-edited** (a hand-edit leaves the old codeRef in the merged tree the APK actually runs); re-run staging and let
+  it overwrite, and clean any copy left under the old `logic/spectral/plugin/` path.
+- **both PyInstaller `*.spec` `pathex`** — S4's fix (still unproven by an actual build) now spans a third repo.
+- **desktop PYTHONPATH run recipe + PyCharm content root** — mirrors `b4dcfc1` for `-core`.
+
+#### Ordering — prove before you move (S3a/S3b ethos, one phase)
+
+Only 2 already-clean files, so **no repo-level 5a/5b split** — but sequence so each step is verifiable while still
+cheap to undo:
+
+1. **In-tree rename** `logic.spectral.plugin.* → plugins.*` + the four literal sites + the in-place DB migration.
+   App still boots; **T1 green** under the new codeRef.
+2. Add the **T2 synthesize-from-core** plugin test **in the app tree**; green.
+3. **Extract** `spectracs-plugins` (`filter-repo`, history intact), delete from app, wire staging / `pathex` /
+   PYTHONPATH / PyCharm, and **move T2 into the new repo's CI**.
+
+Find out you were wrong at step 1, not after the checkout.
+
+#### Verify
+
+- New repo opens in PyCharm: `plugin_sdk` + `-core` resolve, **app code absent**; the grep gate returns empty.
+- **T2 CI:** synthesize → plugin hooks → `EvaluationResult`, importing `plugin_sdk` + `-core` only (app not importable).
+- **Fresh clones of all 6 repos** boot the app; both plugins load via namespace-merge and drive a run (bench
+  selector **and** a Pumpkin login).
+- **T1** (`test_pumpkin_workflow_end_to_end`) still green in the app under the new codeRef path.
+- **Server DB:** no orphaned old-codeRef row; the bound setup resolves the new path.
+
 ## 6. Phases
 
 | Ph | Change | Where | Verify |
@@ -521,7 +646,7 @@ mechanically to `SpectralColor` and changes nothing else. The deletion is its ow
 | **S3a** ✅ | **DONE 2026-07-17.** Re-derived the move list by grep and **enforced the seam in-tree**: the core-bound set is **67 files** and now imports only `-model`, `-base`, itself and externals — **0 violations, 0 Qt**. Renamed `logic/appliction` → `logic/application` (52 files; every occurrence was the dotted module path). No files moved between packages: paths are already final (S3b only changes *repos*), so S3a's real work was **severing core→app edges**. | `spectracsPy` | ✅ **§5 was wrong and the grep caught it** (below). ✅ 197/198 modules import (the 1 is pre-existing dead `Polisher`). ✅ app boots; Settings/Playground/Home navigate. ✅ 112 tests. |
 | **S3b** ✅ | **DONE 2026-07-17.** `spectracsPy-core` exists: **67 files, 24 commits, history intact** (`clone` + `filter-repo --path`×67; `git log --follow`/`blame` reach back through S1b to 2026). Deleted the matched 67 from the app. Phase 0 first (f203ed0): re-homed the render trio out of `view/` → `logic/spectral/report/`, and taught **26 files** the `-core` path — the spec said "ONE line in stage_app_src.sh"; that line is real, the other 26 weren't in the plan. | new repo + `stage_app_src.sh` + 26 PYTHONPATH sites | ✅ **fresh clones of all 5 repos boot the app** (131 modules, only pre-existing dead `Polisher` fails). ✅ all 67 `-core` modules import with **PySide6 blocked**; `-core` has **no `view/`**. ✅ app navigates Settings→Playground→Home, no uncaught exceptions. ✅ 112 tests. |
 | **S4** ✅ | **DONE 2026-07-17 — renamed: it is the INTEGRATION GATE, not a change.** S3b already made the app depend on `-core`, and the two Qt renderers never moved; S4's stated content was a no-op. Its real content turned out to be three leftovers: **both PyInstaller specs** (`pathex` named only `-model`; the Windows one was **empty** — my S3b sweep missed them, different syntax), **`stage_app_src.sh`'s message** (staged 5 repos, said 4 — my bug), and **`-core/requirements.txt`** (deps were prose in the README). | `*.spec` · `stage_app_src.sh` · `-core` | ✅ real entrypoint `spectracsMain.py --phone` boots on `-core`; ✅ renders at 412×883, looked at it; ✅ Android staging includes `-core` (316 .py); ✅ 106 tests. **RIG-VERIFIED by Edwin 2026-07-17: the measurement bench runs end-to-end on `-core`** — the one gate no headless path could reach (the bench refuses virtual devices). Still unverified: the APK (deferred) and a PyInstaller build (unused today, so the `pathex` fix is *unproven*). |
-| **S5** | **`spectracs-plugins`** repo — plugins move; depends on `-core`; CI runs headless `engine.runAll` + tests; add to `stage_app_src.sh` so they still ship. **Not blocked by M3** (§8b) | new repo + staging + CI | open it in PyCharm: SDK present, **app code absent** — *dev-time only; runtime is one merged tree* (§8b). Plugins proven headlessly; the app still loads them |
+| **S5** *(DESIGN, settled 2026-07-17 — see the S5 subsection before this table)* | **`spectracs-plugins`** repo — the 2 already-`plugin_sdk`-clean plugins move out. **(B)** re-home `logic.spectral.plugin.* → plugins.*` **now** (last free moment before M3-B0 freezes the codeRef) + **in-place `DbPlugin.codeRef` migration**. **(A)** new **T2 plugin-boundary CI** synthesizes its `Spectrum` from `-core` and calls the hooks directly — the app-coupled `engine.runAll` (T1) **stays in the app**. Add to `stage_app_src.sh` so they still ship. **Not blocked by M3** (§8b). | new repo + staging + both `*.spec` `pathex` + PYTHONPATH · in-place DB migration | grep gate `from sciens.spectracs.*` ∖ `plugin_sdk` **empty** (the enforced form of "app code absent"); T2 runs `plugin_sdk`+`-core` only; **6 fresh clones** boot + both plugins load via namespace-merge (bench selector + Pumpkin login); T1 still green under the new codeRef; no orphaned old-codeRef DB row |
 
 
 Run order is **S0 → S1a → S1b → S2 → S3a → S3b → S4 → S5**. S0/S1b/S2 make `-model` and the science genuinely
