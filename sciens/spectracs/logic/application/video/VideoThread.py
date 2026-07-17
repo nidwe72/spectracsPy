@@ -79,7 +79,12 @@ class VideoThread(QThread,Generic[S]):
             self._appliedExposure = exposure
             # Fixed drain past the settle so a big jump has fully ramped before we measure (each probe self-settles;
             # no separate warm-up needed).
-            return AutoExposureLogicModule.channelPeak(self.__drainSync(self.__AUTO_EXPOSE_SETTLE_MS))
+            frame = self.__drainSync(self.__AUTO_EXPOSE_SETTLE_MS)
+            # Paint the just-drained frame so the preview shows the exposure ramping instead of freezing for the
+            # whole sweep (the frame is already read — measurement still uses these same drained frames).
+            self.qImage = frame
+            self._emitPreview()
+            return AutoExposureLogicModule.channelPeak(frame)
 
         best = AutoExposureLogicModule().findExposure(measure, minExposure, maxExposure, target, iterations)
         self._backend.setExposure(best)
@@ -89,7 +94,8 @@ class VideoThread(QThread,Generic[S]):
         # probe, and the ELP takes ~1.2-1.5 s to ramp — without this the first burst frames would be captured
         # mid-ramp (the reference-only outliers, SPEC_capture_quality.md §14.6). Sample capture reuses an already
         # settled exposure, which is why it never showed them.
-        self.__drainSync(self.__AUTO_EXPOSE_SETTLE_MS)
+        self.qImage = self.__drainSync(self.__AUTO_EXPOSE_SETTLE_MS)
+        self._emitPreview()
         self.autoExposureFinished.emit(int(best))
 
     def __drainSync(self, milliseconds):
@@ -219,6 +225,12 @@ class VideoThread(QThread,Generic[S]):
                 self._runFlag = False
 
     def createSignal(self)->S:
+        return None
+
+    def _emitPreview(self):
+        # Live-preview hook for the auto-exposure sweep. Subclasses that drive a visible stream override this to
+        # emit their view signal with self.qImage, FIRE-AND-FORGET (no one-frame backpressure), so the synchronous
+        # sweep is never blocked on the render. Default no-op: virtual/headless threads have nothing to paint.
         return None
 
     def onStart(self):

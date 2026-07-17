@@ -33,3 +33,17 @@ class DevCaptureVideoThread(VideoThread[VideoSignal]):
         event = threading.Event()
         self.videoThreadSignal.emit(event, signal)
         event.wait()
+
+    def _emitPreview(self):
+        # Live preview during the auto-exposure sweep. Uses the SAME one-frame backpressure as afterCapture
+        # (emit -> event.wait): the capture thread sits idle while the main thread paints, so there is never a
+        # concurrent backend-read + Qt-paint on the same frame (fire-and-forget segfaulted). The sweep pays a few
+        # ms of paint time per probe -- harmless, and it does NOT re-read the live stream, so exposure measurement
+        # is unaffected.
+        if self.qImage is None:
+            return
+        signal = self.createSignal()
+        signal.isPreview = True   # mark it: a preview frame must never become a capture burst's __latestImage (§14.6)
+        event = threading.Event()
+        self.videoThreadSignal.emit(event, signal)
+        event.wait()

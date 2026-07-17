@@ -652,6 +652,20 @@ nothing during the ~15 s sweep, so `CapturePanel.__latestImage` stays stale (pre
 nulls it, and the reference path additionally **waits for the first post-sweep frame and discards it** (this ELP's
 recurring first-frame quirk) so the burst starts on the second, clean frame.
 
+> **AMENDED 2026-07-18 — the sweep now DOES emit (a live preview), and part (b)'s invariant is kept by a FLAG, not
+> by silence.** The freeze in (b) meant no image at all for the whole ~15 s sweep (Edwin: "no image during
+> auto-exposure", both the reference capture and Dev>Capture). `__runAutoExposeSync` now paints each drained frame
+> via a new `VideoThread._emitPreview()` hook (`DevCaptureVideoThread` overrides it), so you watch the exposure
+> ramp. Two traps, both hit and fixed: **(i)** a fire-and-forget emit **segfaulted** — the capture thread read the
+> next frame (cv2) while the main thread painted the last (Qt), concurrently; the preview therefore uses the SAME
+> `event.wait` one-frame backpressure as `afterCapture`, so the thread sits idle during each paint. **(ii)** these
+> preview frames re-broke Fix 5: `CapturePanel.handleVideoThreadSignal` was setting `__latestImage` on *every*
+> frame, so a preview frame landed there during the sweep and the drop consumed *it* instead of the mid-ramp
+> outlier → the outliers returned. Fix: `VideoSignal.isPreview=True` on preview frames, and `CapturePanel` **skips
+> `__latestImage` when `isPreview`** — so (b)'s "nothing lands in `__latestImage` during the sweep" still holds and
+> Fix 5's drop is unchanged. Lesson: a "nothing happens here" invariant is fragile; make it explicit (a flag), not
+> incidental (silence).
+
 - **Lesson:** never auto-expose by reading an async live stream. Drive the sensor synchronously; drain by
   wall-clock past the settle; measure per-channel so nothing clips; and don't trust the first frame after a change.
 

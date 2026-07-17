@@ -349,7 +349,11 @@ class CapturePanel(QWidget):
         self.__updateControls()
 
     def handleVideoThreadSignal(self, event, videoSignal):
-        self.__latestImage = videoSignal.image
+        # Preview frames (emitted DURING the auto-exposure sweep so the view isn't frozen) paint but must NOT become
+        # __latestImage: the reference-burst drop logic (§14.6) assumes nothing lands here during the sweep, so if a
+        # preview frame did, the drop would consume it and the burst would start on the mid-ramp outlier.
+        if not videoSignal.isPreview:
+            self.__latestImage = videoSignal.image
         if self.__videoViewModule is not None:
             self.__videoViewModule.handleVideoThreadSignal(videoSignal)
             width = videoSignal.image.width() if videoSignal.image is not None else None
