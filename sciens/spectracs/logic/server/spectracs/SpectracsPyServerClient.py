@@ -5,7 +5,7 @@ import Pyro5.api
 import Pyro5.client
 from sqlalchemy.orm import make_transient
 
-from sciens.spectracs.SpectracsPyServer import SpectracsPyServer
+from sciens.spectracs.SpectracsServerEndpoint import SpectracsServerEndpoint
 from sciens.spectracs.SqlAlchemySerializer import SqlAlchemySerializer
 from sciens.spectracs.logic.base.network.NetworkUtil import NetworkUtil
 from sciens.spectracs.logic.model.util.SpectrometerSensorChipUtil import SpectrometerSensorChipUtil
@@ -26,7 +26,7 @@ class SpectracsPyServerClient:
 
     def getProxy(self):
 
-        SpectracsPyServer.configure()
+        SpectracsServerEndpoint.configure()
 
         # Bound the per-attempt wait so an unreachable host cannot hang startup.
         Pyro5.config.COMMTIMEOUT = 5.0
@@ -35,13 +35,13 @@ class SpectracsPyServerClient:
         # daemon — no nameserver (Pyro's UDP discovery doesn't cross Android sandboxes). On the
         # phone this is the only server; on desktop it's a fast no-op when nothing is listening.
         try:
-            localProxy = Pyro5.client.Proxy(SpectracsPyServer.localUri())
+            localProxy = Pyro5.client.Proxy(SpectracsServerEndpoint.localUri())
             localProxy._pyroBind()  # force a connection so we fail fast if nothing is listening
             return localProxy
         except Exception:
             pass
 
-        port = SpectracsPyServer.NAMESERVER_PORT
+        port = SpectracsServerEndpoint.NAMESERVER_PORT
 
         # 2) Otherwise: local dev nameserver (if listening on this machine's port), then the remote
         # (sciens.at) server. If neither is reachable, return None so sync is skipped, not crashed.
@@ -49,7 +49,7 @@ class SpectracsPyServerClient:
         addressUsingPort = NetworkUtil().getAddressUsingPort(port)
         if addressUsingPort is not None:
             candidateHosts.append(addressUsingPort.ip)
-        candidateHosts.append(SpectracsPyServer.DAEMON_NAT_HOST)
+        candidateHosts.append(SpectracsServerEndpoint.DAEMON_NAT_HOST)
 
         # Bound the per-attempt wait so an unreachable remote host cannot hang startup.
         Pyro5.config.COMMTIMEOUT = 5.0
