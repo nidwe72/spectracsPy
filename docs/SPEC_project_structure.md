@@ -407,11 +407,25 @@ dissolved by one `ls`.
 
 Revisit only if `-core` gains its own CI. Note the spec only ever planned CI for **`spectracs-plugins`** (S5).
 
-### S7 (NEW, DESIGN) — `-model` imports UP the stack, into the app
+### S7 (NEW, DESIGN) — the `logic/` tiers are tangled across every repo boundary
 
-Found while ducking S4 (2026-07-17). **The tier diagram in §1 is aspirational, not descriptive.** `-model` is drawn
-at the bottom, depending on nothing but `-base`. It actually reaches into the app — including the **controller** —
-and that closes a cycle across three repos:
+Found while ducking S4 (2026-07-17), then **widened** when a full five-repo audit showed the first look had caught
+**half** of it. The §1 tier diagram is aspirational, not descriptive.
+
+**Every edge, measured:**
+
+```
+  model  -> app        3 files   *** VIOLATION ***
+  server -> app        1 file    *** VIOLATION ***
+  app    -> server     2 files   *** VIOLATION ***   (so app <-> server is MUTUAL)
+
+  model  -> base      10   ok        core -> base     5   ok
+  core   -> model     18   ok        app  -> core    11   ok
+  app    -> base      21   ok        app  -> model   59   ok
+  server -> model      2   ok
+```
+
+**1. `model -> app` (3 files).** `-model` reaches into the app — including the **controller** — closing a cycle:
 
 ```
   -model/logic/model/util/SpectrometerProfileUtil.py
@@ -421,8 +435,18 @@ and that closes a cycle across three repos:
                                       └─ imports  SpectralColorUtil     ─────► -core
                                                        └─ imports SpectralColor ──► -model   (cycle)
 ```
+Also `InstrumentAuthoringLogicModule` → the app's `SpectralLineMasterDataUtil`.
 
-**Proven, not argued** — with only `-model` + `-base` importable, from a neutral cwd:
+**2. `app <-> server` — MUTUAL, and the worse one.**
+- `SpectracsPyServerClient` does `from sciens.spectracs.SpectracsPyServer import SpectracsPyServer` — **the client
+  imports the server class it is supposed to reach over Pyro.** The point of Pyro is that the client holds a
+  *proxy*, not the implementation; this makes the desktop app unbuildable without the server's source.
+- `SpectracsPyServer.py` imports **six** app modules: `SqlAlchemySerializer`, `SpectrometerUtil`,
+  `SpectralLineMasterDataUtil`, `LoginLogicModule`, `UserAdminLogicModule`, `UserSeedLogicModule`.
+
+Neither repo stands alone.
+
+**Proven, not argued** — with only `-model` + `-base` importable, from a **neutral cwd**:
 
 | `-model` class | |
 |---|---|
@@ -431,24 +455,26 @@ and that closes a cycle across three repos:
 | `SpectrometerCalibrationProfileUtil` | **FAIL** → needs `logic.spectral` |
 | `InstrumentAuthoringLogicModule` | **FAIL** → needs `logic.spectral` |
 
-So **`-model`'s DATA tier stands alone; `-model`'s own LOGIC tier does not.** That split is the whole finding: the
-classes `-core` and a LIMS addon actually consume are clean, which is why nothing has broken — but the tier
-boundary holds by luck of which files get touched, not by structure. `-core` → `-model` is the foundation of the
-tiering, so if `-model` secretly depends on the app, `-core` transitively does too.
+**What this does and does not threaten.** `-core` is genuinely clean (S3a: 0 violations, re-verified), and
+`-model`'s **data** classes stand alone — and those are exactly what a plugin and a LIMS addon consume. So the
+plugin story and S3b's goals hold, and **S7 blocks neither S4 nor S5**. What is tangled is the **`logic/` trees**:
+`-model` carries server-side logic that reaches into the app, and the app and server import each other. None of it
+is "model" or "server" in the sense the repo names claim — §5 already noted `-model` is "model *plus* server-side
+logic". The likely fix is that this logic belongs in neither repo where it currently sits.
 
-**Scope: 3 files, all pre-existing** — `SpectrometerProfileUtil`, `SpectrometerCalibrationProfileUtil`,
-`InstrumentAuthoringLogicModule`. All in `-model`'s `logic/` tree, which is itself misnamed (§5: "`-model` is
-misnamed — it is model *plus* server-side logic"). The likely fix is that this logic isn't `-model`'s at all.
-**A fourth was mine and is FIXED** (S0 follow-up, 6c9be9a/54a1ec9): S0 moved `SpectralVideoThreadSignal` to the app
-and left `…WavelengthCalibrationVideoSignal` in `-model` importing it — invisible to S0's `grep -l PySide6` because
-it inherits Qt through `VideoSignal` rather than importing it.
+**Scope: 6 files, all pre-existing.** A fourth `model -> app` edge was **mine and is FIXED** (S0 follow-up,
+6c9be9a/54a1ec9): S0 moved `SpectralVideoThreadSignal` to the app and left `…WavelengthCalibrationVideoSignal` in
+`-model` importing it — invisible to S0's `grep -l PySide6` because it inherits Qt through `VideoSignal` rather
+than importing it.
 
-**Deliberately NOT folded into S4.** S4 is a small integration gate; an architectural repair is its own risk.
+**Deliberately NOT folded into S4.** S4 is a small integration gate; untangling three repos is its own work.
 
-**Lesson for the checkers.** Every automated check in this spec has been pointed one way and been wrong for it:
-S3a's asked only *"does **core** import outward?"*, never *"does **model** import upward?"*; S0's move list came
-from a direct-import grep and missed transitive Qt; the isolation probe was contaminated by `cwd` on `sys.path`
-until `""`/`"."` were stripped. **Check both directions, and check the harness before trusting its verdict.**
+**Lesson for the checkers — every automated check in this spec has been pointed one way and been wrong for it.**
+S3a's asked only *"does **core** import outward?"*, never *"does **model** import upward?"*. S0's move list came
+from a direct-import grep and missed transitive Qt (twice: `.lighter()`, and this signal). The isolation probe was
+contaminated by `cwd` on `sys.path` until `""`/`"."` were stripped. The Qt gate matched the word *pyqtgraph* in a
+**comment**, three times. A stale `.pyc` made shipped code look buggy. **The harness has been less reliable than
+the code it checks.** Check every direction, and verify the harness before trusting its verdict.
 
 ### Dead chain found by S1b's duck (2026-07-17) — record, don't fix here
 
