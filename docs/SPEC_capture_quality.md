@@ -844,9 +844,14 @@ loop. Because Fix #1 removes the systematic ramp, MAD drops ≈ 0 and the top-up
 > `channelPeak`. Rationale: channelPeak is the p99.9 PEAK — it saturates/plateaus at the AE target while the mid/dim
 > regions still ramp, so the settle could read "stable" early; a frame MEAN stays linear and moves until the whole
 > frame settles, and it makes no assumption that the ramp is uniform (matters across different cameras). `channelPeak`
-> is untouched (still the sweep-search metric). Unit tests cover `frameBrightness`; the settle itself is **rig-only**.
+> is untouched (still the sweep-search metric). Unit tests cover `frameBrightness`; **rig-confirmed on the measurement
+> path 2026-07-19 (Edwin: works).** Calibration WB-split still awaits a rig calibration run.
 
-### 14.9 Per-camera exposure range — the hardcoded `[1, 500]` (OPEN, deferred — flagged 2026-07-19)
+### 14.9 Per-camera exposure range — the hardcoded `[1, 500]` (OPEN — **POSTPONED on the roadmap**, flagged 2026-07-19)
+
+> Tracked in [`spectracs-docs/ROADMAP.md`](../../spectracs-docs/ROADMAP.md) → "Per-camera exposure range". Deferred by
+> Edwin 2026-07-19: not urgent (the ELP works; the ~110–120 spectrum peak is mostly the deliberate no-clip AE metric,
+> not the cap), but a real gap once multiple cameras are in use.
 
 Investigating "why does the measured spectrum peak at ~110–120, not near 255?" surfaced a separate, real gap. Two
 things cap the spectrum level:
