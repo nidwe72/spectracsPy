@@ -18,6 +18,20 @@ from sciens.spectracs.view.settings.development.DevCaptureVideoViewModule import
 from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
 
 
+# A capture thread can block inside a cv2 call (VideoCapture(open) on a still-busy device, or a slow high-res
+# read) and outlive its CapturePanel. If it is garbage-collected while still running, PySide aborts
+# ("QThread: Destroyed while thread is still running"); if it stays connected, its next queued emit lands on a
+# deleted panel slot and segfaults in Qt's posted-event delivery. So on stop we DISCONNECT it from the panel and,
+# if it did not finish promptly, park it here — a live reference — until the cv2 call finally returns.
+_STUCK_CAPTURE_THREADS = []
+
+
+def _retireStuckThread(thread):
+    _STUCK_CAPTURE_THREADS.append(thread)
+    thread.finished.connect(
+        lambda: _STUCK_CAPTURE_THREADS.remove(thread) if thread in _STUCK_CAPTURE_THREADS else None)
+
+
 class CapturePanel(QWidget):
     """Shared live-capture acquisition panel (SPEC_plugin_driven_convergence.md §9, S2a — Option A).
 
@@ -340,8 +354,30 @@ class CapturePanel(QWidget):
         self.__updateControls()
 
     def __stopStream(self):
-        if self.__videoThread is not None:
-            self.__videoThread.stop()
+        # Stop the live capture safely. Two failure modes to avoid (both seen in the field):
+        #   1) A leaked worker (blocked in a cv2 call) later emits a queued signal into THIS panel after it has
+        #      been discarded on a plugin switch -> Qt delivers a posted event to a deleted QObject -> SEGFAULT.
+        #      Fix: DISCONNECT every worker->panel signal here, before anything can delete the panel.
+        #   2) The QThread is garbage-collected while still running -> abort. Fix: never drop the only reference to
+        #      a running thread; park a stuck one in _STUCK_CAPTURE_THREADS until it finishes.
+        # The render backpressure is interruptible by stop() (DevCaptureVideoThread), so a worker that is NOT stuck
+        # in cv2 exits within a poll tick and wait() returns fast; that is the normal path and it frees the camera
+        # before any reopen (the plugin-switch reopen race).
+        thread = self.__videoThread
+        self.__videoThread = None
+        if thread is not None:
+            for signal, slot in (
+                    (thread.videoThreadSignal, self.handleVideoThreadSignal),
+                    (thread.autoExposureProgress, self.__onAutoExposeProgress),
+                    (thread.autoExposureFinished, self.__onAutoExposeFinished),
+                    (thread.finished, self.__onThreadFinished)):
+                try:
+                    signal.disconnect(slot)
+                except (TypeError, RuntimeError):
+                    pass
+            thread.stop()
+            if not thread.wait(1500):
+                _retireStuckThread(thread)   # blocked in a cv2 call — keep it alive so PySide can't GC it running
         self.__updateControls()
 
     def __onThreadFinished(self):

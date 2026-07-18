@@ -32,7 +32,17 @@ class DevCaptureVideoThread(VideoThread[VideoSignal]):
         signal = self.createSignal()
         event = threading.Event()
         self.videoThreadSignal.emit(event, signal)
-        event.wait()
+        self.__waitForRender(event)
+
+    def __waitForRender(self, event):
+        # One-frame backpressure — but INTERRUPTIBLE by stop(). Without this, a synchronous stop (CapturePanel
+        # now waits for the camera to be released before an immediate reopen — the plugin-switch/restart race)
+        # would DEADLOCK: the GUI thread blocked in QThread.wait() cannot run the slot that sets this event, so
+        # the worker would block here forever. Polling lets a stop() break us out within one tick, GUI or not, so
+        # run() falls through to backend.release(). Normal renders set the event well under a tick — no added lag.
+        while not event.wait(0.05):
+            if not self._runFlag:
+                return
 
     def _emitPreview(self):
         # Live preview during the auto-exposure sweep. Uses the SAME one-frame backpressure as afterCapture
@@ -46,4 +56,4 @@ class DevCaptureVideoThread(VideoThread[VideoSignal]):
         signal.isPreview = True   # mark it: a preview frame must never become a capture burst's __latestImage (§14.6)
         event = threading.Event()
         self.videoThreadSignal.emit(event, signal)
-        event.wait()
+        self.__waitForRender(event)
