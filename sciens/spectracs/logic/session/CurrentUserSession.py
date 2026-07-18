@@ -54,17 +54,18 @@ class CurrentUserSession(Singleton):
         if not _isDevLoginBypassEnabled():
             return False
 
-        # Local import to avoid a session↔model import cycle at module load.
+        # Local imports to avoid a session↔model import cycle at module load. The plugin codeRef default
+        # comes from the PluginRegistry's canonical constant (A1) — never a literal string here, which is
+        # exactly the drift that left this bypass pointing at a stale, broken codeRef (F1).
         from sciens.spectracs.model.databaseEntity.application.user.UserRoleType import UserRoleType
+        from sciens.spectracs.logic.spectral.plugin.PluginRegistry import PUMPKIN_OIL_CODE_REF
 
         self.login({
             "userId": os.environ.get("SPECTRACS_DEV_USER_ID", "dev-user"),
             "username": os.environ.get("SPECTRACS_DEV_USERNAME", "dev"),
             "roles": [UserRoleType.MASTER_USER.value],
             "pluginId": os.environ.get("SPECTRACS_DEV_PLUGIN_ID", "pumpkin-oil"),
-            "pluginCodeRef": os.environ.get(
-                "SPECTRACS_DEV_PLUGIN_CODEREF",
-                "sciens.spectracs.plugins.pumpkin.PumpkinOilPlugin"),
+            "pluginCodeRef": os.environ.get("SPECTRACS_DEV_PLUGIN_CODEREF", PUMPKIN_OIL_CODE_REF),
             "spectrometerDevice": os.environ.get("SPECTRACS_DEV_DEVICE", "Virtuax"),
         })
         return True

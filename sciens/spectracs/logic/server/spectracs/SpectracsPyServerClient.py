@@ -172,6 +172,17 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.savePlugin failed: %s" % exception)
             return {"ok": False, "message": "failed"}
 
+    def getPluginSource(self, codeRef, version):
+        # B3 loader fetch: the sealed row for (codeRef, version) — source + signature + keyId + targetSdk.
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.getPluginSource(codeRef, version)
+        except Exception as exception:
+            print("SpectracsPyServerClient.getPluginSource failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
     def saveSpectrometerProfile(self, serial, deviceCodeName, calibration=None):
         proxy = self.getProxy()
         if proxy is None:

@@ -29,3 +29,9 @@ appdata==2.2.0
 matplotlib==3.7.1
 Pillow==9.5.0
 pypdf==6.14.2
+# Schema migrations (SPEC_schema_migrations.md): Alembic runs at boot in BOTH the app and server processes
+# (DatabaseInitializer). Mako/MarkupSafe are its transitive deps.
+alembic==1.18.5
+# Plugin signing (SPEC_plugin_distribution.md B2): PyNaCl signs on the master (desktop only); clients VERIFY
+# with a pure-Python Ed25519 vendored in -core, so Android never links libsodium. cffi/pycparser are its deps.
+PyNaCl==1.6.2

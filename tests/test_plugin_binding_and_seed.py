@@ -32,26 +32,27 @@ class PluginBindingSeedTest(unittest.TestCase):
         self.assertEqual(dbPlugin.title, "Pumpkin-seed-oil colour QM")
 
     def test_pumpkin_test_user_is_bound(self):
+        # Binding is per-SERIAL now (SPEC_connection_and_calibration_ux): AppUser carries registeredSerial;
+        # the device + plugin resolve THROUGH the serial at login, not via removed AppUser.pluginId columns.
         user = PersistUserLogicModule().findUserByUsername("pumpkinTestUser")
         self.assertIsNotNone(user)
-        self.assertIsNotNone(user.pluginId)
-        self.assertEqual(user.spectrometerDevice, "Virtuax")
+        self.assertIsNotNone(user.registeredSerial)
 
     def test_login_carries_the_binding(self):
         result = LoginLogicModule().login("pumpkinTestUser", "pumpkinTestUser")
         self.assertTrue(result["ok"])
-        self.assertIsNotNone(result["pluginId"])
+        self.assertIsNotNone(result["pluginCodeRef"])
         self.assertEqual(result["spectrometerDevice"], "Virtuax")
 
     def test_current_user_session_holds_the_binding(self):
         CurrentUserSession().login(LoginLogicModule().login("pumpkinTestUser", "pumpkinTestUser"))
-        self.assertIsNotNone(CurrentUserSession().getPluginId())
+        self.assertIsNotNone(CurrentUserSession().getPluginCodeRef())
         self.assertEqual(CurrentUserSession().getSpectrometerDevice(), "Virtuax")
 
     def test_bad_credentials_still_return_binding_keys(self):
         result = LoginLogicModule().login("pumpkinTestUser", "wrong")
         self.assertFalse(result["ok"])
-        self.assertIsNone(result["pluginId"])
+        self.assertIsNone(result["pluginCodeRef"])
 
 
 if __name__ == "__main__":

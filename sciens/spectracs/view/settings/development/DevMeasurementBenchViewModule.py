@@ -14,8 +14,7 @@ from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModuleParamet
 from sciens.spectracs.logic.session.ActiveSpectrometerProfileLogicModule import ActiveSpectrometerProfileLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
-from sciens.spectracs.plugins.dev.DevSpectralPlugin import DevSpectralPlugin
-from sciens.spectracs.plugins.pumpkin.PumpkinOilPlugin import PumpkinOilPlugin
+from sciens.spectracs.logic.spectral.plugin.PluginRegistry import PluginRegistry
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
@@ -68,9 +67,11 @@ class DevMeasurementBenchViewModule(PageWidget):
 
         self.__engine = None
         self.__workflow = None
-        # P7: which plugin drives the bench (master-selectable, decoupled from SpectrometerSetup).
-        self.__pluginClasses = [DevSpectralPlugin, PumpkinOilPlugin]
-        self.__selectedPluginClass = DevSpectralPlugin
+        # P7: which plugin drives the bench (master-selectable, decoupled from SpectrometerSetup). A1: the
+        # bench enumerates the PluginRegistry (all entries, incl. the benchOnly Dev plugin) instead of a
+        # hard-coded class list, and resolves a codeRef to an instance per run.
+        self.__pluginEntries = PluginRegistry.entries()
+        self.__selectedCodeRef = self.__pluginEntries[0].codeRef
         self.__pluginSelect = None
         self.__cursor = 0
         self.__phases = [SpectralWorkflowPhaseType.ACQUISITION, SpectralWorkflowPhaseType.PROCESSING,
@@ -104,8 +105,8 @@ class DevMeasurementBenchViewModule(PageWidget):
         # P7: master-only plugin selector — run ANY plugin on the bench (the M1 acceptance test). Decoupled
         # from the SpectrometerSetup binding; selecting one re-injects it and restarts the run.
         self.__pluginSelect = QComboBox()
-        for pluginClass in self.__pluginClasses:
-            self.__pluginSelect.addItem(pluginClass.title)
+        for entry in self.__pluginEntries:
+            self.__pluginSelect.addItem(entry.title)
         self.__pluginSelect.currentIndexChanged.connect(self.__onPluginChanged)
         result["pluginSelect"] = self.createLabeledComponent("Plugin", self.__pluginSelect)
         self.__stepBar = StepBarWidget()
@@ -230,7 +231,7 @@ class DevMeasurementBenchViewModule(PageWidget):
             return
 
         self.__resolveCamera()
-        self.__engine = SpectralWorkflowEngine(self.__selectedPluginClass())  # P7: the selected plugin
+        self.__engine = SpectralWorkflowEngine(PluginRegistry.resolve(self.__selectedCodeRef))  # P7: selected plugin
         self.__workflow = self.__engine.getWorkflow()
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.ACQUISITION)  # declares REFERENCE + SAMPLE
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.PUBLISHING)   # L6: static; detect if the plugin declares it
@@ -642,8 +643,8 @@ class DevMeasurementBenchViewModule(PageWidget):
 
     def __onPluginChanged(self, index):
         # P7: switch the plugin driving the bench and restart the run (only once the view is built).
-        if 0 <= index < len(self.__pluginClasses):
-            self.__selectedPluginClass = self.__pluginClasses[index]
+        if 0 <= index < len(self.__pluginEntries):
+            self.__selectedCodeRef = self.__pluginEntries[index].codeRef
             if self.__stack is not None:
                 self.__stopStream()
                 self.__startRun()

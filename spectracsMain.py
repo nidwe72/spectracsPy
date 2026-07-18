@@ -97,6 +97,11 @@ if phoneMode and "QT_SCALE_FACTOR" not in os.environ:
 
 app = QtWidgets.QApplication(sys.argv)
 
+# Bring the APP database to schema head before any session use (SPEC_schema_migrations.md §3.3, policy c).
+# The server DB is migrated by the server process (SpectracsPyServer.__init__); the app owns only spectracsPy.db.
+from sciens.spectracs.model.databaseEntity.DatabaseInitializer import initAppDatabase  # noqa: E402
+initAppDatabase()
+
 # Stable identity for QStandardPaths / caches (P2). The SQLite path itself resolves via
 # ANDROID_PRIVATE on device and `appdata` on desktop (see AppDataPathUtil).
 app.setOrganizationName("Sciens")

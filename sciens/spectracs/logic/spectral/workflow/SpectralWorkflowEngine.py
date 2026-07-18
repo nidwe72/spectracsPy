@@ -1,5 +1,3 @@
-import importlib
-
 from PySide6.QtGui import qGray
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
@@ -44,10 +42,10 @@ class SpectralWorkflowEngine:
 
     @staticmethod
     def importPlugin(codeRef: str):
-        # codeRef = "package.module.ClassName" -> import and instantiate.
-        moduleName, className = codeRef.rsplit(".", 1)
-        module = importlib.import_module(moduleName)
-        return getattr(module, className)()
+        # codeRef = "package.module.ClassName" -> import, SDK-compat check, instantiate. The PluginRegistry
+        # is the single owner of this (A1); this stays as a thin delegator so existing callers are unchanged.
+        from sciens.spectracs.logic.spectral.plugin.PluginRegistry import PluginRegistry
+        return PluginRegistry.resolve(codeRef)
 
     def __buildWorkflow(self) -> SpectralWorkflow:
         workflow = SpectralWorkflow()
