@@ -41,6 +41,32 @@ class PluginRegistryResolveAllTest(unittest.TestCase):
         self.assertEqual(UserSeedLogicModule.PUMPKIN_PLUGIN["codeRef"], PUMPKIN_OIL_CODE_REF)
 
 
+class ListAllTest(unittest.TestCase):
+    """B6.1 — listAll() = the built-in entries + one entry per DB-published (codeRef, version) row."""
+
+    def setUp(self):
+        import sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient as clientModule
+        self._clientModule = clientModule
+        self._orig = clientModule.SpectracsPyServerClient.listPlugins
+
+    def tearDown(self):
+        self._clientModule.SpectracsPyServerClient.listPlugins = self._orig
+
+    def test_listall_merges_builtins_and_db_rows(self):
+        self._clientModule.SpectracsPyServerClient.listPlugins = lambda _self: [
+            {"codeRef": "db.demo.Demo.Demo", "title": "Demo", "version": "2.0.0"}]
+        entries = PluginRegistry.listAll()
+        builtinCount = len(PluginRegistry.entries())
+        self.assertEqual(len(entries), builtinCount + 1)
+        db = [e for e in entries if e.version == "2.0.0"]
+        self.assertEqual(len(db), 1)
+        self.assertEqual(db[0].codeRef, "db.demo.Demo.Demo")
+
+    def test_listall_degrades_to_builtins_when_db_empty(self):
+        self._clientModule.SpectracsPyServerClient.listPlugins = lambda _self: []
+        self.assertEqual(len(PluginRegistry.listAll()), len(PluginRegistry.entries()))
+
+
 class _FakePlugin:
     title = "Fake"
 

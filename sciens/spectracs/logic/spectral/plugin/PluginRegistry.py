@@ -55,17 +55,44 @@ class PluginRegistry:
         return None
 
     @staticmethod
+    def listAll(includeDb: bool = True, includeBenchOnly: bool = True):
+        """Enumeration for the bench selector (B6.1): the built-in entries PLUS one entry per DB-published
+        `(codeRef, version)` row from `listPlugins()`. Server-down / logged-out yields an empty DB list, so the
+        bench degrades to built-ins only — `entries()` stays a pure static (never touches the server) for the
+        callers that must stay offline (the dev-login bypass). Only the bench calls this."""
+        result = list(PluginRegistry.entries(includeBenchOnly))
+        if not includeDb:
+            return result
+        from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
+        for row in (SpectracsPyServerClient().listPlugins() or []):
+            result.append(PluginEntry(row.get("codeRef"), row.get("title") or row.get("codeRef"),
+                                      version=row.get("version")))
+        return result
+
+    @staticmethod
     def resolve(codeRef: str, version: str = None):
-        """The single owner of "codeRef -> plugin instance". Dispatches (a sliver of B6):
-          - a **built-in** codeRef (in this registry) -> importlib.import_module (trusted by shipping in the APK);
-          - anything else -> a **DB-delivered** plugin: fetch the sealed row, VERIFY the signature over the tuple
-            against the shipped TRUSTED_KEYS, SDK-check, then exec the source (B3).
-        Heavy imports are local so importing this module stays cheap (the dev-login bypass references only the
-        codeRef constants)."""
-        entry = PluginRegistry.find(codeRef)
-        if entry is not None and entry.version is None:
+        """The single owner of "codeRef -> plugin instance". Dispatch keys on the assigned ROW'S SEALEDNESS
+        (SPEC_plugin_distribution.md §8, B6.4 / D-shadow = (b)), NOT on whether the codeRef is a built-in:
+
+          - `version is None`         -> the shipped BUILT-IN (dev bench, unassigned serial): no server fetch;
+          - a SEALED row (has source) -> VERIFY the signature over the tuple against the shipped TRUSTED_KEYS,
+                                          SDK-check, then exec the source (a real distributed version — B3);
+          - an UNSEALED/bare row      -> the BUILT-IN (a bare/seed row is a "use the shipped copy" pointer);
+          - fetch failed (offline)    -> the BUILT-IN if shipped, else error.
+
+        So a published sealed row OVERRIDES the built-in, while the seed's bare rows and offline both fall back
+        to it — which is why the seed needs no change and the F16 bootstrap gap dissolves. Heavy imports stay
+        local so importing this module stays cheap (the dev-login bypass references only the codeRef constants)."""
+        if version is None:
             return PluginRegistry._resolveBuiltin(codeRef)
-        return PluginRegistry._resolveDbPlugin(codeRef, version)
+        row = PluginRegistry._fetchDbRow(codeRef, version)
+        if not row or not row.get("ok") or not row.get("source"):
+            # offline, unknown version, or a bare/unsealed row -> the shipped built-in is the fallback.
+            if PluginRegistry.find(codeRef) is not None:
+                return PluginRegistry._resolveBuiltin(codeRef)
+            raise ValueError(
+                "plugin %s %s is not loadable (no sealed source) and has no built-in fallback" % (codeRef, version))
+        return PluginRegistry._resolveDbPluginFromRow(codeRef, row)
 
     @staticmethod
     def _resolveBuiltin(codeRef: str):
@@ -77,24 +104,25 @@ class PluginRegistry:
         return plugin
 
     @staticmethod
-    def _resolveDbPlugin(codeRef: str, version: str):
-        """Fetch -> verify tuple -> SDK-check -> exec source as the codeRef module -> getattr class ->
+    def _fetchDbRow(codeRef: str, version: str):
+        """The sealed row for (codeRef, version) over the Pyro RPC, or None/{'ok': False} when the server is
+        unreachable — the caller treats either as "fall back to the built-in"."""
+        from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
+        return SpectracsPyServerClient().getPluginSource(codeRef, version)
+
+    @staticmethod
+    def _resolveDbPluginFromRow(codeRef: str, row: dict):
+        """A SEALED row -> verify tuple -> SDK-check -> exec source as the codeRef module -> getattr class ->
         instantiate. NEVER exec unverified or SDK-incompatible source: both checks run BEFORE exec."""
         import importlib.util
         from sciens.spectracs.plugin_sdk.version import checkSdkCompatibleVersion
         from sciens.spectracs.logic.security.PluginSignatureUtil import verifySealed, PluginSignatureError
         from sciens.spectracs.logic.security.TrustedKeys import TRUSTED_KEYS
-        from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
-
-        if version is None:
-            raise ValueError("a DB plugin must be resolved by (codeRef, version): %s" % codeRef)
-        row = SpectracsPyServerClient().getPluginSource(codeRef, version)
-        if not row or not row.get("ok"):
-            raise ValueError("plugin %s %s unavailable: %s" % (codeRef, version, (row or {}).get("message")))
 
         if not verifySealed(row["codeRef"], row["version"], row["targetSdkVersion"], row["source"],
                             row["signature"], row["keyId"], TRUSTED_KEYS):
-            raise PluginSignatureError("signature verification FAILED for %s %s" % (codeRef, version))
+            raise PluginSignatureError(
+                "signature verification FAILED for %s %s" % (codeRef, row.get("version")))
 
         checkSdkCompatibleVersion(row["targetSdkVersion"], row.get("title") or codeRef)
 

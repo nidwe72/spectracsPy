@@ -16,7 +16,7 @@ from nacl.signing import SigningKey
 from sciens.spectracs.logic.security.PluginSignatureUtil import signing_tuple, fingerprint, PluginSignatureError
 import sciens.spectracs.logic.security.TrustedKeys as trustedKeysModule
 import sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient as clientModule
-from sciens.spectracs.logic.spectral.plugin.PluginRegistry import PluginRegistry
+from sciens.spectracs.logic.spectral.plugin.PluginRegistry import PluginRegistry, PUMPKIN_OIL_CODE_REF
 
 _SOURCE = (
     "from sciens.spectracs.plugin_sdk import SpectralPlugin\n"
@@ -67,6 +67,42 @@ class DbPluginLoaderTest(unittest.TestCase):
         self._stubFetch(self.row)
         with self.assertRaises(PluginSignatureError):
             PluginRegistry.resolve(_CODEREF, _VERSION)
+
+
+class DispatchSealednessTest(unittest.TestCase):
+    """B6.4 — resolve dispatches on the ROW'S SEALEDNESS, so a bare/seed row and offline both fall back to the
+    shipped built-in (the F16 resolution), while `version=None` never touches the server."""
+
+    def setUp(self):
+        self._origFetch = clientModule.SpectracsPyServerClient.getPluginSource
+
+    def tearDown(self):
+        clientModule.SpectracsPyServerClient.getPluginSource = self._origFetch
+
+    def test_version_none_resolves_builtin_without_fetching(self):
+        def _boom(_self, c, v):
+            raise AssertionError("resolve(codeRef, None) must NOT hit the server")
+        clientModule.SpectracsPyServerClient.getPluginSource = _boom
+        plugin = PluginRegistry.resolve(PUMPKIN_OIL_CODE_REF)  # no version
+        self.assertEqual(plugin.title, "Pumpkin-seed-oil colour QM")
+
+    def test_unsealed_row_falls_back_to_builtin(self):
+        # A bare/seed row (source NULL) is a "use the shipped copy" pointer, not a broken row.
+        bare = {"ok": True, "codeRef": PUMPKIN_OIL_CODE_REF, "version": "1.0", "title": "x",
+                "source": None, "signature": None, "keyId": None, "targetSdkVersion": None}
+        clientModule.SpectracsPyServerClient.getPluginSource = lambda _s, c, v: bare
+        plugin = PluginRegistry.resolve(PUMPKIN_OIL_CODE_REF, "1.0")
+        self.assertEqual(plugin.title, "Pumpkin-seed-oil colour QM")
+
+    def test_offline_falls_back_to_builtin(self):
+        clientModule.SpectracsPyServerClient.getPluginSource = lambda _s, c, v: {"ok": False, "message": "down"}
+        plugin = PluginRegistry.resolve(PUMPKIN_OIL_CODE_REF, "1.0")
+        self.assertEqual(plugin.title, "Pumpkin-seed-oil colour QM")
+
+    def test_unknown_version_with_no_builtin_raises(self):
+        clientModule.SpectracsPyServerClient.getPluginSource = lambda _s, c, v: {"ok": False}
+        with self.assertRaises(ValueError):
+            PluginRegistry.resolve("no.such.Plugin.Plugin", "9.9.9")
 
 
 if __name__ == "__main__":

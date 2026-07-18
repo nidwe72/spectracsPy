@@ -35,17 +35,17 @@ class SpectralWorkflowEngine:
 
     @staticmethod
     def resolvePluginFromSession():
-        # C.0/D3: import the plugin the logged-in user is bound to. Login resolved the binding to a codeRef
-        # (the client can't query the server DB), carried on CurrentUserSession.
-        codeRef = CurrentUserSession().getPluginCodeRef()
-        return SpectralWorkflowEngine.importPlugin(codeRef)
+        # C.0/D3: import the plugin the logged-in user is bound to. Login resolved the binding to
+        # (codeRef, version) (the client can't query the server DB), carried on CurrentUserSession (B5.4).
+        session = CurrentUserSession()
+        return SpectralWorkflowEngine.importPlugin(session.getPluginCodeRef(), session.getPluginVersion())
 
     @staticmethod
-    def importPlugin(codeRef: str):
-        # codeRef = "package.module.ClassName" -> import, SDK-compat check, instantiate. The PluginRegistry
-        # is the single owner of this (A1); this stays as a thin delegator so existing callers are unchanged.
+    def importPlugin(codeRef: str, version: str = None):
+        # (codeRef, version) -> resolve. PluginRegistry is the single owner (A1); resolve routes built-in vs
+        # DB on the row's sealedness (B6.4). version=None -> the shipped built-in (no server fetch).
         from sciens.spectracs.logic.spectral.plugin.PluginRegistry import PluginRegistry
-        return PluginRegistry.resolve(codeRef)
+        return PluginRegistry.resolve(codeRef, version)
 
     def __buildWorkflow(self) -> SpectralWorkflow:
         workflow = SpectralWorkflow()

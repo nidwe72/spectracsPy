@@ -157,10 +157,12 @@ class PluginListViewModule(PageWidget):
         layout.addWidget(self.addButton, 0, 1, 1, 1)
         self.addButton.clicked.connect(self.onClickedAddButton)
 
+        # B4.6: a published row is IMMUTABLE, so there is no "Edit" — the action is "New version" (inherit the
+        # selected row's codeRef, pick a fresh source + version). 'Add' starts a brand-new codeRef.
         self.editButton = QPushButton()
-        self.editButton.setText("Edit")
+        self.editButton.setText("New version")
         layout.addWidget(self.editButton, 0, 2, 1, 1)
-        self.editButton.clicked.connect(self.onClickedEditButton)
+        self.editButton.clicked.connect(self.onClickedNewVersionButton)
 
         self.selectButton = QPushButton()
         self.selectButton.setText("Select")
@@ -179,7 +181,8 @@ class PluginListViewModule(PageWidget):
     def onClickedAddButton(self):
         self.__openEditor(None)
 
-    def onClickedEditButton(self):
+    def onClickedNewVersionButton(self):
+        # Inherit the selected row's codeRef/title into the publisher; the version + source are fresh (B4.6).
         plugin = self.__getSelectedPlugin()
         if plugin is not None:
             self.__openEditor(plugin)
@@ -188,7 +191,7 @@ class PluginListViewModule(PageWidget):
         if self._selectCallback is not None:
             self.onClickedSelectButton()
         else:
-            self.onClickedEditButton()
+            self.onClickedNewVersionButton()
 
     def onClickedSelectButton(self):
         plugin = self.__getSelectedPlugin()

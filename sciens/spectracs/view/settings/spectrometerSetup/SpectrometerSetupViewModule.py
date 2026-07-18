@@ -48,6 +48,7 @@ class SpectrometerSetupViewModule(PageWidget):
     userField: QLineEdit = None
 
     __pluginCodeRef: str = None
+    __pluginVersion: str = None
     __userId = None
 
     def __init__(self, *args, **kwargs):
@@ -169,6 +170,12 @@ class SpectrometerSetupViewModule(PageWidget):
         layout.addWidget(button, 0, 1, 1, 1)
         return container
 
+    def __pluginLabel(self, name, version):
+        # "title @ version" once a distributed version is bound; bare title otherwise (built-in / none).
+        if not name:
+            return ""
+        return "%s @ %s" % (name, version) if version else name
+
     # --- plugin / user pickers (reuse the list screens in SELECT mode) ---
 
     def onClickedSelectPlugin(self):
@@ -181,8 +188,12 @@ class SpectrometerSetupViewModule(PageWidget):
             self.__emitNavigation(navigationSignal)
 
     def onPluginPicked(self, plugin: dict):
+        # B5.1: capture the EXACT version — the picker lists one row per (codeRef, version), so a picked row
+        # names the version to bind (F4). The field shows "title @ version".
         self.__pluginCodeRef = plugin.get('codeRef')
-        self.pluginField.setText(plugin.get('title') or plugin.get('codeRef') or "")
+        self.__pluginVersion = plugin.get('version')
+        self.pluginField.setText(self.__pluginLabel(
+            plugin.get('title') or plugin.get('codeRef'), self.__pluginVersion))
 
     def onClickedSelectUser(self):
         from sciens.spectracs.view.settings.user.UserListViewModule import UserListViewModule
@@ -230,6 +241,7 @@ class SpectrometerSetupViewModule(PageWidget):
     def setModel(self, dto: dict):
         self.dto = dto
         self.__pluginCodeRef = (dto or {}).get('pluginCodeRef')
+        self.__pluginVersion = (dto or {}).get('pluginVersion')
         self.__userId = (dto or {}).get('userId')
         self.model = self.__buildModelFromDto(dto)
         self.__applyModelToWidgets()
@@ -311,7 +323,8 @@ class SpectrometerSetupViewModule(PageWidget):
         if model.spectrometer is not None and self.spectrometerViewModule is not None:
             self.spectrometerViewModule.setModel(model.spectrometer)
 
-        self.pluginField.setText(dto.get('pluginTitle') or dto.get('pluginCodeRef') or "")
+        self.pluginField.setText(self.__pluginLabel(
+            dto.get('pluginTitle') or dto.get('pluginCodeRef'), self.__pluginVersion))
         self.userField.setText(dto.get('username') or "")
 
     def __selectSpectrometerInCombo(self, spectrometer):
@@ -344,7 +357,7 @@ class SpectrometerSetupViewModule(PageWidget):
             return
 
         if self.__pluginCodeRef:
-            result = client.saveSpectrometerSetup(serial, self.__pluginCodeRef)
+            result = client.saveSpectrometerSetup(serial, self.__pluginCodeRef, self.__pluginVersion)
             if not result.get('ok'):
                 InWindowDialog.notify(self, "Save failed", result.get('message') or "setup save failed")
                 return

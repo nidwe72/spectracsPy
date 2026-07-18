@@ -162,12 +162,17 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.listPlugins failed: %s" % exception)
             return []
 
-    def savePlugin(self, title, codeRef, version, pdfRef=None):
+    def savePlugin(self, title, codeRef, version, pdfRef=None, source=None, signature=None,
+                   keyId=None, author=None, targetSdkVersion=None):
+        # B4.4: publish carries the SEALED fields (source + signature + keyId + author + targetSdkVersion),
+        # signed on the master before this call. Older callers pass only the first four and land an unsealed
+        # row (a "use the built-in" pointer, per B6.4).
         proxy = self.getProxy()
         if proxy is None:
             return {"ok": False, "message": "server unavailable"}
         try:
-            return proxy.savePlugin(title, codeRef, version, pdfRef)
+            return proxy.savePlugin(title, codeRef, version, pdfRef, source, signature,
+                                    keyId, author, targetSdkVersion)
         except Exception as exception:
             print("SpectracsPyServerClient.savePlugin failed: %s" % exception)
             return {"ok": False, "message": "failed"}
@@ -193,12 +198,14 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.saveSpectrometerProfile failed: %s" % exception)
             return {"ok": False, "message": "failed"}
 
-    def saveSpectrometerSetup(self, serial, pluginCodeRef):
+    def saveSpectrometerSetup(self, serial, pluginCodeRef, pluginVersion=None):
+        # B5.2: carry the EXACT version so the bind keys the right (codeRef, version) row (F4). A None version
+        # keeps the legacy codeRef-only bind for callers that don't pick a version.
         proxy = self.getProxy()
         if proxy is None:
             return {"ok": False, "message": "server unavailable"}
         try:
-            return proxy.saveSpectrometerSetup(serial, pluginCodeRef)
+            return proxy.saveSpectrometerSetup(serial, pluginCodeRef, pluginVersion)
         except Exception as exception:
             print("SpectracsPyServerClient.saveSpectrometerSetup failed: %s" % exception)
             return {"ok": False, "message": "failed"}

@@ -68,10 +68,11 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__engine = None
         self.__workflow = None
         # P7: which plugin drives the bench (master-selectable, decoupled from SpectrometerSetup). A1: the
-        # bench enumerates the PluginRegistry (all entries, incl. the benchOnly Dev plugin) instead of a
-        # hard-coded class list, and resolves a codeRef to an instance per run.
+        # bench enumerates the PluginRegistry instead of a hard-coded class list, and resolves an entry to an
+        # instance per run. B6.1: the selector shows DB-published versions too — but only built-ins here at
+        # __init__ (a server call at app startup would be wrong); listAll() runs when the selector is built.
         self.__pluginEntries = PluginRegistry.entries()
-        self.__selectedCodeRef = self.__pluginEntries[0].codeRef
+        self.__selectedEntry = self.__pluginEntries[0]
         self.__pluginSelect = None
         self.__cursor = 0
         self.__phases = [SpectralWorkflowPhaseType.ACQUISITION, SpectralWorkflowPhaseType.PROCESSING,
@@ -104,9 +105,14 @@ class DevMeasurementBenchViewModule(PageWidget):
         result["message"] = self.__messageLabel
         # P7: master-only plugin selector — run ANY plugin on the bench (the M1 acceptance test). Decoupled
         # from the SpectrometerSetup binding; selecting one re-injects it and restarts the run.
+        # B6.1: built-ins + DB-published (codeRef, version) rows; DB rows labelled "title @ version". A bare
+        # seed row resolves back to the built-in (B6.4), so it is safe to list. listAll() tolerates a
+        # logged-out / server-down state (DB list empty -> built-ins only).
+        self.__pluginEntries = PluginRegistry.listAll()
+        self.__selectedEntry = self.__pluginEntries[0]
         self.__pluginSelect = QComboBox()
         for entry in self.__pluginEntries:
-            self.__pluginSelect.addItem(entry.title)
+            self.__pluginSelect.addItem(self.__entryLabel(entry))
         self.__pluginSelect.currentIndexChanged.connect(self.__onPluginChanged)
         result["pluginSelect"] = self.createLabeledComponent("Plugin", self.__pluginSelect)
         self.__stepBar = StepBarWidget()
@@ -231,7 +237,8 @@ class DevMeasurementBenchViewModule(PageWidget):
             return
 
         self.__resolveCamera()
-        self.__engine = SpectralWorkflowEngine(PluginRegistry.resolve(self.__selectedCodeRef))  # P7: selected plugin
+        entry = self.__selectedEntry  # P7 + B6.2: resolve the exact (codeRef, version) the selector holds
+        self.__engine = SpectralWorkflowEngine(PluginRegistry.resolve(entry.codeRef, entry.version))
         self.__workflow = self.__engine.getWorkflow()
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.ACQUISITION)  # declares REFERENCE + SAMPLE
         self.__engine.runPhaseHook(SpectralWorkflowPhaseType.PUBLISHING)   # L6: static; detect if the plugin declares it
@@ -641,10 +648,14 @@ class DevMeasurementBenchViewModule(PageWidget):
         self.__fillReportCaptures()
         return WorkflowReportBuilder(self.__workflow, reportView).build().pdfBytes()
 
+    def __entryLabel(self, entry):
+        # B6.3: built-ins show the bare title; DB-published rows are disambiguated by version.
+        return entry.title if entry.version is None else "%s @ %s" % (entry.title, entry.version)
+
     def __onPluginChanged(self, index):
         # P7: switch the plugin driving the bench and restart the run (only once the view is built).
         if 0 <= index < len(self.__pluginEntries):
-            self.__selectedCodeRef = self.__pluginEntries[index].codeRef
+            self.__selectedEntry = self.__pluginEntries[index]
             if self.__stack is not None:
                 self.__stopStream()
                 self.__startRun()

@@ -70,6 +70,7 @@ class SpectrometerSetupListViewModule(PageWidget):
 
         pluginTitleByRef = {p.get('codeRef'): p.get('title') for p in plugins}
         pluginRefBySerial = {s.get('serial'): s.get('pluginCodeRef') for s in setups}
+        pluginVersionBySerial = {s.get('serial'): s.get('pluginVersion') for s in setups}
         userBySerial = {}
         for user in users:
             serial = user.get('registeredSerial')
@@ -85,6 +86,7 @@ class SpectrometerSetupListViewModule(PageWidget):
                 'serial': serial,
                 'deviceCodeName': profile.get('deviceCodeName'),
                 'pluginCodeRef': pluginCodeRef,
+                'pluginVersion': pluginVersionBySerial.get(serial),
                 'pluginTitle': pluginTitleByRef.get(pluginCodeRef) if pluginCodeRef else None,
                 'userId': user.get('userId') if user else None,
                 'username': user.get('username') if user else None,

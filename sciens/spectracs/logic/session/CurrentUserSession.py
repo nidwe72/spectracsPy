@@ -19,6 +19,7 @@ class CurrentUserSession(Singleton):
     roles: List[str] = []
     pluginId: Optional[str] = None            # legacy (dev-bypass only); real login resolves via serial
     pluginCodeRef: Optional[str] = None       # import path of the bound plugin — the client imports it
+    pluginVersion: Optional[str] = None       # B5.4: the EXACT bound version; None -> the shipped built-in
     spectrometerDevice: Optional[str] = None  # stable device code-name, e.g. "Virtuax"
     # Instrument bundle resolved from the user's serial at login (SPEC_connection_and_calibration_ux §4.3):
     registeredSerial: Optional[str] = None
@@ -30,6 +31,7 @@ class CurrentUserSession(Singleton):
         self.roles = loginResult.get("roles") or []
         self.pluginId = loginResult.get("pluginId")
         self.pluginCodeRef = loginResult.get("pluginCodeRef")
+        self.pluginVersion = loginResult.get("pluginVersion")
         self.spectrometerDevice = loginResult.get("spectrometerDevice")
         self.registeredSerial = loginResult.get("registeredSerial")
         self.calibration = loginResult.get("calibration")
@@ -40,6 +42,7 @@ class CurrentUserSession(Singleton):
         self.roles = []
         self.pluginId = None
         self.pluginCodeRef = None
+        self.pluginVersion = None
         self.spectrometerDevice = None
         self.registeredSerial = None
         self.calibration = None
@@ -81,6 +84,10 @@ class CurrentUserSession(Singleton):
 
     def getPluginCodeRef(self) -> Optional[str]:
         return self.pluginCodeRef
+
+    def getPluginVersion(self) -> Optional[str]:
+        # None for the dev-bypass and any built-in binding -> resolve() takes the built-in branch (no fetch).
+        return self.pluginVersion
 
     def getSpectrometerDevice(self) -> Optional[str]:
         return self.spectrometerDevice

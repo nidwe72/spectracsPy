@@ -143,13 +143,14 @@ class WizardViewModule(PageWidget):
 
     def __startNew(self):
         self.__messageLabel.setText("")
-        codeRef = CurrentUserSession().getPluginCodeRef()
+        session = CurrentUserSession()
+        codeRef = session.getPluginCodeRef()
         if not codeRef:
             self.__messageLabel.setText("No plugin configured for this user.")
             self.__stepBar.setSteps([])
             self.__tabWidget.clear()
             return
-        self.__plugin = SpectralWorkflowEngine.importPlugin(codeRef)
+        self.__plugin = SpectralWorkflowEngine.importPlugin(codeRef, session.getPluginVersion())
         self.__engine = SpectralWorkflowEngine(self.__plugin)
         firstPhase = self.__runHookOnce(SpectralWorkflowPhaseType.ACQUISITION)
         if len(firstPhase.getSteps()) > 0:

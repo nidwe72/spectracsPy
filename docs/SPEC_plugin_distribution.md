@@ -1,7 +1,12 @@
 # SPEC — Plugin distribution & storage (Milestone 3)
 
-Status: **Track A IMPLEMENTED (A1·A2); A3 deferred; Track B: M0·B0·B1·B2·B3 IMPLEMENTED 2026-07-18, B4·B5·B6 DESIGN,
-B7 postponed** (spec-first; implement on explicit request only). Source: Edwin (2026-07-10; **all open questions settled 2026-07-16**;
+Status: **Track A IMPLEMENTED (A1·A2); A3 deferred; Track B: M0·B0·B1·B2·B3 IMPLEMENTED 2026-07-18; B4·B5 have a
+settled build plan (§8 "B4+B5 build plan", 2026-07-18) — DESIGN, not built; B6 DESIGN with decisions settled (D-shadow
+= (b) via ROW-SEALEDNESS dispatch: sealed row → DB exec, unsealed/bare row → built-in, so the seed needs no change and
+F16 dissolves); B7 postponed; B8 batch-assign postponed. **Slice 1 (B5.4+B6.4+F16 load+dispatch) + Slice 2 (B4 publish
+UI + B5 assign UI + F4 fix) ✅ IMPLEMENTED 2026-07-18** (unit-tested + headless; live GUI click-through of a real
+publish→assign→load not yet rig-verified). **Remaining: B7 Android, B8 batch-assign, A3 provenance stamp.** (spec-first;
+implement on explicit request only). Source: Edwin (2026-07-10; **all open questions settled 2026-07-16**;
 **Track-B build order + crypto/key + migration prereq settled 2026-07-18** — see §8). **M1**
 ([`SPEC_plugin_driven_convergence.md`](SPEC_plugin_driven_convergence.md)) shipped, and the
 [`SPEC_project_structure.md`](SPEC_project_structure.md) tiering arc (S0–S7) is complete, so both prerequisites
@@ -436,6 +441,295 @@ to what was hashed.
   the per-serial model (M0 unmasked it).
 - [ ] **Out of scope (next):** B4 publish UI, B5 assign UI, B6 registry DB feed, B7 Android spike.
 - [ ] **Not yet rig-verified:** full desktop GUI click-through (paths verified headlessly + by unit tests only).
+
+#### B4+B5 build plan — the publish/assign UI (as designed, 2026-07-18)
+
+**The one-sentence version:** B2/B3 already built the *hard* half (sign · store · fetch · verify · exec); B4/B5 are
+**wiring the two existing master screens to that machinery** — with one non-obvious catch that makes them a **single
+coupled sweep**, not two independent phases (see F5-reopened below).
+
+##### Rubber-duck findings (impl) — grounded in the current code
+
+- **🔴 F5 REOPENED — the linchpin, and it was NOT closed in B0/B3.** The phase-map said *"F5 login must carry
+  `(codeRef, version)` — lands in B0/B3."* **It did not.** The end-user load chain still drops the version at every
+  hop, and it *looks* fine today only because every assignable plugin is a **built-in** (`version=None` → the builtin
+  branch of `resolve`), so the version is never consulted. The moment B4 publishes a real DB row and B5 assigns it,
+  the chain breaks with a hard raise. Trace:
+  - `InstrumentLogicModule.resolveBundle` (`-model`, line 29): `pluginCodeRef = setup.plugin.codeRef` — **drops
+    `setup.plugin.version`**, even though `setup.plugin` *is* the exact row and carries it.
+  - `LoginLogicModule` → returns `pluginCodeRef` only → `CurrentUserSession` stores `pluginCodeRef` only
+    (`getPluginCodeRef()`).
+  - `WizardViewModule` → `SpectralWorkflowEngine.importPlugin(codeRef)` → `PluginRegistry.resolve(codeRef)` **with no
+    version** (`SpectralWorkflowEngine.py:48`).
+  - `resolve(codeRef, None)` on a non-builtin → `_resolveDbPlugin(codeRef, None)` → **`raise ValueError("a DB plugin
+    must be resolved by (codeRef, version)")`** (`PluginRegistry.py:89-90`).
+  **Consequence:** B5 is not "add a version picker." Its real content is **threading `(codeRef, version)` end-to-end**
+  through the bundle → login → session → engine → `resolve`. This is a cross-tier change (`-model` + app) and is the
+  bulk of B5's cost. **It must ship together with — or before — the first real DB assignment**, or an assigned
+  instrument cannot log in and run.
+
+- **🟢 F7 — the 6-vs-3 `savePlugin` discrepancy, reconciled (and smaller than either number).** Source-tree total is
+  **7** definitions (9 with `.buildozer` artifacts), but only **the live-tier canonical 3** matter — and of those, the
+  **`-model` persist path is already B4-complete**:
+  | Role | Path | B4 status |
+  |---|---|---|
+  | app client wrapper | `SpectracsPyServerClient.savePlugin(title, codeRef, version, pdfRef)` | **widen** — carry the sealed fields |
+  | server `@expose` | `SpectracsPyServer.savePlugin(...)` → `createVersion(title, codeRef, version, pdfRef)` | **widen** — pass the sealed fields through |
+  | `-model` persist | `PersistPluginLogicModule.createVersion(…, source, signature, keyId, author, targetSdkVersion)` | **already accepts them — no change** |
+  So **§7's "6 copies" over-counts** (it swept the `android/spike` mirror + the non-RPC entity-saver); **§8-Q7's "3 live
+  paths" counts the model path that's already done.** Honest count: **2 live RPC signatures to widen** (client + server),
+  plus the view rewrite. The `android/spike` + `android/server` + `.buildozer` copies stay **frozen** (Q7).
+
+- **🟢 F8 — B5 needs NO new version-picker widget.** `PluginListViewModule` already runs in SELECT mode as the plugin
+  picker, and its table is **already one row per `(codeRef, version)`** (post-B0 `listPlugins` returns a row per
+  version; columns are `Title · Code reference · Version`). So **selecting a row already IS selecting a version.** The
+  only gap: `SpectrometerSetupViewModule.onPluginPicked` (line 184) captures `plugin.get('codeRef')` and **throws away
+  `plugin.get('version')`**. B5 = capture the version too, show it in `pluginField`, thread it through save. The §7
+  table's *"+ a version picker beside the plugin picker"* is **satisfied by the list that already exists** — don't build
+  a second widget.
+
+- **🔴 F4 CONFIRMED (unchanged) — `saveSetup`'s `.first()` is a live mis-assign.** `InstrumentAuthoringLogicModule.py:100`:
+  `session.query(DbPlugin).filter(DbPlugin.codeRef == pluginCodeRef).first()` — post-B0 there are many rows per codeRef,
+  so it binds an **arbitrary** version. B5 must key the exact row via `findByCodeRefAndVersion(codeRef, version)`.
+
+- **🟠 F9 — B4 publish flow signs client-side, BEFORE the RPC; the key gates the button.** Order: pick source file →
+  **import it on the master's trusted desktop** to read `title` + `targetSdkVersion` off the class (Q5: no hand-typed
+  values that must match code) → run the **one-importable-module lint** (imports only `plugin_sdk` + stdlib; reject a
+  multi-file plugin *at publish*, Q1) → read the source **once as text** → `PluginSigner.sign(codeRef, version,
+  targetSdkVersion, source)` → `(signatureBase64, keyId)` → RPC `savePlugin(…, source, sig, keyId, author, targetSdk)`.
+  The **Publish button is disabled with a clear message when `PluginSigner.signingKeyAvailable()` is false** (no
+  `SPECTRACS_SIGNING_KEY` / seed) — the private key never leaves the master, exactly as §3. **`source` must stay
+  byte-identical** from sign → store → fetch → exec (read once as `str`, pass that exact object through).
+
+- **🟠 F10 — `author` is UNSIGNED provenance; the client supplies it.** The signed tuple is
+  `codeRef|version|targetSdkVersion|sha256(source)` — `author` is **not** in it. So the server can't (and needn't)
+  authenticate it cryptographically; the app passes `author = CurrentUserSession().getUsername()` at publish. It's a
+  provenance label, not a security claim (Q7).
+
+- **🟠 F11 — B4 changes the list's *Add/Edit* semantics.** A published row is **immutable**, so "Edit an existing
+  plugin" stops meaning anything. `PluginViewModule.__applyModelToWidgets` currently sets `codeRef` read-only when
+  editing (line 82) — that whole mode goes. New shape:
+  - **Add** = a brand-new `codeRef` + version 1 (codeRef editable).
+  - **New version** (replaces *Edit*) = prefill `codeRef` + `title` from the selected row, **blank the version**, pick
+    a source; codeRef read-only again but now *because it's inherited*, not because it's a mutable key.
+  Double-click-row = *New version* (not Edit). Update the stale docstrings ("Upsert keyed on codeRef", line 12) while
+  there.
+
+##### B4 — Publish UI (change table)
+
+| # | Change | Where |
+|---|---|---|
+| B4.1 | Editor → **publisher**: source-file picker; derive `title` + `targetSdkVersion` by importing the picked source; **Sign & Publish** button gated on `signingKeyAvailable()` | `PluginViewModule` (app) |
+| B4.2 | One-importable-module **lint gate** at publish (imports only `plugin_sdk` + stdlib) | `PluginViewModule` (app) — hygiene, not a sandbox (§3) |
+| B4.3 | Sign the tuple client-side; call the widened RPC | `PluginViewModule` → `PluginSigner.sign` |
+| B4.4 | **Widen** `savePlugin` to carry `source, signature, keyId, author, targetSdkVersion` | client wrapper **+** server `@expose` (2 copies) |
+| B4.5 | Server passes the sealed fields into `createVersion` (already accepts them) | `SpectracsPyServer.savePlugin` |
+| B4.6 | List: **Add / New-version** semantics; drop read-only-codeRef-on-edit; per-version rows already render | `PluginListViewModule` + `PluginViewModule` |
+
+##### B5 — Assign UI (change table)
+
+| # | Change | Where |
+|---|---|---|
+| B5.1 | `onPluginPicked` captures **`version`** too; show `title @ version` in `pluginField`; store `__pluginVersion` beside `__pluginCodeRef` | `SpectrometerSetupViewModule` (app) |
+| B5.2 | **Widen** `saveSpectrometerSetup(serial, codeRef, version)` | client wrapper **+** server `@expose` (2 copies) |
+| B5.3 | **Fix F4**: `saveSetup` keys the exact row via `findByCodeRefAndVersion` → `setup.pluginId = row.id` | `InstrumentAuthoringLogicModule.saveSetup` (`-model`) |
+| B5.4 | **Fix F5 (the linchpin)**: `resolveBundle` returns `pluginVersion`; login/session carry it; `getPluginVersion()`; `importPlugin`/wizard pass it to `resolve(codeRef, version)` | `InstrumentLogicModule`, `LoginLogicModule`, `CurrentUserSession`, `SpectralWorkflowEngine`, `WizardViewModule` |
+| B5.5 | Verify all three resolve paths (B6.4): `version=None` → built-in; a **bare/seed** row → built-in (unsealed); a **sealed** published row → DB exec | cross-tier |
+
+**Sequencing:** B4 and B5 are **one coupled sweep** — publishing a DB row (B4) with no way to load it (B5.4) is a dead
+end, and B5.4 with nothing published is untestable. Land them together; the demonstrable milestone is **publish pumpkin
+`1.1.0` from the app → assign it to a serial → log in as that serial's end-user → the DB version loads, verifies, and
+runs the wizard.** (B6 then lets the *bench* list DB versions too; today only the end-user load path exercises them.)
+
+**Checkpoints (each green before the next):**
+1. **B4 publish** — a signed row lands via the app; re-publishing the same version is refused (unique constraint);
+   the Publish button is disabled with the key absent.
+2. **B5 assign** — serial A → v2, serial B → v1; `.first()` no longer arbitrary; re-assign A back to v1 = revoke.
+3. **B5.4 load** — the assigned end-user logs in and the **exact** assigned version loads + verifies + runs; a tampered
+   row and an untrusted key are still refused before exec.
+
+**Risks:** the F5 cross-tier thread (5 files, model↔app) is the real work — miss one hop and the version silently
+drops, so a sealed DB row is never reached (the serial quietly stays on the built-in); importing untrusted-ish source
+at *publish* to derive title/sdk (mitigated: master's own machine, same trust as running the app); keeping `source`
+byte-identical across sign→exec.
+
+> **As built — Slice 2 (B4 + B5) ✅ IMPLEMENTED 2026-07-18.** B5.4 already landed in Slice 1; this sweep added the
+> publish + assign UI and widened the RPCs.
+> - **Publish path (B4)** — new app-tier `PluginPublishUtil.inspectPluginSource` imports the picked `.py` on the
+>   master to DERIVE `className`/`title`/`targetSdkVersion` (Q5) and LINT it self-contained (Q1: rejects `sciens.*`
+>   sibling/relative imports, multi-class, no-class, missing title). `PluginViewModule` is now a **publisher**: pick
+>   source → derive (title + target SDK read-only) → validate `codeRef` tail == class name (D-coderef) → `PluginSigner.sign`
+>   the tuple locally → `savePlugin(...)` with the sealed fields; **Sign & Publish** is disabled when
+>   `signingKeyAvailable()` is false. `savePlugin` widened (client wrapper + server `@expose`) to carry
+>   `source/signature/keyId/author/targetSdkVersion` into the already-ready `createVersion`.
+> - **List (B4.6)** — `PluginListViewModule`'s *Edit* → **New version** (inherits codeRef/title, fresh version+source);
+>   `codeRef` read-only only when inheriting, never because it's a mutable key.
+> - **Assign path (B5)** — `SpectrometerSetupViewModule.onPluginPicked` now captures the **version** (the picker
+>   already lists one row per `(codeRef, version)`), shows `title @ version`, and passes it through the widened
+>   `saveSpectrometerSetup(serial, codeRef, version)`. `InstrumentAuthoringLogicModule.saveSetup` **fixes F4** — keys
+>   the exact `(codeRef, version)` row when a version is given (the old `.first()` bound an arbitrary version);
+>   `listSetups` + the setup-list DTO carry `pluginVersion` so an edited setup round-trips its bound version.
+> - **Tests** — new `test_plugin_publish` (inspect/derive + lint refusals + codeRef↔class); `test_plugin_binding_and_seed`
+>   gains the F4 exact-version assertion (reuses the seed, creates no rows). Full plugin blast radius green; all changed
+>   Qt views import headless; `signingKeyAvailable()` is True on the master (key `0c618b47…`) so publish is live.
+> - **NOT yet rig-verified:** the live GUI click-through (publish a real pumpkin `1.1.0` from the app → assign → log
+>   in as the serial → the sealed DB version loads & runs) — the F16 first-real-publish runbook. Paths verified by
+>   unit tests + headless import only.
+> - **Still deferred:** A3 provenance stamp (needs a `SpectralWorkflow.pluginVersion` migration); B6 bench DB-listing
+>   *live* verification; B7 Android; B8 batch-assign.
+
+**Provenance (A3) rides B5.4 for free:** once the session carries `(codeRef, version)`, `WizardViewModule:576`
+(`workflow.pluginCodeRef = session.getPluginCodeRef()`) can also stamp the version — the first real reader, exactly as
+§8's A3 note predicted.
+
+#### B6 build plan — the registry learns DB plugins (as designed, 2026-07-18)
+
+**B3 already built the *load* side of B6** (`PluginRegistry._resolveDbPlugin` — a "sliver of B6"). What's left is the
+**enumerate** side: the only place that asks *"which plugins exist?"* — the **bench selector** — still sees built-ins
+only. B6 is narrow and **bench-facing** (master dev tool); it does not touch the end-user login path (that's B5.4).
+
+##### Rubber-duck findings (impl)
+
+- **🔴 F12 — THE design question: built-in codeRefs SHADOW their DB versions.** `resolve` dispatches on
+  *"is this codeRef a built-in?"* (`PluginRegistry.py:66`: `if entry is not None and entry.version is None → builtin`).
+  So for **any codeRef that is also shipped as a built-in** — e.g. `PUMPKIN_OIL_CODE_REF` — `resolve(codeRef, "1.1.0")`
+  hits `find()`, gets the built-in entry (`version=None`), and takes the **built-in branch, ignoring the requested
+  version entirely.** A DB-published pumpkin `1.1.0` is **unreachable**. That directly contradicts the milestone's
+  stated purpose (*"ship plugin updates without an APK rebuild"*): you could only ever distribute **brand-new**
+  codeRefs, never fix a plugin already shipped in the app. **This needs an explicit decision (D-shadow, below) and it
+  gates B6 — arguably the whole point of distribution.**
+
+- **🟢 F13 — the bench has the SAME version-drop as F5, in miniature.** `DevMeasurementBenchViewModule` stores
+  `__selectedCodeRef` (codeRef only, lines 74/647) and calls `PluginRegistry.resolve(self.__selectedCodeRef)` (line 234)
+  — **no version.** A DB entry there would raise exactly like the login path. So B6 must carry the selected **entry**
+  (or `codeRef + version`), not a bare codeRef. Same lesson, separate call site — independent of B5.4.
+
+- **🟢 F14 — enumeration is the only new data path, and its RPC already exists.** `listPlugins()` (client + server)
+  returns one dict per `(codeRef, version)` row — that's the whole feed. `entries()` today is a pure static returning
+  `__BUILTINS`; making *it* hit the server would change its nature (network, auth, failure) and break the callers that
+  must stay offline (the dev-login bypass reads only the codeRef constants). **Keep `entries()` static; add a separate
+  DB-aware `listAll()`** that merges built-ins + `listPlugins()`. Only the bench calls it.
+
+- **🟢 F15 — narrow blast radius.** The *only* enumeration consumer is the bench (`entries()` at line 73; `codeRefs()`
+  is defined but otherwise unused). PluginListViewModule already lists DB versions via `listPlugins` directly — it does
+  **not** go through the registry. So B6 = one new registry method + rewiring one combo. No other screen changes.
+
+##### B6 — change table
+
+| # | Change | Where |
+|---|---|---|
+| B6.1 | New `PluginRegistry.listAll(includeDb=True)` → built-in entries **+** one `PluginEntry(codeRef, title, version=…)` per `listPlugins()` row; server-down / non-master → built-ins only (bench stays usable offline) | `PluginRegistry` (app) |
+| B6.2 | Bench stores the selected **entry** (`codeRef`+`version`), not a bare codeRef; `resolve(codeRef, version)` | `DevMeasurementBenchViewModule` |
+| B6.3 | Combo label = `title` for built-ins, `title @ version` for DB rows; flat list | `DevMeasurementBenchViewModule` |
+| B6.4 | **(D-shadow = (b), settled — dispatch on ROW-SEALEDNESS, Edwin 2026-07-18)** `version is None → built-in` (dev bench / unassigned, no fetch); else fetch the row → **`source` present → verify + exec** (a real distributed version) / **`source` NULL → built-in fallback** (a bare/seed row is a "use the shipped copy" pointer) / **fetch failed → built-in if shipped, else error** (offline) | `PluginRegistry.resolve` |
+
+##### Decisions — B6 & B4 (settled 2026-07-18 by Edwin)
+
+- **✅ D-shadow → (b), strengthened to a PRINCIPLE.** *"Plugins always come from the DB, delivered over the Pyro
+  server."* The DB is the **source of truth** for distributable plugins; the built-in APK copy is a **fallback only**
+  (offline, unassigned serial, dev bench, or a bare/unsealed row). **Dispatch keys on ROW-SEALEDNESS, not version-presence**
+  (the refinement that dissolves F16): a *sealed* row (has `source`) runs the distributed code; an *unsealed* row (NULL
+  `source`) is a "use the shipped built-in" pointer. So `resolve(pumpkin, "1.1.0-sealed")` → **DB exec**;
+  `resolve(pumpkin, "1.0-seed-bare")` → **built-in**; `resolve(pumpkin, None)` → **built-in, no fetch**. This makes
+  over-the-air fixes to *shipped* plugins work (a published sealed row overrides) — the whole reason to build Track B —
+  **without** forcing any seed change.
+- **✅ D-coderef → validate, don't free-type.** At publish, derive the class name from the imported source and refuse
+  unless `codeRef.endswith('.'+className)` — a typo is caught at the master's desk, not at `getattr` on a field phone.
+- **✅ D-verbench → all-flat.** The bench lists every `(codeRef, version)` row (+ built-ins), so any old version can be
+  reproduced. Revisit only if the list bloats (it's a master dev tool).
+- **✅ D-fallback → KEEP the built-in as the fallback** (reached via the *unsealed-row* branch and the *offline* branch
+  of B6.4). "Always from the DB" holds for **assigned+sealed** users; the built-in is the safety net for everyone else
+  (dev bench, offline, or a bare seed row). The plugin class therefore **stays in the APK** for now (dropping it for a
+  smaller APK is a later, DB-only-hard decision — not now).
+- **✅ F16 seed question → keep demo/ELP on the built-in for now (no signed seed).** The seed's bare `"1.0"` rows resolve
+  to the built-in via the unsealed branch — **no seed change needed**, and pumpkin's *in-tree* source (under active
+  peak-ratio dev) is what the demo runs, so no re-sign treadmill. A **real signed** seed row is deferred until pumpkin
+  stabilizes (see F16 below for the mechanism when we do it).
+
+##### New rubber-duck findings (2026-07-18, post-decision)
+
+- **🟢 F16 — the "bootstrap gap" DISSOLVES into a dispatch choice (was 🔴, resolved by row-sealedness).** The concern:
+  `UserSeedLogicModule` (`:121`, `:165`) binds demo + ELP to a `getOrCreate` pumpkin `"1.0"` row with
+  **`source`/`signature`/`keyId` all NULL**, and the server **cannot** seed a *signed* row (private key is off-server,
+  §3). A naïve *version-present → DB* dispatch would hit that bare row → `verifySealed` fails → demo login dead.
+  **Resolution (B6.4): dispatch on row-sealedness** — an unsealed row is a deliberate "run the shipped built-in"
+  pointer, not a broken row. So:
+  1. **The seed needs NO change** — its bare `"1.0"` rows resolve to the built-in; the demo runs pumpkin's in-tree
+     source, unaffected by signing.
+  2. **Real DB delivery of pumpkin is still a one-time MASTER act** — but there are two routes, and we pick by phase:
+     - **now / dev:** stay on the built-in (bare rows). Zero crypto, no drift.
+     - **at release / to demo distribution:** *either* publish from the app once (B4/B5 runbook) *or* seed a
+       **pre-signed** row via an Alembic **data migration** — Edwin signs pumpkin **offline** (his key) → the sealed
+       blob (`source+signature+keyId+version+targetSdk`) is committed → the migration inserts it (immutable → migration,
+       not the idempotent seed) and repoints the serials; bump `"1.0"` → `"1.0.0"` semver. Deferred (F16 seed decision
+       above).
+- **🟠 F17 — the SDK gate finally goes live (as designed, §4).** The first DB-delivered pumpkin whose `targetSdkVersion`
+  exceeds the installed APK's `SDK_VERSION` yields the honest *"this plugin needs a newer app"* — the case §4 was built
+  for. Inert until now; B6 is where it first bites. No new work, but the B6 verify must include the mismatch path.
+- **🟢 F18 — batch assignment is cheap and safely postponable.** Assignment is per-serial (`SpectrometerSetup.pluginId`);
+  a batch UI is just a loop over `saveSetup(serial, codeRef, version)` across many serials. Nothing in the model blocks
+  it, and the per-serial path is unchanged by it. **Recorded as B8 (postponed, Edwin 2026-07-18)** — no structural debt
+  incurred by deferring.
+
+**B6 dependencies & the FIRST SLICE.** B6.4's dispatch flip is **coupled to F16 and B5.4**: flipping the dispatch
+without the sealedness rule + the login version-thread would break the demo/ELP login (they'd fetch their bare seed
+rows). So the honest first slice — if we start here rather than with the publish/assign UI — is:
+
+> **Slice 1 = B5.4 (login carries `version`) + B6.4 (row-sealedness dispatch) + F16 (unsealed-row = built-in) + B6.1-B6.3 (bench lists DB rows).**
+> No B4/B5 *UI* needed: DB-delivery becomes real, the demo keeps working on the built-in, and the bench can run a
+> hand-seeded sealed row (a test-signed blob, the same "B4 stand-in" trick B0–B3 used). **B4+B5 publish/assign UI is Slice 2.**
+
+This inverts the earlier "B4+B5 first" sequencing note above: with row-sealedness, the *load+dispatch* path is
+demonstrable **before** any UI, and it's the lower-risk place to start. (The B4+B5 coupled-sweep description remains
+correct for Slice 2.)
+
+##### Slice 1 — checkpointed build order (as designed, 2026-07-18)
+
+Four checkpoints, each green before the next — the same shape as the B0–B3 sweep. No new DB columns, no migration
+(the seed is untouched); the only edits are `resolve`'s dispatch + the login version-thread + the bench enumeration.
+
+| CP | Change | Where | Green when |
+|---|---|---|---|
+| **CP1** | **B6.4 dispatch** — `resolve(codeRef, version)` keys on row-sealedness: `version None → builtin` (no fetch); fetch row → `source present → verify+exec` / `source NULL or fetch-failed → builtin if shipped, else error`. Split the fetch out of `_resolveDbPlugin` into `_resolveDbPluginFromRow` | `PluginRegistry` (app) | pure unit tests: the 3 existing loader tests still pass **+** unsealed-row→builtin, offline→builtin, unknown-no-builtin→error |
+| **CP2** | **B5.4 login version-thread** — `resolveBundle` returns `pluginVersion`; `LoginLogicModule` carries it; `CurrentUserSession` stores it + `getPluginVersion()`; `importPlugin(codeRef, version=None)` → `resolve(codeRef, version)`; wizard passes `getPluginVersion()` | `-model` ×2, app ×3 | `test_plugin_binding_and_seed` green; pumpkin login now carries `version="1.0"` and still resolves (bare row → builtin) |
+| **CP3** | **B6.1–B6.3 bench enumeration** — `PluginRegistry.listAll()` = built-ins + `listPlugins()` rows; bench carries the selected **entry** (codeRef+version) and labels DB rows `title @ version` | `PluginRegistry`, `DevMeasurementBenchViewModule` | unit test: `listAll` merges built-ins + a mocked `listPlugins`; bench builds headless |
+| **CP4** | **End-to-end** — a **test-signed sealed row** (ephemeral key → TRUSTED_KEYS, the B0–B3 stand-in trick) resolves + runs via the DB branch, while the demo user still rides the built-in | tests | full blast-radius suite green (registry · loader · binding · wizard-offscreen) |
+
+**Provenance (A3) is explicitly OUT of Slice 1** — stamping `workflow.pluginVersion` needs a new `SpectralWorkflow`
+column (a migration), so it stays deferred to whichever sink lands first (§8 A3 note). Slice 1 threads the version to
+*resolve*, not to *persistence*.
+
+**Risks:** the CP2 thread crosses model↔app (5 files) — miss a hop and the version silently drops to `None` (a sealed
+row would then be shadowed by the built-in, the inverse of F12); `listAll()` must not fire a server call at app
+*startup* (build the combo lazily / tolerate `listPlugins()==[]` when logged-out).
+
+> **As built — Slice 1 ✅ IMPLEMENTED 2026-07-18.** All four checkpoints green.
+> - **CP1** — `PluginRegistry.resolve` now dispatches on row-sealedness: `version is None → _resolveBuiltin` (no
+>   fetch); else `_fetchDbRow` → `source` present → `_resolveDbPluginFromRow` (verify → SDK-check → exec) / else (bare,
+>   offline, unknown) → built-in if shipped, else `ValueError`. `_resolveDbPlugin` split into `_fetchDbRow` +
+>   `_resolveDbPluginFromRow`. Tests: the 3 loader tests hold + 4 new (`version=None` no-fetch, unsealed→builtin,
+>   offline→builtin, unknown-no-builtin→raise).
+> - **CP2** — version threaded end-to-end: `InstrumentLogicModule.resolveBundle` returns `pluginVersion`;
+>   `LoginLogicModule` carries it (success + bad-creds); `CurrentUserSession` stores it + `getPluginVersion()`;
+>   `SpectralWorkflowEngine.importPlugin(codeRef, version=None)` + `resolvePluginFromSession`; `WizardViewModule.__startNew`
+>   passes it. `test_plugin_binding_and_seed` asserts the seed's `"1.0"` rides login→session (and resolves to the
+>   built-in via the unsealed branch — offline in tests, bare-row online).
+> - **CP3** — `PluginRegistry.listAll()` merges built-ins + `listPlugins()` rows; the bench carries the selected
+>   **entry** (codeRef+version) and labels DB rows `title @ version`. `listAll` unit-tested (merge + empty-DB degrade);
+>   bench imports headless and degrades to built-ins offline.
+> - **CP4** — 37 green across the blast radius (registry · loader · binding · signature · sdk-ops · pumpkin wizard ·
+>   pumpkin end-to-end); a **test-signed sealed row** loads + runs via the DB branch (`test_signed_db_plugin_loads_and_runs`).
+> - **NOT rig-verified:** live desktop GUI click-through of the bench selector listing a real published DB row (needs
+>   the B4 publish UI or a hand-inserted signed row); paths verified headlessly + by unit tests only.
+> - **Out of scope (as planned):** A3 provenance stamp (`SpectralWorkflow.pluginVersion` — needs a migration), B4/B5
+>   publish/assign UI (Slice 2).
+
+##### B8 — batch assignment UI (postponed, Edwin 2026-07-18)
+
+Assign one `(codeRef, version)` to **many serials** at once (a rollout console beyond the one-serial editor). Pure UI
+over the existing per-serial `saveSetup` — a selection list + a loop. No model change. Deferred until there is a fleet
+large enough to feel the one-at-a-time pain; recorded so the per-serial design (B5) is understood as its building block,
+not a dead end.
 
 ## 9. Dropped from the original D0–D8
 

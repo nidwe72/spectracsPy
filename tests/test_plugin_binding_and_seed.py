@@ -42,17 +42,35 @@ class PluginBindingSeedTest(unittest.TestCase):
         result = LoginLogicModule().login("pumpkinTestUser", "pumpkinTestUser")
         self.assertTrue(result["ok"])
         self.assertIsNotNone(result["pluginCodeRef"])
+        # B5.4: the EXACT bound version travels too (the seed binds the "1.0" row).
+        self.assertEqual(result["pluginVersion"], UserSeedLogicModule.PUMPKIN_PLUGIN["version"])
         self.assertEqual(result["spectrometerDevice"], "Virtuax")
 
     def test_current_user_session_holds_the_binding(self):
         CurrentUserSession().login(LoginLogicModule().login("pumpkinTestUser", "pumpkinTestUser"))
         self.assertIsNotNone(CurrentUserSession().getPluginCodeRef())
+        self.assertEqual(CurrentUserSession().getPluginVersion(),
+                         UserSeedLogicModule.PUMPKIN_PLUGIN["version"])
         self.assertEqual(CurrentUserSession().getSpectrometerDevice(), "Virtuax")
 
     def test_bad_credentials_still_return_binding_keys(self):
         result = LoginLogicModule().login("pumpkinTestUser", "wrong")
         self.assertFalse(result["ok"])
         self.assertIsNone(result["pluginCodeRef"])
+        self.assertIsNone(result["pluginVersion"])
+
+    def test_saveSetup_keys_on_the_exact_version(self):
+        # B5.3 (F4): binding with an explicit (codeRef, version) resolves the exact seeded row; a version that
+        # does not exist is refused rather than silently binding an arbitrary `.first()` row. Reuses the
+        # seeded "1.0" row — creates nothing.
+        from sciens.spectracs.logic.instrument.InstrumentAuthoringLogicModule import InstrumentAuthoringLogicModule
+        codeRef = UserSeedLogicModule.PUMPKIN_PLUGIN["codeRef"]
+        version = UserSeedLogicModule.PUMPKIN_PLUGIN["version"]
+        ok = InstrumentAuthoringLogicModule().saveSetup(UserSeedLogicModule.DEMO_SERIAL, codeRef, version)
+        self.assertTrue(ok["ok"])
+        missing = InstrumentAuthoringLogicModule().saveSetup(
+            UserSeedLogicModule.DEMO_SERIAL, codeRef, "9.9.9-nope")
+        self.assertFalse(missing["ok"])
 
 
 if __name__ == "__main__":
