@@ -689,3 +689,189 @@ cap. That removes the magic numbers and the false-convergence trap. Also possibl
 resolution-switch complexity and verifying exposure carries across modes.
 
 **Cleanup done:** the dead `AutoExposureCaptureHelper` has been deleted.
+
+### 14.8 Reference-outlier CONFIRMED IN THE FIELD (2026-07-18) — drop-1 + fixed-settle is insufficient (DIAGNOSIS; fix deferred)
+
+The §14.7 caveat *"drop 1 assumes exactly ONE bad frame … if the camera emits >1, this wouldn't catch it"* is now
+**observed, not hypothetical.** Three bench captures (Edwin, ksnip 2026-07-18; same physical specimen used for BOTH
+roles for convenience): the two **Reference** spectra show a thick band of **gray per-frame traces sitting BELOW the
+green mean**; the **Sample** is a single clean line with almost none. Diagnosis (rubber-duck, code-grounded):
+
+- **Reference-only ⇐ only the reference runs AE right before its burst.** Sample reuses the locked exposure
+  (`CapturePanel.__lockedExposure`, `:343`) on a warm, already-settled stream — no exposure change, no ramp, uniform
+  frames. Reference sweeps, then bursts.
+- **Below the mean ⇐ the exposure ramps UP to `best`.** UVC/V4L2 exposure changes take **several frames** to take
+  effect (the same ~1.2–1.5 s / ~frame-count latency §14.6 measured). The burst starts before the ramp fully lands, so
+  the **first N reference-burst frames are still at the lower, not-yet-settled exposure → globally dimmer → below**.
+  The single `best`-drain (Fix 5) + `drop 1` covers **one** such frame; the ELP produces **more than one**.
+- **Why the sigma-clip doesn't rescue it (new angle, not just AE):** `MeanSpectrumLogicModule` reduces with a
+  **per-wavelength-bin** `sigmaClippedMean`. That rejects an *isolated* read-spike (1 of N), but the ramp is a
+  **coherent group** (several dim frames). With a large-minority dim cluster the per-bin σ inflates and the mean is
+  pulled toward them — they survive the clip and **bias the reference low**.
+- **Why it's not cosmetic — it corrupts T = S/R.** The reference is the denominator; a low-biased, non-uniform R
+  biases **T high** and **distorts its shape**, so the pumpkin ratio / colour verdict inherits the error. Foundational.
+
+**The fix — two phases (deferred; implement on explicit request). Design pinned 2026-07-18.**
+
+Fix #1 **prevents** the dim frames (an adaptive *warmup* before the burst); Fix #2 **catches** any residue **and
+guarantees the effective frame count** (per-frame rejection + top-up). Do both — #1 makes #2 cheap, #2 makes #1 safe.
+
+Two kinds of capture, only one counted: **warmup frames** are grabbed-and-discarded to let the exposure ramp finish;
+**burst frames** are the counted ones the mean is built from. The warmup stabilizes *exposure*, not the mean.
+
+**Target flow (ASCII sequence — for later reference):**
+```
+ CapturePanel                 VideoThread / Camera            Reducer (MAD + σ-clip)
+     │ requestAutoExpose ───────────▶│                              │
+     │◀──── autoExposureFinished ────│  sweep, pick+apply `best`     │
+ ═══ WARMUP / SETTLE — frames DISCARDED, not counted (Fix #1) ═══
+     │ grab ────────────────────────▶│                              │
+     │◀──────── frame ───────────────│                              │
+     │ b = channelPeak(frame)        │                              │
+     │ stable for K reads? ── no ──┐  │   (throwaway loop, capped)   │
+     │        grab again  ◀─────────┘  │                              │
+     │ ...yes → exposure settled      │                              │
+ ═══ BURST — COUNTED, target N ═══
+     │ grab ────────────────────────▶│                              │
+     │ accepted.append(frame)  … until len == N                     │
+ ═══ REJECT + TOP-UP — guarantees N EFFECTIVE (Fix #2) ═══
+     │ MAD-reject(per-frame scalars) ──────────────────────────────▶│
+     │◀──── survivors = N − k (dropped k dim/spike frames) ─────────│
+     │ survivors < N ? ─ yes → grab k more (BURST) → re-MAD … cap   │
+     │ survivors == N                                               │
+ ═══ REDUCE ═══
+     │ sigmaClippedMean(N clean) ──────────────────────────────────▶│
+     │◀──────────────── green mean spectrum ───────────────────────│
+```
+
+**Per-frame rejection = MAD on a per-frame brightness scalar** (the axis-change that beats the per-bin σ-clip):
+```
+ scalarᵢ  = median over wavelength bins of frame i's spectrum   (one number per frame)
+ median   = median(scalars);  MAD = median(|scalarᵢ − median|);  σ̂ = 1.4826·MAD
+ drop frame i  if  |scalarᵢ − median| > k·σ̂   (k≈3)   ← MAD's 50% breakdown survives a big dim minority
+```
+Example — scalars `[86,88,101,100,102,99]` (2 ramp-dim): median 99.5, MAD 2.0, σ̂ 2.97, cutoff 8.9 → deviations
+`[13.5,11.5,1.5,.5,2.5,.5]` → frames 1&2 dropped; σ-clip mean then rides the clean four. The per-bin σ-clip *keeps*
+those two (their presence inflates the per-column σ → wide band); the per-frame scalar makes the coherent group obvious.
+
+**Ensuring N effective:** the **grab-until-N-accepted** policy — a dropped frame is *replaced* (grab k more, re-run
+MAD) until N survive, **capped at N + margin** so an unstable camera yields a clean "capture failed", not an infinite
+loop. Because Fix #1 removes the systematic ramp, MAD drops ≈ 0 and the top-up almost never fires.
+
+**Rubber-duck (impl, code-grounded 2026-07-18):**
+- **Fix #1 lives in `VideoThread`, synchronously — reuse what's there.** `__runAutoExposeSync` already drains at
+  `best` via `__drainSync(1800ms)` and measures `AutoExposureLogicModule.channelPeak(frame)`. Make that tail drain
+  **adaptive**: loop `__drainSync(short)` → `channelPeak` until K consecutive peaks differ by < ε, or a cap. Same
+  thread that owns the backend, same metric — no new machinery. Retire the fixed `__AUTO_EXPOSE_SETTLE_MS` reliance
+  and the CapturePanel `drop 1`.
+- **⚠ the burst reads the ASYNC stream, not the sync drain.** `CapturePanel`'s provider pumps `__latestImage`
+  (`__pumpFrames(120)`), so there's a sync-AE → async-stream handoff. Once exposure is settled the async frames are at
+  `best` (BUFFERSIZE=1 limits stale carry-over), but the handoff is why a *single* fixed drop was ever needed. Fix #2's
+  rejection makes the burst robust to a stray handoff frame regardless.
+- **Fix #2 is a PURE addition to the reducer — no capture change.** `RobustReductionLogicModule` already carries the
+  MAD scaling (`__MAD_TO_SIGMA = 1.4826`) and MAD machinery; add `rejectDimFrames(stack) -> keep-mask` and call it in
+  `MeanSpectrumLogicModule.meanSpectrum` **before** `sigmaClippedMean`. Unit-testable in isolation, headless.
+- **Top-up is the ONLY capture-loop change.** `SpectralWorkflowEngine.__runBurst` is today a flat
+  `for _ in range(frames)`; rework to *grab until N survive the reject* (cap N+margin). It already has each frame's
+  extracted spectrum, so it can compute the per-frame scalar inline.
+- **Two scalars, two stages — intentional.** Warmup judges RAW image brightness (`channelPeak`, pre-extraction, in the
+  thread); reject judges the EXTRACTED spectrum (`median` across bins, in the reducer). Different data at different
+  points; both are correct.
+- **Virtual/headless path stays valid.** `__runBurst`'s default virtual provider yields identical frames → MAD == 0 →
+  `rejectDimFrames` keeps all (the existing MAD==0 guards apply). No regression to headless tests.
+- **Display collapses for free.** Post-fix, the gray per-frame traces should ride on the green mean (the reject removes
+  the below-mean group), matching the Sample plot today.
+
+**Impl phases (tabular):**
+```
+ Ph │ change                                                    │ where                              │ risk │ depends
+ ───┼───────────────────────────────────────────────────────────┼────────────────────────────────────┼──────┼────────
+ C1 │ per-frame MAD rejection BEFORE the σ-clip (un-biases the   │ RobustReductionLogicModule.reject… │ LOW  │ —
+    │ mean even with today's warmup) — the immediate fidelity win│  + MeanSpectrumLogicModule         │ pure │
+ C2 │ adaptive warmup: drain until K stable channelPeaks or cap; │ VideoThread (AE tail) + CapturePanel│ MED │ —
+    │ retire fixed 1.8 s settle + drop-1                         │  (remove drop-1)                   │ rig  │
+ C3 │ top-up burst: grab until N survive reject, cap N+margin    │ SpectralWorkflowEngine.__runBurst  │ MED  │ C1
+    │ (guarantees N effective; clean fail at cap)               │                                    │      │
+ C4 │ rig verify end-to-end                                     │ bench, live ELP                    │ —    │ C1-C3
+ ───┴───────────────────────────────────────────────────────────┴────────────────────────────────────┴──────┴────────
+ Order: C1 first (pure, safe, fixes the bias on its own) → C2 (root cause, fewer drops) → C3 (restore the count).
+ C1 ⟂ C2 (independent); C3 needs C1's reject fn. C4 gates the whole.
+```
+
+> **AS BUILT — C1·C2·C3 IMPLEMENTED 2026-07-18 (unit + headless verified; C4 rig-verify pending Edwin's ELP).**
+> - **C1** — `RobustReductionLogicModule.rejectDimFrames(stack) → keep-mask` (per-frame brightness = median across
+>   bins; MAD-outlier reject, `DIM_FRAME_K=3`, `MIN_FRAMES_TO_REJECT=5`, plus a **relative scale floor**
+>   `DIM_FRAME_SCALE_FLOOR=0.02` so a blatant dim frame can't survive a tight/identical clean cluster and the virtual
+>   path keeps all). `MeanSpectrumLogicModule.meanSpectrum` applies it **before** `sigmaClippedMean`. Tests:
+>   `test_capture_frame_rejection` — dim group dropped, clean/degenerate/too-few kept, never-reject-all, and the mean
+>   stays on the clean cluster (~100, not the plain-mean ~94).
+> - **C2** — `VideoThread.__settleUntilStable()` replaces the fixed final drain: drain `__SETTLE_CHUNK_MS` chunks and
+>   measure `channelPeak` until `__SETTLE_STABLE_READS` consecutive reads are within `__SETTLE_TOLERANCE`, gated by
+>   `__SETTLE_MIN_MS=1500` (past the latency plateau — avoids the §14.6 false-converge) and capped at
+>   `__SETTLE_MAX_MS=4000`. The per-probe drain stays fixed (measuring mid-sweep must not adapt). `CapturePanel`'s
+>   fixed 1-frame drop is retired. **Rig-only** to fully verify (camera timing).
+> - **C3** — `SpectralWorkflowEngine.__runBurst` now GRABS UNTIL N frames survive `rejectDimFrames` (via
+>   `__survivingFrameCount`), capped at `N + max(5, N//5)` accepted and a total-attempt cap (a wedged provider fails
+>   cleanly). Test: 3 dim frames → burst tops up past N, ≥N survive. Existing burst tests unchanged (identical frames →
+>   MAD≈0 + floor → all kept → exactly N).
+> - **Pipeline unaffected on the virtual path** (identical frames → keep-all): pumpkin end-to-end, spectrum-processing,
+>   wizard-offscreen all green (15).
+>
+> **C4 rig-verify (Edwin, live ELP):** re-shoot the reference — the gray band collapses onto the green mean (as the
+> Sample already does); R does not sit systematically below a fixed-long-exposure control capture; and the effective
+> frame count entering `sigmaClippedMean` equals N (log it). T = S/R then stable run-to-run.
+
+> **AS BUILT — the residual reference-only band was AUTO WHITE-BALANCE, not the lamp (IMPLEMENTED 2026-07-19).**
+> Rig retest of C1–C3: the below-*bias* was fixed (mean centered) but the reference stayed noisier than the sample,
+> **and the lamp was constant/warm** — so it was not warmup. Root cause: `CaptureBackend.open` pinned only exposure +
+> gain and **left auto-white-balance + backlight-compensation ON**; they re-converge after the AE exposure change, so
+> the reference burst (right after the sweep) caught the transient while the settled sample did not. C2's `channelPeak`
+> settle couldn't see it (it tracks the bright end; WB/backlight settle separately). **Fix (rig-confirmed: reference
+> and sample now look the same):** freeze them at capture. **Mode-split** so calibration is untouched:
+> - `CaptureBackend.open(deviceId, exposure, whiteBalanceKelvin=None)` — `None` → **auto-WB** (calibration keys on it,
+>   §13/§14.6; set explicitly so a sticky manual WB can't leak in); a value → `AUTO_WB=0` then `WB_TEMPERATURE=value`
+>   (+ read-back) + backlight off.
+> - `VideoThread.WHITE_BALANCE_KELVIN = None` (default → all **calibration** threads stay on auto-WB, unchanged);
+>   `DevCaptureVideoThread.WHITE_BALANCE_KELVIN = 6500` (the **measurement** path → fixed to the **6500 K lamp**, so WB
+>   renders it neutrally, cancels in T = S/R, and removes a degree of freedom). TODO: seed per-lamp in
+>   `SpectrometerSensorUtil` alongside VID/PID + exposure.
+> - ⚠ **Calibration must be re-verified on the rig with the split** (calibration is back on auto-WB, so it should match
+>   the historical ~0.6 nm PASS — confirm).
+>
+> **AS BUILT — fix (2) full-frame settle metric IMPLEMENTED 2026-07-19 (Edwin: multi-camera use makes it worth it).**
+> `VideoThread.__settleUntilStable` now keys on `AutoExposureLogicModule.frameBrightness` (the MEAN of the brightest
+> channel over the whole frame) with a **relative** tolerance (`__SETTLE_TOLERANCE_FRAC = 0.01`), instead of
+> `channelPeak`. Rationale: channelPeak is the p99.9 PEAK — it saturates/plateaus at the AE target while the mid/dim
+> regions still ramp, so the settle could read "stable" early; a frame MEAN stays linear and moves until the whole
+> frame settles, and it makes no assumption that the ramp is uniform (matters across different cameras). `channelPeak`
+> is untouched (still the sweep-search metric). Unit tests cover `frameBrightness`; the settle itself is **rig-only**.
+
+### 14.9 Per-camera exposure range — the hardcoded `[1, 500]` (OPEN, deferred — flagged 2026-07-19)
+
+Investigating "why does the measured spectrum peak at ~110–120, not near 255?" surfaced a separate, real gap. Two
+things cap the spectrum level:
+
+1. **The AE metric (by design, keep):** AE targets `channelPeak` (p99.9 of the brightest CHANNEL) at **245** so *no
+   channel clips*. The displayed spectrum is `qGray` (a luminance blend) after a robust per-column reduction, both of
+   which sit **below** the max-channel peak — so at the brightest non-clipping exposure, qGray lands ~110–120. This is
+   the no-clip ↔ dynamic-range trade-off; it is **correct** (unbiased for T = S/R) and should stay. Do NOT retarget AE
+   to qGray (a channel would clip → breaks the colour-anchored calibration §13/§14.6 and distorts the peak).
+2. **🔴 The exposure search range is HARDCODED and NOT per-camera** (`CapturePanel.__EXPOSURE_MIN = 1`,
+   `__EXPOSURE_MAX = 500`). The search itself is fine (a ladder + bisection refine over the range, not a fixed value
+   set — `AutoExposureLogicModule.findExposure`). But V4L2 `exposure_time_absolute` **units differ wildly between
+   cameras** (one camera's 500 ≈ another's 50 or 5000), and `cap.set(CAP_PROP_EXPOSURE, x)` **clamps to the camera's
+   own min/max/step**. So a fixed `[1, 500]`:
+   - can be **too low** on a camera whose useful range extends higher → AE tops out dark, the whole spectrum dim;
+   - can be **too coarse/misaligned** on a camera with a different unit scale.
+   With **multiple cameras in use (Edwin)** this is a genuine correctness/UX gap, the exposure sibling of the WB-per-lamp
+   and settle-metric items.
+
+**Planned fix (deferred, impl on explicit request):**
+- **Read the camera's actual exposure range** at open — `CaptureBackend` exposes `cap.get(CAP_PROP_EXPOSURE)` min/max
+  where the driver provides them (V4L2 does) — and drive the AE ladder over *that*, not a constant. Where the driver
+  won't report a range, fall back to a **per-sensor seed** in `SpectrometerSensorUtil` (alongside VID/PID, exposure
+  default, and the new WB-Kelvin — a natural home for all per-camera capture constants).
+- **Diagnostic to disambiguate first (cheap):** log the exposure AE lands on. Near `__EXPOSURE_MAX` (500) ⇒ the cap is
+  the limit (raise / per-camera it); well below ⇒ it is the no-clip metric (item 1), leave it.
+- **Secondary (only if the captured image shows a bright region OUTSIDE the spectrum band):** measure the AE metric over
+  the **ROI band** rather than the whole frame, so stray bright pixels can't starve the spectrum's exposure.

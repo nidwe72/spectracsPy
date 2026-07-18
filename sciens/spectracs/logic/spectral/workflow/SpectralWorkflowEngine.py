@@ -175,13 +175,24 @@ class SpectralWorkflowEngine:
         return lambda: image
 
     def __runBurst(self, frames, frameProvider, onFrame=None):
-        # The numeric burst (Qt-free): pull `frames` frames from the provider and accumulate them into one
-        # Spectrum via the REAL reader. `frameProvider` is a no-arg callable returning a frame image (or None
-        # for a dropped frame, which is skipped). Reader pulls its calibration from the app-context singleton.
-        # This is the ONLY thing that "moved into the engine"; the live camera stays behind the provider
-        # (§9.1). `onFrame(spectrum, index, total)` lets the host live-plot / step a progress bar per frame.
+        # The numeric burst (Qt-free): pull frames from the provider and accumulate them into one Spectrum via
+        # the REAL reader. `frameProvider` is a no-arg callable returning a frame image (or None for a dropped
+        # frame, which is skipped). Reader pulls its calibration from the app-context singleton. The live camera
+        # stays behind the provider (§9.1). `onFrame(spectrum, index, total)` lets the host live-plot / step a
+        # progress bar per frame.
+        #
+        # C3 (SPEC_capture_quality.md §14.8): GRAB UNTIL `frames` frames SURVIVE per-frame brightness rejection,
+        # so the EFFECTIVE count feeding the mean is the intended N even when a few dim/spike frames get dropped
+        # by C1. Bounded: at most `frames + margin` accepted, and a total-attempt cap so a provider that keeps
+        # returning None (a wedged camera) fails cleanly instead of looping forever.
+        target = frames
+        maxFrames = target + max(5, target // 5)     # +20% (or +5) headroom to replace rejected frames
+        maxAttempts = maxFrames + target             # also bound provider None-returns (dropped/dead frames)
         spectrum = None
-        for index in range(frames):
+        captured = 0
+        attempts = 0
+        while captured < maxFrames and attempts < maxAttempts:
+            attempts += 1
             image = frameProvider()
             if image is None:
                 continue
@@ -191,6 +202,21 @@ class SpectralWorkflowEngine:
             parameters.setVideoSignal(signal)
             parameters.spectrum = spectrum
             spectrum = ImageSpectrumAcquisitionLogicModule().execute(parameters).spectrum
+            captured += 1
             if onFrame is not None:
-                onFrame(spectrum, index, frames)
+                onFrame(spectrum, min(captured, target) - 1, target)   # progress fills to N, then top-up is silent
+            if captured >= target and self.__survivingFrameCount(spectrum) >= target:
+                break
         return spectrum
+
+    def __survivingFrameCount(self, spectrum):
+        # How many captured frames would survive C1's per-frame brightness rejection (the SAME test the final
+        # MeanSpectrum reduce applies) — so the top-up loop stops once the mean will see N clean frames.
+        import numpy as np
+        from sciens.spectracs.logic.spectral.acquisition.RobustReductionLogicModule import RobustReductionLogicModule
+        frames = spectrum.getCapturedValuesByNanometers() if spectrum is not None else None
+        if not frames:
+            return 0
+        keys = list(frames[0].keys())
+        stack = np.array([[frame.get(key, np.nan) for key in keys] for frame in frames], dtype=float)
+        return int(np.sum(RobustReductionLogicModule().rejectDimFrames(stack)))

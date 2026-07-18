@@ -483,11 +483,12 @@ class CapturePanel(QWidget):
             if role == REFERENCE and self.__autoExposureCheckBox.isChecked():
                 self.__runAutoExposure()      # async: hands the sweep to the capture thread
                 self.__waitForAutoExposure()  # ...block until it finishes before grabbing the reference burst
-                # The FIRST frame the stream delivers after the sweep resumes is a one-off outlier on this ELP
-                # (its recurring first-frame quirk — §14.6). Wait for it, then drop it, so the reference burst
-                # starts on the second, clean frame. Sample never sweeps, so its warm stream never shows this.
-                self.__waitForFirstFrame()
-                self.__latestImage = None
+                # The fixed 1-frame drop that used to sit here is RETIRED (SPEC_capture_quality.md §14.8): the
+                # sweep now settles ADAPTIVELY at `best` (VideoThread.__settleUntilStable, C2) so the stream is
+                # genuinely stable before the burst, and any residual dim frame is rejected per-frame in the
+                # temporal reduction (C1) while the burst tops up to keep N effective (C3). Dropping exactly one
+                # frame only ever covered ONE bad frame — the ELP emits several (the ksnip evidence).
+                self.__latestImage = None     # discard the last pre-sweep stale frame; the burst waits for a fresh one
 
             frameCount = int(self.__framesComboBox.currentText())
             self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)

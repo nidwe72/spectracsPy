@@ -16,6 +16,12 @@ class DevCaptureVideoThread(VideoThread[VideoSignal]):
 
     videoThreadSignal = Signal(threading.Event, VideoSignal)
 
+    # MEASUREMENT capture: freeze white balance to the LAMP's colour temperature so the reference/sample bursts are
+    # deterministic (SPEC_capture_quality.md §14.8, fix 1) — auto-WB otherwise re-converges after the AE exposure
+    # change and the reference burst catches the transient. Fixed WB cancels in T = S/R. Calibration threads keep the
+    # base None (auto-WB). TODO: seed per-lamp in SpectrometerSensorUtil alongside VID/PID + exposure.
+    WHITE_BALANCE_KELVIN = 6500
+
     def createSignal(self) -> VideoSignal:
         signal = VideoSignal()
         signal.image = self.qImage

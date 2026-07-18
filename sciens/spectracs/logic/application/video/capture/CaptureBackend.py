@@ -14,7 +14,7 @@ from sciens.base.PlatformUtil import is_android
 
 
 class CaptureBackend:
-    def open(self, deviceId: int = 0, exposure: int = None) -> None:
+    def open(self, deviceId: int = 0, exposure: int = None, whiteBalanceKelvin: int = None) -> None:
         raise NotImplementedError
 
     def read(self) -> QImage:
@@ -50,7 +50,7 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         self._width = None
         self._height = None
 
-    def open(self, deviceId: int = 0, exposure: int = None) -> None:
+    def open(self, deviceId: int = 0, exposure: int = None, whiteBalanceKelvin: int = None) -> None:
         import cv2
         from sys import platform
         # V4L2 is the reference backend on Linux (verified in the probe); CAP_ANY elsewhere.
@@ -96,12 +96,27 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         elif platform == 'win32':
             self._cap.set(cv2.CAP_PROP_EXPOSURE, -3)
 
-        # DIAGNOSTIC (2026-07-15): auto white-balance + backlight compensation left at the camera DEFAULT (on) while we
-        # check whether disabling them broke the wavelength-calibration peak detection (Edwin's suspicion — the
-        # historical calibration ran with auto-WB on, and WB changes the qGray spectrum shape / line prominences).
-        # Only gain is pinned to 0 (deterministic, and to undo a sticky gain=100 a probe left behind). If peak detection
-        # recovers, re-introduce auto-WB-off carefully — it matters for T=S/R per-channel consistency (SPEC §4.8).
-        self._cap.set(cv2.CAP_PROP_GAIN, 0)
+        self._cap.set(cv2.CAP_PROP_GAIN, 0)             # pinned in BOTH modes (also undoes a sticky gain=100 a probe left)
+
+        # White balance is MODE-SPLIT (SPEC_capture_quality.md §14.8, fix 1).
+        if whiteBalanceKelvin is None:
+            # CALIBRATION path — keep the camera's AUTO white-balance (and default backlight). The colour-anchored
+            # wavelength peak-detection (§13/§14.6) is tuned for auto-WB's line prominences; do not disturb it.
+            # Set it explicitly (not merely "untouched") so a manual WB left sticky by a prior measurement open on
+            # the same /dev/videoN can't leak in.
+            self._cap.set(cv2.CAP_PROP_AUTO_WB, 1)
+        else:
+            # MEASUREMENT path — FREEZE the auto loops so the reference/sample bursts are deterministic. Auto-WB +
+            # auto-backlight otherwise re-converge after the AE exposure change, and the reference burst (run right
+            # after the sweep) catches that transient while the settled sample does not — the reference-only settling
+            # band the ksnip captures showed. Fixed to the LAMP's colour temperature (6500 K here), WB renders the
+            # lamp neutrally: it cancels in T = S/R and gives the colour evaluation a stable per-channel balance.
+            # Order matters on V4L2: auto OFF first, THEN the temperature control is live.
+            self._cap.set(cv2.CAP_PROP_AUTO_WB, 0)
+            self._cap.set(cv2.CAP_PROP_WB_TEMPERATURE, int(whiteBalanceKelvin))
+            self._cap.set(cv2.CAP_PROP_BACKLIGHT, 0)
+            actualWb = int(self._cap.get(cv2.CAP_PROP_WB_TEMPERATURE))
+            print("CaptureBackend: white balance fixed = %dK (requested %dK)" % (actualWb, int(whiteBalanceKelvin)))
 
     def read(self) -> QImage:
         import cv2
@@ -143,7 +158,7 @@ class AndroidUvcCaptureBackend(CaptureBackend):
     libusb (libusb_wrap_sys_device) -> libuvc -> frames. Needs <uses-feature usb.host> +
     UsbManager.requestPermission (NOT android.permission.CAMERA). See spec §6."""
 
-    def open(self, deviceId: int = 0, exposure: int = None) -> None:
+    def open(self, deviceId: int = 0, exposure: int = None, whiteBalanceKelvin: int = None) -> None:
         raise NotImplementedError("Android UVC-over-OTG capture is deferred (P7) — see spec §6")
 
     def read(self) -> QImage:
@@ -155,7 +170,7 @@ class RaspberryPiNetworkCaptureBackend(CaptureBackend):
     capture and the phone becomes a network client (reusing the Pyro/HTTP pattern) — no OTG. The
     choice between this and AndroidUvcCaptureBackend is made when the hardware direction is set."""
 
-    def open(self, deviceId: int = 0, exposure: int = None) -> None:
+    def open(self, deviceId: int = 0, exposure: int = None, whiteBalanceKelvin: int = None) -> None:
         raise NotImplementedError("RPi-network capture is deferred (P7) — see spec §6")
 
     def read(self) -> QImage:

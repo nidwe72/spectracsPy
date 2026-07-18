@@ -26,6 +26,25 @@ class VideoThread(QThread,Generic[S]):
     # sensor is still ramping) → the sweep picks an over-bright, clipping exposure. A flat fixed wait can't misfire.
     __AUTO_EXPOSE_SETTLE_MS = 1800
 
+    # Adaptive settle AFTER the sweep picks `best`, before handing back to the burst (SPEC_capture_quality.md
+    # §14.8 C2). The per-probe drain above stays a flat wait (measuring mid-sweep must not false-converge on the
+    # ramp plateau). But the FINAL settle at `best` is where the reference-burst dim outliers come from: a fixed
+    # 1.8 s is too short when the ramp runs long. Drain in chunks and stop once channelPeak stops changing (K
+    # reads within tolerance) — but only AFTER a minimum wait PAST the ~1.2 s latency plateau, so we can't
+    # false-converge on the flat pre-jump window (the §14.6 trap). Capped so a slow ramp hands back, never hangs.
+    __SETTLE_CHUNK_MS = 200
+    __SETTLE_MIN_MS = 1500          # never declare "settled" before the latency plateau is past
+    __SETTLE_MAX_MS = 4000          # cap total wall-clock (a slow/never-settling ramp hands back the last frame)
+    __SETTLE_STABLE_READS = 3       # K consecutive full-frame-brightness reads within tolerance
+    __SETTLE_TOLERANCE_FRAC = 0.01  # frame-brightness change (RELATIVE — the mean is small on a mostly-dark frame)
+                                    # under this fraction counts as "no longer changing" (§14.8 fix 2)
+
+    # White-balance mode passed to CaptureBackend.open (SPEC_capture_quality.md §14.8, fix 1). None = the camera's
+    # AUTO white balance — the DEFAULT, so calibration threads (which key on auto-WB's colour rendering, §13/§14.6)
+    # are unchanged. The MEASUREMENT thread (DevCaptureVideoThread) overrides this to the lamp's fixed temperature so
+    # its reference/sample bursts are deterministic.
+    WHITE_BALANCE_KELVIN = None
+
     def __init__(self):
         super().__init__()
         self._runFlag = True
@@ -92,11 +111,40 @@ class VideoThread(QThread,Generic[S]):
         self._liveExposure = best     # keep the normal loop from re-applying a stale slider value
         # Settle at the CHOSEN exposure before we hand back to the burst: `best` is a fresh change from the last
         # probe, and the ELP takes ~1.2-1.5 s to ramp — without this the first burst frames would be captured
-        # mid-ramp (the reference-only outliers, SPEC_capture_quality.md §14.6). Sample capture reuses an already
-        # settled exposure, which is why it never showed them.
-        self.qImage = self.__drainSync(self.__AUTO_EXPOSE_SETTLE_MS)
+        # mid-ramp (the reference-only outliers, SPEC_capture_quality.md §14.6/§14.8). Sample capture reuses an
+        # already-settled exposure, which is why it never showed them. ADAPTIVE now (§14.8 C2): drain until
+        # channelPeak stabilises (past the latency plateau), so a long ramp is fully covered, not cut off at 1.8 s.
+        self.qImage = self.__settleUntilStable()
         self._emitPreview()
         self.autoExposureFinished.emit(int(best))
+
+    def __settleUntilStable(self):
+        # Adaptive replacement for the fixed final drain (SPEC_capture_quality.md §14.8 C2). Drain short chunks and
+        # measure channelPeak; stop once K consecutive reads are within tolerance AND the minimum wait (past the
+        # ramp's latency plateau) has elapsed; hard-cap the total. Returns the last drained frame.
+        start = time.monotonic()
+        last = None
+        previous = None
+        stable = 0
+        while True:
+            frame = self.__drainSync(self.__SETTLE_CHUNK_MS)
+            if frame is not None:
+                last = frame
+            # Fix 2 (§14.8): settle on FULL-FRAME brightness, not channelPeak. channelPeak (the p99.9 peak)
+            # saturates/plateaus at the AE target while the mid/dim regions are still ramping → it can read
+            # "stable" too early; a frame MEAN stays linear and moves until the whole frame settles.
+            brightness = AutoExposureLogicModule.frameBrightness(frame)
+            if previous is not None and abs(brightness - previous) <= self.__SETTLE_TOLERANCE_FRAC * max(previous, 1.0):
+                stable += 1
+            else:
+                stable = 0
+            previous = brightness
+            elapsedMs = (time.monotonic() - start) * 1000.0
+            if elapsedMs >= self.__SETTLE_MIN_MS and stable >= self.__SETTLE_STABLE_READS:
+                break
+            if elapsedMs >= self.__SETTLE_MAX_MS:
+                break
+        return last
 
     def __drainSync(self, milliseconds):
         # Actively read+discard frames for `milliseconds` of wall-clock (mirrors diagnostics drain): buffered reads
@@ -140,7 +188,7 @@ class VideoThread(QThread,Generic[S]):
         # (getCaptureBackend() there raises on open). Only open a backend for a real sensor.
         if not self.getIsVirtual():
             self._backend = getCaptureBackend()
-            self._backend.open(self._deviceId, self._exposure)
+            self._backend.open(self._deviceId, self._exposure, self.WHITE_BALANCE_KELVIN)
             self._appliedExposure = self._exposure
 
             # Warm-up: the first frames after open can be empty while the UVC stream settles; discard a

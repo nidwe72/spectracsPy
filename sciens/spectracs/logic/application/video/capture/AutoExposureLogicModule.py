@@ -106,6 +106,23 @@ class AutoExposureLogicModule:
         rgb = pixels[:, :width * 3].reshape(height, width, 3)
         return float(np.percentile(rgb.max(axis=2), percentile))
 
+    @staticmethod
+    def frameBrightness(image) -> float:
+        """Full-frame settle metric (SPEC_capture_quality.md §14.8, fix 2): the MEAN of the brightest channel over
+        ALL pixels. `channelPeak` tracks the p99.9 PEAK, which saturates/plateaus at the AE target while the mid and
+        dim regions are still ramping — so a settle keyed on it can read "stable" too early. A frame MEAN stays in
+        the linear range and keeps moving until the WHOLE frame (dim regions included) has settled, and it is
+        camera-agnostic (no assumption that the ramp is uniform). Not for the sweep search — brightness only. 0.0 if
+        missing."""
+        if image is None:
+            return 0.0
+        converted = image.convertToFormat(image.format())
+        width, height = converted.width(), converted.height()
+        pointer = converted.constBits()
+        pixels = np.frombuffer(pointer, np.uint8).reshape(height, converted.bytesPerLine())
+        rgb = pixels[:, :width * 3].reshape(height, width, 3)
+        return float(rgb.max(axis=2).mean())
+
     def __select(self, measured: dict, target: int, fallback: int) -> int:
         """Brightest exposure whose measured brightness stays <= target; if every probe clips (all > target),
         the dimmest one (least clipped); `fallback` only if nothing was measured."""
