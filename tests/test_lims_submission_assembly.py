@@ -67,11 +67,15 @@ class SubmissionAssemblyTest(unittest.TestCase):
             _appUser(), _setup(style=None), _pluginInfo(), b"x")
         self.assertEqual(submission.instrument.kind, "Spectrometer")
 
-    def test_missing_vendor_sensor_are_blank_not_crash(self):
+    def test_missing_vendor_sensor_default_not_blank(self):
+        # Vendor/sensor are a hard invariant (a real spectrometer always has them). If the graph is
+        # nonetheless incomplete we substitute a non-empty house label rather than send SENAITE a blank-title
+        # Manufacturer/Supplier — a blank field IS the corrupt-data exposure we want to avoid. "Spectracs" is a
+        # legitimate manufacturer name (also the hardware maker). SPEC_test_hygiene_debt.md T4.
         submission = LimsLogicModule().buildSubmission(
             _appUser(), _setup(vendor=None, sensor_seller=None), _pluginInfo(), b"x")
-        self.assertEqual(submission.instrument.manufacturer, "")
-        self.assertEqual(submission.instrument.supplier, "")
+        self.assertEqual(submission.instrument.manufacturer, "Spectracs")
+        self.assertEqual(submission.instrument.supplier, "Spectracs")
 
     def test_plugin_slice_and_report(self):
         s = self.submission

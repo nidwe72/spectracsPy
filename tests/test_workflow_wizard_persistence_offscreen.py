@@ -13,8 +13,9 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtGui import QImage
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication
 
+from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.persistence.database.spectral.PersistSpectralWorkflowLogicModule import PersistSpectralWorkflowLogicModule
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
@@ -108,9 +109,11 @@ class WizardPersistenceOffscreenTest(unittest.TestCase):
         viewWizard.onClickedNext()  # Save changes -> updateMetadata + Home
         self.assertEqual(self.__title(self.persist.findById(workflowId)), "Batch Beta")
 
-        # 3) delete (confirm dialog auto-accepted)
-        original = QMessageBox.question
-        QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+        # 3) delete — the confirm is an IN-WINDOW modal (InWindowDialog.confirm) that spins its OWN nested
+        # event loop; headless nobody clicks it, so it must be auto-accepted. Patching QMessageBox.question
+        # does nothing here (wrong dialog) — that mis-target is what used to hang the whole suite (T2).
+        original = InWindowDialog.confirm
+        InWindowDialog.confirm = staticmethod(lambda *a, **k: True)
         try:
             deleteWizard = self.__wizard()
             deleteWizard.setViewWorkflow(workflowId)
@@ -118,7 +121,7 @@ class WizardPersistenceOffscreenTest(unittest.TestCase):
             self.app.processEvents()
             deleteWizard.onClickedDelete()  # Delete
         finally:
-            QMessageBox.question = original
+            InWindowDialog.confirm = original
         self.assertIsNone(self.persist.findById(workflowId))
 
     def __title(self, workflow):
