@@ -575,8 +575,8 @@ byte-identical across sign→exec.
 > - **NOT yet rig-verified:** the live GUI click-through (publish a real pumpkin `1.1.0` from the app → assign → log
 >   in as the serial → the sealed DB version loads & runs) — the F16 first-real-publish runbook. Paths verified by
 >   unit tests + headless import only.
-> - **Still deferred:** A3 provenance stamp (needs a `SpectralWorkflow.pluginVersion` migration); B6 bench DB-listing
->   *live* verification; B7 Android; B8 batch-assign.
+> - **Still deferred:** A3 provenance stamp (needs a `SpectralWorkflow.pluginVersion` migration — build plan below);
+>   B7 Android; B8 batch-assign. *(B6 bench DB-listing is rig-verified — Edwin 2026-07-19.)*
 
 **Provenance (A3) rides B5.4 for free:** once the session carries `(codeRef, version)`, `WizardViewModule:576`
 (`workflow.pluginCodeRef = session.getPluginCodeRef()`) can also stamp the version — the first real reader, exactly as
@@ -730,6 +730,107 @@ Assign one `(codeRef, version)` to **many serials** at once (a rollout console b
 over the existing per-serial `saveSetup` — a selection list + a loop. No model change. Deferred until there is a fleet
 large enough to feel the one-at-a-time pain; recorded so the per-serial design (B5) is understood as its building block,
 not a dead end.
+
+#### A3 — provenance stamp build plan (drafted 2026-07-19; ✅ A3.1–A3.5 IMPLEMENTED 2026-07-19)
+
+> **✅ IMPLEMENTED 2026-07-19** (A3.1–A3.5, `test_workflow_persistence` green — 2 tests incl. the NULL-version
+> case; app DB migrated to head `f0ac79b33dde`; fresh-install `create_all` verified to build the column):
+> - `SpectralWorkflow.pluginVersion = Column(String)` (nullable) + `toReportJson()` header carries it.
+> - `WizardViewModule.__saveNewRun` stamps `session.getPluginVersion()` beside the existing `pluginCodeRef` stamp.
+> - Migration `f0ac79b33dde` — **hand-written** to a single `add_column`. **F-a3-3 was worse than predicted:**
+>   autogenerate proposed **dropping the whole workflow table graph**, because `AllEntities` (Alembic's
+>   `target_metadata` source) imports the `databaseEntity.spectral.device.*` tables but **not** the
+>   `model.spectral.SpectralWorkflow` graph — those register on `DbBaseEntity.metadata` only at app runtime, so the
+>   isolated Alembic env is blind to them (same root cause as the baseline never capturing them). Body discarded,
+>   replaced with the intended `batch_alter_table … add_column('pluginVersion')`.
+> - **A3.4 stamp is on the desktop tree only**; the Android `app_src`/`.buildozer`/spike copies are untouched (B7).
+> - **⚠️ Latent finding (NOT fixed — separate concern):** `AllEntities` omitting the workflow graph means all
+>   future workflow-table migrations will mis-autogenerate the same way. A one-line-per-entity fix to `AllEntities`
+>   would make the workflow graph visible to Alembic; deferred as its own change (touches the schema-migrations
+>   infra-spec, not A3). Recorded here so the next workflow migration author expects the hand-clean.
+
+
+
+**Both 2026-07-18 blockers are now down.** The ⚠️ note deferred A3 for two reasons — "no reader/sink" and
+"`version` is vacuous pre-B0". B0 shipped per-version rows, and Slice 1 (B5.4) put `pluginVersion` on the session
+(`CurrentUserSession.getPluginVersion()`), so `version` is now a real identity. A3 is the one-liner §8 promised —
+*written at the moment there is finally a reader.* That moment has arrived.
+
+##### Rubber-duck findings (impl)
+
+- **🟢 F-a3-1 — the reader is LIVE, not M2-dormant. This is the headline correction.** The original note assumed
+  the first sink would be M2's PDF JSON (design-only). Wrong: **`SpectralWorkflow` *is* the persisted DB row**
+  (Option A / concept §9.5) — run metadata `{username, userId, pluginCodeRef, timestampIso}` are real
+  `Column(String)`s stamped at Save (`SpectralWorkflow.py:15-18`), and the **saved-runs overview already reads that
+  header live** (`SpectralJobsOverviewViewModule.py:68` reads `workflow.timestampIso`). So provenance has a real,
+  shipping home *today* — A3 no longer waits on M2. There are **two** readers: the persisted row (live) and
+  `toReportJson()`'s `header` (`SpectralWorkflow.py:64-65`, dormant until M2 but already emits `pluginCodeRef`).
+- **🟢 F-a3-2 — single stamp site, no bench mirror.** Only one place stamps run metadata:
+  `WizardViewModule.__saveNewRun` (`WizardViewModule.py:572-578`). The bench does **not** have its own save/stamp
+  path (unlike the acquisition-guidance logic, which is mirrored). So the stamp is literally **one line at one
+  site** — `workflow.pluginVersion = session.getPluginVersion()` beside line 577.
+- **🟠 F-a3-3 — the migration wrinkle: `spectral_workflow` was never captured by Alembic.** The app baseline
+  migration (`7200faf1d770`) creates only `application_config` + `application_config_to_spectrometer_profile`; the
+  entire workflow table graph is built by `create_all`, never by a migration. Consequence for the add-column
+  migration: author it with `authorMigration.sh` **against an up-to-date `create_all`-built dev DB** — autogenerate
+  compares the ORM to the *live DB* (not to migration history), sees `spectral_workflow` already present, and emits
+  exactly `op.add_column('spectral_workflow', sa.Column('pluginVersion', sa.String()))`. **Eyeball the generated
+  script** and delete any spurious `create_table('spectral_workflow'…/…phase/…step…)` ops if it was authored
+  against a DB that happened to lack them. Both DatabaseInitializer paths then work: **case 1 (fresh)** →
+  `create_all` builds the column from the current ORM + `stamp head` (migration skipped); **case 2 (evolve)** →
+  `upgrade head` runs the new `add_column`. (`DatabaseInitializer.py:38-46`.)
+- **🟢 F-a3-4 — column semantics settled by precedent; no decision.** `pluginVersion = Column(String)`, **nullable**;
+  `NULL`/`None` = *"shipped built-in / versionless"* — precisely what `getPluginVersion()` returns for a bare or
+  built-in binding (F16 sealedness dispatch). Mirrors `pluginCodeRef` exactly. **No backfill** of pre-A3 rows: their
+  producing version can't be reconstructed, so `NULL` correctly reads as "unknown/built-in".
+
+##### The settled design (no open decisions)
+
+Four touches, each a mechanical mirror of the existing `pluginCodeRef` field:
+
+1. **Model** — add `pluginVersion = Column(String)` to `SpectralWorkflow` beside `pluginCodeRef`
+   (`SpectralWorkflow.py:17`); add it to the `toReportJson()` `header` dict beside `pluginCodeRef`
+   (`SpectralWorkflow.py:65`).
+2. **Migration** — one hand-verified `op.add_column` on the **app** tree (F-a3-3).
+3. **Stamp** — one line in `__saveNewRun` (`WizardViewModule.py:577`).
+4. **Test** — extend `test_workflow_persistence._buildWorkflow` to set `pluginVersion` and assert it round-trips
+   through save→reload (it already round-trips `pluginCodeRef`).
+
+##### ✅ D-a3-display RESOLVED — (a) record only (Edwin 2026-07-19)
+
+**Provenance is a *record*, not a display.** The version is stamped on the persisted `SpectralWorkflow` row and rides
+`toReportJson()` into M2's embedded JSON — that is the whole of A3. The saved-runs overview is **not** changed to show
+the producing version. (The `SpectrometerSetupListViewModule` "title @ version" precedent stays where it is — that's
+the *binding* console, a different surface.) If runs should later *advertise* their producing version, that is a
+separate follow-up, explicitly out of A3. **A3 now has no open decisions — the plan below is complete.**
+
+##### Implementation phases
+
+```
++--------+-------------------------------------------------+--------------------------------+---------------------------------------------+
+| Phase  | Change                                          | Where                          | Verify                                      |
++--------+-------------------------------------------------+--------------------------------+---------------------------------------------+
+| A3.1   | `pluginVersion = Column(String)` (nullable)     | spectracsPy-model:             | ORM imports; new field defaults None        |
+|        | beside `pluginCodeRef`                          | SpectralWorkflow.py:17         |                                             |
++--------+-------------------------------------------------+--------------------------------+---------------------------------------------+
+| A3.2   | add `"pluginVersion": self.pluginVersion`       | SpectralWorkflow.py:65         | header dict carries version (dormant->M2)    |
+|        | to the `toReportJson()` header dict             | (toReportJson)                 |                                             |
++--------+-------------------------------------------------+--------------------------------+---------------------------------------------+
+| A3.3   | `authorMigration.sh` app -> hand-verify it is   | spectracsPy-model/alembic/     | fresh DB (case 1) has column via create_all;|
+|        | ONLY `op.add_column(...pluginVersion...)`       | app/versions/*                 | existing DB (case 2) upgrades cleanly       |
+|        | (strip any spurious create_table) [F-a3-3]      |                                |                                             |
++--------+-------------------------------------------------+--------------------------------+---------------------------------------------+
+| A3.4   | `workflow.pluginVersion =                       | WizardViewModule.py:577        | saved run's row carries the bound version;  |
+|        | session.getPluginVersion()` (one line)          | (__saveNewRun)                 | built-in binding -> NULL                    |
++--------+-------------------------------------------------+--------------------------------+---------------------------------------------+
+| A3.5   | round-trip test: set + assert `pluginVersion`   | tests/                         | save->reload preserves pluginVersion;       |
+|        | survives save->reload                           | test_workflow_persistence.py   | None-case preserved as NULL                 |
++--------+-------------------------------------------------+--------------------------------+---------------------------------------------+
+```
+
+All five phases are the decision-free core: provenance recorded end-to-end, both readers fed (the live persisted row
++ the dormant-until-M2 `toReportJson` header). No saved-runs UI change — D-a3-display = (a). **This closes A3 as a
+DESIGN; impl on explicit request.**
 
 ## 9. Dropped from the original D0–D8
 

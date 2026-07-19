@@ -29,6 +29,7 @@ def _buildWorkflow():
     workflow.username = "pumpkinTestUser"
     workflow.userId = USER_ID
     workflow.pluginCodeRef = "x.Plugin"
+    workflow.pluginVersion = "1.1.0"  # A3 provenance: the resolved plugin version
     workflow.timestampIso = "2026-07-02T15:04:00"
 
     processing = SpectralWorkflowPhase()
@@ -85,6 +86,10 @@ class WorkflowPersistenceTest(unittest.TestCase):
         self.assertEqual(verdicts[0].roastState, "PERFECT-ROASTED")
         self.assertEqual(verdicts[0].hueDegrees, 60.0)
 
+        # A3 provenance: the resolved plugin (codeRef, version) round-trips
+        self.assertEqual(loaded.pluginCodeRef, "x.Plugin")
+        self.assertEqual(loaded.pluginVersion, "1.1.0")
+
         # metadata
         self.assertEqual(self.__title(loaded), "Batch A")
 
@@ -100,6 +105,15 @@ class WorkflowPersistenceTest(unittest.TestCase):
         self.assertIsNotNone(self.persist.findById(workflowId))
         self.persist.delete(workflowId, userId=USER_ID)
         self.assertIsNone(self.persist.findById(workflowId))
+
+    def test_builtin_binding_persists_null_version(self):
+        # A3: a built-in / versionless binding stamps None -> stored + reloaded as NULL, not "".
+        workflow = _buildWorkflow()
+        workflow.pluginVersion = None
+        self.persist.save(workflow)
+        loaded = self.persist.findById(workflow.id)
+        self.assertIsNone(loaded.pluginVersion)
+        self.persist.delete(workflow.id, userId=USER_ID)
 
     def __title(self, workflow):
         return [f for f in workflow.getMetadataFields() if f.name == "title"][0].value

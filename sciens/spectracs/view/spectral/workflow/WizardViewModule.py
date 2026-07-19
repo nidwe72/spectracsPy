@@ -575,6 +575,7 @@ class WizardViewModule(PageWidget):
         workflow.username = session.username
         workflow.userId = session.userId
         workflow.pluginCodeRef = session.getPluginCodeRef()
+        workflow.pluginVersion = session.getPluginVersion()  # A3 provenance; None -> shipped built-in
         workflow.timestampIso = datetime.datetime.now().isoformat()
         specsByName = {spec.name: spec for spec in self.__plugin.metadata(workflow)}
         for name, value in self.__readMetadata().items():
