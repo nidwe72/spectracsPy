@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QSizePolicy, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QSizePolicy, QVBoxLayout
 
 from sciens.spectracs.logic.application.style.Metrics import Metrics
 from sciens.spectracs.model.spectral.plugin.view.MetricFieldView import MetricFieldView
@@ -70,15 +70,29 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
             font.setBold(True)
             label.setFont(font)
         grid.addWidget(label, row, 0, 1, 1)
+        # Three cases (SPEC_color_retrieval.md §F12): color+value → swatch + read-only field side-by-side (a colour
+        # chip with its HSL text); color only → a full-width swatch; value only → a read-only field.
         color = getattr(view, "color", None)
+        fieldHeight = QLineEdit().sizeHint().height()
         if color is not None:
-            # ‡ extended: the value cell renders a swatch instead of a text field. Fixed to the value-field
-            # height so the row height matches the text metrics sharing this grid (aligned label column).
-            swatch = QLabel()
             red, green, blue = color
+            swatch = QLabel()
             swatch.setStyleSheet("background-color: rgb(%d,%d,%d); border: 1px solid #444;" % (red, green, blue))
-            swatch.setFixedHeight(QLineEdit().sizeHint().height())
-            grid.addWidget(swatch, row, 1, 1, 1)
+            if view.value is not None:
+                swatch.setFixedSize(fieldHeight, fieldHeight)     # square chip beside the HSL field
+                cell = QWidget()
+                cellLayout = QHBoxLayout()
+                cellLayout.setContentsMargins(0, 0, 0, 0)
+                cellLayout.setSpacing(Metrics.S)
+                cell.setLayout(cellLayout)
+                cellLayout.addWidget(swatch)
+                field = QLineEdit(str(view.value))
+                field.setReadOnly(True)
+                cellLayout.addWidget(field)
+                grid.addWidget(cell, row, 1, 1, 1)
+            else:
+                swatch.setFixedHeight(fieldHeight)                # full-width swatch (aligns to the grid rows)
+                grid.addWidget(swatch, row, 1, 1, 1)
         else:
             field = QLineEdit(str(view.value))
             field.setReadOnly(True)
