@@ -63,12 +63,17 @@ whether the correction tightens A_blue / A_green / their ratio (D_Q should barel
 
 **Follow-ups.** Re-export oilG with paired metrics; extend to N≈5; then UC2 (one oil × two dilutions).
 
-**Reference-tilt investigation (oilJ, 2026-07-20).** The *absorbed* colour drifts ~5° run-to-run while *perceived*
-holds — traced to a ~1% reference-shape tilt (green vs blue/red) amplified by `−log₁₀` at low absorbance (SPEC
-§10.2). De-spike does NOT fix it (broadband, not a spike). **Diagnostic added:** capture now prints one
-`CAPTURE-SETTINGS role=… exposure_applied=… exposure_cv2=… wb=… autoWb=… gain=…` line per capture to stdout. To
-use: run `./runApp.sh` from a terminal, do Reference+Sample twice, then `grep CAPTURE-SETTINGS` the output — compare
-R1/S1 vs R2/S2. If exposure or wb differs → AE/AWB re-convergence is the source; if identical → lamp thermal drift.
+**Reference-tilt investigation (oilJ → diagnoseCapture, 2026-07-20) — SOLVED.** The *absorbed* colour drifts ~5°
+run-to-run while *perceived* holds — traced to a reference-shape tilt (red↑ vs green/blue) amplified by `−log₁₀` at
+low absorbance (SPEC §10.2). `CAPTURE-SETTINGS` logging showed exposure/WB/gain **identical** across runs (rules out
+AE/AWB). `diagnoseCapture.py` (real ELP, same pot untouched) then showed the tilt **resets after an idle gap** —
+ruling out evaporation (irreversible, hours-scale) and the lamp (external, always on) — and a `--ae-once` warm-up
+run gave a **clean single-exponential** red/green vs time: **camera sensor self-heating** (channel-balance /
+responsivity drift; the dark-frame test missed it because that's dark *offset*, not gain). **τ = 2.9 min, settles to
+within noise by ~9 min, 1.68% total shape change.** **FIX: warm up the camera ~10 min (stream) before measuring, and
+keep R→S close in time** — then R and S share the sensor state and the tilt cancels in `S/R`. Curve:
+`spectracs-references/tmp/sensor_warmup_curve.png`. Tools: `runDiagnose.sh` / `diagnoseCapture.py`
+(`--runs/--interval/--ae-once/--frames`), `CaptureDiagnosticsLogger` (per-frame JSON via `SPECTRACS_LOG_SPECTRA`).
 
 ---
 

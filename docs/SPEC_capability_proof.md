@@ -647,6 +647,12 @@ exposure_cv2=… wb=… autoWb=… gain=…` line to stdout (`CapturePanel.__log
 `grep CAPTURE-SETTINGS` — if exposure/wb differ run-to-run it's AE/AWB; if identical it's thermal. See
 [[spectracs-capture-settings-logging]].
 
+**ROOT CAUSE FOUND (2026-07-20): camera sensor SELF-HEATING** — the reference-shape tilt is a per-channel
+responsivity/QE drift as the sensor warms (τ≈2.9 min, ~1.68% red/green, settles ~9 min); ruled AE/AWB (settings
+pinned), evaporation (reversible after idle) and lamp (external, warm) out; the camera cold-starts every run (streams
+only during ACQUISITION). Full write-up + fix options in **`SPEC_capture_quality.md §16`**. Confirmation pending: a
+warm re-run (1 oil ×2 after 10-min warm-up) to check it's the *whole* 5°.
+
 **Deepest lever:** the absorbed colour is fragile only because pumpkin oil at this dilution is nearly transparent
 (T≈0.9). **Less dilution → larger A → out of the log-amplified regime** — now feasible since the max()-reduction
 restored blue fidelity (the heavy dilution was to fight qGray's blue suppression, §15). Otherwise treat absorbed

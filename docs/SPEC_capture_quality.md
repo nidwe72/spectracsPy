@@ -1059,3 +1059,64 @@ captures, the metrics, stored data, and colour VALUES are all untouched. Why:
    the util (`maxChannel` — the mask `:129` already uses it, so reduction+mask become consistent); the calibration
    branch (`:58`) reads `pixelColor()` (QColor) not `pixel()` (int) to feed the scalar `toGrayMaximum`. **Do not**
    claim linearity: `max` recovers blue *signal* but values remain gamma-encoded (C1 is the separate, postponed fix).
+
+---
+
+## 16. Camera sensor SELF-HEATING — reference-shape drift over minutes  *(RIG-DIAGNOSED 2026-07-20)*
+
+**Symptom.** Same oil measured twice gives an **absorbed-colour hue that drifts ~5°** run-to-run while the
+*perceived* colour is stable. Root: the **reference SPD shape** tilts run-to-run (red ↑ vs green/blue by ~1%),
+amplified into the absorbed colour by `A = −log₁₀(S/R)` in the low-absorbance regime (pumpkin oil T≈0.9 → A≈0.02–0.05;
+a 1% transmission change → ~19% change in the tiny green `A`). See `SPEC_capability_proof.md §10.5`.
+
+### 16.1 Diagnosis chain (what it is NOT, then what it is)
+
+Instrumented capture with two diagnostics (both `spectracsPy` app + `spectracsPy-core`):
+- `CAPTURE-SETTINGS` line per capture (`CapturePanel.__logCameraSettings` → `VideoThread`/`CaptureBackend.readCameraSettings`): landed exposure + live V4L2 WB/gain/backlight.
+- `CaptureDiagnosticsLogger` (`SPECTRACS_LOG_SPECTRA=<dir>`): per-frame spectra + the C1 dim-frame keep-mask + brightness + reduced mean, hooked into the Qt-free `SpectralWorkflowEngine.captureAcquisitionStep`. Driven headless by `diagnoseCapture.py` / `runDiagnose.sh` (real ELP + local server; masterUserExakta calibration).
+
+Ruled out, in order:
+1. **AE / auto-WB drift** — `CAPTURE-SETTINGS` identical across runs (exposure=90, WB=6500, gain=0, all pinned).
+2. **Evaporation of the blank** — the drift **reverses after an idle gap** (a monotonic-loss process can't reset up); and it's hours-scale, not minutes (Edwin).
+3. **Lamp thermal / warm-up** — the Yuji lamp is external, always on, already warm; it doesn't cool in a 13-min idle. But the drift **reset** across that idle → the thing that cooled was the **camera** (released each session).
+4. **Sensor dark current** — a prior dark-frame test was clean. But that tests the *additive offset*; this is a *multiplicative per-channel responsivity/QE* drift — a different mechanism the dark test can't see.
+
+**Conclusion: camera sensor SELF-HEATING** — as the die warms from operation, per-channel QE drifts (red most temperature-sensitive), tilting the channel balance. Overall brightness stays pinned (~143, exposure holds it); only the *shape* moves.
+
+### 16.2 Quantified — the warm-up curve
+
+`diagnoseCapture.py --runs 15 --interval 45 --ae-once --frames 40` (fixed exposure, cold start) → `red/green` vs
+time is a **clean single exponential** `A − B·e^(−t/τ)`:
+
+| quantity | value |
+|---|---|
+| time constant τ | **171 s (2.9 min)** |
+| total shape change | **1.68%** (red/green 0.682 → 0.694) |
+| 90% / 95% settled | 6.6 min / 8.5 min |
+| within measurement noise of equilibrium | **~9 min** |
+
+Curve: `spectracs-references/tmp/sensor_warmup_curve.png`.
+
+### 16.3 The camera lifecycle makes it WORSE (code-confirmed)
+
+The camera does **NOT** run for the app's lifetime. It streams **only while the ACQUISITION step is the active
+view**: `WizardViewModule.__renderRealAcquisition()` calls `CapturePanel.startStream()` (opens the camera **cold**);
+`stopStream()` + `backend.release()` fire on navigating away (to Processing/Evaluation), `hideEvent`, or a plugin
+switch. So **every measurement run cold-starts the camera**, captures **R first at the coldest, steepest part of the
+curve**, then S ~30–60 s later while it warms fastest → the **R→S gain drift is maximised**, and it **resets every
+run**. Because the sensor gain cancels in `S/R` only when R and S share a temperature, this residual is exactly what
+tilts `A`; run-to-run variation in the cold-start state varies it → the observed hue drift.
+
+### 16.4 Fixes (options — DESIGN, implement on explicit request)
+
+Operational (no code): stay on acquisition streaming ~10 min before capturing R; keep the R→S gap minimal.
+App-side (the real fix, ranked):
+1. **Warm-up hold** — on entering acquisition, stream until `red/green` (or the reference shape) stabilises, or a fixed ~10 min, before enabling the capture button. Deterministic; the diagnostic already measures the stabilisation.
+2. **Keep the camera open/warm across phases** — don't `release()` on nav to Processing/Evaluation (only on plugin switch / app exit), so the sensor stays at equilibrium between R and S and between runs.
+3. **Minimise R→S** — capture S as soon after R as the protocol allows.
+
+⚠ Prerequisite honesty: confirm the mechanism accounts for the *full* 5° with a **warm re-run** (one oil × two runs after 10-min warm-up, R→S tight) — if the hue drift collapses to ~0–1°, self-heating was the whole story (`SPEC_capability_proof.md §10.5`). NOT yet done. Also: the intermittent gray-frame outliers (§14.8) are still un-reproduced (0 rejected across ~1500 diagnostic frames) — orthogonal to this shape drift.
+
+### 16.5 Tooling shipped (uncommitted at time of writing)
+
+`CaptureDiagnosticsLogger` (core), the `CAPTURE-SETTINGS` read-back (`CaptureBackend.readCameraSettings` / `VideoThread` / `CapturePanel`), the engine logging hook, `diagnoseCapture.py` (+ `--runs/--interval/--ae-once/--frames`), `runDiagnose.sh`, and `tests/test_capture_diagnostics_logger.py`.

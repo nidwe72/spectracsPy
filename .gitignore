@@ -26,3 +26,4 @@ android/server/*.apk
 .claude/settings.local.json
 # Stray camera capture probe (debug artifact)
 camera_capture_probe.png
+captureDiagnostics/

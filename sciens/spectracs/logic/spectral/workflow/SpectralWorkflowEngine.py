@@ -5,6 +5,7 @@ from sciens.spectracs.logic.playground.PlaygroundCalibrationLogicModule import P
 from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import ImageSpectrumAcquisitionLogicModuleParameters
+from sciens.spectracs.logic.spectral.acquisition.CaptureDiagnosticsLogger import CaptureDiagnosticsLogger
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
@@ -110,6 +111,9 @@ class SpectralWorkflowEngine:
         spectrum = self.__runBurst(frameCount, provider, onFrame)
         if spectrum is None:
             return None
+        # Env-gated diagnostic (SPEC_capability_proof.md §7.0.1): dump per-frame spectra + the C1 rejection mask +
+        # brightness for the reference gray-outlier investigation. No-op unless SPECTRACS_LOG_SPECTRA is set.
+        CaptureDiagnosticsLogger().log(role, spectrum)
         container = SpectraContainer()
         container.addToSpectra(spectrum, role)
         step.setContainer(container)
