@@ -465,6 +465,24 @@ class CapturePanel(QWidget):
 
     # --- capture (routes the burst through the headless engine seam) ---
 
+    def __logCameraSettings(self, role):
+        # One greppable line per capture (stdout, alongside the CaptureBackend prints): the AE-landed exposure and
+        # the live V4L2 controls. Compare Reference vs Sample and run-to-run to trace the reference-tilt that shifts
+        # the absorbed colour (SPEC_capability_proof.md §7.0.1). Best-effort — a diagnostic must never break capture.
+        thread = self.__videoThread
+        if thread is None:
+            return
+        try:
+            settings = thread.readCameraSettings()
+        except Exception as error:
+            print("CAPTURE-SETTINGS role=%s unavailable (%s)" % (role, error))
+            return
+        print("CAPTURE-SETTINGS role=%s exposure_applied=%s exposure_cv2=%s autoExposure=%s wb=%s autoWb=%s "
+              "gain=%s backlight=%s wbRequested=%s"
+              % (role, settings.get("appliedExposure"), settings.get("exposure"), settings.get("autoExposure"),
+                 settings.get("wbTemperature"), settings.get("autoWb"), settings.get("gain"),
+                 settings.get("backlight"), settings.get("whiteBalanceKelvinRequested")))
+
     def __onClickedCapture(self):
         if self.__resolvedIndex is None or self.__videoThread is None or self.__autoExposing:
             return
@@ -522,6 +540,10 @@ class CapturePanel(QWidget):
                 return
 
             self.__representativeFrames[role] = images[len(images) // 2]
+
+            # Diagnostic (SPEC_capability_proof.md §7.0.1): log the landed exposure / white-balance / gain for THIS
+            # capture, so reference-vs-sample and run-to-run drift (the absorbed-colour reference tilt) is traceable.
+            self.__logCameraSettings(role)
 
             if role == REFERENCE:
                 self.__lockedExposure = self.__exposureSlider.value()

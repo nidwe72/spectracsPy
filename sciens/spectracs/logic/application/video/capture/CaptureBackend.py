@@ -28,6 +28,11 @@ class CaptureBackend:
         """(width, height) actually delivered by the open device, or (None, None) if not open."""
         return (None, None)
 
+    def readCameraSettings(self) -> dict:
+        """Diagnostic read-back of the live camera controls (exposure / white-balance / gain / ...). Empty when
+        the backend has no such notion. Best-effort — never raises."""
+        return {}
+
     def release(self) -> None:
         pass
 
@@ -145,6 +150,30 @@ class DesktopCv2CaptureBackend(CaptureBackend):
 
     def getResolution(self):
         return (self._width, self._height)
+
+    def readCameraSettings(self) -> dict:
+        # Diagnostic read-back of the live V4L2 controls (SPEC_capability_proof.md §7.0.1 — the reference-tilt
+        # investigation: is the exposure / white-balance / gain drifting between reference and sample, run to run?).
+        # cv2 .get() is a lightweight control query (VIDIOC_G_CTRL), distinct from frame grabbing; each read is
+        # guarded so a failure yields a None entry rather than raising.
+        import cv2
+        if self._cap is None:
+            return {}
+
+        def get(prop):
+            try:
+                return self._cap.get(prop)
+            except cv2.error:
+                return None
+
+        return {
+            "exposure": get(cv2.CAP_PROP_EXPOSURE),
+            "autoExposure": get(cv2.CAP_PROP_AUTO_EXPOSURE),
+            "wbTemperature": get(cv2.CAP_PROP_WB_TEMPERATURE),
+            "autoWb": get(cv2.CAP_PROP_AUTO_WB),
+            "gain": get(cv2.CAP_PROP_GAIN),
+            "backlight": get(cv2.CAP_PROP_BACKLIGHT),
+        }
 
     def release(self) -> None:
         if self._cap is not None:

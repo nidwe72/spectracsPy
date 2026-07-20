@@ -300,13 +300,44 @@ the "Absorption (improved)" overlay in `processing()`; one extra `spectrumToHsl`
 `evaluation()`. `EvaluationColorUtil` / `__chip` / `MetricFieldView` / `SpectrumPlotView` **reused as-is**. The
 correction reaches the plugin through a small **`plugin_sdk`** exposure (keeps the plugin `plugin_sdk`-only, like
 `MeanOp`) — either a thin `baselineOffset` util or `SpectrumUtil.baselineOffset()` wrapped in `plugin_sdk`.
-**Open knob:** the transparent-window anchor for the offset (min over the green window vs the analysis-window
-min) — decide on first data. **Caveat:** the flat-offset removes only a *flat* `b`; if the rig's `b` is sloping
-(scatter/RI), a 1st-derivative or a large-window baseline is the fallback (§10.1) — the bench will reveal it.
+**Anchor — SETTLED (Edwin 2026-07-20): the analysis-window min.** Read the scalar `A` to subtract at the lowest-
+absorbance point across the whole analysis window (the truly transparent, signal-free region — most likely the
+red end), not the local green-window trough (which risks subtracting a real shoulder). Matches textbook practice
+(Rinnan 2009: offset-correct off the genuinely transparent region). The green-window min stays as a *knob* to try
+only if drift directly under the feature turns out to dominate. **Caveat:** the flat-offset removes only a *flat*
+`b`; if the rig's `b` is sloping (scatter/RI), a 1st-derivative or a large-window baseline is the fallback (§10.1)
+— the bench will reveal it.
+
+**The new LogicModule — name SETTLED: `FlatOffsetBaselineLogicModule`** (folder `logic/spectral/flatOffsetBaseline/`,
+method `flatOffsetBaseline`, sibling `…Parameters`/`…Result`). Parallels the existing `RemoveBaselineLogicModule`
+(both verb-first, both under `logic/spectral/`) and reads as "apply a flat offset baseline." *Flat* = 0th-order /
+constant (vs the morphological one); *Offset* = subtract a single scalar. (Considered: `OffsetBaselineLogicModule`,
+`AnchorBaselineLogicModule` — `FlatOffset…` is the combined name that names both the order and the operation.)
+The `plugin_sdk` exposure (`baselineOffset` / `SpectrumUtil.baselineOffset()`) delegates to this module.
+
+**Why not reuse `RemoveBaselineLogicModule` (the algorithm already in the tree):** it is a **morphological opening**
+(`minimum_filter1d` then `maximum_filter1d` over a resolution-adaptive window ≈ 10% of the spectrum width). It was
+built to isolate **sharp emission lines** for calibration peak-detection — with its default small window it would
+strip the **broad colour-carrying absorption envelope** we are trying to measure. A morphological opening with a
+*very large* window ≈ a flat offset, but that is a roundabout way to get a constant. So Entry 0 uses the dedicated
+`FlatOffsetBaselineLogicModule` directly. (This distinction is to be captured as a doc comment on
+`RemoveBaselineLogicModule` — see §8.1 pending code touches.)
 
 > **Common-mode caveat (see §10.4):** the camera-linearity nonlinearity is present in BOTH the raw and improved
 > paths, so Entry 0 stays valid as a *relative* comparison (the confounder cancels in the with-vs-without read);
 > only *absolute* colour claims inherit the linearity caveat.
+
+### 7.0.2 Capture ROI — narrow to the lamp's usable band  *(Edwin 2026-07-20)*
+
+The DEV plugin currently declares the host-clamped capture window as `WAVELENGTH_MIN_NM = 430.0` /
+`WAVELENGTH_MAX_NM = 650.0` (`DevSpectralPlugin`). **Decision: retune to `440.0 … 630.0 nm`** — the CFL lamp
+actually delivers reasonable light only across ~440–630, so the outer 430–440 / 630–650 edges feed the `S/R`
+floor-guard mostly noise. Narrowing the ROI keeps those dead margins out of the stored spectrum entirely.
+
+Guard: the window must still ⊇ every `declaredEvalBand()` (asserted in `acquisition()`). `440–630` covers the raw
+bands (blue 450–490, Q 555–600) **and** the incoming new PB literature bands (blue Soret slope **440**–460, green
+560–580, `Q_BASELINE` anchor 550) — the min moving to 440 is exactly what the new 440-nm blue band needs, so the
+two changes are consistent, not in tension. Update the §9/M1 comment block alongside the constants.
 
 ### 7.1 Two setups, in order
 
@@ -320,21 +351,27 @@ Setup A carries a glass-mismatch offset `b_glass` that will **not** transfer to 
 one any threshold work must use. Running A then B also **directly demonstrates** whether `b_glass` matters (does
 the separation survive the switch?).
 
-### 7.2 Run sequence
+### 7.2 Lab use cases (the run taxonomy — named by what each PROVES)
 
-0. **Run 0 / Entry 0 — colour, corrections on vs off, ONE oil × ONE dilution (§7.0).** The first diary entry and
-   first build target: capture one oil at one dilution, render the **colour chips only**, side-by-side **with and
-   without** each correction. **Observation to record:** whether/how the corrections shift the colour. No
-   invariance claim yet — this is the skeleton.
-1. **Run 1 — dilution-invariance, ONE oil (Edwin).** Take **one** oil (start with the
-   *typical green*) and measure it at the two dilutions: **2 drops** and **3 drops** in 3 ml isopropanol. Compare
-   the metric tables (§4.2) across the two dilutions. **Expectation to confirm:** the metrics barely move.
-   *This is the run that validates the whole "dilution-invariant by concept" premise before anything else.*
-2. **Run 2 — three-oil discrimination.** Measure all three oils (too-green / typical / brown), each at a fixed
-   dilution. **Expectation:** the metric vectors land in three visibly separated clusters (§2.4).
-3. **Run 3 (recommended) — repeatability.** Measure one oil **~5×** (re-prep each time). Field-readiness is
-   "does it give the same answer twice" (`SPEC_pumpkin_peak_ratio_eval.md §13.8 gap 2`); this is cheap and worth
-   knowing before any threshold. Also yields the **noise floor** to compare against `D_Q` (the metric's real SNR).
+Renamed 2026-07-20 (Edwin): "Entry 0 / Run 1-3" were unillustrative. Each use case is now named by the claim it
+tests. UC0 is the build skeleton; UC1-UC3 are the scientific runs. (Old → new: Entry 0 → UC0; Run 3 → UC1;
+Run 1 → UC2; Run 2 → UC3.)
+
+- **UC0 · Correction sanity — colour, corrections on vs off, ONE oil × ONE dilution (§7.0).** The build skeleton
+  and first diary entry: capture one oil at one dilution, render the **colour chips + paired metrics**, each shown
+  side-by-side **with and without** the correction (raw vs `· improved`). **Observation to record:** whether/how the
+  correction shifts each value. No invariance claim yet — this proves the machinery moves things sensibly.
+- **UC1 · Repeatability — ONE oil, same dilution, N runs.** Measure one oil **~5×** (re-prep each time). Proves
+  "does it give the same answer twice" (`SPEC_pumpkin_peak_ratio_eval.md §13.8 gap 2`) → the **variance floor** /
+  noise floor to compare against `D_Q` (the metric's real SNR). Cheap and worth knowing before any threshold.
+- **UC2 · Dilution-invariance — ONE oil, two dilutions (Edwin).** Take **one** oil (start with the *typical green*)
+  and measure it at **2 drops** and **3 drops** in 3 ml isopropanol. Compare the metric tables (§4.2) across the two
+  dilutions. **Expectation to confirm:** the metrics barely move. *This validates the whole "dilution-invariant by
+  concept" premise.*
+- **UC3 · Discrimination — three oils.** Measure all three oils (too-green / typical / brown), each at a fixed
+  dilution. **Expectation:** the metric vectors land in three visibly separated clusters (§2.4).
+
+Order to run: UC0 (skeleton, done) → UC1 (repeatability) → UC2 (invariance) → UC3 (discrimination).
 
 ### 7.3 Per-capture procedure (one-pot, Setup B)
 
@@ -355,9 +392,10 @@ Sloppy drop-counting is fine — the ratio cancels *how much* oil (§3). Effort 
 +----+-------------------------------------------+----------------------------------+-------------------------------------+---------+
 | Ph | What                                      | New / Touched                    | Gate (drive-and-observe)            | Risk    |
 +----+-------------------------------------------+----------------------------------+-------------------------------------+---------+
-| V1 | SNV op + wire the unused smooth/baseline   | NEW SnvSpectrumLogicModule (+     | On a captured A(λ): snv/baseline/   | LOW     |
-|    | into SpectrumUtil as composable steps      | Params/Result); TOUCH SpectrumUtil| smooth each produce a sane spectrum;|         |
-|    |                                            | (add snv())                      | façade order documented.            |         |
+| V1 | FlatOffset baseline op (Entry-0 needs it)  | NEW FlatOffsetBaselineLogicModule | On a captured A(λ): flatOffset/snv/ | LOW     |
+|    | + SNV op (bench toggle) + wire smooth/      | + SnvSpectrumLogicModule (+ each   | baseline/smooth each produce a sane |         |
+|    | baseline into SpectrumUtil as steps        | Params/Result); TOUCH SpectrumUtil| spectrum; façade order documented.  |         |
+|    |                                            | (add flatOffset()/snv())         |                                     |         |
 +----+-------------------------------------------+----------------------------------+-------------------------------------+---------+
 | V2a| ** FIRST IMPL TASK / Diary Entry 0 (§7.0)**| TOUCH DevSpectralPlugin.evaluation| One oil, one dilution: colour chips  | LOW-MED |
 |    | COLOUR ONLY, corrections ON vs OFF, one    | + DevMeasurementBenchViewModule   | shown WITH vs WITHOUT each correction|         |
@@ -398,6 +436,82 @@ the calibrated verdict edges are the *next* milestone (peak-ratio P5), not this 
 > reduction** `qGray → max-channel` (`SPEC_capture_quality.md §15`, G1–G6). Every metric here reads that reduction; the
 > current `qGray` suppresses blue ~3×, forcing heavy dilution. It doesn't *bias* the metrics (it cancels in `T/A`)
 > but it caps blue fidelity/headroom — so it lands **before** the V phases.
+
+### 8.1 Entry-0 concrete code touches — the E-phases  *(IMPLEMENTED 2026-07-20)*
+
+Entry 0 (colour-only walking skeleton) is a **subset of V1+V2a**: flat-offset + light SG only, **no SNV** (RD-B —
+SNV is deferred to the V2 eureka bench, not needed for the colour skeleton). Settled design decisions:
+
+- **G1 seam = two SDK ops (option B), NOT a `SpectrumUtil` export.** Add role-agnostic `BaselineOffsetOp` +
+  `SmoothOp` (thin `SpectraContainer → SpectraContainer` adapters, like `MeanOp`), exported through `plugin_sdk`.
+  Keeps the SDK curated, mirrors what the plugin already composes with, and these two ops become V2's toggle units.
+  The ops are **non-destructive** (deep-copy each spectrum before the LogicModule mutates it) — mandatory, because
+  the raw `absorption` object is reused by the raw chip, the metrics, and the raw plot in the same `evaluation()`.
+- **G2 = colour-only overlay.** `SpectrumPlotView.addTrace(spectrum, label, color)` has **no linestyle**, so the
+  "Absorption (improved)" tab is two *coloured* traces (raw muted grey `0.6`, improved green `g`), not dashed.
+- **G3 = light SG** = 1 pass / window 7 / polyorder 3 (`SmoothOp` defaults).
+- **G4/RD-A = robust floor lives INSIDE the module.** `FlatOffsetBaselineLogicModule` reads its scalar floor as the
+  **minimum of a median-filtered copy** (a moving median rejects a lone cold pixel that a peak-preserving
+  Savitzky-Golay would *not* — caught while testing), then subtracts from the raw input — making the op
+  order-independent while external composition stays literature-correct (offset → light SG, §10.1). The median
+  filter is its **own** `MedianFilterSpectrumLogicModule` (not inline scipy) — a distinct smoothing algorithm gets
+  its own module, like `SmoothSpectrumLogicModule` for Savitzky-Golay; `FlatOffsetBaselineLogicModule` delegates.
+
+```
++----+---------------------------------------------+-------------------------------------+----------+
+| Ph | What                                        | File(s) — New·Touch                 | Repo     |
++----+---------------------------------------------+-------------------------------------+----------+
+| E1 | FlatOffsetBaselineLogicModule: floor =      | NEW flatOffsetBaseline/{Module,     | core     |
+|    | min(median-filtered copy) -> subtract from  | Parameters, Result}.py + NEW        |          |
+|    | RAW -> clip>=0 (G4/RD-A). Median = its OWN  | medianFilter/{Module,Parameters,    |          |
+|    | MedianFilterSpectrumLogicModule (not inline)| Result}.py; SpectrumUtil.medianFilter|         |
+| E2 | Role-agnostic non-destructive SDK ops:      | NEW ops/BaselineOffsetOp.py,        | core     |
+|    | BaselineOffsetOp(->E1) + SmoothOp; export   | ops/SmoothOp.py; TOUCH plugin_sdk/  |          |
+|    | via plugin_sdk (SpectrumUtil NOT exported)  | __init__.py                         |          |
+| E3 | Doc comment on RemoveBaselineLogicModule    | TOUCH RemoveBaselineLogicModule.py  | core     |
+| E4 | __improvedAbsorption(a) + 2 twin chips      | TOUCH DevSpectralPlugin.evaluation  | plugins  |
+| E5 | "Absorption (improved)" PROCESSING tab      | TOUCH DevSpectralPlugin.processing  | plugins  |
+| E6 | ROI 430/650 -> 440/630 + §9 comment         | TOUCH DevSpectralPlugin (consts)    | plugins  |
+| E7 | Diary Entry 0 scaffold                       | NEW LAB_DIARY_capability_proof.md   | docs     |
++----+---------------------------------------------+-------------------------------------+----------+
+Tests (spectracsPy/tests): FlatOffset LogicModule unit (E1), BaselineOffsetOp/SmoothOp op tests (E2),
+headless evaluation "7 chips + improved hue" (E4). Never edit android/*/app_src (stale build-staging).
+```
+
+### 8.2 De-spike batch (F-phases) — *(IMPLEMENTED 2026-07-20, after the oilH finding)*
+
+The UC1 repeatability data (oilH, §7.0.1 below) showed the flat-offset **hurts** the small band-mean metrics (it
+subtracts a floor comparable to `A_green` and injects its own variance). Two corrections + a de-spike, so the
+processing becomes a clean ladder:
+
+```
+raw ──[de-spike: median k≈7]──► despiked ──[flat-offset: red-end anchor mean]──► despiked+baseline
+        │                                                                              │
+        └── METRICS = raw + `· despiked`  (flat-offset dropped from metrics)           │
+            COLOUR (10-chip set) uses raw / despiked / despiked+baseline  ◄────────────┘
+            (processed rungs hue-normalized; NO SG — near-no-op for chromaticity, Edwin)
+```
+
+- **De-spike (F1)** — new `MedianFilterOp` (wraps `MedianFilterSpectrumLogicModule`, kernel 7, non-destructive).
+  Removes the narrow **instrument** spikes (the ~473 nm blue-pump edge, the ~607 nm registration artifact) while
+  leaving broad oil bands intact. Safe for every metric (oil features are 20–100 nm; spikes are 1–5 px).
+- **Floor estimator (F2)** — `FlatOffsetBaselineLogicModule` gains `floorMode`: **`anchorMean`** (default) = mean of
+  `A` over a deep-red transparent window **[615, 625] nm**, OUTSIDE every metric band and low-variance (a mean, not
+  a min); **`medianMin`** (the old min-of-median) kept selectable per Edwin.
+- **Metrics colour-split (F3/F4)** — metrics recompute on **raw + de-spiked** (flat-offset removed from them);
+  `D_Q` still barely moves (local baseline), `A_blue` drops where the ~473 spike inflated it. De-spike computed
+  once, shared.
+- **Colour = a 10-variant set (Edwin 2026-07-20)** — intrinsic (absorbance) then intrinsic-perceived (+180°
+  complement) then perceived (transmission). Each intrinsic family: **natural, hue-norm, · despiked,
+  · despiked + baseline**; perceived: **natural + hue-norm**. Processed rungs are hue-normalized (fixed S/L) so only
+  HUE moves. `baseline-corrected` = de-spike → flat-offset(anchorMean), **NO SG** (near-no-op for chromaticity).
+- **Ladder tab (F5)** — the PROCESSING absorption tab shows three traces: raw (grey) → despiked (orange) →
+  despiked+baseline (green), so the spike removal and baseline shift are visible.
+- **Kernel caveat:** k=7 fully kills the ~473 spike (~2 px) but only tames the ~607 (~5 px); bump to 9 on the rig
+  if needed (607 is outside all bands anyway). Rig re-export pending to see raw-vs-despiked on real `b`.
+
+Tests: `test_flat_offset_baseline.py` (both floor modes, MedianFilterOp), `test_dev_plugin_improved_colour.py`
+(despiked metric twins, 3-trace ladder). 46 targeted tests green.
 
 ---
 
@@ -456,6 +570,27 @@ Confidence is flagged: **[consensus]** = textbook/review; **[single-paper]**; **
   **XYZ/Lab, sRGB only for display** — matches our K-series converter split. **[consensus]** — Brühl 2021.
 - DIY practice: **lock exposure/gain/WB at 6500 K**, read **grayscale along dispersion** — matches our
   `DevCaptureVideoThread` 6500 K + qGray. **[community + peer-reviewed consensus]** — Public Lab; Ju et al. HardwareX 2021.
+- **The rig lamp is a Yuji SunWave 6500 K bulb** — a phosphor-converted white LED (a **blue pump chip ~455–475 nm
+  + broad phosphor** down-conversion), matching the 6500 K WB lock. Its SPD is therefore a narrow-ish blue peak
+  (~20 nm FWHM) riding on a very broad (~100–150 nm) phosphor hump, plus a red-phosphor shoulder ~590–600 nm
+  (see `spectracs-references/tmp/lamp_spd_annotated.png`, built from a reference raster).
+- **The two sharp `A(λ)` spikes are NOT both lamp lines (raster-verified 2026-07-20):**
+  - **~473 nm = REAL lamp feature** — the blue pump peak; a genuine narrow bright column in the blue channel of the
+    raster, present in both reference and sample. It sits **inside `BLUE_BAND` (450–490)** and is reference-gated
+    *kept*, so it mildly contaminates `A_blue`.
+  - **~607 nm = a registration ARTIFACT, not a line** — the raster red channel is smooth there (no bump), just a
+    steep rolloff; the spike is sub-pixel R/S misregistration on that steep slope not cancelling in S/R. It lands
+    **outside every eval band** (`Q_BASELINE` ends 600), so it touches no metric.
+  - Future (roadmap, not Entry-0): mask the blue-pump column out of `A_blue` and/or sub-pixel-align R vs S so
+    steep-slope artifacts stop leaking.
+- **Why the blue spike only became obvious after the max()-reduction (Edwin, §15 `ColorGrayUtil.toGrayMaximum`):**
+  not a bug of max() — it *stopped hiding* the feature. `qGray` at the blue-pump column is ~58% green-channel /
+  42% blue (Rec.601 weights blue ×0.114), and the green channel there is on its smooth phosphor slope (no peak) —
+  so `qGray` **smears the sharp blue peak into the smooth green**, flattening its edges → tiny A-spike. `max()` is
+  the *pure blue channel* = the sharp peak, steep edges intact → the sub-pixel-drift non-cancellation shows. So
+  max() gives the faithful blue (what we want for `A_blue`) and the de-spike cleans the surfaced artifact — the
+  chain (max() for fidelity → de-spike for the artifact) is consistent. A pure amplitude scaling would cancel in
+  the ratio; the effect is **shape/weighting**, not scale.
 
 ### 10.3 Camera & optical confounders (ranked) — standard fix + our state
 
@@ -486,6 +621,36 @@ dark-frame subtraction** anywhere before `T=S/R` / `A=−log10(S/R)`. The only `
 (Edwin 2026-07-20): POSTPONED** — recorded as state, not a task. When picked up it belongs in
 [`SPEC_capture_quality.md`](SPEC_capture_quality.md). Entry 0 remains valid meanwhile because the nonlinearity is
 **common-mode** across the raw/improved comparison (§7.0.1 caveat).
+
+### 10.5 The absorbed-colour reference tilt — UC1 finding (oilJ, 2026-07-20)
+
+**Observation.** Run-to-run (same oil), the **perceived** colour is rock-stable (H89 → H89) but the **absorbed**
+(intrinsic) colour drifts **~5° hue** (H282 → H287). De-spiking does **not** remove it (still 5°), so it is a
+*broadband* effect, not the blue-pump spike.
+
+**Root cause (raster-verified).** The reference SPD **shape** tilts ~1% run-to-run (green ~1% down vs blue/red;
+`R2/R1` ≈ blue 1.006 / green 0.994 / red 1.011). That tiny tilt blows up in the absorbed colour because:
+- **Perceived** = CIE colour of `T = S/R`, dominated by the **high-transmission** green–red window (T≈0.94), read
+  *linearly* → a ~1% shift barely moves it.
+- **Absorbed** = CIE colour of `A = −log₁₀(S/R)`, in the **low-absorbance** regime (A≈0.02–0.05). The `−log₁₀`
+  amplifies (`dA = −dT/(T·ln10)`): a **+1.2% green T** becomes a **−19% swing in the small green A** (0.026→0.021),
+  which tilts the absorbed hue's blue/green balance. Same fragility as `A_green` (the oilH finding) — the
+  **low-A + log-amplification** regime.
+
+**Likely source of the reference tilt (ranked):** (1) AE / auto-WB re-convergence between captures; (2) lamp
+thermal drift (the LED's blue-pump-to-phosphor ratio shifts with junction temperature). Both re-captured references
+carry it.
+
+**Diagnostic shipped (2026-07-20):** each acquisition burst prints a `CAPTURE-SETTINGS role=… exposure_applied=…
+exposure_cv2=… wb=… autoWb=… gain=…` line to stdout (`CapturePanel.__logCameraSettings` → `VideoThread` /
+`CaptureBackend.readCameraSettings`). Runbook: `./runApp.sh` from a terminal, capture Reference+Sample twice,
+`grep CAPTURE-SETTINGS` — if exposure/wb differ run-to-run it's AE/AWB; if identical it's thermal. See
+[[spectracs-capture-settings-logging]].
+
+**Deepest lever:** the absorbed colour is fragile only because pumpkin oil at this dilution is nearly transparent
+(T≈0.9). **Less dilution → larger A → out of the log-amplified regime** — now feasible since the max()-reduction
+restored blue fidelity (the heavy dilution was to fight qGray's blue suppression, §15). Otherwise treat absorbed
+colour as a *soft* signal and lean discrimination on `D_Q` (immune to all of this).
 
 ## 11. Cross-references
 

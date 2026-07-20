@@ -69,6 +69,16 @@ class VideoThread(QThread,Generic[S]):
     def setDeviceId(self, deviceId: int):
         self._deviceId = deviceId
 
+    def readCameraSettings(self) -> dict:
+        # Diagnostic snapshot of the live camera controls for the reference-tilt investigation
+        # (SPEC_capability_proof.md §7.0.1): the backend's live read-back merged with what THIS thread applied
+        # (the AE-landed exposure) and the requested white-balance mode. Safe on virtual/headless (no backend →
+        # just the applied values).
+        settings = self._backend.readCameraSettings() if self._backend is not None else {}
+        settings["appliedExposure"] = self._appliedExposure
+        settings["whiteBalanceKelvinRequested"] = self.WHITE_BALANCE_KELVIN
+        return settings
+
     def setExposure(self, exposure: int):
         self._exposure = exposure
 
