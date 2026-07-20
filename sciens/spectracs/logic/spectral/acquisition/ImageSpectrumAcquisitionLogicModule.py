@@ -1,10 +1,11 @@
 from typing import Dict
 
 import numpy as np
-from PySide6.QtGui import qGray, QColor, QImage
+from PySide6.QtGui import QColor, QImage
 from numpy import poly1d
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
+from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from sciens.spectracs.logic.spectral.acquisition.RobustReductionLogicModule import RobustReductionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import \
     ImageSpectrumAcquisitionLogicModuleParameters
@@ -55,9 +56,11 @@ class ImageSpectrumAcquisitionLogicModule:
             valuesByNanometers={}
 
             for pixelIndex in range(1,imageWidth):
-                valuesByNanometers[pixelIndex]=qGray(image.pixel(pixelIndex,y))
+                pixelColor = image.pixelColor(pixelIndex, y)
+                # SPEC_capture_quality.md §15: max-channel (radiometric) reduction, was qGray (blue-suppressing).
+                valuesByNanometers[pixelIndex]=SpectralColorUtil().toGrayMaximum(pixelColor)
                 if moduleParameters.getAcquireColors():
-                    colorsByPixelIndices[pixelIndex]=image.pixelColor(pixelIndex,y)
+                    colorsByPixelIndices[pixelIndex]=pixelColor
 
             spectrum.setValuesByNanometers(valuesByNanometers)
             spectrum.addToCapturedValuesByNanometers(valuesByNanometers)
@@ -110,10 +113,12 @@ class ImageSpectrumAcquisitionLogicModule:
         return result
 
     def __reducedColumnValues(self, image, x1, x2, y1, y2):
-        """One robust qGray value per column x1..x2, reduced over an INSET band of rows (SPEC §6). Saturated
-        (any channel==255) and dead (all channels==0) pixels are masked to NaN BEFORE qGray is formed —
-        saturation is a per-channel fact that qGray would hide — then Tukey-biweight per column. An all-masked
-        column falls back to its plain median (so a fully-clipped column still reports a value)."""
+        """One robust max-channel value per column x1..x2, reduced over an INSET band of rows (SPEC §6, §15).
+        Saturated (any channel==255) and dead (all channels==0) pixels are masked to NaN BEFORE the reduction —
+        saturation is a per-channel fact — then Tukey-biweight per column. An all-masked column falls back to its
+        plain median (so a fully-clipped column still reports a value). §15: the reduction is now max-channel
+        (radiometric), not qGray (photometric, blue-suppressing); the mask was already max-channel, so the two
+        are now consistent."""
         inset = int(round((y2 - y1) * self.__INSET_FRACTION))
         yLo = max(0, int(y1) + inset)
         yHi = max(yLo + 1, min(int(y2) - inset, image.height()))
@@ -124,11 +129,10 @@ class ImageSpectrumAcquisitionLogicModule:
         frame = frame[:, :width * 3].reshape(img.height(), width, 3)[yLo:yHi, int(x1):int(x2), :].astype(np.float32)
 
         r, g, b = frame[:, :, 0], frame[:, :, 1], frame[:, :, 2]
-        qgray = (11.0 * r + 16.0 * g + 5.0 * b) / 32.0
-        maxChannel = np.maximum(np.maximum(r, g), b)
-        valid = (maxChannel < 255.0) & (maxChannel > 0.0)
+        gray = SpectralColorUtil().toGrayMaximumArray(r, g, b)  # §15: max-channel reduction (== the saturation mask)
+        valid = (gray < 255.0) & (gray > 0.0)
 
-        reduced = RobustReductionLogicModule().tukeyBiweightPerColumn(np.where(valid, qgray, np.nan))
-        fallback = np.median(qgray, axis=0)                    # all-clipped/dead column -> plain median (keeps 255/0)
+        reduced = RobustReductionLogicModule().tukeyBiweightPerColumn(np.where(valid, gray, np.nan))
+        fallback = np.median(gray, axis=0)                     # all-clipped/dead column -> plain median (keeps 255/0)
         return np.where(np.isnan(reduced), fallback, reduced)
 

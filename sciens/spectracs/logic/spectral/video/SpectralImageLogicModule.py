@@ -1,10 +1,12 @@
 import numpy.typing
 from PySide6 import QtGui
 from PySide6.QtGui import QImage
-from PySide6.QtGui import qGray
 from PySide6.QtGui import QColor
 import numpy as np
 import cv2
+
+from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
+
 
 class SpectralImageLogicModule:
 
@@ -28,7 +30,7 @@ class SpectralImageLogicModule:
         for x in range(0,width):
             for y in range(0, height):
                 pixel=image[y,x]
-                gray = qGray(pixel[0],pixel[1],pixel[2])
+                gray = int(SpectralColorUtil().toGrayMaximumArray(pixel[0],pixel[1],pixel[2]))  # §15: max-channel
                 newPixelColor.setHsv(hue,255,gray)
                 image[y,x]=np.array([newPixelColor.red(),newPixelColor.green(),newPixelColor.blue()])
         return image
@@ -45,7 +47,7 @@ class SpectralImageLogicModule:
         for x in range(0,width):
             for y in range(0,height):
                 pixelColor=image.pixelColor(x,y)
-                gray=qGray(pixelColor.red(),pixelColor.green(),pixelColor.blue())
+                gray=SpectralColorUtil().toGrayMaximum(pixelColor)  # §15: max-channel
                 newPixelColor=QColor()
                 newPixelColor.setHsv(hue,255,gray)
                 result.setPixelColor(x,y,newPixelColor)

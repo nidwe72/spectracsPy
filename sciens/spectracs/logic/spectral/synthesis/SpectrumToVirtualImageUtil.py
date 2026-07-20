@@ -10,7 +10,10 @@ class SpectrumToVirtualImageUtil(Singleton):
     # Faithful SPD -> full-resolution grayscale ROI-strip encoder: the inverse of
     # ImageSpectrumAcquisitionLogicModule's read-back. For each ROI column x it maps x -> nm via the SAME
     # calibration cubic the reader uses, linearly resamples the SPD onto that nm, and writes an 8-bit gray
-    # so that qGray(pixel) == round(255 * value / vmax). REFERENCE and SAMPLE share ONE vmax (they model a
+    # so that gray(pixel) == round(255 * value / vmax). REFERENCE and SAMPLE share ONE vmax (they model a
+    # -- SPEC_capture_quality.md §15 INVARIANT: this writes NEUTRAL gray (Format_Grayscale8, R=G=B=v), so
+    #    max(v,v,v) == qGray(v,v,v) == v. The virtual round-trip is therefore IDENTICAL under either reduction;
+    #    switching the reader qGray->max needs NO change here (test_virtual_device_image_roundtrip proves it). --
     # single camera + light source shooting both), so T = SAMPLE/REFERENCE and the absorption plot stay on
     # a true scale. (SPEC_pumpkin_integration.md A.2 / D6 / D11 / D12)
 

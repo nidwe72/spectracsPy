@@ -861,6 +861,9 @@ things cap the spectrum level:
    which sit **below** the max-channel peak — so at the brightest non-clipping exposure, qGray lands ~110–120. This is
    the no-clip ↔ dynamic-range trade-off; it is **correct** (unbiased for T = S/R) and should stay. Do NOT retarget AE
    to qGray (a channel would clip → breaks the colour-anchored calibration §13/§14.6 and distorts the peak).
+   **⚠ REVISITED by §15:** the *spectrum reduction itself* switches `qGray → max-channel` (blue SNR/headroom) —
+   which **aligns the spectrum with the max-channel AE target** (spectrum peak rises toward 245). AE is NOT
+   retargeted; both reductions are unbiased. So this item's "~110–120, keep" no longer holds once §15 lands.
 2. **🔴 The exposure search range is HARDCODED and NOT per-camera** (`CapturePanel.__EXPOSURE_MIN = 1`,
    `__EXPOSURE_MAX = 500`). The search itself is fine (a ladder + bisection refine over the range, not a fixed value
    set — `AutoExposureLogicModule.findExposure`). But V4L2 `exposure_time_absolute` **units differ wildly between
@@ -880,3 +883,179 @@ things cap the spectrum level:
   the limit (raise / per-camera it); well below ⇒ it is the no-clip metric (item 1), leave it.
 - **Secondary (only if the captured image shows a bright region OUTSIDE the spectrum band):** measure the AE metric over
   the **ROI band** rather than the whole frame, so stray bright pixels can't starve the spectrum's exposure.
+
+---
+
+## 15. Radiometric intensity reduction — `qGray` → max-channel (the "gray value" fix)
+
+> **Status: ✅ IMPLEMENTED + RIG-VERIFIED 2026-07-20 (G1–G6).** Edwin's rig pass confirmed G4 (calibration ~0.6 nm
+> holds under the scale-invariant `prominence=0.01·peak`, green anchor + blue Hg 436 detected), G4b (extremes floor
+> sane) and G6 (blue healthy, less dilution, the Yuji lamp reads full-spectrum). HIGHEST PRIORITY,
+> the PREREQUISITE ahead of the Capability-Proof milestone (V) — every downstream metric reads this reduction.
+> Done: G1 `SpectralColorUtil.toGrayMaximum/Luminance/Mean` (+ numpy siblings) + unit test (`test_gray_reduction.py`,
+> 6 tests); G2 both real-capture creators (`ImageSpectrumAcquisitionLogicModule` :58 measurement/:127 robust/:132
+> fallback) route through `toGrayMaximum`; G3 virtual encoder verified no-op (Grayscale8 → `test_virtual_device_
+> image_roundtrip` green); G4 calibration made scale-invariant (`WavelengthLineDetectionLogicModule`:
+> `prominence = 0.01·peak`, was absolute `1`); G5 display colorizers aligned. Full suite **198 passed, no
+> regression.** **Not committed.** Rig-pending: G4 (calibration ~0.6 nm PASS + green-anchor holds on the real CFL),
+> G4b (blue/red floor sane), G6 (blue healthy, less dilution). Settled with Edwin 2026-07-20.
+
+### 15.1 The finding
+
+The per-column spectrum intensity is formed with Qt's **photometric `qGray = (11·R + 16·G + 5·B)/32`** — blue
+weight **5/32 ≈ 0.16** vs green **16/32 = 0.50**, so **blue reads ~3× low for the same light**. Evidence
+(2026-07-20 rig, screenshots): the reference trace sits **~25 in the blue vs a ~115 green plateau** (≈1/5), yet
+the **ROI raster image shows a vivid, bright blue band** — the blue *channel* is strong; the Yuji SunWave 6500 K +
+camera capture blue fine. **The suppression is the weighting, not the LED or the sensor QE.** (The steep 465→480
+rise in the trace is the Bayer green channel switching on — a reduction artifact, not a lamp edge.)
+
+### 15.2 Why it (mostly) doesn't BIAS — but still matters
+
+A **homogeneous** reduction (`qGray`, `max`, `mean`, `sum`) **cancels in `T = S/R` and `A = −log₁₀(S/R)`**: at each
+column the reference and sample are the *same colour* (same λ), the sample just dimmer, so the weighting scales
+both equally. ⇒ **the reduction does not change `T`, `A`, or any colour value** — consistent with §14.9 item 1
+(the low `qGray` peak was unbiased). What `qGray` *does* cost:
+
+- **Blue SNR + dilution headroom.** It keeps only 5/32 of the blue signal *and* adds read-noise from the R/G
+  channels that see ~0 blue light → blue drowns in noise at lower absorbance → **forces heavy dilution.** A
+  radiometric read gives ~3× blue signal with no empty-channel noise → **dilute less**, and an honest plot.
+- The **blue is where it matters most**: the intrinsic *absorbed* colour and the Soret peak-ratio flank both live
+  there ([`SPEC_color_retrieval.md`](SPEC_color_retrieval.md) §0, [`SPEC_pumpkin_peak_ratio_eval.md`](SPEC_pumpkin_peak_ratio_eval.md) §1b).
+
+⇒ **Not a correctness fix — a fidelity/headroom fix.** But it is a **prerequisite** because it eases the dilution
+constraint the whole Capability-Proof series (V) depends on.
+
+### 15.3 Decision — max-channel, in a `ColorGrayUtil` (Edwin)
+
+- **Reduction = `max(r, g, b)`** — reads the channel that actually saw that wavelength: largest blue, no
+  empty-channel noise; it's already what the **ROI-finder** uses. It is positively homogeneous
+  (`max(k·x) = k·max(x)`), so it **still cancels in `T`/`A`** → no metric bias.
+- **Centralize into the EXISTING `SpectralColorUtil`** (Edwin — reuse, don't invent) —
+  `spectracsPy-core/.../spectral/util/SpectralColorUtil.py`, a Qt-free `Singleton` in **core** that already takes
+  a colour and reduces channels (`channelDominance(color, kind)` does `r,g,b = color.red(),…`). Add **three
+  `toGray*()` variants** so "the gray of a pixel" lives in ONE place instead of inline across client code:
+  - `toGrayMaximum()` → `max(r,g,b)` — **the new default**
+  - `toGrayLuminance()` → `(11r+16g+5b)/32` — today's photometric (kept for reference / the eureka bench)
+  - `toGrayMean()` → `(r+g+b)/3` — unweighted
+  - *Nuance:* the robust per-column loop is numpy-vectorized, so also add array siblings
+    (`toGrayMaximumArray(r,g,b)` …) in the same util — one source of truth, two entry shapes (both fine in core).
+  Being in core, both the app-side reduction AND the virtual-device encoder import the same definition.
+- **WB stays 6500 K** — the blue is already captured (raster proves it); this just *reads* it. Boosting blue via WB
+  would risk clipping the pump and cancels in the ratio anyway.
+
+### 15.4 Side-effect map — the `qGray` usages, categorized
+
+The grep looks alarming; categorized it is small. Only categories **1–2 are mandatory changes**; 3 is
+re-verification (and improves); 4–5 are optional/none.
+
+| # | Category | Sites | Effect of the switch |
+|---|---|---|---|
+| **1** | **CREATES the spectrum value** (the reduction — *the* change) | `ImageSpectrumAcquisitionLogicModule` line **127** (measurement, robust) + **58** (calibration single-row) | route both through `ColorGrayUtil.toGrayMaximum`. **Tiny:** line 128 **already computes `maxChannel`** (for the saturation mask) — measurement branch is a one-token swap |
+| **2** | **MUST MIRROR the reduction** (encoder) | `SpectrumToVirtualImageUtil` (virtual device encodes so `qGray(pixel)==value`) | **change together** — encode so `max(pixel)==value`, else virtual captures decode wrong |
+| **3** | **CONSUMES the spectrum** — behaviour shifts (for the better) | `WavelengthLineDetectionLogicModule` (calibration line-detect), `SpectralWorkflowEngine:165` (`qGray>20` content threshold) | **re-verify / re-tune**, don't rewrite. Blue rises → calibration lines clearer; re-tune the `>20` constant |
+| **4** | **DISPLAY only** (cosmetic) | `SpectralImageLogicModule:31,48` (hue-mapped raster render) | **optional** align; no measurement effect |
+| **5** | **NOT affected** (already channel-based / agnostic) | `SpectrometerRegionOfInterestLogicModule` (max), `AutoExposureLogicModule` (max channel), `RobustReductionLogicModule` (reduces whatever array it's handed) | **nothing** |
+
+### 15.5 Calibration — clarifying the "already uses max / might be affected" tension
+
+Two different calibration-adjacent modules use **different** reductions:
+- **`SpectrometerRegionOfInterestLogicModule`** (finds the ROI **x-bounds**) → **already `max`** → *unaffected*.
+- **`WavelengthLineDetectionLogicModule`** (finds the **pixel position of Hg lines** → pixel→nm) reads the
+  **`qGray` calibration spectrum** (§15.4 site 58) → *affected* — and **helped**: the blue **Hg 436 nm** line,
+  currently crushed by 5/32, **rises** under `max`, easier to detect. The hue constraint (`colorsByPixelIndices`,
+  §13) is unchanged (raw `QColor`s). **Re-verify the ~0.6 nm calibration still passes.**
+
+### 15.6 Reconciliation with §14.9
+
+§14.9 item 1 (correctly) said the `qGray` spectrum peaking ~110–120 is **unbiased for `T=S/R`** and warned *"do NOT
+retarget AE to `qGray`."* This section does **not** violate that: **AE keeps targeting the max CHANNEL** (245,
+no-clip). We change the **spectrum reduction** to max — **aligning the spectrum with what AE already targets**, so
+the spectrum peak rises toward the channel peak and blue recovers ~3×. Both `qGray` and `max` are unbiased; we pick
+`max` for blue SNR/headroom. (Annotate §14.9 item 1 → "revisited by §15".)
+
+### 15.7 Implementation phases  *(DESIGN — implement on explicit request only)*
+
+```
++----+-------------------------------------------+----------------------------------+-----------------------------------+---------+
+| Ph | What                                      | New / Touched                    | Gate                              | Risk    |
++----+-------------------------------------------+----------------------------------+-----------------------------------+---------+
+| G1 | SpectralColorUtil: add toGrayMaximum/      | TOUCH SpectralColorUtil (existing | Unit: the 3 reductions match hand-| LOW     |
+|    | Luminance/Mean (scalar, take colour) +    | core util); + numpy siblings     | computed on sample pixels. No     |         |
+|    | toGray*Array(r,g,b) numpy siblings        | toGray*Array                     | behaviour change yet.             |         |
+| G2 | Route the 2 REAL-capture creators through  | TOUCH ImageSpectrumAcquisition    | Real spectrum blue lifts ~3-6x,   | LOW-MED |
+|    | toGrayMaximum. Measurement (:127) reuses   | :127 (use already-computed       | peak rises ~115->~245; T/A a      |         |
+|    | the already-computed maxChannel; calib     | maxChannel) + :58 (pixelColor->  | virtual round-trip still matches  |         |
+|    | (:58) reads pixelColor (line 60 already).  | toGrayMaximum)                   | (unchanged). No metric change.    |         |
+| G3 | VERIFY the virtual encoder is a NO-OP       | SpectrumToVirtualImageUtil is    | test_virtual_device_image_        | LOW     |
+|    | (Grayscale8 -> gray: max==qGray). NO code  | Format_Grayscale8 -> gray pixels | roundtrip stays GREEN; add an     | (was MED|
+|    | change; assert the invariant in a comment. | round-trip identically           | assert/comment on the invariant.  | -> LOW) |
+| G4 | CALIBRATION scale-invariance (the real     | WavelengthLineDetection       | On rig: green anchor holds, Eu-red   | MED     |
+|    | risk, §15.9/9): NORMALIZE the calib         | (normalize + prominence)      | not hijacked, blue Hg436 detected,   | (rig)   |
+|    | spectrum before find_peaks OR re-tune the   | + SpectralWorkflowEngine:165  | ~0.6nm PASS. Positions stable => no  |         |
+|    | ABSOLUTE prominence=1 to the new scale;     | (>20 gate, opt bump)          | DB migration.                        |         |
+|    | >20 has-signal gate opt bump                |                               |                                      |         |
+| G4b| Verify the deep-blue/far-red noise floor    | inspection on rig traces      | Extremes floor sane; Tukey biweight  | LOW-MED |
+|    | isn't inflated by max's upward bias (§15.9/10)|                             | absorbs the max-of-noise spikes.     |         |
+| G5 | OPTIONAL: align the display render         | TOUCH SpectralImageLogicModule    | Raster/plot read consistently.    | LOW     |
+| G6 | Rig-verify end-to-end                      | measurement                      | Blue healthy; less dilution;      | -       |
+|    |                                           |                                  | calibration + metrics intact.     |         |
++----+-------------------------------------------+----------------------------------+-----------------------------------+---------+
+Order: G1 -> G2 -> G3(verify) -> G4(rig); G5 optional; G6 last. All plugins/metrics inherit it for free.
+```
+
+### 15.8 Cross-references
+- §14.9 (AE targets max-channel — this aligns the spectrum to it) · §13 (colour-anchored line detection — hue
+  constraint unchanged) · §5 (dark-frame, the additive sibling) · §6 (robust reduction — operates on whatever
+  gray the caller forms).
+- [`SPEC_capability_proof.md`](SPEC_capability_proof.md) — milestone **V depends on this** (§10.3 confounder,
+  camera reduction). · [`SPEC_color_retrieval.md`](SPEC_color_retrieval.md) §0 — why blue carries the intrinsic colour.
+
+### 15.9 Implementation rubber-duck (risks & de-risks, vs as-is code, 2026-07-20)
+
+The headline: **the entire behavioural change is confined to REAL camera captures** (colour Bayer pixels). Virtual
+captures, the metrics, stored data, and colour VALUES are all untouched. Why:
+
+1. **Virtual encoder is a NO-OP — the big de-risk.** `SpectrumToVirtualImageUtil` writes `QImage.Format_Grayscale8`
+   (neutral gray, R=G=B=v). For a gray pixel `max(v,v,v) == qGray(v,v,v) == v`, so every virtual capture (and every
+   baked asset, and `test_virtual_device_image_roundtrip`) **decodes identically under max**. G3 needs no code — just
+   assert the invariant. *(Side note: the virtual device therefore won't SHOW the blue-recovery — its baked assets
+   are already qGray-derived; only real captures benefit. Re-baking from max captures is optional, later.)*
+2. **T/A and every metric are unchanged even for REAL captures.** `max` is positively homogeneous, and at one column
+   reference & sample are the same colour (sample dimmer), so `max` cancels in `T=S/R`/`A` exactly as `qGray` did.
+   ⇒ no metric regression; the visible change is only the **raw R/S plot + blue SNR/headroom**.
+3. **No stored-data migration.** Calibration profiles store ROI + the pixel→nm cubic — **intensity-independent**.
+   `max` changes line *heights*, not line *positions*, so existing calibrations stay valid and the nm map is unchanged.
+4. **Spectrum peak rises ~115 → ~245** (aligns with the max-channel AE target, §14.9/§15.6). Verify nothing hardcodes
+   ~115 (expected: only plot autoscale + the *relative* transmission floor, both fine).
+5. **`>20` ROI-has-signal gate (`SpectralWorkflowEngine:165`)** — a coarse "is there any signal here" sanity check;
+   `max ≥ qGray`, so it errs toward *finding* signal (safe). Optional small bump; low-risk. (Uses `image.pixel()`
+   int — switch to `pixelColor()` if routed through the util, or leave: on a real frame the raw compare is fine.)
+6. **Calibration line-detection (rig re-verify, the one MED-risk).** Real CFL, colour pixels: `max` lifts the blue
+   **Hg 436** line (currently crushed 5/32) → *more* detectable (good). The §13 colour constraints
+   (`channelDominance`/`hueSimilarity`, raw `QColor`s) are unchanged. Re-verify: green anchor still dominates, the
+   ~0.6 nm fit still passes, no spurious blue peak hijacks the anchor. Can't unit-test (needs the rig).
+7. **Two entry shapes, one formula.** Measurement path is numpy (`toGrayMaximumArray`, reusing the `maxChannel`
+   line 128 already computes for the saturation mask — a one-token swap); calibration/threshold/display are scalar
+   (`toGrayMaximum(color)`). Both live in `SpectralColorUtil` → single source of truth.
+8. **Bonus:** keeping `toGrayLuminance`/`toGrayMean` in the util lets the Capability-Proof eureka bench compare all
+   three reductions on the same capture — the reduction becomes a knob, not a hardcode.
+
+**Second pass (2026-07-20, "be safe") — new findings:**
+
+9. **⭐ The sharpest risk — calibration line-detection uses an ABSOLUTE `prominence=1`.**
+   `WavelengthLineDetectionLogicModule` runs `find_peaks(intensities, …, prominence=1)` on the **raw, un-normalized**
+   spectrum, and the anchoring is **prominence-RANK-sensitive** (header: *"out-prominences it → mislabels red as
+   green"*; Eu-red = "most-prominent peak right of green"). `max` lifts amplitudes 2–6× → `prominence=1` is
+   relatively looser → a lifted spurious bump could admit a fake peak or **flip the anchor**. **Fix: normalize the
+   calibration spectrum before `find_peaks` (scale-invariant — the robust option, also immunizes against exposure)
+   OR re-tune `prominence` to the new scale.** Rig-verify either way. This — not the reduction swap — is the real work of G4.
+10. **`max` is an UPWARD-biased estimator** (`max ≥ any channel`): at low-signal extremes (deep-blue ~430, far-red
+   >640) it can inflate the noise floor. The Tukey-biweight over rows absorbs the max-of-noise spikes, but verify the
+   extremes (G4b). *(A bias-free alternative — the per-λ dominant channel — is heavier; keep `max` + this check.)*
+11. **DE-RISK confirmed: no raw-spectrum colour consumer.** Every `spectrumToColor` caller passes **transmission**
+   (`PlaygroundViewModule:151`) or a synthetic SPD — none a raw reference/sample spectrum. So the oil colour is
+   **fully invariant** to the reduction (grep-verified, not assumed).
+12. **Swap-completeness checklist:** route the measurement reduction **and** its all-clipped fallback (`:132`) through
+   the util (`maxChannel` — the mask `:129` already uses it, so reduction+mask become consistent); the calibration
+   branch (`:58`) reads `pixelColor()` (QColor) not `pixel()` (int) to feed the scalar `toGrayMaximum`. **Do not**
+   claim linearity: `max` recovers blue *signal* but values remain gamma-encoded (C1 is the separate, postponed fix).

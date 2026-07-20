@@ -38,6 +38,10 @@ class WavelengthLineDetectionLogicModule:
     WIDTH = 3
     MIN_CHANNEL = 0.02          # channel-dominance gate: below this a peak is "not that colour"
     CLUSTER_GAP = 80            # px; merge a line's sub-peaks (they split at high resolution)
+    PROMINENCE_FRACTION = 0.01  # SPEC_capture_quality.md §15/G4: prominence as a FRACTION of the spectrum peak,
+                                # NOT an absolute (was prominence=1). Makes line detection invariant to the
+                                # intensity reduction (qGray vs max-channel) and to exposure. 0.01 ~= the old
+                                # absolute 1 at the qGray peak (~120); rig-tunable if spurious peaks appear.
     DOUBLET_LEFT = 60           # green-left search window (px left of the green anchor)
     DOUBLET_RIGHT = 4
 
@@ -58,7 +62,11 @@ class WavelengthLineDetectionLogicModule:
         util = SpectralColorUtil()
         refColour = {name: util.wavelengthToColor(nm) for name, nm in self.NM.items()}
 
-        idx, _ = find_peaks(intensities, distance=self.DISTANCE, width=self.WIDTH, rel_height=0.5, prominence=1)
+        peak = float(intensities.max()) if intensities.size else 0.0
+        if peak <= 0.0:
+            return {}                                                 # no signal at all -> no anchor
+        prominence = self.PROMINENCE_FRACTION * peak                  # §15/G4: scale-invariant (was absolute 1)
+        idx, _ = find_peaks(intensities, distance=self.DISTANCE, width=self.WIDTH, rel_height=0.5, prominence=prominence)
         if len(idx) == 0:
             return {}
         proms = peak_prominences(intensities, idx)[0]
