@@ -73,6 +73,8 @@ class MainStatusBarViewModule(QWidget):
         # §12 auto-connection: background presence poller for the session's real device (None otherwise).
         self.__connectionPollThread = None
         self.__connectionDeviceCodeName = None
+        self.__connectionPresent = False
+        self.__warmupTimer = None            # re-checks the warming state so the dot flips amber -> green (§16.6)
 
         outerLayout=QVBoxLayout()
         outerLayout.setContentsMargins(0,0,0,0)
@@ -198,6 +200,7 @@ class MainStatusBarViewModule(QWidget):
         from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 
         self.__stopConnectionPoll()  # tear down any previous device's poller first
+        self.__stopWarmKeeper()      # and its warm-keeper — a present real device restarts it via presenceChanged
 
         if not CurrentUserSession().isLoggedIn():
             self.connectionButton.setVisible(False)
@@ -227,11 +230,58 @@ class MainStatusBarViewModule(QWidget):
         self.__connectionPollThread.start()
 
     def __onConnectionPresenceChanged(self, present):
+        # Presence drives BOTH the indicator AND the warm-keeper lifecycle (§16.6): start warm-keeping when the real
+        # device appears (post-login), stop when it is unplugged. The dot shows amber "warming up" for the first
+        # WARMUP_SECONDS, then green "connected & warm".
+        self.__connectionPresent = present
         if present:
-            self.__setConnectionColour(self.CONNECTION_CONNECTED_COLOR,
-                                       "Spectrometer connected (%s)" % (self.__connectionDeviceCodeName or ""))
+            self.__startWarmKeeper()
+            if self.__warmupTimer is None:
+                self.__warmupTimer = QtCore.QTimer(self)
+                self.__warmupTimer.timeout.connect(self.__refreshConnectionColour)
+                self.__warmupTimer.start(20000)   # re-check ~every 20 s so amber flips to green at ~9 min
         else:
+            self.__stopWarmKeeper()
+        self.__refreshConnectionColour()
+
+    def __refreshConnectionColour(self):
+        from sciens.spectracs.logic.application.video.CameraWarmupService import CameraWarmupService
+        name = self.__connectionDeviceCodeName or ""
+        if not self.__connectionPresent:
             self.__setConnectionColour(self.CONNECTION_DISCONNECTED_COLOR, "Spectrometer not connected")
+            return
+        if CameraWarmupService().isWarming(self.WARMUP_SECONDS):
+            minute = int((CameraWarmupService().warmupElapsedSeconds() or 0) // 60) + 1
+            self.__setConnectionColour(self.CONNECTION_WARMING_COLOR,
+                                       "Spectrometer warming up — %d/%d min (%s)"
+                                       % (minute, self.WARMUP_SECONDS // 60, name))
+        else:
+            self.__setConnectionColour(self.CONNECTION_CONNECTED_COLOR,
+                                       "Spectrometer connected & warm (%s)" % name)
+
+    def __startWarmKeeper(self):
+        # Resolve the real device's cv2 index + a seed exposure and start the idle warm-keeper (no-op if already
+        # running for this device). Virtual / unresolved → skip.
+        from sciens.spectracs.logic.application.video.CameraWarmupService import CameraWarmupService
+        from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
+        from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
+        sensor = SpectrometerSensorUtil().getSensorByCodeName(self.__connectionDeviceCodeName)
+        if sensor is None or sensor.isVirtual:
+            return
+        deviceIndex = SensorCaptureIndexResolver().resolveCaptureIndex(sensor)
+        if deviceIndex is None:
+            return
+        settings = SpectrometerSensorUtil().getSensorSettings(sensor)
+        exposure = settings.calibrationExposure if settings is not None else None
+        CameraWarmupService().start(deviceIndex, exposure)
+
+    def __stopWarmKeeper(self):
+        self.__connectionPresent = False
+        if self.__warmupTimer is not None:
+            self.__warmupTimer.stop()
+            self.__warmupTimer = None
+        from sciens.spectracs.logic.application.video.CameraWarmupService import CameraWarmupService
+        CameraWarmupService().stop()
 
     def __stopConnectionPoll(self):
         if self.__connectionPollThread is not None:
@@ -337,9 +387,11 @@ class MainStatusBarViewModule(QWidget):
   <circle cx="12" cy="13" r="3.2" fill="none" stroke="%(c)s" stroke-width="1.8"/>
 </svg>'''
 
-    CONNECTION_CONNECTED_COLOR='#3D7848'      # green
+    CONNECTION_CONNECTED_COLOR='#3D7848'      # green — present & warm
     CONNECTION_DISCONNECTED_COLOR='#FFFFFF'   # white
     CONNECTION_NO_INSTRUMENT_COLOR='#808080'  # grey
+    CONNECTION_WARMING_COLOR='#E0A030'        # amber — present but the sensor is still warming up (§16.6)
+    WARMUP_SECONDS=9*60                        # camera warm-up window (SPEC_capture_quality.md §16.2: settles ~9 min)
 
     logo_png='''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->

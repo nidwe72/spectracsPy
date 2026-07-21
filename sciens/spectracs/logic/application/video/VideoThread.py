@@ -7,6 +7,7 @@ from PySide6.QtGui import QImage
 
 from sciens.spectracs.logic.application.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
+from sciens.spectracs.logic.application.video.CameraLease import CameraLease
 from sciens.spectracs.model.databaseEntity.AppDataPathUtil import get_app_data_dir
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 
@@ -48,6 +49,7 @@ class VideoThread(QThread,Generic[S]):
     def __init__(self):
         super().__init__()
         self._runFlag = True
+        self._isWarmKeeper = False   # the idle warm-keeper sets this True → exempt from the camera lease (§16.6)
         self.qImage = None
         self._autoExposeRequest = None        # (minExposure, maxExposure, target, iterations) or None
 
@@ -193,20 +195,40 @@ class VideoThread(QThread,Generic[S]):
 
         self.onStart()
 
-        # Virtual mode serves frames from VirtualSpectrometerSettings and must never touch a
-        # physical camera. This is also required on Android, where there is no usable capture device
-        # (getCaptureBackend() there raises on open). Only open a backend for a real sensor.
-        if not self.getIsVirtual():
-            self._backend = getCaptureBackend()
-            self._backend.open(self._deviceId, self._exposure, self.WHITE_BALANCE_KELVIN)
-            self._appliedExposure = self._exposure
+        # Virtual mode serves frames from VirtualSpectrometerSettings and must never touch a physical camera (also
+        # true on Android). Only real threads open a backend — and they LEASE the single camera device
+        # (SPEC_capture_quality.md §16.6): acquire() before open() (which pauses the idle warm-keeper and releases
+        # the device first), release() after, in a finally so a crash can't wedge the lease forever. The warm-keeper
+        # itself is exempt (it is the idle-holder, not a consumer).
+        if self.getIsVirtual():
+            self.__captureLoop()
+        else:
+            leased = False
+            if not self._isWarmKeeper:
+                CameraLease().acquire()   # blocks until the warm-keeper has released the device
+                leased = True
+            try:
+                self._backend = getCaptureBackend()
+                self._backend.open(self._deviceId, self._exposure, self.WHITE_BALANCE_KELVIN)
+                self._appliedExposure = self._exposure
 
-            # Warm-up: the first frames after open can be empty while the UVC stream settles; discard a
-            # few so the first delivered frame is real (spec §3.5 / §0). read() never raises → None ok.
-            for _ in range(6):
-                if self._backend.read() is not None:
-                    break
+                # Warm-up: the first frames after open can be empty while the UVC stream settles; discard a
+                # few so the first delivered frame is real (spec §3.5 / §0). read() never raises → None ok.
+                for _ in range(6):
+                    if self._backend.read() is not None:
+                        break
 
+                self.__captureLoop()
+            finally:
+                if self._backend is not None:
+                    self._backend.release()
+                    self._backend = None
+                if leased:
+                    CameraLease().release()
+
+        self._setCurrentFrameIndex(0)
+
+    def __captureLoop(self):
         while self._runFlag:
 
             # A pending auto-exposure request runs synchronously here (backend is single-threaded and ours),
@@ -224,12 +246,6 @@ class VideoThread(QThread,Generic[S]):
 
             self.beforeCapture()
             self.__captureFrame()
-
-
-        self._setCurrentFrameIndex(0)
-        if self._backend is not None:
-            self._backend.release()
-            self._backend = None
 
     def __captureFrame(self):
 

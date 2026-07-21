@@ -77,12 +77,24 @@ keep R→S close in time** — then R and S share the sensor state and the tilt 
 
 ---
 
-## UC2 · Dilution-invariance  ·  _status: PENDING_
+## UC2 · Dilution-invariance  ·  _2026-07-21_  ·  _status: ✅ CONFIRMED (clean data)_
 
-One oil, 2 drops vs 3 drops in 3 ml isopropanol. Expectation: metrics barely move across dilution. _TODO._
+Same oil, **matched pots** (4 ml alcohol both), warm camera. **K = 2 drops, L = 3 drops.** Absorbances scale
+uniformly (`A_blue` ×2.04, `A_green` ×2.06 ⇒ `b`≈0). **Browning ratio invariant: K 3.13 ↔ L 3.10 (1%)**; intrinsic
+hue 293↔289. (Contrast the contaminated pre-K G↔K = 1.7↔3.1 — mismatched alcohol.) Greenness NOT perfectly invariant
+(D_Q under-scales). Full: SPEC_capability_proof §11.1. PDFs: `oilK_00{1-4}`, `oilL_00{1-4}`.
 
 ---
 
-## UC3 · Discrimination  ·  _status: PENDING_
+## UC3 · Discrimination  ·  _2026-07-21_  ·  _status: ✅ green↔brown (2 of 3 oils)_
 
-Three oils (too-green / typical / brown), fixed dilution. Expectation: three separated metric clusters. _TODO._
+Same recipe (4 ml + 3 drops), matched pots, warm camera. **L = green, M = brown**, 4 runs each. The oils **separate
+unambiguously**: `A_blue` 0.365↔0.213 (−42%, ~20× noise), **Browning ratio 2.92↔1.98 (−32%, ~12× noise)**. Raw hue
+289↔281 (8°); baseline hue only 5° (clamp halves colour discrimination → use raw not baseline). Greenness INVERTED
+(useless), D_Q weak. **Direction inverted vs the name:** greener = MORE blue absorption (more green pigment) = higher
+Browning ratio → it's a *freshness/pigment* index, not "browning". Physically: brown oil = degraded green pigment
+(NOT Maillard), reddish in bulk via dichromatism. Full: SPEC_capability_proof §11.2–11.5. PDFs: `oilL_00{1-4}`,
+`oilM_00{1-4}`. **Brown dilution-invariance (N-series, brown at 2 drops, 2026-07-21):** Browning ratio M(3drops)
+1.98 ↔ N(2drops) 1.82 (~8%, weaker than green's 1% — residual scatter `b`, degraded oil is more turbid); but brown
+(~1.8–2.0) stays a distinct cluster far below green (~2.9), so discrimination is **dilution-robust**. PDFs
+`oilN_00{1,2}`. **Remaining:** only the 3rd "too-green" oil. **Verdict so far: GO.**

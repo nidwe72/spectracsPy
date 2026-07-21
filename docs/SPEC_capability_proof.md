@@ -647,6 +647,23 @@ exposure_cv2=… wb=… autoWb=… gain=…` line to stdout (`CapturePanel.__log
 `grep CAPTURE-SETTINGS` — if exposure/wb differ run-to-run it's AE/AWB; if identical it's thermal. See
 [[spectracs-capture-settings-logging]].
 
+**⚠ G↔K DILUTION FINDING RETRACTED (Edwin 2026-07-21): the pre-K samples had MISMATCHED ALCOHOL in the ref vs
+sample pots** — so the alcohol/path did NOT cancel in `A=−log10(S/R)` (a large uncontrolled additive `b`). G–J are
+therefore CONTAMINATED and not trustworthy for invariance/ratio claims. The observed G(1.7)↔K(3.1) browning-ratio
+gap is at least partly that setup error, NOT clean dilution. **K is the first CORRECT setup (matched 4 ml both
+pots)** → the K-series is the first trustworthy data. THEORY still holds: intrinsic absorbed colour IS
+dilution-invariant (dilution scales `A→k·A`; chromaticity `xy` is scale-invariant), broken only by the additive `b`
+(glass/scatter/**mismatched alcohol**) — which the baseline removes. Clean dilution-invariance test still needed:
+**matched pots, one oil, two dilutions.**  (Superseded prior note — kept the still-valid points below.)
+The additive `b` does NOT cancel in a ratio, so at high dilution (tiny `A_green`) it dominates → the ratio is pulled
+toward 1; **lever = higher concentration** so `b` is negligible. **Lever (confirms §10.5 deepest-lever): measure at HIGHER concentration** (K `A_green`≈0.06 already
+~2× truer) → `b` negligible → ratios dilution-invariant WITHOUT the noisy baseline, and the colour leaves the
+log-amplified regime (more stable AND more discriminating). Absorbed colour (baseline) IS ~invariant G↔K (hue ~295
+vs 300). **Colour gamut clamp POSTPONED (2026-07-21, Edwin):** confirmed real (XYZ→sRGB out-of-gamut, green ch −1 to
+−5, clamped) BUT NOT the discrimination bottleneck — clamp-free CIELAB clusters just as tight (4° vs sRGB 5°), so Lab
+is NOT the fix; the baseline↔discrimination tension is (untested without 3 distinct oils). "Softening" colour variant
+deferred. See [[spectracs-colour-retrieval]] / SPEC_color_retrieval.
+
 **ROOT CAUSE FOUND (2026-07-20): camera sensor SELF-HEATING** — the reference-shape tilt is a per-channel
 responsivity/QE drift as the sensor warms (τ≈2.9 min, ~1.68% red/green, settles ~9 min); ruled AE/AWB (settings
 pinned), evaporation (reversible after idle) and lamp (external, warm) out; the camera cold-starts every run (streams
@@ -658,7 +675,89 @@ warm re-run (1 oil ×2 after 10-min warm-up) to check it's the *whole* 5°.
 restored blue fidelity (the heavy dilution was to fight qGray's blue suppression, §15). Otherwise treat absorbed
 colour as a *soft* signal and lean discrimination on `D_Q` (immune to all of this).
 
-## 11. Cross-references
+## 11. RESULTS — clean-data validation (K / L / M series, 2026-07-21)
+
+**The earlier series (A–J) are CONTAMINATED** — mismatched alcohol in the reference vs sample pots (a large
+uncontrolled additive `b` that does NOT cancel in `S/R`) and a cold camera (the sensor self-heating tilt,
+`SPEC_capture_quality.md §16`). **The K/L/M series is the first clean data:** matched pots (equal alcohol both),
+warm camera, higher concentration (`A` out of the log-amplified low-signal regime). On this data the capability-proof
+premises hold.
+
+**Oils (two distinct commercial products, not one oil roasted):** the **green/fresh** oil (K, L) = **"Spar Premium
+100 % steirisches Kürbiskernöl g.g.A"** (a premium PGI Styrian oil — high green-pigment content); the **brown**
+oil (M, N) = **"Hofer Bellasan Kürbiskernöl"** (a cheaper supermarket oil — lower pigment). So UC3 is really a
+**premium-vs-commodity quality/authenticity discrimination**, exactly the field use case.
+
+### 11.1 UC2 — dilution-invariance ✓ (K vs L, same oil, 2 vs 3 drops)
+Absorbances scale **UNIFORMLY**: `A_blue` ×2.04, `A_green` ×2.06 (identical ⇒ pure `A→k·A` scaling ⇒ `b`≈0 — matched
+pots worked). **The Browning ratio is invariant: K 3.13 ↔ L 3.10 (1%)** across the 2× concentration change (vs the
+contaminated G(1.7)↔K(3.1)). Intrinsic hue stable (293↔289). ⚠ Greenness NOT perfectly invariant (1.43↔1.20) —
+`D_Q` under-scales (×1.74 vs A's ×2.06), a `D_Q`-method effect, not `b`.
+
+### 11.2 UC3 — discrimination ✓ (L green vs M brown, same recipe 4 ml + 3 drops, 4 runs each)
+| metric | L green | M brown (mean±spread) | separation / within-oil noise |
+|---|---|---|---|
+| **A_blue** | 0.365 | 0.213 ± 0.008 | **−42%, ~20× noise** |
+| **Browning ratio** | 2.92 | 1.98 ± 0.08 | **−32%, ~12× noise** |
+| raw intrinsic hue | 289 | 281 ± 1.6 | 8°, ~5× |
+| baseline hue | 300 | 295 ± 2 | 5°, ~2.6× (weak) |
+| D_Q | 0.155 | 0.140 | −10%, weak |
+| Greenness | 1.23 | 1.30 | **inverted** |
+
+The oils **separate unambiguously** — `A_blue` / Browning ratio split by **12–20× the within-oil scatter**. With
+§11.1, the **Browning ratio is the primary discriminator: dilution-invariant AND separating.**
+
+### 11.3 Metric hygiene (SETTLED)
+- **Primary: Browning ratio** (`A_blue/A_green`) — invariant + separates.
+- Secondary: `A_blue` (strongest split but dilution-DEPENDENT — trust only at matched concentration) + **raw/de-spiked hue**.
+- **DROP for discrimination:** Greenness (inverted here), `D_Q` (weak + under-scales), and the **baseline-corrected
+  hue** — the clamp/over-compression HALVES colour discrimination (raw hue 8°/5× vs baseline 5°/2.6×, now validated on
+  DISTINCT oils; the earlier-retracted concern is REAL on clean data). Colour *discrimination* = **raw/de-spiked hue**;
+  colour *stability* comes from warm camera + settled sample + high concentration, NOT the baseline. The **Lab / gamut-
+  clamp rabbit-hole is DROPPED** (§10.5) — it was never the bottleneck.
+- **⚠ DIRECTION IS INVERTED vs the metric name:** the greener/fresher oil absorbs MORE blue (`A_blue` 0.37 vs 0.21) →
+  HIGHER Browning ratio. So "Browning ratio — higher = more browned" is **BACKWARDS**; it is really a **freshness /
+  green-pigment index**. Rename (metric + tooltips) when the plugin is next touched.
+
+### 11.4 Sample clearing (blue-weighted turbidity)
+Within a session the absolute `A_blue` and Browning ratio drift DOWN ~7–10% over ~20 min (both L and M), while
+`A_green` / `D_Q` / hue hold. `A_blue` drops FASTER than `A_green` ⇒ the drift is **turbidity / scatter — blue-weighted
+(∝ 1/λ⁴)** — clearing as the sample settles; NOT evaporation (would RAISE `A`) nor the (warm) camera. **Let the sample
+settle (`A_blue` stops falling) before the definitive capture** — §7.3 "dissolve cleanly", now quantified (~10% of the
+Browning ratio is unsettled turbidity).
+
+**The BROWN oil carries MORE scatter than the green (N-series, 2026-07-21).** Its dilution-invariance is measurably
+weaker: brown Browning ratio M(3 drops) ~1.90 ↔ N(2 drops) ~1.79 (~7–8%, both settled, 4 runs each; more dilute →
+lower ratio as the residual `b` pulls it toward 1), and the absolutes scale **non-uniformly**
+(`A_blue` ×0.73 vs `A_green` ×0.80) — vs the green oil's clean ×2.04 / ×2.06 and 1% ratio invariance (§11.1).
+Non-uniform scaling = a **residual additive `b`**, physically the degraded/roasted oil's higher **turbidity /
+particulate scatter** (a blue-weighted `b` that doesn't cancel in `S/R`; possibly incl. an undissolved dirt speck).
+So scatter is a real, **oil-dependent** property — worse for degraded oils — and settling longer (and/or a quick
+filter) tightens the brown oil's invariance. It does NOT threaten discrimination (§11.6).
+
+### 11.5 Physical interpretation — why it works, and why the brown oil looks reddish
+`A_blue` reads the **green chlorophyll-type pigment content** (its Soret band ~430–470 nm). Fresh/green oil = high
+pigment = high `A_blue`; roasted/aged brown oil = **degraded pigment = low `A_blue`**. This is **pigment degradation,
+NOT Maillard browning** — the **Maillard reaction** (amino acids + reducing sugars + heat → brown *melanoidins* +
+roasted flavour; what browns roasted seeds, coffee, toast) would *add* broad blue absorption (`A_blue` UP), but it
+went DOWN. So the discriminator has real chemical meaning (pigment / freshness), not just a statistical split.
+**The reddish bulk appearance fits:** pumpkin-seed oil is **dichromatic** — thin/dilute → green, thick/bulk → red —
+because the green pigment leaves a narrow green transmission window that collapses to red as path length grows;
+degrade the pigment and the amber/red base shows through → browner/reddish in bulk. (The *diluted* transmission hue
+barely moves, 70↔73, because the red is a thick-layer effect not seen in the thin cuvette; `A_blue` captures the
+*cause* even in the thin sample — which is why absorbance beats perceived colour as the discriminator.)
+
+### 11.6 Status & remaining
+- **UC1 repeatability ✓** (warm + settled + concentrated → intrinsic hue ~1°, ratios ~few %).
+- **UC2 dilution-invariance ✓** — clean for the green oil (Browning ratio K↔L 1%); **weaker but adequate for the
+  brown** (M↔N ~8%, residual scatter `b`, §11.4). Discrimination is **robust across dilution regardless**: brown
+  clusters ~1.8–2.0 (2 & 3 drops), green ~2.9–3.1 — the green↔brown gap (~1.0) dwarfs brown's dilution wobble (~0.13).
+- **UC3 discrimination ✓ green↔brown** (Browning ratio, `A_blue`) — and confirmed dilution-robust by the N-series.
+- **REMAINING for the gate:** only the **third "too-green" oil** (should land ABOVE green on the freshness axis —
+  even higher `A_blue`/Browning). Three distinct, non-overlapping clusters closes it.
+- **Verdict so far: GO** (green↔brown separate cleanly and dilution-robustly; only the too-green oil outstanding).
+
+## 12. Cross-references
 
 - [`SPEC_pumpkin_peak_ratio_eval.md`](SPEC_pumpkin_peak_ratio_eval.md) — the peak-ratio metric (§3), the PB bands
   (§1b), and the dilution/measurement model + `b`/one-pot analysis (§13). This milestone implements PB and acts on §13.

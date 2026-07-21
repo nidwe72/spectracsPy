@@ -1120,3 +1120,82 @@ App-side (the real fix, ranked):
 ### 16.5 Tooling shipped (uncommitted at time of writing)
 
 `CaptureDiagnosticsLogger` (core), the `CAPTURE-SETTINGS` read-back (`CaptureBackend.readCameraSettings` / `VideoThread` / `CapturePanel`), the engine logging hook, `diagnoseCapture.py` (+ `--runs/--interval/--ae-once/--frames`), `runDiagnose.sh`, and `tests/test_capture_diagnostics_logger.py`.
+
+### 16.6 The warm-keeper — W1–W4 IMPLEMENTED 2026-07-20 (Phase 1: lease; single-owner subscriber model POSTPONED)
+
+**Status:** W1–W4 built (headless-green: `tests/test_camera_lease.py` + compile + import-cycle-free); **W5 = rig
+validation pending** (handoffs without EBUSY across phase-nav / calibration / dev-capture; then the warm oil re-run
+→ does the 5° tilt collapse?). W6 (red/green guard) postponed. Files: `logic/application/video/CameraLease.py`,
+`CameraWarmupVideoThread.py`, `CameraWarmupService.py`; `VideoThread.py` (run() restructure + `_isWarmKeeper`);
+`view/main/MainStatusBarViewModule.py` (amber warming state + presence-driven start/stop).
+
+
+**Decision (Edwin 2026-07-20):** keep the sensor warm by **streaming continuously**. The full single-owner
+"one thread, many frame-subscribers" `CameraService` is the clean *end-state* but is **POSTPONED** (it forces the
+in-thread-processing consumers — wavelength-calibration + spectral-job — onto a subscriber model, touches
+master-only calibration, and needs multi-subscriber frame delivery with the segfault-copy history + producer/
+consumer threading + WB/AE arbitration). Phase 1 is the **lease warm-keeper**: lower risk, ships the thermal fix,
+and is the *seed* of the eventual `CameraService`.
+
+**Mechanism.** All five capture consumers subclass `VideoThread` and open via `getCaptureBackend().open()` in
+`VideoThread.run()` → **one enforcement point**:
+- `CameraLease` (singleton): `acquire()`/`release()` with a consumer count. First `acquire()` → warm-keeper
+  `pause()`; last `release()` → warm-keeper `resume()`. Holds `warmSince`.
+- `VideoThread.run()`: a real, non-virtual, **non-warm-keeper** thread `acquire`s before `open()` and `release`s
+  after `release()` (in `finally`) — auto-coordinates measurement / both calibration threads / dev-capture /
+  spectral-job with **no change to their internals**.
+- `CameraWarmupService` (singleton): owns the warm-keeper thread, streams the real device during idle, flagged so
+  `VideoThread.run()` skips the lease for it (idle-holder, not a consumer).
+
+**Second-pass rubber-duck corrections (2026-07-20):**
+- **The warm-keeper is a READ-AND-DISCARD thread, NOT a `DevCaptureVideoThread`.** `DevCaptureVideoThread.afterCapture`
+  emits a frame then BLOCKS in `__waitForRender(event)` until a subscriber `event.set()`s — with no subscriber the
+  warm-keeper would stall after one frame (no continuous readout). The **base `VideoThread`** already reads+discards
+  (its `afterCapture` only advances the index, no emit) and with `frameCount=0` never stops → use a tiny
+  `CameraWarmupVideoThread(VideoThread)` with `_isWarmKeeper`. Bonus: no signals → cross-thread `stop()/wait()` is
+  affinity-safe.
+- **`VideoThread.run()` needs a guaranteed-release `finally`.** Today `backend.release()` is at the END of `run()`
+  with no `finally`; adding `lease.acquire()` before `open()` without one means a mid-loop exception holds the lease
+  FOREVER (camera wedged until restart). W2 = wrap the REAL path: `acquire → try{ open, warmup, loop } finally{
+  release backend; release lease }` (the loop serves both virtual+real, so wrap only the real path — a careful
+  restructure, not a two-liner).
+- **The lease AVOIDS WB/exposure arbitration** — each consumer opens the device fresh with its own settings
+  (calibration auto-WB, measurement 6500K+AE), so there is no shared-mode state machine (the hardest part of the
+  single-owner model simply doesn't exist here). Reconfirms Phase 1 = lease.
+
+**Hard parts / risks:**
+1. **`pause()` releases BEFORE the consumer opens — synchronously** (`stop()` + bounded `wait()` for `backend.release()`,
+   then return) so the two never both hold `/dev/video0` (EBUSY). Reuse the `_STUCK_CAPTURE_THREADS` bounded-wait +
+   park pattern so a wedged cv2 read can't deadlock the handoff. **#1 risk.** Note C-D: the first consumer after
+   login can wait a few seconds on the warm-keeper's multi-second 2592×1944 `open()` (blocking cv2, ignores the stop
+   flag) — acceptable/one-time. Lease count needs a mutex; `finally` matches release to acquire.
+2. **`warmSince` persists across ~1 s handoffs** (warm as long as anyone streams); resets only on a real gap
+   (device unplugged / nothing streaming > ~30 s cooldown). All consumers stream continuously while they hold it.
+3. **Start post device-resolution** (`installFromSession`, `LoginViewModule`), real sensor only (virtual/no-camera skip).
+4. **Indicator:** `MainStatusBarViewModule` gains an **amber warming** state while `present and now−warmSince < 9 min`
+   (data: τ≈2.9 min, settles ~9 min, §16.2), else green "connected & warm". Reuse the presence poll.
+5. **Accepted:** continuous 2592×1944 streaming all session (USB/CPU — rig-validate); `diagnoseCapture.py` conflicts
+   with the running app (document "stop the app first").
+
+**Phases (DESIGN — implement on explicit request):**
+```
++----+------------------------------------------------+------------------------------------------+
+| Ph | What                                           | Files — New·Touch                        |
++----+------------------------------------------------+------------------------------------------+
+| W1 | CameraLease singleton (mutex count + warmSince) | NEW CameraLease + CameraWarmupService +  |
+|    | + CameraWarmupService (idle stream, pause=stop+ | CameraWarmupVideoThread (READ-DISCARD,   |
+|    | bounded-wait, resume) + CameraWarmupVideoThread | base VideoThread, no emit — NOT DevCap)  |
+|    | (read-discard base thread, _isWarmKeeper)       |                                          |
+| W2 | VideoThread.run: acquire -> try{open,loop}      | TOUCH VideoThread.py (careful run()      |
+|    | finally{release backend; release lease}. warm-  | restructure — guaranteed-release finally)|
+|    | keeper + virtual exempt. #1 = release-before-open|                                         |
+| W3 | Start hook post device-resolution (real sensor | TOUCH LoginViewModule (+ MainContainer/  |
+|    | only); stop on logout/disconnect               | bench install points)                    |
+| W4 | Indicator: amber "warming up (N min)" < 9 min, | TOUCH MainStatusBarViewModule            |
+|    | else green "connected & warm"                  |                                          |
+| W5 | Rig validation: warm-keeper survives phase     | (rig)                                    |
+|    | nav / calibration / dev-capture without EBUSY; |                                          |
+|    | warm oil re-run → does the 5° tilt collapse?   |                                          |
++----+------------------------------------------------+------------------------------------------+
+W6 (POSTPONED): red/green stability guard at measurement time (item c). Single-owner CameraService: later.
+```
