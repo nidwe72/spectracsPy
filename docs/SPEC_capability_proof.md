@@ -884,9 +884,15 @@ barely moves, 70↔73, because the red is a thick-layer effect not seen in the t
   brown** (M↔N ~8%, residual scatter `b`, §11.4). Discrimination is **robust across dilution regardless**: brown
   clusters ~1.8–2.0 (2 & 3 drops), green ~2.9–3.1 — the green↔brown gap (~1.0) dwarfs brown's dilution wobble (~0.13).
 - **UC3 discrimination ✓ green↔brown** (Browning ratio, `A_blue`) — and confirmed dilution-robust by the N-series.
-- **REMAINING for the gate:** only the **third "too-green" oil** (should land ABOVE green on the freshness axis —
-  even higher `A_blue`/Browning). Three distinct, non-overlapping clusters closes it.
-- **Verdict so far: GO** (green↔brown separate cleanly and dilution-robustly; only the too-green oil outstanding).
+- **REMAINING for the gate — two items; with both in, the Capability Proof is READY (Edwin 2026-07-23):**
+  1. the **third "too-green" oil** tested for discrimination — should land ABOVE green on the freshness axis
+     (even higher `A_blue` / Pigment ratio). Three distinct, non-overlapping clusters closes the discrimination claim.
+  2. **a reasonable amber** — a mid-band sample that actually falls in the Roast-Ampel amber zone (ratio 2.6–2.8),
+     so the "probably too brown" state is **exercised by real data**, not an empty gap. Today no sample lands
+     between best-brown 2.59 and worst-green 3.67, so the middle verdict is untested. See
+     [`SPEC_roast_ampel.md`](SPEC_roast_ampel.md) §2 / §5.
+- **Verdict so far: GO** (green↔brown separate cleanly and dilution-robustly; the too-green oil and a real
+  amber-band sample are the only items outstanding — once both are measured, the proof is complete).
 
 ## 11.7 Deliverable — the one-page summary (artifact + PDF)
 
