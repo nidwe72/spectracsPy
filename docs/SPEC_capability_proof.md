@@ -513,6 +513,42 @@ raw ──[de-spike: median k≈7]──► despiked ──[flat-offset: red-end
 Tests: `test_flat_offset_baseline.py` (both floor modes, MedianFilterOp), `test_dev_plugin_improved_colour.py`
 (despiked metric twins, 3-trace ladder). 46 targeted tests green.
 
+### 8.3 PB-band "Evaluation (new)" tab — the V-phase (V3) — *(IMPLEMENTED 2026-07-22, Edwin)*
+
+The PB literature bands land as a **new, parallel EVALUATION view** rather than by mutating the shipped metrics —
+"emit both" (§2.1) realized as **tab-vs-tab**, not cell-vs-cell. All in `DevSpectralPlugin.py` (mean → `bandMean`
+already exists, no core change). Unit + headless GREEN (24 plugin tests: 7 new/updated in
+`test_dev_plugin_improved_colour.py`); **RIG-VERIFIED 2026-07-22 (Edwin)** — the new tab renders on the bench and
+the Pigment ratio discriminates cleanly on K/L/M/N (§11.2a).
+
+- **New step `Evaluation (new)`** (a second `SpectralWorkflowStep` in `evaluation()`, after `Spectrum`, before
+  `Report`). Reads the PB windows on the **despiked** absorbance as plain band **MEANS** (`__newEvaluationResult`):
+  `Soret · 440–460`, `Q · 560–580`, `Clarity · 510–540`, then **`Pigment ratio`** = Soret/Q (primary, bold =
+  dilution-invariant) and **`Pigment ratio · clarity`** = Soret/clarity-floor (the stable-denominator safety net),
+  plus the **10-variant colour set DUPLICATED** here.
+- **Mean, NOT integral (§9 decision, Edwin 2026-07-22):** the two 20-nm bands make the Soret/Q ratio identical
+  either way, and means keep the same unit + cross-tab comparability as the legacy `A_blue`/`A_green`; an integral
+  would inject a bandwidth factor into the unequal-width Soret/clarity comparison (20 vs 30 nm → 33 % artifact).
+- **New step `Spectrum (new)`** — a **second band-marked A(λ) plot** (despiked) shading the PB Soret + Q windows +
+  the 510–540 clarity floor, Q local-max marked. Sits beside `Evaluation (new)`.
+- **Renames (physics; §11 found "browning" inverted):** legacy tab `Browning A_blue → Soret A_blue`,
+  `Browning ratio → Pigment ratio · legacy` (compute UNCHANGED — old 450–490 / 510–540 means — so §11 numbers stay
+  directly comparable, only the label strings move). Three distinct ratio labels avoid collision: `Pigment ratio`
+  (new Soret/Q) vs `Pigment ratio · clarity` (new Soret/clarity) vs `Pigment ratio · legacy` (old-band Browning).
+- **Colour-chip S/L "C scheme" (§5):** hue-normalized chips drop from vivid `S 80 / L 50` to calm/darker
+  **`S 38 / L 34`** (`__NORM_SATURATION`/`__NORM_LIGHTNESS`); applies to every normalized chip in both tabs.
+- **`declaredEvalBands`** gains 440–460 & 560–580 (both inside the 440–630 clamp — no window change). Doc-automation
+  scenario `measurement_bench.py` relabelled to match.
+- **✅ Q-denominator worry RESOLVED on K/L/M/N (§11.2a, 2026-07-22):** the pre-registered rubber-duck concern that
+  the weak 560–580 Q band would make `Pigment ratio` (Soret/Q) jumpy is **not borne out** — over a 20-nm despiked
+  mean it is the *tightest* discriminator (Δ/noise ≈ 13.5, beats legacy 10.7). Re-confirm on the 3rd oil.
+- **Deferred (follow-up, Edwin):** the perceptually-correct **Lab/opponent-space complement** for
+  intrinsic-perceived (replacing the raw `+180°` HSL hue flip) — `EvaluationColorUtil.complementLab()`; prototype
+  on the 289°/281° oil hues first (gamut-clip check). See [[spectracs-colour-retrieval]].
+
+Tests: `test_dev_plugin_improved_colour.py` — new-tab band means + both pigment ratios, 10 duplicated chips, the
+`Spectrum (new)` PB bands, C-scheme S/L, legacy renames (no "Browning" survives). 24 plugin tests green.
+
 ---
 
 ## 9. Open questions / caveats
@@ -520,6 +556,17 @@ Tests: `test_flat_offset_baseline.py` (both floor modes, MedianFilterOp), `test_
 - **Per-metric preprocessing (§3).** SETTLED for **colour**: flat-offset + light SG, **no SNV** (§7.0.1, §10.1).
   Still open for the ratio/PCA path — §10.1's caution ("SNV is for turbid samples, can smear band ratios") now
   makes even the PCA-SNV of §2.3/§3 questionable; the comparison bench (§4) decides, don't hard-pick before data.
+- **Baseline ↔ colour-hue tension (OPEN — needs the 3rd oil).** Flat-offset baseline correction is *double-edged*
+  on the intrinsic/absorbed hue: it **helps repeatability** (oilG ×2, UC1: run-to-run hue spread 5° → 0°, by removing
+  the additive `b` that drifts chromaticity) but **hurts discrimination** (green↔brown, UC3: raw hue separates 8°
+  ≈5× noise vs baseline-corrected only 5° ≈2.6× — the clamp/over-compression roughly *halves* colour discrimination).
+  **Interim resolution (§11, diary):** on the discriminator path use **RAW/despiked hue, not baseline-corrected hue**;
+  buy stability the other way — warm camera + settled sample + higher concentration (out of the log-amplified
+  near-transparent regime) — instead of by subtracting `b`. This trade-off was only observed on **two** oils, so it
+  is **untested with three distinct oils**: the open question is whether raw-hue discrimination survives the too-green
+  oil, or whether a *smarter* correction is needed (see next bullet — a sloping/derivative `b` fix, not the flat 0th
+  order). Note the sRGB→gamut clamp is *not* the bottleneck here (clamp-free CIELAB clusters just as tight, 4° vs 5°),
+  so the "softening"/Lab colour variant stays POSTPONED (§11, 2026-07-21). Resolvable only once the 3rd oil is run.
 - **Flat vs sloping `b`.** The flat-offset removes only a *flat* offset; a sloping/curved `b` (scatter, RI) needs a
   1st-derivative or a large-window baseline. Which the rig has is unknown → measure (`SPEC_pumpkin_peak_ratio_eval.md
   §13.5` blank-vs-blank test P + noise-floor test). Note RI mismatch (§10.3/C3) is a real source of a sloping `b`.
@@ -707,6 +754,37 @@ contaminated G(1.7)↔K(3.1)). Intrinsic hue stable (293↔289). ⚠ Greenness N
 The oils **separate unambiguously** — `A_blue` / Browning ratio split by **12–20× the within-oil scatter**. With
 §11.1, the **Browning ratio is the primary discriminator: dilution-invariant AND separating.**
 
+### 11.2a PB-band re-analysis — the new **Pigment ratio (Soret/Q)** wins (all 16 K/L/M/N runs, 2026-07-22)
+
+Re-computed the **V3 PB-band metric** (§2.1 / §8.3) directly from the spectral data embedded in every K/L/M/N PDF
+(`workflow.json` → PROCESSING absorbance → median-k7 despike → band **means** on 440–460 Soret / 560–580 Q /
+510–540 clarity). Grouping **green = K,L · brown = M,N** (2×2: K/N = 2 drops, L/M = 3 drops).
+
+| metric (despiked, means) | green K,L | brown M,N | \|Δ\| | **Δ / within-group noise** |
+|---|---|---|---|---|
+| Soret 440–460 alone | 0.79 ± 0.22 | 0.50 ± 0.08 | 0.29 | 1.9 |
+| Q 560–580 alone | 0.21 ± 0.06 | 0.20 ± 0.03 | 0.00 | ~0 |
+| **Pigment ratio = Soret / Q** | **3.83 ± 0.13** | **2.41 ± 0.08** | **1.41** | **13.5 — best** |
+| Pigment ratio · clarity (Soret/510–540) | 8.44 ± 0.60 | 5.12 ± 0.32 | 3.32 | 7.2 |
+| legacy Browning≈ (450–490 mean / clarity) | 3.07 ± 0.11 | 1.88 ± 0.11 | 1.19 | 10.7 |
+
+- **The Pigment ratio (Soret/Q) is the strongest discriminator of all** — Δ/noise ≈ **13.5**, beating the legacy
+  Browning ratio (10.7) and the Soret/clarity safety net (7.2). The clusters are **fully non-overlapping**: worst
+  green **3.67** > best brown **2.59**, a gap of **1.08** against within-group scatter of ~0.1.
+- **Dilution-invariant too:** green K(2drops) 3.89 ↔ L(3drops) 3.76 (**3.3 %**); brown N(2drops) 2.35 ↔ M(3drops)
+  2.48 (**5.4 %**) — both far below the 1.41 between-oil gap. So Soret/Q is dilution-invariant AND separating.
+- **Why Soret/Q works (physics):** both bands scale with pigment concentration (Beer–Lambert), so the ratio cancels
+  dilution and isolates the pigment *shape*; green vs brown differ strongly in the Soret-to-Q balance (fresher
+  pigment → relatively more Soret). The Q denominator is nearly identical *between* groups (0.21 vs 0.20), so the
+  separation is driven almost entirely by real Soret signal.
+- **⚠ Rubber-duck reversal (§8.3):** the pre-registered worry that the weak 560–580 Q denominator would make the
+  ratio jumpy is **not borne out on K/L/M/N** — over a 20-nm despiked mean the Q band is stable enough that Soret/Q
+  is the *tightest* of the three. The §8.3 "watch" is downgraded to **verified fine on K/L/M/N; re-confirm on the
+  3rd oil.**
+- **Caveats:** still only **two oils** (3rd "too-green" oil pending for a 3-cluster proof); the "legacy≈" row uses a
+  plain band mean, not the plugin's reference-gated `A_blue`, so it is indicative — the Soret/Q and Soret/clarity
+  rows are exact.
+
 ### 11.3 Metric hygiene (SETTLED)
 - **Primary: Browning ratio** (`A_blue/A_green`) — invariant + separates.
 - Secondary: `A_blue` (strongest split but dilution-DEPENDENT — trust only at matched concentration) + **raw/de-spiked hue**.
@@ -757,6 +835,40 @@ barely moves, 70↔73, because the red is a thick-layer effect not seen in the t
   even higher `A_blue`/Browning). Three distinct, non-overlapping clusters closes it.
 - **Verdict so far: GO** (green↔brown separate cleanly and dilution-robustly; only the too-green oil outstanding).
 
+## 11.7 Deliverable — the one-page summary (artifact + PDF)
+
+A stakeholder-facing one-pager distills §11 into a single scannable page: the GO verdict, the Browning-ratio
+strip plot (two non-overlapping clusters), the 2×2 factorial table (K/L/M/N), seven takeaways, gate status, and
+a **photo of the physical samples** (`SparPremioumAndHoferBellana.jpg` — upper row Hofer/commodity/brown, lower
+row Spar/premium/green; dilution increasing left→right). The caption makes the sales point: at this dilution both
+oils read pale amber to the eye, the eye's judgement drifts day-to-day and has no side-by-side reference, so the
+instrument's fixed comparable number is the value-add.
+
+- **Source (single self-contained HTML):** `scratchpad/capability_proof_summary.html` — inline CSS, no external
+  assets (dual light/dark theme + an `@media print` block that forces the light identity, `print-color-adjust:exact`,
+  A4). The sample photo is embedded as a **base64 `data:` URI** (resized to ~1400 px wide first) so it survives both
+  the artifact CSP and the local-file PDF render. The strip-plot SVG must use **CSS classes** for fills, not
+  `fill="var(--x)"` presentation attributes (SVG attrs don't resolve `var()`).
+- **Published artifact (same URL on re-publish):** https://claude.ai/code/artifact/467cd564-f923-466b-8d9e-b4f311207b6c
+- **PDF:** `spectracs-references/tmp/CapabilityProof_pumpkin-oil_summary.pdf`
+
+**PDF recipe (reusable — HTML → PDF via headless Chrome):**
+
+```
+# 1. (if embedding a photo) resize + re-encode small, then base64 it into an <img src="data:...">
+convert SparPremioumAndHoferBellana.jpg -resize 1400x -quality 82 oils_resized.jpg
+#    base64 the jpg and inline it as  <img src="data:image/jpeg;base64,…">  (Python base64.b64encode)
+
+# 2. render the self-contained HTML to A4 PDF (the @media print block in the HTML supplies A4 + colours)
+google-chrome --headless=new --disable-gpu --no-pdf-header-footer \
+  --print-to-pdf="$OUT.pdf" "file://$ABS_PATH_TO.html"
+```
+
+Notes: `--no-pdf-header-footer` drops Chrome's URL/date chrome; `@page{size:A4;margin:13mm}` +
+`-webkit-print-color-adjust:exact` in the HTML's `@media print` do the page setup and force the swatch/oil colours
+to print. The VAAPI stderr warning is harmless. Re-publishing the **same file path** in the same session keeps the
+artifact URL stable; from another session pass that URL as `url=` or a new one is minted.
+
 ## 12. Cross-references
 
 - [`SPEC_pumpkin_peak_ratio_eval.md`](SPEC_pumpkin_peak_ratio_eval.md) — the peak-ratio metric (§3), the PB bands
@@ -767,4 +879,3 @@ barely moves, 70↔73, because the red is a thick-layer effect not seen in the t
 - [`SPEC_dev_measure_bench.md`](SPEC_dev_measure_bench.md) — the bench host these deltas land in.
 - `tests/lda3.py` / `tests/lda4.py` (workspace root, 2021) — the abandoned LDA prototypes; retained as the record
   of why §2.4 uses a simple distance judge, not a supervised classifier.
-```

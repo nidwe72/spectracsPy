@@ -98,3 +98,14 @@ Browning ratio → it's a *freshness/pigment* index, not "browning". Physically:
 1.98 ↔ N(2drops) 1.82 (~8%, weaker than green's 1% — residual scatter `b`, degraded oil is more turbid); but brown
 (~1.8–2.0) stays a distinct cluster far below green (~2.9), so discrimination is **dilution-robust**. PDFs
 `oilN_00{1,2}`. **Remaining:** only the 3rd "too-green" oil. **Verdict so far: GO.**
+
+**PB-band re-analysis (2026-07-22) — the new Pigment ratio (Soret/Q) is the best discriminator yet.** Re-computed
+the V3 metric (440–460 Soret / 560–580 Q, despiked band means) from the spectral data embedded in all 16 K/L/M/N
+PDFs (green = K,L · brown = M,N; K/N = 2 drops, L/M = 3 drops). **Pigment ratio (Soret/Q): green 3.83 ± 0.13 vs
+brown 2.41 ± 0.08 — Δ/noise ≈ 13.5**, clusters fully non-overlapping (worst green 3.67 > best brown 2.59, gap 1.08).
+Beats the legacy Browning ratio (Δ/noise 10.7) and the Soret/clarity safety net (7.2). **Dilution-invariant:** green
+K(2d) 3.89 ↔ L(3d) 3.76 (3.3%); brown N(2d) 2.35 ↔ M(3d) 2.48 (5.4%). Physics: Soret & Q both scale with pigment
+conc → ratio cancels dilution, isolates the Soret-to-Q *shape*, which shifts with pigment degradation; Q is nearly
+equal between groups (0.21 vs 0.20) so the split is real Soret signal. **Rubber-duck reversal:** the weak-Q-denominator
+worry did NOT bite here — over a 20-nm despiked mean Soret/Q is the *tightest* metric. Still 2 oils (3rd pending).
+Full table: SPEC_capability_proof §11.2a.

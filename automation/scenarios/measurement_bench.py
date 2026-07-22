@@ -53,8 +53,8 @@ AGENDA = [
 
 # Every evaluation metric, in the grid order the Dev plugin emits them (DevSpectralPlugin) — Edwin: describe
 # them ALL, including 'color'.
-EVAL_METRICS = ["color", "Greenness G", "Pigment D_Q", "Browning A_blue",
-                "Clarity A_green", "Browning ratio", "G' (alt.)"]
+EVAL_METRICS = ["color", "Greenness G", "Pigment D_Q", "Soret A_blue",
+                "Clarity A_green", "Pigment ratio · legacy", "G' (alt.)"]
 
 # Claude-authored narration — the 'why', a different register from the in-app coach line (§16.0).
 NARRATION = {
@@ -78,12 +78,12 @@ NARRATION = {
                           "Higher means a greener, fresher oil.",
     "metric:Pigment D_Q": "Pigment D_Q — the depth of the green-pigment Q-band: how much intact green "
                           "pigment the oil still carries.",
-    "metric:Browning A_blue": "Browning A_blue — absorption in the blue region, which rises with roasting "
-                              "and Maillard browning.",
+    "metric:Soret A_blue": "Soret A_blue — absorption in the blue Soret region, which tracks the intact "
+                           "green pigment; a fresher, greener oil absorbs more blue here.",
     "metric:Clarity A_green": "Clarity A_green — the green-window floor, which rises with turbidity or "
                               "darkening from sediment or a heavy roast.",
-    "metric:Browning ratio": "Browning ratio — blue over green absorption: the roast axis on its own, "
-                             "independent of pigment. Higher means more browned.",
+    "metric:Pigment ratio · legacy": "Pigment ratio, legacy bands — blue Soret over the green clarity floor. "
+                             "Higher means more intact pigment; a greener, fresher oil.",
     "metric:G' (alt.)": "G-prime — an alternative greenness using the blue denominator. Browning-sensitive, "
                         "and a little fragile on this rig.",
 }
