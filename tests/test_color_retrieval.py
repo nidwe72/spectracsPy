@@ -58,6 +58,39 @@ class DilutionInvarianceTest(unittest.TestCase):
         self.assertGreater(_hueDelta(hue1, hue2), 3.0)
 
 
+class ComplementTest(unittest.TestCase):
+    """SPEC_capability_proof.md option (b) — colorIntrinsicPerceived as the white-point complement of the absorbed
+    colour, replacing the old +180° HSL hue flip (validated ~4° vs ~34° on K/L/M/N)."""
+
+    def setUp(self):
+        self.util = EvaluationColorUtil()
+        self.absorbance = _absorbance()
+
+    def test_complement_beats_the_180_flip_against_true_perceived_hue(self):
+        absHue, _, _ = self.util.spectrumToHsl(_spectrum(self.absorbance), converter="srgb", ceiling=3.0)
+        compHue, _, _ = self.util.complementViaWhitePoint(_spectrum(self.absorbance), ceiling=3.0)
+        # ground truth: the perceived hue of the transmission this absorbance implies (T = 10^-A)
+        transmission = {nm: 10.0 ** (-v) for nm, v in self.absorbance.items()}
+        percHue, _, _ = self.util.spectrumToHsl(_spectrum(transmission), converter="srgb")
+        flip = (absHue + 180.0) % 360.0
+        self.assertLess(_hueDelta(compHue, percHue), _hueDelta(flip, percHue))  # closer to the truth than +180
+        self.assertTrue(30.0 <= compHue <= 110.0, compHue)                      # green-yellow family, not blue-violet
+
+    def test_complement_is_dilution_invariant(self):
+        c1, _, _ = self.util.complementViaWhitePoint(_spectrum(self.absorbance), ceiling=3.0)
+        doubled = {nm: 2.0 * v for nm, v in self.absorbance.items()}
+        c2, _, _ = self.util.complementViaWhitePoint(_spectrum(doubled), ceiling=3.0)
+        self.assertLess(_hueDelta(c1, c2), 2.0)
+
+    def test_complement_of_grey_is_achromatic(self):
+        flat = _spectrum({nm: 1.0 for nm in range(400, 701, 5)})
+        _, saturation, lightness = self.util.complementViaWhitePoint(flat)
+        self.assertLess(self.util.chroma(saturation, lightness), EvaluationColorUtil.ACHROMATIC_CHROMA)
+
+    def test_complement_of_empty_is_zero(self):
+        self.assertEqual(self.util.complementViaWhitePoint(_spectrum({})), (0.0, 0.0, 0.0))
+
+
 class GuardsTest(unittest.TestCase):
 
     def test_negative_absorbance_does_not_crash(self):

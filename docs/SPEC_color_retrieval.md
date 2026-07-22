@@ -73,6 +73,14 @@ complement of transmitted is a physical fact, not a chosen constant). It is a **
 so it must be labelled distinctly. `hue+180°` in HSL is the *simple* complement; a perceptually-exact complement (§6) is
 a future upgrade. Rendered **first** so the human-readable intrinsic colour leads the group.
 
+> **UPDATE 2026-07-22 — the `+180°` flip is RETIRED (SPEC_capability_proof.md §8.4, option (b)).** An empirical
+> comparison on all 16 K/L/M/N runs showed `+180° HSL` misses the *actual* perceived hue by ~34° (and a Lab-180
+> flip is even worse, ~38°). `colorIntrinsicPerceived` now uses the **colorimetric complement** —
+> `EvaluationColorUtil.complementViaWhitePoint()` reflects the absorbed chromaticity through the D65 white point
+> (`2·white − absorbed`, the mixing-to-white opposite), landing ~4° from the truth. Everything below about
+> dilution-invariance and the achromatic guard still holds (it's still a deterministic transform of the invariant
+> absorbed chromaticity); only the *transform* changed from a hue rotation to a white-point reflection.
+
 ### 1b. colorAbsorbed = option (A), locked
 
 `colorAbsorbed` is the **literal CIE colour of the absorbance** (parameter-free; scale-invariance is automatic).

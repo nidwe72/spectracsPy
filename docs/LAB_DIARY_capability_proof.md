@@ -109,3 +109,13 @@ conc → ratio cancels dilution, isolates the Soret-to-Q *shape*, which shifts w
 equal between groups (0.21 vs 0.20) so the split is real Soret signal. **Rubber-duck reversal:** the weak-Q-denominator
 worry did NOT bite here — over a 20-nm despiked mean Soret/Q is the *tightest* metric. Still 2 oils (3rd pending).
 Full table: SPEC_capability_proof §11.2a.
+
+**Colour: same hue, different chroma (2026-07-22).** After switching colorIntrinsicPerceived to the white-point
+complement (option (b), §8.4), green and brown gave the *same* perceived hue (~67°) — puzzling until measured as
+angle+distance from white: all 16 runs sit at the **same absorbed hue-angle (245.5°)**, differing only in **chroma**
+(green 0.234 vs brown 0.198, Δ/noise ≈ 6.5, dilution-invariant). The complement reflects through white → preserves
+direction → same hue; the hue-normalized chips fix S/L and discard the chroma → identical chips. The earlier "~12°
+absorbed hue" split (§11.2a) was a gamut-clamp artifact (blue-violet far out of sRGB folds to different HSL hues);
+the real colour separator is **chroma**, and the Pigment ratio is its numeric face. Physics: same pigment family →
+same band positions → same hue; browning cuts pigment *amount* → chroma toward grey, no hue shift. Detail:
+SPEC_capability_proof §11.2b.

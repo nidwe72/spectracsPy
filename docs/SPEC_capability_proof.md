@@ -542,12 +542,39 @@ the Pigment ratio discriminates cleanly on K/L/M/N (§11.2a).
 - **✅ Q-denominator worry RESOLVED on K/L/M/N (§11.2a, 2026-07-22):** the pre-registered rubber-duck concern that
   the weak 560–580 Q band would make `Pigment ratio` (Soret/Q) jumpy is **not borne out** — over a 20-nm despiked
   mean it is the *tightest* discriminator (Δ/noise ≈ 13.5, beats legacy 10.7). Re-confirm on the 3rd oil.
-- **Deferred (follow-up, Edwin):** the perceptually-correct **Lab/opponent-space complement** for
-  intrinsic-perceived (replacing the raw `+180°` HSL hue flip) — `EvaluationColorUtil.complementLab()`; prototype
-  on the 289°/281° oil hues first (gamut-clip check). See [[spectracs-colour-retrieval]].
+- **Follow-up ✅ DONE — the intrinsic-perceived complement (§8.4 below), 2026-07-22.**
 
 Tests: `test_dev_plugin_improved_colour.py` — new-tab band means + both pigment ratios, 10 duplicated chips, the
 `Spectrum (new)` PB bands, C-scheme S/L, legacy renames (no "Browning" survives). 24 plugin tests green.
+
+### 8.4 Intrinsic-perceived complement — option (b), the white-point reflection — *(IMPLEMENTED + RIG-VERIFIED 2026-07-22)*
+
+The `+180° HSL` hue flip that produced `colorIntrinsicPerceived` was replaced by the **colorimetric complement**:
+reflect the absorbed chromaticity through the **D65 white point** (`2·white − absorbed`) — the additive
+"mixing-to-white" opposite. New `EvaluationColorUtil.complementViaWhitePoint(spectrum, ceiling)`; the DEV plugin
+routes all four intrinsic-perceived rungs through it and the per-chip `hueOffset` is retired.
+
+**Chosen by empirical comparison on all 16 K/L/M/N runs** (each candidate's intrinsic-perceived hue vs the *actual*
+perceived hue from measured transmission):
+
+| method | mean hue error vs true perceived | verdict |
+|---|---|---|
+| `+180° HSL` (old) | 33.9° | wrong — overshoots to green |
+| Lab-180 (negate a\*,b\*) | 38.3° | **worse than HSL — dropped** |
+| **b1 · reflect through white (xy)** | **4.0°** | ✅ chosen — principled, near-free |
+| (c) perceived @ reference dilution | 0.3° | exact, but needs an anchor knob + redefines the chip |
+
+- **Key finding:** a 180° rotation in *any* space (HSL or Lab) is *not* "the other half of the light" — it's off by
+  ~34–38°. The white-point reflection (the true additive complement w.r.t. the lamp) lands within ~4°, and it drops
+  straight into the xy the absorbed path already computes (no Lab round-trip). **Lab-180 was retired by the data.**
+- **Honest consequence:** the accurate complement shows green and brown as **near-identical amber** (both perceived
+  ~71°) — the eye genuinely can't separate them here. The old flip's apparent 11–20° hue "separation" was a
+  distortion artifact. Discrimination stays with the **absorbed colour** + **Pigment ratio** (§11.2a); the
+  intrinsic-perceived chip's only job is "…and to your eye it looks like this amber." (Why green and brown give the
+  *same* complement hue — same absorbed hue-angle, different chroma — is worked out in **§11.2b**.)
+- (c) is kept on the shelf as the gold-standard "perceived @ reference dilution" (needs a normalization anchor,
+  e.g. Soret mean = 0.5) if an *exact* dilution-invariant perceived colour is ever wanted. Tests:
+  `test_color_retrieval.py::ComplementTest` (beats-the-flip, dilution-invariant, achromatic guards).
 
 ---
 
@@ -784,6 +811,32 @@ Re-computed the **V3 PB-band metric** (§2.1 / §8.3) directly from the spectral
 - **Caveats:** still only **two oils** (3rd "too-green" oil pending for a 3-cluster proof); the "legacy≈" row uses a
   plain band mean, not the plugin's reference-gated `A_blue`, so it is indicative — the Soret/Q and Soret/clarity
   rows are exact.
+
+### 11.2b Colour discriminates via CHROMA, not hue — and a §11.2a correction (2026-07-22)
+
+The white-point complement (§8.4) gave *identical* intrinsic-perceived hues (~67°) for green and brown, even though
+the absorbed colours looked like they differed. Resolved by measuring the absorbed chromaticity as **angle + distance
+from the D65 white point** across all 16 runs:
+
+| | angle from white | chroma (distance from white) |
+|---|---|---|
+| green (K,L) | **245.5° ± 0.4°** | 0.234 ± 0.006 |
+| brown (M,N) | **245.4° ± 0.2°** | 0.198 ± 0.005 |
+
+- **Same hue, different chroma.** Every run sits at the same angle (245.5°) — one hue direction. What separates the
+  oils is the **distance from white** (green more saturated, brown washed toward grey), **Δ/noise ≈ 6.5**, and it is
+  dilution-invariant (xy is scale-invariant).
+- **Why the perceived hue is identical:** the complement is a reflection through white — a rigid motion that preserves
+  *direction*. Same absorbed angle → same complement angle (~65.5°) → same hue. The chroma difference survives, but
+  the **hue-normalized chips fix S/L and discard it**, so the normalized chips look identical.
+- **§11.2a correction:** the "~12° absorbed *hue* separation" reported there was a **gamut-clamp artifact** — the
+  absorbed blue-violet is far outside sRGB (blue channel 1.4–1.6), and clamping folds same-hue/different-chroma
+  colours to slightly different *HSL* hues. In the honest xy space the angle is identical; the real colour separator
+  is **chroma**, of which the `Pigment ratio` (3.8 vs 2.4) is the numeric face.
+- **Physics:** same pigment family (protochlorophyll/protopheophytin) → same band positions → same hue; browning
+  degrades the pigment *amount*, moving the absorbed colour toward grey (lower chroma) without rotating its hue.
+- **Practical:** for a *visible* colour discriminator, use a **natural-chroma** chip (green = richer amber, brown =
+  paler), not the hue-normalized one; or read the `Pigment ratio`. The GO verdict is unaffected.
 
 ### 11.3 Metric hygiene (SETTLED)
 - **Primary: Browning ratio** (`A_blue/A_green`) — invariant + separates.
