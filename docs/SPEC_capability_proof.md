@@ -902,15 +902,23 @@ falls to the floor and the ratio inflates. Stirring recovered it (4.57→3.82), 
 pigment loss) and giving a free discriminating test: re-suspend → if the ratio drops back, it was clearing.
 
 **MANDATORY measurement protocol for the pigment-ratio metric (green oils):**
-1. **Agitate** (stir/shake) immediately before every capture.
+1. **Agitate GENTLY** (a swirl, not a vigorous stir) immediately before every capture. Vigorous stirring
+   *coarsens* the droplets faster and whips in **microbubbles** — both add scatter noise.
 2. **Wait a fixed short settle** — the *same* each run (~60–90 s: long enough for bubbles to clear, short enough
    that the dispersion is still present).
-3. **Capture**, and **never reuse a cuvette that has aged** (hours). Prefer measuring **fresh, within the first
-   1–2 h** — the kinetically-stable window.
-4. **Keep the Soret band-mean ≳ 0.5** (enough oil, without saturating the 440 Soret toward the 1.5 ceiling) so
-   the weak Q stays above the floor; **log the settle time + room temperature** with each run.
+3. **Capture**, and **measure fresh, within the first ~1 h** — the kinetically-stable window (fine droplets,
+   slow reproducible settling).
+4. **Do NOT re-stir an aged sample — discard and re-prepare.** Once the sample has aged (~2 h → ratio drifts up
+   to ~4.9, §11.4c), stirring is **unreliable**: it re-suspends *coarse, fast-settling* droplets (which re-clear
+   in seconds) + bubbles, so the reading lands anywhere — **sometimes lower, sometimes even higher** than
+   before. Coalescence and any pigment oxidation are irreversible; stirring cannot restore a fresh state.
+   **⚠ "the stir made it worse" is itself the age indicator** — treat that inconsistency as "sample too old,
+   re-prepare." (Rig, Edwin 2026-07-24.)
+5. **Keep the Soret band-mean ≳ 0.5** (enough oil, without saturating the 440 Soret toward the 1.5 ceiling) so
+   the weak Q stays above the floor; **cap/seal the cuvette** over longer sessions to limit evaporation drift;
+   **log the settle time + room temperature** with each run.
 
-Caveat: the "first 1–2 h are flat" part is *inferred* from the physics — the afternoon O/P runs span only ~35 min
+Caveat: the "first ~1 h is flat" part is *inferred* from the physics — the afternoon O/P runs span only ~35 min
 and were each freshly handled, so part of their stability is consistent timing, not proof of an undisturbed hold.
 Testable directly: fresh prep, measure every ~15 min undisturbed over 2–3 h and watch the drift rate grow.
 
@@ -976,6 +984,45 @@ settling**. The full picture, for the record:
 fresh, don't reuse an aged cuvette**) is mandatory, and why the raw ratio carries a settle-state wobble. It is
 also why *stirring recovered* the aged sample (§11.4a) — re-suspending the sunken scatterers restores the
 baseline. Nothing here is instrument or pigment failure; it is colloid physics.
+
+### 11.4d Why *the green oil* needs a fresh sample — matched vs mismatched bands
+
+The freshness requirement (§11.4a) is not symmetric: it bites the **green** oils and barely touches the brown
+one. The reason is structural, and it explains itself once you see each band as two stacked contributions:
+
+> **Every band reading = real pigment absorption + haze** (the broadband scatter baseline from the turbidity,
+> §11.4c). Over time the haze **settles out of the beam**, so its contribution shrinks; the dissolved pigment
+> stays.
+
+**Principle — haze is a bigger *share* of a band when the pigment there is weak.** A band with strong pigment
+absorption is mostly real signal, and the haze is a minor add-on; a band with weak pigment absorption is
+*mostly haze*. So how much a band's reading moves when the haze clears depends on how pigment-rich that band is.
+
+**The ratio only drifts when the two bands are *mismatched*.** The metric is Soret ÷ Q, and clearing acts on the
+**ratio**, not on each band alone:
+- **Two haze-dominated bands (matched)** → the haze rides on top of *both*; when it clears it shrinks numerator
+  and denominator by the *same fraction*, and in the division it **cancels**. Each band's absolute value falls,
+  but the ratio holds. (Same math that makes the metric dilution-invariant — a common factor cancels.)
+- **One pigment-strong band ÷ one haze-dominated band (mismatched)** → clearing removes the haze mostly from the
+  *weak* band; numerator and denominator move by *different* amounts, so nothing cancels and the **ratio drifts**.
+
+**Applied to the two oils:**
+- **Brown oil = two faint bands (matched).** Its pigment is degraded (§11.5), so pigment absorption is weak in
+  *both* the Soret and the Q window — both are haze-dominated. Settling clears the haze from both equally → it
+  cancels in the ratio → the ratio is **robust to age** (≈2.5 the whole time), even though each band's absolute
+  absorbance drops. The brown oil is *forgiving*.
+- **Green oil = one strong band ÷ one faint band (mismatched).** Fresh green oil has a **strong Soret pigment**
+  (numerator ≈ real signal, haze a minor share — deep A(440) barely moved, §11.4a) but a **weak Q pigment**
+  (denominator ≈ half haze: Q-pigment ≈ 0.067 ≈ the baseline ≈ 0.07). Clearing drains the haze mostly out of the
+  weak Q denominator while the strong Soret numerator holds → the two move differently → the **ratio inflates**
+  (3.7 → 4.6 over 11 h). The green oil is *susceptible*.
+
+**Consequence.** The green oil's ratio is only trustworthy while its Q band still has its *fresh* haze+pigment
+level — i.e. **measured fresh, at a fixed settle state** (§11.4a). The mismatch is intrinsic to a *fresh, high-
+pigment* oil (that is exactly what a strong-Soret / weak-Q oil is), so it cannot be removed by a metric tweak
+(floor-subtraction made it worse, §11.4b) — only by the protocol. The brown oil needs no such care because its
+matched bands make the ratio self-cancel. **Net: freshness discipline is a green-oil requirement; the metric's
+own dilution-invariance protects the brown one for free.**
 
 ### 11.5 Physical interpretation — why it works, and why the brown oil looks reddish
 `A_blue` reads the **green chlorophyll-type pigment content** (its Soret band ~430–470 nm). Fresh/green oil = high
