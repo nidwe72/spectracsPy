@@ -50,7 +50,7 @@ class PumpkinWizardOffscreenTest(unittest.TestCase):
 
     # small helpers over the wizard's private state (this test stands in for a human click-through)
     def __engine(self):
-        return self.wizard._WizardViewModule__engine
+        return self.wizard._engine
 
     def __next(self):
         self.wizard.onClickedNext()
@@ -59,32 +59,32 @@ class PumpkinWizardOffscreenTest(unittest.TestCase):
     def test_flow_measure_then_advance_to_verdict(self):
         wizard = self.wizard
         # 1) opens on ACQUISITION with two capture tabs; Next is gated until measured
-        self.assertEqual(wizard._WizardViewModule__shownPhases[0], SpectralWorkflowPhaseType.ACQUISITION)
-        self.assertEqual(wizard._WizardViewModule__tabWidget.count(), 2)
-        self.assertFalse(wizard._WizardViewModule__nextButton.isEnabled())
+        self.assertEqual(wizard._plan[0].phaseType, SpectralWorkflowPhaseType.ACQUISITION)
+        self.assertEqual(wizard._tabWidget.count(), 2)
+        self.assertFalse(wizard._nextButton.isEnabled())
 
         # 2) Measure both steps (what the per-tab Measure buttons do)
         acquisition = self.__engine().getWorkflow().getPhase(SpectralWorkflowPhaseType.ACQUISITION)
         for step in acquisition.getSteps().values():
             self.__engine().captureAcquisitionStep(step)
-        wizard._WizardViewModule__refreshNav()
-        self.assertTrue(wizard._WizardViewModule__nextButton.isEnabled())
+        wizard._refreshNav()
+        self.assertTrue(wizard._nextButton.isEnabled())
 
         # 3) Next -> PROCESSING (an absorption plot tab), Next -> EVALUATION, Next -> METADATA (terminal)
         self.__next()
-        self.assertEqual(wizard._WizardViewModule__shownPhases[wizard._WizardViewModule__cursor],
+        self.assertEqual(wizard._plan[wizard._cursor].phaseType,
                          SpectralWorkflowPhaseType.PROCESSING)
-        self.assertGreaterEqual(wizard._WizardViewModule__tabWidget.count(), 1)
+        self.assertGreaterEqual(wizard._tabWidget.count(), 1)
         self.__next()
-        self.assertEqual(wizard._WizardViewModule__shownPhases[wizard._WizardViewModule__cursor],
+        self.assertEqual(wizard._plan[wizard._cursor].phaseType,
                          SpectralWorkflowPhaseType.EVALUATION)
         # Non-terminal proceed: text is "Next" + a permanent amber ▶ ICON (SPEC_acquisition_guidance); METADATA follows.
-        self.assertEqual(wizard._WizardViewModule__nextButton.text(), "Next")
-        self.assertFalse(wizard._WizardViewModule__nextButton.icon().isNull())
+        self.assertEqual(wizard._nextButton.text(), "Next")
+        self.assertFalse(wizard._nextButton.icon().isNull())
         self.__next()
-        self.assertEqual(wizard._WizardViewModule__shownPhases[wizard._WizardViewModule__cursor],
+        self.assertEqual(wizard._plan[wizard._cursor].phaseType,
                          SpectralWorkflowPhaseType.METADATA)
-        self.assertEqual(wizard._WizardViewModule__nextButton.text(), "Save")
+        self.assertEqual(wizard._nextButton.text(), "Save")
 
         # 4) the verdict rendered
         step = list(self.__engine().getWorkflow().getPhase(

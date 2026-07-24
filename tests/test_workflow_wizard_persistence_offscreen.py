@@ -63,7 +63,11 @@ class WizardPersistenceOffscreenTest(unittest.TestCase):
         return wizard
 
     def __private(self, wizard, name):
-        return getattr(wizard, "_WizardViewModule__" + name)
+        # nav/metadata state now lives on the base (single-underscore names)
+        return getattr(wizard, "_" + name)
+
+    def __currentPhaseType(self, wizard):
+        return wizard._plan[wizard._cursor].phaseType
 
     def test_new_run_saves_then_view_edits_then_delete(self):
         # 1) NEW run: measure both acquisition steps, advance to the terminal, fill metadata, Save
@@ -81,8 +85,7 @@ class WizardPersistenceOffscreenTest(unittest.TestCase):
             self.app.processEvents()
         self.assertEqual(self.__private(wizard, "nextButton").text(), "Save")
         # the terminal phase is METADATA (its own phase, not an EVALUATION tab)
-        self.assertEqual(self.__private(wizard, "shownPhases")[self.__private(wizard, "cursor")],
-                         SpectralWorkflowPhaseType.METADATA)
+        self.assertEqual(self.__currentPhaseType(wizard), SpectralWorkflowPhaseType.METADATA)
         self.__private(wizard, "metadataWidgets")["title"][0].setText("Batch Alpha")
         wizard.onClickedNext()  # Save -> persists + Home
 
@@ -97,8 +100,7 @@ class WizardPersistenceOffscreenTest(unittest.TestCase):
         viewWizard.show()
         self.app.processEvents()
         self.assertGreater(self.__private(viewWizard, "tabWidget").count(), 0)
-        shownPhases = self.__private(viewWizard, "shownPhases")
-        while self.__private(viewWizard, "cursor") < len(shownPhases) - 1:  # advance to the terminal phase
+        while self.__private(viewWizard, "cursor") < len(viewWizard._plan) - 1:  # advance to the terminal phase
             viewWizard.onClickedNext()
         self.app.processEvents()
         self.assertEqual(self.__private(viewWizard, "metadataWidgets")["title"][0].text(), "Batch Alpha")

@@ -72,7 +72,7 @@ class WizardStepBarOffscreenTest(unittest.TestCase):
         ApplicationContextLogicModule().getNavigationHandler().mainContainerViewModule = _StubMainContainer()
 
     def __private(self, wizard, name):
-        return getattr(wizard, "_WizardViewModule__" + name)
+        return getattr(wizard, "_" + name)  # nav state now on AbstractPluginExecutionView
 
     def test_step_bar_shows_all_phases_and_tracks_navigation(self):
         wizard = WizardViewModule()
