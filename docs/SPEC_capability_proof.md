@@ -13,6 +13,84 @@ trust colour), and [`SPEC_dev_measure_bench.md`](SPEC_dev_measure_bench.md) (the
 
 ---
 
+## Current state — executive summary *(2026-07-24)*
+
+*A scannable snapshot of where the gate stands. Detail + provenance in §11; scope narrowing in §1a.*
+
+### In one line
+The go/no-go gate: prove a cheap DIY VIS spectrometer + this pipeline can **detect over-roasting** — flag a
+**good green** oil vs a **browned / over-roasted** one — *and* do it so a sloppy mill floor (loose dilution)
+can't break it. Everything downstream (LIMS, field, Android) is justified only if this holds.
+
+### The claim — two mandatory sub-claims
+
+| # | Sub-claim | Meaning | Status |
+|---|---|---|:--:|
+| 1 | **Dilution-invariance** | same oil at 2 vs 3 drops → same number | ✅ proven |
+| 2 | **Discrimination** | good-green vs over-roasted-brown → clearly different numbers | ✅ proven |
+
+**Scope narrowed (§1a):** the old "too-green" third class and the "which green is better" ranking are **dropped**
+— that is a matter of taste, not the miller's need. Brown is *not* a matter of taste (tastes worse, sells
+cheaper). Goal = a **binary over-roast warning**, not a three-way roast scale.
+
+### The metric that carries it
+
+| Metric | Role | Result |
+|---|---|---|
+| **Pigment ratio (Soret/Q, 440–460 / 560–580)** | primary verdict driver | **the winner** |
+| Colour chroma (distance from white) | corroborating | Δ/noise ≈ 6.5, dilution-invariant |
+| PCA "is it pumpkin at all" | optional bonus, **not** authentication | out of gate |
+
+Class call = **simple nearest-cluster distance**, not a trained classifier (§2.4).
+
+### The evidence
+
+| Claim | Green (good) | Brown (over-roasted) | Separation | ✓ |
+|---|:--:|:--:|:--:|:--:|
+| Pigment ratio, all 32 runs | 3.75 ± 0.13 | 2.47 ± 0.11 | **Δ/noise ≈ 10.8, non-overlapping** | ✅ |
+| Pigment ratio, K/L/M/N | 3.83 ± 0.13 | 2.41 ± 0.08 | Δ/noise ≈ 13.5 | ✅ |
+| Dilution-invariance (2↔3 drops) | 3.3 % | 5.4 % | ≪ 1.4 between-oil gap | ✅ |
+| Colour (chroma) | 0.234 | 0.198 | Δ/noise ≈ 6.5 | ✅ |
+| Threshold | — | — | **Ampel zone at 2.8 exists** | ✅ |
+
+Cluster gap: **worst green 3.67 > best brown 2.59** — a clean, empty separation.
+
+### Proven vs open
+
+| Aspect | State |
+|---|---|
+| Dilution-invariant good/brown discrimination | ✅ **Proven, not marginal** (10–13× noise) |
+| Physics understood (settling, matched/mismatched bands) | ✅ No hand-waving (§11.4a–d) |
+| Freshness-protocol repeatability (green ×5) | ✅ Validated (§11.4a) |
+| Verdict threshold | ✅ Exists (Ampel 2.8) |
+| Miller-facing verdict in-app | ✅ **Implemented** — the Roast Ampel gauge shows an easy green/brown read, not raw numbers ([`SPEC_roast_ampel.md`](SPEC_roast_ampel.md) §8) |
+| Sample preparation | ✅ **Easy** — a few drops of oil in isopropanol + a swirl; no lab skills |
+| Broaden panel: +1 brown, +4 green | ⏳ **The one open item — confirmatory** (§11.6) |
+| Brown ×5 fresh runs | ⏳ In progress (2 done; age-robust as predicted) |
+| ~~Third too-green oil~~ | ⛔ Retired — out of scope (§1a) |
+| ~~Amber-band sample~~ | ⛔ Retired — no intermediate oils in practice (§1a) |
+
+### Can we be hopeful? — honest read
+
+**Yes — and with the too-green class dropped, more so than before.** The biggest prior risk (green-vs-greener
+tangled with settle-drift) is **out of scope**. What's left is the *easy, big* cut — intact green pigment vs
+degraded brown pigment — already demonstrated at 10–13× the noise, non-overlapping, dilution-robust.
+
+| Question | Honest answer |
+|---|---|
+| Is the core binary claim proven? | **Effectively yes** — strong, clean, on 4 oils / 32 runs. |
+| Does the settle-drift threaten it? | **No** — it pushes green *up*, away from 2.8; corrupts only the fine gradation we no longer need (§11.4b). |
+| What could still surprise us? | Only that the broadened panel breaks the pattern — unlikely (price + eye + spectrum agree three ways). |
+| Overall | **GO on the core claim**; remaining work strengthens evidence, it is not make-or-break. |
+
+**Bottom line:** with scope honestly set to *over-roast detection*, this is no longer "hopeful but unproven" —
+the core capability is **demonstrated**; the outstanding item (a wider oil panel) is about *confidence*, not
+*viability*. And the delivery side is **already in place**: the verdict reaches the miller as an easy-to-read
+in-app **Roast Ampel** (a green/brown read, not raw numbers), and preparing a sample is a few-drops-and-swirl
+affair — so nothing exotic stands between the proven science and the mill floor.
+
+---
+
 ## 0. Why this milestone exists
 
 **Product goal (recap).** A *cheap DIY VIS spectrometer* + *convenient software* for the **pumpkin-oil mill
@@ -57,6 +135,30 @@ at the metric tables, and see whether within-oil metrics cluster while between-o
 pass/fail thresholds are set yet** — those come later, from the data (this is exactly `SPEC_pumpkin_peak_ratio_eval.md`
 P5 / §8 calibration). A quantitative separation criterion (e.g. within-oil spread ≪ between-oil spread) is an
 *open question* for §9, to be pinned once the first series exists.
+
+### 1a. Scope NARROWED — binary *good-green vs over-roasted-brown* (Edwin 2026-07-24)
+
+The three-class ambition is **reduced to a binary, deliverable goal: detect over-roasting.** Flag whether an oil
+is a **good green** or a **browned / over-roasted** one. The **"too-green" class is DROPPED as a goal.** Rationale:
+
+- **In practice oils are one of two types** — the green (good) type or the brown (over-roasted) type. There is no
+  meaningful population of intermediate "amber" oils on a mill floor, so the empty 2.6–2.8 middle is **not a gap
+  to fill** but a rarely-occupied boundary.
+- **Ranking green oils against each other is out of scope.** "Your green is greener/fresher than his" is partly a
+  **matter of taste** — not a claim the miller needs, nor one the instrument should arbitrate.
+- **Brown is NOT a matter of taste.** An over-roasted oil objectively **tastes worse and sells cheaper.** That is
+  the one call worth making — and it is the coarse, robust call the metric already nails.
+
+**Consequences for the gate:**
+- The **third "too-green" oil** measurement is **no longer required** (removes the old §11.6 item 1).
+- The **fine green-vs-greener separation** — the settle-drift-entangled hard part — is **out of scope**. The
+  settle-drift (§11.4a) therefore corrupts only a fine gradation **we don't need**, so the §11.4b "silver lining"
+  is now the *whole* story, not a consolation prize.
+- The **verdict threshold already exists**: the Roast-Ampel zone boundary at **2.8** ([`SPEC_roast_ampel.md`](SPEC_roast_ampel.md)).
+  Calibrating finer roast-degree gradations is deferred / out of scope.
+- What remains is **confirmatory, not make-or-break**: broaden the panel (1 brown + 4 green, §11.6) to lift the
+  good-vs-brown call from n=4 bottles to a wider set. The core claim — *dilution-invariant good/brown
+  discrimination* — is already met.
 
 ---
 
@@ -1042,15 +1144,29 @@ barely moves, 70↔73, because the red is a thick-layer effect not seen in the t
   brown** (M↔N ~8%, residual scatter `b`, §11.4). Discrimination is **robust across dilution regardless**: brown
   clusters ~1.8–2.0 (2 & 3 drops), green ~2.9–3.1 — the green↔brown gap (~1.0) dwarfs brown's dilution wobble (~0.13).
 - **UC3 discrimination ✓ green↔brown** (Browning ratio, `A_blue`) — and confirmed dilution-robust by the N-series.
-- **REMAINING for the gate — two items; with both in, the Capability Proof is READY (Edwin 2026-07-23):**
-  1. the **third "too-green" oil** tested for discrimination — should land ABOVE green on the freshness axis
-     (even higher `A_blue` / Pigment ratio). Three distinct, non-overlapping clusters closes the discrimination claim.
-  2. **a reasonable amber** — a mid-band sample that actually falls in the Roast-Ampel amber zone (ratio 2.6–2.8),
-     so the "probably too brown" state is **exercised by real data**, not an empty gap. Today no sample lands
-     between best-brown 2.59 and worst-green 3.67, so the middle verdict is untested. See
-     [`SPEC_roast_ampel.md`](SPEC_roast_ampel.md) §2 / §5.
-- **Verdict so far: GO** (green↔brown separate cleanly and dilution-robustly; the too-green oil and a real
-  amber-band sample are the only items outstanding — once both are measured, the proof is complete).
+- **Freshness-protocol repeatability ✓ green (Edwin 2026-07-24):** with the §11.4a discipline (fresh sample +
+  uniform dilution) the green Steirerkraft oil held a **small ratio variance across 5 runs** (afternoon + evening),
+  confirming the protocol is the antidote to the §11.4d susceptibility. **Brown ×5 in progress** (2 fresh + 1 at
+  +11 h already ≈2.5; 2 more fresh due) — §11.4d predicts the brown is *age-robust* (matched faint bands), so its
+  5-run spread should be tight without special care.
+- **Scope narrowed to binary good-green vs over-roasted-brown (§1a, Edwin 2026-07-24)** — the too-green class and
+  the fine green-ranking are dropped, which **retires two of the old three remaining items.**
+- **REMAINING for the gate — ONE confirmatory item (Edwin 2026-07-24):**
+  1. **Broaden the oil panel — TODO.** The conclusion rests on **2 brown (~2.5) + 2 green (~3.5)** oils. It is
+     almost certainly not a coincidence — **price, perceived colour, and the measured ratio all agree** (cheap
+     commodity → brown → low ratio; better oil → green → high ratio; *walks like a duck*). To make it **safe**,
+     measure the oils already on hand: **1 more brown + 4 more green** (each fresh, per §11.4a), turning 2-vs-2 into
+     a broad multi-oil panel triangulated by three independent signals — removing the small-N doubt.
+- **RETIRED (no longer gate items, per §1a):**
+  - ~~third "too-green" oil~~ — the too-green class is dropped; only over-roast detection is the goal.
+  - ~~a real amber-band sample~~ — practically there are no intermediate oils; the empty 2.6–2.8 middle is a
+    rarely-occupied boundary, not a gap that must be exercised. (If a borderline oil ever turns up it *validates*
+    the middle zone, but it is not required for GO.)
+  - "no numeric thresholds" — **superseded**: the verdict threshold exists as the **Roast-Ampel 2.8 zone boundary**
+    ([`SPEC_roast_ampel.md`](SPEC_roast_ampel.md)); finer roast-degree calibration is out of scope.
+- **Verdict: GO on the core claim** — green↔brown separate cleanly (Δ/noise ~10.8, non-overlapping) and
+  dilution-robustly, which is exactly the binary over-roast call the product needs. The one open item (broaden
+  the panel) is **confirmatory strengthening of already-strong n=4 evidence**, not a risk to the outcome.
 
 ## 11.7 Deliverable — the one-page summary (artifact + PDF)
 
@@ -1085,6 +1201,28 @@ Notes: `--no-pdf-header-footer` drops Chrome's URL/date chrome; `@page{size:A4;m
 `-webkit-print-color-adjust:exact` in the HTML's `@media print` do the page setup and force the swatch/oil colours
 to print. The VAAPI stderr warning is harmless. Re-publishing the **same file path** in the same session keeps the
 artifact URL stable; from another session pass that URL as `url=` or a new one is minted.
+
+## 11.8 Deliverable — the colleague-facing *current-state* status report (PDF)
+
+A short, non-technical **status report** for sharing the gate's standing with a colleague — distinct from the
+§11.7 GO-verdict one-pager (that is the evidence artifact; this is the *"where do we stand"* narrative). It mirrors
+the **Current state** executive summary at the top of this spec, in plain prose + three headline stats, and — its
+distinguishing feature — **embeds the two live Roast-Ampel screenshots** to show the result already reaches the
+user in a usable form: the everyday **Send-to-LIMS** verdict first ("what the miller always sees"), then the
+optional analytical **Evaluation** gauge ("if interested in the detail").
+
+- **Generator (single source of truth — do NOT hand-edit the PDF):**
+  [`docs/tools/build_capability_status_pdf.py`](tools/build_capability_status_pdf.py). Self-contained: it
+  base64-embeds the two screenshots (Pillow-resized/cropped) into an inline-CSS A4 HTML and renders via headless
+  Chrome. One command regenerates it: `python3 docs/tools/build_capability_status_pdf.py`.
+- **Output PDF:** `spectracs-references/tmp/Spectracs_CapabilityProof_status.pdf` (2 pages, A4).
+- **To update** (evidence moved, UI changed, scope shifted): edit the copy/stats in the generator's HTML string;
+  if the gauge UI changed, re-take the two Ampel screenshots and repoint `LIMS_IMG` / `EVAL_IMG` at the top of the
+  script (the header docstring spells out which screen each is); re-run. The screenshots are the live app, so a
+  UI-accurate refresh means re-shooting them — the script does the rest.
+- **Provenance note:** keep this report's numbers in step with §11 and the top-of-spec Current-state section; all
+  three tell the same story at different depths (report = shareable prose, Current-state = scannable tables, §11 =
+  full data + provenance).
 
 ## 12. Cross-references
 

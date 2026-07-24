@@ -1,8 +1,10 @@
-# SPEC — The Roast Ampel (green / amber / red oil-quality traffic light)
+# SPEC — The Roast Ampel (green / brown over-roast traffic light)
 
 Status: **DESIGN — implement on explicit request only.** Raised by Edwin 2026-07-22/23. Grew out of the
 colour-mapping discussion on top of the Capability Proof results. "Ampel" = German/Austrian for **traffic
-light**; that is exactly what this is — a three-state green/amber/red verdict the miller can read at a glance.
+light**; that is exactly what this is — a **two-state green / (too-)brown** verdict the miller can read at a
+glance (a single 2.8 threshold, §2; the earlier three-state amber middle was **dropped** — the goal is over-roast
+detection, [`SPEC_capability_proof.md`](SPEC_capability_proof.md) §1a).
 An **interactive mockup + rendered A4 PDF** exist at `spectracs-references/ampel/roast_ampel_mockup.{html,pdf}`
 (concept → miller's read → bench photo → K…R samples → group separation; four oils / 32 runs). Not
 implemented in the app yet — **§8 is the app-integration build design.**
@@ -826,3 +828,32 @@ colour + value), instead of the table hard-coding `VerdictView` then gauge then 
 task **generalises that same mechanism** to result-derived label/colour/value. It is **independent of this gauge
 build** (own small spec when picked up); the gauge's cached `verdictLabel`/`swatchColor` merely happen to be the
 shape such a declaration would surface, so nothing here blocks or depends on it. Tracked as **D8-table-decl**.
+
+## 8.12 Deferred — the staleness / high-ratio guard *(Edwin 2026-07-24; POSTPONED, low priority)*
+
+**Priority note.** In the app the primary user is the **miller measuring FRESH oil** — that is the audience the
+verdict serves. **Sample aging is a secondary topic of less interest**, so this guard is explicitly **postponed**
+(not part of any current build). Recorded here so the idea isn't lost.
+
+**The idea.** When the Pigment ratio comes back **implausibly high**, the sample has most likely *stood and
+cleared* (settling drains the haze out of the weak Q denominator → the ratio inflates — [`SPEC_capability_proof.md`](SPEC_capability_proof.md)
+§11.4a/§11.4d). The guard would **softly ask** the user — *"This reading is unusually high; a fresh, well-mixed
+sample would sit below ~5. Has the sample been standing? Re-agitate or prepare a fresh one."* — a **nudge, never
+a gate** (the green oil drifts *up*, away from 2.8, so the verdict itself is never endangered — §11.4b silver
+lining).
+
+**Threshold — and why the raw ratio alone is a weak trigger.**
+- Fresh green measures **3.7–4.1**; *aged* green reached **4.57 / 4.7 / 4.9**; the band's left edge is **5.0**.
+- A fixed cutoff at **~5.2** is only a *sanity ceiling* (it fires past the band, above even the aged 4.9 seen) —
+  it catches truly off-the-charts readings but **misses moderate aging** (4.5–4.9). That is acceptable, since the
+  verdict is safe there anyway.
+- **Sharper trigger (recommended if built): ratio-high *and* absolute Soret *low*.** An aged/cleared sample has a
+  *weak* Soret (~0.40, down from ~0.5); a **genuinely greener oil has a strong Soret**. Keying on *Soret-low*
+  distinguishes a **stale sample** (warn) from a legitimately high reading — a genuinely fresh, high-pigment
+  green oil reads high *with a strong Soret* and must **not** false-alarm. (This mattered even more under the old
+  three-oil scope; with the scope narrowed to over-roast detection — [`SPEC_capability_proof.md`](SPEC_capability_proof.md)
+  §1a — it is now just good hygiene, reinforcing why the guard is postponed, not urgent.)
+
+**Placement (when picked up).** A plugin-level warning **view item** in the Evaluation (new) step (a styled
+`LabelView`, or a `warn`/`note` field surfaced on the gauge view-model), computed from the ratio + the Soret band
+mean the plugin already has. Design-only; no build until requested.
