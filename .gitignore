@@ -27,3 +27,11 @@ android/server/*.apk
 # Stray camera capture probe (debug artifact)
 camera_capture_probe.png
 captureDiagnostics/
+
+# Confidential business material — must NEVER enter GitHub. The originals live OUTSIDE any
+# git repo in ../spectracs-references/business/. These patterns are a defensive backstop so a
+# stray copy inside this repo can't be committed by accident. (Specs may REFERENCE them by name.)
+SPEC_wirtschaftliches.md
+Verkaufsangebot_Mueller.md
+Spectracs_Roestampel_Flyer.pdf
+build_flyer_pdf.py

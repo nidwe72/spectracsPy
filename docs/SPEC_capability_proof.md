@@ -1234,3 +1234,8 @@ optional analytical **Evaluation** gauge ("if interested in the detail").
 - [`SPEC_dev_measure_bench.md`](SPEC_dev_measure_bench.md) — the bench host these deltas land in.
 - `tests/lda3.py` / `tests/lda4.py` (workspace root, 2021) — the abandoned LDA prototypes; retained as the record
   of why §2.4 uses a simple distance judge, not a supervised classifier.
+- **`SPEC_wirtschaftliches.md`** — market/economics analysis (will the miller profit, realistic Spectracs revenue,
+  lab-as-channel model). **⚠ Lives OUTSIDE this git repo at `spectracs-references/business/SPEC_wirtschaftliches.md`
+  and must NEVER be committed / pushed to GitHub** (confidential business analysis). Referencing it by name from
+  here is fine; the file itself stays off GitHub. See also the sales-offer material in the same folder
+  (`Verkaufsangebot_Mueller.md`, `Spectracs_Roestampel_Flyer.pdf`).
