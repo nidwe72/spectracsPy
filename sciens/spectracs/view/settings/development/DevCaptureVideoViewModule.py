@@ -18,13 +18,26 @@ class DevCaptureVideoViewModule(BaseVideoViewModule[VideoSignal]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__roiItem = None
+        self.__cropToRoi = False
+
+    def setCropToRoi(self, cropped):
+        # SPEC_simplified_plugin_navigation.md §5 (Change A): show ONLY the cropped ROI strip instead of the whole
+        # frame + a dotted box. Because scene coords == image pixels, fitting the ROI rect IS the crop (no pixel
+        # copy). Applied from the next painted frame.
+        self.__cropToRoi = cropped
 
     def handleVideoThreadSignal(self, videoSignal: VideoSignal):
         image = videoSignal.image
         if image is None:
             return
         self.imageItem.setPixmap(QPixmap.fromImage(image))
-        self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
+        if self.__cropToRoi and self.__roiItem is not None:
+            self.__roiItem.setVisible(False)  # the box is redundant once cropped
+            # Fill the view with the ROI strip (IgnoreAspectRatio) so there are no black letterbox margins
+            # around it (Edwin, rig cosmetic) — the strip's vertical axis is redundant, so the stretch is fine.
+            self.videoWidget.fitInView(self.__roiItem, Qt.AspectRatioMode.IgnoreAspectRatio)
+        else:
+            self.videoWidget.fitInView(self.imageItem, Qt.AspectRatioMode.KeepAspectRatio)
 
     def setRoi(self, x1, y1, x2, y2):
         # Corners aren't ordered top-left/bottom-right (X1=left, X2=right, but Y1=lower/Y2=upper Hough

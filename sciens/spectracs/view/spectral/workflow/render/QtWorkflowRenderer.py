@@ -19,12 +19,16 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
         self.__container.setLayout(self.__layout)
         self.__swatchRow = None
         self.__metricGrid = None  # accumulates consecutive MetricFieldViews into one grid (aligned label column)
+        self.__expandingContent = False  # set when a plot is added, so it FILLS the height instead of top-packing
         for item in items:
             if not isinstance(item, MetricFieldView):
                 self.__flushMetricGrid()
             dispatchItem(item, self)
         self.__flushMetricGrid()
-        self.__layout.addStretch(1)
+        # A step whose only content is a spectrum plot should fill the vertical space (Edwin, rig cosmetic) —
+        # so skip the top-packing stretch when there is an expanding widget; keep it for metric/label lists.
+        if not self.__expandingContent:
+            self.__layout.addStretch(1)
         return self.__container
 
     # --- visitor methods ---
@@ -148,7 +152,9 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
             line = pg.InfiniteLine(pos=marker[0], angle=90,
                                    pen=pg.mkPen('w', style=Qt.PenStyle.DashLine))
             plot.addItem(line)
+        plot.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.__layout.addWidget(plot)
+        self.__expandingContent = True
 
     def visitSpectrumCapture(self, view):
         # P2: the captured raster (host-filled `.image`). Passive — a scaled image + optional caption.

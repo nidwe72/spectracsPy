@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, QPointF, QRectF, QSize
-from PySide6.QtGui import QPainter, QPolygonF, QColor
+from PySide6.QtGui import QPainter, QPen, QPolygonF, QColor
 from PySide6.QtWidgets import QWidget
 
 from sciens.base.PlatformUtil import is_android
@@ -15,6 +15,7 @@ class StepBarWidget(QWidget):
     __HEIGHT = 34
     __ACTIVE_TEXT = QColor("#FFFFFF")
     __INACTIVE_TEXT = QColor("#FFFFFF")  # inactive phases: white-on-(secondary) gray
+    __SEPARATOR = QColor("#6E6E6E")      # chevron seam: lighter than the inactive gray so segments read apart
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -93,4 +94,14 @@ class StepBarWidget(QWidget):
             left = x0 + (depth if index > 0 else 6)
             right = x1 if isLast else x1 - depth
             painter.drawText(QRectF(left, 0, max(1.0, right - left), height), Qt.AlignCenter, label)
+
+        # Separator seam: draw each non-last chevron's tip edge lighter, ON TOP of all fills, so two adjacent
+        # gray segments no longer merge into one surface (Edwin, rig cosmetic).
+        painter.setBrush(Qt.NoBrush)
+        painter.setPen(QPen(self.__SEPARATOR, 1))
+        for index in range(count - 1):
+            x0 = index * (segmentWidth - depth)
+            x1 = x0 + segmentWidth
+            painter.drawLine(QPointF(x1 - depth, 0), QPointF(x1, height / 2.0))
+            painter.drawLine(QPointF(x1, height / 2.0), QPointF(x1 - depth, height))
         painter.end()

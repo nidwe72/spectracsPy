@@ -25,6 +25,10 @@ class BaseVideoViewModule(QFrame,Generic[VIDEO_SIGNAL]):
         self.graphicsView=QGraphicsView()
 
         self.videoWidget=QGraphicsView()
+        # The view always fits its content (fitInView); it must never show scrollbars — otherwise the
+        # crop-to-ROI zoom (Change A) leaves a stray scrollbar on the right (Edwin, rig cosmetic).
+        self.videoWidget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.videoWidget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         layout.addWidget(self.videoWidget, 0, 0, 1, 1)
 
         #scene = QGraphicsScene();

@@ -1,8 +1,9 @@
 # SPEC — Simplified, plugin-driven navigation + ROI-cropped capture preview
 
-Status: **M1 + M2 IMPLEMENTED 2026-07-24** (nav-model SDK + base extraction: both hosts rehomed onto
-`AbstractPluginExecutionView`; full suite **243 passed**). **M3 DESIGN** (implement on explicit request — Edwin's
-spec-first rule). Source: Edwin, 2026-07-24. Decisions confirmed inline by Edwin on 2026-07-24 (§3, §4, §5, §6).
+Status: **M1 + M2 + M3-core IMPLEMENTED & RIG-VERIFIED 2026-07-24/25** (nav-model SDK + base extraction: both hosts
+rehomed onto `AbstractPluginExecutionView`; DEV plugin drives the should-be flow; Edwin drove the bench on the rig —
+works as expected; full suite **249 passed**). **Deferred:** P3/Change G (plugin-declared rasters) + X (remove the
+temporary toggle). Source: Edwin, 2026-07-24. Decisions confirmed inline by Edwin on 2026-07-24 (§3, §4, §5, §6).
 
 **M1 as built (2026-07-24):** `plugin_sdk/policy/{NavigationMode,NavigationPolicy,WorkflowPolicy}.py` (Qt-free,
 exported via the `plugin_sdk` facade); `SpectralPlugin.policy()` default = `WorkflowPolicy.default()` (both real
@@ -45,8 +46,25 @@ default-policy / facade-exports).
   guidance, so it updates on capture too (this was a latent bug in the wizard as well). Guard test added
   (`test_refresh_nav_fires_guidance_hook_on_capture`). Also reworded the DEV Sample prompt
   ("select oil-tab…" → "Insert the oil dilution and capture") — the old wording made no sense once on the tab.
-- **M2 COMPLETE.** NEXT = **M3** (DEV plugin behaviour: `policy()` auto-advance + step-chevrons, `metadata()`,
-  rasters-as-`SpectrumCaptureView`, cropped preview, the temporary toggle).
+- **M2 COMPLETE.**
+- **M3 rig-verified (Edwin 2026-07-24/25): the should-be flow works as expected on the bench.** Four cosmetic
+  fixes landed from the rig walk-through: (1) scrollbars off on the capture video view (the crop `fitInView` tripped
+  a stray one — `BaseVideoViewModule`); (2) the chevron seam between two gray segments drawn in lighter gray
+  (`#6E6E6E`) so they read apart (`StepBarWidget`); (3) a single-plot step now **fills** the panel vertically (skip
+  the top-packing stretch + plot Expanding — `QtWorkflowRenderer`); (4) the cropped preview **fills** the view
+  (`IgnoreAspectRatio`) so there are no black letterbox margins around the strip (`DevCaptureVideoViewModule`).
+- **M3 (core done — offscreen-green):** the DEV plugin now declares the whole should-be
+  presentation. **P1** `policy()` = AUTO_ADVANCE + `stepChevronPhases={ACQUISITION}` + the **role-lift**
+  (`CapturePanel.setActiveStep` hides the internal role-tabs so the chevron is the role selector; bench `_renderStop`
+  focuses the panel per step; `_canAdvanceFrom` gates an earlier ACQ step on itself, the boundary on all-captured).
+  **P2** `metadata()` = the 3 fields (land on the form after measuring). **P4/Change A** cropped preview:
+  `CaptureView.croppedPreview` + `DevCaptureVideoViewModule.setCropToRoi` (fitInView to the ROI rect, box hidden) +
+  `CapturePanel` wiring. **P5** the temporary `SIMPLIFIED_NAVIGATION` toggle (flip False ⇒ as-is). Tests:
+  `test_dev_plugin_m3_declarations.py` (4) + a should-be bench-nav flow test; full suite **249 passed**. **Rig
+  click-through needed:** the per-chevron camera focus, the visual ROI crop, exposure-lock-on-sample under the
+  role-lift. **Deferred: P3/Change G** (rasters as plugin-declared `SpectrumCaptureView` — the host raster hook
+  stays for now; low priority as the should-be flow jumps past PROCESSING) and **X** (remove the toggle after rig
+  sign-off).
 
 ## 0. Goal & why
 

@@ -30,6 +30,7 @@ class _StubCapturePanel(QWidget):
     def isCameraReady(self): return False   # short-circuit the guidance highlight (rig-verified separately)
     def getCaptureButton(self): return self.__button
     def getRepresentativeFrame(self, role): return None
+    def setActiveStep(self, step): self.activeStep = step
 
 
 def _addStep(phase, label, role=None):
@@ -121,6 +122,50 @@ class DevBenchNavOffscreenTest(unittest.TestCase):
         self.assertEqual(bench._plan[bench._cursor].phaseType, P.PROCESSING)
         bench.onClickedBack()   # back to Acquisition
         self.assertEqual(bench._plan[bench._cursor].phaseType, P.ACQUISITION)
+
+    def test_should_be_flow_step_chevrons_auto_advance_to_metadata(self):
+        from sciens.spectracs.plugin_sdk.policy.NavigationMode import NavigationMode
+        from sciens.spectracs.plugin_sdk.policy.NavigationPolicy import NavigationPolicy
+        from sciens.spectracs.plugin_sdk.policy.WorkflowPolicy import WorkflowPolicy
+
+        fields = [type("F", (), {"name": "title", "label": "Title", "type": "TEXT",
+                                 "order": 0, "showInWorkflowsTable": True})()]
+
+        class _ShouldBe(_StubPlugin):
+            def policy(self):
+                return WorkflowPolicy(NavigationPolicy(NavigationMode.AUTO_ADVANCE,
+                                                       stepChevronPhases={P.ACQUISITION}))
+            def metadata(self, workflow):
+                return fields
+
+        bench = _TestBench()
+        bench.finished = False
+        bench._resolvePlugin = lambda: _ShouldBe()
+        bench.initialize()
+        bench._startNewRun()
+        chevron = [bench._plan[i].label for i in range(len(bench._plan))]
+        self.assertEqual(chevron, ["Reference", "Sample", "Processing", "Evaluation", "Metadata", "Publishing"])
+
+        acq = list(bench._workflow().getPhase(P.ACQUISITION).getSteps().values())
+        # Reference stop: advances once the REFERENCE is captured (not all)
+        self.assertFalse(bench._nextButton.isEnabled())
+        acq[0].setContainer(SpectraContainer())
+        bench._refreshNav()
+        self.assertTrue(bench._nextButton.isEnabled())
+        bench.onClickedNext()   # -> Sample
+        self.assertEqual(bench._plan[bench._cursor].phaseType, P.ACQUISITION)
+        self.assertEqual(bench._plan[bench._cursor].label, "Sample")
+        # Sample stop is the boundary: gated on ALL captured
+        self.assertFalse(bench._nextButton.isEnabled())
+        acq[1].setContainer(SpectraContainer())
+        bench._refreshNav()
+        self.assertTrue(bench._nextButton.isEnabled())
+        bench.onClickedNext()   # boundary -> JUMP to Metadata (index 4)
+        self.assertEqual(bench._plan[bench._cursor].phaseType, P.METADATA)
+        # the jumped-over computed phases are populated + Back-reachable
+        self.assertGreater(len(bench._workflow().getPhase(P.PROCESSING).getSteps()), 0)
+        bench.onClickedNext()   # Metadata -> Publishing (terminal)
+        self.assertEqual(bench._plan[bench._cursor].phaseType, P.PUBLISHING)
 
     def test_no_publishing_when_plugin_declares_none(self):
         class _NoPub(_StubPlugin):

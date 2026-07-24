@@ -119,6 +119,19 @@ class CapturePanel(QWidget):
     def plotActiveRole(self):
         self.__plotActiveRole()
 
+    def setActiveStep(self, step):
+        # SPEC_simplified_plugin_navigation.md §4.6 (role-lift): drive the active role EXTERNALLY when the host's
+        # chevron is the role selector (per-step chevrons). Hide the internal Reference/Sample tab bar and run the
+        # same __onRoleTabChanged logic (reparent content, exposure-lock-on-sample, labels, plot).
+        if step not in self.__steps:
+            return
+        index = self.__steps.index(step)
+        self.__roleTabs.tabBar().setVisible(False)
+        self.__roleTabs.blockSignals(True)
+        self.__roleTabs.setCurrentIndex(index)
+        self.__roleTabs.blockSignals(False)
+        self.__onRoleTabChanged()
+
     # --- build ---
 
     def __build(self):
@@ -405,8 +418,11 @@ class CapturePanel(QWidget):
             if calibration is not None else None
         if extended is None:
             self.__videoViewModule.clearRoi()
+            self.__videoViewModule.setCropToRoi(False)
         else:
             self.__videoViewModule.setRoi(*extended)
+            # Change A: the active step's CaptureView decides whether the live preview shows only the cropped ROI.
+            self.__videoViewModule.setCropToRoi(self.__croppedPreview())
 
     # --- auto-exposure ---
 
@@ -630,6 +646,11 @@ class CapturePanel(QWidget):
         nmMax = getattr(view, "wavelengthMaxNm", None)
         return (nmMin if nmMin is not None else self.__NM_MIN,
                 nmMax if nmMax is not None else self.__NM_MAX)
+
+    def __croppedPreview(self):
+        # Change A: the active step's CaptureView.croppedPreview (default False = whole frame + dotted box).
+        view = self.__activeStep.getView() if self.__activeStep is not None else None
+        return bool(getattr(view, "croppedPreview", False))
 
     def __applyExtendedRoi(self, imageWidth):
         if self.__savedRoiX is not None:

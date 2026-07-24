@@ -14,6 +14,7 @@ from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.server.spectracs.SpectracsPyServerClient import SpectracsPyServerClient
 from sciens.spectracs.logic.spectral.plugin.PluginRegistry import PluginRegistry
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
+from sciens.spectracs.logic.spectral.navigation.NavigationFlow import NavigationFlow
 from sciens.spectracs.view.spectral.workflow.AbstractPluginExecutionView import AbstractPluginExecutionView
 from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
 from sciens.spectracs.view.spectral.workflow.CapturePanel import CapturePanel
@@ -123,9 +124,13 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
         self.__goToSettings()
 
     def _canAdvanceFrom(self, navStop):
-        if navStop.phaseType == SpectralWorkflowPhaseType.ACQUISITION:
-            return self.__acquisitionComplete()
-        return True
+        if navStop.phaseType != SpectralWorkflowPhaseType.ACQUISITION:
+            return True
+        # Per-step chevrons (§4.6): an earlier ACQUISITION step advances once IT is captured; the LAST acquisition
+        # stop (the auto-advance boundary) gates on ALL captured. A single phase stop gates on all captured.
+        if navStop.isStep() and not NavigationFlow.isAtAcquisitionBoundary(self._plan, self._cursor):
+            return navStop.step.getContainer() is not None
+        return self.__acquisitionComplete()
 
     def _beforeRender(self):
         # Stop the live stream before the tab area is cleared, but KEEP the panel object alive — it holds the
@@ -142,7 +147,7 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
     def _renderStop(self, navStop, container):
         phaseType = navStop.phaseType
         if phaseType == SpectralWorkflowPhaseType.ACQUISITION:
-            self.__renderAcquisition(container)
+            self.__renderAcquisition(container, navStop.step if navStop.isStep() else None)
         elif phaseType == SpectralWorkflowPhaseType.PROCESSING:
             self.__renderProcessing(container)
         elif phaseType == SpectralWorkflowPhaseType.EVALUATION:
@@ -152,13 +157,16 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
 
     # --- acquisition ---
 
-    def __renderAcquisition(self, container):
+    def __renderAcquisition(self, container, activeStep=None):
         if self.__capturePanel is None:
             self.__capturePanel = CapturePanel(
                 self.__acquisitionSteps(), self._engine,
                 onCaptured=self.__onCaptured, onRoleChanged=self.__refreshGuidance,
                 onCaptureFailed=self.__onCaptureFailed)
-        container.addTab(self.__capturePanel, "Acquisition")
+        container.addTab(self.__capturePanel, activeStep.getLabel() if activeStep is not None else "Acquisition")
+        if activeStep is not None:
+            # per-step chevron (§4.6 role-lift): the chevron IS the role selector; focus the panel on this role.
+            self.__capturePanel.setActiveStep(activeStep)
         self.__capturePanel.startStream()
         self.__capturePanel.plotActiveRole()
 
