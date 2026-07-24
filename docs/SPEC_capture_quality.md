@@ -1199,3 +1199,57 @@ and is the *seed* of the eventual `CameraService`.
 +----+------------------------------------------------+------------------------------------------+
 W6 (POSTPONED): red/green stability guard at measurement time (item c). Single-owner CameraService: later.
 ```
+
+---
+
+## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DESIGN; TASK TO HANDLE SOON — Edwin 2026-07-24, impl on explicit request)*
+
+Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).
+The thread's general point is correct — a consumer camera applies a non-linear (gamma) curve so relative-intensity
+maths is wrong unless linearized — but **most of its recommendations we already satisfy for free, and one we should
+adopt.** This section records the reasoning and the plan.
+
+### 17.1 Why we DISCARD the QE / blackbody-lamp calibration (recorded, not chased)
+The thread spends most of its length on characterizing the sensor's **Quantum-Efficiency (relative spectral
+response) curve** — via a Planck's-law blackbody (halogen) lamp or the ASTM solar standard — and dividing it out.
+**That is for _absolute_ spectroscopy (no reference).** We do **reference-based transmission**: `T = S/R`
+(isopropanol blank vs. sample). The sensor's per-wavelength QE **and** the lamp's own spectrum are **common factors
+in both R and S, so they cancel exactly in the ratio.** That is the entire point of a reference measurement — it
+divides out the instrument+illuminant response. So the blackbody/QE calibration would be **effort spent
+re-solving a problem the reference already solves.** We do **not** pursue it. (Likewise **OECF characterization —
+doubling exposure to map the response curve — is out of scope for now**, Edwin.)
+
+### 17.2 The residual the reference does NOT cancel = the nonlinearity (gamma)
+Linearity is the one thing a ratio cannot fix. With encoding `v = v_lin^(1/γ)` (γ ≈ 2.2, sRGB):
+`T_measured = S/R = (S_lin/R_lin)^(1/γ) = T_true^(1/γ)`  ⇒  `A_measured = A_true / γ` — a **uniform scale** on
+absorbance. To recover true absorbance, linearize R and S **before** dividing.
+
+### 17.3 Why it is an ACCURACY upgrade, not a correctness fix for the verdict
+Because `A_true = γ·A_measured` is a *uniform* scale, **band ratios are gamma-invariant** — the Soret/Q pigment
+ratio (the pumpkin verdict) is unchanged. This is almost certainly why the **Capability Proof already succeeded**
+(10–13× class separation, dilution-invariant) with gamma-encoded data. So gamma linearization does **not** rescue
+the verdict; it improves everything the ratio does *not* protect:
+- **Colour accuracy** (the hue chips / `spectrumToColor`) — colour is *non-linearly* wrong without it; **biggest
+  real gain**.
+- **Dark-band fidelity** — the gamma toe distorts most near black, exactly where the dim Soret 440–460 slope lives.
+- **Multi-camera consistency** — different cameras carry different gamma; linearizing normalizes absolute absorbance
+  across the fleet (Edwin runs several cameras).
+- Makes absorbance *physically real* (today it is ~1/γ ≈ 0.45× compressed).
+
+### 17.4 The plan (design; implement on explicit request)
+- **Linearize PER-CHANNEL, before the `qGray`/max-channel reduction** (§15). Decode each of R,G,B (`c_lin =
+  (c/255)^γ`) then form the luminance from the linear channels — **you cannot gamma-decode the `qGray` *sum*** (sum
+  of gamma-encoded ≠ decode of sum), so linearization must precede the channel combine.
+- **Assume the standard sRGB / γ≈2.2 curve** as the working model (UVC cameras output sRGB); an OECF measurement to
+  refine the exact per-camera curve is a **later, separate refinement — explicitly not now**. Home for a per-camera
+  gamma override (if ever needed): `SpectrometerSensorUtil` (alongside WB-Kelvin / exposure).
+- **Where:** a linearization step in the frame→spectrum reduction path (`RobustReductionLogicModule` /
+  `MeanSpectrumLogicModule` — the same place §15's max-channel reduction lives), gated so it is opt-in until proven.
+- **Measured-experiment discipline** (like the C-phases): after wiring it, **compare** — expect the pumpkin verdict
+  ≈ unchanged (confirming §17.3's ratio-invariance) and the **colour chips visibly improved / more physical**.
+- **Known limit:** we only have **8-bit, already-demosaiced, gamma-encoded** frames (UVC via cv2), **not true RAW**
+  — so this is *approximate* linearization (precision loss; assumes standard sRGB), not the thread's RAW ideal.
+  Good enough for colour + cross-camera consistency; not a path to absolute radiometry.
+
+**Status: soon.** A bounded, low-risk fidelity upgrade — primarily for colour and multi-camera consistency — that
+does not touch the verdict maths. Implement on explicit request.
