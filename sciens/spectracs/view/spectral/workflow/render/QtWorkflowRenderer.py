@@ -40,10 +40,11 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
         self.__layout.addWidget(label)
 
     def visitGauge(self, view):
-        # SPEC_roast_ampel.md §8.4 — the VerdictGaugeView as a labeled metric-grid ROW (Edwin 2026-07-24): the
-        # caption is the gray label chip in col 0, the band+swatch+pill sit in col 1, aligned with the metric
-        # field values below. It shares the metric grid so its columns line up with the chips/metrics.
-        from sciens.spectracs.view.spectral.workflow.GaugeWidget import GaugeWidget
+        # SPEC_roast_ampel.md §8.4 — a labeled metric-grid ROW (Edwin 2026-07-24): the caption is the gray label
+        # chip in col 0 ("verdict (S/Q ratio)" in Evaluation, "Verdict" in LIMS), the gauge sits in col 1. The
+        # col-1 content differs by render flags — band+swatch+pill (Option A) vs big pill + zone bar (Option B).
+        from sciens.spectracs.view.spectral.workflow.GaugeWidget import GaugeWidget, HEADLINE_HEIGHT
+        from sciens.spectracs.model.spectral.plugin.view.GaugeRender import GaugeRender
         if self.__metricGrid is None:
             widget = QWidget()
             grid = QGridLayout()
@@ -56,7 +57,12 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
         _, grid, row = self.__metricGrid
         label = TooltipPageLabel(view.caption or "")
         label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        grid.addWidget(label, row, 0, 1, 1, Qt.AlignmentFlag.AlignTop)
+        if GaugeRender.BAND in view.render:                       # Option A: align the chip with the band top
+            grid.addWidget(label, row, 0, 1, 1, Qt.AlignmentFlag.AlignTop)
+        else:                                                     # Option B (LIMS): same height as the badge,
+            label.setFixedHeight(HEADLINE_HEIGHT)                 # text vertically centred (Edwin 2026-07-24)
+            label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+            grid.addWidget(label, row, 0, 1, 1)
         grid.addWidget(GaugeWidget(view), row, 1, 1, 1)
         self.__metricGrid[2] = row + 1
 

@@ -817,7 +817,10 @@ class _PublishTab(QWidget):
         # shared visitor, so its pill is identical to the Evaluation gauge's; drawn above the publish summary.
         if badgeItems:
             from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
-            layout.addWidget(QtWorkflowRenderer().render(badgeItems))
+            badgeWidget = QtWorkflowRenderer().render(badgeItems)
+            if badgeWidget.layout() is not None:      # zero margins so the "Verdict" chip left-aligns with the
+                badgeWidget.layout().setContentsMargins(0, 0, 0, 0)   # Publish button below (Edwin 2026-07-24)
+            layout.addWidget(badgeWidget)
 
         analyses = ", ".join(analysis.get("name", "") for analysis in view.analyses) or "—"
         summary = QLabel("Send this measurement to the LIMS as a new sample.\n"

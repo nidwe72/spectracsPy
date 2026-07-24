@@ -866,6 +866,117 @@ particulate scatter** (a blue-weighted `b` that doesn't cancel in `S/R`; possibl
 So scatter is a real, **oil-dependent** property — worse for degraded oils — and settling longer (and/or a quick
 filter) tightens the brown oil's invariance. It does NOT threaten discrimination (§11.6).
 
+### 11.4a Settle-time dependence & the mandatory timing protocol (2026-07-24 — the §11.4 effect, run to 11 h)
+
+**The observation (Edwin, rig).** The *same* green Steirerkraft (Spar Steirerkraft g.g.A) cuvette measured
+**~3.66** in the afternoon (O/P series) read **4.57** when re-measured **~11 h later**, and within that evening
+session it climbed **4.0 → 4.58 over a few minutes**. The **brown S-Budget** (Q/R) was **unchanged** afternoon
+→ evening. Room temp had dropped 26 °C → 24.5 °C. **Stirring the aged cuvette brought it straight back to 3.82.**
+
+**Diagnosis (from the embedded `workflow.json` of `now.pdf` vs O/P).** *Not the instrument* — the reference
+spectra overlay exactly (blue/green balance 1.271 vs 1.275). The **sample cleared**: the absorbance drop is
+strongly *wavelength-dependent* — deep Soret **A(440) −17 %** (0.873→0.727), the weak **510–540 valley ~−50 %**,
+the **Q 560–580 −36 %**. The fractional loss is biggest where the signal is *smallest* (the scatter-dominated
+valley/Q) and smallest where pigment dominates (440) — the fingerprint of **turbidity settling out of the beam,
+pigment largely intact.** As the baseline under the weak Q denominator falls, **Soret/Q inflates** (3.66→4.57);
+the Soret/clarity safety-net inflates the same way (7.05→10.79), so it does *not* rescue it — both denominators
+clear.
+
+**Mechanism.** A fresh oil-in-isopropanol dilution is a **cloudy dispersion**, not a true solution (oil droplets
++ micro-particulate, denser than IPA ρ≈0.92 vs 0.79 → they **sink**). Freshly mixed = fine droplets → **very slow
+Stokes settling (v ∝ r²)** → kinetically stable, steady readings. Over hours the droplets **coarsen** (coalescence
++ Ostwald ripening) → settle *faster*, and the scatter leaves the light path → baseline drops → weak Q collapses
+toward the floor. So the **settling rate accelerates with age**; and an aged cuvette, once disturbed
+(handling/insertion), re-suspends coarse sediment that re-settles in **minutes** — which is exactly the observed
+4.0 → 4.58 minutes-scale climb (the ratio *chasing* the clearing in real time). The colder room may assist
+clearing, but the dominant variable is **settle time**, not temperature or the sensor.
+
+**Why green and not brown.** The green oil has a **real but weak** Q-band pigment feature riding on the turbidity
+baseline; when the baseline clears, that weak denominator collapses and the ratio swings. The brown oil's bands
+already sit on the floor (degraded pigment, §11.5) → no differential → its ratio is stable regardless.
+
+**⚠ Danger for the gate / Ampel (record).** A **cleared / over-settled green sample reads a HIGHER S/Q — i.e.
+"greener / fresher" — the WRONG direction.** The Pigment ratio is trustworthy **only while both bands sit well
+above the measurement floor**; once the sample over-clears (or is too dilute / degraded), the weak Q denominator
+falls to the floor and the ratio inflates. Stirring recovered it (4.57→3.82), confirming settled scatter (not
+pigment loss) and giving a free discriminating test: re-suspend → if the ratio drops back, it was clearing.
+
+**MANDATORY measurement protocol for the pigment-ratio metric (green oils):**
+1. **Agitate** (stir/shake) immediately before every capture.
+2. **Wait a fixed short settle** — the *same* each run (~60–90 s: long enough for bubbles to clear, short enough
+   that the dispersion is still present).
+3. **Capture**, and **never reuse a cuvette that has aged** (hours). Prefer measuring **fresh, within the first
+   1–2 h** — the kinetically-stable window.
+4. **Keep the Soret band-mean ≳ 0.5** (enough oil, without saturating the 440 Soret toward the 1.5 ceiling) so
+   the weak Q stays above the floor; **log the settle time + room temperature** with each run.
+
+Caveat: the "first 1–2 h are flat" part is *inferred* from the physics — the afternoon O/P runs span only ~35 min
+and were each freshly handled, so part of their stability is consistent timing, not proof of an undisturbed hold.
+Testable directly: fresh prep, measure every ~15 min undisturbed over 2–3 h and watch the drift rate grow.
+
+### 11.4b Floor-subtracted metric TRIED and REJECTED — raw Soret/Q wins (2026-07-24)
+
+The §11.4a floor-sensitivity (the weak Q denominator riding on a variable turbidity floor) motivated testing a
+**floor-subtracted** ratio `(Soret − clarity)/(Q − clarity)` — subtract the 510–540 clarity band from both
+windows before dividing. Computed on **all 32 K/L/M/N/O/P/Q/R runs** (despiked band means; green = K,L,O,P ·
+brown = M,N,Q,R):
+
+| metric | green | brown | **Δ / noise** | gap (worst-green → best-brown) |
+|---|---|---|---|---|
+| **raw Soret/Q** | 3.75 ± 0.13 | 2.47 ± 0.11 | **10.8** | +0.91 |
+| floor-sub `(S−c)/(Q−c)` | 6.38 ± 0.27 | 3.97 ± 0.32 | **8.1** | +1.20 |
+
+**Floor-subtraction is WORSE, not better.** Δ/noise drops **10.8 → 8.1** and the within-group scatter roughly
+**doubles** (green sd 0.13 → 0.27). Reason: subtracting the floor removes the *stabilizing bulk* of the already-
+weak Q band, leaving a tiny, noisy denominator (`Q − clarity` ≈ 0.05–0.07); dividing by that **amplifies** noise.
+Keeping the floor *in* the denominator (raw Q ≈ 0.14) is the more stable choice. **It also does NOT fix the
+settle-state drift** — tonight's Steirerkraft under floor-sub is still high vs afternoon (afternoon 6.58 → fresh
+6.83–7.44, over-settled 7.18). **Decision: keep the raw Soret/Q Pigment ratio; do not adopt floor-subtraction.**
+
+**Silver lining — the drift does NOT break the verdict.** The settle-state clearing pushes a green oil **UP**
+(3.7 → 4.5), i.e. *further above* the 2.8 threshold, never toward "brown." So the coarse green/brown Ampel call
+is safe; the drift corrupts only the **absolute value** (fine gradation, threshold-calibration). The one residual
+risk is a *genuinely borderline* oil near 2.8 that clears and tips over the line — so **borderline samples need
+the §11.4a protocol most.** Net: raw Soret/Q + a pinned agitate-then-fixed-settle protocol is the recommendation;
+a metric change is not the fix.
+
+### 11.4c Why the sample settles/clears — the physical chemistry (2026-07-24)
+
+The measured "drift" (§11.4/§11.4a) is not chemistry going wrong; it is the **physics of a fine dispersion
+settling**. The full picture, for the record:
+
+- **It is a dispersion, not a true solution.** Isopropanol (2-propanol) is *semi-polar* — a polar –OH on a small
+  nonpolar isopropyl group — while pumpkin oil is a **nonpolar triacylglycerol**. Oil is only *partially*
+  miscible in IPA, so a few drops in a few mL **exceeds solubility** and forms a **cloudy emulsion**: tiny oil
+  droplets + micro-particulate (waxes, phospholipids, seed sediment) suspended in the solvent. The **pigment**
+  (protochlorophyll/pheophytin — moderately polar tetrapyrroles) *does* dissolve — that is the real absorbance
+  signal — but the suspended oil/particulate **scatters** light, which is the turbidity baseline.
+- **Density → it sinks (sediments, not creams).** Oil ρ ≈ 0.92 g/mL vs IPA ρ ≈ 0.785 g/mL (Δρ ≈ 0.13). The
+  denser droplets/particulate fall to the **bottom**, below the beam path in the middle of the cuvette.
+- **Brownian motion = the "kinetically stable at first" part.** Freshly mixed, the droplets are *tiny*; thermal
+  (Brownian) jostling overwhelms the small gravitational pull, so the fine fraction stays suspended → readings
+  are steady for a while.
+- **Stokes' law = why the rate accelerates.** Terminal settling velocity `v = (2/9)·Δρ·g·r²/η` scales with the
+  **droplet radius squared**. Fine droplets settle glacially; as they grow, settling speeds up nonlinearly.
+- **Coarsening over hours** grows the droplets — **coalescence** (droplets collide and merge, with no surfactant
+  to stabilise them) and **Ostwald ripening** (oil's slight IPA-solubility lets molecules diffuse from small,
+  high-curvature droplets to large ones). Bigger droplets → faster settling → the **stable-then-accelerating**
+  clearing seen on the 11 h sample and even minute-to-minute after handling (§11.4a).
+- **Optical effect.** As scatterers leave the beam, the **turbidity baseline drops**; the weak Q pigment band
+  rides on that baseline, so it collapses toward the floor and **Soret/Q inflates** — the whole §11.4a effect.
+- **Temperature is a secondary modulator.** Lower T *raises* viscosity η (Stokes → slower settling) but *lowers*
+  oil/wax solubility (more comes out of solution) and shifts the emulsion balance. Net small; the dominant
+  variable is **elapsed settle time**, not the 1–2 °C room swing.
+- **Why NOT the intuitive opposite (darkening/clouding).** Oxidation is slow (days, and it degrades pigment, it
+  doesn't clear scatter); evaporation would *concentrate* the sample → *raise* A (wrong sign); fresh
+  precipitation would *add* scatter → cloudier (wrong sign). Over ~hours the **physical sedimentation of the
+  initial dispersion wins** over every darkening process — the sample goes *more transparent*.
+
+**Consequence:** this is exactly why the §11.4a protocol (**agitate → fixed short settle → capture; measure
+fresh, don't reuse an aged cuvette**) is mandatory, and why the raw ratio carries a settle-state wobble. It is
+also why *stirring recovered* the aged sample (§11.4a) — re-suspending the sunken scatterers restores the
+baseline. Nothing here is instrument or pigment failure; it is colloid physics.
+
 ### 11.5 Physical interpretation — why it works, and why the brown oil looks reddish
 `A_blue` reads the **green chlorophyll-type pigment content** (its Soret band ~430–470 nm). Fresh/green oil = high
 pigment = high `A_blue`; roasted/aged brown oil = **degraded pigment = low `A_blue`**. This is **pigment degradation,
