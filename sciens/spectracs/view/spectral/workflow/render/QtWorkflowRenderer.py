@@ -39,6 +39,27 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
         label.setStyleSheet("font-weight: bold; font-size: 16px;")
         self.__layout.addWidget(label)
 
+    def visitGauge(self, view):
+        # SPEC_roast_ampel.md §8.4 — the VerdictGaugeView as a labeled metric-grid ROW (Edwin 2026-07-24): the
+        # caption is the gray label chip in col 0, the band+swatch+pill sit in col 1, aligned with the metric
+        # field values below. It shares the metric grid so its columns line up with the chips/metrics.
+        from sciens.spectracs.view.spectral.workflow.GaugeWidget import GaugeWidget
+        if self.__metricGrid is None:
+            widget = QWidget()
+            grid = QGridLayout()
+            grid.setContentsMargins(0, 0, 0, 0)
+            grid.setSpacing(Metrics.S)
+            grid.setColumnStretch(0, 30)
+            grid.setColumnStretch(1, 70)
+            widget.setLayout(grid)
+            self.__metricGrid = [widget, grid, 0]
+        _, grid, row = self.__metricGrid
+        label = TooltipPageLabel(view.caption or "")
+        label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        grid.addWidget(label, row, 0, 1, 1, Qt.AlignmentFlag.AlignTop)
+        grid.addWidget(GaugeWidget(view), row, 1, 1, 1)
+        self.__metricGrid[2] = row + 1
+
     def visitColorSwatch(self, view):
         if self.__swatchRow is None:
             self.__swatchRow = self.__newSwatchRow()

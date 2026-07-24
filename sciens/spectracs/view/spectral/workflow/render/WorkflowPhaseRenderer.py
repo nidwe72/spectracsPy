@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QTabWidget, QWidget, QVBoxLayout, QLabel
 
 from sciens.spectracs.model.spectral.plugin.view.CaptureView import CaptureView
 from sciens.spectracs.model.spectral.plugin.view.ReportView import ReportView
+from sciens.spectracs.model.spectral.plugin.view.LimsPublishView import LimsPublishView
 from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
 
 
@@ -47,10 +48,11 @@ class WorkflowPhaseRenderer:
         if result is not None:
             items.extend(result.getItems())
         view = step.getView() if hasattr(step, "getView") else None
-        # CaptureView (interactive) and ReportView (a report descriptor the generic host can't render) are NOT
-        # passive visitor items — skip them. A report-aware host (the dev bench, M2) special-cases the ReportView
-        # step before delegating here; in a generic host a report step is simply headless (no tab).
-        if view is not None and not isinstance(view, (CaptureView, ReportView)):
+        # CaptureView (interactive), ReportView (a report descriptor) and LimsPublishView (an interactive
+        # publish descriptor + server call, SPEC_roast_ampel.md §8.6 / RD#3) are NOT passive visitor items —
+        # skip them, or dispatchItem would drop them silently (the publish button would vanish). The report-aware
+        # / publishing hosts special-case those steps; in a generic host they are simply headless (no tab).
+        if view is not None and not isinstance(view, (CaptureView, ReportView, LimsPublishView)):
             items.append(view)
         return items
 

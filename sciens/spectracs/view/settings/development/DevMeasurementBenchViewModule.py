@@ -614,7 +614,11 @@ class DevMeasurementBenchViewModule(PageWidget):
         for step in phase.getSteps().values():
             view = step.getView() if hasattr(step, "getView") else None
             if isinstance(view, LimsPublishView):
-                tab = _PublishTab(view)
+                # SPEC_roast_ampel.md §8.6 — the step's other view-models (the verdict-gauge badge) render above
+                # the publish button, so the end user sees the oil verdict + Publish at one glance.
+                result = step.getEvaluationResult() if hasattr(step, "getEvaluationResult") else None
+                badgeItems = result.getItems() if result is not None else []
+                tab = _PublishTab(view, badgeItems)
                 tab.publishButton.clicked.connect(
                     lambda checked=False, t=tab, v=view: self.__onPublish(t, v))
                 self.__publishingTabs.addTab(tab, step.getLabel())
@@ -802,12 +806,18 @@ class _PublishTab(QWidget):
     # L6 (SPEC_lims_integration.md §3): the PUBLISHING "Send to LIMS" step body — a short summary of what will
     # be sent, a Publish button, and a status line the host updates with the returned sample id (or the error).
 
-    def __init__(self, view):
+    def __init__(self, view, badgeItems=None):
         super().__init__()
         layout = QVBoxLayout()
         layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
         layout.setSpacing(Metrics.S)
         self.setLayout(layout)
+
+        # SPEC_roast_ampel.md §8.6 — the verdict-gauge badge (and any other step view-models) rendered via the
+        # shared visitor, so its pill is identical to the Evaluation gauge's; drawn above the publish summary.
+        if badgeItems:
+            from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
+            layout.addWidget(QtWorkflowRenderer().render(badgeItems))
 
         analyses = ", ".join(analysis.get("name", "") for analysis in view.analyses) or "—"
         summary = QLabel("Send this measurement to the LIMS as a new sample.\n"
