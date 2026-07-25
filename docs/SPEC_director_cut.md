@@ -301,8 +301,8 @@ AGENDA = [
 ]
 use_case = "From a real sample to a lab-ready roast verdict, on the bench."
 ```
-(The gauge is genuinely green→brown — classes "good — green" / "probably too brown", one threshold at 2.8; no
-amber/red. Narration matches the on-screen colours.)
+(The gauge is genuinely green→brown — classes "good — green" / "probably too brown", one threshold at 4.4
+(recalibrated for the 2026 oils, was 2.8); no amber/red. Narration matches the on-screen colours.)
 ```
 ```
 

@@ -58,18 +58,20 @@ Why this metric and not raw colour:
 
 ---
 
-## 2. The two states (traffic-light threshold) — *one line, updated 2026-07-23*
+## 2. The two states (traffic-light threshold) — *one line; RECALIBRATED for 2026 oils 2026-07-25*
 
-A **single** threshold at 2.8 (the earlier three-state 2.6–2.8 amber band was **dropped** — see the note):
+A **single** threshold at **4.4** (the earlier three-state 2.6–2.8 amber band was **dropped** — see the note):
 
 | Ratio band | Verdict | Light | Miller action |
 |---|---|---|---|
-| **≥ 2.8** | **good — green** | 🟢 | On the right path — keep the roast profile. |
-| **< 2.8** | **probably too brown** | 🔴 | Too brown — usual cause over-roasting; look at the batch (lower temp / shorter time). |
+| **≥ 4.4** | **good — green** | 🟢 | On the right path — keep the roast profile. |
+| **< 4.4** | **probably too brown** | 🔴 | Too brown — usual cause over-roasting; look at the batch (lower temp / shorter time). |
 
-**⚠ The 2.8 threshold is PROVISIONAL / illustrative — not yet calibrated.** It sits in the *empty gap* the
-proof found (no sample between best-brown and worst-green). Good enough for the mockup and the story, **not**
-for a field verdict. See §5 (calibration) — the gating open item before the Ampel ships as a real control.
+**Recalibration (Edwin 2026-07-25).** The live threshold moved **2.8 → 4.4** and the band **5.0→2.0 ⇒ 6.0→3.0**
+(RoastGaugeView) for the **fresh 2026 oils**: the 2023 oils measured during the proof had **aged**, reading low —
+fresh oils read higher, so the whole scale shifts up. The 2023 numbers in §5 are the *prior* calibration, kept as
+the evidence trail. **⚠ 4.4 is still PROVISIONAL** — set from the new oils, not yet a broad calibration; good for
+the bench + story, firming up as more 2026 runs land.
 
 **Why one line, not three (Edwin 2026-07-23).** A second brown line at 2.6 ("probably" vs "very probably") was
 tried and **removed**: the fourth oil (S-Budget, Q/R) has a 6.5 % dilution spread that *straddled* 2.6 —
@@ -102,14 +104,13 @@ like real oil" cue on top of the abstract light.
 Design of the colour map (all interpolation in **OKLab** so olive mid-tones stay olive):
 
 - **Marker position** is *linear* in ratio across the band, anchored to **fixed endpoints** (as-built
-  **left = 4.5, right = 2.0**; the mockup uses 4.0) — replaces the earlier group-mean anchoring 3.83 → 2.41, so
-  the position is comparable across oils and independent of the sample set.
-- **Colour is non-linear**, pivoting at `BROWN_START = 2.8`:
-  - **Above 2.8** — a *subtle* olive drift: fresher green `#9B9E57` at the left easing to muted olive `#8B8952`
+  **left = 6.0, right = 3.0**; 2026 recalibration, was 5.0 → 2.0) — so the position is comparable across oils and
+  independent of the sample set.
+- **Colour is non-linear**, pivoting at `BROWN_START = 4.4` (the threshold):
+  - **Above 4.4** — a *subtle* olive drift: fresher green `#9B9E57` at the left easing to muted olive `#8B8952`
     at the pivot.
-  - **Below 2.8** — the **brown kick-in**, made *aggressive* as-built: muted olive `#8B8952` → warm brown
-    `#6E4A22` already by 2.4 → dark brown `#442C0E` at the right edge (the earlier subtle `#8B8952`→`#6E5A34`
-    ramp read too olive on-screen — Edwin, rig 2026-07-24).
+  - **Below 4.4** — the **brown kick-in**, made *aggressive* as-built: muted olive `#8B8952` → warm brown
+    `#6E4A22` by 3.8 → dark brown `#442C0E` at the right edge (3.0).
 - Anchors are **illustrative olives/browns**, chosen by eye — *not* measured intrinsic colours (see §5).
 
 Rationale for the non-linearity: the interesting decision is at the brown end, so the green region is kept calm
