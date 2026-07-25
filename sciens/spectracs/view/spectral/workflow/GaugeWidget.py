@@ -92,9 +92,11 @@ class _GaugeZoneBar(QWidget):
         for i in range(1, n):
             x = rect.left() + i * segW
             painter.drawLine(int(x), rect.top(), int(x), rect.bottom())
-        # marker
+        # marker — inset its travel by the dot radius so a value at (or past) a zone edge stays FULLY visible
+        # instead of clipping half off the bar end (Edwin, rig cosmetic). The zone segments still span full width.
         mp = util.zoneMarkerPosition(view.value, view.thresholds, view.bandLeft, view.bandRight)
-        mx = rect.left() + mp * rect.width()
+        pad = 7  # dot radius (6) + 1
+        mx = rect.left() + pad + mp * (rect.width() - 2 * pad)
         painter.setPen(QPen(QColor("#111111"), 1.5))
         painter.setBrush(QBrush(QColor("#FFFFFF")))
         painter.drawEllipse(QRectF(mx - 6, rect.center().y() - 6, 12, 12))

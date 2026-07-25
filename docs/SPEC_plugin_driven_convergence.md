@@ -171,7 +171,8 @@ the internal package can be re-homed transparently (see **Namespace** below).
 | `ColorSwatchView(rgb, label)` | all | — | filled swatch | `visitColorSwatch` | evaluation |
 | `VerdictView(roastState, hueDegrees)` | all | — | headline | `visitVerdict` | evaluation |
 | `SpectrumPlotView(traces[], bands[], title)` **†** | traces, bands, title | (spectra already in model) | plot (curves + band overlays) | `visitSpectrumPlot` | processing, evaluation |
-| `SpectrumCaptureView(caption, cropped, roiOverlay)` **‡** | caption, `cropped`, `roiOverlay`, *its presence = "show it"* | **`image`** (masked/cropped frame) | scaled raster image | `visitSpectrumCapture` | acquisition, processing |
+| `SpectrumCaptureView(caption, cropped, roiOverlay)` **‡** | caption, `cropped`, `roiOverlay`, *its presence = "show it"* | **`image`** (crop / ROI-border / mask frame) | scaled raster image | `visitSpectrumCapture` | acquisition, processing |
+| `TabGroupView(tabs=[(label, childView)])` **✦** | ordered `(label, child)` pairs | (children host-filled, recursively) | Qt sub-tab `QTabWidget`; PDF stacks children under headings | `visitTabGroup` | any |
 | `CaptureView(prompt, captureLabel, showLivePreview, geometry, showFramesControl, showExposureControls)` **‡** | shell params + dev-chrome flags | live video, burst, progress | capture panel | **host capture path** (not visitor) | acquisition |
 
 **¶ extended** (2026-07-13): `MetricFieldView` gained an optional `color` (a plain `(r,g,b)` 0-255 tuple). When set,
@@ -196,6 +197,13 @@ plugin-declared *shell* (caption + `cropped` full-frame-vs-ROI + `roiOverlay` pa
 `.image` (it applies the crop/overlay and injects pixels the plugin can't know in advance). The bench's *Full frame* /
 *Cropped ROI* tabs become two `SpectrumCaptureView`s (`cropped=False, roiOverlay=True` and `cropped=True`); the wizard
 declares none. `CaptureView` is the interactive acquisition shell (§2B).
+
+**✦ new** (SPEC_simplified_plugin_navigation §7b, 2026-07-25). `TabGroupView` is an **explicit container** view-model:
+an ordered list of `(label, childView)` pairs the plugin wants shown as **sub-tabs**. `visitTabGroup` renders a
+`QTabWidget` (each child via a fresh `QtWorkflowRenderer`) on screen and **stacks** the children under their headings
+in the PDF (paper has no tabs). `toJson`/`fromJson` recurse children through the `ViewModelFactory`, and the host
+capture-fill descends into the group to reach nested `SpectrumCaptureView`s. The DEV bench's *Reference image* /
+*Sample Image* rasters are each one `TabGroupView([("Full frame", …roiOverlay=False), ("Cropped ROI", …cropped=True)])`.
 
 **Deferred to M2:** `ReportView` + a per-view-model `shownInReport` flag. Nothing else is deferred on the model side.
 

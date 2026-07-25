@@ -97,7 +97,7 @@ class DevBenchNavOffscreenTest(unittest.TestCase):
     def test_chevron_and_step_through_to_publishing_then_finish(self):
         bench = self._bench()
         chevron = [bench._plan[i].label for i in range(len(bench._plan))]
-        self.assertEqual(chevron, ["Acquisition", "Processing", "Evaluation", "Publishing"])
+        self.assertEqual(chevron, ["Acquisition", "Processing", "Evaluation", "Verdict/Publish"])
         self.assertEqual(bench._plan[bench._cursor].phaseType, P.ACQUISITION)
         # Next is gated until both roles are captured
         self.assertFalse(bench._nextButton.isEnabled())
@@ -144,7 +144,7 @@ class DevBenchNavOffscreenTest(unittest.TestCase):
         bench.initialize()
         bench._startNewRun()
         chevron = [bench._plan[i].label for i in range(len(bench._plan))]
-        self.assertEqual(chevron, ["Reference", "Sample", "Processing", "Evaluation", "Metadata", "Publishing"])
+        self.assertEqual(chevron, ["Reference", "Sample", "Processing", "Evaluation", "Details", "Verdict/Publish"])
 
         acq = list(bench._workflow().getPhase(P.ACQUISITION).getSteps().values())
         # Reference stop: advances once the REFERENCE is captured (not all)
@@ -166,6 +166,53 @@ class DevBenchNavOffscreenTest(unittest.TestCase):
         self.assertGreater(len(bench._workflow().getPhase(P.PROCESSING).getSteps()), 0)
         bench.onClickedNext()   # Metadata -> Publishing (terminal)
         self.assertEqual(bench._plan[bench._cursor].phaseType, P.PUBLISHING)
+
+    def test_option_c_revisit_steps_but_recapture_rejumps(self):
+        # Option C (§4.4a, J): the first pass jumps (fresh capture); a revisit WITHOUT re-capturing disarms the
+        # jump and steps into Processing; a re-capture re-arms it so the next Next jumps again.
+        from sciens.spectracs.plugin_sdk.policy.NavigationMode import NavigationMode
+        from sciens.spectracs.plugin_sdk.policy.NavigationPolicy import NavigationPolicy
+        from sciens.spectracs.plugin_sdk.policy.WorkflowPolicy import WorkflowPolicy
+
+        fields = [type("F", (), {"name": "title", "label": "Title", "type": "TEXT",
+                                 "order": 0, "showInWorkflowsTable": True})()]
+
+        class _ShouldBe(_StubPlugin):
+            def policy(self):
+                return WorkflowPolicy(NavigationPolicy(NavigationMode.AUTO_ADVANCE,
+                                                       stepChevronPhases={P.ACQUISITION}))
+            def metadata(self, workflow):
+                return fields
+
+        bench = _TestBench()
+        bench.finished = False
+        bench._resolvePlugin = lambda: _ShouldBe()
+        bench.initialize()
+        bench._startNewRun()
+        for step in bench._workflow().getPhase(P.ACQUISITION).getSteps().values():
+            step.setContainer(SpectraContainer())
+        bench._refreshNav()
+
+        def backToSampleBoundary():
+            while not (bench._plan[bench._cursor].phaseType == P.ACQUISITION
+                       and bench._plan[bench._cursor].label == "Sample"):
+                bench.onClickedBack()
+
+        bench.onClickedNext()   # Reference -> Sample
+        self.assertTrue(bench._canJump())
+        bench.onClickedNext()   # Sample boundary, FRESH -> JUMP to Metadata
+        self.assertEqual(bench._plan[bench._cursor].phaseType, P.METADATA)
+
+        backToSampleBoundary()
+        self.assertFalse(bench._canJump())   # PROCESSING already computed -> jump disarmed
+        bench.onClickedNext()   # revisit, no re-capture -> STEP into Processing (no jump)
+        self.assertEqual(bench._plan[bench._cursor].phaseType, P.PROCESSING)
+
+        backToSampleBoundary()
+        bench._onCapture()      # a fresh burst re-invalidates the computed phases + re-arms the jump
+        self.assertTrue(bench._canJump())
+        bench.onClickedNext()   # fresh again -> JUMP to Metadata
+        self.assertEqual(bench._plan[bench._cursor].phaseType, P.METADATA)
 
     def test_no_publishing_when_plugin_declares_none(self):
         class _NoPub(_StubPlugin):

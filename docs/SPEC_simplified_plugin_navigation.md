@@ -2,8 +2,9 @@
 
 Status: **M1 + M2 + M3-core IMPLEMENTED & RIG-VERIFIED 2026-07-24/25** (nav-model SDK + base extraction: both hosts
 rehomed onto `AbstractPluginExecutionView`; DEV plugin drives the should-be flow; Edwin drove the bench on the rig —
-works as expected; full suite **249 passed**). **Deferred:** P3/Change G (plugin-declared rasters) + X (remove the
-temporary toggle). Source: Edwin, 2026-07-24. Decisions confirmed inline by Edwin on 2026-07-24 (§3, §4, §5, §6).
+works as expected; full suite **250 passed**). **P3/Change G (plugin-declared rasters) IMPLEMENTED 2026-07-25.**
+**Deferred:** X (remove the temporary toggle) + the re-jump refinement (§4.4a option C). Source: Edwin, 2026-07-24.
+Decisions confirmed inline by Edwin on 2026-07-24/25 (§3, §4, §5, §6).
 
 **M1 as built (2026-07-24):** `plugin_sdk/policy/{NavigationMode,NavigationPolicy,WorkflowPolicy}.py` (Qt-free,
 exported via the `plugin_sdk` facade); `SpectralPlugin.policy()` default = `WorkflowPolicy.default()` (both real
@@ -53,6 +54,14 @@ default-policy / facade-exports).
   (`#6E6E6E`) so they read apart (`StepBarWidget`); (3) a single-plot step now **fills** the panel vertically (skip
   the top-packing stretch + plot Expanding — `QtWorkflowRenderer`); (4) the cropped preview **fills** the view
   (`IgnoreAspectRatio`) so there are no black letterbox margins around the strip (`DevCaptureVideoViewModule`).
+- **Cosmetics DONE (Edwin 2026-07-25):** (a) the PROCESSING raster images now **fill the full width**
+  (`ScaledImageLabel.setFill` / `visitSpectrumCapture`); (b) the PUBLISHING **verdict zone-bar marker** is inset by
+  the dot radius so it stays fully visible at the extremes (`GaugeWidget` ZONES). Both rig-visual — quick glance
+  worthwhile.
+- **P3 / Change G DONE (Edwin 2026-07-25):** the bench's Reference/Sample raster tabs are now **plugin-declared** —
+  `DevSpectralPlugin.processing()` adds role-tagged raster steps carrying full+cropped `SpectrumCaptureView`s; the
+  bench `__fillProcessingRasters` fills each `.image` from the captured frame; the host `__rasterTab`/`__imageLabel`
+  hook is **gone**. First real GUI use of `visitSpectrumCapture`. Test: `test_processing_declares_role_tagged_raster_steps`.
 - **M3 (core done — offscreen-green):** the DEV plugin now declares the whole should-be
   presentation. **P1** `policy()` = AUTO_ADVANCE + `stepChevronPhases={ACQUISITION}` + the **role-lift**
   (`CapturePanel.setActiveStep` hides the internal role-tabs so the chevron is the role selector; bench `_renderStop`
@@ -306,7 +315,28 @@ plugin stays declarative, the host stays generic.
 AUTO_ADVANCE: the Next that leaves the **last ACQUISITION stop** (Sample) runs `__runProcessing()` +
 `__runEvaluation()` + `__runPublishing()` (populate all), then sets the cursor to the **halt stop** — the first
 `METADATA` stop if metadata fields exist, else the final stop — and renders. STEP mode = one stop per Next. From
-METADATA, a normal Next → PUBLISHING. The jump fires once; afterwards Back/Next just walk `stops`.
+METADATA, a normal Next → PUBLISHING.
+
+#### 4.4a Re-jump behaviour — jump only on FRESH captures (Change C-nav, Edwin 2026-07-25) — RESOLVED
+The jump is a **skip-to-result-after-measuring** convenience, *not* an unconditional property of the Sample
+boundary. Once the user has run the workflow and navigates **back** to review, a `Next` at the Sample chevron must
+**not** re-skip Processing/Evaluation — it should step forward normally. Rule (**option C**):
+
+> At the Sample boundary, `Next` **jumps to the halt (Metadata)** iff acquisition has **fresh, un-processed
+> captures**; otherwise it **steps to the next chevron (Processing)** like any ordinary Next.
+
+- First completion: capture → *fresh* → jump to Metadata. ✔ (the should-be flow)
+- Back to review, return to Sample, `Next` with **no** re-capture: *not fresh* → step to **Processing**. ✔ (fixes
+  the reported re-skip)
+- Re-capture Reference or Sample → *fresh* again → jump to Metadata (a new measurement re-earns the jump). ✔
+
+**Mechanism:** a **capture invalidates the computed phases** (drops `PROCESSING`/`EVALUATION` from the engine's
+run-set + clears their steps); "fresh" = *computed phases not yet run for the current captures*. So `Next` at the
+boundary passes a `canJump = (PROCESSING not run)` flag into `NavigationFlow.forwardTarget(...)`; when clean it
+returns `cursor+1` (step) instead of the halt. This **replaces** the current *invalidate-on-Back-into-acquisition*
+hack (§onClickedBack) with the cleaner **invalidate-on-capture** — reviewing shouldn't force a re-process; only a
+re-capture should. (**Alternative B** — jump strictly on the *first* completion, ignore re-measurement — recorded
+but not chosen.) STEP-mode plugins are unaffected (no jump). Design only; implement on explicit request.
 
 ### 4.5 Change C — the METADATA stop
 `DevSpectralPlugin.metadata()` returns Pumpkin's three fields (`title` TEXT+`showInWorkflowsTable`, `temperature`
@@ -393,6 +423,190 @@ auto-advance + step-chevrons + cropped-preview.
 
 ---
 
+## 7b. DEV content refinement — step order, renames, default step  *(Edwin 2026-07-25, DESIGN; impl on request)*
+
+Concrete instance of §7.1 (step order) + §7.2 (default step) + §7.3 (phase contents). Almost entirely **DEV-plugin
+label/order edits** (reorder the `addToSteps` calls, change the labels) — plus one host tweak (the capture inner
+tabs) and the default-step mechanism. Spelling normalised to "Absorption". Order below = tab order left→right.
+
+**Capturing (ACQUISITION) — the CapturePanel inner tabs** *(host change; these tabs are host chrome, not
+plugin-declared)*: order **Spectrum, then Image** and **rename "Captured image" → "Image"**. Swap the `addTab`
+order + the `__SPECTRUM_TAB`/`__IMAGE_TAB` indices; keep the AE "force the image tab during the sweep" behaviour
+(retarget to the new index). **D-capture-default RESOLVED (Edwin 2026-07-25):** open a capture step on the **Image**
+tab (aiming needs the live feed), and **auto-switch to Spectrum once that role's capture completes** (show the
+result). AE already forces Image during the sweep. So "Spectrum" is first in the tab *order*, but the *selected* tab
+on entry is Image — the one genuine "default ≠ first" case (a `CapturePanel` concern, not the base's phase tabs).
+
+**PROCESSING — `DevSpectralPlugin.processing()`** — order + renames:
+
+| # | New label | From |
+|---|---|---|
+| 1 | **Spectra** | unchanged |
+| 2 | **Absorption** | unchanged (moved before Transmission) |
+| 3 | **Transmission** | unchanged |
+| 4 | **Reference image** | was "Reference raster" |
+| 5 | **Sample Image** | was "Sample raster" |
+| 6 | **Absorption (dev)** | was "Absorption (raw / despiked / baseline-corrected)" |
+
+**Default-selected step: Spectra** (it is now first ⇒ automatic; also declared explicitly via the mechanism below).
+
+**Tab-grouping — explicit `TabGroupView` (Edwin 2026-07-25, chosen over the implicit rule).** How a plugin declares
+that some of its content is **grouped into sub-tabs** — a general seam, not a raster-only heuristic. A new **container
+view-model `TabGroupView`** holds ordered `(title, childView)` entries; the plugin declares the grouping explicitly
+(no "2+ consecutive captures auto-group" magic, no `title` field on `SpectrumCaptureView`). Children may be **any**
+view-model.
+
+"Reference image" / "Sample Image" each = one step whose `EvaluationResult` holds a single
+`TabGroupView([("Full frame", SpectrumCaptureView(cropped=False, roiOverlay=False)),
+("Cropped ROI", SpectrumCaptureView(cropped=True))])`.
+
+Renderers gain **`visitTabGroup`**: Qt → a `QTabWidget` (each child rendered in its own panel via a fresh
+`QtWorkflowRenderer`, added under its declared title); matplotlib → the children **stacked** under their title
+headings (paper has no tabs). Serialization: `TabGroupView.toJson`/`fromJson` recurse into children through
+`ViewModelFactory`. **Blast radius:** a new view-model in the visitor seam (+`dispatchItem`, +`visitTabGroup` in
+**both** renderers), and the host **fill must traverse into** `TabGroupView` to reach nested `SpectrumCaptureView`s.
+Supersedes the earlier `title`-on-capture idea. Other plugins unaffected (only DEV declares a `TabGroupView`).
+
+**Report — full frame (ROI border) + cropped, BOTH (Edwin 2026-07-25).** The acquisition-step *report* content gains
+a `SpectrumCaptureView(cropped=False, roiOverlay=True, shownInReport)` — the **full frame with the ROI rectangle
+painted** ("the camera captured a sane image; here's the ROI placement", a debug aid) — **alongside** the existing
+cropped one; **both** appear in the report. Host report-fill gains a **roiOverlay** branch (paint the ROI border) →
+three fill modes: crop / border (roiOverlay) / mask (neither). These report captures are **separate `shownInReport`
+items** (the report renders them stacked; it has no tabs) — *not* a `TabGroupView`. The GUI processing raster
+`TabGroupView`s are **not** `shownInReport` (not in the report), so the two concerns don't collide.
+
+**EVALUATION — `DevSpectralPlugin.evaluation()`** — the NEW/PB-band views become **primary**, the legacy peak-ratio
+views become **"(dev)"**:
+
+| # | New label | From |
+|---|---|---|
+| 1 | **Metrics** | was "Evaluation (new)" (the PB literature-band metrics) |
+| 2 | **Absorption (bands)** | was "Spectrum (new)" (PB-band A(λ) plot) |
+| 3 | **Report** | unchanged |
+| 4 | **Metrics (dev)** | was "Metrics" (legacy peak-ratio) |
+| 5 | **Absorption (bands, dev)** | was "Spectrum" (legacy band plot) |
+
+**Default-selected-step mechanism (§7.2 made concrete).** A `WorkflowPolicy` field
+`defaultSteps = {phaseType: stepLabel}` (a plugin declares the tab to open on per phase); the base, rendering a
+PHASE stop's `QTabWidget`, sets `setCurrentIndex` to the step whose label matches, else index 0. **Note:** for every
+default DEV asks for here the target is already the **first** step, so **ordering alone achieves it** — the mechanism
+is specified for the general case (default ≠ first) and can be deferred until such a case exists.
+
+**Scope note:** these are content/label edits — no new nav behaviour. The renames ripple into the M2 PDF report
+(labels shown there) and any test/`objectName` that pins a label; sweep those when implementing.
+
+**Phase-CHEVRON label renames (Edwin 2026-07-25, IMPLEMENTED).** These are the *phase-level* chevron labels in
+`NavigationModel.PHASE_LABELS` (spectracsPy-core) — shared by EVERY plugin (bench + end-user wizard), not DEV-only:
+**`METADATA` "Metadata" → "Details"** ("Metadata"/"My data" wrongly implied user/account data; the fields describe
+the measurement) and **`PUBLISHING` "Publishing" → "Verdict/Publish"** (the step shows the verdict badge then
+publishes). Also retargeted: the base's single METADATA tab title, the chevron pins in three offscreen tests, and
+the Director `OUTLINE`/`d.doc(phase=…)`. The report SECTION-heading mirror (`WorkflowReportBuilder.__PHASE_LABELS`)
+took METADATA→"Details" but kept PUBLISHING as plain "Publishing" (a document heading, not a nav affordance;
+neither phase actually contributes a report group today).
+
+---
+
+## 7c. Outstanding tasks — rubber-duck + impl phases  *(2026-07-25)*
+
+> **STATUS 2026-07-25 — J·T1·T2·T3·C1·C2·SW IMPLEMENTED** (offscreen+unit green: 261 spectracsPy + 23 plugins).
+> J = `forwardTarget(…, canJump)` + base `_onCapture()`/`_canJump()` replacing the Back-invalidate hack, hosts
+> call `_onCapture()` on capture. T1 = `TabGroupView` (+ ViewModelFactory + plugin_sdk export). T2 = `visitTabGroup`
+> in the seam + both renderers. T3 = bench `__flattenItems` recursion + `__fillCaptureImage` three modes (crop /
+> border=`__borderRoi` / mask). C1 = DEV renames+reorder + `TabGroupView` rasters + report full-frame(border)+
+> cropped. C2 = CapturePanel Spectrum→Image order, "Captured image"→"Image", open-on-Image. SW = renames swept
+> through tests + automation `TAB_NARRATION` + capability-status-pdf comments. New tests: `test_tab_group_view.py`,
+> `test_tab_group_render.py`, `test_navigation_flow.py` (canJump), `test_dev_bench_nav_offscreen.py` (Option C
+> revisit/re-capture). **C2 RIG-VERIFIED (Edwin 2026-07-25).** Phase-chevron renames (Metadata→"Details",
+> Publishing→"Verdict/Publish") done — see §7b. **X DONE 2026-07-25:** after Edwin rig-verified the toggle-OFF
+> as-is path, `SIMPLIFIED_NAVIGATION` was removed — `DevSpectralPlugin` drives should-be permanently (`policy()`
+> always AUTO_ADVANCE+chevrons; `croppedPreview=True`); `test_toggle_off_restores_as_is` deleted. **§7b/§7c bundle
+> COMPLETE (260 spectracsPy + 23 plugins green).** **NOT updated:** the frozen `android/spike/**` copies of
+> `WorkflowItemVisitor`/`MatplotlibWorkflowRenderer` lack `visitTabGroup` — harmless (the spike runs no DEV
+> plugin), sweep if the spike is ever revived.
+
+Everything specified-but-unbuilt, rubber-ducked, then sequenced. (Separate tracks, NOT in this bundle:
+`M-unify` §10, guidance→container §7.4, gamma linearization `SPEC_capture_quality.md` §17, saved-runs plugin filter,
+`selection=ASSIGNED` picker.)
+
+**Rubber-duck — what would bite (re-ducked 2026-07-25, TabGroupView + report-both + D-capture-default resolved):**
+1. **No default-step MECHANISM needed.** Every phase-tab default (Spectra, Metrics) is already the FIRST step ⇒
+   ordering achieves it. The one real "default ≠ first" is the CAPTURE inner tab (open on **Image**, not the
+   first-positioned Spectrum) — a `CapturePanel` concern, not the base's phase `QTabWidget`. So
+   `WorkflowPolicy.defaultSteps` (§7.2) stays **deferred** — nothing consumes it. ✔
+2. **Option C: replace the hack, don't stack on it.** The base's *invalidate-on-Back-into-acquisition* (onClickedBack)
+   is **removed** and replaced by *invalidate-on-capture* — a base `_onCapture()` the two hosts call from their
+   capture callbacks (bench `__onCaptured`, wizard `onMeasure`/`__onRealCaptured`). `forwardTarget(…, canJump=True)`
+   keeps the existing flow tests jumping; the base passes `canJump = (PROCESSING not run)` at the boundary. Wizard is
+   STEP-mode (never jumps) so only its re-process-on-recapture improves. ⚠
+3. **`TabGroupView` touches the visitor seam + BOTH renderers** (supersedes the earlier `title`-on-CaptureView idea).
+   A new container view-model → `dispatchItem` ladder + `visitTabGroup` in **both** `QtWorkflowRenderer` (a
+   `QTabWidget`, each child rendered by a *fresh* renderer) **and** `MatplotlibWorkflowRenderer` (children stacked
+   under their tab labels — PDF has no tabs). `toJson`/`fromJson` must recurse children through `ViewModelFactory`.
+   Grouping is now **explicit** (the plugin builds the container), not an implicit "2+ consecutive captures" rule —
+   so no fragile adjacency heuristic in the renderer. ⚠
+4. **Host-fill must recurse into `TabGroupView`.** The bench fills nested `SpectrumCaptureView.image`; today
+   `__fillProcessingRasters`/`__fillReportCaptures` iterate `result.getItems()` — they must now also **descend** into
+   any `TabGroupView`'s children (one small recursive helper, shared by both fill paths). Miss this and the sub-tab
+   images render blank. ⚠
+5. **Three capture-fill MODES now, keyed off view flags.** For each `SpectrumCaptureView` the host fills: **crop**
+   (`cropped=True` → cropped-ROI pixels), **border** (`roiOverlay=True` → full frame with the ROI rectangle painted —
+   the *new* report full-frame), or **mask** (neither → full frame, region outside ROI dimmed — the GUI raster
+   full-frame). One `if/elif/else` in the fill helper; `cropped` and `roiOverlay` are mutually exclusive by
+   construction. ✔
+6. **§7b renames are a SWEEP.** The reorder is trivial (insertion order); the rename ripples into the **M2 PDF report**
+   (step labels), **`objectName`/doc-automation §16 anchors** (Director postponed — don't break the naming), and any
+   **test** pinning a DEV label. Grep + update all. ⚠
+7. **Capture inner-tab swap is the riskiest §7b bit (rig).** `__SPECTRUM_TAB`/`__IMAGE_TAB` are consumed by AE (forces
+   Image during the sweep) and by capture (shows Spectrum). The swap = retarget every index use + open-on-Image +
+   auto-switch-to-Spectrum-on-capture (D-capture-default). Camera/AE-coupled ⇒ **rig**. ⚠
+8. **X (remove toggle)** is blocked on Edwin's toggle-OFF rig test, then trivial (delete the const + OFF branches). ✔
+9. **Independence:** Option C (J), the §7b bundle, and X are mutually independent. Inside §7b: **T1→T2→T3**
+   (TabGroupView model → renderers → host fill) before **C1** (DEV declares the containers) before **C2** (capture
+   tabs) before **SW** (rename sweep). ✔
+
+**Impl phases (when Edwin says go — NOT yet implemented).** Test kind: U=unit · W=offscreen-widget · R=rig.
+```
+┌────┬────────────────────────────────────────────────┬─────────────────────────────────────┬──────────────────────────────┬────┐
+│ Ph │ Task                                           │ Files                               │ What can be tested           │Kind│
+├────┼────────────────────────────────────────────────┼─────────────────────────────────────┼──────────────────────────────┼────┤
+│ J  │ Option C smart re-jump: forwardTarget +canJump;│ NavigationFlow; AbstractPlugin-     │ revisit→Processing; re-capture│U+W │
+│    │ base _onCapture invalidates COMPUTED (replaces │ ExecutionView; Wizard + Bench       │ →jumps; first-jump still fires│    │
+│    │ Back-invalidate); hosts call it on capture     │ capture callbacks                   │ STEP-mode unaffected          │    │
+├────┼────────────────────────────────────────────────┼─────────────────────────────────────┼──────────────────────────────┼────┤
+│ T1 │ TabGroupView container view-model: label+list  │ spectracsPy-model/.../view/         │ round-trips incl. nested      │ U  │
+│    │ of child views; toJson/fromJson recurse via    │ TabGroupView.py; ViewModelFactory   │ children (factory-built)      │    │
+│    │ ViewModelFactory; register in factory          │                                     │                              │    │
+├────┼────────────────────────────────────────────────┼─────────────────────────────────────┼──────────────────────────────┼────┤
+│ T2 │ visitTabGroup in seam + BOTH renderers: Qt =   │ WorkflowItemVisitor; QtWorkflow-    │ Qt: TabGroupView → QTabWidget │ W  │
+│    │ QTabWidget (child via fresh renderer, expanding│ Renderer; MatplotlibWorkflow-       │ (N labelled sub-tabs); mpl:   │    │
+│    │ -fill); mpl = children stacked under labels    │ Renderer                            │ children stacked              │    │
+├────┼────────────────────────────────────────────────┼─────────────────────────────────────┼──────────────────────────────┼────┤
+│ T3 │ Host-fill recurses into TabGroupView children; │ bench __fillProcessingRasters +     │ fill reaches nested captures; │ W  │
+│    │ 3 fill modes crop / border(roiOverlay) / mask  │ __fillReportCaptures (+shared helper)│ each mode sets the right image│    │
+├────┼────────────────────────────────────────────────┼─────────────────────────────────────┼──────────────────────────────┼────┤
+│ C1 │ DEV renames + reorder PROCESSING & EVALUATION; │ spectracs-plugins/.../dev/          │ new order + labels; rasters = │ U  │
+│    │ rasters = TabGroupView(Full frame|Cropped ROI);│ DevSpectralPlugin.py                │ TabGroupView; report captures │    │
+│    │ report captures = full-frame(border)+cropped,  │                                     │ = border + cropped, both      │    │
+│    │ both shownInReport                             │                                     │ shownInReport                 │    │
+├────┼────────────────────────────────────────────────┼─────────────────────────────────────┼──────────────────────────────┼────┤
+│ C2 │ CapturePanel inner tabs: order Spectrum→Image, │ CapturePanel.py (tab indices, AE    │ tab order + labels; opens on  │W+R │
+│    │ rename "Captured image"→"Image"; open on Image,│ retarget, open-on-Image, auto-switch)│ Image; auto-Spectrum after   │    │
+│    │ auto-Spectrum after capture (D-capture-default)│                                     │ capture; AE forces Image      │    │
+├────┼────────────────────────────────────────────────┼─────────────────────────────────────┼──────────────────────────────┼────┤
+│ SW │ Rename SWEEP: PDF-report labels, objectName /  │ report; tests; doc-automation §16   │ full suite green; report      │ W  │
+│    │ Director anchors, label-pinning tests          │                                     │ labels current                │    │
+├────┼────────────────────────────────────────────────┼─────────────────────────────────────┼──────────────────────────────┼────┤
+│ X  │ Remove SIMPLIFIED_NAVIGATION toggle (after the │ DevSpectralPlugin.py                │ DEV permanently should-be;    │ W  │
+│    │ toggle-OFF rig test)                           │                                     │ no OFF branch remains         │    │
+└────┴────────────────────────────────────────────────┴─────────────────────────────────────┴──────────────────────────────┴────┘
+```
+Sequencing: **J** standalone (nav logic). **§7b bundle = T1 → T2 → T3 → C1 → C2 → SW** (T1–T3 = the `TabGroupView`
+infra + recursive fill; they supersede the old R1/R2 `title`-field phases). **X** after Edwin's toggle-OFF rig test.
+Only **C2** needs the rig (camera/AE); everything else is offscreen-testable. **Resolved:** D-capture-default =
+open-on-Image + auto-Spectrum-after-capture; report shows BOTH the full-frame(ROI-border) and cropped images.
+
+---
+
 ## 8. Open decisions (recommendations adopted unless Edwin objects)
 - **D-A1** crop the whole ACQUISITION live preview (adopted), not only AE.
 - **D-A2** crop as a plugin `CaptureView.croppedPreview` flag (adopted).
@@ -407,8 +621,11 @@ auto-advance + step-chevrons + cropped-preview.
 ---
 
 ## 9. Rubber-duck — design self-check
-1. **One-shot jump** — after landing, Back-then-Next walks `stops` via the normal cursor; the jump fires only on
-   leaving the last ACQUISITION stop. ✔
+1. **The jump is NOT one-shot-by-cursor** ⚠ (corrected — Edwin rig-found, §4.4a). The base builds the *full* plan
+   up front, so `forwardTarget` re-jumps from the Sample boundary on *every* Next — a Back-then-Next re-skips
+   Processing/Evaluation. Resolved by **option C**: jump only when acquisition has fresh, un-processed captures
+   (capture invalidates the computed phases; boundary `Next` passes `canJump = PROCESSING-not-run` to
+   `forwardTarget`, else steps to Processing). See §4.4a + §9b-C.
 2. **Halt set = {METADATA-with-fields}**, else the final stop — computed from `stops`, not hard-coded. ✔
 3. **Change D is view-only** — `stops` is a projection of the unchanged workflow→phase→step graph; the engine,
    hooks, containers, and persistence model are untouched. ✔
@@ -503,6 +720,25 @@ auto-advance + step-chevrons + cropped-preview.
 25. **Raster `SpectrumCaptureView` in VIEW mode may lack pixels.** Its `.image` is host-filled from the *live*
     capture; a saved bench run reopened later has no live frame. Acceptable (rasters are dev inspection, bench is
     master-only) — but decide: re-fill from a persisted capture, or show the shell empty in VIEW. Note, don't block. ⚠
+
+**§9b-C — Re-jump-on-fresh-capture (option C, §4.4a), pre-impl rubber-duck (2026-07-25)**
+- **Dirty signal = `PROCESSING not in engine run-set`.** A capture clears the computed phases from the run-set (and
+  their steps) → "fresh". The jump runs them → "clean". No new persisted state; reuses the existing hook-tracking. ✔
+- **`forwardTarget` gains `canJump=True`** (default preserves today's tests). The base passes
+  `canJump = PROCESSING-not-run` at the boundary; clean ⇒ returns `cursor+1` (step to Processing). Existing
+  `test_navigation_flow` 3-arg calls keep jumping. ✔
+- **Invalidation moves from Back→capture.** Add a base `_onCapture()` the subclasses call from their capture
+  callbacks (bench `__onCaptured`, wizard `onMeasure`/`__onRealCaptured`); it invalidates the computed phases +
+  refreshes nav. **Remove** the `onClickedBack` invalidate-into-acquisition. ⚠ (behaviour improvement for both
+  hosts: reviewing no longer re-processes; re-capturing does.)
+- **Wizard unaffected by the jump** (STEP mode never jumps); it *does* pick up the cleaner re-process-on-recapture,
+  which is more correct and untested-against (guard tests capture once). ✔
+- **First-jump still fires in tests** because a fresh run has `PROCESSING not run` ⇒ dirty ⇒ jump; add a *revisit*
+  test (complete → Back to Sample → `Next` lands on **Processing**, not Metadata) and a *re-capture* test (→ jumps
+  again). ⚠
+- **After a clean step to Processing, the user walks Processing→…→Publishing** by ordinary Next (chevrons aren't
+  clickable). Fine for review mode; clickable chevrons are a separate future nicety. ✔
+- **STEP/AUTO_ADVANCE stop LIST unchanged** — this only changes the boundary *cursor target*, never the chevron. ✔
 
 ## 9c. Rubber-duck — B2 (wizard) + B3 (bench) rehoming, pre-impl (2026-07-24)
 

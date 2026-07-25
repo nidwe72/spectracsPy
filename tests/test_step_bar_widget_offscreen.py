@@ -85,7 +85,7 @@ class WizardStepBarOffscreenTest(unittest.TestCase):
         # the pumpkin plugin contributes metadata, so the full sequence is all four phases, shown at once
         self.assertEqual(
             stepBar.getSteps(),
-            ["Acquisition", "Processing", "Evaluation", "Metadata"])
+            ["Acquisition", "Processing", "Evaluation", "Details"])
         self.assertEqual(stepBar.getCurrentIndex(), 0)  # starts on Acquisition
 
         engine = self.__private(wizard, "engine")

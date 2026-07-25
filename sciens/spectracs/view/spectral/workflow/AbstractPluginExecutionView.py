@@ -208,7 +208,7 @@ class AbstractPluginExecutionView(PageWidget):
         self._tabWidget.clear()
         self._tabWidget.tabBar().setVisible(True)
         if stop.phaseType == SpectralWorkflowPhaseType.METADATA:
-            self._tabWidget.addTab(self._buildMetadataForm(), "Metadata")
+            self._tabWidget.addTab(self._buildMetadataForm(), "Details")
         else:
             self._renderStop(stop, self._tabWidget)
         # Change F: a single-step phase shows its content directly, no redundant one-tab bar.
@@ -227,22 +227,13 @@ class AbstractPluginExecutionView(PageWidget):
     def onClickedBack(self):
         if self._cursor > 0:
             self._cursor -= 1
-            # Returning to ACQUISITION means the user may re-capture -> drop the computed-phase cache so a
-            # subsequent forward pass re-runs PROCESSING/EVALUATION against the fresh captures.
-            if (not self._isView()
-                    and self._plan[self._cursor].phaseType == SpectralWorkflowPhaseType.ACQUISITION):
-                self._hooksRun.difference_update(_COMPUTED)
-                for phaseType in _COMPUTED:
-                    phase = self._engine.getWorkflow().getPhase(phaseType)
-                    if phase is not None:
-                        phase.getSteps().clear()
             self._renderCursor()
 
     def onClickedNext(self):
         stop = self._plan[self._cursor] if self._plan else None
         if stop is not None and not self._canAdvanceFrom(stop):
             return
-        target = NavigationFlow.forwardTarget(self._plan, self._cursor, self._mode())
+        target = NavigationFlow.forwardTarget(self._plan, self._cursor, self._mode(), canJump=self._canJump())
         if target is None:
             self._onFinish()
             return
@@ -250,6 +241,27 @@ class AbstractPluginExecutionView(PageWidget):
             self._ensurePopulated(self._plan[index].phaseType)
         self._cursor = target
         self._renderCursor()
+
+    def _canJump(self):
+        # Option C (SPEC_simplified_plugin_navigation.md §4.4a): the AUTO_ADVANCE jump past the computed phases
+        # fires only on a FRESH capture pass — i.e. PROCESSING has not been computed yet (or was invalidated by a
+        # re-capture, see _onCapture). A revisit to acquisition WITHOUT re-capturing leaves PROCESSING computed,
+        # so paging forward steps through the phases one at a time instead of skipping to the metadata halt.
+        return SpectralWorkflowPhaseType.PROCESSING not in getattr(self, "_hooksRun", set())
+
+    def _onCapture(self):
+        # A capture (re)invalidates the computed phases (SPEC §4.4a, Option C): drop the PROCESSING/EVALUATION
+        # cache so the next forward pass recomputes them against the fresh frames — and, being fresh again,
+        # re-arms the AUTO_ADVANCE jump. The hosts call this from their capture callbacks (replacing the former
+        # invalidate-on-Back-into-acquisition hack); it then refreshes the nav so the Next gate reflects the
+        # new capture state. No-op in VIEW mode (nothing runs).
+        if not self._isView():
+            self._hooksRun.difference_update(_COMPUTED)
+            for phaseType in _COMPUTED:
+                phase = self._engine.getWorkflow().getPhase(phaseType)
+                if phase is not None:
+                    phase.getSteps().clear()
+        self._refreshNav()
 
     def _isTerminal(self):
         return NavigationFlow.isTerminal(self._plan, self._cursor)

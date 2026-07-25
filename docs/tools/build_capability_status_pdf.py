@@ -9,7 +9,7 @@ HOW TO UPDATE
 -------------
 1. (If the UI changed) re-take the two Roast-Ampel screenshots from the running app:
      - LIMS_IMG  = the Publishing -> "Send to LIMS" step (the plain verdict the miller always sees)
-     - EVAL_IMG  = the Evaluation -> "Evaluation (new)" tab (the analytical gauge, optional detail)
+     - EVAL_IMG  = the Evaluation -> "Metrics" tab (the analytical gauge, optional detail)
    and point the two constants below at them.
 2. Edit the report copy / stats in the HTML string below as the evidence evolves.
 3. Run:  python3 docs/tools/build_capability_status_pdf.py
@@ -21,7 +21,7 @@ from PIL import Image
 
 # --- inputs: the two live Ampel screenshots (update these when the UI changes) -----------------
 LIMS_IMG = os.path.expanduser("~/ksnip_20260724-071903.png")   # Send-to-LIMS — the everyday verdict
-EVAL_IMG = os.path.expanduser("~/ksnip_20260724-072139.png")   # Evaluation (new) — analytical gauge
+EVAL_IMG = os.path.expanduser("~/ksnip_20260724-072139.png")   # Metrics (PB bands) — analytical gauge
 # --- outputs -----------------------------------------------------------------------------------
 OUT_PDF = os.path.expanduser(
     "~/development/spectracs/spectracs-references/tmp/Spectracs_CapabilityProof_status.pdf")

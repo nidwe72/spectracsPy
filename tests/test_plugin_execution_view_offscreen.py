@@ -116,19 +116,19 @@ class PluginExecutionViewOffscreenTest(unittest.TestCase):
 
     def test_publishing_appears_when_declared(self):
         view = self._view(_StubPlugin(publishing=True))
-        self.assertEqual(self._chevron(view), ["Acquisition", "Processing", "Evaluation", "Publishing"])
+        self.assertEqual(self._chevron(view), ["Acquisition", "Processing", "Evaluation", "Verdict/Publish"])
 
     def test_metadata_chevron_when_fields_present(self):
         fields = [type("F", (), {"name": "title", "label": "Title", "type": "TEXT", "order": 0})()]
         view = self._view(_StubPlugin(metadataFields=fields))
-        self.assertIn("Metadata", self._chevron(view))
+        self.assertIn("Details", self._chevron(view))
 
     def test_auto_advance_with_step_chevrons_jumps_to_metadata(self):
         fields = [type("F", (), {"name": "title", "label": "Title", "type": "TEXT", "order": 0})()]
         policy = WorkflowPolicy(NavigationPolicy(NavigationMode.AUTO_ADVANCE, stepChevronPhases={P.ACQUISITION}))
         view = self._view(_StubPlugin(policy=policy, metadataFields=fields, publishing=True))
         self.assertEqual(self._chevron(view),
-                         ["Reference", "Sample", "Processing", "Evaluation", "Metadata", "Publishing"])
+                         ["Reference", "Sample", "Processing", "Evaluation", "Details", "Verdict/Publish"])
         self.assertEqual(view._cursor, 0)                     # Reference
         view.onClickedNext()                                  # plain step -> Sample
         self.assertEqual(view._cursor, 1)

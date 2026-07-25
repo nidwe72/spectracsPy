@@ -80,3 +80,22 @@ def test_single_acquisition_phase_stop_is_the_boundary():
     stops = [_phaseStop(P.ACQUISITION), _phaseStop(P.PROCESSING), _phaseStop(P.METADATA)]
     assert F.isAtAcquisitionBoundary(stops, 0) is True
     assert F.forwardTarget(stops, 0, NavigationMode.AUTO_ADVANCE) == 2  # jump to Metadata
+
+
+# --- Option C (§4.4a, J): canJump gates the AUTO_ADVANCE jump so a revisit without a re-capture steps normally ---
+
+def test_can_jump_true_still_jumps_from_the_boundary():
+    # A FRESH capture pass (canJump=True, the default) jumps from the boundary to Metadata — unchanged behaviour.
+    assert F.forwardTarget(_DEV_STOPS, 1, NavigationMode.AUTO_ADVANCE, canJump=True) == 4
+
+
+def test_can_jump_false_steps_one_at_a_time_on_revisit():
+    # A revisit whose PROCESSING was already computed (canJump=False): Next off the boundary steps to the next
+    # stop (Processing, index 2) instead of skipping to Metadata — the user browses the computed phases.
+    assert F.forwardTarget(_DEV_STOPS, 1, NavigationMode.AUTO_ADVANCE, canJump=False) == 2
+
+
+def test_can_jump_false_does_not_affect_non_boundary_or_step_mode():
+    # Away from the boundary, or in STEP mode, canJump is irrelevant — every Next is already a plain step.
+    assert F.forwardTarget(_DEV_STOPS, 0, NavigationMode.AUTO_ADVANCE, canJump=False) == 1
+    assert F.forwardTarget(_DEV_STOPS, 1, NavigationMode.STEP, canJump=False) == 2

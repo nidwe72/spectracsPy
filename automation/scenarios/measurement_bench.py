@@ -31,17 +31,17 @@ TITLE = "The measurement bench — a real sample, end to end"
 # Post-convergence targets: the capture surface lives on the shared CapturePanel (§16.0 finding 2).
 CAPTURE = "CapturePanel.captureButton"       # single button; label flips Reference/Sample by role-tab
 ROLE_TABS = "CapturePanel.roleTabs"          # Reference | Sample (the SpectralWorkflowStep tabs)
-INNER_TABS = "CapturePanel.innerTabs"        # Captured image | Spectrum
+INNER_TABS = "CapturePanel.innerTabs"        # Spectrum | Image (§7b C2 order; opens on Image)
 NEXT = "DevMeasurementBenchViewModule.nextButton"
 SEND_LIMS = "DevMeasurementBenchViewModule.sendToLimsButton"
 # Per-phase step-tab widgets — walked so EVERY step of each phase is clicked + described (Edwin).
 PROCESSING_TABS = "DevMeasurementBenchViewModule.processingTabs"
 EVAL_TABS = "DevMeasurementBenchViewModule.evaluationTabs"
 PUBLISHING_TABS = "DevMeasurementBenchViewModule.publishingTabs"
-SPECTRUM_TAB = 1   # inner tabs: 0 = Captured image, 1 = Spectrum
+SPECTRUM_TAB = 0   # inner tabs (§7b C2): 0 = Spectrum, 1 = Image
 REFERENCE_TAB = 0  # role tabs: 0 = Reference, 1 = Sample
 SAMPLE_TAB = 1
-OUTLINE = ["Acquisition", "Processing", "Evaluation", "Publishing"]
+OUTLINE = ["Acquisition", "Processing", "Evaluation", "Verdict/Publish"]
 
 # The overview typed onto the SECOND cover card (§18.7 CR-B) — what the viewer is about to see.
 AGENDA = [
@@ -92,17 +92,18 @@ NARRATION = {
 # to the raw label for anything not listed). PROCESSING and EVALUATION each have several steps.
 TAB_NARRATION = {
     # PROCESSING steps
-    "Reference raster": "The reference frame's raster — the raw camera strip the reference spectrum was "
-                        "extracted from.",
-    "Sample raster": "The sample frame's raster — the raw strip behind the sample spectrum.",
+    "Reference image": "The reference frame's image — the raw camera strip the reference spectrum was "
+                       "extracted from (full frame + cropped-ROI sub-tabs).",
+    "Sample Image": "The sample frame's image — the raw strip behind the sample spectrum (full frame + "
+                    "cropped-ROI sub-tabs).",
     "Spectra": "The two raw spectra overlaid, reference against sample, before any math.",
     "Transmission": "Transmission, T(λ) = S ÷ R: the fraction of the reference light the sample lets "
                     "through at each wavelength.",
     "Absorption": "Absorption, A(λ) = −log₁₀(S/R): the same information as optical density — the oil's "
                   "absorption bands now stand out as peaks.",
-    # EVALUATION steps
+    # EVALUATION steps (§7b: the PB-band views are primary; the legacy peak-ratio views are "(dev)")
     "Metrics": "The evaluation metrics — the quality numbers the plugin computes from the spectra.",
-    "Spectrum": "The absorption spectrum again, now with the pumpkin-oil evaluation bands marked on it.",
+    "Absorption (bands)": "The absorption spectrum again, now with the pumpkin-oil evaluation bands marked on it.",
     "Report": "The one-click PDF report: every spectrum, metric and capture from this run, ready to save "
               "or attach.",
     # PUBLISHING step
@@ -178,7 +179,7 @@ def run(d):
 
     # --- PUBLISHING (only if the plugin declares it) ---
     d.click(NEXT)                               # EVALUATION → PUBLISHING
-    d.doc(phase="Publishing")
+    d.doc(phase="Verdict/Publish")
     d.narrate(NARRATION["phase:Publishing"])
     d.walk_tabs(PUBLISHING_TABS, TAB_NARRATION, screenshot="bench_05_publishing")
     d.click(SEND_LIMS)

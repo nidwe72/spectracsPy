@@ -1,8 +1,8 @@
 import numpy as np
 
-from PySide6.QtCore import QRect
-from PySide6.QtGui import QPixmap, QImage, QColor, QPainter, QIcon
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QTabWidget, QFileDialog
+from PySide6.QtCore import Qt, QRect
+from PySide6.QtGui import QPixmap, QImage, QColor, QPainter, QPen, QIcon
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QFileDialog
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.application.style.Metrics import Metrics
@@ -24,9 +24,8 @@ from sciens.spectracs.model.spectral.plugin.view.ReportView import ReportView
 from sciens.spectracs.model.spectral.plugin.view.LimsPublishView import LimsPublishView
 from sciens.spectracs.model.spectral.plugin.view.SpectrumCaptureView import SpectrumCaptureView
 from sciens.spectracs.model.spectral.plugin.view.SpectrumPlotView import SpectrumPlotView
-from sciens.spectracs.plugin_sdk.roles import REFERENCE, SAMPLE
+from sciens.spectracs.model.spectral.plugin.view.TabGroupView import TabGroupView
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
-from sciens.spectracs.view.application.widgets.ScaledImageLabel import ScaledImageLabel
 from sciens.spectracs.view.application.widgets.PdfPreviewWidget import PdfPreviewWidget
 from sciens.spectracs.view.spectral.workflow.render.WorkflowPhaseRenderer import WorkflowPhaseRenderer
 
@@ -178,7 +177,7 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
         return [step for step in phase.getSteps().values() if step.getRole() is not None]
 
     def __onCaptured(self, step):
-        self._refreshNav()
+        self._onCapture()   # Option C (§4.4a): invalidate computed phases + refresh nav (re-arms the jump)
 
     def __onCaptureFailed(self):
         InWindowDialog.notify(self, "Capture failed", "No frames were delivered by the camera.")
@@ -191,14 +190,54 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
 
     def __renderProcessing(self, container):
         phase = self._workflow().getPhase(SpectralWorkflowPhaseType.PROCESSING)
-        # The raster inspection tabs stay host dev-chrome for now (plugin-declared rasters = Change G / M3).
-        container.addTab(self.__rasterTab(REFERENCE), "Reference raster")
-        container.addTab(self.__rasterTab(SAMPLE), "Sample raster")
+        self.__fillProcessingRasters(phase)   # Change G: fill the plugin-declared raster captures from the frames
         renderer = WorkflowPhaseRenderer()
         for step in phase.getSteps().values():
             content = renderer.renderStep(step)
             if content is not None:
                 container.addTab(content, step.getLabel())
+
+    def __fillProcessingRasters(self, phase):
+        # Change G (SPEC_simplified_plugin_navigation.md §4.7-G) + T3 (§7b): the DEV plugin declares role-tagged
+        # raster steps carrying SpectrumCaptureView shells — now grouped into a TabGroupView (Full frame | Cropped
+        # ROI). The host — which alone owns the pixels — fills each `.image` from that role's captured frame,
+        # traversing INTO the group to reach the nested captures (crop / border / mask per the descriptor flags).
+        roi = None
+        for step in phase.getSteps().values():
+            role = step.getRole()
+            result = step.getEvaluationResult() if hasattr(step, "getEvaluationResult") else None
+            if role is None or result is None:
+                continue
+            frame = self.__capturePanel.getRepresentativeFrame(role) if self.__capturePanel is not None else None
+            if frame is None:
+                continue
+            if roi is None:
+                roi = self.__roi()
+            for item in self.__flattenItems(result.getItems()):
+                if isinstance(item, SpectrumCaptureView):
+                    self.__fillCaptureImage(item, frame, roi)
+
+    @staticmethod
+    def __flattenItems(items):
+        # T3: flatten a step's view-models, descending into any TabGroupView so nested sub-tab captures/plots are
+        # reached by the host fill. Recursive (a group could nest a group, though DEV only nests one level).
+        flat = []
+        for item in items:
+            if isinstance(item, TabGroupView):
+                flat.extend(DevMeasurementBenchViewModule.__flattenItems(item.children()))
+            else:
+                flat.append(item)
+        return flat
+
+    def __fillCaptureImage(self, item, frame, roi):
+        # T3: the three capture-fill modes, keyed off the plugin's descriptor flags — crop to the ROI, paint the
+        # ROI border on the full frame (roiOverlay — the report "here's the ROI placement" aid), or mask outside.
+        if item.cropped:
+            item.image = self.__cropToRoi(frame, roi)
+        elif getattr(item, "roiOverlay", False):
+            item.image = self.__borderRoi(frame, roi)
+        else:
+            item.image = self.__maskOutsideRoi(frame, roi)
 
     # --- evaluation (plugin steps + the M2 Report tab) ---
 
@@ -339,10 +378,9 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
             result = step.getEvaluationResult()
             if result is None:
                 continue
-            for item in result.getItems():
+            for item in self.__flattenItems(result.getItems()):
                 if isinstance(item, SpectrumCaptureView) and frame is not None:
-                    item.image = self.__cropToRoi(frame, roi) if item.cropped \
-                        else self.__maskOutsideRoi(frame, roi)
+                    self.__fillCaptureImage(item, frame, roi)   # crop / border(roiOverlay) / mask
                     item.reportImage = self.__qImageToPil(item.image)
                 elif isinstance(item, SpectrumPlotView) and spectrum is not None:
                     item.spectrum = self.__meanSpectrum(spectrum)
@@ -438,28 +476,7 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
                 self.__stopStream()
                 self.__enterRun()
 
-    # --- raster / ROI dev tabs ---
-
-    def __rasterTab(self, role):
-        image = self.__capturePanel.getRepresentativeFrame(role) if self.__capturePanel is not None else None
-        if image is None:
-            return QLabel("No captured frame.")
-        roi = self.__roi()
-        tabs = QTabWidget()
-        tabs.addTab(self.__rasterImageTab("Region outside the ROI blacked out (preview only)",
-                                          self.__maskOutsideRoi(image, roi)), "Full frame")
-        tabs.addTab(self.__rasterImageTab("Cropped to the ROI", self.__cropToRoi(image, roi)), "Cropped ROI")
-        return tabs
-
-    def __rasterImageTab(self, caption, image):
-        widget = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(Metrics.M, Metrics.M, Metrics.M, Metrics.M)
-        layout.setSpacing(Metrics.S)
-        widget.setLayout(layout)
-        layout.addWidget(QLabel(caption))
-        layout.addWidget(self.__imageLabel(image), 1)
-        return widget
+    # --- ROI / raster pixel helpers (fill the plugin-declared SpectrumCaptureViews — Change G) ---
 
     def __roi(self):
         calibration = ApplicationContextLogicModule().getApplicationSettings() \
@@ -489,10 +506,16 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
     def __cropToRoi(self, image, roi):
         return image.copy(roi)
 
-    def __imageLabel(self, image):
-        label = ScaledImageLabel()
-        label.setImagePixmap(QPixmap.fromImage(image))
-        return label
+    def __borderRoi(self, image, roi):
+        # T3 (§7b): the full frame with the ROI rectangle painted — the report "the camera saw a sane image;
+        # here's where the ROI landed" debug aid (roiOverlay). Keeps the whole frame (unlike crop/mask).
+        bordered = image.copy()
+        painter = QPainter(bordered)
+        painter.setPen(QPen(QColor(255, 80, 80), 3))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRect(roi)
+        painter.end()
+        return bordered
 
     # --- streaming ---
 

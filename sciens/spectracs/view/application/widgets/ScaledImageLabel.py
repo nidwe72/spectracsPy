@@ -16,9 +16,16 @@ class ScaledImageLabel(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__original = None
+        self.__fill = False
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setMinimumSize(1, 1)
+
+    def setFill(self, fill=True):
+        # Fill the whole label (IgnoreAspectRatio) instead of fitting with margins — for a raster/spectrum strip
+        # the exact aspect is not meaningful, so filling uses the full width available (Edwin, rig cosmetic).
+        self.__fill = fill
+        self.__rescale()
 
     def setImagePixmap(self, pixmap: QPixmap):
         self.__original = pixmap
@@ -31,6 +38,6 @@ class ScaledImageLabel(QLabel):
     def __rescale(self):
         if self.__original is None:
             return
-        scaled = self.__original.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                                        Qt.TransformationMode.SmoothTransformation)
+        mode = Qt.AspectRatioMode.IgnoreAspectRatio if self.__fill else Qt.AspectRatioMode.KeepAspectRatio
+        scaled = self.__original.scaled(self.size(), mode, Qt.TransformationMode.SmoothTransformation)
         self.setPixmap(scaled)

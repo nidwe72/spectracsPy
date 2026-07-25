@@ -170,11 +170,25 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
             return
         label = ScaledImageLabel()
         label.setImagePixmap(pixmap)
+        label.setFill(True)   # use the full width available — a raster's exact aspect isn't meaningful (Edwin)
         self.__layout.addWidget(label, 1)   # fill: ScaledImageLabel is Ignored-sized, needs the stretch
         if view.caption:
             caption = QLabel(view.caption)
             caption.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             self.__layout.addWidget(caption)
+        self.__expandingContent = True
+
+    def visitTabGroup(self, view):
+        # T2 (SPEC_simplified_plugin_navigation.md §7b): an explicit sub-tab group — one QTabWidget, each child
+        # rendered in its own panel by a FRESH renderer (so a child plot/capture keeps its own expanding-fill),
+        # added under its declared title. The group fills the height like a plot/capture does.
+        from PySide6.QtWidgets import QTabWidget, QSizePolicy
+        tabs = QTabWidget()
+        for label, child in view.tabs:
+            tabs.addTab(QtWorkflowRenderer().render([child]), label or "")
+        tabs.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.__layout.addWidget(tabs, 1)
+        self.__expandingContent = True
 
     # --- accumulation helpers ---
 

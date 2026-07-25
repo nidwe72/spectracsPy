@@ -62,8 +62,11 @@ class CapturePanel(QWidget):
     __NM_MAX = 700.0
     __FRAME_COLOR = "#777777"   # per-frame traces (gray)
     __MEAN_COLOR = "#2ECC71"    # mean spectrum (green)
-    __IMAGE_TAB = 0
-    __SPECTRUM_TAB = 1
+    # §7b (Edwin 2026-07-25): inner-tab order is Spectrum then Image. The SELECTED tab on entry is Image
+    # (D-capture-default: aiming needs the live feed); capture auto-switches to Spectrum to show the result,
+    # and AE forces Image during the sweep.
+    __SPECTRUM_TAB = 0
+    __IMAGE_TAB = 1
 
     def __init__(self, steps, engine, onCaptured=None, onRoleChanged=None, onCaptureFailed=None):
         super().__init__()
@@ -146,8 +149,9 @@ class CapturePanel(QWidget):
         self.__spectrumPlot = SpectrumPlotWidget()
         self.__innerTabs = QTabWidget()
         self.__innerTabs.setObjectName("CapturePanel.innerTabs")
-        self.__innerTabs.addTab(self.__videoViewModule, "Captured image")   # __IMAGE_TAB
-        self.__innerTabs.addTab(self.__spectrumPlot, "Spectrum")            # __SPECTRUM_TAB
+        self.__innerTabs.addTab(self.__spectrumPlot, "Spectrum")            # __SPECTRUM_TAB (index 0)
+        self.__innerTabs.addTab(self.__videoViewModule, "Image")            # __IMAGE_TAB (index 1)
+        self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)                  # D-capture-default: open on Image for aiming
 
         controls = QWidget()
         controls.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)

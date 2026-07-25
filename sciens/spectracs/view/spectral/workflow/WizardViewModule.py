@@ -175,7 +175,7 @@ class WizardViewModule(AbstractPluginExecutionView):
         self.__capturePanel.plotActiveRole()
 
     def __onRealCaptured(self, step):
-        self._refreshNav()
+        self._onCapture()   # Option C (§4.4a): invalidate computed phases + refresh nav
 
     def __onRealCaptureFailed(self):
         self._messageLabel.setText("Capture failed — no frames were delivered by the camera.")
@@ -210,7 +210,7 @@ class WizardViewModule(AbstractPluginExecutionView):
                 spectrum = step.getContainer().getSpectra()[step.getRole()]
                 plot.plotSpectrum(spectrum, title=step.getLabel())
                 statusLabel.setText("Measured (%s frames)" % step.getFrames())
-                self._refreshNav()
+                self._onCapture()   # Option C (§4.4a): invalidate computed phases + refresh nav
 
             measureButton.clicked.connect(onMeasure)
             if captured is not None:
