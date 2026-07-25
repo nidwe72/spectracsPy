@@ -580,6 +580,19 @@ class Director:
                 raise RuntimeError("activate %r tab %r failed: %r" % (name, index, activated))
         time.sleep(0.4)
 
+    def point(self, name, duration=1.1):
+        """Glide the visible cursor to a widget (locate only, NO activate) — for POINTING at a field the viewer
+        should look at (a metric row / gauge) without clicking it (SPEC_director_cut.md E3). A click would pop a
+        tooltip or no-op via __activate; pointing just moves the real cursor there for the camera."""
+        reply = self.__rpc({"cmd": "locate", "name": name})
+        if not (reply and reply.get("ok")):
+            raise RuntimeError("point %r failed: %r" % (name, reply))
+        self.__raise_app()
+        time.sleep(0.2)
+        glide = max(0.2, duration * self.__speed)
+        pyautogui.moveTo(reply["cx"], reply["cy"], duration=glide, tween=pyautogui.easeInOutQuad)
+        time.sleep(0.2)
+
     def dismiss(self):
         """Dismiss any open in-window dialog (e.g. a capture-fail modal) so it can't wedge the run (§7.1).
         Harmless when nothing is open — returns {dismissed:false}."""
@@ -618,8 +631,26 @@ class Director:
                 self.screenshot("%s_%02d_%s" % (screenshot, index, slug))
         return labels
 
+    def visit_tab(self, name, label, duration=1.1):
+        """Point/switch to a step-tab by its LABEL (SPEC_director_cut.md E3, D-subset): resolve the index from
+        the live tab list and go_to_tab it — activating only if it is not already the shown tab. Robust to tab
+        reorder; used to visit a CURATED subset of a phase's tabs (unlike walk_tabs, which walks every tab)."""
+        labels, shown = self.__tabs_state(name)
+        if label not in labels:
+            raise RuntimeError("visit_tab: %r has no tab %r (has %r)" % (name, label, labels))
+        index = labels.index(label)
+        self.go_to_tab(name, index, activate=(index != shown), duration=duration)
+
     def type_text(self, text, interval=0.06):
-        pyautogui.write(text, interval=interval)
+        # Route through `xdotool type`, which emits arbitrary UNICODE reliably into the focused field — the
+        # metadata title contains "ö" (Kernöl), which pyautogui.write drops/mangles (ASCII / layout-dependent).
+        # Fall back to pyautogui on any failure (missing xdotool, etc.). SPEC_director_cut.md E3.
+        delay_ms = max(0, int(interval * 1000))
+        try:
+            subprocess.run(["xdotool", "type", "--clearmodifiers", "--delay", str(delay_ms), text],
+                           timeout=15, check=True)
+        except Exception:
+            pyautogui.write(text, interval=interval)
 
     def wait_ready(self, name, timeout=30, poll=0.25, **state):
         deadline = time.time() + timeout

@@ -9,6 +9,26 @@ from sciens.spectracs.controller.application.ApplicationContextLogicModule impor
 from sciens.spectracs.model.application.navigation.NavigationSignal import NavigationSignal
 
 
+def resolveByObjectName(scopes, name):
+    # Among the given scope widgets (searched in order), return the VISIBLE widget whose objectName == name; if
+    # none is visible, return the first match found (so __locate can still report "found but hidden" for a
+    # genuinely hidden single match); else None. Pulled out of __lookup so it is unit-testable without a live
+    # UDP service (SPEC_director_cut.md E4). The visible preference matters because the same objectName can
+    # appear twice (shared CapturePanel.* names across hosts; the workflowItem.* colour chips duplicated across
+    # the Metrics / Metrics (dev) tabs) — a plain findChild returns the first in tree order, often a hidden twin.
+    fallback = None
+    for scope in scopes:
+        if scope is None:
+            continue
+        candidates = ([scope] if scope.objectName() == name else []) + list(scope.findChildren(QWidget, name))
+        for widget in candidates:
+            if widget.isVisible():
+                return widget
+            if fallback is None:
+                fallback = widget
+    return fallback
+
+
 class DocModeUdpService(QObject):
     """Local UDP command endpoint for --doc-mode (SPEC_doc_automation §2.3).
 
@@ -165,24 +185,20 @@ class DocModeUdpService(QObject):
             return "?"
 
     def __lookup(self, name):
-        # Resolve an objectName scoped to the CURRENT view first. Post-convergence BOTH hosts share the same
-        # CapturePanel.* objectNames, so a hidden wizard CapturePanel and the visible bench one can coexist in
-        # the tree (e.g. a plugin-bound login lands in the wizard, then we nav to the bench). A root-wide
-        # findChild returns whichever comes first — often the wrong, hidden one. Searching the active MainView
-        # page first returns the on-screen widget; fall back to the root for anything global.
+        # Resolve an objectName scoped to the CURRENT view first, and among duplicates prefer the VISIBLE one
+        # (SPEC_director_cut.md E4). The same objectName can appear more than once: both hosts share the
+        # CapturePanel.* names (a hidden wizard panel + the visible bench one), and the 10 colour chips are
+        # duplicated across the Metrics / Metrics (dev) tabs (workflowItem.* twins). A plain findChild returns
+        # the first in tree order — often a hidden twin — so walk findChildren and return the on-screen match,
+        # falling back to the first found so __locate can still report "found but hidden" for a genuinely hidden
+        # single match.
         if not name:
             return None
         try:
             current = self.__root.mainViewModule.currentWidget()
         except Exception:
             current = None
-        if current is not None:
-            if current.objectName() == name:
-                return current
-            found = current.findChild(QWidget, name)
-            if found is not None:
-                return found
-        return self.__root.findChild(QWidget, name)
+        return resolveByObjectName((current, self.__root), name)
 
     def __find(self, name):
         widget = self.__lookup(name)

@@ -1,3 +1,5 @@
+import re
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QSizePolicy, QVBoxLayout
 
@@ -5,6 +7,15 @@ from sciens.spectracs.logic.application.style.Metrics import Metrics
 from sciens.spectracs.model.spectral.plugin.view.MetricFieldView import MetricFieldView
 from sciens.spectracs.view.application.widgets.page.TooltipPageLabel import TooltipPageLabel
 from sciens.spectracs.logic.spectral.report.WorkflowItemVisitor import WorkflowItemVisitor, dispatchItem
+
+
+def workflowItemObjectName(label):
+    # SPEC_director_cut.md E2 — a stable objectName for a rendered view-model so the doc-mode Director can point the
+    # cursor at an individual field (the Verdict gauge, a specific chip/row). Slug rule (SHARED with the scenario,
+    # §4): lowercase, every run of non-alphanumeric chars -> one "_", strip leading/trailing "_". e.g.
+    # "Soret · 440–460 nm" -> "workflowItem.soret_440_460_nm".
+    slug = re.sub(r"[^a-z0-9]+", "_", (label or "").lower()).strip("_")
+    return ("workflowItem.%s" % slug) if slug else "workflowItem"
 
 
 class QtWorkflowRenderer(WorkflowItemVisitor):
@@ -67,7 +78,9 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
             label.setFixedHeight(HEADLINE_HEIGHT)                 # text vertically centred (Edwin 2026-07-24)
             label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
             grid.addWidget(label, row, 0, 1, 1)
-        grid.addWidget(GaugeWidget(view), row, 1, 1, 1)
+        gauge = GaugeWidget(view)
+        gauge.setObjectName(workflowItemObjectName(view.caption or "verdict"))  # E2: Director point target
+        grid.addWidget(gauge, row, 1, 1, 1)
         self.__metricGrid[2] = row + 1
 
     def visitColorSwatch(self, view):
@@ -90,6 +103,7 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
             self.__metricGrid = [widget, grid, 0]
         _, grid, row = self.__metricGrid
         label = TooltipPageLabel(view.label)
+        label.setObjectName(workflowItemObjectName(view.label))  # E2: Director point target (the field's label chip)
         label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         if view.tooltip:
             label.setToolTip(view.tooltip)

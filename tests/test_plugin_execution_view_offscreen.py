@@ -141,6 +141,19 @@ class PluginExecutionViewOffscreenTest(unittest.TestCase):
         self.assertEqual(view._cursor, 3)
         self.assertEqual(view._plan[view._cursor].phaseType, P.EVALUATION)
 
+    def test_metadata_field_objectnames_are_set(self):
+        # E1 (SPEC_director_cut.md): the metadata form fields carry stable objectNames so the doc-mode Director
+        # can focus + type into them (title / temperature).
+        from PySide6.QtWidgets import QLineEdit
+        fields = [type("F", (), {"name": "title", "label": "Title", "type": "TEXT", "order": 0})(),
+                  type("F", (), {"name": "temperature", "label": "Temp", "type": "NUMBER", "order": 1})()]
+        policy = WorkflowPolicy(NavigationPolicy(NavigationMode.AUTO_ADVANCE, stepChevronPhases={P.ACQUISITION}))
+        view = self._view(_StubPlugin(policy=policy, metadataFields=fields, publishing=True))
+        view.onClickedNext(); view.onClickedNext()            # jump to Details (the METADATA form renders)
+        self.assertEqual(view._plan[view._cursor].phaseType, P.METADATA)
+        self.assertIsNotNone(view._tabWidget.findChild(QLineEdit, "PluginExecutionView.metadata.title"))
+        self.assertIsNotNone(view._tabWidget.findChild(QLineEdit, "PluginExecutionView.metadata.temperature"))
+
     def test_refresh_nav_fires_guidance_hook_on_capture(self):
         # Regression: guidance must refresh on _refreshNav (which onCaptured calls), not only on a full render —
         # else the amber cue + coach line go stale after a capture.

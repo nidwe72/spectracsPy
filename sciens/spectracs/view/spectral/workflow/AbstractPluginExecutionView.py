@@ -304,6 +304,9 @@ class AbstractPluginExecutionView(PageWidget):
             else:
                 widget = QLineEdit()
                 widget.setText("" if value is None else str(value))
+            # Director anchor (SPEC_director_cut.md E1): a stable objectName per metadata field so the doc-mode
+            # harness can focus + type into it (e.g. title / temperature). Field names are safe identifiers.
+            widget.setObjectName("PluginExecutionView.metadata.%s" % name)
             self._metadataWidgets[name] = (widget, fieldType)
             layout.addWidget(self.createLabeledComponent(label, widget))
         layout.addStretch(1)
