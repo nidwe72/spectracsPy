@@ -1261,6 +1261,42 @@ the pump held. So the two phosphor-fed channels fell together and the pump-fed c
    from the outside. `DevCaptureVideoThread` pins WB at 6500 K with `AUTO_WB=0`, so this should not happen — but
    "should not" is not evidence.
 
+#### 16.7.1 MEASURED — the drift time-course, 12 min on the rig *(2026-07-27, `diagnostics/reference_drift_probe.py`)*
+
+Rather than keep arguing lamp-vs-camera from two captures, the time course was measured: exposure picked once
+(landed at 64; 128 and 256 clip) then **pinned**, WB 6500 K, 21 samples over 12 minutes, camera freshly opened
+with the lamp already warm. Log archived at `spectracs-references/probe/drift_20260727_0124.log`.
+
+| | result |
+|---|---|
+| **camera settings across all 21 samples** | `exp=64 wb=6500 autoWb=0 gain=0` — **never moved** |
+| **phosphor/pump** | 0.6437 → 0.6543, **+1.65 %**, monotone and clearly **asymptoting** (+0.9 % by 2½ min, +1.5 % by 7 min, flat after ~10) |
+| pump level | −0.77 % — the blue **falls** while the phosphor **rises** |
+| frame spread | 0–1.8 % (no dim-frame group; the burst is clean at a pinned exposure) |
+
+**Three conclusions, and the middle one kills my own hypothesis:**
+
+1. **The white-balance/gain bug is ruled out.** `wb`, `autoWb` and `gain` are constant to the digit for 12
+   minutes. Whatever moves the spectrum, it is not the camera's controls.
+2. **⚠ The sign is OPPOSITE to Edwin's A/B event.** Warming this rig makes phosphor/pump **rise** 1.65 %; between
+   his two blanks it **fell** 5.04 %. A lamp phosphor droop (§16.7's hypothesis 1) predicts a *fall*, so it is not
+   what this run shows — this is blue falling relative to green+red, which is **§16.2's documented sensor
+   self-heating signature** (red ↑ vs green/blue, ~1 %), seen cleanly because the camera was cold-opened while the
+   lamp was already warm. **So the A/B event is neither warm-up mechanism: wrong sign, and 3× too large.**
+3. **A real but modest warm-up exists and is worth respecting**: ~1.6 %, settling in ~10 minutes from camera open.
+   At `A_Q ≈ 0.15` that is still ~4 % on the pigment ratio, so a 10-minute settle before critical runs is cheap
+   insurance — but it is not the explanation being hunted.
+
+**What the A/B event then was — narrowed, still open.** It is a *smooth* spectral tilt (§16.7's table: 1.010 at
+440–460 declining monotonically to 0.928 at 620–640), **not** a localized feature — which also rules out oil
+carry-over in the blank cuvette (that would bite as a Soret-shaped notch at 440–470, not a smooth ramp). With
+warm-up and camera controls both excluded, the leading remaining candidate is **beam geometry**: the cuvette was
+removed and refilled between the two runs, and re-seating it shifts which part of the slit/grating is illuminated,
+which tilts throughput smoothly across wavelength. **Cheap decisive test (needs hands, not code):** capture a
+blank, remove and re-insert the cuvette without touching anything else, capture again. If the tilt reappears,
+cuvette seating is the error source — and no warm-up protocol would ever have fixed it, while the R→S→R′ bracket
+catches it every time.
+
 **The discriminator already exists and costs nothing: the `CAPTURE-SETTINGS` line** printed for every capture
 (§ capture-settings logging) carries `exposure_applied`, `wb`, `autoWb`, `gain`. Compare the two runs' lines: if
 `wb`/`gain`/`autoWb` are identical, mechanism 1 (lamp); if they moved, mechanism 2 (camera) — and it is a bug,
