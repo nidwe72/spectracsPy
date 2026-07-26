@@ -43,7 +43,7 @@ class WizardPersistenceOffscreenTest(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
         folder = os.path.join(os.path.dirname(__file__), "..", "..", "spectracs-references",
-                              "pumpkin_oil", "virtual_captures", "pumpkinoil_perfect_v1")
+                              "pumpkin_oil", "virtual_captures", "pumpkinoil_perfect_v2")
         settings = ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings()
         for role, name in [(VirtualCaptureRole.CALIBRATION, "calibration.png"),
                            (VirtualCaptureRole.REFERENCE, "reference.png"),

@@ -35,7 +35,7 @@ class StaleCalibrationRecoveryTest(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
         cls.folder = os.path.join(os.path.dirname(__file__), "..", "..", "spectracs-references",
-                                  "pumpkin_oil", "virtual_captures", "pumpkinoil_perfect_v1")
+                                  "pumpkin_oil", "virtual_captures", "pumpkinoil_perfect_v2")
 
     def __loadFolderIntoDevice(self):
         settings = ApplicationContextLogicModule().getApplicationSettings().getVirtualSpectrometerSettings()

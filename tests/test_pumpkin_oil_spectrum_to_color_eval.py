@@ -98,11 +98,17 @@ class PumpkinOilSpectrumToColorEvalTest(unittest.TestCase):
     # --- transmission / absorption ops ----------------------------------------------------------
 
     def test_transmission_absorption_and_low_reference_guard(self):
-        reference = Spectrum(); reference.setValuesByNanometers({450: 1.0, 500: 0.005, 550: 0.8, 600: 1.0})
-        sample = Spectrum(); sample.setValuesByNanometers({450: 0.5, 500: 0.004, 550: 0.4, 600: 0.1})
+        # The guard masks bins where the reference is a negligible fraction of its peak (there S/R is noise).
+        # Its threshold is read in LINEAR light since SPEC_capture_quality.md §17: the historical 1%-of-peak was
+        # 1% of a gamma-ENCODED peak, which is 0.01^2.2 = 6.3e-5 here. Both halves are asserted, because the
+        # ONLY thing that changed is the domain — a bin at 0.5% of peak (~11% of peak in camera DN) must now
+        # SURVIVE, and it is exactly those bins the old constant silently deleted at the spectrum's edges.
+        reference = Spectrum(); reference.setValuesByNanometers({450: 1.0, 500: 0.005, 550: 0.8, 600: 1.0, 650: 1e-5})
+        sample = Spectrum(); sample.setValuesByNanometers({450: 0.5, 500: 0.004, 550: 0.4, 600: 0.1, 650: 1e-6})
         transmission = SpectrumUtil().transmission(reference, sample)
         absorption = SpectrumUtil().absorption(reference, sample)
-        self.assertNotIn(500, transmission.valuesByNanometers, "low-reference guard should mask 500 nm")
+        self.assertNotIn(650, transmission.valuesByNanometers, "low-reference guard should mask 650 nm")
+        self.assertIn(500, transmission.valuesByNanometers, "0.5% of peak is real signal in linear light")
         self.assertAlmostEqual(transmission.valuesByNanometers[450], 0.5)
         self.assertAlmostEqual(absorption.valuesByNanometers[600], 1.0)  # -log10(0.1)
 

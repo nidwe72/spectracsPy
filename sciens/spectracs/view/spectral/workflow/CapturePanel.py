@@ -11,6 +11,7 @@ from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import E
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
 from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModule import MeanSpectrumLogicModule
 from sciens.spectracs.logic.spectral.meanSpectrum.MeanSpectrumLogicModuleParameters import MeanSpectrumLogicModuleParameters
+from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from sciens.spectracs.model.application.applicationStatus.ApplicationStatusSignal import ApplicationStatusSignal
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
 from sciens.spectracs.plugin_sdk.roles import REFERENCE, SAMPLE
@@ -52,6 +53,10 @@ class CapturePanel(QWidget):
     NOTE: the live-camera behaviour is rig-verified (golden-frame + live smoke, §9.5) — it cannot run offscreen.
     """
 
+    # Below this camera DN the darkest bin of a capture is quantization-limited (one code step is
+    # >15% relative there) — reported per capture by the low-DN guard, SPEC_capture_quality.md §17.6/11.
+    # 16 DN is where the new dilution protocol puts the Soret floor (§17.5, side observation).
+    __LOW_DN_WARN = 16.0
     __EXPOSURE_MIN = 1
     __EXPOSURE_MAX = 500
     __EXPOSURE_FALLBACK = 150
@@ -503,6 +508,26 @@ class CapturePanel(QWidget):
                  settings.get("wbTemperature"), settings.get("autoWb"), settings.get("gain"),
                  settings.get("backlight"), settings.get("whiteBalanceKelvinRequested")))
 
+    def __logLowDnGuard(self, role, spectrum):
+        # Low-DN guard (SPEC_capture_quality.md §17.6/11). The darkest bin of a capture is the one that decides
+        # whether absorbance is real or quantization: at DN 5 a single code step is ~20% relative BEFORE the
+        # gamma decode and ~44% after it, and once a bin reaches 0 absorbance saturates silently. The spectrum
+        # is LINEAR here, so map the minimum back through the decode's inverse to report it in the camera's own
+        # units — the number the operator can act on (dilute less / expose longer). Best-effort, never breaks a
+        # capture.
+        try:
+            values = (spectrum.valuesByNanometers or {}) if spectrum is not None else {}
+            if not values:
+                return
+            nanometer, minimum = min(values.items(), key=lambda item: item[1])
+            digitalNumber = SpectralColorUtil().encodeGammaFraction(max(0.0, float(minimum)) / 255.0)
+            print("CAPTURE-LOWDN role=%s minDn=%.1f at=%.1fnm%s"
+                  % (role, digitalNumber, float(nanometer),
+                     "  <-- LOW (quantization-limited; dilute less or expose longer)"
+                     if digitalNumber < self.__LOW_DN_WARN else ""))
+        except Exception as error:
+            print("CAPTURE-LOWDN role=%s unavailable (%s)" % (role, error))
+
     def __onClickedCapture(self):
         if self.__resolvedIndex is None or self.__videoThread is None or self.__autoExposing:
             return
@@ -564,6 +589,7 @@ class CapturePanel(QWidget):
             # Diagnostic (SPEC_capability_proof.md §7.0.1): log the landed exposure / white-balance / gain for THIS
             # capture, so reference-vs-sample and run-to-run drift (the absorbed-colour reference tilt) is traceable.
             self.__logCameraSettings(role)
+            self.__logLowDnGuard(role, spectrum)
 
             if role == REFERENCE:
                 self.__lockedExposure = self.__exposureSlider.value()

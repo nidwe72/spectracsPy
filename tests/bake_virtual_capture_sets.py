@@ -23,9 +23,13 @@ from sciens.spectracs.logic.spectral.synthesis.OilSampleSynthesisLogicModule imp
 from sciens.spectracs.logic.spectral.synthesis.OilSampleSynthesisLogicModuleParameters import OilSampleSynthesisLogicModuleParameters
 from sciens.spectracs.logic.spectral.synthesis.PlaygroundDemoOils import PLAYGROUND_DEMO_OILS
 from sciens.spectracs.logic.spectral.synthesis.SpectrumToVirtualImageUtil import SpectrumToVirtualImageUtil
+from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
 from sciens.spectracs.logic.spectral.verdict.RoastState import RoastState
 
-ENCODER_VERSION = "v1"
+# v2 (SPEC_capture_quality.md §17): the encoder now gamma-ENCODES, the inverse of the reader's
+# decode. A v1 folder decodes gamma-DISTORTED under the current reader — which is exactly what the
+# version marker is for, so bump rather than overwrite (the v1 sets stay on disk for rollback).
+ENCODER_VERSION = "v2"
 
 _VARIANT_BY_ROAST = {
     RoastState.UNDER_ROASTED: "under",
@@ -72,6 +76,7 @@ def bake(outputRoot=None):
                 "targetHue": demoOil.targetHue,
                 "achievedHue": round(result.getAchievedHue(), 2),
                 "sharedVmax": True,
+                "captureDecode": SpectralColorUtil().captureDecodeDescriptor(),
                 "resample": "linear",
                 "imageWidth": calibration.imageWidth,
                 "imageHeight": calibration.imageHeight,

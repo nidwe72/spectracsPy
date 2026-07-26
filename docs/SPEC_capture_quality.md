@@ -1212,6 +1212,124 @@ and is the *seed* of the eventual `CameraService`.
 W6 (POSTPONED): red/green stability guard at measurement time (item c). Single-owner CameraService: later.
 ```
 
+### 16.7 Field evidence — the drift caught a dilution pair red-handed *(2026-07-27, measured)*
+
+Edwin measured the same oil at two dilutions five minutes apart — `NowSteirerkraftA` (2 drops in 8 ml, 00:03)
+and `NowSteirerkraftB` (2 drops in 6 ml, 00:08) — and the pigment ratio **diverged by 48 %** (3.739 vs 5.547),
+where it should be dilution-INVARIANT. Replay (`diagnostics/gamma_dilution_diverge{,2}.py`) puts it on §16:
+
+**The samples agree; the blanks do not.** Peak-normalized, the two SAMPLE spectra differ **only in the Soret
+band** (B/A = 0.817 there, 0.99–1.04 in every other band) — exactly what a higher concentration does, and
+nothing else. The two REFERENCE spectra differ **everywhere above ~500 nm**, as a smooth tilt:
+
+| band | 440–460 | 480–500 | 520–540 | 560–580 | 600–620 | 620–640 |
+|---|---|---|---|---|---|---|
+| reference B/A (peak-normalized) | 1.010 | 0.991 | 0.961 | **0.930** | 0.950 | 0.928 |
+
+**Cross-swap proves it.** Recomputing each sample against the *other* run's reference moves the ratio by
+20–28 % — more than half the total divergence, from the blank alone:
+
+| | A sample | B sample |
+|---|---|---|
+| **with its own reference** | 3.739 | 5.547 |
+| **with the other reference** | 4.786 (+28 %) | 4.372 (−21 %) |
+
+**Why a 7 % blank error wrecks a ratio.** `A_Q ≈ 0.15` at this dilution. A relative reference error δ moves
+absorbance by `0.434·δ`, i.e. **2.9·δ relative on the denominator** — 7 % in, ~20 % out. The same δ on the
+Soret band (`A ≈ 0.7`) costs only 4 %. **The ratio's dilution-invariance assumes both bands carry real signal;
+here the denominator is mostly instrument drift.** (This is also why the 32-run proof held at SD ≈ 4 %: those
+runs were captured back-to-back in one thermal state.)
+
+**Not §16's sensor self-heating — but the culprit is NOT yet pinned** *(refined twice on 2026-07-27, after Edwin
+pushed back on both the camera AND the lamp: "both had been running for minutes")*. What the data says
+unambiguously, from the per-channel replay of the embedded frames (`diagnostics/gamma_reference_valley.py`):
+
+| whole-frame channel level | run A | run B | B/A |
+|---|---|---|---|
+| **BLUE** (sees the InGaN **pump**) | 64.61 DN | 63.72 DN | **0.986** |
+| **GREEN** (sees the **phosphor**) | 107.67 DN | 104.57 DN | **0.971** |
+| **RED** (sees the **phosphor**) | 40.29 DN | 38.75 DN | **0.962** |
+
+The reference peak sits at **472.7 nm — the pump** — and **phosphor/pump fell 5.04 %** (0.7353 → 0.6982) while
+the pump held. So the two phosphor-fed channels fell together and the pump-fed channel did not.
+
+**Two mechanisms produce exactly that signature, and the spectrum alone cannot separate them:**
+1. **Lamp** — white-LED phosphor thermal quenching (conversion efficiency drops as the junction heats; the blue
+   pump barely moves). Weak corroboration: the pump peak moved 472.7 → 473.3 nm, the direction InGaN shifts when
+   it gets *hotter*. Against it: Edwin reports the lamp had been on for minutes.
+2. **Camera** — a white-balance / channel-gain shift (R and G gains down relative to B) is *indistinguishable*
+   from the outside. `DevCaptureVideoThread` pins WB at 6500 K with `AUTO_WB=0`, so this should not happen — but
+   "should not" is not evidence.
+
+**The discriminator already exists and costs nothing: the `CAPTURE-SETTINGS` line** printed for every capture
+(§ capture-settings logging) carries `exposure_applied`, `wb`, `autoWb`, `gain`. Compare the two runs' lines: if
+`wb`/`gain`/`autoWb` are identical, mechanism 1 (lamp); if they moved, mechanism 2 (camera) — and it is a bug,
+not physics. **Do this before spending time on either fix.** Cross-check on the sensor: §16.2's self-heating
+tilts the **other** way (red ↑ vs green/blue) at ~1 %, so this is not that. Note also that auto-exposure pins the
+**peak**, which *is* the pump — so either mechanism is invisible in level and shows up purely as this shape
+change. If mechanism 1 survives: §8's lamp warm-up drift-to-stable was never measured, and
+`diagnostics/capture_quality_probe.py` Phase B (1 frame / 2 s × 5 min) measures exactly it; the clean physical
+test is to keep the camera streaming and power-cycle only the lamp.
+
+**Consequences.**
+- This is **not** a gamma effect (the decode is a uniform scale on `A` and cancels in the ratio, §17.5.1 — and
+  the pre-§17 run's 5.183 sits *between* the two new ones), **not** a floor effect (§17.8.5), and **not**
+  fixable by normalization (§17.8.5).
+- **Baseline subtraction makes it worse, not better:** removing the red-anchor offset (0.120 / 0.090 — itself
+  drift) shrinks the denominator to 0.058 / 0.054 and the two ratios go to 9.43 vs 13.16.
+- ⇒ **Blocking for any ratio work at low absorbance** — and the lever is the **lamp warm-up**, not §16's
+  camera warm-keeper (W5/W6 stay worth finishing, but they would not have caught this).
+- The cheap protocol fix that also *measures* the problem: bracket the run **R → S → R′** — blank, sample, blank
+  again — and accept it only if the two blanks agree band-wise within ~1 %. That is a plugin acquisition step,
+  not new physics, and it turns an invisible corruption into a visible per-run number. It also **self-corrects**
+  if wanted: with two blanks straddling the sample, interpolate the reference to the sample's timestamp.
+- **Measure the lamp first** (§8, still unmeasured): run the Phase-B warmup probe once and read off how long the
+  phosphor/pump ratio takes to settle. That number becomes the coach line "lamp warming — N min left".
+
+### 16.8 The Q band sits in the sensor's colour-filter CROSSOVER *(2026-07-27 — why the blank reads low at 580 nm)*
+
+Edwin: *"the pure alcohol blank has such small values at 580 nm, yet the capture image looks uniform."* Both
+observations are correct, and the resolution is that **the dip is the camera, not the light.** Replaying the
+embedded full-resolution blank frame per channel (`diagnostics/gamma_reference_valley.py`, raw DN):
+
+| nm | R | G | B | max = the spectrum | winner |
+|---|---|---|---|---|---|
+| 540–550 | 5.2 | **186.9** | 0.0 | 186.9 | GREEN |
+| 560–570 | 10.6 | **152.0** | 0.0 | 152.0 | GREEN |
+| **570–580** | 39.2 | **121.1** | 0.0 | **121.1  ← the notch (57 % of peak)** | GREEN |
+| 580–590 | **127.6** | 77.6 | 0.0 | 127.6 | RED |
+| 590–600 | **152.3** | 47.6 | 0.0 | 152.3 | RED |
+
+The light really is smooth — the **green filter has rolled off and the red filter has not yet risen**, so
+`max(R,G,B)` (§15's reduction) dips where neither is efficient. `sum(R,G,B)` at 570–580 is 160 vs `max`'s 121,
+i.e. the photons are there, split across two half-open filters. **`max()` hands over GREEN → RED at ~580 nm with
+only a 24 DN margin** — the Q band's own upper edge.
+
+**This does not bias `T`** — the notch is instrument response, common to reference and sample, and it cancels in
+`S/R`. What it costs is **photons and stability, exactly at the denominator**:
+
+| candidate denominator band | level (DN) | photons (ΣRGB) | drift between the two blanks |
+|---|---|---|---|
+| clarity 500–540 | 195.6 | 246.2 | −2.5 % |
+| green peak 520–545 | 192.2 | 212.4 | −2.6 % |
+| **Q 560–580** | **136.4** | **161.5** | **−4.0 %** |
+| red 590–620 | 138.3 | 163.3 | −2.7 % |
+
+⇒ the Q band is simultaneously the **darkest** part of the usable range, the place where the reduction **switches
+channel**, and the **most drift-prone** — and §16.7 needs it as a small denominator (`A_Q ≈ 0.15`). That is the
+structural reason the ratio is fragile, independent of whatever causes the drift.
+
+**Open options** (DESIGN — none implemented):
+- **(a) Leave the band, fix the stability.** The chemistry picked 560–580 (chlorophyll Q); the instrument is
+  simply worst there. §16.7's R→S→R′ bracket plus the lamp/WB answer.
+- **(b) Move the denominator** to 500–540, where there are ~50 % more photons, no channel switch and 1.5 points
+  less drift. **Cheap to evaluate before committing:** recompute the 32-run capability set with Soret/clarity and
+  compare Cohen's d against the published 10.39 — if separation survives, the metric gets much more robust. It
+  changes what the ratio *means* chemically, so thresholds would need re-anchoring.
+- **(c) Reduce with ΣRGB instead of max in the crossover.** Tempting (the notch nearly vanishes) but it reopens
+  §15's decision — `sum` re-admits the empty-channel noise `max` was chosen to avoid. Only worth it if (a) and
+  (b) fail.
+
 ---
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
@@ -1282,11 +1400,16 @@ the verdict; it improves everything the ratio does *not* protect:
   — so this is *approximate* linearization (precision loss; pure-power model), not the thread's RAW ideal.
   Good enough for colour + cross-camera consistency; not a path to absolute radiometry.
 
+**Implementation walkthrough: [§17.6](#176-implementation-rubber-duck--walked-against-the-as-is-code-2026-07-26)**
+— the plan above vs the as-is code (12 findings, phases L0–L6). It **reopens one gate**: the hue-band verdict of
+the shipped `PumpkinOilPlugin` rides the *perceived* axis, which is the one axis gamma moves.
+
 **Status: DE-RISKED DESIGN — every open question answered (§17.5), implement on explicit request.** The motive is
 **closure**, not accuracy (Edwin 2026-07-26): we *know* the camera is non-linear, so leaving the assumption in the
 pipeline keeps "maybe it's the gamma" on the suspect list for every future anomaly forever. Linearizing removes it
 permanently. The colour gain (+33–40 % perceived chroma) is the bonus. Because the decode is verdict-neutral, this
-is a **strictly safe** change: the Roast Ampel threshold does **not** move.
+is a **strictly safe** change: the Roast Ampel threshold does **not** move. *(Narrowed by §17.6/1: safe for the
+peak-**ratio** verdict — the older **hue-band** verdict still needs the L0 measurement.)*
 
 ### 17.5 Measured verification of §17 — the 2026 oils  *(Edwin 2026-07-26; §17.3's claim, now measured)*
 
@@ -1385,6 +1508,378 @@ quantization alone is ±10 % relative. Harmless in practice (the band mean over 
 means the oil was near-opaque at 440 nm at the 1:20 dilution — the finding that drove the protocol change. An open,
 minor proposal: a **low-DN guard** (report the per-capture band-minimum DN, so the floor is *visible* before a bin
 ever reaches 0 and absorbance saturates silently). Largely obsolete once the protocol lands (floor moves 5 → 16 DN).
+
+### 17.6 Implementation rubber-duck — walked against the as-is code  *(2026-07-26)*
+
+§17.4/§17.5 settled the **physics** (pure `x^2.2`, decode-first, verdict-neutral). This pass walks that plan
+through the code that would actually execute it. The headline correction: **"verdict-neutral" is proven for the
+peak-RATIO verdict, and the shipped end-user plugin does not use it** — see finding 1. Everything else is
+mechanical, but three of the mechanics are *silent* if missed (2, 3, 5).
+
+1. **⭐ `PumpkinOilPlugin`'s verdict is NOT gamma-invariant — §17.5 measured the wrong verdict.**
+   `PumpkinOilPlugin.evaluation` reads `EvaluationColorUtil().spectrumToRgbAndHue(transmission)` and hands the hue
+   to `VerdictOp` → `VerdictLogicModule` (bands **47° / 66°**). That is the **perceived** axis — the one axis
+   §17.5.1 explicitly measured as *moving* (perceived chroma 32.9 → 43.7). `T → T^γ` is a per-wavelength
+   distortion of transmission, **not** a scale, so its chromaticity is free to shift; only the *absorbed*
+   chromaticity and the *band ratio* are provably invariant. §17.5 tabulated perceived **chroma** but never
+   perceived **hue**, so the number that decides the pumpkin verdict is the one number not yet measured.
+   ⇒ **L0 (below) is a gate, not a formality:** replay the perceived HUE, as-is vs γ=2.2, on the 2026 pair *and*
+   the 32-run set, and compare the shift against the 47/66 band edges. The same shift lands on
+   `test_pumpkin_workflow_end_to_end` and on `test_virtual_device_image_roundtrip`'s ±3° hue tolerance. The
+   Roast-Ampel 4.4 threshold stays untouched either way (§17.5.4).
+   *(If the hue does move: the bands are calibrated against a decode model exactly as the 4.4 threshold is —
+   re-anchor them in the same commit, or the end-user verdict silently changes meaning.)*
+
+2. **⭐ Keep the 0–255 scale: decode with a 256-entry LUT, never a normalization to [0,1].**
+   Use `f(v) = 255·(v/255)^γ` — monotone with `f(0)=0`, `f(255)=255`. That preserves the saturation/dead mask at
+   `ImageSpectrumAcquisitionLogicModule.py:133`, `valid = (gray < 255.0) & (gray > 0.0)`, **exactly**: no other DN
+   maps onto the endpoints (`f(254)=252.8`, `f(1)=0.0013`). If the decode instead returned [0,1], that mask would
+   silently stop rejecting anything — every value is `< 255` — and clipped pixels would flow into the Tukey
+   estimate unnoticed. Plot autoscale, the probes and the diagnostics logs also keep their familiar scale.
+   Implementation: `LUT = ((numpy.arange(256) / 255.0) ** GAMMA) * 255.0`, then index the **uint8** slice at
+   `:129` *before* `.astype(numpy.float32)`. Exact (256 possible inputs), and it removes a per-frame
+   `numpy.power` over ~0.7 Mpx × 150 frames × 2 roles from the burst path. A per-camera exponent becomes one
+   table rebuild.
+
+3. **⭐ The low-reference guard silently becomes 12× stricter — the spectral window shrinks.**
+   `TransmissionLogicModule.DEFAULT_REFERENCE_FLOOR_FRACTION = 0.01` masks every bin where the reference is below
+   **1 % of the reference peak**. Taken in the *linear* domain that is `0.01^(1/2.2)` = **12.3 % of peak DN**:
+   every bin whose reference sits between 1 % and 12.3 % of peak DN silently vanishes from `T` — and therefore
+   from `A`, the band means and the colour integral. Nothing errors; the spectrum just gets shorter at the edges,
+   where the white-LED reference is weakest (deep blue ≈440, far red ≈630 — both **inside** the pumpkin ROI).
+   ⇒ Re-express the guard in the same commit: `0.01 → 0.01^γ ≈ 6.3e-5`, or apply the floor in DN before the
+   decode. L0 should also just *read off* the reference at 440/630 nm as a % of peak, so we know whether the ROI
+   was ever near that edge.
+
+4. **The raw-DN domain boundary — decode ONLY the measurement extraction.** Explicitly do **not** decode:
+   - **the calibration branch (`:58-61`)** — line detection needs peak *positions* (invariant under any monotone
+     map) and raw `QColor` hues (untouched), but its anchoring is **prominence-RANK-sensitive** (§15.9/9).
+     Decoding compresses dim peaks relative to bright ones, so the blue **Hg 436** line that §15 just rescued
+     would lose relative prominence against `prominence = 0.01·peak` — reintroducing the G4 anchor risk for
+     **zero** benefit. Calibration stays in DN.
+   - **`SpectralWorkflowEngine.__calibrationRoiHasSignal`** (`qGray(image.pixel(...)) > 20`) — reads raw pixels,
+     unaffected, leave it.
+   - **`SpectrometerRegionOfInterestLogicModule`** (geometry) and **`AutoExposureLogicModule.frameBrightness` /
+     `VideoThread.__settleUntilStable`** (steers the camera; the AE target 245 and the 1 % settle tolerance are
+     DN facts, §14.9/§14.8-fix-2) — all stay raw.
+   ⇒ The rule, worth a comment at both branches so nobody "unifies" them later: **anything that steers the
+   camera or finds geometry stays in DN; only the measurement extraction linearizes.**
+
+5. **The virtual encoder stops being a no-op — it must gamma-ENCODE.** §15's big de-risk does **not** repeat here.
+   `SpectrumToVirtualImageUtil.__encodeOne` writes `gray = 255·value/vmax`; with a decoding reader every virtual
+   capture returns `value^γ`. Fix: `gray = 255·(value/vmax)^(1/γ)` — which makes the virtual device *more*
+   faithful (it now models what a real camera does) and improves dark-bin quantization. Consequences: the
+   `§15 INVARIANT` comment block in that file is superseded; **re-bake** the sets
+   (`tests/bake_virtual_capture_sets.py`) and bump `ENCODER_VERSION "v1" → "v2"` — the folder name and `set.json`
+   carry it for exactly this reason, and a stale `v1` folder on disk would otherwise decode γ-distorted. Tests
+   that ride this path: `test_virtual_device_image_roundtrip`, `test_pumpkin_workflow_end_to_end`,
+   `test_frame_provider_burst`, `test_capture_frame_rejection` (it *encodes* a deliberately dim image — still
+   rejected, more strongly). Virtual `T` stays invariant either way (reference and sample share one `vmax`).
+
+6. **Robust-statistics constants: self-scaling except one.** Under `x^γ` a small relative deviation multiplies by
+   γ — and so does the MAD — so `TUKEY_C`, `SIGMA_K` and `DIM_FRAME_K` are ratios and keep their meaning. The
+   exception is the **fixed** `DIM_FRAME_SCALE_FLOOR = 0.02`: 2 % measured in the linear domain is ≈ **0.9 % in
+   DN**, so the docstring's "effective reject band ≥ K·2 % ≈ 6 % dim" becomes ≈ 2.7 % dim — C1 dim-frame
+   rejection gets ~γ× more trigger-happy in the MAD≈0 case. Either divide it out (`0.02 → ~0.045`) or accept it
+   deliberately and fix the docstring. `tests/test_capture_frame_rejection.py` pins the current behaviour.
+
+7. **The colour ceiling is copy-pasted 4× across 2 repos — and one copy ships from the DB.** `ceiling=3.0` lives
+   in `DevSpectralPlugin.__colourChips` (3 `spectrumToHsl` + 3 `complementViaWhitePoint` call sites),
+   `spectracsPy/tests/test_color_retrieval.py` and `spectracs-plugins/tests/test_dev_plugin_improved_colour.py`.
+   §17.4 says "scale 3.0 → 6.6" — but under M3 the plugin is a **sealed, versioned DB blob**: a linearizing host
+   plus an older assigned plugin version = clamped chips, silently, with no version check that would catch it.
+   ⇒ Prefer §17.4's own alternative and make the ceiling **relative** (cap inside `EvaluationColorUtil.__sanitize`
+   at `k·max(values)`), which is gamma-proof *and* skew-proof and deletes the constant from plugin code. If the
+   absolute number is preferred, at minimum hoist it host-side to `EvaluationColorUtil.ABSORBANCE_CEILING` so one
+   edit moves all four.
+
+8. **Stamp the decode model into the run.** Stored runs hold *post-extraction* values (DbMeasurement blobs, the
+   `workflow.json` embedded in every report PDF), so old runs keep rendering exactly as today — good — but a
+   post-change absolute `A` is γ× a pre-change one, and every baseline in `LAB_DIARY_capability_proof.md` /
+   `SPEC_capability_proof.md` is pre-change. Record `captureDecode: "pow2.2"` (or the per-camera exponent) in the
+   workflow metadata so the era is visible **in the artifact** instead of inferred from its date. Ratio metrics
+   stay comparable across the boundary (§17.5.1) — absolute absorbance and colour do not.
+
+9. **Put the decode in core, or the replays drift.** `diagnostics/calibration_probe.py`,
+   `diagnostics/capture_quality_probe.py`, `diagnostics/calibration_fix_test.py` and the §17.5 off-line replay
+   each re-implement the extractor. Home the decode next to the reductions it precedes —
+   `SpectralColorUtil` in `spectracsPy-core` (`decodeGammaArray` / `gammaLut`, alongside `toGrayMaximumArray`) —
+   so probes import it. Otherwise §17.5's replay silently stops reproducing the app bit-for-bit, and that
+   reproducibility is what made the whole verification credible.
+
+10. **Per-camera home + Android.** The exponent belongs where §14.9 already parks per-sensor facts:
+    `SpectrometerSensorUtil` (`spectracsPy-model`), beside WB-Kelvin and exposure. Default 2.2 everywhere until
+    measured. §17.5.1's fleet note bounds the damage: ratios are already cross-camera comparable, so a wrong
+    per-camera exponent costs colour and absolute `A` — never the ratio verdict. The same extractor runs on
+    Android; the LUT is plain numpy, so nothing new there.
+
+11. **Quantization gets γ× worse exactly where the signal is — so ship the low-DN guard with the decode.** One DN
+    step at DN 5 is 20 % relative before decode, ≈44 % after; §17.5's side observation puts the Soret floor at
+    DN 5. The ~140-bin band mean still averages it away, but after linearization the plot's toe is compressed
+    toward zero, so a near-floor capture is *harder* to spot by eye. That promotes the §17.5 "low-DN guard"
+    (report the per-capture band-minimum DN) from *minor proposal* to **ship it in the same milestone**.
+
+12. **Ordering rule for the retired pedestal.** If dark-level subtraction ever returns (§5), it must be applied
+    **in DN, before** the LUT — the sensor's black level is added ahead of the camera's encoding, so subtracting
+    after the decode subtracts the wrong quantity. Put the rule in the LUT construction comment, where the next
+    person will be standing.
+
+**Phases**  *(DESIGN — implement on explicit request only)*
+
+```
++----+------------------------------------------+---------------------------------+------------------------------------+--------+
+| Ph | What                                     | New / Touched                   | Gate                               | Risk   |
++----+------------------------------------------+---------------------------------+------------------------------------+--------+
+| L0 | MEASURE-FIRST GATE (off-line, no code):  | the §17.5 replay tooling        | Hue shift known + compared to      | -      |
+|    | perceived HUE as-is vs g=2.2 (2026 pair  | (workflow.json in the report    | 47/66. Reference at 440/630 nm     | (gate) |
+|    | + 32 runs) vs the 47/66 verdict bands    | PDFs)                           | as % of peak known (finding 3).    |        |
+|    | (finding 1); reference-edge headroom     |                                 | => go / re-anchor-bands / stop.    |        |
+| L1 | Core decode: gamma LUT + decodeGamma-     | TOUCH SpectralColorUtil (core)  | Unit: f(0)=0, f(255)=255, monotone,| LOW    |
+|    | Array next to the toGray* reductions      | + unit test                     | LUT == closed form. No behaviour   |        |
+|    |                                          |                                 | change yet.                        |        |
+| L2 | Wire into the extractor: LUT on the uint8 | TOUCH ImageSpectrumAcquisition- | Mask semantics unchanged; spectrum | LOW-MED|
+|    | slice BEFORE astype/toGrayMaximumArray;   | LogicModule :129-133 (+ a       | shape changes as predicted; suite  |        |
+|    | comment the DN-domain boundary at :58     | comment at the calib branch)    | green except the known movers.     |        |
+| L3 | Reference floor re-expressed for the      | TOUCH TransmissionLogicModule   | The 440/630 bins still present in  | MED    |
+|    | linear domain (0.01 -> ~6.3e-5) - SAME    | (constant + comment)            | T; window length unchanged vs      |        |
+|    | commit as L2, else the window shrinks     |                                 | today's run.                       |        |
+| L4 | Virtual encoder inverse-gamma; re-bake     | TOUCH SpectrumToVirtualImage-   | Round-trip test green again; the   | LOW-MED|
+|    | the sets; ENCODER_VERSION v1 -> v2         | Util + bake script + the 4      | 3 baked v2 folders written.        |        |
+|    |                                          | virtual-path tests              |                                    |        |
+| L5 | Colour ceiling made RELATIVE (host-side); | TOUCH EvaluationColorUtil +     | Chips unchanged on a pre-decode    | LOW    |
+|    | DIM_FRAME_SCALE_FLOOR decision; decode    | DevSpectralPlugin + 2 tests;    | run; no clamp on a post-decode     |        |
+|    | stamp in the workflow metadata; low-DN    | RobustReduction constant        | one; stamp present in workflow.json|        |
+|    | guard                                    |                                 |                                    |        |
+| L6 | Rig verify on the ELP: calibration ~0.6nm | -                               | Calibration PASS; ratio matches    | -      |
+|    | still PASSES, ratio unmoved, chroma up    |                                 | the pre-decode run to ~0.2%;       |        |
+|    |                                          |                                 | chips visibly richer.              |        |
++----+------------------------------------------+---------------------------------+------------------------------------+--------+
+Order: L0 (gate) -> L1 -> L2+L3 (one commit) -> L4 -> L5 -> L6. L2 without L3 is a silent regression.
+```
+*(Ordering revised by §17.7/21 — **L2·L3·L4 are ONE commit**: the reader's decode and the virtual encoder are
+inverse halves, so either one alone leaves the virtual device γ-distorted. The full as-built table is §17.7.)*
+
+**Status after the duck:** the plan is sound and the physics is closed, but §17.4's *"strictly safe — no verdict
+moves"* holds only for the ratio verdict. **L0 must run before any code**: it is off-line, uses tooling that
+already exists, and it decides whether the pumpkin hue bands need re-anchoring alongside the decode.
+
+### 17.7 Second rubber-duck pass — the mechanics of writing it  *(2026-07-26)*
+
+§17.6 walked the *design* against the code. This pass walks the **edit itself**: what a first cut would get wrong
+while typing, and what the phase table has to look like as a result. It **revises §17.6's ordering** (finding 21).
+
+13. **⭐ Do not put a mutable γ on the `SpectralColorUtil` singleton.** `sciens.base.Singleton.__new__` hands back
+    **one process-wide instance** per class, shared by the video thread and the GUI thread. A `setGamma()` on it is
+    global mutable state read mid-burst from another thread — and a silent cross-test leak: the unit tests run in
+    one process, so a test that sets γ=1.0 to exercise the no-op path poisons every test that runs after it.
+    ⇒ LUT as a **module-level constant** built at import for the default γ, plus a small `lutFor(gamma)` dict cache
+    for overrides. γ is passed in, never stored.
+
+14. **The LUT *replaces* the `astype`, and must sit after the ROI slice.** At `:129` today the chain is
+    frombuffer → reshape → **slice** → `.astype(numpy.float32)`. `frame = LUT[slicedUint8]` yields float32
+    directly, so it is a one-line change, not two. Two traps: build the LUT **float32** (a float64 LUT silently
+    upgrades the whole hot array — 2× memory, and the new dtype flows into the Tukey estimator), and keep it
+    **after** the slice (decoding before it means 5 Mpx instead of ~0.7). `numpy.frombuffer` is read-only, but
+    fancy indexing returns a fresh writable array, so the NaN mask at `:135` keeps working.
+
+15. **The live trace will look alarming on the rig — and that is correct.** The decode is near-identity at the top
+    (DN 245 → 233) and crushes the middle (DN 120 → 49): the reference plateau drops ~2.5× while the peak barely
+    moves, so the plot reads *dimmer and more peaked*. That is the visual opposite of §15's "blue lifts ~3×"
+    result, which is what the eye at the rig is now calibrated to. Two defences: warn the operator **before** L6 so
+    it is not read as a regression, and consider keeping the **capture-panel live plot in DN** (display-only) —
+    the panel is an exposure-judging instrument, and exposure is a DN fact for exactly the reason AE stays in DN
+    (§14.9, §17.6/4).
+
+16. **Grep-verified, not assumed: nothing else judges the spectrum's amplitude.** `CapturePanel` reads no spectrum
+    values at all (its only numeric clamps are the exposure slider); `AcquisitionGuidance` carries no amplitude
+    threshold; the sole absolute-amplitude gate in the chain is `SpectralWorkflowEngine.__calibrationRoiHasSignal`
+    (`qGray(image.pixel(...)) > 20`), which reads **raw pixels** and is therefore unaffected. So the blast radius
+    of the scale change is exactly the three sites already named — the saturation mask, the reference floor, and
+    the dim-frame scale floor. Worth the grep: "some view surely shows a peak number" was the obvious fear, and
+    it is false.
+
+17. **Every touched file exists 4–5 times in the tree.** `ImageSpectrumAcquisitionLogicModule.py`,
+    `SpectrumToVirtualImageUtil.py` and `SpectrometerSensorUtil.py` each have copies under
+    `android/server/app_src/`, `android/spike/app_src/`, both `.buildozer/android/app/` trees and
+    `deployment/spectracsPy-model/`. An APK built from a half-synced `app_src` ships the **old reader with the new
+    encoder** (or the reverse) — a γ-distorted spectrum with no error anywhere. Decide per phase and write it
+    down: `.buildozer/` are build artifacts (leave), `app_src/` is APK source (mirror or knowingly defer with
+    Android marked stale).
+
+18. **The dim-frame test cannot catch a half-landed change — don't let it reassure you.**
+    `test_capture_frame_rejection` scales the *spectrum* by 0.45 before encoding, so after inverse-encode +
+    decode the frame is still 45 % dim (and if the encoder half were missing, 17 % — dimmer, still rejected). It
+    stays green either way. The test that actually detects the mismatch is
+    `test_virtual_device_image_roundtrip` (recovered ≈ source). Treat that one as the L4 gate.
+
+19. **Make the domain visible in the code, not only in a comment.** Both branches of
+    `ImageSpectrumAcquisitionLogicModule` write into the same `Spectrum` type, which carries no unit — one branch
+    now DN, the other linear. §17.6/4's comment is the weak form of the fix; the cheap strong form is naming:
+    rename `__reducedColumnValues` → `__reducedLinearColumnValues`, and mark the dict built at `:105` as linear.
+    A future reader edits at the name, not at the comment.
+
+20. **No hidden normalization in the colour path — confirmed.** `SpectrumToColorLogicModule` aligns onto the CMF
+    grid and integrates; it never normalizes, and chromaticity is scale-invariant. So the perceived hue moves
+    (§17.6/1) purely because the spectrum's **shape** changes — there is no scale bug to find there, and no knob
+    in that module that could compensate. Recorded so the L0 result is not chased into the wrong file.
+
+21. **⭐ Ordering correction: L2, L3 and L4 are ONE commit.** §17.6's table had L4 following L2. But the reader's
+    decode and the virtual encoder are **inverse halves of one transform**: with only L2, every virtual capture
+    reads `value^γ`; with only L4, it reads `value^(1/γ)`. Either gap distorts the **DEV bench demo, the plugin
+    round-trip and the doc-automation screencasts**, which all run on the virtual path. L3 is already welded to L2
+    (§17.6/3). ⇒ one atomic commit: extractor + reference floor + encoder + re-bake.
+
+22. **Skip the per-camera γ hook for now (YAGNI, and it would be param plumbing).**
+    `SpectrometerSensorUtil.getSensorSettings(sensor)` needs a `SpectrometerSensor` object; the extractor holds no
+    sensor handle — it pulls only the calibration profile out of `ApplicationContextLogicModule`. Wiring γ
+    per-camera therefore means threading a sensor through the capture path, which is exactly the plumbing pattern
+    we avoid elsewhere. §17.6/10 already concludes every camera starts at 2.2, and §17.5.1 shows a wrong exponent
+    costs colour only, never the ratio. ⇒ **document the seam, do not build it** until a second camera is
+    actually measured.
+
+**Implementation phases — as-built table**  *(supersedes §17.6's; DESIGN, implement on explicit request only)*
+
+```
++----+-----------------------------------+--------------------------------------------+---------------------------------------+------+
+| Ph | What                              | Files touched                              | Gate / how you know it worked         | Risk |
++====+===================================+============================================+=======================================+======+
+| L0 | MEASURE-FIRST GATE. Off-line      | (none - analysis only, the §17.5 replay)   | Perceived hue shift KNOWN for both    |  -   |
+|    | replay: perceived HUE as-is vs    |                                            | oils + the 32 runs, compared against  | gate |
+|    | g=2.2 on the 2026 pair + 32 runs, |                                            | 47/66. Reference at 440/630 nm as %   |      |
+|    | vs the 47/66 verdict bands.       |                                            | of peak known. => GO / RE-ANCHOR      |      |
+|    | Also: reference-edge headroom     |                                            | BANDS / STOP.                         |      |
+|    | for the floor change (17.6/3).    |                                            |                                       |      |
++----+-----------------------------------+--------------------------------------------+---------------------------------------+------+
+| L1 | Core decode util. Module-level    | spectracsPy-core .../spectral/util/        | New unit test: f(0)=0, f(255)=255,    | LOW  |
+|    | float32 LUT + lutFor(gamma)       |   SpectralColorUtil.py           (TOUCH)   | strictly monotone, LUT == closed form |      |
+|    | cache; NO gamma stored on the     | spectracsPy/tests/test_gamma_decode.py     | to 1e-6, dtype float32. Whole suite   |      |
+|    | singleton (17.7/13). Doc the      |                                  (NEW)     | unchanged - nothing calls it yet.     |      |
+|    | per-camera seam, don't build it.  |                                            |                                       |      |
++----+-----------------------------------+--------------------------------------------+---------------------------------------+------+
+| L2 | READER: LUT on the uint8 slice,   | .../acquisition/ImageSpectrumAcquisition   | Mask still rejects 255/0 (assert on a | MED  |
+| +  | replacing .astype (17.7/14).      |   LogicModule.py  :129 (+:105, :115 rename)| clipped fixture). Ratio matches the   |      |
+| L3 | Rename -> __reducedLinearColumn   | .../transmission/TransmissionLogicModule.py| pre-change run to ~0.2% (17.5.3).     | ONE  |
+| +  | Values; DN-domain comment at the  |   DEFAULT_REFERENCE_FLOOR_FRACTION          | T covers the SAME nm window as before |COMMIT|
+| L4 | calibration branch :58.           | .../synthesis/SpectrumToVirtualImageUtil.py| (the L3 check - else the window       |      |
+|    | FLOOR: 0.01 -> 0.01^g (~6.3e-5).  | tests/bake_virtual_capture_sets.py          | silently shrank).                     |      |
+|    | ENCODER: inverse gamma + version  |   ENCODER_VERSION v1 -> v2                  | test_virtual_device_image_roundtrip   |      |
+|    | v1 -> v2; RE-BAKE the 3 sets.     | spectracs-references/.../virtual_captures/  | GREEN = the two halves match (17.7/18)|      |
+|    | ATOMIC - see 17.7/21.             |   pumpkinoil_{under,perfect,over}_v2  (NEW) | + pumpkin e2e + frame_provider_burst. |      |
++----+-----------------------------------+--------------------------------------------+---------------------------------------+------+
+| L5 | Fallout, one commit per bullet:   | plugin_sdk/util/EvaluationColorUtil.py     | Chips: no clamp on a post-decode run; | LOW  |
+|    | (a) ceiling RELATIVE, host-side   | plugins/dev/DevSpectralPlugin.py (drop 3.0)| identical output on a pre-decode one. |      |
+|    | (b) DIM_FRAME_SCALE_FLOOR /g      | RobustReductionLogicModule.py (+docstring) | Rejection count unchanged on the C1   |      |
+|    | (c) captureDecode stamp in the    | workflow metadata + report JSON            | fixtures. Stamp visible in a fresh    |      |
+|    |     workflow/report JSON          | tests: test_color_retrieval,                | workflow.json + report PDF. Low-DN    |      |
+|    | (d) low-DN guard (band-min DN)    |   test_dev_plugin_improved_colour           | line printed per capture.             |      |
++----+-----------------------------------+--------------------------------------------+---------------------------------------+------+
+| L5b| ANDROID mirror decision (17.7/17) | android/{server,spike}/app_src/... (3 files)| Either mirrored, or Android recorded  | LOW  |
+|    | - mirror app_src or record stale  |                                            | as knowingly stale in this spec.      |      |
++----+-----------------------------------+--------------------------------------------+---------------------------------------+------+
+| L6 | RIG VERIFY on the ELP. Warn the   | (none)                                     | Calibration ~0.6 nm still PASSES      |  -   |
+|    | operator FIRST that the live      |                                            | (untouched by design); pigment ratio  | rig  |
+|    | trace legitimately looks dimmer   |                                            | unmoved vs the pre-decode run; colour |      |
+|    | in the mid-band (17.7/15).        |                                            | chips visibly richer; window intact.  |      |
++----+-----------------------------------+--------------------------------------------+---------------------------------------+------+
+
+DEPENDENCIES
+  L0 ──gates──▶ everything (it can still say "re-anchor 47/66 first")
+  L1 ──────────▶ L2+L3+L4  (the util must exist before the reader imports it)
+  L2·L3·L4  =  ONE ATOMIC COMMIT   (decode ⟷ encode are inverse halves; floor is welded to decode)
+  L5, L5b   =  after, independently revertable
+  L6        =  last, needs Edwin + the ELP + the lamp warm (§16)
+
+ROLLBACK
+  The atomic commit is a single revert: no schema change, no stored-data migration (stored spectra are
+  post-extraction values and keep rendering as-is), and the v1 baked sets are still on disk next to v2.
+```
+
+**What this pass changed:** ordering (L2·L3·L4 atomic), one design simplification (no per-camera γ yet), and three
+coding traps that would each have shipped quietly — singleton γ state, a float64 LUT, and an Android `app_src`
+half-sync.
+
+### 17.8 AS-BUILT — L0–L5b implemented 2026-07-26 *(L6 rig-verify pending; ONE decision open)*
+
+> **Status: IMPLEMENTED, NOT COMMITTED.** 277 app tests + 23 plugin tests green. **L0 fired both warnings** —
+> the hue verdict moves and the window narrows — so §17.6/1 and §17.6/3 were not theoretical. The floor is fixed
+> in code; the **47/66 band re-anchor is Edwin's call** and is the one thing still open.
+
+#### 17.8.1 L0 result — measured, 61 archived runs
+
+Replayed every `measurement_report_*.pdf` in `spectracs-references/tmp/` through the app's own
+`TransmissionLogicModule` → `EvaluationColorUtil` → `VerdictOp`, as-is vs pure `x^2.2`:
+
+| | measured |
+|---|---|
+| perceived hue shift | **−4.34° mean**, range **−10.75° … +1.15°** (systematically *browner*) |
+| **verdict flips** | **2 of 61** — `oilR_001` (70.11° → 64.03°) and `oilR_002` (70.34° → 64.10°), both UNDER-ROASTED → PERFECT-ROASTED across the 66° edge |
+| shift is sample-dependent | the greenest oils move most (`oilG_002` −10.75° at hue 86.7°), the brownest least (`NowSBudget` −1.52°) — so it is a **compression of the hue scale, not an offset** |
+| window narrowing (§17.6/3) | the naive floor cut bins in **14 of 61 runs**, worst `oilB_002` **1520 → 1421** (−6.5 %); `floor = 0.01^γ` restores **all 61 exactly** |
+
+⇒ **§17.3's "the pumpkin verdict is unchanged" is true only of the peak-RATIO verdict.** The `PumpkinOilPlugin`
+hue verdict is not gamma-neutral, and the bands were anchored against gamma-encoded data exactly as the Roast
+Ampel 4.4 threshold was. Script: **`diagnostics/gamma_l0_gate.py`** (re-runnable, reads only the archived PDFs; it also prints
+the naive-vs-fixed floor comparison).
+
+**⚠ OPEN DECISION (Edwin):** re-anchor `VerdictOp`'s 47/66 to the linearized hue scale, or leave them. Not
+decided here — it is a product-semantics recalibration against real oils, the same kind of call as 2.8 → 4.4.
+Note a uniform offset is **not** right: the shift is scale-compressing, so the honest re-anchor maps the two
+band edges through the same replay rather than subtracting 4.34° from each. Untouched meanwhile: the DEV/Roast
+Ampel ratio path (bit-identical), and every absorbed-colour chip.
+
+#### 17.8.2 What was built
+
+| Ph | As-built |
+|---|---|
+| **L1** | `SpectralColorUtil`: module-level float32 LUT + `_LUT_CACHE`/`lutFor`-style cache, `captureGamma()`, `captureDecodeDescriptor()`, `gammaLut()`, `decodeGammaArray()` (uint8 → LUT fast path, else closed form), `encodeGammaFraction()`. γ is a parameter, never singleton state (§17.7/13). New `tests/test_gamma_decode.py` — 10 tests, incl. fixed endpoints, strict monotonicity, float32 dtype, encode/decode inverse, 8-bit round-trip, and no-leak on a γ override. |
+| **L2** | `ImageSpectrumAcquisitionLogicModule.__reducedColumnValues` → **`__reducedLinearColumnValues`**; the LUT decode on the uint8 ROI slice **replaces** `.astype(np.float32)`, after the slice. Calibration branch carries the DN-domain comment and is untouched. |
+| **L3** | `TransmissionLogicModule.DEFAULT_REFERENCE_FLOOR_FRACTION` 0.01 → **6.31e-5** (= `0.01^2.2`), with the measured justification inline. |
+| **L4** | `SpectrumToVirtualImageUtil` gamma-**encodes** (`encodeGammaFraction`); the §15 no-op invariant comment is superseded in place. `ENCODER_VERSION v1 → v2`, sets **re-baked** (`pumpkinoil_{under,perfect,over}_v2`, `set.json` now carries `captureDecode`), 3 tests re-pointed. v1 folders left on disk for rollback. |
+| **L5** | (a) **Relative colour ceiling**: `EvaluationColorUtil.RELATIVE` + `RELATIVE_CEILING_MULTIPLE = 2.0` (cap = 2× the spectrum's own p95); `DevSpectralPlugin`'s four `3.0`s are gone. (b) `DIM_FRAME_SCALE_FLOOR` 0.02 → **0.045** (= ×γ) so C1 keeps its DN-domain aggressiveness. (c) **`captureDecode` stamp** injected into the embedded `workflow.json` header by `WorkflowReportBuilder` — no `-model` dependency, **no DB column, no migration**. (d) **Low-DN guard**: `CAPTURE-LOWDN role=… minDn=… at=…nm` printed per capture, minimum mapped back through the decode's inverse into camera DN, flagged below 16 DN. |
+| **L5b** | **Android app_src recorded as knowingly stale** — not mirrored. `diff -rq` shows **179 differences across 139 files**: `android/{server,spike}/app_src/` are July-3 build snapshots, not maintained mirrors, so mirroring 3 files would have produced exactly the half-synced tree §17.7/17 warns about. The next APK build must re-sync the whole tree. |
+| **L6** | **PENDING — needs Edwin + the ELP.** |
+
+#### 17.8.3 Verification beyond the suite
+
+- **Relative ceiling, on real spectra** (`diagnostics/gamma_ceiling_check.py`): dormant on every archived run, as-is *and*
+  decoded (0 clamped bins of 1305), while it independently **reproduces §17.5(4)**: under the old absolute 3.0 a
+  decoded `NowSBudget` clamps to 298.2° → 296.9° / chroma 63.2 → 59.0, under RELATIVE it stays exactly
+  298.2°/63.2. A synthetic `T→0` spike (5 bins at A=40) still gets caught: hue error +1.8° uncapped → +0.4° capped.
+- **`test_virtual_device_image_roundtrip` green** = the L4 gate: decode and encode are genuine inverse halves
+  (§17.7/18 — the dim-frame test *cannot* prove this, and stayed green throughout).
+- **One test changed, deliberately**: `test_pumpkin_oil_spectrum_to_color_eval`'s low-reference-guard case
+  pinned the old constant on synthetic data. It now asserts **both** halves of the new policy — a bin at 1e-5 of
+  peak is still masked, and one at 0.5 % of peak (≈11 % of peak DN) **survives**, which is precisely the class of
+  bin the old constant deleted at the spectrum's edges.
+
+#### 17.8.4 Rig runbook for L6
+
+1. **Expect the live trace to look dimmer in the mid-band** — decode maps DN 245 → 233 but DN 120 → 49. That is
+   linear light, not a regression (§17.7/15).
+2. Calibration must still pass **~0.6 nm** — it is in DN by design and should be bit-unchanged.
+3. Pigment ratio must match a pre-decode run to ~0.2 % (§17.5.3's Jensen gap); colour chips visibly richer.
+4. Watch the new `CAPTURE-LOWDN` line: if `minDn` sits near 5 the sample is too concentrated (the protocol change
+   in `SPEC_capability_proof.md` §7.3 moves it to ~16).
+5. **The virtual-spectrometer folder setting must be re-pointed to a `_v2` set** — a `v1` folder now decodes
+   γ-distorted (that is what the version bump is for).
+
+#### 17.8.5 First field run — two things linearization is NOT guilty of *(2026-07-27)*
+
+Edwin's first post-§17 pair (`NowSteirerkraftA/B`) raised two suspicions. Both were replayed off the archived
+PDFs; the full diagnosis lives in **§16.7** (it is reference drift). Recorded here because both suspicions land
+naturally on this section:
+
+1. **"At 440 nm practically no light comes through."** Measured, in camera DN: the sample bottoms at **52 DN**
+   (A) and **38 DN** (B) of 255, against a ~177 DN reference — healthy, and *brighter* than the pre-§17 run
+   (10 DN). What changed is the PLOT: 52 DN decodes to **7.6 of 255 in linear light (3 % of the plot height)**,
+   so a perfectly good band now looks extinct. This is §17.7/15 arriving exactly as predicted, on the first
+   real run. The new `CAPTURE-LOWDN` line is the antidote — it reports DN, and 38–52 DN is far above its 16 DN
+   warning. *(It also strengthens the case for §17.7/15's other half: show the capture-panel live plot in DN.)*
+2. **"Should absorbance be normalized before taking ratios?"** It makes **no difference — measured at 8.9e-16**
+   (`gamma_dilution_diverge.py`). A ratio of two band means from the *same* spectrum is already scale-free, so
+   every multiplicative normalization (peak, area, SNV's scale half) cancels exactly — the same algebra that
+   makes the ratio dilution-invariant and gamma-invariant. Only an **additive** correction can move a ratio,
+   and here it moves it the wrong way (§16.7): subtracting the baseline shrinks an already-tiny denominator.
 
 ---
 
