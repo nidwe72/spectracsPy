@@ -473,9 +473,11 @@ Driven with the SM1 dev view + a scratch exposure sweep against the live ELP on 
   railed px) → auto-exposed to 61, green unclipped. Plus a **live manual exposure slider** to dial by hand
   (the tool to find the still-TBD LED-measurement value). See `SPEC_dev_capture_view.md`.
 - **Still open:** whether calibration/measurement flows call auto-exposure automatically (they should, per
-  above) vs a manual "re-tune"; the LED-measurement exposure value itself; camera **response linearity**
-  (the RGB output may carry ISP gamma — worth confirming for quantitative T, though same-exposure ref/sample
-  keeps the *ratio* robust regardless).
+  above) vs a manual "re-tune"; the LED-measurement exposure value itself. Camera **response linearity** is
+  **no longer open** — confirmed and quantified 2026-07-26 ([`SPEC_capture_quality.md`](SPEC_capture_quality.md)
+  §17.5): the RGB output *is* gamma-encoded, the decode is designed (pure `x^2.2`, per channel, first in the
+  reduction) but deliberately unbuilt, and the hunch recorded here was right — the *ratio* is robust regardless,
+  bit-identically so.
 
 ### 9.4 Connection + calibration UX ("a sound setup the end user understands")
 > **This thread now has its own spec:** `docs/SPEC_connection_and_calibration_ux.md` (the full serial-keyed

@@ -1,5 +1,13 @@
 # SPEC — Capture quality & fidelity (ROI clamp · robust reduction · dark level · normalization)
 
+> **Looking for the big picture rather than the derivations?** Read
+> [`DOC_capture_fidelity.md`](DOC_capture_fidelity.md) — the textbook-style *documentation* of this
+> whole chain (why the brightness law exists, what `T = S/R` cancels, and one short chapter per
+> decision), written for the developer, the chemist and the lab alike. It is generated to
+> `spectracs-docs/internal/Spectracs_CaptureFidelity.pdf` via
+> `docs/tools/build_capture_fidelity_pdf.py`. **This spec remains the source of truth** for the
+> numbers and the decision history; the document summarises and points back here.
+
 Status: **MIXED (2026-07-15)** — the M0 probe surfaced a production-breaking resolution mismatch that outranked the
 original topics, and the work that followed is **IMPLEMENTED + RIG-VERIFIED + committed+pushed**:
 - **§4.9 M0.5** — capture pinned to 2592×1944 + ROI⊆frame tripwire.
@@ -13,7 +21,11 @@ original topics, and the work that followed is **IMPLEMENTED + RIG-VERIFIED + co
 
 Still **DESIGN-only / not needed**: Topic 3 (normalization) = documented no-op (§7); **M3** (Topic 4, dark-frame
 subtraction §5) = **not needed** — the dark was measured near-zero, and the M2 spatial Tukey already discards the
-rare hot pixel (so no bad-pixel map either).
+rare hot pixel (so no bad-pixel map either); **§17 gamma linearization** = **DE-RISKED DESIGN, ready to build**
+(2026-07-26) — every open question in it was answered by measurement (§17.5), the decode is settled (pure `x^2.2`,
+per channel, first in the reduction; the piecewise sRGB EOTF measured 24 % *worse* and was declined), and it is
+**verdict-neutral by construction**, so it moves no threshold. Motive = closure + colour accuracy; implement on
+explicit request. **§18** records the derived documentation artifact.
 
 Source: Edwin. Investigated with two code-map sweeps + web research (astronomy CCD reduction) + rubber-duck
 adversarial passes, then measured-then-built on the rig throughout. Governs the capture→spectrum path shared by both
@@ -1202,7 +1214,7 @@ W6 (POSTPONED): red/green stability guard at measurement time (item c). Single-o
 
 ---
 
-## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DESIGN; TASK TO HANDLE SOON — Edwin 2026-07-24, impl on explicit request)*
+## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).
 The thread's general point is correct — a consumer camera applies a non-linear (gamma) curve so relative-intensity
@@ -1237,19 +1249,182 @@ the verdict; it improves everything the ratio does *not* protect:
 - Makes absorbance *physically real* (today it is ~1/γ ≈ 0.45× compressed).
 
 ### 17.4 The plan (design; implement on explicit request)
-- **Linearize PER-CHANNEL, before the `qGray`/max-channel reduction** (§15). Decode each of R,G,B (`c_lin =
-  (c/255)^γ`) then form the luminance from the linear channels — **you cannot gamma-decode the `qGray` *sum*** (sum
-  of gamma-encoded ≠ decode of sum), so linearization must precede the channel combine.
-- **Assume the standard sRGB / γ≈2.2 curve** as the working model (UVC cameras output sRGB); an OECF measurement to
-  refine the exact per-camera curve is a **later, separate refinement — explicitly not now**. Home for a per-camera
-  gamma override (if ever needed): `SpectrometerSensorUtil` (alongside WB-Kelvin / exposure).
-- **Where:** a linearization step in the frame→spectrum reduction path (`RobustReductionLogicModule` /
-  `MeanSpectrumLogicModule` — the same place §15's max-channel reduction lives), gated so it is opt-in until proven.
-- **Measured-experiment discipline** (like the C-phases): after wiring it, **compare** — expect the pumpkin verdict
-  ≈ unchanged (confirming §17.3's ratio-invariance) and the **colour chips visibly improved / more physical**.
+- **Linearize PER-CHANNEL, FIRST — before any reduction.** Decode each of R,G,B (`c_lin = (c/255)^γ`), then form
+  the intensity from the linear channels. *Amended 2026-07-26 (§17.5):* the original "you cannot gamma-decode the
+  `qGray` *sum*" warning is a **leftover from the qGray era**. §15 replaced that weighted sum with **max-channel**,
+  and `max()` is an **order statistic**: for any strictly increasing `f`, `max(f(R),f(G),f(B)) ≡ f(max(R,G,B))`.
+  Decoding before or after the channel combine is therefore **provably identical**, not merely close. The same
+  holds for the **median** despike. The only genuine non-commuters are the two *averages* — the Tukey biweight
+  (spatial) and the sigma-clipped mean (temporal) — so **decode-first remains mandatory by concept**, and it is
+  free: there is no cost to doing it in the right place. Measured residual if one got the order wrong anyway:
+  **0.08–0.20 %** on the pigment ratio (§17.5).
+- **Use the PURE POWER LAW `v_lin = (v/255)^2.2`. The piecewise sRGB EOTF is DECLINED** *(decision 2026-07-26,
+  measured — §17.5)*. The real sRGB curve is piecewise (linear toe below DN ≈ 10.3, `((v+0.055)/1.055)^2.4`
+  above, net behaviour ≈ 2.2). It is the more physically faithful model — and it **costs 24 % of the pumpkin class
+  separation** while buying **no measurable colour gain**, because the toe rescales the Soret band by a
+  *sample-dependent* amount (deeper-dipping = browner samples lose more), which injects scatter into the one band
+  that carries the signal. The pure power law is a **uniform** scale and is therefore *exactly* verdict-neutral.
+  This is a deliberate operational choice over a physical one: **do not "fix" it to the standard curve** — that
+  silently loses a quarter of the separation. Home for a per-camera gamma override (if ever needed):
+  `SpectrometerSensorUtil` (alongside WB-Kelvin / exposure). OECF characterization stays out of scope.
+- **Where:** a linearization step in the frame→spectrum reduction path — concretely in
+  `ImageSpectrumAcquisitionLogicModule.__reducedColumnValues`, right after the RGB array is sliced out of the frame
+  and **before** `toGrayMaximumArray` (the first line of our code that touches pixel values).
+- **Ship the colour ceiling with it (REQUIRED, same commit).** `DevSpectralPlugin.__colourChips` passes
+  `ceiling=3.0` to `EvaluationColorUtil.spectrumToHsl` — a clamp that stops a `T→0` spike dominating the CIE
+  integral. It is dormant today (A peaks 1.3–1.6). Linearization doubles A to ~2.9–3.5 and the clamp **starts
+  cutting real signal**: measured absorbed hue drift 298.2° → 296.9° and chroma 63.2 → 59.0, where the unclamped
+  path stays *exactly* 298.2°/63.2. Scale it **3.0 → 6.6** (= 3.0·γ), or make it relative to the spectrum max.
+- **Dark level / pedestal: already retired.** §4's 150-frame dark at exposure 1 measured **black level 0.00 % FS**.
+  A pedestal would be a *bigger* lever than gamma (a +8/+16 DN offset swings the ratio −12 %…+13 %, non-monotone),
+  so this is load-bearing: decode assumes true black is 0, and on this camera it is.
 - **Known limit:** we only have **8-bit, already-demosaiced, gamma-encoded** frames (UVC via cv2), **not true RAW**
-  — so this is *approximate* linearization (precision loss; assumes standard sRGB), not the thread's RAW ideal.
+  — so this is *approximate* linearization (precision loss; pure-power model), not the thread's RAW ideal.
   Good enough for colour + cross-camera consistency; not a path to absolute radiometry.
 
-**Status: soon.** A bounded, low-risk fidelity upgrade — primarily for colour and multi-camera consistency — that
-does not touch the verdict maths. Implement on explicit request.
+**Status: DE-RISKED DESIGN — every open question answered (§17.5), implement on explicit request.** The motive is
+**closure**, not accuracy (Edwin 2026-07-26): we *know* the camera is non-linear, so leaving the assumption in the
+pipeline keeps "maybe it's the gamma" on the suspect list for every future anomaly forever. Linearizing removes it
+permanently. The colour gain (+33–40 % perceived chroma) is the bonus. Because the decode is verdict-neutral, this
+is a **strictly safe** change: the Roast Ampel threshold does **not** move.
+
+### 17.5 Measured verification of §17 — the 2026 oils  *(Edwin 2026-07-26; §17.3's claim, now measured)*
+
+§17.3 *asserted* that gamma linearization cannot move the pumpkin verdict. This section **measures** it, on the
+two fresh-2026 captures (`measurement_report_NowSBudget.pdf`, `measurement_report_NowSteirerkraft.pdf`) and — where
+scatter is needed — on the full **32-run** Capability-Proof set (K/L/O/P green · M/N/Q/R brown).
+
+**Method.** Every report PDF embeds `workflow.json` (the meaned R and S spectra, 1305 pts, 440–629.8 nm) **and**
+both full-resolution 2592×1944 RGB capture frames as `/EmbeddedFiles`. So the whole pipeline could be replayed
+off-line at two levels: **spectrum level** (decode R and S → `AbsorptionOp` → `MedianFilterOp(7)` → `bandMean` →
+`EvaluationColorUtil`) and **pixel level** (replay `ImageSpectrumAcquisitionLogicModule` on the frames: ROI
+x 820–2125 / y 906–1783 read off the overlay, 20 % inset, max-channel + Tukey-per-column). The replay reproduces
+the app **bit-for-bit** — ratio `4.05906808789795` → 4.0591 and `5.182554` → 5.1826, Soret/Q 0.807/0.199 and
+0.698/0.135 — and the 32-run group statistics reproduce `SPEC_roast_ampel.md` §2's published 3.75 ± 0.13 /
+2.47 ± 0.11 exactly. **The numbers below are the app's own maths, not a re-derivation.**
+
+#### 17.5.1 The verdict is invariant — structurally, not by luck
+
+| decode model | S-Budget ratio | Steirerkraft ratio | verdict @ 4.4 | perceived chroma | absorbed hue |
+|---|---|---|---|---|---|
+| as-is (today) | **4.0591** | **5.1826** | RED / GREEN | 33.7 / 32.2 | 298.2° / 300.0° |
+| pure power γ=1.8 | 4.0591 | 5.1826 | RED / GREEN | 41.6 / 40.8 | 298.2° / 300.0° |
+| pure power γ=2.2 | 4.0591 | 5.1826 | RED / GREEN | 43.9 / 43.5 | 298.2° / 300.0° |
+| pure power γ=2.6 | 4.0591 | 5.1826 | RED / GREEN | 45.9 / 45.9 | 298.2° / 300.0° |
+| true sRGB EOTF (toe) | 3.6362 | 4.7391 | RED / GREEN | 43.5 / 42.7 | 292.8° / 296.8° |
+
+**Bit-identical at every exponent** — 15 significant digits, not "close". `A_true = γ·A_measured` is a *uniform*
+scale and a ratio of two band means divides it out exactly. The **absorbed** colour (hue *and* chroma) is equally
+invariant, because the CIE path drops luminance at `XYZ_to_xy` and chromaticity ignores scale. Only the
+**perceived** colour (from `T`) moves — and that is the one axis that does not discriminate the oils anyway.
+
+**Fleet consequence (better than §17.3 assumed):** the condition is "*a* pure power law", not "2.2 specifically".
+So across Edwin's several cameras the **pigment ratio is already directly comparable today**, whatever each
+camera's exponent. Only *absolute* absorbance and colour need linearizing for cross-camera comparability.
+
+#### 17.5.2 Why the piecewise sRGB EOTF is declined (the load-bearing measurement)
+
+Effective gamma per band (= `A_decoded / A_as-is`, which for a pure power law is exactly γ at every bin):
+
+| band | sample DN range | % of bins below the knee (10.3 DN) | effective gamma |
+|---|---|---|---|
+| **Soret 440–460** | **5.1 … 79** | **17.4 %** (brown) / 4.3 % (green) | **1.58 … 2.14** |
+| blue-green 460–510 *(context)* | 80 … 164 | 0 % | 2.14 … 2.24 |
+| clarity 510–540 | 144 … 163 | 0 % | 2.21 … 2.22 |
+| Q 560–580 | 56 … 115 | 0 % | 2.01 … 2.17 |
+| deep red 600–630 *(context)* | 60 … 113 | 0 % | 2.02 … 2.17 |
+
+Everywhere except Soret the two models agree within ~5 %. In Soret — where the oil absorbs hardest and the sample
+bottoms out at **DN 5** — the toe drags the effective gamma to 1.6, **and by a sample-dependent amount** (the
+browner oil has 17.4 % of its bins under the knee vs the green oil's 4.3 %). A non-uniform, sample-dependent
+rescale of the numerator band is exactly what a ratio cannot absorb:
+
+| | | as-is | **pure 2.2** | true sRGB |
+|---|---|---|---|---|
+| **2026 pair** | ratio gap | 1.123 | **1.123** | 1.103 (−1.8 %) |
+| | absorbed chroma gap | 14.8 | **14.8** | 10.1 (−32 %) |
+| **2023 proof (32 runs)** | ratio gap | 1.277 | **1.277** | 1.156 (−9.5 %) |
+| | green SD · brown SD | 0.134 · 0.111 | **0.134 · 0.111** | **0.201** · 0.053 |
+| | **gap/noise (Cohen's d)** | **10.39** | **10.39** | **7.87 (−24 %)** |
+| | absorbed chroma gap | 11.8 | **11.8** | 9.7 (−18 %) |
+| | within-oil dilution spread | 8.7 % | 8.7 % | 8.8 % |
+
+Same direction on **both** oil sets. Dilution invariance survives the toe (8.7 → 8.8 %) — the damage is
+**inflated within-group scatter** (green SD +50 %), visible only on the 32-run set, because two runs have no
+scatter to show. And the colour gain the whole exercise is *for* is unaffected by the choice:
+
+| | perceived chroma, as-is | **pure 2.2** | true sRGB |
+|---|---|---|---|
+| 2026 pair | 32.9 | **43.7 (+33 %)** | 43.1 |
+| 2023 proof (32) | 29.1 | **40.6 (+40 %)** | 39.9 |
+
+⇒ the piecewise refinement delivers marginally *less* colour and costs a quarter of the discriminator. **Pure
+`x^2.2`.** Recorded so a later reader does not "correct" it toward the standard.
+
+#### 17.5.3 Decode order — measured on real pixels
+
+Replaying the extractor on the embedded full-resolution frames, decode-**before**-combine vs post-hoc scalar
+decode differ by **0.20 %** (S-Budget) and **0.08 %** (Steirerkraft) on the ratio, and by **< 0.2°** on every hue.
+That is the Jensen gap of the Tukey row average alone (`mean(x)^γ ≠ mean(x^γ)`, gap ∝ spread). The **temporal**
+half could not be measured — the 150 burst frames are not persisted, only their mean — so it is *argued*: frame-to-
+frame spread (shot noise, after §14.8's C1–C3 dim-frame rejection) is smaller than row-to-row spread across the
+slit height (vignetting, smile, illumination profile), so the temporal gap should be **≤** the spatial one. If that
+ever needs measuring rather than arguing, it takes one bench run that dumps the raw burst.
+
+#### 17.5.4 Consequences recorded elsewhere
+
+- **`SPEC_roast_ampel.md` §2** — the 4.4 threshold is anchored to the *decode model*; under pure `x^2.2` it does
+  **not** move.
+- **`SPEC_pumpkin_peak_ratio_eval.md` §1b.3** — the Soret band-placement re-test this investigation triggered
+  (the toe worry is what prompted "shift 440 → 450"; measured answer: don't).
+- **`SPEC_capability_proof.md` §7.3 / `LAB_DIARY_capability_proof.md`** — the dilution-protocol change that
+  removes the Soret band from the toe entirely, which makes this whole subsection moot going forward.
+
+**Side observation (independent of gamma):** the darkest Soret bins sat at **DN 5 of 255** (≈2 % FS), where
+quantization alone is ±10 % relative. Harmless in practice (the band mean over ~140 bins averages it away) but it
+means the oil was near-opaque at 440 nm at the 1:20 dilution — the finding that drove the protocol change. An open,
+minor proposal: a **low-DN guard** (report the per-capture band-minimum DN, so the floor is *visible* before a bin
+ever reaches 0 and absorbance saturates silently). Largely obsolete once the protocol lands (floor moves 5 → 16 DN).
+
+---
+
+## 18. The derived documentation artifact — `DOC_capture_fidelity.md` → internal PDF  *(as-built 2026-07-26)*
+
+This spec is the **source of truth**; it is also long, chronological and written for whoever is doing the work.
+Edwin asked for a second view of the same material: a **textbook-style document** giving the big picture without
+the derivations, readable by three audiences at once — himself as developer, his chemist colleague, and the lab
+that receives a Spectracs report (the PDF can be sent alongside one). That artifact now exists.
+
+```
+source of truth   docs/DOC_capture_fidelity.md                 <- markdown master, edit HERE
+generator         docs/tools/build_capture_fidelity_pdf.py
+output            ../spectracs-docs/internal/Spectracs_CaptureFidelity.pdf   (~30 pages, self-contained)
+
+    python3 docs/tools/build_capture_fidelity_pdf.py            # regenerate
+    python3 docs/tools/build_capture_fidelity_pdf.py --out /tmp/preview.pdf --html
+```
+
+**It is documentation, not specification.** It creates no work items and holds no authority: every claim in it is
+a summary of a section here, and its Appendix B is the index back. When a decision in this spec changes, update
+the document and re-run the generator — the PDF is never hand-edited.
+
+**Structure** (Edwin's brief: abstract first, then reference material, then the argumentation): §1 is a
+**standalone summary** — abstract + a one-table overview of every decision (`§ | what we do | what led us there`)
+— so a reader gets the impression without reading on; §2 is the **foundations/reference** part (why the
+brightness law exists, its variants, what `T = S/R` cancels, spatial vs temporal outliers, what a white-LED
+spectrum is); §3 is **one chapter per decision**, each as *problem → what we measured → decision → what it
+costs*, covering the topics Edwin listed: grey value `max(R,G,B)`, the brightness law, camera warm-up, the
+sigma-clipped mean and dim-frame rejection, dark frames, auto-exposure, fixed white balance — plus the resolution
+pin, the ROI window and the sample dilution; §4 is **what we deliberately did not do**; §5 the as-built settings
+table; §6 open items; **Appendix A a knowledge base** (7 entries: gamma/sRGB in depth, Beer-Lambert and the
+algebra of ratios, robust statistics, DN/quantisation/noise, Bayer/demosaic/QE, white LEDs/CRI, spectrum→colour),
+cross-linked from the exact spot in the main text by clickable "→ Background" boxes.
+
+**Toolchain.** Markdown → styled HTML → headless Chrome `--print-to-pdf`, matching the existing
+`build_capability_status_pdf.py`, so the only dependency stays Chrome (no pandoc, no weasyprint). The generator
+carries a small markdown-subset converter (headings, lists, GFM tables, fenced code, block quotes as call-outs,
+data-URI images resolved against the repo and `spectracs-references/`, `<!--TOC-->` / `<!--PAGEBREAK-->`) and
+**fails the build on a dangling internal link** — dead links are silent in a PDF, so they must not be shippable.
+
+**Figures** are embedded from `spectracs-references/tmp/`: `lamp_spd_annotated.png` (§2.6) and
+`sensor_warmup_curve.png` (§3.6). The PDF is therefore self-contained and portable as a single file.

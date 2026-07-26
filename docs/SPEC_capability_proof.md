@@ -475,16 +475,66 @@ Run 1 → UC2; Run 2 → UC3.)
 
 Order to run: UC0 (skeleton, done) → UC1 (repeatability) → UC2 (invariance) → UC3 (discrimination).
 
-### 7.3 Per-capture procedure (one-pot, Setup B)
+### 7.3 Per-capture procedure — **REVISED 2026-07-26 for the fresh 2026 oils (batch-and-pour)**
+
+**Why it changed.** The lab conditions changed with the 2026 oils: they are **fresher and absorb far more** than
+the aged 2023 oils. At the old strength (2 drops in 4 ml ≈ **1:20**) the sample bottoms out at **DN 5 of 255** at
+440 nm — 17 % of the Soret band sitting in the camera's sRGB *toe*, the least trustworthy part of its response
+([`SPEC_capture_quality.md`](SPEC_capture_quality.md) §17.5). The oil is essentially opaque there. **Too much
+absorption, not too little.**
+
+**The fix is a weaker dilution.** Simulated on the measured 2026 spectra (Beer-Lambert scaling, sample DN
+re-quantized to integers), the minimum acceptable strength is ≈ **1:27**; **1:30–1:33** is comfortable:
+
+| dilution | min DN @ 440 (brown / green) | verdict |
+|---|---|---|
+| 1:20 (old) | 5 / 10 | **too dark** — 17 % of Soret bins in the toe |
+| 1:25 | 10 / 18 | still marginal |
+| 1:27 | 12 / 20 | minimum that clears it |
+| **1:30** | **16 / 25** | comfortable |
+| **1:33** | **21 / 31** | comfortable, more headroom |
+
+**The pigment ratio moves ±0.35 % across all of them** (vs an 8.7 % run-to-run spread) — dilution-invariance doing
+its job. So the recipes are **interchangeable mid-series**, the Ampel threshold **4.4 is unaffected**, and the
+existing 1:20 runs stay comparable.
+
+**Key insight that shapes the recipe: the TRANSFER volume does not matter.** The measurement sees the solution's
+*concentration* and the pot's fixed path length. How many ml you pour in is irrelevant as long as the beam passes
+through liquid. **Only the batch concentration needs to be accurate** — so prepare the batch in whatever glass
+reads best, then simply fill the pot.
 
 ```
-3 ml isopropanol into the pot  →  place, capture REFERENCE
-→  add N drops of oil, stir ~20 s until visibly clear  →  capture SAMPLE
+Prepare a BATCH at 1:30–1:33 in the measuring glass, swirl until clear
+   6 ml isopropanol +  2 drops oil   = 1:30   (1 pot-fill  — improvised interim recipe)
+  10 ml isopropanol +  3 drops oil   = 1:33   (2 pot-fills — standing recipe, 10 ml cylinder)
+  20 ml isopropanol +  6 drops oil   = 1:33   (5 pot-fills — when running a series)
+→  fill the pot with PURE isopropanol, place, capture REFERENCE
+→  empty, fill the pot from the swirled batch                →  capture SAMPLE
 →  bench computes T = S/R, A = −log10(S/R), then the preprocessing matrix + metrics (§4.2)
 ```
 
-Sloppy drop-counting is fine — the ratio cancels *how much* oil (§3). Effort belongs on **dissolving cleanly**
-(clear, not cloudy), because turbidity is additive and does **not** cancel.
+- **Glassware.** A 10 ml **graduated cylinder** (narrow bore, ~0.2 ml graduations) — not a beaker. Read the bottom
+  of the meniscus at eye level. Volume error then ≈ 2 %, leaving the **drop count** as the dominant prep error.
+- **Drop count is the crude step.** ±½ drop is ±25 % at 2 drops, ±17 % at 3, ±8 % at 6. Preparing a larger batch
+  at the same concentration is the cheapest precision win available; alcohol *per run* is 4 ml either way once the
+  batch yields ≥ 5 fills.
+- **Swirl before every pour** — a standing batch can stratify.
+- **Evaporation is forgiving**: it concentrates the oil, and the ratio is dilution-invariant. Keep it covered
+  anyway so the DN stays in range.
+- Sloppy drop-counting remains tolerable — the ratio cancels *how much* oil (§3). Effort belongs on **dissolving
+  cleanly** (clear, not cloudy), because turbidity is additive and does **not** cancel.
+- **Record the recipe per run.** The METADATA form has no dilution field yet (`title`, `temperature`,
+  `dateOfRoasting`); until one exists, put it in the **title** ("Steirerkraft 10ml+3"). Every report PDF embeds the
+  whole workflow JSON, so the recipe then travels with the evidence. *Proposal, design-only:* add a `dilution`
+  `MetadataField` to `DevSpectralPlugin.metadata()` — one line.
+
+**Suggested one-batch experiment (cheap, not yet run).** The 8.7 % within-oil spread mixes **prep noise** and
+**instrument noise**, which have never been separated. Fill the pot 2–4× from a *single* batch: that spread is
+instrument-only. Compare against the existing four-separate-preps figure. If much smaller, prep dominates and
+batch-and-pour is a permanent win; if similar, drop-counting was never the bottleneck. Either answer finally gives
+the Ampel threshold a measured error bar.
+
+*History: the 2023 proof series ran at 3–4 ml with 2–3 drops (≈1:20); all 32 archived runs are at that strength.*
 
 ---
 
@@ -772,7 +822,7 @@ Confidence is flagged: **[consensus]** = textbook/review; **[single-paper]**; **
 
 | # | Confounder | Standard fix | Our state |
 |---|---|---|---|
-| **C1** | **Sensor nonlinearity / sRGB gamma** — `A=−log10(S/R)` needs LINEAR intensity; consumer cameras gamma-encode | shoot RAW or invert the camera response (a fixed γ=2.2 is not enough) | **NOT handled** — see §10.4. **Postponed.** |
+| **C1** | **Sensor nonlinearity / sRGB gamma** — `A=−log10(S/R)` needs LINEAR intensity; consumer cameras gamma-encode | shoot RAW or invert the camera response | **Not handled — and MEASURED HARMLESS for the verdict (2026-07-26).** Decoding is designed but not built; the pigment ratio is *bit-identical* under a pure-power decode at any exponent, so C1 cannot move the go/no-go. See §10.4 and [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §17.5. |
 | **C2** | **Dark current / black-level** — additive, does NOT cancel in −log10(S/R); worst at high A | dark-frame subtract S & R before the ratio, matched temp | **NOT handled** — no dark-frame in the path. Postponed. |
 | **C3** | **Refractive-index mismatch** (oil-in-IPA vs IPA blank) — a *physical source* of our additive `b` | one-pot / matched cell minimizes it at source | ties to §7.1 Setup B / `…§13.4` one-pot |
 | **C4** | **Stray light / 2nd-order diffraction** — blue/UV lands near 2×λ, contaminates the red end; caps max A | order-sorting / long-pass filter | hardware — noted |
@@ -797,6 +847,20 @@ dark-frame subtraction** anywhere before `T=S/R` / `A=−log10(S/R)`. The only `
 (Edwin 2026-07-20): POSTPONED** — recorded as state, not a task. When picked up it belongs in
 [`SPEC_capture_quality.md`](SPEC_capture_quality.md). Entry 0 remains valid meanwhile because the nonlinearity is
 **common-mode** across the raw/improved comparison (§7.0.1 caveat).
+
+**RESOLVED AS A RISK 2026-07-26 (still not implemented, and no longer needs to be).** The postponement above was
+made without knowing the *size* of the effect. It has since been measured, off-line, by replaying the pipeline
+from the spectra embedded in the report PDFs — see [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §17.5:
+
+- **C1 (gamma) cannot move the verdict.** `A_true = γ·A_measured` is a **uniform** scale, so a ratio of two
+  absorbance bands divides it out *exactly*: the pigment ratio is bit-identical (15 significant digits) at
+  γ = 1.8 / 2.2 / 2.6. The Capability Proof's separation was therefore never at risk from C1 — and, because the
+  condition is "*a* pure power law" rather than "2.2 exactly", ratios are already comparable across cameras with
+  different gammas. Absolute absorbance and colour *do* inherit the caveat (as §7.0.1 says); only they.
+- **C2 (dark/black level) is measured absent** — 0.00 % of full scale over 150 dark frames at the worst-case
+  exposure (`SPEC_capture_quality.md` §4). Not "unaddressed", but *not present on this camera*.
+- The decode itself (pure `x^2.2`; the piecewise sRGB curve was measured to cost 24 % of the class separation and
+  was declined) remains designed-and-unbuilt, motivated by **colour accuracy and closure**, not by the verdict.
 
 ### 10.5 The absorbed-colour reference tilt — UC1 finding (oilJ, 2026-07-20)
 

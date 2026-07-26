@@ -119,3 +119,53 @@ absorbed hue" split (§11.2a) was a gamut-clamp artifact (blue-violet far out of
 the real colour separator is **chroma**, and the Pigment ratio is its numeric face. Physics: same pigment family →
 same band positions → same hue; browning cuts pigment *amount* → chroma toward grey, no hue shift. Detail:
 SPEC_capability_proof §11.2b.
+
+---
+
+## UC4 · Gamma verification + protocol change  ·  _2026-07-26_  ·  _status: ✅ ANALYSED (no new captures)_
+
+**Goal.** Settle whether the camera's brightness non-linearity (the "2.2 law") can move the Roast Ampel verdict —
+the question parked in [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §17. **No rig time**: everything was
+re-computed from data already embedded in the report PDFs. Full write-up in **§17.5** of that spec; band re-test in
+[`SPEC_pumpkin_peak_ratio_eval.md`](SPEC_pumpkin_peak_ratio_eval.md) §1b.3.
+
+**Data used.** The two fresh-2026 captures `measurement_report_NowSBudget.pdf` (S-Budget, brown) and
+`measurement_report_NowSteirerkraft.pdf` (Steirerkraft, green), plus the 32-run K/L/M/N + O/P/Q/R set for scatter.
+Each PDF carries `workflow.json` (meaned R+S spectra) **and** both 2592×1944 RGB frames as `/EmbeddedFiles` — enough
+to replay the pipeline at spectrum *and* pixel level. Replay matched the app bit-for-bit (4.05906808789795 and
+5.182554) and reproduced the published group stats 3.75 ± 0.13 / 2.47 ± 0.11 exactly.
+
+**Result — the verdict cannot be moved by gamma.** Decoding R and S with a pure power law at γ = 1.8 / 2.2 / 2.6
+leaves the pigment ratio **bit-identical** (4.0591 and 5.1826, 15 significant digits) — `A_true = γ·A_measured` is a
+uniform scale that a band ratio divides out. Absorbed hue *and* chroma are equally invariant (chromaticity ignores
+scale). Only the *perceived* colour moves, and it is the one axis that does not discriminate the oils.
+**Consequence for the fleet:** the condition is "*a* pure power law", not 2.2 specifically — so ratios from Edwin's
+different cameras are already comparable today.
+
+**Result — the piecewise sRGB EOTF is DECLINED.** The physically-faithful curve (linear toe below DN 10.3) rescales
+the Soret band by a *sample-dependent* amount, because the browner oil dips deeper into the toe (17.4 % of its bins
+vs 4.3 %). Cost, on the 32-run set: green SD **0.134 → 0.201** (+50 %), gap/noise **10.39 → 7.87 (−24 %)**, absorbed
+chroma gap 11.8 → 9.7. Colour gain unchanged (43.7 vs 43.1 perceived chroma). Same direction on the 2026 pair.
+⇒ **pure `x^2.2`**, deliberately chosen over the standard curve; recorded so nobody "fixes" it later.
+
+**Result — band 440–460 re-tested, KEPT.** Shifting to 450–470 (to escape the toe) costs **25 %** of the
+discriminating power. The lamp's blue-pump edge (ref DN 186 → 228 at 472–474 nm) turned out to be a non-issue — it
+appears in R *and* S and **cancels in `T = S/R`** (despiker deviation 0.0019 there). What the despiker actually
+flags is the **left** edge, 440.0–440.3 nm, deviation 0.166. A 442–460 trim scores best of all (10.84, +4 %) but was
+declined as not worth another threshold re-anchor.
+
+**⭐ Lab-condition change (Edwin) — the real finding.** The 2026 oils are **fresher and absorb much more** than the
+aged 2023 oils. What got through at 4 ml + 2–3 drops in 2023 is now **over-absorbing**: sample bottoms out at
+**DN 5 of 255** at 440 nm, 17 % of the Soret band sitting in the camera's toe. **The standard setup must change.**
+
+**New protocol (see [`SPEC_capability_proof.md`](SPEC_capability_proof.md) §7.3).** Batch-and-pour at **1:30–1:33**
+— *6 ml + 2 drops* improvised now, *10 ml + 3 drops* once the 10 ml graduated cylinder arrives; the transfer volume
+does not matter (only the batch concentration does), so just fill the pot. Predicted effect: Soret floor
+**5 → 16–25 DN**, **0 %** of bins in the toe, pigment ratio unchanged to **±0.35 %** ⇒ **Ampel threshold 4.4
+carries over** and the 1:20 archive stays comparable. Neatly, this also makes the whole toe debate moot going
+forward. **Not yet verified on the rig** — next bench session should run one oil at both 1:20 and 1:30 to confirm
+the invariance directly.
+
+**Open (minor):** low-DN guard (report per-capture band-minimum DN — largely obsolete once the protocol lands);
+`dilution` metadata field; one-batch repeatability run to split prep noise from instrument noise in the 8.7 %
+within-oil spread.

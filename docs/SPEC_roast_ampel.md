@@ -73,6 +73,19 @@ fresh oils read higher, so the whole scale shifts up. The 2023 numbers in §5 ar
 the evidence trail. **⚠ 4.4 is still PROVISIONAL** — set from the new oils, not yet a broad calibration; good for
 the bench + story, firming up as more 2026 runs land.
 
+**The threshold is anchored to the DECODE MODEL and to the BAND — but not to the dilution** *(2026-07-26,
+measured — [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §17.5)*. 4.4 is a number on a particular pixel
+pipeline, so it must be re-anchored whenever that pipeline changes the ratio's *scale*:
+- **Gamma linearization (§17, pending):** with the chosen **pure `x^2.2`** decode the ratio is *bit-identical*, so
+  **4.4 does not move**. (Had we taken the piecewise sRGB EOTF instead, both oils would have dropped ~9–10 % and
+  4.4 would have needed re-anchoring — one of the reasons that variant was declined.)
+- **Soret band placement:** a band change *does* re-scale the ratio (e.g. the declined 442–460 trim gives green
+  3.46 / brown 2.24). 440–460 was re-tested and kept — see
+  [`SPEC_pumpkin_peak_ratio_eval.md`](SPEC_pumpkin_peak_ratio_eval.md) §1b.3.
+- **Dilution protocol (1:20 → 1:30 / 1:33):** ratio unchanged to **±0.35 %** across every dilution simulated, so
+  **4.4 carries over** and the existing 4.06 / 5.18 stay comparable to runs made with the new recipe. This is
+  dilution-invariance doing exactly the job §1 claims for it.
+
 **Why one line, not three (Edwin 2026-07-23).** A second brown line at 2.6 ("probably" vs "very probably") was
 tried and **removed**: the fourth oil (S-Budget, Q/R) has a 6.5 % dilution spread that *straddled* 2.6 —
 2.45 at 2 drops vs 2.62 at 3 drops, the **same oil earning two verdicts**. A threshold a sample's own scatter

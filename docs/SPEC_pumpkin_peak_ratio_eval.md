@@ -137,6 +137,61 @@ peak.
   ([`SPEC_capture_quality.md`](SPEC_capture_quality.md) §9) **becomes false** — `BLUE_BAND` would start at **440**,
   below 450. That spec's ROI-clamp reasoning must be re-checked against the new window.
 
+### 1b.3 Band placement RE-TESTED and CONFIRMED — 440–460 stays  *(Edwin 2026-07-26; measured, 32 runs)*
+
+**Where this came from.** The gamma investigation ([`SPEC_capture_quality.md`](SPEC_capture_quality.md) §17.5)
+found the sample bottoming out at **DN 5 of 255** inside the Soret band — in the sRGB *toe*, the least trustworthy
+part of the camera's response. Edwin's proposal: **shift the Soret band 10 nm right (440–460 ⇒ 450–470)** to sit on
+healthier signal, checking that the shifted right edge would still clear the lamp's blue-pump spike. Both halves
+were measured on the embedded spectra of the 32-run proof set (K/L/O/P green · M/N/Q/R brown), the only data with
+real within-class scatter. **Outcome: keep 440–460.**
+
+**(a) The lamp spike is a non-issue — the reference cancels it.** The blue-pump edge is real and exactly where the
+diary says: reference DN jumps **186 → 228** between 472 and 474 nm. But it appears in **both** R and S (sample
+127 → 156), so it divides out of `T = S/R`: absorbance across the edge is smooth (0.165 → 0.165 → 0.136). The
+despiker agrees — max `|A_raw − A_despiked|` over 465–475 nm is **0.0019**. Nothing to avoid on the right.
+
+**(b) What the despiker *does* flag is the LEFT edge: 440.0–440.3 nm, deviation 0.166** — 90× larger than anything
+near the lamp. That is the capture-window boundary artifact, and it sits *inside* the current band.
+
+**(c) Shifting right costs discriminating power, monotonically.** `gap/noise` = class separation in units of
+within-class scatter (Cohen's d), the honest robustness number:
+
+| Soret band | green mean | brown mean | **gap/noise** | min sample DN |
+|---|---|---|---|---|
+| **440–460 (as-is)** | 3.750 ± 0.134 | 2.472 ± 0.111 | **10.39** | 4.0 |
+| 445–465 | 2.664 ± 0.088 | 1.711 ± 0.105 | 9.84 | 8.0 |
+| 450–465 | 2.151 ± 0.074 | 1.378 ± 0.097 | 8.96 | 18.5 |
+| **450–470 (the proposal)** | 1.907 ± 0.073 | 1.253 ± 0.094 | **7.75 (−25 %)** | 18.5 |
+| 455–475 | 1.461 ± 0.067 | 1.015 ± 0.085 | 5.86 | 41.6 |
+
+**Physics, and Edwin's reading of it: keep as much of the steep right flank of the Soret peak as possible.**
+Absorbance falls hard across this window (1.34 @ 440 → 0.79 @ 450 → 0.33 @ 460 → 0.18 @ 470); the steep flank *is*
+the pigment signal, and everything further right is flatter and carries less contrast between oils. The low-DN
+worry does **not** materialize: relative within-class scatter at 440–460 is **3.6 %**, the *lowest* of any
+candidate — the band mean over ~140 bins averages the quantization away.
+
+**(d) The 2 nm left-trim — better, but DECLINED (on the shelf, priced).** Removing only the artifact bins:
+
+| band | gap/noise |
+|---|---|
+| 440–460 (as-is) | 10.39 |
+| 441–460 | 10.80 |
+| **442–460** | **10.84** ← best of everything tested (**+4 %**) |
+| 443–460 | 10.76 |
+| 440–465 | 10.15 |
+| 440–470 | 9.64 |
+
+**Declined (Edwin):** +4 % is real but small, the median despike already removes most of that edge (raw A @ 440 =
+1.606 vs despiked 1.338, and the band means run on the *despiked* spectrum), and any band change re-scales the
+ratio (442–460 gives green 3.46 / brown 2.24) which would force another Ampel threshold re-anchor. Recorded with
+its price tag so the option is available if a margin ever gets tight.
+
+**(e) The real fix was the sample, not the band.** The DN-5 floor was a *dilution* problem: at 1:20 the fresh 2026
+oils are near-opaque at 440 nm. Diluting to 1:30 lifts the Soret floor to **16–25 DN** and clears the toe
+completely, with the ratio unchanged to ±0.35 % (dilution-invariance doing its job) — see
+[`SPEC_capability_proof.md`](SPEC_capability_proof.md) §7.3. **The band was never the problem.**
+
 ## 2. Hardware constraint driving "two bands only" (Edwin, 2026-07-09)
 
 The current rig — an **S-mount 12 mm / 16 mm lens ahead of the C-mount camera** — does **not** deliver the
