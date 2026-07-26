@@ -67,27 +67,60 @@ def _bandMean(nanometers, values, low, high):
     return float(np.mean(selected)) if selected.size else float("nan")
 
 
+def _pickExposure(backend, candidates=(4, 8, 16, 32, 64, 128, 256), ceiling=245.0):
+    """Pick an exposure ONCE the way the app's AE does — brightest whose channel peak stays under the no-clip
+    ceiling — then it is pinned for the whole run. Drift must show up in the SPECTRUM, never in the exposure."""
+    measured = {}
+    for candidate in candidates:
+        backend.setExposure(candidate)
+        for _ in range(6):                      # drain: the ELP needs a beat for an exposure change to land
+            backend.read()
+        image = backend.read()
+        if image is None:
+            continue
+        from PySide6.QtGui import QImage
+        converted = image.convertToFormat(QImage.Format.Format_RGB888)
+        width, height = converted.width(), converted.height()
+        frame = np.frombuffer(converted.constBits(), np.uint8).reshape(height, converted.bytesPerLine())
+        frame = frame[:, :width * 3].reshape(height, width, 3)
+        measured[candidate] = float(np.percentile(frame.max(axis=2), 99.9))
+        print("   exposure %4d -> channel peak %6.1f" % (candidate, measured[candidate]))
+    below = [(e, b) for e, b in measured.items() if b <= ceiling]
+    chosen = max(below, key=lambda item: item[1])[0] if below else min(measured, key=measured.get)
+    backend.setExposure(chosen)
+    for _ in range(10):
+        backend.read()
+    print("   -> pinned at exposure %d\n" % chosen)
+    return chosen
+
+
 def main():
     parser = argparse.ArgumentParser(description="Blank/reference drift time-course (SPEC_capture_quality §16.7)")
     parser.add_argument("--minutes", type=float, default=12.0, help="total duration")
     parser.add_argument("--every", type=float, default=30.0, help="seconds between samples")
     parser.add_argument("--frames", type=int, default=10, help="frames averaged per sample")
     parser.add_argument("--device", type=int, default=None)
-    parser.add_argument("--exposure", type=int, default=None, help="fix the exposure (default: app's stored value)")
+    parser.add_argument("--exposure", type=int, default=None,
+                        help="fix the exposure (default: pick once by sweep, then pin)")
+    parser.add_argument("--roi", default=None, help="X1,Y1,X2,Y2 (default: app context)")
+    parser.add_argument("--coeffs", default=None, help="A,B,C,D px->nm cubic (default: app context)")
     arguments = parser.parse_args()
 
     context = _appContext()
     device = arguments.device if arguments.device is not None else context.get("device", 0)
-    roi, coefficients = context.get("roi"), context.get("coeffs")
+    roi = [int(v) for v in arguments.roi.split(",")] if arguments.roi else context.get("roi")
+    coefficients = ([float(v) for v in arguments.coeffs.split(",")] if arguments.coeffs
+                    else context.get("coeffs"))
     if roi is None or coefficients is None:
         print("ERROR: no ROI / calibration cubic in the app context — calibrate first, or pass them explicitly.")
         return 2
-    exposure = arguments.exposure if arguments.exposure is not None else context.get("exposure") or 150
-
     from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
     backend = getCaptureBackend()
     # Mirror DevCaptureVideoThread: 6500 K fixed white balance, gain pinned, FIXED exposure for the whole run.
-    backend.open(deviceId=device, exposure=exposure, whiteBalanceKelvin=6500)
+    exposure = arguments.exposure if arguments.exposure is not None else context.get("exposure")
+    backend.open(deviceId=device, exposure=exposure or 150, whiteBalanceKelvin=6500)
+    if exposure is None:
+        exposure = _pickExposure(backend)
     print("camera %s at %s, exposure PINNED at %s, WB 6500 K\n" % (device, backend.getResolution(), exposure))
 
     print("%8s %9s %9s %9s %10s %9s %9s  %s"
@@ -98,7 +131,9 @@ def main():
     first = None
     while time.time() < deadline:
         stack = []
-        for _ in range(arguments.frames):
+        for index in range(arguments.frames):
+            if index:
+                time.sleep(0.7)     # at 2592x1944 the ELP delivers ~1.5 fps — without this we re-read one frame
             image = backend.read()
             if image is None:
                 continue
