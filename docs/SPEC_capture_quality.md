@@ -1319,16 +1319,45 @@ only a 24 DN margin** — the Q band's own upper edge.
 channel**, and the **most drift-prone** — and §16.7 needs it as a small denominator (`A_Q ≈ 0.15`). That is the
 structural reason the ratio is fragile, independent of whatever causes the drift.
 
-**Open options** (DESIGN — none implemented):
-- **(a) Leave the band, fix the stability.** The chemistry picked 560–580 (chlorophyll Q); the instrument is
-  simply worst there. §16.7's R→S→R′ bracket plus the lamp/WB answer.
-- **(b) Move the denominator** to 500–540, where there are ~50 % more photons, no channel switch and 1.5 points
-  less drift. **Cheap to evaluate before committing:** recompute the 32-run capability set with Soret/clarity and
-  compare Cohen's d against the published 10.39 — if separation survives, the metric gets much more robust. It
-  changes what the ratio *means* chemically, so thresholds would need re-anchoring.
-- **(c) Reduce with ΣRGB instead of max in the crossover.** Tempting (the notch nearly vanishes) but it reopens
-  §15's decision — `sum` re-admits the empty-channel noise `max` was chosen to avoid. Only worth it if (a) and
-  (b) fail.
+#### 16.8.1 Option (b) — moving the denominator — TESTED AND REFUTED *(2026-07-27)*
+
+The obvious response to "the denominator sits in the darkest, twitchiest band" is to move it somewhere brighter.
+**Measured, it is wrong.** `diagnostics/pigment_denominator_trial.py` replays the full **32-run Capability-Proof
+set** through the app's own chain (`AbsorptionOp` → `MedianFilterOp(7)` → `bandMean`, exactly
+`DevSpectralPlugin.__pigmentRatio`) and scores each candidate on **both** axes that matter — class separation on
+a stable set, and fragility on Edwin's drift-affected A/B pair:
+
+| denominator | green (mean ± SD) | brown (mean ± SD) | **Cohen's d** | A/B divergence |
+|---|---|---|---|---|
+| **Q 560–580 (current)** | 3.750 ± 0.134 | 2.472 ± 0.111 | **10.39** | **48.2 %** |
+| clarity 500–540 | 8.117 ± 0.918 | 5.249 ± 0.414 | 4.03 *(−61 %)* | 75.1 % |
+| green peak 520–545 | 7.393 ± 0.834 | 4.711 ± 0.327 | 4.23 *(−59 %)* | 71.2 % |
+| wide green 500–560 | 7.888 ± 0.917 | 5.140 ± 0.397 | 3.89 *(−63 %)* | 74.4 % |
+| red 590–620 | 6.386 ± 0.472 | 4.203 ± 0.229 | 5.89 *(−43 %)* | 66.3 % |
+| Q widened 555–590 | 4.240 ± 0.180 | 2.773 ± 0.125 | 9.46 *(−9 %)* | 50.7 % |
+
+*(The current band reproduces `SPEC_roast_ampel.md` §2's published 3.75 ± 0.13 / 2.47 ± 0.11 and d = 10.39
+exactly — so the replay is trustworthy before it is used to judge alternatives.)*
+
+**The dark band wins on both axes, and by a lot.** It also has the *lowest* within-class scatter (CV 3.6 % / 4.5 %
+vs 7–11 % for every brighter band) despite having the fewest photons. **Photon count was the wrong model.** What
+makes a denominator good is how much genuine *pigment* absorbance it carries: 560–580 is a chlorophyll Q band, so
+numerator and denominator move together as one substance. The brighter bands are not pigment bands — their
+absorbance is mostly baseline and scattering, which varies independently run to run, so they add noise to the
+ratio *and* dilute the class difference. Moving the denominator trades a real chemical signal for photons the
+metric does not actually need.
+
+⇒ **Keep 560–580.** The crossover costs less than the chemistry would.
+
+**Remaining options** (DESIGN — none implemented):
+- **(a) Leave the band, fix the stability — now the ONLY sensible route.** The instrument is worst exactly where
+  the chemistry is best; that is unlucky, not fixable by band choice. §16.7's R→S→R′ bracket plus the lamp/WB
+  discriminator. Note every candidate band diverged 48–75 % on the drifted pair — **drift dominates all of them**,
+  which is further evidence that stability, not band placement, is the lever.
+- **(c) Reduce with ΣRGB instead of max in the crossover.** Still open, and now the only structural idea left: it
+  would fill the notch (160 vs 121 DN at 570–580) and roughly halve the shot noise there. But it reopens §15's
+  decision — `sum` re-admits the empty-channel noise `max` was chosen to avoid — so it would have to be a
+  *gated* sum (only channels above the dark floor), and it must be re-scored on the same two axes above.
 
 ---
 
