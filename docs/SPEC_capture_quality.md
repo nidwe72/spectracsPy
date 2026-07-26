@@ -1292,10 +1292,17 @@ with the lamp already warm. Log archived at `spectracs-references/probe/drift_20
 carry-over in the blank cuvette (that would bite as a Soret-shaped notch at 440–470, not a smooth ramp). With
 warm-up and camera controls both excluded, the leading remaining candidate is **beam geometry**: the cuvette was
 removed and refilled between the two runs, and re-seating it shifts which part of the slit/grating is illuminated,
-which tilts throughput smoothly across wavelength. **Cheap decisive test (needs hands, not code):** capture a
-blank, remove and re-insert the cuvette without touching anything else, capture again. If the tilt reappears,
-cuvette seating is the error source — and no warm-up protocol would ever have fixed it, while the R→S→R′ bracket
-catches it every time.
+which tilts throughput smoothly across wavelength. **Decisive test — `diagnostics/cuvette_reseat_probe.py` (built 2026-07-27, awaiting Edwin's hands).**
+It is not "measure six times": each round captures a **before** (untouched since the previous round's after),
+prompts for a re-seat, then captures an **after**. So it yields two paired sets over the same timescale —
+**re-seat deltas** (before→after) and **no-touch deltas** (after→next before, drift + noise only). If seating is
+innocent the two are indistinguishable; if it is the culprit, the re-seat arm stands out against its own control
+rather than against an assumption. Each delta is reported as the spectral tilt, the level change, and — using
+Edwin's own `A_Soret = 0.801 / A_Q = 0.144` — **the pigment-ratio swing that seating error would have caused**.
+Validated with a null run (nothing moved): noise floor **0.07–0.14 % tilt / 0.5–1.1 % ratio**, against the A/B
+event's 5.04 % / 20–28 % — roughly 50× the discrimination needed, and the null correctly returns "innocent".
+Run: `--changes 6` after a 5-minute settle. If the tilt reappears, cuvette seating is the error source, no
+warm-up protocol would ever have fixed it, and the R→S→R′ bracket catches it every time.
 
 **The discriminator already exists and costs nothing: the `CAPTURE-SETTINGS` line** printed for every capture
 (§ capture-settings logging) carries `exposure_applied`, `wb`, `autoWb`, `gain`. Compare the two runs' lines: if
