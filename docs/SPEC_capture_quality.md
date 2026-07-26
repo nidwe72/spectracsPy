@@ -1354,10 +1354,35 @@ metric does not actually need.
   the chemistry is best; that is unlucky, not fixable by band choice. §16.7's R→S→R′ bracket plus the lamp/WB
   discriminator. Note every candidate band diverged 48–75 % on the drifted pair — **drift dominates all of them**,
   which is further evidence that stability, not band placement, is the lever.
-- **(c) Reduce with ΣRGB instead of max in the crossover.** Still open, and now the only structural idea left: it
-  would fill the notch (160 vs 121 DN at 570–580) and roughly halve the shot noise there. But it reopens §15's
-  decision — `sum` re-admits the empty-channel noise `max` was chosen to avoid — so it would have to be a
-  *gated* sum (only channels above the dark floor), and it must be re-scored on the same two axes above.
+#### 16.8.2 Option (c) — ΣRGB instead of max — ALSO TESTED, ALSO REFUTED *(2026-07-27)*
+
+Every archived run embeds both full-resolution capture frames, so all three reductions can be replayed from the
+**same pixels** (`diagnostics/reduction_sum_vs_max.py`, 32 runs × 2 frames, decode → combine → absorbance →
+median(7) → band means):
+
+| reduction | green | brown | **d** | green CV | A/B divergence | notch depth |
+|---|---|---|---|---|---|---|
+| **max (current)** | 3.731 ± 0.128 | 2.460 ± 0.116 | **10.41** | 3.4 % | 49.2 % | 55 % |
+| sum | 3.653 ± 0.126 | 2.412 ± 0.114 | 10.34 | 3.5 % | 48.2 % | 50 % |
+| gated sum (>6 DN) | 3.405 ± 0.441 | 2.312 ± 0.146 | **3.33** | 12.9 % | 48.2 % | 50 % |
+
+*(The pixel-level replay reproduces the spectrum-level results — d = 10.41 vs 10.39, A/B divergence 49.2 % vs
+48.2 % — so it is measuring the same thing the app does.)*
+
+**`sum` is a wash, and the gate is harmful.** Two things worth keeping:
+
+1. **In LINEAR light the crossover discards much less than it appears to in DN.** At 570–580 the DN reading is
+   G = 121, R = 39 — which *looks* like `max` throwing away a quarter of the light. Decoded, that is G = 49.4 and
+   **R = 4.1**: the second channel carries only ~8 %. The notch is therefore mostly a *real* dip in the sensor's
+   total response, not an artefact of `max`, and `sum` only lifts the floor 50.2 → 55.9 (55 % → 50 % depth). The
+   earlier "the photons are there" framing was a DN-space illusion — gamma expands small values.
+2. **⚠ A gated sum breaks the reference cancellation.** The gate fires at *different wavelengths* for blank and
+   sample (the sample is dimmer, so more of its channels fall under the floor and get zeroed while the blank
+   keeps them), so `S/R` acquires a sample-dependent, wavelength-dependent bias — d collapses 10.41 → 3.33 and CV
+   triples. **Any conditional applied per-spectrum rather than per-pair is dangerous for the same reason.**
+
+⇒ **Keep `max`.** All three structural options are now closed by measurement: the band placement (b), the
+reduction (c), and — by elimination — only **(a) instrument stability** remains.
 
 ---
 
