@@ -1329,6 +1329,50 @@ test is to keep the camera streaming and power-cycle only the lamp.
 - **Measure the lamp first** (§8, still unmeasured): run the Phase-B warmup probe once and read off how long the
   phosphor/pump ratio takes to settle. That number becomes the coach line "lamp warming — N min left".
 
+### 16.7.2 ⭐ SOLVED — cuvette RE-SEATING is the error source *(2026-07-27, measured on the rig)*
+
+`diagnostics/cuvette_reseat_probe.py`, 6 re-seats of the **same** cuvette with the same liquid, exposure pinned,
+5-minute settle first, each re-seat paired against a no-touch control over the same timescale:
+
+| arm | n | tilt (phosphor/pump) mean · max | implied pigment-ratio swing mean · max | level |
+|---|---|---|---|---|
+| **re-seat** | 6 | **2.84 % · 6.71 %** | **9.6 % · 22.0 %** | 1.51 % |
+| no-touch (control) | 5 | 0.26 % · 0.57 % | 0.7 % · 1.7 % | 0.22 % |
+
+> **Re-seating moves the spectrum 11× as much as leaving it alone.** And the size matches the crime exactly:
+> Edwin's A/B blanks differed by **5.04 %**, which sits inside the observed re-seat range (0.82 – 6.71 %).
+> **§16.7's open question is closed.**
+
+**The mechanism is visible in the numbers.** Across all 12 captures the **pump band moves 1.42 %** while the
+**phosphor band moves 7.04 %** — a **5× larger swing in green+red than in blue**. Re-seating does not dim the
+light uniformly (that would cancel in `T = S/R` anyway); it **tilts** it, and it tilts the half of the spectrum
+where the Q band lives. Most likely the cuvette acts as a weak prism/window: a fraction of a millimetre of
+displacement changes the beam's angle into the grating and which part of the dispersed image lands in the ROI, and
+grating efficiency is a function of both angle and wavelength.
+
+The `ph/pump` sequence also suggests **discrete seating states** rather than a continuum —
+`0.6509 · 0.6945 · 0.6911 · 0.6854 · 0.6853 · 0.6781 · 0.6821 · 0.6678 · 0.6674 · 0.6600 · 0.6610 · 0.6956` —
+clustering around **0.667 ± 0.010** and **0.690 ± 0.004**, i.e. the cuvette drops into one of a couple of
+positions (rotated 180°? resting against a different wall?) with slow settling in between.
+
+#### 16.7.3 What follows from it
+
+1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
+   seated and exchange the *liquid* in place (aspirate the blank, pipette the sample in). The no-touch arm is the
+   measurement of that protocol: **0.7 % ratio error instead of 9.6 % — a 14× improvement**, larger than anything
+   else discussed in this document.
+2. **Mechanical backup:** a keyed / clamped / spring-loaded holder so the cuvette can only return one way. Worth
+   it for the end-user product, where "don't touch it" is not enforceable.
+3. **R→S→R′ bracket (§16.7) is still worth having** — it *detects* the residue and any other event, and it costs
+   one extra blank capture. Detection ≠ prevention: item 1 prevents.
+4. **Re-anchor expectations, not thresholds.** Nothing about the verdict maths changes; what changes is that a
+   run's reference must be earned by not disturbing the optics. The Roast Ampel threshold and the 47/66 hue bands
+   are unaffected by this finding.
+5. **Open question for the archive:** the 32-run Capability-Proof set has CV 3.6 %, *better* than the 9.6 % mean
+   re-seat error measured here — so those runs must have had ~3× less seating error. Did that series keep the
+   cuvette in place between reference and sample? If yes, it is direct confirmation of item 1; if no, the holder
+   or the handling was simply more repeatable then, and item 2 matters more.
+
 ### 16.8 The Q band sits in the sensor's colour-filter CROSSOVER *(2026-07-27 — why the blank reads low at 580 nm)*
 
 Edwin: *"the pure alcohol blank has such small values at 580 nm, yet the capture image looks uniform."* Both
