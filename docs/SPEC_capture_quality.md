@@ -2299,6 +2299,34 @@ stays slipped (61 % of each excursion was permanent). So the fix for alignment, 
 low priority given the ceiling above. The comparison against the jar figures is fair in kind, since both used
 the same probe, the same rig, and the same paired control.)*
 
+#### 16.9.3e Decomposing the mechanical stack — EMPTY beam *(Edwin, 2026-07-27)*
+
+§16.9.3d measured a camera nudge with the jar in place. The follow-up removes the jar entirely and disturbs the
+**stack itself**, so nothing that moves can be blamed on the jar's optics:
+
+```
+    --disturb holder   nudge the JAR HOLDER only,  beam empty
+    --disturb stack    nudge the camera AND the holder, beam empty
+```
+
+**What each outcome means — and the `holder` case is the interesting one:**
+
+| result | reading |
+|---|---|
+| empty **holder** nudge moves the spectrum | **the holder is intercepting light itself** — it is part of the aperture, not just a jar carrier. It then needs fixing rigidly *and* it is a candidate for the aperture function §16.9.2 wants to add |
+| empty holder nudge does nothing | the holder matters only through the jar it carries — so a **keyed/clamped jar seat** is the fix, and the holder body can stay as it is |
+| empty **stack** ≈ camera alone (0.42 %, §16.9.3d) | the holder adds nothing; the residual alignment sensitivity is the cone joint |
+| empty **stack** ≫ camera alone | the two disturbances compound — the stack has more than one loose degree of freedom |
+
+**Why an empty beam is the right control here** (and why it was *not* right for the ring 2×2, §16.9.3b): the
+question is purely *"how much does the instrument care about its own geometry"*, which needs no sample at all.
+The focus-shift objection that disqualifies the empty beam as a *reference* does not apply, because nothing is
+being ratioed against a jar-in measurement — each block is compared only against **its own** untouched control.
+
+**Expect low numbers.** The camera-with-jar block already came in at 0.42 % mean tilt against a 0.09 % control,
+and the jar re-seat at 2.84 %. If the empty-beam blocks land near the control, that is a *useful negative*: it
+confines the entire problem to the jar's own optics, which is what §16.9.2's aperture addresses.
+
 ### 16.9.4 Verification — and it must be pre-registered this time
 
 Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below
