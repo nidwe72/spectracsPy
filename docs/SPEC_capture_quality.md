@@ -2878,7 +2878,12 @@ A tilt is **an offset *and a slope*** in absorbance. That is why the earlier can
 constant-anchor subtraction removes the offset, SNV removes offset and scale — **neither removes a slope.**
 Fitting a straight line through two oil-quiet windows (520–540 and 600–630) and subtracting it removes both.
 
-| metric | green (n=8) | brown (n=6) | d | **misclassified (LOO)** | 2023 set d |
+⚠ **The LOO column below is SUPERSEDED — read §16.10.10's scoring note first.** Leave-one-*run*-out is
+optimistic here: runs within a fill share a seating state, so holding out one run leaves its near-twins in
+training. The honest figure is leave-one-**fill**-out, and on the 25-run set it is **1/25 for the linear
+baseline and 9/25 for S/Q** (§16.10.12's bench). The n=14 numbers are kept as the original evidence trail.
+
+| metric | green (n=8) | brown (n=6) | d | **misclassified (LOO — see warning)** | 2023 set d |
 |---|---|---|---|---|---|
 | S/Q (current) | 4.722 ± 0.529 | 4.105 ± 0.467 | 1.23 | 4 / 14 = **29 %** | **10.39** |
 | SNV difference | 2.597 ± 0.034 | 2.515 ± 0.072 | 1.55 | 2 / 14 = 14 % | 6.69 |
@@ -2927,19 +2932,24 @@ per-device reference measurement is not optional. But **"every unit built identi
 
 ### 16.10.6 Combined, and what is still open
 
+*Superseded in places by §16.10.7–16.10.12 (same day, later). Current state:*
+
 | lever | effect | status |
 |---|---|---|
-| linear-baseline metric | 29 % → 7 % errors | **measured**, needs fresh-data validation |
-| kinematic angular seat + aperture | σ 11 % → ~2 % | designed (§16.9), not built |
-| median of 3 fills | ×1.7 | free, adopt now |
+| linear-baseline metric | S/Q 9/25 → **1/25** errors (leave-one-fill-out, §16.10.10) | ✅ **IMPLEMENTED** 2026-07-27, equal-weighted fit (§16.10.9); still needs a fresh *session* |
+| **no-re-seat control (syringe fill)** | attacks the 98 % term directly | **free, run it FIRST** (§16.9.4a) — also unblocks §16.10.8 |
+| kinematic angular seat + aperture | σ 11 % → ~2 % | designed (§16.9.4), not built; candidate coupling in §16.9.4f |
+| median of 3 fills | ×1.7 | free, adopt now — improved by B3 (deliberate 120° rotation) |
+| "inconclusive" third gauge zone | removes the last LOFO error at 4 % width | analysed (§16.10.11), **not implemented** |
 | sample clarification | attacks the *fragility* (§16.7.2l) | untested |
 
-They are independent and they multiply. **Nothing measured today suggests the approach is unsound** — the
-instrument resolves a 15 % class gap on oils whose *pigment* difference is genuinely small; what it lacks is a
-seat that returns the sample to the same angle twice.
+They are independent and they multiply. **Nothing measured suggests the approach is unsound** — the instrument
+resolves a class gap on oils whose *pigment* difference is genuinely small; what it lacks is a seat that returns
+the sample to the same angle twice.
 
 **Still open:** the slit width (unmeasured, and it sets the sensitivity), the tilt-vs-translation test above,
-the fresh-data validation of the linear baseline, and the 47/66 hue-band decision from §17.8.1.
+a fresh-**session** validation of the linear baseline, **dilution invariance (§16.10.8 — blocked on the seat)**,
+the near-zero denominator guard (§16.10.9), and the 47/66 hue-band decision from §17.8.1.
 
 ### 16.10.7 Cross-group verification of the linear baseline *(2026-07-27, all 15 runs of the day)*
 
@@ -2954,7 +2964,13 @@ every number.
 | green, diffuser (`B` 001–003, 008–009) | 5 | 5.212 (17.4 %) | 11.990 (11.0 %) |
 | brown (`C` 001–006) | 6 | 4.105 (11.4 %) | 9.361 (8.9 %) |
 
-CV improves in **all five** groups of the day (incl. the two not shown), mean factor 0.71 ≈ **1.4× better
+⚠ **"improves in all five" does NOT generalise — one counter-example found later the same day.** On the
+7-run green `20260727E` series the linear baseline was *worse* on scatter: **S/Q CV 7.9 % vs LINEAR 9.0 %**.
+It still won decisively there on the thing that matters (7/7 correct vs 5/7), because the class gap widened
+far more than the scatter did — but **"the metric always tightens the scatter" is false** and should not be
+relied on. Separation, not repeatability, is what it reliably buys.
+
+CV improves in **all five** groups of the *morning* set, mean factor 0.71 ≈ **1.4× better
 repeatability** — and the class gap widens at the same time, so both terms of *d* move the right way at once.
 
 **Ranked by LINEAR base, all 9 green runs sort above all 6 brown** (worst green 10.565 > best brown 10.002,
@@ -2993,6 +3009,23 @@ ran 0.071–0.114, so the §16.10.9 near-zero guard was not approached.
 
 The binding constraint is unchanged — green `B008` 10.564 against brown `C002` 9.999. The fresh runs did not
 narrow it.
+
+⚠ **"0 of 21/25 wrong" is IN-SAMPLE.** Under leave-one-**fill**-out — threshold refitted on three fills and
+tested on the fourth — the linear baseline scores **1/25**, not 0. The miss is brown `C002` (10.011) against a
+held-out threshold of 9.988. S/Q scores 9/25 on the same basis. 1/25 remains good, and the *small* gap between
+in-sample and LOFO is itself the reassuring part (the weak candidates in §16.10.12's bench collapsed instead) —
+but the honest headline number is 1/25.
+
+**Margin trend as data accumulated** — every batch has *tightened* the constraint, never loosened it, which is
+what one expects if 10.3 was drawn slightly optimistically from a small sample:
+
+| after | worst green | margin above 10.3 |
+|---|---|---|
+| `B`+`C` (15 runs) | 10.564 | +2.6 % |
+| + `D`/`E` 001–003 (21 runs) | 10.564 | +2.6 % |
+| + `E` 004–007 (25 runs) | 10.506¹ | **+2.0 %** |
+
+¹ under the equal-weighted fit now shipped (§16.10.9); 10.452 under the original unweighted one.
 
 *What this does and does not establish:* it tests the **threshold** out of sample, not the instrument
 configuration and not the oils — same rig, same day. Six runs are enough to have **falsified** the threshold

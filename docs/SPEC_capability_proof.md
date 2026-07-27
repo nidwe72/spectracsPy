@@ -70,6 +70,33 @@ Cluster gap: **worst green 3.67 > best brown 2.59** — a clean, empty separatio
 | ~~Third too-green oil~~ | ⛔ Retired — out of scope (§1a) |
 | ~~Amber-band sample~~ | ⛔ Retired — no intermediate oils in practice (§1a) |
 
+> ### ⚠ UPDATE 2026-07-27 — the table above is the **2023-oil** picture and does NOT hold on the 2026 oils
+>
+> A full day of instrument work ([`SPEC_capture_quality.md`](SPEC_capture_quality.md) §16.7–§16.10, 25 runs)
+> changed three of these rows. Recorded here because the summary above would otherwise read as settled.
+>
+> | row above | 2026 reality |
+> |---|---|
+> | *Dilution-invariant discrimination ✅ proven (10–13× noise)* | **UNRESOLVED on the 2026 oils** (§16.10.8). Not refuted — **unmeasurable**: seating noise alone produces a 1.34× metric spread, as large as a deliberate 2.19× dilution change, so the dilution term is buried. The 2023 evidence stands for the 2023 oils; it does not transfer. |
+> | *Verdict threshold ✅ exists (Ampel 2.8)* | 2.8 → **4.4** (2026-07-25 recalibration), plus a **second** gauge at **10.3** on the linear-baseline metric ([`SPEC_roast_ampel.md`](SPEC_roast_ampel.md) §2a). Both provisional. |
+> | *Proven, not marginal (10–13× noise)* | On the 2026 oils the raw Soret/Q ratio gives **d = 1.24 and the classes OVERLAP** — 9/25 wrong under leave-one-fill-out. The margin that made 2023 look easy is largely absent here. |
+>
+> **What rescued the gate is a metric change, not new hardware.** The linear-baseline pigment ratio
+> (§16.10.9, implemented) separates all 25 runs of 2026-07-27 — **1/25** under leave-one-fill-out vs S/Q's 9/25,
+> *d* 2.88 vs 1.24 — and costs nothing on the 2023 set (*d* 10.27 vs 10.39). Two green runs that the old gauge
+> called brown are now correct.
+>
+> **What is now the gate's real blocker:** the jar's re-seating, ~**98 %** of instrument variance (§16.7.2n).
+> It is not merely costing margin — it **prevents the dilution-invariance experiment from being run at all**,
+> and dilution invariance is one of the two mandatory sub-claims in §1. The cheapest next step is not hardware:
+> §16.9.4a's **no-re-seat control** (syringe-fill in place, zero parts) both tests the mechanism and yields a
+> clean dilution series.
+>
+> **Revised honest read:** the *binary discrimination* claim is in better shape than this morning (a metric that
+> separates 25/25 in-sample, 24/25 honestly). The *dilution-invariance* sub-claim is **not** currently
+> demonstrated on the oils that matter, and cannot be until the seat is fixed. **GO on discrimination, HOLD on
+> dilution invariance.**
+
 ### Can we be hopeful? — honest read
 
 **Yes — and with the too-green class dropped, more so than before.** The biggest prior risk (green-vs-greener

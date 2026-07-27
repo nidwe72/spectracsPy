@@ -73,6 +73,33 @@ fresh oils read higher, so the whole scale shifts up. The 2023 numbers in §5 ar
 the evidence trail. **⚠ 4.4 is still PROVISIONAL** — set from the new oils, not yet a broad calibration; good for
 the bench + story, firming up as more 2026 runs land.
 
+### 2a. A SECOND Ampel — the linear-baseline gauge *(✅ IMPLEMENTED 2026-07-27; see [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §16.10.9)*
+
+`RoastBaselineGaugeView` runs **alongside** `RoastGaugeView`, on its own scale. It is driven by the
+**linear-baseline pigment ratio** — a straight line fitted through the oil-quiet 520–540 and 600–630 windows and
+subtracted before taking Soret ÷ Q — rather than by the raw ratio §1 describes.
+
+| | raw Soret/Q | linear baseline |
+|---|---|---|
+| threshold | **4.4** | **10.3** |
+| band | 6.0 → 3.0 | 15.0 → 7.0 |
+| errors, 25 runs of 2026-07-27, leave-one-**fill**-out | 9 / 25 | **1 / 25** |
+| classes on that set | **overlap** by 1.005 | separate, gap +0.495 |
+
+**Why a second gauge and not a replacement.** A re-seating tilt enters absorbance as an offset **and** a slope;
+the raw ratio removes neither, so it inherits the instrument's dominant error (`SPEC_capture_quality.md` §16.10.1
+— the jar is ~98 % of the variance). The two are shown side by side deliberately: **their numbers are NOT
+comparable, only their verdicts are**, and a disagreement is informative. Live example — green run `B006` reads
+4.137 → *"probably too brown"* on the old gauge (a misclassification) and 11.352 → *"good — green"* on the new.
+
+**⚠ 10.3 is PROVISIONAL, and more so than 4.4 was.** It is anchored on one day, one rig, one oil pair, n = 25,
+with the nearest run only **+2.0 %** clear — and that margin has *tightened* with every new batch. Separation is
+demonstrated at **fixed dilution only**; dilution invariance is unresolved (§16.10.8) because seating noise alone
+produces as much spread as a 2.19× dilution change. The band edges and the two quiet windows were chosen *after*
+seeing the tilt problem, so they are fitted, not independent. **Second opinion, not headline**, until a fresh
+session validates it. §16.10.11 designs an "inconclusive — measure again" third zone that would make this honest
+in the UI; it is analysed but **not implemented**.
+
 **The threshold is anchored to the DECODE MODEL and to the BAND — but not to the dilution** *(2026-07-26,
 measured — [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §17.5)*. 4.4 is a number on a particular pixel
 pipeline, so it must be re-anchored whenever that pipeline changes the ratio's *scale*:
