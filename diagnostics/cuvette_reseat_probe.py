@@ -107,23 +107,29 @@ def watchSettle(backend, roi, coefficients, frames, seconds, before):
 
 
 def settleReport(series, noiseFloor=0.26):
-    """Did it calm down, and what is left? Compares the FIRST third of the window against the LAST third."""
+    """How much of the disturbance is a TRANSIENT that settles out, and how much is PERMANENT?
+
+    The first reading is NOT the peak: the disturbance is still developing a second or two after the jar is put
+    back, so measuring the jump from t=0 understates it (and can make "recovery" come out negative). Score the
+    window against its own PEAK excursion instead, and against the settled value at the end."""
     if len(series) < 6:
         return None
     third = max(2, len(series) // 3)
-    early = np.array([t for _e, t in series[:third]])
-    late = np.array([t for _e, t in series[-third:]])
-    jump, residual = series[0][1], float(np.mean(late))
-    recovered = ((abs(jump) - abs(residual)) / abs(jump) * 100) if abs(jump) > noiseFloor * 2 else float("nan")
+    tilts = np.array([t for _e, t in series])
+    late = tilts[-third:]
+    early = tilts[:third]
+    peak = float(np.max(np.abs(tilts)))
+    settled = float(np.mean(late))
+    permanent = abs(settled) / peak * 100 if peak > 0 else 0.0
     earlySpread, lateSpread = float(early.max() - early.min()), float(late.max() - late.min())
-    print("      jump %+.2f%% -> settled %+.2f%%   |   movement: first third %.2f%%, last third %.2f%%"
-          % (jump, residual, earlySpread, lateSpread))
-    if abs(jump) <= noiseFloor * 2:
-        print("      (the jump is at the noise floor - nothing was really disturbed)")
+    print("      transient peak %.2f%%  ->  settled %+.2f%%   |   movement: first third %.2f%%, last third %.2f%%"
+          % (peak, settled, earlySpread, lateSpread))
+    if peak <= noiseFloor * 2:
+        print("      (peak excursion is at the noise floor - nothing was really disturbed)")
     else:
-        print("      -> %.0f%% of the jump recovered; the trace is %s at the end"
-              % (recovered, "STILL MOVING" if lateSpread > earlySpread * 0.5 else "STEADY"))
-    return dict(jump=jump, residual=residual, recovered=recovered,
+        print("      -> %.0f%% of it is PERMANENT; the trace is %s at the end"
+              % (permanent, "STILL MOVING" if lateSpread > earlySpread * 0.5 else "STEADY"))
+    return dict(peak=peak, jump=series[0][1], residual=settled, permanent=permanent,
                 earlySpread=earlySpread, lateSpread=lateSpread)
 
 
@@ -248,16 +254,19 @@ def main():
         else:
             print("  => inconclusive at this sample size; run more rounds (--changes 12).")
     if settles:
-        jumps = np.abs([r["jump"] for r in settles])
+        jumps = np.array([r["peak"] for r in settles])          # peak excursion, not the first reading
         residuals = np.abs([r["residual"] for r in settles])
+        permanents = np.array([r["permanent"] for r in settles])
         floor = float(np.abs([d["tilt"] for d in notouch]).mean()) if notouch else 0.26
         sensitivity = 0.434 / A_Q          # tilt % -> pigment-ratio % at Edwin's dilution
         print("\n=== DOES WAITING IT OUT FIX IT?  (%.0f s window after each change) ===" % arguments.relax)
-        print("  right after the change : tilt mean %5.2f%%  max %5.2f%%   -> ratio %5.1f%% / %5.1f%%"
+        print("  peak during the window : tilt mean %5.2f%%  max %5.2f%%   -> ratio %5.1f%% / %5.1f%%"
               % (jumps.mean(), jumps.max(), jumps.mean() * sensitivity, jumps.max() * sensitivity))
         print("  after the window       : tilt mean %5.2f%%  max %5.2f%%   -> ratio %5.1f%% / %5.1f%%"
               % (residuals.mean(), residuals.max(), residuals.mean() * sensitivity, residuals.max() * sensitivity))
         print("  untouched control      : tilt mean %5.2f%%" % floor)
+        print("  => %.0f%% of the disturbance is PERMANENT on average (%.0f%% settles out)"
+              % (permanents.mean(), 100 - permanents.mean()))
         if jumps.mean() < max(floor * 2.0, 0.4):
             print("\n  => NO REAL DISTURBANCE was applied (the jumps are at the noise floor), so there is")
             print("     nothing to settle and nothing to conclude. This is the null case.")
