@@ -2089,6 +2089,104 @@ reduction (c), and — by elimination — only **(a) instrument stability** rema
 
 ---
 
+## 16.9 Optical hardening — the aperture mask and the fixed diffuser  *(DESIGN, 2026-07-27; build on explicit request)*
+
+Two small parts that attack the two halves of the dominant error (§16.7.2n). They are **independent**, solve
+**different** problems, and stack:
+
+| part | fixes | error it removes |
+|---|---|---|
+| **A — aperture mask** | *which* light is measured | wall-guided ring light (stray light), and the dependence on jar centring |
+| **B — diffuser mount** | *how* the light may arrive | angular/positional sensitivity of the grating response |
+
+### 16.9.1 The one rule that decides whether either works
+
+> **Both parts mount to the HOLDER or the CONE. Neither ever touches the jar.**
+
+This is the whole lesson of §16.7.2g: a diffuser resting on the jar is **lifted and re-seated with it**, so it
+becomes part of the disturbance instead of a shield from it — which is why its A/B came out null (n=5, p = 0.29).
+An aperture glued to the jar would fail identically. Mounted to the holder, both parts define a **fixed optical
+geometry that the jar moves through**, rather than a geometry the jar carries with it.
+
+### 16.9.2 Part A — the aperture mask
+
+**What it does.** A black, matte disc with a central hole, held **above the jar** in a fixed position, so the
+spectrometer can only see the central region of the liquid. Light that entered the acrylic **wall** — refracted,
+guided, and emerging as the rings Edwin observed — is blocked before any optic can mix it in.
+
+**Why it matters more than it looks.** Wall light never crossed the full liquid depth, so it is stray light: it
+**biases high absorbances low** (capping `A_max` at `−log10(f)` for a stray fraction `f`), it hits the **Soret
+numerator** hardest, and **its share changes every time the jar is re-seated**. A fixed aperture also **pins the
+measured area**, so centring errors stop mattering — the jar can sit a millimetre off and the same patch of
+liquid is measured.
+
+**Geometry (to be finalised on the rig).**
+```
+jar outer diameter        30 mm            (measured, photo 2026-07-27)
+jar depth (base)          13 mm
+wall thickness            MEASURE  — the ring source; aperture must clear it with margin
+aperture hole             start 16 mm, adjustable      <- ~5 mm clear of a ~2 mm wall on each side
+mask thickness            2-3 mm, opaque
+finish                    MATTE BLACK on the underside (a shiny mask re-reflects into the beam)
+position                  fixed to the holder, centred on the OPTICAL axis, not on the jar
+standoff                  as close to the liquid surface as handling allows (a distant mask lets
+                          wall light sneak back in at an angle)
+```
+**Notes.** Spectrally neutral by construction — it sits in **undispersed white light**, so it cannot tilt the
+spectrum the way a throughput change does. Print in black PETG/PLA, or line a printed ring with matte black
+paper. Make the hole a **separate insert** so 12 / 16 / 20 mm can be swapped without reprinting the holder.
+
+### 16.9.3 Part B — the diffuser mount
+
+**What it does.** Holds the frosted glass **at the spectrometer entrance, immediately before the slit**, rigidly
+attached to the upper cone / spectrometer mount.
+
+**Why at the slit and not on the jar** (the non-obvious half, §16.7.2n): a diffuser in the **jar's plane**
+becomes an extended source there and smears the disk *and the rings* together — it can make stray light **worse**
+while making the field *look* more uniform, which may be exactly what Edwin observed. At the slit it can only
+scramble light that **already arrived**, and it homogenises the **angular** distribution entering the grating —
+which is what makes the response independent of how the beam arrives. This is standard instrument practice
+(fibre spectrometers use a cosine corrector at the entrance for the same reason).
+
+**Constraints.**
+```
+position     immediately in front of the slit, covering the full entrance aperture
+mounting     rigid to the cone/spectrometer; NEVER removed for a jar change
+material     the frosted camera glass already on hand
+light cost   measured: exposure 64 -> 256 (~4x). Affordable — headroom to 500 (§14.9), and the
+             untouched control sits at 0.02% tilt (§16.7.2c), so SNR is not the limiting factor
+risk         RESOLUTION: filling the acceptance cone can blur the slit image -> re-verify calibration
+```
+
+### 16.9.4 Verification — and it must be pre-registered this time
+
+Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below
+fixes the rules **before** the data:
+
+| gate | test | pass condition |
+|---|---|---|
+| **V0** | **stray-light sizing** — measure a 3× over-concentrated sample | `A_Soret` scales linearly ⇒ stray light is small, the aperture is optional. It **flattens** ⇒ `f = 10^(−A_plateau)`, and the aperture is the highest-value part on the list |
+| **V1** | **calibration survives the diffuser** — run the wavelength calibration with the mount fitted | still **~0.6 nm**, green anchor holds (§14.6). *A gate, not a formality: a diffuser at the slit can cost resolution* |
+| **V2** | **re-seat repeatability**, `cuvette_reseat_probe.py`, **n ≥ 6 per arm**, exclusion = documented physical cause only | tilt and level both fall against the no-hardware baseline (3.27 % / 4.95 %, §16.7.2c) |
+| **V3** | **end-to-end** — 6 fills of one sample | S/Q CV **≤ 4 %** (the level needed to separate 4.2 from 4.8, §16.7.2f) |
+
+**Arms for V2**, in this order, so a null result is still informative: *baseline → aperture only → aperture +
+diffuser*. Diffuser-only is optional; the aperture is expected to be the larger effect and is cheaper to build.
+
+### 16.9.5 Consequences to plan for
+
+1. **The threshold must be re-anchored afterwards.** Changing the optical configuration shifted the measured S/Q
+   by **14 %** between the diffuser and no-diffuser sets (§16.7.2g). Fix the final configuration **first**, then
+   re-anchor the Roast Ampel threshold to it, and do not compare runs across the change.
+2. **Re-run the calibration** once the hardware is final (V1), and record the configuration alongside it.
+3. **The DN plot is the acceptance instrument.** After the light loss, check `CAPTURE-LOWDN` still lands at
+   20–40 DN with the standing recipe; if not, adjust exposure before the dilution (§16.7.2e).
+4. **This does not replace the sample-side lever.** §16.7.2l's clarification test (let the dilution settle /
+   filter it) attacks why the denominator is fragile; the hardware attacks the disturbance that exploits it.
+   They are independent and both worth having.
+
+---
+
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).
