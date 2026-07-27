@@ -1455,11 +1455,25 @@ average implies ≈ 7 % of path (≈ 0.9 mm of a 13 mm jar), and the 14 % worst 
 jar is not returning to the same *effective depth of liquid in the beam* — exactly the variable §16.7.4 flagged
 as unpinned.
 
-**3. The good news: a pure path change CANCELS in the pigment ratio.** `A = ε·c·l` in both bands, so
-`A_Soret/A_Q` is independent of `l`. The level channel therefore does **not** threaten the verdict — it scales
-absolute absorbance, which matters for cross-run comparability and for any future calibrated (rather than
-ratio-based) metric. **Tilt is the enemy of the verdict; level is the enemy of absolute numbers.** The probe now
-reports them separately for that reason.
+**3. ⚠ CORRECTED — "level cancels in the ratio" is only half true, and the wrong half is the dangerous one.**
+Two different things move the measured level, and they behave oppositely:
+
+- **Path length** (more or less liquid in the beam): `A = ε·c·l`, so **both bands scale together** and
+  `A_Soret/A_Q` is **exactly** invariant — verified: ×0.9, ×1.1, ×1.2 all give 5.563. Harmless for the verdict.
+- **Throughput mismatch between the R capture and the S capture** (light lost or gained in the optics, not in
+  the liquid): `A_measured = A_true − log10(k)`, an **additive offset**. That does *not* cancel, and because the
+  denominator `A_Q ≈ 0.144` is small the offset eats a large fraction of it:
+
+  | level mismatch R vs S | offset in A | pigment ratio error |
+  |---|---|---|
+  | 2 % | 0.009 | **+5.2 %** |
+  | 5 % | 0.021 | **+14.2 %** |
+  | 14 % | 0.057 | **+53.6 %** |
+
+  ⇒ **a throughput mismatch is MORE damaging than a tilt of the same size**, and it is the same additive term
+  that shows up as the non-zero red-anchor "baseline" (0.09–0.12 measured, §16.7). The probe reports tilt and
+  level separately, but **both must be small** — the earlier claim that level was benign applies only to the
+  path-length half.
 
 **4. The instrument itself is excellent.** The untouched control reached **0.02 % tilt / 0.04 % level** — so the
 camera, lamp and reduction chain contribute essentially nothing at this timescale. Every bit of the error under
