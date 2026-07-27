@@ -1778,6 +1778,30 @@ SNV diff       2.615   2.672        <- ordinary members of the pack (all nine: 2
 The nine same-sample runs give **SD 0.0325 (CV 1.2 %)**, leave-one-out **0.019–0.035** — no single run carries
 it. And the 2023 classes remain cleanly split with **no overlap** (green 2.410–2.533, brown 1.920–2.158).
 
+**⭐ Run 003 is a DOCUMENTED fault, and it is the single best piece of evidence here.** Edwin observed the jar
+**sitting badly** on that run — the exclusion is causal, not statistical, and it is recorded as such. Which makes
+003 a natural experiment: one *observed* seating fault, put through both metrics.
+
+| | run 003 | the other eight | distance | error |
+|---|---|---|---|---|
+| **raw S/Q** | 6.691 | 4.722 ± 0.529 | **3.7 σ** | **+42 %** |
+| **SNV difference** | 2.615 | 2.597 ± 0.034 | **0.5 σ** | **+1 %** |
+
+**SNV absorbs a known, seen, physical fault almost completely.** That is a far stronger claim than "it reduces
+unexplained scatter" — the scatter has a name, Edwin watched it happen, and the correction repairs it. It also
+closes the loop on the whole §16.7 chain: re-seating → geometry change → additive/multiplicative error → SNV is
+the standard correction for that error → the observed bad seat is corrected.
+
+*(Note the exclusion does NOT flatter SNV: removing 003 improves the raw ratio a lot — CV 16.6 % → 11.2 %,
+d_today 1.55 → 2.41 — and leaves SNV essentially unchanged, 13.52 → 12.87. The incumbent gains from the cut and
+still loses by 5×.)*
+
+**⚠ The same exclusion cannot settle the diffuser question.** With 003 out for cause the diffuser arm reads CV
+8.8 % (n=4) against 14.3 % (n=4) — but **F = 0.37 on df 3,3, needing 9.3.** And with each group minus its own
+worst run the ranking reverses (8.8 % vs 4.2 %). **A comparison whose verdict flips with the outlier rule is not
+a result.** Fix the rule before the data: n ≥ 6 per arm, pre-registered exclusion criteria (a documented physical
+cause, as here — never "it looks wrong").
+
 **⚠ Why this is a lead and not a switch:**
 1. Nine runs, **one sample, one day, one instrument state**. The class gap still comes from the 2023 set.
 2. Under *stable* conditions the raw ratio is the better discriminator (2023 d 10.39 vs 6.69) — SNV buys immunity
