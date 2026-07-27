@@ -2327,7 +2327,20 @@ being ratioed against a jar-in measurement — each block is compared only again
 and the jar re-seat at 2.84 %. If the empty-beam blocks land near the control, that is a *useful negative*: it
 confines the entire problem to the jar's own optics, which is what §16.9.2's aperture addresses.
 
-#### 16.9.3f RESULT — the HOLDER is in the beam *(2026-07-27, `--disturb stack`, empty)*
+#### 16.9.3f RESULT — ⚠ CONFOUNDED, the DIFFUSER moved too *(2026-07-27, `--disturb stack`, empty)*
+
+> **Read the conclusion below as provisional.** Edwin: the frosted glass was still in place during this run,
+> **it carries dirt that cannot be cleaned off** (it came from an old camera lens), and **it moved when the jar
+> holder was nudged.** So three things moved together — camera, holder, and a *patterned absorber* — and the
+> tilt/level below cannot be attributed to the holder. A retry with **no diffuser and no jar** is the clean
+> version and is the next run.
+>
+> **The dirt is itself a finding, and a simple rule falls out of it:** a fixed pattern in the beam is
+> **harmless** — it is common to the reference and the sample, so it cancels in `T = S/R`. It only becomes an
+> error source **when it moves**. As deployed (dirty, loose, riding with the jar/holder) the diffuser was
+> therefore a *net negative*, which fits every null and negative result it has produced: §16.7.2g's
+> indistinguishable A/B, and quite possibly the level inflation measured here. **If a diffuser is kept, it must
+> be rigidly fixed — cleanliness matters far less than immobility.**
 
 Camera **and** holder nudged ~1 mm, **no jar at all**, 6 rounds:
 
@@ -2358,8 +2371,9 @@ and S captures moves the pigment ratio by **≈ 6 %** (§16.7.2c's additive-offs
 have to be *touched* between reference and sample for this to bite — it only has to **relax**, and 73 % of each
 excursion here was permanent.
 
-⇒ **Priority after this run:** (1) rigid stack / hinged access, (2) aperture built into the holder,
-(3) diffuser mount — still last, and now clearly so.
+⇒ **Priority, pending the clean retry:** (1) rigid stack / hinged access, (2) aperture built into the holder,
+(3) diffuser — now questionable at any position while it is dirty and loose; **immobility, then cleanliness,
+then placement**, in that order of importance.
 
 ### 16.9.4 Verification — and it must be pre-registered this time
 
