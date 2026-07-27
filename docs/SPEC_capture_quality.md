@@ -1703,6 +1703,40 @@ therefore testable: the best window should be the one whose baseline fraction be
 **fix the instrument first**, and if the baseline wander survives, test *Soret 450–460* on fresh data — both
 classes, n ≥ 15, one optical configuration — before touching `PB_SORET_BAND`.
 
+#### 16.7.2j Broadening the Q band — tested, and it fails on BOTH axes *(2026-07-27)*
+
+Proposal: widen the Q window, e.g. start it at 500 nm. Unlike the narrowing test (§16.7.2i) this one is
+unambiguous — **every widening is monotonically worse on both axes** (Soret held at 440–460):
+
+| Q band | today CV | 2023 d | gap / CV |
+|---|---|---|---|
+| **560–580 (current)** | **16.6 %** | **10.39** | **2.47** |
+| 555–585 | 18.1 % | 9.37 | 2.25 |
+| 550–590 | 19.4 % | 8.59 | 2.14 |
+| 520–590 | 22.5 % | 6.61 | 1.88 |
+| 500–590 | 24.5 % | 5.98 | 1.72 |
+| 500–560 | 32.3 % | 3.89 | 1.31 |
+
+Separation falls because the added region is not pigment-specific — the class difference lives in the Q *peak*,
+not in the clarity shoulder (the 500–540 band alone scored d = 4.03, §16.8.1). **The current 560–580 is at the
+optimum of everything tested, in both directions.**
+
+**⭐ The reproducibility half is the important finding, because it identifies the noise.** Widening a window
+should *reduce* a band mean's scatter as `1/√bins`. It does the opposite:
+
+| window | bins | CV of A | `1/√n` predicts |
+|---|---|---|---|
+| 565–575 | 68 | 18.0 % | (reference) |
+| 560–580 | 137 | 17.7 % | 12.7 % |
+| 550–590 | 274 | 19.9 % | 9.0 % |
+| 520–620 | 687 | **21.8 %** | **5.7 %** |
+
+⇒ **the error is a COHERENT offset across wavelength, not per-bin noise.** Ten times the bins buys nothing; the
+CV even rises as more of the wandering baseline is included. This closes off a whole family of would-be fixes:
+**more bins, heavier smoothing, longer bursts and more frames cannot touch this error.** Only two things can —
+**instrument stability** (remove the wander) or a **baseline-differential metric** (subtract the common term,
+§16.7.2h). That is the same conclusion three independent analyses have now reached.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
