@@ -3062,6 +3062,60 @@ and **0.31 %** under equal weighting — a factor of ~26.
 remains. Equal weighting also does **not** make the fit width-invariant — a wider window moves its own centroid,
 and that legitimately changes the line.
 
+### 16.10.10 The blank's own tilt does NOT predict a run's error — a useful NULL *(2026-07-27)*
+
+Idea: the blank is captured every run through the same geometry, so `R`'s own spectral tilt should fingerprint
+that run's seating and let the error be regressed out of data already collected. Tested on all 25 runs
+(`diagnostics/reference_tilt_covariate.py`; tilt = slope of log₁₀ R per 100 nm — **log** so a pure throughput
+change is an offset and the scalar reads SHAPE, not brightness):
+
+| metric | r | t (n=25) | variance explained |
+|---|---|---|---|
+| S/Q raw | +0.129 | 0.63 | 1.7 % |
+| S/Q linear base | −0.200 | 0.98 | 4.0 % |
+
+**Null** (needs \|t\| > 2.07). Regressing it out moves *d* 2.88 → 3.05, but at r = −0.20 that is fitting noise;
+**not adopted**.
+
+**Why it had to be null, and why that matters.** The error is not "R has a tilt" — it is that the geometry
+**differs between the R capture and the S capture**, because the jar is emptied and refilled in between.
+`T = S/R` cancels whatever geometry is *common* to both; what survives is the **change**. R's absolute tilt
+describes R's geometry alone and is structurally incapable of reporting the R→S difference. The null therefore
+**confirms** §16.10.1 rather than contradicting it — and it promotes the bracketing protocol below from a nice
+check to *the only way to observe the quantity that does the damage*.
+
+### 16.10.11 A third gauge zone — "inconclusive, measure again" *(2026-07-27, analysed; impl on request)*
+
+Zone = threshold × (1 ± f), on the 25 runs at the shipped 10.3:
+
+| f | zone | inconclusive | confident wrong | LOFO wrong |
+|---|---|---|---|---|
+| 0 % | — | 0/25 | 0 | **1** |
+| 2 % | 10.09–10.51 | 0/25 | 0 | 0 |
+| **4 %** | **9.89–10.71** | **3/25** | **0** | **0** |
+| 10 % | 9.27–11.33 | 9/25 | 0 | 0 |
+| 15 % | 8.76–11.85 | 13/25 | 0 | 0 |
+
+At 2 % it costs nothing and neutralises the single leave-one-fill-out error (brown `C002`, which becomes
+"measure again" instead of wrong). At 4 % it costs 3 runs — `E006`, `C002`, `B008`, precisely the boundary
+cases already known — for a clean sheet. **Recommend f = 4 %, documented as pragmatic.**
+
+⚠ **The uncomfortable part.** Within-series CV is ~10 %, so one run's σ ≈ 1.0 in metric units and a
+*statistically honest* zone would be ±1–2σ = **±10–20 %** — which makes half the measurements inconclusive.
+The truthful statement is that **single-run precision does not support confident verdicts near the threshold at
+all**; a narrow zone is a compromise, not a rigorous interval. The real fix is the median of 3 fills (σ ÷ 1.7,
+§16.10.4) plus the seat, after which ±6 % would carry the weight ±10 % does today.
+
+### 16.10.12 Idea backlog — marked, not built *(2026-07-27, Edwin)*
+
+| # | idea | status | note |
+|---|---|---|---|
+| **B1** | **Bracket the sample between two blanks: R → S → R** | **marked for later** | Free, no hardware. If the two blanks disagree, the geometry moved *during the run* and it can be discarded. **Promoted by §16.10.10's null** — it is the only protocol that observes the R→S change, which is the quantity that actually causes the error. It also directly measures the R-to-S stability that §16.10.5's manufacturability argument rests on. |
+| **B2** | **Internal standard doped into the SAMPLE** | **postponed** | A trace of a stable dye with a sharp band where the oil is featureless. Its band amplitude measures path × concentration *for that run*, so the oil bands are normalised by it and **dilution stops being an assumption and becomes a measurement** — which is what §16.10.8 is blocked on. Will NOT fix tilt (a shape error, not an amplitude one). Cost: a consumable, plus finding a dye that misses the useful parts of 440–630. |
+| B3 | Rotate the jar 120° between replicates | idea | Converts an arbitrary-but-fixed per-fill bias into something closer to random, so the median of 3 (§16.10.4) actually averages it down. Free. |
+| B4 | Weigh the oil instead of counting drops (~€15 scale) | idea | "2 drops" varies 10–20 %. §16.10.8 cannot resolve dilution invariance while dilution itself is known only to ±15 %. |
+| B5 | Double-beam bypass channel | idea | Split light *around* the jar onto a different strip of the **slit height** — the grating disperses each height independently, so one exposure yields two spectra on different sensor rows. Lamp/exposure/WB drift then appears in both and divides out exactly, per frame. **Does not see the jar's seating** (the bypass never traverses it), so it kills the small terms, not the 98 % one. |
+
 **Still open (not implemented):** the near-zero denominator guard. `ratio()` clamps at `EPS = 1e-3`, so a run
 that drove the corrected Q to ≤ 0 would yield an enormous ratio, clamp to the band's left edge, and report a
 confident **"good — green"**. Today's denominators ran 0.062–0.114, i.e. ≥ 62× the guard, so it is nowhere near
