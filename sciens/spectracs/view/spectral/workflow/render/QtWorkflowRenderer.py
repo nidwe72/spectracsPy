@@ -144,19 +144,35 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
             grid.addWidget(field, row, 1, 1, 1)
         self.__metricGrid[2] = row + 1
 
+    # Below this camera DN a bin is quantization-limited (SPEC_capture_quality.md §17.6/11); drawn as a line on
+    # DN-axis plots so "too dilute / too dark" is visible instead of inferred.
+    __LOW_DN_GUARD = 16.0
+
     def visitSpectrumPlot(self, view):
         # P2: draw a real curve (pyqtgraph) from the view's traces + shaded band annotations. Supports the
         # single-spectrum case and multi-trace overlays (Reference + Sample).
         import pyqtgraph as pg
         from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
+        from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
         plot = SpectrumPlotWidget()
         palette = ["y", "c", "m", "g", "r"]
         traces = view.allTraces() if hasattr(view, "allTraces") else [(view.spectrum, None, None)]
+        # axis="dn": raw capture spectra are drawn on a camera-DN axis (§16.7.2e) — display-only, the values
+        # themselves stay linear everywhere else.
+        asDn = getattr(view, "axis", None) == "dn"
+        util = SpectralColorUtil()
         first = True
         for index, (spectrum, _label, color) in enumerate(traces):
-            plot.plotSpectrum(spectrum, title=(view.title if first else None),
+            plot.plotSpectrum(util.toDisplayDnSpectrum(spectrum) if asDn else spectrum,
+                              title=(view.title if first else None),
                               color=(color or palette[index % len(palette)]), clear=first)
             first = False
+        if asDn:
+            plot.getPlotItem().setLabel("left", "camera DN")
+            guard = pg.InfiniteLine(pos=self.__LOW_DN_GUARD, angle=0,
+                                    pen=pg.mkPen((200, 120, 60), style=Qt.PenStyle.DashLine))
+            guard.setZValue(-5)
+            plot.addItem(guard)
         for band in (getattr(view, "bands", None) or []):
             region = pg.LinearRegionItem(values=(band[0], band[1]), movable=False,
                                          brush=pg.mkBrush(120, 120, 120, 40))

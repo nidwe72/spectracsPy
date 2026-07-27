@@ -625,17 +625,33 @@ class CapturePanel(QWidget):
         plot = self.__spectrumPlot
         if plot is None:
             return
+        # Drawn on a CAMERA-DN axis, not in linear light (SPEC_capture_quality.md §16.7.2e). This plot is an
+        # EXPOSURE instrument: every judgement taken from it — clipping at 255, the AE target at 245,
+        # quantization below 16 — is a sensor fact, and on a linear axis those landmarks collapse into the
+        # bottom few percent (16..60 DN occupies 4% of the height). The pipeline keeps the linear values.
         title = "Reference" if role == REFERENCE else "Sample"
         if spectrum is None:
             plot.plotSpectrum(None, title=title)
             return
+        util = SpectralColorUtil()
         frames = spectrum.getCapturedValuesByNanometers()
         plot.plotSpectrum(None, title=title)  # clear + set title
+        plot.getPlotItem().setLabel("left", "camera DN")
+        self.__drawLowDnGuard(plot)
         for values in frames:
             frameSpectrum = Spectrum()
             frameSpectrum.setValuesByNanometers(dict(values))
-            plot.addTrace(frameSpectrum, color=self.__FRAME_COLOR, width=1)
-        plot.addTrace(self.__meanSpectrum(spectrum), color=self.__MEAN_COLOR, width=2)
+            plot.addTrace(util.toDisplayDnSpectrum(frameSpectrum), color=self.__FRAME_COLOR, width=1)
+        plot.addTrace(util.toDisplayDnSpectrum(self.__meanSpectrum(spectrum)),
+                      color=self.__MEAN_COLOR, width=2)
+
+    def __drawLowDnGuard(self, plot):
+        # The line the operator judges dilution against: below it a bin is quantization-limited (§17.6/11).
+        import pyqtgraph as pg
+        guard = pg.InfiniteLine(pos=self.__LOW_DN_WARN, angle=0,
+                                pen=pg.mkPen((200, 120, 60), style=Qt.PenStyle.DashLine))
+        guard.setZValue(-5)
+        plot.addItem(guard)
 
     def __meanSpectrum(self, spectrum):
         parameters = MeanSpectrumLogicModuleParameters()
