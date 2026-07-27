@@ -112,7 +112,7 @@ number.** Worth resolving before the claim is used externally.
 
 **The instrument's borderline zone probably coincides with the EYE's borderline zone.** A strongly over-roasted
 oil reads ~8.0 and resolves on one fill — and a miller can *see* that one. A mildly brown oil sits at ~9.4,
-needs three fills, and often still returns BORDERLINE (§16.10.17d: only 52 % of brown triplets resolve even
+needs three fills, and often still returns ÜBERGANG (§16.10.17d: only 52 % of brown triplets resolve even
 after the 10.6 policy move) — and that is precisely where human judgement also fails.
 
 So at today's precision the value is **NOT "detects what the eye cannot"**. It is:
@@ -161,7 +161,7 @@ Why this is more than a nice phrase:
    yields a defensible record *with expertise behind it* — which neither produces separately.
 2. **Disagreement is the payload, not the failure.** Miller says green, tool says brown ⇒ something wants
    attention: an unusual sample, or the miller's internal calibration has drifted.
-3. **A BORDERLINE verdict is a feature.** When both are unsure, "unsure" is the truth. A tool that manufactures
+3. **An ÜBERGANG verdict is a feature.** When both are unsure, "unsure" is the truth. A tool that manufactures
    certainty where none exists is worse than useless. §16.10.17c's third outcome is therefore a design virtue,
    not an admission.
 4. **⭐ The strongest form — a miller acclimatises, an instrument does not.** If the product drifts slowly over a

@@ -3117,7 +3117,7 @@ describes R's geometry alone and is structurally incapable of reporting the R→
 **confirms** §16.10.1 rather than contradicting it — and it promotes the bracketing protocol below from a nice
 check to *the only way to observe the quantity that does the damage*.
 
-### 16.10.11 A third gauge zone — "inconclusive, measure again" *(2026-07-27, analysed; impl on request)*
+### 16.10.11 A third gauge zone — ÜBERGANG, "measure again" *(2026-07-27, analysed; impl on request)*
 
 Zone = threshold × (1 ± f), on the 25 runs at the shipped 10.3:
 
@@ -3385,7 +3385,7 @@ FILL 1
 MEDIAN OF 3
    >= 11.6   ->  GREEN                (T + 9 %, = T + 1.96 sigma_3)
    <=  9.6   ->  BROWN                (T - 9 %)
-   else      ->  BORDERLINE
+   else      ->  ÜBERGANG   (transition -- see 16.10.17c for the term)
 ```
 
 Three fills nearly **halve** the clearance needed (2.7 units → 1.0) because σ halves. At the earlier
@@ -3399,7 +3399,7 @@ did. The 99 % early exit against a 95 % final gate is crude alpha-spending; the 
 
 #### 16.10.17c Wording
 
-> **Borderline after fill 1:**
+> **Übergang after fill 1:**
 > "This sample sits close to the green/brown boundary — one measurement can't settle it.
 > Prepare a **fresh fill** and measure again. Two more will decide it."
 
@@ -3416,13 +3416,20 @@ The point is **independence**: if the operator sees the verdict first they are a
 between human and instrument — which is most of the product's value — stops meaning anything. Same
 anti-anchoring principle as withholding the direction on a borderline re-fill, applied one step earlier.
 
+**⚠ TERMINOLOGY — the third state is „ÜBERGANG", never „grenzwertig"** *(Edwin 2026-07-27)*. Colloquial German
+„grenzwertig" means *dubious / pushing it*, so it **condemns the oil** — when the truth is that the
+**measurement** has not separated it. Nothing is wrong with a sample that lands there. „Übergang" describes the
+*region* (and matches what the gradient bar literally does: grün → Übergang → braun) without a verdict on the
+product. The same word is used on the customer flyer. English prose in this spec still uses *borderline*
+adjectivally ("a borderline reading") — that is analysis language, not a user-facing label.
+
 Outcomes:
 
 | | |
 |---|---|
 | ✅ | **"Green — consistent with a good roast."** *(high confidence)* |
 | 🔴 | **"Brown — consistent with over-roasting."** *(high confidence)* |
-| ⚪ | **"Borderline — this oil sits between the two classes.** Three fills did not separate it. That is a real result: the sample is genuinely near the boundary." |
+| ⚪ | **„Übergang — diese Probe liegt zwischen den beiden Klassen."** Drei Füllungen haben sie nicht getrennt. Das ist ein echtes Ergebnis: die Probe liegt im Übergangsbereich. |
 
 The third **must** read as an answer, not a failure — presented as a failure the operator keeps measuring until
 it tips, and the trap returns. And **no percentage labelled "% green"** may reach the UI: the number is
@@ -3440,7 +3447,7 @@ dominated by green, which supplies 119 of the 140 triplets. Split by class it is
 
 The classes are **not equidistant** from the threshold: green's mean sits **1.86 σ** above 10.3, brown's only
 **1.23 σ** below. So a brown oil essentially never resolves on one fill, and a *mildly* brown one (fill `C`,
-mean 9.371 — triplet medians land at P ≈ 0.06–0.08, just missing the 0.05 gate) often stays BORDERLINE even
+mean 9.371 — triplet medians land at P ≈ 0.06–0.08, just missing the 0.05 gate) often stays in ÜBERGANG even
 after three. A strongly brown one (fill `D`, mean 8.44) resolves easily.
 
 **Why:** 10.3 was placed midway between the observed *extremes* (worst green 10.506, best brown 10.011) — a
