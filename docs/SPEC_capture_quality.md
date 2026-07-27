@@ -1212,6 +1212,101 @@ and is the *seed* of the eventual `CameraService`.
 W6 (POSTPONED): red/green stability guard at measurement time (item c). Single-owner CameraService: later.
 ```
 
+### 16.7.0 ⭐ SUMMARY OF THE 2026-07-27 INVESTIGATION — read this first
+
+§16.7–§16.9 were written as the day unfolded, so they are chronological and long. This is the consolidated
+result. Everything below was measured on Edwin's rig with `diagnostics/cuvette_reseat_probe.py` and the same
+paired untouched control, or replayed from the archived report PDFs.
+
+**The question:** three same-sample runs scattered **CV 14.2 %** where the 2023 series held **3.6 %**.
+Same instrument, same jar handling.
+
+#### The error budget — instrument side
+
+| source | tilt (corrupts the ratio) | where measured |
+|---|---|---|
+| **jar seating + its own optics** | **2.81 %** | §16.9.3h (2.84 % total minus the cone's 0.39 %) |
+| holder nudge | 0.56 % | §16.9.3f |
+| camera nudge | 0.42 % | §16.9.3d |
+| cone lifted off and replaced | 0.39 % | §16.9.3h |
+| untouched control | **0.04–0.09 %** | every run |
+
+**⇒ the jar is ~98 % of the variance.** The cone joint, which has a defined seat, is *more* repeatable than a
+1 mm nudge of the camera — **the fix is a keyed seat for the jar, not more careful handling.**
+
+#### The error budget — sample side
+
+| | 2023 series | 2026 fresh oil |
+|---|---|---|
+| `A_Q` (the denominator) | 0.172–0.247 | 0.212 |
+| of which broad **baseline** | ~50 % | **72 %** |
+| **pigment** content | 0.079–0.135 | **0.059** |
+| error amplification `0.434/A_Q` | 2.1 | 4.5 → **1.9** after the recipe fix |
+
+**⇒ the 2026 oils are not the 2023 oils.** Only the *pigment* half of the denominator co-varies with the Soret
+band and cancels in the ratio; the baseline half does not. Halving the pigment content doubles the damage from
+the same physical disturbance (§16.7.2l).
+
+#### What was ESTABLISHED
+
+1. **The error model:** `A_measured = k·A_true + b`, with `b` **coherent across wavelength** — proved by the
+   bin-scaling test (widening a band makes the CV *rise*, where random noise would make it fall, §16.8.2/§16.7.2j).
+   **⇒ more bins, more smoothing, longer bursts and more frames cannot touch this error.**
+2. **It is heavy-tailed** — "usually fine, occasionally awful" (tilts 6.71 · 0.82 · 1.05 · 2.10 · 1.11 · 5.23).
+   **⇒ report the MEDIAN of 3–4 fills, never the mean** (§16.7.2f).
+3. **Waiting does not help**: 76 % of each disturbance is permanent; the jar lands in a *new* optical state and
+   holds it (§16.7.2b).
+4. **The live plot must be drawn in DN** — the linear trace hides the usable-but-dim range in its bottom 4 % and
+   directly caused a series of over-diluted measurements (§16.7.2e). **Implemented.**
+5. **The recipe**: 0.333 drops/ml, batched as **18 ml + 6 drops**, verified to put the darkest bin at 18–26 DN
+   and the amplification back to 1.9 (`SPEC_capability_proof.md` §7.3).
+
+#### What was RULED OUT — each with its evidence
+
+| suspect | verdict | evidence |
+|---|---|---|
+| the brightness law (§17) | **innocent** | undoing the decode changes S/Q by **0.00e+00** |
+| normalizing before the ratio | **no-op** | 8.9e-16 |
+| sample ageing | **innocent** | the three runs go up then down, not monotone |
+| narrower or wider bands | **rejected** | 560–580 is optimal in *both* directions (§16.7.2i/j) |
+| moving the denominator band | **rejected** | d 10.39 → 4.03 (§16.8.1) |
+| ΣRGB instead of max | **rejected** | d 10.34; a *gated* sum collapses to 3.33 (§16.8.2) |
+| de-baselining, on stable data | **rejected** | d 9.79 vs 10.39 (§16.7.2f) |
+| the diffuser | **no effect** | F = 1.47, p = 0.29 (n=5); dirty and loose it *adds* ~1.5 % level noise |
+| camera alignment / cone joint | **minor** | 0.42 % / 0.39 % against the jar's 2.81 % |
+
+#### The two live leads
+
+- **SNV difference** — `d_today = 13.52` against the raw ratio's 1.55, and it pulls the *observed* bad seating
+  (run 003, a 3.7 σ outlier) back to **0.5 σ**. It is the textbook correction for the error model derived above,
+  not a fit. **Needs validation on data it was not chosen from** (§16.7.2k).
+- **Sample clarification** — untested, cheap: let the dilution stand overnight or filter it, and watch `A_red`
+  fall. It attacks *why* the denominator is fragile rather than the disturbance that exploits it (§16.7.2l).
+
+#### Claims made and WITHDRAWN during the day *(kept deliberately — each was overturned by the next measurement)*
+
+| claim | why it fell |
+|---|---|
+| "it is the lamp — phosphor droop" | the drift probe's sign was **opposite** (§16.7.1) |
+| "the diffuser tightens the blank 3×, the scatter 6×" | an n = 2 artefact; gone at n = 4 (§16.7.2g) |
+| "level cancels in the ratio" | true only of the *path* half; a throughput mismatch does **not** (§16.7.2c) |
+| "the holder is in the beam" (from the level channel) | that was the moving **dirt**; the *tilt* evidence survives (§16.9.3f) |
+| "440–450 is floor-limited, so drop it" | it is the **steadiest** sub-band of all (§16.7.2i) |
+| "the green→red crossover hurts the Q band" | 570–580 is the *less* noisy half (§16.7.2i) |
+| "turbidity is excluded" | excluded only as *Rayleigh*; large-particle **grey** scattering fits (§16.7.2l) |
+
+#### ▶ Next, in order
+
+1. **Brown-2026 oil, 4–6 fills** — the one number that decides whether the verdict is safe in the direction that
+   matters (§16.7.2m). *Marked as the next step.*
+2. **Keyed jar seat + aperture, one printed part** — 98 % of the instrument error (§16.9).
+3. **Sample clarification test** — independent of the hardware.
+4. **SNV validation** — both classes, n ≥ 15, one optical configuration, fresh data.
+5. **Decide the 47/66 hue bands** — the L0 gate found 2 of 61 archived runs flip under linearization (§17.8.1);
+   still Edwin's call.
+
+---
+
 ### 16.7 Field evidence — the drift caught a dilution pair red-handed *(2026-07-27, measured)*
 
 Edwin measured the same oil at two dilutions five minutes apart — `NowSteirerkraftA` (2 drops in 8 ml, 00:03)
