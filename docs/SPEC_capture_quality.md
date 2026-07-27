@@ -2436,6 +2436,46 @@ near the 0.98 % nudge, the jar's own optics dominate after all and §16.9.2's ap
 
 **Do this before printing anything.** It is one 17-minute run and it decides which part gets built.
 
+#### 16.9.3h ANSWER — the cone is innocent; it really is the jar *(2026-07-27, `--disturb cone`)*
+
+Upper cone lifted off and replaced exactly as for a jar change, **beam empty, jar and holder untouched**,
+6 rounds:
+
+| | tilt mean | tilt max | level | control |
+|---|---|---|---|---|
+| **cone lift off/on** | **0.39 %** | 0.81 % | 0.25 % | 0.04 % |
+
+**Decomposition of the 2.84 % jar re-seat, which contains this by necessity:**
+
+```
+     full jar re-seat   2.84 %      (measured)
+     cone lift alone    0.39 %      (measured)
+     -> the JAR itself  2.81 %      (quadrature)   — the cone is 2 % of the variance
+```
+
+**The jar's own seating and optics are ~98 % of the problem.** A hinge or side-loading holder would buy
+essentially nothing. §16.9.3g's inversion scenario is closed: the aperture and the jar seat keep their priority.
+
+**Final ranking of the tilt error**, everything measured on the same rig, same probe, same control:
+
+| source | tilt | |
+|---|---|---|
+| **jar seating + its optics** | **2.81 %** | `############################` |
+| holder nudge (inside the stack test) | 0.56 % | `#####` |
+| camera nudge | 0.42 % | `####` |
+| cone lift off/on | 0.39 % | `###` |
+| untouched control | 0.04 % | |
+
+**A pleasant surprise in there:** the cone joint is *more* repeatable than a 1 mm nudge of the camera or holder
+(0.39 % vs 0.42 / 0.56 %) — a full lift-and-replace returns closer to true than a small push does. That is what a
+**defined seat** buys, and it is the argument for giving the *jar* one: the cone already has a seat, the jar does
+not. **The lesson generalises — the fix for the jar is a KEYED SEAT, not more care in handling.**
+
+⇒ **Build order, now settled by measurement:** (1) **keyed / kinematic jar seat + aperture built into the
+holder** — one printed part addressing 98 % of the error; (2) sample clarification (§16.7.2l), which is
+independent and attacks the *fragility* rather than the disturbance; (3) everything else — cone, camera,
+diffuser — is noise-floor housekeeping.
+
 ### 16.9.4 Verification — and it must be pre-registered this time
 
 Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below

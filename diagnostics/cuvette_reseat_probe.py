@@ -288,7 +288,9 @@ def main():
         if factor is None:
             pass
         elif reseatTilt < 0.5:
-            print("  => nothing was meaningfully disturbed this run (re-seat arm is at the noise floor).")
+            print("  => REAL but SMALL: %.0fx the floor, yet only %.2f%% of tilt in absolute terms. Rank it"
+                  % (factor, reseatTilt))
+            print("     against the other disturbances before spending effort on it.")
         elif factor >= 3.0 and arguments.disturb == "camera":
             print("  => ALIGNMENT IS AN ERROR SOURCE. Run this again with the diffuser fitted: if the factor")
             print("     drops, that is what the diffuser buys, measured on the variable it targets (§16.9.3c).")
@@ -326,9 +328,10 @@ def main():
             print("     (liquid slosh, mechanical relaxation) rather than a changed geometry. Protocol fix:")
             print("     pause after every change - and the curves above say how long.")
         elif residuals.mean() <= max(floor * 2.0, 0.5):
-            print("\n  => MOSTLY PERMANENT, but SMALL. %.0f%% of each excursion survives the pause, yet what")
+            print("\n  => MOSTLY PERMANENT, but SMALL. %.0f%% of each excursion survives the pause, yet what"
+                  % permanents.mean())
             print("     survives is close to the untouched floor (%.2f%% vs %.2f%%). The disturbance changes"
-                  % (permanents.mean(), residuals.mean(), floor))
+                  % (residuals.mean(), floor))
             print("     the geometry for good, but by little - this variable is not a major error source.")
         elif residuals.mean() >= jumps.mean() * 0.8:
             print("\n  => WAITING DOES NOT HELP. It is a PERMANENT STEP - the %s does not return to the same"
