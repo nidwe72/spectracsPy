@@ -503,6 +503,15 @@ existing 1:20 runs stay comparable.
 through liquid. **Only the batch concentration needs to be accurate** — so prepare the batch in whatever glass
 reads best, then simply fill the pot.
 
+> **⚠ CORRECTED 2026-07-27 — this holds only if the pot is filled to a REPEATABLE level.** The pot is a 3 cm ×
+> 1.3 cm screw-jar and the beam runs **vertically** through it, so the **path length is the fill depth**: 4 ml =
+> 0.57 cm, 6 ml = 0.85 cm, 8 ml = 1.13 cm. **1 ml ≈ 11 % of a full path ⇒ 11 % on absorbance** — the same order
+> as the ±25 % drop-count error this section calls the dominant prep term. The claim above is true for a cuvette
+> with a horizontal beam and a fixed width, not for this geometry. **Fix: fill the jar to the brim and close the
+> lid** — the path becomes the jar's own 1.3 cm, and the free liquid surface (a 3 cm meniscus sitting in the
+> beam) disappears with it. See `SPEC_capture_quality.md` §16.7.4, and §16.7.2/2b for what that free surface and
+> the re-seating cost: **a 5.3 % band of irreproducible optical states, ~10 % on the pigment ratio.**
+
 ```
 Prepare a BATCH at 1:30–1:33 in the measuring glass, swirl until clear
    6 ml isopropanol +  2 drops oil   = 1:30   (1 pot-fill  — improvised interim recipe)

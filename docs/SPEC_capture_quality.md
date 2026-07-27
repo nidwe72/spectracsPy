@@ -1355,6 +1355,61 @@ The `ph/pump` sequence also suggests **discrete seating states** rather than a c
 clustering around **0.667 ± 0.010** and **0.690 ± 0.004**, i.e. the cuvette drops into one of a couple of
 positions (rotated 180°? resting against a different wall?) with slow settling in between.
 
+#### 16.7.2b Waiting does NOT fix it — the 60 s settling test *(2026-07-27, second rig run)*
+
+Edwin's hypothesis after seeing the photo of his own rig: the pot is a wide shallow screw-jar with a **free
+liquid surface in the beam**, carried by a fragile stack of two 25 cm cones, so a change may disturb the
+**liquid and the mechanics** rather than the centring — in which case *waiting* would fix it. Tested directly:
+6 re-seats, each followed by a **60-second window sampled continuously**.
+
+| | tilt | implied ratio swing |
+|---|---|---|
+| peak excursion during the window | mean 4.62 %, max 8.90 % | — |
+| **settled, after the full 60 s** | **mean 3.34 %, max 5.11 %** | **10.1 %, max 15.4 %** |
+| untouched control | **0.09 %** | 0.3 % |
+
+> **The residual after a minute is 37× the untouched control. Waiting does not bring it back.**
+
+**But the curves refine the picture, and Edwin is partly right.** Per round, the share of the disturbance that
+survives the minute: **78 · 96 · 91 · 46 · 51 · 94 %** — on average **76 % permanent, 24 % transient**. There is
+a real settling component (round 5 fell to −8.9 % and was still climbing back at t = 60 s, last-third movement
+1.10 %), and a fast transient in the first ~2 s that the earlier one-shot test was measuring blind. It simply
+never returns to where it started.
+
+**The decisive observation is the state sequence.** The undisturbed `ph/pump` *before* each round reads
+`0.6923 · 0.6632 · 0.6828 · 0.6972 · 0.6890 · 0.6621` — a **5.3 % band** — while the no-touch control between
+rounds is **0.09 %**. So each re-seat lands the instrument in a **new random optical state inside that band, and
+it then holds that state until the next disturbance**. That is not a settling delay; it is
+**irreproducibility of the optical state after re-seating**, and no pause can cure it.
+
+**What is still open** is *which* element fails to reproduce — the jar's position, or the liquid surface inside
+it (a 3 cm meniscus is a lens, and contact-line pinning is genuinely discrete, which fits the clustering seen in
+the first run). **One experiment separates them: fill the jar to the brim, close the lid so there is no free
+surface and no air gap, and re-run this same probe.** If the scatter collapses, it was the liquid surface — and
+brim-filling is the fix. If it persists, it is the seating/mechanics and the answer is a keyed or clamped holder.
+That test also pins the path length (§16.7.4), so it is worth doing regardless.
+
+#### 16.7.4 The pot's fill level IS the path length — a correction to `SPEC_capability_proof.md` §7.3
+
+The pot is a **3 cm × 1.3 cm screw-jar** (photo, 2026-07-27) with the beam running **vertically** through it.
+`SPEC_capability_proof.md` §7.3 states *"the TRANSFER volume does not matter … the pot's fixed path length"*.
+That is true for a cuvette with a horizontal beam and a fixed width; **here the path length is whatever depth was
+poured**, and nothing in the protocol pins it:
+
+| poured | depth | vs a full jar |
+|---|---|---|
+| 4 ml | 0.57 cm | 44 % |
+| 6 ml | 0.85 cm | 65 % |
+| 8 ml | 1.13 cm | 87 % |
+| 9.2 ml | 1.30 cm | full |
+
+**1 ml ≈ 0.14 cm ≈ 11 % of a full path ⇒ 11 % straight onto absorbance** — comparable to the ±25 % drop-count
+error the spec already calls the dominant prep term. It also makes "2 drops in 6 ml vs 8 ml" ambiguous: pouring
+the *whole batch* in gives `c × l = 1.333 × 0.750 = 1.000` (identical absorbance, a null experiment), while
+pouring a *fixed* amount from each batch gives 1.333. The measured Soret ratio was 1.21, so probably the latter —
+but the experiment cannot say, which is the point. **Fill to the brim and close the lid**: the path becomes the
+jar's own 1.3 cm, and the free surface disappears with it.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
