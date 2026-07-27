@@ -2158,6 +2158,45 @@ light cost   measured: exposure 64 -> 256 (~4x). Affordable — headroom to 500 
 risk         RESOLUTION: filling the acceptance cone can blur the slit image -> re-verify calibration
 ```
 
+### 16.9.3b The EMPTY-BEAM measurement (Edwin's idea) — what it can and cannot answer
+
+Measuring the lamp **with no jar at all** is worth doing, but for two specific purposes rather than as a general
+reference.
+
+**⚠ First the limit, so it is not over-read.** The jar is a **refracting slab**: ~4 mm of acrylic at n ≈ 1.49
+plus ~10 mm of isopropanol at n ≈ 1.377 shift the focal plane by **≈ 4 mm** when it is removed. So *no jar* is a
+**different optical configuration**, not a neutral baseline — an empty-beam spectrum cannot serve as the
+reference for computing "the jar's transmission".
+
+**What it IS good for:**
+
+**(a) Separating instrument drift from jar handling.** Run `reference_drift_probe.py` with **no jar in the
+beam**. Whatever drifts then is lamp + optics + sensor alone. Compare with the same run *with* a jar left
+untouched: the difference is the jar's own contribution to drift (thermal creep in the acrylic, liquid settling,
+the holder relaxing). Today we cannot tell those apart.
+
+**(b) ⭐ Sizing the ring problem directly — the measurement that decides whether the aperture is worth
+building.** Four captures at **one pinned exposure** (chosen so the brightest cell does not clip):
+
+```
+                       no aperture      with aperture
+     no jar                 A                 B         <- pure geometric vignetting  = B/A
+     jar + blank            C                 D         <- vignetting + ring blocking = D/C
+
+     ring fraction   f_ring = 1 − (D/C)/(B/A)
+```
+
+Because the rings exist **only** when the jar is present, dividing out the no-jar column removes the aperture's
+plain geometric vignetting and leaves the wall-guided light alone. `f_ring` is then literally *the share of what
+the slit collects that came through the jar WALL rather than the liquid*. **A few percent would make the
+aperture the highest-value part in §16.9**, and it also predicts how much of the re-seat error it can remove —
+`f_ring` is the part that changes when the jar moves.
+
+**Protocol notes.** One exposure for all four cells (removing the jar raises the level, so pick the exposure on
+cell A). Do not auto-expose per cell — that would divide out the very thing being measured. Capture the ROI
+**image** as well as the spectrum: with and without the jar the rings should be directly visible in the
+difference, which is a useful sanity check on `f_ring` before trusting the arithmetic.
+
 ### 16.9.4 Verification — and it must be pre-registered this time
 
 Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below
