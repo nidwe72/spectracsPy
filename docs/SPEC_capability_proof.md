@@ -97,6 +97,67 @@ Cluster gap: **worst green 3.67 > best brown 2.59** — a clean, empty separatio
 > demonstrated on the oils that matter, and cannot be until the seat is fixed. **GO on discrimination, HOLD on
 > dilution invariance.**
 
+### ⚖ Where this stands after 2026-07-27 — will the mill profit? *(Edwin asked directly; honest read)*
+
+**The one-line summary of the day:** brown oil does read lower than green — in 2023 and again in 2026 — but a
+**single run cannot decide it**, so the workflow moved to a **multi-fill, median-of-3 paradigm** (§16.10.17)
+that earns its confidence instead of asserting it.
+
+**Amendment to that summary:** the effect is **much smaller on fresh oils than 2023 suggested**. The 2023 set
+gave *d* ≈ 10; today's fresh oils give ***d* = 1.24 on the raw ratio**, and it took the linear baseline to reach
+2.88. ⏳ **That 2023-vs-2026 gap has no explanation yet, and the capability claim currently leans on the larger
+number.** Worth resolving before the claim is used externally.
+
+#### The uncomfortable observation
+
+**The instrument's borderline zone probably coincides with the EYE's borderline zone.** A strongly over-roasted
+oil reads ~8.0 and resolves on one fill — and a miller can *see* that one. A mildly brown oil sits at ~9.4,
+needs three fills, and often still returns BORDERLINE (§16.10.17d: only 52 % of brown triplets resolve even
+after the 10.6 policy move) — and that is precisely where human judgement also fails.
+
+So at today's precision the value is **NOT "detects what the eye cannot"**. It is:
+
+| what it genuinely delivers | why the eye cannot |
+|---|---|
+| an **objective, recordable number** | the eye produces no artefact; a PDF with spectrum + verdict + embedded raw data is actionable by a buyer, lab or certification scheme ([`SPEC_lims_integration.md`](SPEC_lims_integration.md)) |
+| **consistency** across operators, batches, seasons | a fixed reference does not tire, does not acclimatise to a drifting product, does not disagree with the next person |
+| **contractual / incoming-goods** use | a number settles a dispute; an opinion does not |
+
+That is a real product. It is simply not yet the *"sees what you can't see"* product.
+
+#### What would convert it — and it is mechanical, not scientific
+
+σ = **9.7 %** today; §16.10.3's target is **~3 %**. At 3 % most samples decide on a **single fill**, and the
+marginal cases — the ones the eye fails on — begin to resolve. That is **a printed jar seat and a syringe-fill
+protocol** (§16.9.4), not a research programme. **This is the strongest argument for the mechanical work, and it
+is stronger than any of the statistical arguments in §16.10.**
+
+#### The real risk is dilution, not the metric
+
+If the reading depends on how carefully someone doses drops into isopropanol, **field use by a non-laboratory
+person is fragile** — and §16.10.8 established we currently *cannot measure* whether it does, because seating
+noise swamps the dilution term. This is the one open item that could **undermine** the concept rather than
+merely limit it. It is also **free to resolve**: syringe-fill in place, one session (§16.9.4a).
+
+#### Who the user actually is
+
+~20 minutes per verdict shapes the customer. That fits a **QC station, a laboratory, or a cooperative** far
+better than a miller mid-press — which points the same way as the market analysis's own conclusion
+(`spectracs-references/business/SPEC_wirtschaftliches.md` §7/§12: *the lab as channel partner*). A lab has the
+patience for three fills and **needs** the documentation; a busy miller has neither.
+
+#### Verdict
+
+The science is **sound, and today made it more sound, not less** — you now know what limits it, which is worth
+more than a flattering number. What is unproven is not the physics but the **field robustness**: one rig, one
+day, two oils, dilution invariance unmeasured.
+
+> **Do the syringe experiment (§16.9.4a) and one fresh session before telling anyone this is ready, and position
+> it first as a documentation-and-consistency instrument rather than a detection one.**
+
+That a single day of careful measurement could localise **98 %** of the error to one mechanical joint is itself
+the encouraging part. *Instruments that cannot be debugged do not become products.*
+
 ### Can we be hopeful? — honest read
 
 **Yes — and with the too-green class dropped, more so than before.** The biggest prior risk (green-vs-greener
