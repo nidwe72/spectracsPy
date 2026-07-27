@@ -3352,6 +3352,103 @@ Two conditions on any re-run: it must be a **new fill and a new seating** (re-ca
 same disturbance and is not a second opinion), and 10.0 is an **observed extreme on 25 runs** — observed extremes
 move outward as data accumulates, as the §16.10.7a margin trend already shows.
 
+### 16.10.17 End-user measurement protocol *(2026-07-27, Edwin approved the shape; DESIGN — impl on request)*
+
+The operator-facing form of §16.10.11a. Turns "the margin is 2 %" into a procedure a miller can run.
+
+#### 16.10.17a Why 3 fills — and it beats the theory
+
+σ of the **median** of n fills, measured empirically from every n-subset of the real data (not assumed):
+
+| n fills | σ_rel | vs n=1 | decided @95 % |
+|---|---|---|---|
+| 1 | 9.8 % | 1.00× | 8/25 |
+| 2 | 5.7 % | 1.71× | 15/25 |
+| **3** | **4.8 %** | **2.03×** | 16/25 |
+| 4 | 3.4 % | 2.90× | 20/25 |
+| 5 | 2.1 % | 4.60× | 22/25 |
+
+Median-of-3 tightens σ by **2.03×**, beating the √3 = 1.73 an *average* would give — because the error is
+heavy-tailed (§16.7.2f) and the median is the right estimator for that. **The data confirms lever C's premise
+(§16.10.4).**
+
+#### 16.10.17b The decision table
+
+σ single fill = **1.01**, σ median-of-3 = **0.49** (metric units, threshold T = 10.3).
+
+```
+FILL 1
+   >= 12.9   ->  GREEN, done          (T + 25 %, = T + 2.58 sigma)
+   <=  7.7   ->  BROWN, done          (T - 25 %)   -- theoretical, see 16.10.17d
+   else      ->  take 2 more fills
+
+MEDIAN OF 3
+   >= 11.3   ->  GREEN                (T + 9 %, = T + 1.96 sigma_3)
+   <=  9.3   ->  BROWN                (T - 9 %)
+   else      ->  BORDERLINE
+```
+
+Three fills nearly **halve** the clearance needed (2.6 units → 1.0) because σ halves. In today's data 5 of 16
+green runs clear 12.9 — **≈31 % of green samples finish after one fill**; the rest go to three.
+
+⚠ **The stopping rule must be FIXED IN ADVANCE.** This is §16.10.16's trap in another guise: if the operator may
+keep adding fills until the answer looks decided, the error rate inflates exactly as *"re-run until it goes low"*
+did. The 99 % early exit against a 95 % final gate is crude alpha-spending; the statistically clean variant is
+**always three fills, no early exit**. Ship the clean one unless the 31 % early exit is worth the complexity.
+
+#### 16.10.17c Wording
+
+> **Borderline after fill 1:**
+> "This sample sits close to the green/brown boundary — one measurement can't settle it.
+> Prepare a **fresh fill** and measure again. Two more will decide it."
+
+**Deliberately WITHOUT the direction.** If the operator knows it leaned brown, a brown-ish second reading reads
+as *confirmation* and invites stopping there — optional-stopping bias re-entering through the human. Withhold
+direction until the protocol completes. (Harmless to show it in a fully automated flow with no human decision.)
+
+**"Fresh fill" is not pedantry** — re-capturing the same fill repeats the same seating disturbance and adds no
+information at all (§16.10.10). The screen must not say merely "measure again".
+
+Outcomes:
+
+| | |
+|---|---|
+| ✅ | **"Green — consistent with a good roast."** *(high confidence)* |
+| 🔴 | **"Brown — consistent with over-roasting."** *(high confidence)* |
+| ⚪ | **"Borderline — this oil sits between the two classes.** Three fills did not separate it. That is a real result: the sample is genuinely near the boundary." |
+
+The third **must** read as an answer, not a failure — presented as a failure the operator keeps measuring until
+it tips, and the trap returns. And **no percentage labelled "% green"** may reach the UI: the number is
+P(above threshold) (§16.10.11a). A qualitative "high confidence" badge is defensible; "96 % green" is not.
+
+#### 16.10.17d ⚠ BROWN is the harder call — and the threshold embeds an unmade decision
+
+*Correction to a pooled figure quoted earlier in the session: "85 % of triplets resolve" is true overall but is
+dominated by green, which supplies 119 of the 140 triplets. Split by class it is very different:*
+
+| | resolved at fill 1 (99 %) | resolved after 3 fills (95 %) |
+|---|---|---|
+| green | 5/16 = **31 %** | 114/119 triplets = **96 %** |
+| brown | 0/9 = **0 %** | 5/21 triplets = **24 %** |
+
+The classes are **not equidistant** from the threshold: green's mean sits **1.86 σ** above 10.3, brown's only
+**1.23 σ** below. So a brown oil essentially never resolves on one fill, and a *mildly* brown one (fill `C`,
+mean 9.371 — triplet medians land at P ≈ 0.06–0.08, just missing the 0.05 gate) often stays BORDERLINE even
+after three. A strongly brown one (fill `D`, mean 8.44) resolves easily.
+
+**Why:** 10.3 was placed midway between the observed *extremes* (worst green 10.506, best brown 10.011) — a
+placement that protects the green verdict and pays for it in brown detection power.
+
+| threshold | green protected | brown detected | in-sample errors |
+|---|---|---|---|
+| **10.3** *(shipped)* | strongly | weakly | 0/25 |
+| ~10.6 *(midway between class MEANS)* | weakly | strongly | 2/25 (`B008` 10.604, `E006` 10.506 flip) |
+
+**For a quality-control instrument the usual instinct is the opposite of what ships: passing bad oil as good is
+normally the costlier error.** Not to be changed on 25 runs from one day — the class means are exactly what more
+data will move — but it is **a product decision, not a midpoint formula**, and the current setting silently
+answers it. ⏳ **OPEN: Edwin to decide which error is costlier.**
+
 **Still open (not implemented):** the near-zero denominator guard. `ratio()` clamps at `EPS = 1e-3`, so a run
 that drove the corrected Q to ≤ 0 would yield an enormous ratio, clamp to the band's left edge, and report a
 confident **"good — green"**. Today's denominators ran 0.062–0.114, i.e. ≥ 62× the guard, so it is nowhere near
