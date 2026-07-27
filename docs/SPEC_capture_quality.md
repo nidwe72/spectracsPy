@@ -2080,6 +2080,50 @@ band starts trading into the quantization floor.
 and none of them substitutes for it: not the bands, not the reduction, not the diffuser, not the metric, not
 waiting, not averaging alone.
 
+#### 16.7.2p SNV applied to BOTH 2026 classes — halves the errors, does not rescue the verdict *(2026-07-27)*
+
+§16.7.2k proposed SNV on the green set alone. Applied to both — 8 green fills (`20260727B`, 003 excluded for
+documented cause) and 6 brown (`20260727C`):
+
+| metric | green | brown | d ± SE | **misclassified (leave-one-out)** |
+|---|---|---|---|---|
+| **S/Q** | 4.722 ± 0.529 | 4.105 ± 0.467 | 1.23 ± 0.59 | **4 / 14 = 29 %** |
+| **SNV difference** | 2.597 ± 0.034 | 2.515 ± 0.072 | 1.55 ± 0.61 | **2 / 14 = 14 %** |
+
+**SNV halves the error rate — but the two are statistically indistinguishable.** The `d` difference is 0.32 and
+each carries SE ≈ 0.6, so on this pair of oils the metric choice is **not** resolved by the data; only the
+counted errors favour SNV, and 2-vs-4 out of 14 is itself a thin margin.
+
+**The failure mode is asymmetric, and that matters for a product.**
+
+```
+   SNV  green 2.563 2.572 2.580 2.581 2.594 2.604 2.611 2.672
+        brown 2.375 2.516 2.527 2.537 2.563 2.572   <- only the top TWO browns reach into the green range
+```
+
+**SNV classifies every green correctly (0/8); all its errors are browns leaking upward** — the green set is 2×
+tighter in SNV (SD 0.034 vs 0.072). For an Ampel whose job is to *catch* over-roasted oil, that is the **wrong**
+asymmetry: it never cries wolf, and it misses one brown in three. S/Q's errors are spread both ways (3 green,
+1 brown).
+
+**With the median of 3 fills**, same thresholds: S/Q → 15.6 % / 12.6 %; SNV → **1.9 % green / 16.1 % brown**.
+SNV's asymmetry survives averaging, because averaging cannot fix a *gap* that is only 1.1 brown-SDs wide.
+
+**⚠ One outlier behaves differently in the two sets, and it bounds what SNV can do.**
+
+| | S/Q | SNV |
+|---|---|---|
+| `B/003` — documented bad seat | 6.691 (3.7 σ) | **2.615 — corrected, mid-pack** |
+| `C/006` | 3.223 | **2.375 — still the low outlier** |
+
+SNV removes an offset-and-scale error (`B/003`, a seating fault) but **not a change of spectral shape**. `C/006`
+also carried `A_Q = 0.379` against 0.25–0.31 for its siblings — a genuinely different spectrum, not a
+mis-seating. **So SNV is a correction for the disturbance, not a repair for a bad sample.**
+
+⇒ **Verdict on the metric question: keep S/Q for now.** SNV is ahead on counted errors, behind on the asymmetry
+that matters, and level with S/Q statistically. Neither reaches a usable error rate on these oils, because both
+are limited by the same 11 % instrument scatter — **which is the keyed seat's job, not the metric's** (§16.7.2o).
+
 #### 16.7.2n The jar-wall rings, and WHERE the diffuser belongs *(Edwin's observation, 2026-07-27)*
 
 Edwin, from visual inspection: the diffuser does homogenise the disk nicely, **but the jar's WALLS throw rings
