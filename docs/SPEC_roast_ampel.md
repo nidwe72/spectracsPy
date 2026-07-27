@@ -81,7 +81,7 @@ subtracted before taking Soret ÷ Q — rather than by the raw ratio §1 describ
 
 | | raw Soret/Q | linear baseline |
 |---|---|---|
-| threshold | **4.4** | **10.3** |
+| threshold | **4.4** | **10.6** *(policy, see below)* |
 | band | 6.0 → 3.0 | 15.0 → 7.0 |
 | errors, 25 runs of 2026-07-27, leave-one-**fill**-out | 9 / 25 | **1 / 25** |
 | classes on that set | **overlap** by 1.005 | separate, gap +0.495 |
@@ -92,8 +92,22 @@ the raw ratio removes neither, so it inherits the instrument's dominant error (`
 comparable, only their verdicts are**, and a disagreement is informative. Live example — green run `B006` reads
 4.137 → *"probably too brown"* on the old gauge (a misclassification) and 11.352 → *"good — green"* on the new.
 
-**⚠ 10.3 is PROVISIONAL, and more so than 4.4 was.** It is anchored on one day, one rig, one oil pair, n = 25,
-with the nearest run only **+2.0 %** clear — and that margin has *tightened* with every new batch. Separation is
+**The threshold is 10.6 by DECISION, not by fit** *(Edwin 2026-07-27, `SPEC_capture_quality.md` §16.10.17d)*.
+The fitted value was 10.3 — the midpoint of the observed extremes — but that placement silently protected the
+GREEN verdict and paid for it in brown detection power: only **5 %** of brown triplets resolved at 95 %
+confidence, against 96 % of green ones. Since **passing bad oil is the costlier error**, the line moved to
+midway between the class *means*, giving both classes comparable headroom:
+
+| | 10.3 | **10.6** |
+|---|---|---|
+| brown triplets resolved @95 % | 5 % | **52 %** |
+| green triplets resolved @95 % | 96 % | 80 % |
+| in-sample misclassifications | 0/25 | 1/25 (green `E006`) |
+
+A false BROWN costs a re-check; a false GREEN ships bad oil. Budget **1–2** accepted false-browns, not exactly
+one: `B008` clears the line by 0.004 and could land either way on a repeat.
+
+**⚠ 10.6 is PROVISIONAL, and more so than 4.4 was.** It is anchored on one day, one rig, one oil pair, n = 25. Separation is
 demonstrated at **fixed dilution only**; dilution invariance is unresolved (§16.10.8) because seating noise alone
 produces as much spread as a 2.19× dilution change. The band edges and the two quiet windows were chosen *after*
 seeing the tilt problem, so they are fitted, not independent. **Second opinion, not headline**, until a fresh

@@ -3374,22 +3374,23 @@ heavy-tailed (§16.7.2f) and the median is the right estimator for that. **The d
 
 #### 16.10.17b The decision table
 
-σ single fill = **1.01**, σ median-of-3 = **0.49** (metric units, threshold T = 10.3).
+σ single fill ≈ **1.04**, σ median-of-3 ≈ **0.51** (metric units, at the shipped **T = 10.6**, §16.10.17d).
 
 ```
 FILL 1
-   >= 12.9   ->  GREEN, done          (T + 25 %, = T + 2.58 sigma)
-   <=  7.7   ->  BROWN, done          (T - 25 %)   -- theoretical, see 16.10.17d
+   >= 13.3   ->  GREEN, done          (T + 25 %, = T + 2.58 sigma)
+   <=  7.9   ->  BROWN, done          (T - 25 %)   -- theoretical, see 16.10.17d
    else      ->  take 2 more fills
 
 MEDIAN OF 3
-   >= 11.3   ->  GREEN                (T + 9 %, = T + 1.96 sigma_3)
-   <=  9.3   ->  BROWN                (T - 9 %)
+   >= 11.6   ->  GREEN                (T + 9 %, = T + 1.96 sigma_3)
+   <=  9.6   ->  BROWN                (T - 9 %)
    else      ->  BORDERLINE
 ```
 
-Three fills nearly **halve** the clearance needed (2.6 units → 1.0) because σ halves. In today's data 5 of 16
-green runs clear 12.9 — **≈31 % of green samples finish after one fill**; the rest go to three.
+Three fills nearly **halve** the clearance needed (2.7 units → 1.0) because σ halves. At the earlier
+T = 10.3 the fill-1 gate was 12.9 and 5 of 16 green runs cleared it (≈31 %); at 10.6 the gate rises to 13.3, so
+the one-fill shortcut fires **less often** — part of the price of the stricter policy.
 
 ⚠ **The stopping rule must be FIXED IN ADVANCE.** This is §16.10.16's trap in another guise: if the operator may
 keep adding fills until the answer looks decided, the error rate inflates exactly as *"re-run until it goes low"*
@@ -3445,9 +3446,26 @@ placement that protects the green verdict and pays for it in brown detection pow
 | ~10.6 *(midway between class MEANS)* | weakly | strongly | 2/25 (`B008` 10.604, `E006` 10.506 flip) |
 
 **For a quality-control instrument the usual instinct is the opposite of what ships: passing bad oil as good is
-normally the costlier error.** Not to be changed on 25 runs from one day — the class means are exactly what more
-data will move — but it is **a product decision, not a midpoint formula**, and the current setting silently
-answers it. ⏳ **OPEN: Edwin to decide which error is costlier.**
+normally the costlier error.** It is **a product decision, not a midpoint formula**, and 10.3 silently answered
+it the wrong way round.
+
+#### ✅ DECIDED 2026-07-27 (Edwin): passing bad oil is the costlier error → **threshold = 10.6**, IMPLEMENTED
+
+| | T = 10.3 | **T = 10.6** |
+|---|---|---|
+| brown triplets resolved @95 % | 1/21 = 5 % | **11/21 = 52 %** ← the point of the change |
+| green triplets resolved @95 % | 114/119 = 96 % | 95/119 = 80 % |
+| in-sample misclassifications | 0/25 | 1/25 |
+| fill-1 green gate | 12.90 | **13.28** |
+| 3-fill gates | ≥ 11.27 / ≤ 9.33 | **≥ 11.60 / ≤ 9.60** |
+
+**Brown detection ×10.** The accepted cost is green `E006` (10.506) reading brown.
+
+⚠ **Budget for 1–2 accepted false-browns, not exactly 1:** `B008` clears the new line by **0.004** (10.604 vs
+10.600) — functionally a coin flip that could land either way on a repeat. The direction is deliberate: a false
+BROWN costs a re-check, a false GREEN ships bad oil.
+
+The decision table in §16.10.17b is stated for T = 10.3; **the shipped gates are the 10.6 column above.**
 
 **Still open (not implemented):** the near-zero denominator guard. `ratio()` clamps at `EPS = 1e-3`, so a run
 that drove the corrected Q to ≤ 0 would yield an enormous ratio, clamp to the band's left edge, and report a

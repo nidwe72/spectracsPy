@@ -147,25 +147,40 @@ class RoastBaselineGaugeTest(unittest.TestCase):
     def __verdict(self, value):
         return self.view(value, render=None).verdictLabel
 
-    def test_it_separates_every_run_of_2026_07_27(self):
-        # The claim in §16.10.7 / §16.10.7a: all 12 green above all 9 brown, no run on the wrong side.
-        for value in self.GREEN:
-            self.assertEqual(self.__verdict(value), "good — green", "green run %.3f misclassified" % value)
+    # §16.10.17d — the threshold moved 10.3 -> 10.6 as a POLICY choice (passing bad oil is the costlier
+    # error), which deliberately accepts a small number of false BROWNs. These are the accepted ones.
+    ACCEPTED_FALSE_BROWN = [10.506]      # 20260727E/006
+
+    def test_no_brown_run_is_ever_called_green(self):
+        # THE asymmetric guarantee the 10.6 policy buys: a false GREEN ships bad oil, so this direction
+        # must be clean. It is the assertion that would have to fail before the threshold is lowered again.
         for value in self.BROWN:
-            self.assertEqual(self.__verdict(value), "probably too brown", "brown run %.3f misclassified" % value)
+            self.assertEqual(self.__verdict(value), "probably too brown",
+                             "brown run %.3f called GREEN — the costly direction" % value)
+
+    def test_green_runs_are_correct_except_the_accepted_false_browns(self):
+        for value in self.GREEN:
+            if value in self.ACCEPTED_FALSE_BROWN:
+                self.assertEqual(self.__verdict(value), "probably too brown",
+                                 "%.3f is documented as an accepted false brown" % value)
+                continue
+            self.assertEqual(self.__verdict(value), "good — green", "green run %.3f misclassified" % value)
 
     def test_the_out_of_sample_runs_are_classified_by_the_unrefitted_threshold(self):
         # §16.10.7a — these six were measured AFTER the threshold was fixed. Called out separately from the
-        # anchoring set above because only THIS assertion is evidence rather than curve-fitting: a threshold
-        # always classifies the data it was drawn from.
+        # anchoring set because only THIS assertion is evidence rather than curve-fitting: a threshold always
+        # classifies the data it was drawn from. (They pre-date the 10.6 policy move and still all pass.)
         for value in self.FRESH_GREEN:
             self.assertEqual(self.__verdict(value), "good — green")
         for value in self.FRESH_BROWN:
             self.assertEqual(self.__verdict(value), "probably too brown")
 
-    def test_the_threshold_sits_between_the_two_classes(self):
-        self.assertGreater(min(self.GREEN), self.view._THRESHOLDS[0])
-        self.assertLess(max(self.BROWN), self.view._THRESHOLDS[0])
+    def test_the_threshold_sits_above_the_brown_class_and_is_deliberately_strict(self):
+        threshold = self.view._THRESHOLDS[0]
+        self.assertGreater(threshold, max(self.BROWN))          # no brown may reach it
+        self.assertLess(threshold, min(v for v in self.GREEN    # but it IS above the lowest green, on purpose
+                                       if v not in self.ACCEPTED_FALSE_BROWN))
+        self.assertLess(min(self.GREEN), threshold)             # ...which is what makes it strict
 
     def test_the_band_brackets_every_observed_run(self):
         # A value past an edge clamps the marker only (RD#5), but the scale should not need to clamp real data.
