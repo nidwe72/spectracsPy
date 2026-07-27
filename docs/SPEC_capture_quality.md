@@ -2327,6 +2327,40 @@ being ratioed against a jar-in measurement — each block is compared only again
 and the jar re-seat at 2.84 %. If the empty-beam blocks land near the control, that is a *useful negative*: it
 confines the entire problem to the jar's own optics, which is what §16.9.2's aperture addresses.
 
+#### 16.9.3f RESULT — the HOLDER is in the beam *(2026-07-27, `--disturb stack`, empty)*
+
+Camera **and** holder nudged ~1 mm, **no jar at all**, 6 rounds:
+
+| disturbance | tilt | level | control |
+|---|---|---|---|
+| jar re-seat (jar in) | **2.84 %** | 1.68 % | 0.09 % |
+| camera nudge (jar in) | 0.42 % | 0.44 % | 0.09 % |
+| **camera + holder (EMPTY beam)** | **0.99 %** | **2.23 %** | 0.05 % |
+
+**19× the untouched floor with no jar present at all** — so this is pure mechanics, and §16.9.3e's *informative*
+case has landed: **the holder is intercepting light.** Adding it to the camera nudge multiplies the tilt **2.4×**
+and the level **5.1×**. An empty holder cannot affect anything optically unless it is part of the aperture, so
+that is what it is.
+
+**Two consequences, one of them a correction to how the earlier numbers should be read.**
+
+1. **The holder is already an aperture — a badly-defined one.** That settles where §16.9.2's mask belongs: it is
+   not a new part bolted on, it is **the holder done properly** — a defined, centred, matte-black opening
+   instead of whatever the current body happens to occlude.
+2. **⚠ If a jar change also lifts the upper cone, the 2.84 % jar figure CONTAINS this.** Edwin's stack is an
+   upper cone *placed onto* a lower tube; if it must come off to reach the jar, then every "jar re-seat" was
+   also a stack re-seat. Decomposed: jar alone ≈ **1.85 %** (linear) or **2.66 %** (quadrature). **Open
+   question for Edwin: does changing the jar require lifting the upper cone?** If yes, a rigid or hinged stack
+   removes a third of the error before the aperture is even printed.
+
+**The level number is the one to watch.** 2.23 % of throughput, and a level mismatch of that size between the R
+and S captures moves the pigment ratio by **≈ 6 %** (§16.7.2c's additive-offset algebra). The stack does not
+have to be *touched* between reference and sample for this to bite — it only has to **relax**, and 73 % of each
+excursion here was permanent.
+
+⇒ **Priority after this run:** (1) rigid stack / hinged access, (2) aperture built into the holder,
+(3) diffuser mount — still last, and now clearly so.
+
 ### 16.9.4 Verification — and it must be pre-registered this time
 
 Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below

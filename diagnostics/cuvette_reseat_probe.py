@@ -284,9 +284,13 @@ def main():
         elif factor >= 3.0 and arguments.disturb == "camera":
             print("  => ALIGNMENT IS AN ERROR SOURCE. Run this again with the diffuser fitted: if the factor")
             print("     drops, that is what the diffuser buys, measured on the variable it targets (§16.9.3c).")
-        elif factor >= 3.0:
+        elif factor >= 3.0 and arguments.disturb == "jar":
             print("  => CUVETTE SEATING IS AN ERROR SOURCE. No warm-up protocol fixes this; the R->S->R' bracket")
             print("     (SPEC §16.7) catches it, and so would clamping/keying the cuvette holder.")
+        elif factor >= 3.0:
+            print("  => THE %s IS AN ERROR SOURCE at %.0fx the untouched floor. Compare it with the jar re-seat"
+                  % (arguments.disturb.upper(), factor))
+            print("     figures (§16.7.2c) to see where it ranks, and make it RIGID if it ranks high.")
         elif factor <= 1.5:
             print("  => seating looks INNOCENT — re-seating is no worse than doing nothing. The 5% A/B tilt")
             print("     must then come from something else (the liquid itself, or an event we have not sampled).")
@@ -319,9 +323,10 @@ def main():
                   % (permanents.mean(), residuals.mean(), floor))
             print("     the geometry for good, but by little - this variable is not a major error source.")
         elif residuals.mean() >= jumps.mean() * 0.8:
-            print("\n  => WAITING DOES NOT HELP. It is a PERMANENT STEP - the jar does not return to the same")
-            print("     optical state. Fix the seating instead (fill to the brim, keyed holder), or never")
-            print("     re-seat between reference and sample.")
+            print("\n  => WAITING DOES NOT HELP. It is a PERMANENT STEP - the %s does not return to the same"
+                  % arguments.disturb)
+            print("     optical state. Fix it mechanically (rigid mount / keyed seat); a pause cannot recover")
+            print("     a geometry that has moved for good.")
         else:
             print("\n  => PARTLY. Some settles out, a residual step remains - both mechanisms are present.")
             print("     Waiting is worth doing, but it is not sufficient on its own.")
