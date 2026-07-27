@@ -2192,10 +2192,43 @@ the slit collects that came through the jar WALL rather than the liquid*. **A fe
 aperture the highest-value part in §16.9**, and it also predicts how much of the re-seat error it can remove —
 `f_ring` is the part that changes when the jar moves.
 
+**⚠ Corrected by Edwin (2026-07-27): there are TWO rings, not one.** The lamp itself throws a ring — light
+diffusing through the outline of its own disk — which is present **with or without the jar**, and which Edwin
+describes as *"more calm"*. That does not break the 2×2; it explains what it measures:
+
+| ring | present | behaviour | what it costs |
+|---|---|---|---|
+| **lamp ring** | always | fixed — the lamp does not move | **ACCURACY**: a constant stray fraction compresses high absorbances (the Soret most) |
+| **jar-wall ring** | only with the jar | changes on every re-seat | **REPRODUCIBILITY**: it is the run-to-run wander |
+
+The lamp ring appears in **both columns** of the 2×2 and therefore **cancels in the ratio-of-ratios** — so
+`f_ring` still isolates the jar's *marginal* contribution, which is precisely the part that varies with seating.
+(First-order: the jar also refracts the lamp ring, so the cancellation is approximate, not exact.) A calm,
+constant ring is the *benign* kind — it biases the number without scattering it, and the same aperture removes
+both.
+
 **Protocol notes.** One exposure for all four cells (removing the jar raises the level, so pick the exposure on
 cell A). Do not auto-expose per cell — that would divide out the very thing being measured. Capture the ROI
 **image** as well as the spectrum: with and without the jar the rings should be directly visible in the
 difference, which is a useful sanity check on `f_ring` before trusting the arithmetic.
+
+**⭐ Run the block TWICE — with the diffuser and without (Edwin, 2026-07-27).** The diffuser costs ~4× light, so
+one exposure cannot span both; instead pin an exposure **per block**. `f_ring` is a ratio-of-ratios *within* a
+block, so it stays exposure-independent and the two blocks remain comparable.
+
+```
+   block 1: NO diffuser      (lamp -> jar -> slit)          exposure pinned on its own cell A
+   block 2: diffuser ON JAR  (as Edwin has it today)        exposure pinned on its own cell A
+   -> f_ring(no diffuser)  vs  f_ring(diffuser on jar)
+```
+
+**This is a falsifiable test of §16.7.2n's central claim.** If a diffuser in the jar's plane smears the rings
+across the whole field, then with it fitted the aperture can no longer *selectively* block them — the ring light
+is everywhere — so **`f_ring` should come out SMALLER with the diffuser on the jar while the contamination is
+unchanged or worse**. If instead `f_ring` is the same in both blocks, the smearing argument is wrong and the
+diffuser is optically neutral about placement (leaving only the mechanical reason to move it). Either way the
+answer is one extra block of four captures, and it decides where the diffuser belongs on evidence rather than on
+my reasoning.
 
 ### 16.9.4 Verification — and it must be pre-registered this time
 
