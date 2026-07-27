@@ -1903,10 +1903,56 @@ and worse if its CV is nearer the green's.** So the argument *"the brown is safe
 wander"* **does not hold for these oils**: they are intrinsically closer together than the 2023 pair (24 % apart
 vs 41 %) *and* individually more fragile. In 2023 that argument would have been sound; in 2026 it is not.
 
-**The missing measurement is small and decisive: 4–6 fills of the 2026 BROWN oil.** Its CV is the one number
+**▶ NEXT STEP — the missing measurement is small and decisive: 4–6 fills of the 2026 BROWN oil.** Its CV is the one number
 that decides whether the verdict is safe in the direction that matters (catching an over-roasted oil). If it
 lands near 4–5 % the brown side is workable while the green stays noisy; if it lands near the green's, the whole
 2026 pair needs the instrument fix or the SNV metric before any verdict is trustworthy.
+
+#### 16.7.2n The jar-wall rings, and WHERE the diffuser belongs *(Edwin's observation, 2026-07-27)*
+
+Edwin, from visual inspection: the diffuser does homogenise the disk nicely, **but the jar's WALLS throw rings
+around it** — and the spectrometer slit probably does not sit exactly over the jar's centre.
+
+**The rings are a real error source, and of the right kind.** Light entering the acrylic wall is refracted and
+guided, emerging around the disk having travelled a **different path** — much of it never crossing the full
+liquid depth. Any of it that reaches the slit is **stray light**: signal that did not experience the sample's
+absorption. Two consequences, both matching what we measure:
+- stray light **biases high absorbances low** (it caps `A_max` at `−log10(f)` for a stray fraction `f`), which
+  bites hardest in the Soret band — the numerator;
+- **its share depends on where the jar sits**, so it changes on every re-seat. That is precisely the
+  geometry-coupled error §16.7.2 has been chasing.
+
+**⭐ Mounting the diffuser at the SLIT is better than on the jar — for two independent reasons.**
+
+1. **Mechanical (already established).** On the jar it is lifted and re-seated every time, so it is part of the
+   disturbance (§16.7.2g explains the null result that way).
+2. **Optical, and this one is the subtle one.** A diffuser *at the jar* becomes a new extended source **in the
+   jar's own plane**: it takes the disk **and the rings** and smears them together, so ring light is mixed into
+   everything the slit sees — it can make stray light *worse* even while the field looks more uniform. A
+   diffuser *at the slit* only scrambles the light that **already arrived** there; it cannot import ring light
+   that the geometry was not already delivering. It homogenises the **angular** distribution entering the
+   grating, which is exactly what makes the response independent of how the beam arrives.
+
+That is also standard instrument practice: fibre spectrometers use a **cosine corrector / diffuser at the
+entrance** for precisely this reason. Edwin's instinct matches the textbook. Costs to accept: light (already
+seen, exposure 64 → 256, affordable per §16.7.2f) and possibly a little spectral resolution, since the diffuser
+fills the acceptance cone.
+
+**But the targeted fix for the rings is not the diffuser at all — it is an APERTURE.** A black mask over the jar
+with a central hole (≈ 15–20 mm of the 30 mm jar) blocks the wall-guided light at its source, before any optics
+can mix it in. Cheap, printable as part of the holder, and it has a bonus: it **fixes the illuminated area**, so
+the measured geometry stops depending on how the jar is centred. Diffuser and aperture solve *different*
+problems and are complementary:
+
+| | what it fixes |
+|---|---|
+| **aperture over the jar** | *which* light is measured — blocks wall/ring stray light |
+| **diffuser at the slit** | *how* the light arrives — removes angular/positional sensitivity |
+
+**Cheap test for whether stray light is actually significant:** measure a deliberately **over-concentrated**
+sample (say 3× the standing recipe). Without stray light `A_Soret` scales linearly with concentration; with a
+stray fraction `f` it **flattens off** toward `−log10(f)`. The concentration at which it stops rising gives `f`
+directly — and if it flattens early, the aperture is worth building before anything else.
 
 #### 16.7.3 What follows from it
 
