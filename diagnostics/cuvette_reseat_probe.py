@@ -84,6 +84,49 @@ def delta(before, after):
                 level=(after["level"] / before["level"] - 1.0) * 100)
 
 
+def watchSettle(backend, roi, coefficients, frames, seconds, before):
+    """Sample continuously for `seconds` after the jar was disturbed, printing the curve as it goes.
+
+    Tilt is measured against the UNDISTURBED `before`, so the first reading is the jump the change caused and the
+    last is what survives once it has settled. Those two numbers are the whole experiment: liquid slosh and
+    mechanical settling DECAY over the window, a changed geometry HOLDS."""
+    print("   settling window - %.0f s, do NOT touch anything now" % seconds)
+    reference = before["phosphor"] / before["pump"]
+    started, series, sample = time.time(), [], None
+    while time.time() - started < seconds:
+        current = capture(backend, roi, coefficients, max(2, frames // 3))
+        if current is None:
+            break
+        sample = current
+        elapsed = time.time() - started
+        tilt = ((sample["phosphor"] / sample["pump"]) / reference - 1.0) * 100
+        series.append((elapsed, tilt))
+        print("      t=%5.1fs   ph/pump %7.4f   tilt %+6.2f%%"
+              % (elapsed, sample["phosphor"] / sample["pump"], tilt))
+    return series, sample
+
+
+def settleReport(series, noiseFloor=0.26):
+    """Did it calm down, and what is left? Compares the FIRST third of the window against the LAST third."""
+    if len(series) < 6:
+        return None
+    third = max(2, len(series) // 3)
+    early = np.array([t for _e, t in series[:third]])
+    late = np.array([t for _e, t in series[-third:]])
+    jump, residual = series[0][1], float(np.mean(late))
+    recovered = ((abs(jump) - abs(residual)) / abs(jump) * 100) if abs(jump) > noiseFloor * 2 else float("nan")
+    earlySpread, lateSpread = float(early.max() - early.min()), float(late.max() - late.min())
+    print("      jump %+.2f%% -> settled %+.2f%%   |   movement: first third %.2f%%, last third %.2f%%"
+          % (jump, residual, earlySpread, lateSpread))
+    if abs(jump) <= noiseFloor * 2:
+        print("      (the jump is at the noise floor - nothing was really disturbed)")
+    else:
+        print("      -> %.0f%% of the jump recovered; the trace is %s at the end"
+              % (recovered, "STILL MOVING" if lateSpread > earlySpread * 0.5 else "STEADY"))
+    return dict(jump=jump, residual=residual, recovered=recovered,
+                earlySpread=earlySpread, lateSpread=lateSpread)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Cuvette re-seating repeatability (SPEC_capture_quality §16.7.1)")
     parser.add_argument("--changes", type=int, default=6, help="number of cuvette re-seats (default 6)")
@@ -92,10 +135,10 @@ def main():
                         help="seconds to let the sensor settle before starting (measured: ~1.6%% over 10 min)")
     parser.add_argument("--device", type=int, default=None)
     parser.add_argument("--exposure", type=int, default=None)
-    parser.add_argument("--relax", type=float, default=0.0,
-                        help="after each re-seat, watch for N seconds instead of capturing once. THE "
-                             "DISCRIMINATOR: liquid sloshing / mechanical settling RELAXES back over time, a "
-                             "changed geometry is a permanent STEP. The last reading is used as the 'after'.")
+    parser.add_argument("--relax", type=float, default=60.0,
+                        help="seconds to WATCH after each jar change (default 60). The window is analysed live, "
+                             "and the SETTLED value is what counts as the 'after': liquid slosh and mechanical "
+                             "settling decay over it, a changed geometry holds. 0 = one capture, no window.")
     parser.add_argument("--roi", default=None, help="X1,Y1,X2,Y2")
     parser.add_argument("--coeffs", default=None, help="A,B,C,D px->nm cubic")
     arguments = parser.parse_args()
@@ -129,6 +172,7 @@ def main():
     print("We are measuring the SEATING, not the contents.\n")
 
     rounds = []
+    settles = []
     previousAfter = None
     for index in range(1, arguments.changes + 1):
         print("--- round %d of %d ---" % (index, arguments.changes))
@@ -145,32 +189,10 @@ def main():
         except EOFError:
             print("   (non-interactive — continuing without a re-seat)")
         if arguments.relax > 0:
-            print("   watching it settle for %.0fs — do NOT touch anything now" % arguments.relax)
-            relaxEnd = time.time() + arguments.relax
-            started, series = time.time(), []
-            while time.time() < relaxEnd:
-                sample = capture(backend, roi, coefficients, max(2, arguments.frames // 3))
-                if sample is None:
-                    break
-                elapsed = time.time() - started
-                tilt = ((sample["phosphor"] / sample["pump"])
-                        / (before["phosphor"] / before["pump"]) - 1.0) * 100
-                series.append((elapsed, tilt))
-                print("      t=%5.0fs  ph/pump %7.4f   tilt vs before %+6.2f%%" % (elapsed, sample["phosphor"] / sample["pump"], tilt))
-            after = sample
-            if len(series) >= 3:
-                # Settling shows as |tilt| shrinking from the first reading to the last; a geometry step holds.
-                firstTilt, lastTilt = abs(series[0][1]), abs(series[-1][1])
-                if firstTilt < 0.5:      # noise floor is ~0.26% — below this there is no jump to interpret
-                    print("      -> initial jump %+.2f%% is within the noise floor: nothing was disturbed"
-                          % series[0][1])
-                else:
-                    recovered = (firstTilt - lastTilt) / firstTilt * 100
-                    print("      -> initial %+.2f%% settled to %+.2f%% (%.0f%% of the jump recovered) => %s"
-                          % (series[0][1], series[-1][1], recovered,
-                             "SETTLING (liquid / mechanics — it relaxes back)" if recovered > 50 else
-                             "PERMANENT STEP (geometry — it stays put)" if recovered < 20 else
-                             "MIXED: part settles, part is permanent"))
+            series, after = watchSettle(backend, roi, coefficients, arguments.frames, arguments.relax, before)
+            report = settleReport(series)
+            if report is not None:
+                settles.append(report)
         else:
             after = capture(backend, roi, coefficients, arguments.frames)
         if after is None:
@@ -204,9 +226,20 @@ def main():
     if notouch:
         reseatTilt = np.abs([d["tilt"] for d in reseats]).mean()
         notouchTilt = np.abs([d["tilt"] for d in notouch]).mean()
-        factor = reseatTilt / notouchTilt if notouchTilt else float("inf")
-        print("\n  re-seating moves the spectrum %.1fx as much as leaving it alone." % factor)
-        if factor >= 3.0:
+        # The control can read ~0 by luck on a short run; dividing by it manufactures a huge, meaningless
+        # factor. Floor the denominator at the measured noise level and refuse a verdict on a weak control.
+        if len(notouch) < 2 or notouchTilt < 0.05:
+            print("\n  control arm too small/quiet to compare against (n=%d, %.3f%%) — run more rounds."
+                  % (len(notouch), notouchTilt))
+            factor = None
+        else:
+            factor = reseatTilt / notouchTilt
+            print("\n  re-seating moves the spectrum %.1fx as much as leaving it alone." % factor)
+        if factor is None:
+            pass
+        elif reseatTilt < 0.5:
+            print("  => nothing was meaningfully disturbed this run (re-seat arm is at the noise floor).")
+        elif factor >= 3.0:
             print("  => CUVETTE SEATING IS AN ERROR SOURCE. No warm-up protocol fixes this; the R->S->R' bracket")
             print("     (SPEC §16.7) catches it, and so would clamping/keying the cuvette holder.")
         elif factor <= 1.5:
@@ -214,6 +247,31 @@ def main():
             print("     must then come from something else (the liquid itself, or an event we have not sampled).")
         else:
             print("  => inconclusive at this sample size; run more rounds (--changes 12).")
+    if settles:
+        jumps = np.abs([r["jump"] for r in settles])
+        residuals = np.abs([r["residual"] for r in settles])
+        floor = float(np.abs([d["tilt"] for d in notouch]).mean()) if notouch else 0.26
+        sensitivity = 0.434 / A_Q          # tilt % -> pigment-ratio % at Edwin's dilution
+        print("\n=== DOES WAITING IT OUT FIX IT?  (%.0f s window after each change) ===" % arguments.relax)
+        print("  right after the change : tilt mean %5.2f%%  max %5.2f%%   -> ratio %5.1f%% / %5.1f%%"
+              % (jumps.mean(), jumps.max(), jumps.mean() * sensitivity, jumps.max() * sensitivity))
+        print("  after the window       : tilt mean %5.2f%%  max %5.2f%%   -> ratio %5.1f%% / %5.1f%%"
+              % (residuals.mean(), residuals.max(), residuals.mean() * sensitivity, residuals.max() * sensitivity))
+        print("  untouched control      : tilt mean %5.2f%%" % floor)
+        if jumps.mean() < max(floor * 2.0, 0.4):
+            print("\n  => NO REAL DISTURBANCE was applied (the jumps are at the noise floor), so there is")
+            print("     nothing to settle and nothing to conclude. This is the null case.")
+        elif residuals.mean() <= max(floor * 2.0, 0.5):
+            print("\n  => WAITING WORKS. What survives the pause is down at the untouched noise floor, so the")
+            print("     disturbance is the LIQUID and the MECHANICS settling, not a changed geometry.")
+            print("     Protocol fix: pause after every jar change - and the curves above say how long.")
+        elif residuals.mean() >= jumps.mean() * 0.8:
+            print("\n  => WAITING DOES NOT HELP. It is a PERMANENT STEP - the jar does not return to the same")
+            print("     optical state. Fix the seating instead (fill to the brim, keyed holder), or never")
+            print("     re-seat between reference and sample.")
+        else:
+            print("\n  => PARTLY. Some settles out, a residual step remains - both mechanisms are present.")
+            print("     Waiting is worth doing, but it is not sufficient on its own.")
     print("\n  For scale: Edwin's A/B pair differed by 5.04% tilt, which swung the pigment ratio 20-28%.")
     return 0
 
