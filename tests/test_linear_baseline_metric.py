@@ -90,9 +90,16 @@ class LinearBaselineMetricTest(unittest.TestCase):
 class RoastBaselineGaugeTest(unittest.TestCase):
     """The second gauge must classify the 2026-07-27 runs the way §16.10.7 says it does."""
 
-    # All 15 runs of 2026-07-27 (spectracs-references/tmp/20260727B + C), linear-baseline values.
-    GREEN = [11.471, 12.047, 11.342, 14.209, 11.620, 11.681, 14.162, 10.565, 11.921]
-    BROWN = [9.855, 10.002, 9.406, 9.649, 9.543, 7.714]
+    # All 21 runs of 2026-07-27, linear-baseline values as the plugin computes them (de-spiked).
+    #   anchoring set  (§16.10.7)  20260727B = green, 20260727C = brown
+    #   OUT-OF-SAMPLE  (§16.10.7a) 20260727E = green, 20260727D = brown — measured AFTER the threshold
+    #                              was fixed, and classified 6/6 by it with nothing refitted.
+    ANCHORING_GREEN = [11.460, 12.048, 11.352, 14.186, 11.616, 11.675, 14.171, 10.564, 11.920]
+    ANCHORING_BROWN = [9.844, 9.999, 9.406, 9.644, 9.543, 7.714]
+    FRESH_GREEN = [13.395, 12.834, 12.116]
+    FRESH_BROWN = [9.475, 7.804, 8.023]
+    GREEN = ANCHORING_GREEN + FRESH_GREEN
+    BROWN = ANCHORING_BROWN + FRESH_BROWN
 
     def setUp(self):
         from sciens.spectracs.plugin_sdk.util.GaugeColorUtil import GaugeColorUtil
@@ -103,11 +110,20 @@ class RoastBaselineGaugeTest(unittest.TestCase):
         return self.view(value, render=None).verdictLabel
 
     def test_it_separates_every_run_of_2026_07_27(self):
-        # The claim in §16.10.7: all 9 green above all 6 brown, no run on the wrong side.
+        # The claim in §16.10.7 / §16.10.7a: all 12 green above all 9 brown, no run on the wrong side.
         for value in self.GREEN:
             self.assertEqual(self.__verdict(value), "good — green", "green run %.3f misclassified" % value)
         for value in self.BROWN:
             self.assertEqual(self.__verdict(value), "probably too brown", "brown run %.3f misclassified" % value)
+
+    def test_the_out_of_sample_runs_are_classified_by_the_unrefitted_threshold(self):
+        # §16.10.7a — these six were measured AFTER the threshold was fixed. Called out separately from the
+        # anchoring set above because only THIS assertion is evidence rather than curve-fitting: a threshold
+        # always classifies the data it was drawn from.
+        for value in self.FRESH_GREEN:
+            self.assertEqual(self.__verdict(value), "good — green")
+        for value in self.FRESH_BROWN:
+            self.assertEqual(self.__verdict(value), "probably too brown")
 
     def test_the_threshold_sits_between_the_two_classes(self):
         self.assertGreater(min(self.GREEN), self.view._THRESHOLDS[0])

@@ -2962,6 +2962,45 @@ gap 0.563). Ranked by S/Q the classes **interleave** — three greens fall below
 classifies all 15. This is a *separation* result against Edwin's labels, **not** a threshold calibration; the
 implied 10.28 midpoint is provisional (±2.7 % margin at n=15, one day) and must not ship as an Ampel threshold.
 
+#### 16.10.7a First OUT-OF-SAMPLE check — the threshold held *(2026-07-27 12:50–13:26, 6 fresh runs)*
+
+The first runs the shipped 10.3 threshold was **not** anchored on. Nothing refitted. Brown = `20260727D`
+(001–003), green = `20260727E` (001–003) — Edwin referred to the green folder as "20260727Da"; the runs are
+in `E`, which is the folder written immediately after `D`.
+
+| label | run | S/Q | old gauge | LINEAR | new gauge |
+|---|---|---|---|---|---|
+| brown | 001 | 5.142 | **good — green** ← wrong | 9.475 | probably too brown |
+| brown | 002 | 3.535 | probably too brown | 7.804 | probably too brown |
+| brown | 003 | 3.598 | probably too brown | 8.023 | probably too brown |
+| green | 001 | 5.484 | good — green | 13.395 | good — green |
+| green | 002 | 4.810 | good — green | 12.834 | good — green |
+| green | 003 | 4.743 | good — green | 12.116 | good — green |
+
+**S/Q 5 / 6 · LINEAR base 6 / 6.** Brown 001 is the instructive one: at S/Q 5.142 it reads *greener than two
+of the actual green runs*, and the old gauge passes it. The linear baseline places it at 9.475, correctly brown.
+
+Separation **within this fresh set** is far wider than in the anchoring set — gap **2.641** (vs 0.563), worst
+green 17.6 % above the threshold, best brown 8.0 % below it; S/Q overlaps by 0.398. Corrected-Q denominators
+ran 0.071–0.114, so the §16.10.9 near-zero guard was not approached.
+
+**All 21 runs of the day pooled:**
+
+| metric | green (n=12) | brown (n=9) | d | at the shipped threshold |
+|---|---|---|---|---|
+| S/Q @ 4.4 | 4.960 [4.137 .. 6.692] | 4.101 [3.224 .. 5.142] | 1.28 | **5 of 21 wrong**, classes overlap by 1.005 |
+| LINEAR base @ 10.3 | 12.278 [10.564 .. 14.186] | 9.050 [7.714 .. 9.999] | **3.06** | **0 of 21 wrong**, gap 0.565 |
+
+The binding constraint is unchanged — green `B008` 10.564 against brown `C002` 9.999. The fresh runs did not
+narrow it.
+
+*What this does and does not establish:* it tests the **threshold** out of sample, not the instrument
+configuration and not the oils — same rig, same day. Six runs are enough to have **falsified** the threshold
+and not enough to have confirmed it; the value is that it had a real chance to fail and did not. The
+§16.10.2 fresh-data validation (both classes, n ≥ 15, one configuration, a different session) still stands.
+It is also the first evidence bearing on §16.10.8 — two fresh fills landing where predicted is *consistent*
+with fill-to-fill stability, but resolves nothing about dilution.
+
 ### 16.10.8 Dilution invariance — UNRESOLVED, and seating is why *(2026-07-27)*
 
 The 2023 library **cannot** answer it: each oil was measured 2–4 times at *one* dilution, within-oil level spread
