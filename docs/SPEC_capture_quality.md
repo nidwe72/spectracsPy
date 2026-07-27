@@ -3149,6 +3149,114 @@ all**; a narrow zone is a compromise, not a rigorous interval. The real fix is t
 | B4 | Weigh the oil instead of counting drops (~€15 scale) | idea | "2 drops" varies 10–20 %. §16.10.8 cannot resolve dilution invariance while dilution itself is known only to ±15 %. |
 | B5 | Double-beam bypass channel | idea | Split light *around* the jar onto a different strip of the **slit height** — the grating disperses each height independently, so one exposure yields two spectra on different sensor rows. Lamp/exposure/WB drift then appears in both and divides out exactly, per frame. **Does not see the jar's seating** (the bypass never traverses it), so it kills the small terms, not the 98 % one. |
 
+### 16.10.13 Candidate-metric bench — nothing beat the linear baseline *(2026-07-27, `diagnostics/metric_bench.py`)*
+
+Seven candidates, same 25 runs, same de-spiked absorbance, scored **leave-one-FILL-out**: runs within a fill
+share a seating state, so leave-one-*run*-out leaves a run's near-twins in training and inflates the score.
+Four fills — green `B`, green `E`, brown `C`, brown `D`.
+
+| candidate | \|d\| | in-sample | **LOFO** |
+|---|---|---|---|
+| **S/Q linear base** *(shipped)* | 2.88 | 0/25 | **1/25** |
+| area ratio (same bands, integrated not averaged) | 2.89 | 0/25 | 1/25 |
+| centroid nm (first moment of the corrected curve) | 2.24 | 1/25 | 3/25 |
+| S/Q raw | 1.24 | 5/25 | 9/25 |
+| absorbed hue | 0.64 | 7/25 | 12/25 |
+| 2nd-derivative ratio (Savitzky-Golay) | 1.07 | 6/25 | 17/25 |
+| Q λ-max | 0.37 | 8/25 | 19/25 |
+
+**Nothing beat the shipped metric.** Area ratio ties but is the same bands integrated rather than averaged — a
+restatement, not evidence. Q λ-max and the 2nd derivative failed; the latter is a verdict on **untuned**
+Savitzky-Golay parameters (green spanned 0.155–9.411 — noise amplification) more than on the technique.
+
+⚠ **Correction to the first reading of this bench.** The centroid was initially written up as "the one genuine
+find — position-based, independent, worth carrying as a second opinion". §16.10.14 then measured its error
+correlation against the shipped ratio at **r = −0.95**: it is *not* independent, it reads the same quantity with
+a sign flip. It is not a second opinion.
+
+### 16.10.14 Combining metrics / emitting a probability — measured, does NOT help *(2026-07-27)*
+
+**Q: could several metrics be combined into a verdict or a probability?** Two independent reasons why not, on
+today's data.
+
+**(a) The candidates fail on the SAME runs.** Error correlations of the within-class deviations:
+
+| | lin. base | centroid | area | S/Q raw | hue |
+|---|---|---|---|---|---|
+| **lin. base** | 1.00 | **−0.95** | 1.00 | 0.80 | 0.48 |
+| **centroid** | −0.95 | 1.00 | −0.95 | −0.90 | −0.49 |
+
+Every candidate is disturbed by the same seating event, so there is **no independent second opinion to
+combine**. Averaging metrics that are wrong together changes nothing.
+
+**(b) At n=25 a fitted model is WORSE than a hand-set threshold.** Logistic regression, refit inside the LOFO
+loop (no leakage):
+
+| features | LOFO |
+|---|---|
+| plain threshold on the linear base *(what ships)* | **1/25** |
+| logistic, linear base **alone** | 7/25 |
+| logistic, linear base + centroid | 7/25 |
+| logistic, + absorbed hue | 10/25 |
+| logistic, all five | 9/25 |
+
+Not a bug: the threshold search minimises misclassifications directly, while logistic regression minimises
+log-loss, is pulled by well-separated points, and with 4 folds + imbalanced training sets + L2 shrinkage toward
+the class prior the boundary lands badly. Adding features makes it worse — textbook overfitting.
+
+**(c) The probabilities would be confidently wrong**, which is the worst outcome of the three:
+
+```
+20260727C/004  brown  P(green) = 0.642  WRONG
+20260727C/005  brown  P(green) = 0.615  WRONG
+20260727C/003  brown  P(green) = 0.566  WRONG
+```
+
+A "64 % green" printed beside a wrong verdict converts an error into a *justified-looking* error. **Do not ship
+a fitted probability.**
+
+**What an honest confidence WOULD be:** §16.10.11's route — distance from the threshold divided by the
+**measured** replicate scatter. That is estimable (how far does a repeat of the same oil move?), needs no fitted
+model, degrades gracefully, and yields "green / brown / measure again" naturally. A genuinely fitted probability
+needs many more fills, since the between-fill variation is what must be sampled and there are currently four.
+
+An agreement rule (ratio and centroid must concur, else inconclusive) scores 2/25 inconclusive · 23 confident ·
+1 wrong — no better than the single metric, and (a) explains why.
+
+### 16.10.15 Colour channels do NOT discriminate this oil pair *(2026-07-27)*
+
+All nine channels the DEV plugin can render, same 25 runs, same LOFO scoring:
+
+| channel | green (n=16) | brown (n=9) | d | overlap | LOFO |
+|---|---|---|---|---|---|
+| absorbed hue | 258.31 [255.83..263.08] | 257.34 [256.36..259.27] | 0.64 | YES | 12/25 |
+| intrinsic-perceived hue | 78.31 [75.83..83.08] | 77.34 [76.36..79.27] | 0.64 | YES | 12/25 |
+| absorbed chroma | 69.44 [61.96..86.67] | 64.75 [57.65..75.69] | 0.84 | YES | 12/25 |
+| absorbed lightness | 65.28 [56.67..69.02] | 67.63 [62.16..71.18] | −0.84 | YES | 16/25 |
+| perceived hue | 70.67 [70.00..71.29] | 70.57 [69.90..71.43] | 0.23 | YES | 10/25 |
+| perceived chroma | 36.27 [33.33..40.00] | 36.99 [32.94..40.39] | −0.32 | YES | 14/25 |
+| absorbed / perceived **saturation** | **100.00 every run** | **100.00 every run** | 0.00 | YES | 7/25¹ |
+
+¹ tie-breaking noise on a **constant**, not a result.
+
+**Every channel overlaps**; best \|d\| is 0.84 against the shipped ratio's 2.88. Three structural findings:
+
+1. **Saturation is pinned at 100.0 on every run**, absorbed and perceived — the F10 problem
+   [`SPEC_color_retrieval.md`](SPEC_color_retrieval.md) already flags (near-white chromaticities read S ≈ 100 %
+   in HLS, which is why chroma exists). A structurally constant channel arguably should not be displayed.
+2. **`intrinsic-perceived hue` = `absorbed hue` + 180° by construction**, so identical *d* and identical LOFO —
+   it can add interpretability, never discriminating power. With the normalized variants fixing S and L, the
+   **five chips carry two independent numbers**: absorbed hue and perceived hue. Not five pieces of evidence.
+3. **Absorbed hue's brown range is NESTED inside green's** (256.4–259.3 within 255.8–263.1). No threshold
+   separates nested ranges — this is not a tuning problem.
+
+**Likely why:** at 6 drops in 18 ml both oils are pale, and chromaticity of a ~1:3000 dilution retains little of
+the difference obvious in the bottle. A band *ratio* survives dilution because it is a shape measure; hue is
+what little is left of an almost-white sample. This predicts colour would work better **undiluted** — exactly
+where absorbance saturates and the ratio stops working. **The two approaches want opposite concentrations.**
+
+Colour therefore stays a **visual aid** on this oil pair, not a discriminator.
+
 **Still open (not implemented):** the near-zero denominator guard. `ratio()` clamps at `EPS = 1e-3`, so a run
 that drove the corrected Q to ≤ 0 would yield an enormous ratio, clamp to the band's left edge, and report a
 confident **"good — green"**. Today's denominators ran 0.062–0.114, i.e. ≥ 62× the guard, so it is nowhere near

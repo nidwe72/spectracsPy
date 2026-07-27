@@ -55,6 +55,35 @@ Rendered by the DEV plugin **in this order** (Edwin), as a labelled colour group
 - **Labels:** friendly label visible; the exact code name + a one-line meaning go in the label's tooltip (traceable on
   the bench, readable for a human). *Overridable.*
 
+### 1c. ⚠ MEASURED 2026-07-27 — the chips are a VISUAL AID, not a discriminator (on this oil pair)
+
+All nine renderable colour channels were scored against the 25 green/brown runs of 2026-07-27, leave-one-**fill**-out
+(full table: [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §16.10.15). **Every channel overlaps.** Best
+\|d\| = 0.84 (absorbed lightness / chroma) against the linear-baseline pigment ratio's 2.88; best colour LOFO
+score 10/25 against the ratio's 1/25.
+
+Three findings that bear on the design above:
+
+1. **Saturation reads exactly 100.0 on every run**, absorbed *and* perceived — the §3 F10 problem in the live
+   data, not a corner case. The "natural" S in rows 4/5 of the table is therefore **structurally constant** and
+   carries no information; only hue and (via chroma) lightness vary. Worth deciding whether to display it.
+2. **Rows 1 and 2 are the same number.** `colorIntrinsicPerceived` = `colorAbsorbed` hue + 180° by construction,
+   and "normalized" keeps the measured hue — so identical *d*, identical LOFO. Combined with rows 3/5 sharing
+   the perceived hue, **the five chips carry TWO independent numbers**: absorbed hue and perceived hue. They are
+   five *views*, not five pieces of evidence, and should not be read as corroborating one another.
+3. **Absorbed hue's brown range is NESTED inside green's** (256.4–259.3 within 255.8–263.1) — no threshold can
+   separate nested ranges, so this is not a tuning or S/L-choice problem.
+
+**Likely cause, and it is not a defect in this design:** at 6 drops in 18 ml both oils are pale, and the
+chromaticity of a ~1:3000 dilution retains little of the difference that is obvious in the bottle. A band
+*ratio* survives dilution because it measures spectral SHAPE; hue is what remains of an almost-white sample.
+This predicts colour would discriminate better **undiluted** — precisely where absorbance saturates and the
+ratio stops working. **The two approaches want opposite concentrations**, which is a genuine open question for
+§6 rather than something to tune here.
+
+Nothing in §1's design changes on this evidence — the chips remain the right *visual* answer to §0's physics.
+What changes is the claim attached to them: they illustrate, they do not decide.
+
 ### 1a. colorIntrinsicPerceived = the intuitive intrinsic chip (rendered FIRST, Edwin)
 
 The dilution-invariant `colorAbsorbed` reads **blue-violet** (the colour of what's *absorbed*, ≈ complement of the
