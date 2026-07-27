@@ -1590,29 +1590,37 @@ extinction rather than the chlorophyll Q peak. Two consequences, one reassuring 
 **⇒ Next: diffuser back on (mounted to the cone, not the jar) + report the median of 3 fills.** Predicted CV
 ~2–4 %, i.e. discrimination restored.
 
-#### 16.7.2g The diffuser A/B, run by accident *(2026-07-27 — 001-003 WITH, 004-007 WITHOUT)*
+#### 16.7.2g The diffuser A/B — CLAIM WITHDRAWN once n reached 4 *(2026-07-27)*
 
-Edwin confirms the split: same sample, same 18 ml : 6 drops, same session, the diffuser removed after run 003.
-That is the one-variable test §16.7.2c asked for.
+Edwin confirmed the split (001-003 with the diffuser, 004-007 without) and a fourth diffuser run (008) arrived
+afterwards. **It overturns the reading taken at n = 2.**
 
-| | S/Q | median | CV (all) | **CV without its one outlier** | blank ph/pump spread |
-|---|---|---|---|---|---|
-| **with diffuser** (001-003) | 4.972 · 4.924 · **6.691** | 4.972 | 18.2 % | **0.7 %** (n=2) | **1.4 %** |
-| **without** (004-007) | 4.225 · 4.482 · 4.137 · **5.569** | 4.353 | 14.3 % | 4.2 % (n=3) | 4.1 % |
+| | S/Q | median | CV (all) | CV minus its one high outlier |
+|---|---|---|---|---|
+| **with diffuser** (001·002·003·008) | 4.972 · 4.924 · **6.691** · 4.239 | 4.948 | 20.1 % | **8.7 %** (n=3) |
+| **without** (004·005·006·007) | 4.225 · 4.482 · 4.137 · **5.569** | 4.354 | 14.3 % | **4.2 %** (n=3) |
 
-**Two findings, pulling in the same direction as the earlier control measurement** (0.02 % vs 0.09 %, §16.7.2c):
-the diffuser tightens the **blank ~3×** and the clean-run scatter **~6×**. *Caveat: n = 2 and n = 3 — encouraging,
-not established.*
+At n = 2 the diffuser pair happened to fall 1.0 % apart, which read as a 6× improvement. With the fourth run the
+"clean" diffuser scatter is **8.7 %** — if anything *worse* than without. Formally: variance ratio **F = 4.3 on
+df 2,2**, significant only above **19**. ⇒ **the two configurations are not distinguishable at this sample
+size**, and the earlier "tightens the blank ~3×, the scatter ~6×" is withdrawn. (The blank spreads also
+converged once n = 4: **4.6 % with vs 4.1 % without**.) The 14 % absolute-level difference likewise fails to
+establish itself — **t-test p = 0.37**.
 
-**But each group still contains exactly one large outlier.** The diffuser damps the *small* geometric changes and
-does nothing about the occasional bad seating — which is precisely what one expects while **it rides on the jar
-and is lifted with it every time**. That is the remaining half of the fix: mount it to the cone (§16.7.2c/(b)).
+**A caveat had been attached to the first reading ("n = 2 and n = 3 — encouraging, not established"), but the
+claim was still led with. The lesson is procedural: on a heavy-tailed error, n < 6 per arm cannot support a
+comparison at all.**
 
-**⚠ The two configurations do not share a calibration.** Medians 4.97 vs 4.35 — **14 % apart** on the same oil.
-A plausible mechanism is stray light (a directional beam and a diffused one fill the aperture differently, and
-stray light biases high absorbances low), but it is equally consistent with something else changing at that
-moment; it is not established. Either way the rule is firm: **pick one optical configuration, keep it, and
-re-anchor the 4.4 threshold to it.** Do not compare runs across the change.
+**What IS robust across all eight runs**, and consistent with everything measured before:
+
+- **two high outliers in eight** (6.69, 5.57) — one in four, exactly the rate the re-seat probe predicted;
+- **the other six sit at CV 8.2 %** (mean 4.50), against 17.8 % for the raw set;
+- the diffuser **cannot** be expected to fix this *while it rests on the jar*, because it is lifted and
+  re-seated along with it — it is part of the disturbance, not a shield from it.
+
+⇒ Nothing here changes the plan; it removes a false positive from it. **Mount the diffuser rigidly to the cone,
+then run n ≥ 6 per configuration** — below that, this experiment cannot answer the question it is asking. And
+report the **median**, which survives both outliers untouched.
 
 #### 16.7.3 What follows from it
 
