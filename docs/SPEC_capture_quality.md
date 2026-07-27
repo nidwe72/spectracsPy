@@ -3410,6 +3410,12 @@ direction until the protocol completes. (Harmless to show it in a fully automate
 **"Fresh fill" is not pedantry** — re-capturing the same fill repeats the same seating disturbance and adds no
 information at all (§16.10.10). The screen must not say merely "measure again".
 
+**Before the first fill — capture the operator's OWN read** *(consistency-instrument design, `SPEC_capability_proof.md`
+"positioning term"; not yet built)*. A "your assessment: green / brown / unsure" field at sample preparation.
+The point is **independence**: if the operator sees the verdict first they are anchored, and the agreement
+between human and instrument — which is most of the product's value — stops meaning anything. Same
+anti-anchoring principle as withholding the direction on a borderline re-fill, applied one step earlier.
+
 Outcomes:
 
 | | |

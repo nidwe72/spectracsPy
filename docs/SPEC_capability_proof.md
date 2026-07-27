@@ -146,6 +146,45 @@ better than a miller mid-press — which points the same way as the market analy
 (`spectracs-references/business/SPEC_wirtschaftliches.md` §7/§12: *the lab as channel partner*). A lab has the
 patience for three fills and **needs** the documentation; a busy miller has neither.
 
+#### 📌 The positioning term: a CONSISTENCY INSTRUMENT *(Edwin 2026-07-27 — adopt this wording)*
+
+Edwin's framing, and it is better than "documentation instrument":
+
+> *"No magic tool — but telling one that this might be worth inspecting further. The miller uses it when he is
+> not sure himself, and the tool will probably also say it is not sure. Or the tool says it first, then the
+> miller."*
+
+Why this is more than a nice phrase:
+
+1. **Agreement between two INDEPENDENT judgements is worth more than either alone.** The miller's read is
+   expert but subjective and unrecordable; the instrument's is crude but objective and recordable. Concurrence
+   yields a defensible record *with expertise behind it* — which neither produces separately.
+2. **Disagreement is the payload, not the failure.** Miller says green, tool says brown ⇒ something wants
+   attention: an unusual sample, or the miller's internal calibration has drifted.
+3. **A BORDERLINE verdict is a feature.** When both are unsure, "unsure" is the truth. A tool that manufactures
+   certainty where none exists is worse than useless. §16.10.17c's third outcome is therefore a design virtue,
+   not an admission.
+4. **⭐ The strongest form — a miller acclimatises, an instrument does not.** If the product drifts slowly over a
+   season or over years, this year's oil looks fine because it resembles last year's. **Human reference points
+   move with the product; a fixed spectral reference does not.** This is a class of error the eye *structurally
+   cannot* catch — and it is not per-sample detection, it is **consistency across time**. This is what the
+   instrument is genuinely better at, and it is the core of the positioning.
+5. **The 10.6 threshold decision is coherent with this** (§16.10.17d). A triage instrument should over-refer:
+   a second look at good oil is cheap, missing bad oil is not. Choosing 10.6 and choosing "consistency
+   instrument" are the same decision reached from two directions.
+
+**⚠ Design consequence — ORDER MATTERS (feature, not yet built).** If the miller sees the verdict before forming
+their own judgement, the two are **no longer independent** — they have been anchored, and the agreement stops
+meaning anything. The workflow must therefore **capture the operator's own read BEFORE revealing the result**:
+a "your assessment: green / brown / unsure" field filled in at sample preparation (§16.10.17c). Then agreement
+is evidence, disagreement is a flag, and over a season the divergence record becomes **calibration data for the
+instrument AND the miller**. Same anti-anchoring principle as withholding the direction on a borderline re-fill.
+
+**The honest caution to keep attached:** a sceptic will ask why buy a tool that mostly confirms what you already
+thought. The answer cannot be the individual verdict — it must be **the record, the trend, and that a buyer or
+lab need not take the miller's word for it.** Positioned as a per-sample oracle it looks redundant; positioned
+as consistency over time plus evidence for third parties, it does not.
+
 #### Verdict
 
 The science is **sound, and today made it more sound, not less** — you now know what limits it, which is worth
