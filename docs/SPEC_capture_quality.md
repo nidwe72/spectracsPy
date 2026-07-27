@@ -1330,9 +1330,10 @@ the same physical disturbance (§16.7.2l).
 
 #### ▶ Next, in order
 
-1. **Brown-2026 oil, 4–6 fills** — the one number that decides whether the verdict is safe in the direction that
-   matters (§16.7.2m). *Marked as the next step.*
-2. **Keyed jar seat + aperture, one printed part** — 98 % of the instrument error (§16.9).
+1. ~~Brown-2026 oil, 4–6 fills~~ — **DONE (§16.7.2o)**: brown is *not* steadier (CV 11.4 % vs 11.2 %), the
+   classes separate at only **d = 1.23**, and **~26 % of single verdicts would be wrong today.**
+2. **▶ Keyed jar seat + aperture, one printed part** — now the critical path, not an optimisation: it takes the
+   error rate from 26 % to ~0 % (§16.9, §16.7.2o).
 3. **Sample clarification test** — independent of the hardware.
 4. **SNV validation** — both classes, n ≥ 15, one optical configuration, fresh data.
 5. **Decide the 47/66 hue bands** — the L0 gate found 2 of 61 archived runs flip under linearization (§17.8.1);
@@ -2035,6 +2036,49 @@ vs 41 %) *and* individually more fragile. In 2023 that argument would have been 
 that decides whether the verdict is safe in the direction that matters (catching an over-roasted oil). If it
 lands near 4–5 % the brown side is workable while the green stays noisy; if it lands near the green's, the whole
 2026 pair needs the instrument fix or the SNV metric before any verdict is trustworthy.
+
+#### 16.7.2o ▶ THE BROWN OIL, 6 FILLS — the next-step measurement, and it is sobering *(2026-07-27, `tmp/20260727C`)*
+
+The measurement §16.7.2m called decisive. Six fills of the 2026 **brown** oil, same recipe, same session:
+
+| metric | GREEN (n=8) | BROWN (n=6) | **d** |
+|---|---|---|---|
+| **S/Q** | 4.723 ± 0.529 | 4.105 ± 0.467 | **1.23** |
+| SNV difference | 2.597 ± 0.034 | 2.515 ± 0.072 | 1.54 |
+
+**Three findings, none of them comfortable.**
+
+**1. Edwin's hypothesis is NOT confirmed for the 2026 oils.** Brown CV **11.4 %** against green **11.2 %** — the
+brown is no steadier. It held in 2023 (2.0 % vs 2.8 %) because the brown oils then carried 1.7× the pigment in
+the denominator; the 2026 brown does not have that advantage (baseline share 68 % vs the green's 72 % — barely
+different, and both far above 2023's ~50 %).
+
+**2. The classes barely separate — d = 1.23.** Against the 4.4 threshold, on a **single** measurement:
+
+| | green reads BROWN | brown reads GREEN |
+|---|---|---|
+| one measurement | **27 %** | **26 %** |
+| median of 3 fills | 15 % | 14 % |
+| **keyed jar seat (σ 1.9 %)** | **0.0 %** | **0.0 %** |
+
+**A quarter of verdicts would be wrong today.** The means are on the correct sides of 4.4 — the metric and the
+threshold are right — but the scatter swamps a 15 % gap. **The keyed seat is not an optimisation here; it is
+what makes the instrument usable on these oils.**
+
+**3. ⚠ The SNV enthusiasm of §16.7.2k must be re-scaled.** That section quoted `d_today = 13.52` — computed with
+the **2023** class gap (0.44) against today's SD. **The actual 2026 pair is 5.4× closer in SNV space** (gap
+0.082), so its real `d` is **1.54**, only marginally ahead of the raw ratio's 1.23. SNV still corrects the
+observed bad seating (§16.7.2k's run-003 evidence stands) and still beats S/Q — but it is **not** a substitute
+for fixing the instrument, and the "9× better" framing was an artefact of borrowing a gap from a different pair
+of oils.
+
+**A recipe note:** the brown ran at **13–16 DN** in its darkest bin, below the 20–40 target — it absorbs more
+than the green at the same dilution (`A_Soret` 1.25 vs 0.99). **Dilute the brown ~25 % further**, or the Soret
+band starts trading into the quantization floor.
+
+⇒ **The next step is no longer a measurement — it is the keyed jar seat.** Every alternative has now been tested
+and none of them substitutes for it: not the bands, not the reduction, not the diffuser, not the metric, not
+waiting, not averaging alone.
 
 #### 16.7.2n The jar-wall rings, and WHERE the diffuser belongs *(Edwin's observation, 2026-07-27)*
 
