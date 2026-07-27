@@ -1549,6 +1549,47 @@ same reason a camera histogram shows raw levels and an audio meter shows dBFS ra
 (`SpectralColorUtil.encodeGammaFraction`), so the panel plots `encode(value)` while the pipeline keeps the linear
 values untouched. Label the axis **DN**, and draw the 16 DN guard line on it.
 
+#### 16.7.2f Recipe verified, blank still the bottleneck — and the error is HEAVY-TAILED *(2026-07-27, 4 runs)*
+
+Four fills of one sample at the new **18 ml : 6 drops**, diffuser **removed** (`tmp/20260727B/004-007`):
+
+| | this morning | **these four** | 2023 |
+|---|---|---|---|
+| `A_Q` | 0.096 | **0.225** | 0.210 |
+| amplification `0.434/A_Q` | 4.5 | **1.9** ✅ | 2.1 |
+| darkest bin | 60 DN | **18–26 DN** ✅ | 4–16 DN |
+| **S/Q CV** | 14.2 % | **14.3 %** ✗ | 3.6 % |
+
+**The recipe did exactly what it was designed to do** — the amplifier is back to the 2023 value and the darkest
+bin is in the target window. **And the CV did not move**, because the blank error roughly doubled at the same
+moment: implied blank term `14.3 / 1.9 = 7.5 %` against this morning's `14.2 / 4.5 = 3.2 %`. The diffuser came
+off between run 003 and run 004 — and the two diffuser runs before it (001/002) sit **1.0 % apart**. That is the
+strongest evidence yet that the diffuser is doing real work.
+
+**⭐ The error is not Gaussian — it is "usually fine, occasionally awful".**
+
+```
+S/Q:  4.225   4.482   4.137   5.569
+      └─────── three within CV 4.2 % ───────┘   └─ one outlier, +28 %
+```
+
+Same shape as the six measured re-seat tilts (`6.71 · 0.82 · 1.05 · 2.10 · 1.11 · 5.23` — median 1.6 %, two
+large). **⇒ report the MEDIAN of 3–4 fills, never the mean.** The median is the right estimator for a
+heavy-tailed error; the mean is dragged by exactly the bad seating we cannot yet prevent. Here: median **4.353**
+vs mean 4.603, and **the three clean fills already meet the ≤ 4.1 % target on their own.**
+
+**New observation — the red anchor is now 75 % of the denominator.** `A_red` ran 0.144–0.183 against `A_Q`
+0.196–0.243, and it **scales with concentration** (3× stronger sample → ~3× baseline: it was 0.042–0.064 this
+morning). So it is the *sample*, not a throughput offset. It is **not turbidity** either — the slope rises toward
+the **red** (+2.4…3.0e-3 /nm), the opposite of a scattering power law. So most of the "Q band" is broad oil
+extinction rather than the chlorophyll Q peak. Two consequences, one reassuring and one closed:
+- Dilution invariance survives (baseline and pigment both scale with `c`, so the ratio still divides out).
+- **Subtracting it does NOT help discrimination** — on the 32-run set, `(S−R)/(Q−R)` gives d = **9.79 vs 10.39**
+  (−6 %). Tested, rejected; leave the metric as it is.
+
+**⇒ Next: diffuser back on (mounted to the cone, not the jar) + report the median of 3 fills.** Predicted CV
+~2–4 %, i.e. discrimination restored.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
