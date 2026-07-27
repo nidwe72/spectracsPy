@@ -38,6 +38,14 @@ from reference_drift_probe import PHOSPHOR, PUMP, QBAND, _appContext, _bandMean,
 
 SORET = (440.0, 460.0)
 
+# What the operator is asked to change each round. The analysis is identical — only the disturbance differs —
+# so the same paired design (disturbed vs untouched control) measures whichever variable is being probed.
+PROMPTS = {
+    "jar": "TAKE THE CUVETTE OUT AND PUT IT BACK IN",
+    "camera": "NUDGE THE CAMERA / UPPER CONE SLIGHTLY — about 1 mm, the SAME direction and amount each round",
+    "none": "CHANGE NOTHING (null run — just wait a moment)",
+}
+
 # Sensitivity constants from Edwin's NowSteirerkraftB run (SPEC_capture_quality.md §16.7): with A_Soret = 0.801
 # and A_Q = 0.144, a RELATIVE reference error d in a band moves that band's absorbance by 0.434*d, so the pigment
 # ratio moves by 0.434*d/A. The Q band is ~5.6x more sensitive than the Soret band — that is the whole problem.
@@ -135,7 +143,12 @@ def settleReport(series, noiseFloor=0.26):
 
 def main():
     parser = argparse.ArgumentParser(description="Cuvette re-seating repeatability (SPEC_capture_quality §16.7.1)")
-    parser.add_argument("--changes", type=int, default=6, help="number of cuvette re-seats (default 6)")
+    parser.add_argument("--changes", type=int, default=6, help="number of disturbances (default 6)")
+    parser.add_argument("--disturb", choices=("jar", "camera", "none"), default="jar",
+                        help="WHAT is disturbed each round. 'jar' = take the jar out and put it back "
+                             "(§16.7.2). 'camera' = nudge the camera/upper cone instead, which probes the "
+                             "alignment sensitivity the diffuser is supposed to remove (§16.9.3c). 'none' = a "
+                             "null run: prompts but change nothing, to measure the floor.")
     parser.add_argument("--frames", type=int, default=8, help="frames averaged per capture")
     parser.add_argument("--warmup", type=float, default=300.0,
                         help="seconds to let the sensor settle before starting (measured: ~1.6%% over 10 min)")
@@ -174,8 +187,15 @@ def main():
             backend.read()
             time.sleep(1.0)
 
-    print("\nPut the SAME cuvette back each time — same liquid, same orientation if you can.")
-    print("We are measuring the SEATING, not the contents.\n")
+    if arguments.disturb == "jar":
+        print("\nPut the SAME cuvette back each time — same liquid, same orientation if you can.")
+        print("We are measuring the SEATING, not the contents.\n")
+    elif arguments.disturb == "camera":
+        print("\nNudge by a SIMILAR amount and in the SAME direction every round — the comparison between")
+        print("runs (with vs without the diffuser) only holds if the disturbance is comparable. Do NOT touch")
+        print("the jar at all: this run measures ALIGNMENT sensitivity, not seating.\n")
+    else:
+        print("\nNull run: change nothing at the prompts. Whatever this measures is the floor.\n")
 
     rounds = []
     settles = []
@@ -191,9 +211,9 @@ def main():
             rounds.append(("no-touch", delta(previousAfter, before)))
 
         try:
-            input("\n   >>> TAKE THE CUVETTE OUT AND PUT IT BACK IN, then press Enter ")
+            input("\n   >>> %s, then press Enter " % PROMPTS[arguments.disturb])
         except EOFError:
-            print("   (non-interactive — continuing without a re-seat)")
+            print("   (non-interactive — continuing without a disturbance)")
         if arguments.relax > 0:
             series, after = watchSettle(backend, roi, coefficients, arguments.frames, arguments.relax, before)
             report = settleReport(series)
@@ -218,7 +238,7 @@ def main():
     if not reseats:
         return 0
 
-    print("\n=== RESULT ===")
+    print("\n=== RESULT — disturbance: %s ===" % arguments.disturb.upper())
     print("%-12s %3s   %-22s %-22s %s" % ("", "n", "tilt (phosphor/pump)", "implied ratio swing", "level"))
     for label, group in (("re-seat", reseats), ("no-touch", notouch)):
         if not group:
@@ -248,6 +268,9 @@ def main():
             pass
         elif reseatTilt < 0.5:
             print("  => nothing was meaningfully disturbed this run (re-seat arm is at the noise floor).")
+        elif factor >= 3.0 and arguments.disturb == "camera":
+            print("  => ALIGNMENT IS AN ERROR SOURCE. Run this again with the diffuser fitted: if the factor")
+            print("     drops, that is what the diffuser buys, measured on the variable it targets (§16.9.3c).")
         elif factor >= 3.0:
             print("  => CUVETTE SEATING IS AN ERROR SOURCE. No warm-up protocol fixes this; the R->S->R' bracket")
             print("     (SPEC §16.7) catches it, and so would clamping/keying the cuvette holder.")

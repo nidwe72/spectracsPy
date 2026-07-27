@@ -2230,6 +2230,47 @@ diffuser is optically neutral about placement (leaving only the mechanical reaso
 answer is one extra block of four captures, and it decides where the diffuser belongs on evidence rather than on
 my reasoning.
 
+### 16.9.3c Probing ALIGNMENT instead — nudge the camera *(Edwin, 2026-07-27; no hardware needed)*
+
+The 2×2 needs an aperture, which does not exist yet. Edwin's alternative is better for the question that matters
+most: **disturb the camera instead of the jar.** It perturbs exactly the variable the diffuser is supposed to
+desensitise — where the light arrives and at what angle — so it measures what the diffuser buys **directly**,
+rather than inferring it from a seating experiment that the diffuser was never mounted to influence.
+
+Implemented as `cuvette_reseat_probe.py --disturb camera`. Everything else is unchanged: the same paired design
+(disturbed round vs untouched control over the same timescale), the same settling window, the same tilt / level /
+implied-ratio reporting. Only the prompt differs:
+
+```
+    --disturb jar      TAKE THE CUVETTE OUT AND PUT IT BACK IN            (§16.7.2, already measured)
+    --disturb camera   NUDGE THE CAMERA / UPPER CONE ~1 mm, same way      (alignment sensitivity)
+    --disturb none     CHANGE NOTHING                                     (null run — the floor)
+```
+
+**The comparison to run, two blocks of 6:**
+
+```
+    block 1   --disturb camera,  NO diffuser        -> alignment sensitivity, bare
+    block 2   --disturb camera,  diffuser fitted    -> alignment sensitivity, diffused
+```
+
+**If the diffuser does what it is supposed to, block 2's tilt collapses toward the untouched control.** That is
+a direct measurement of its value on its own terms — unlike §16.7.2g, which asked a diffuser *resting on the
+jar* to fix a *jar* disturbance and unsurprisingly found nothing.
+
+**Protocol discipline.** Nudge by a **similar amount and in the same direction** every round — the between-block
+comparison only holds if the disturbance is comparable, and "a little bit" is not otherwise reproducible. **Do
+not touch the jar at all** during these runs. A `--disturb none` block is worth one run as the floor, since
+today's controls have ranged 0.02–0.26 % depending on configuration.
+
+**What each outcome means:**
+
+| result | reading |
+|---|---|
+| bare block shows a large tilt, diffused block small | the diffuser works; mount it at the slit (§16.9.3) and the alignment error goes away |
+| both blocks small | alignment is not a significant error source here — the seating error is about the jar's own optics (wall rings, meniscus), and the aperture matters more than the diffuser |
+| both blocks large | the diffuser does not fix alignment on this rig; look to mechanical rigidity of the two-cone stack instead |
+
 ### 16.9.4 Verification — and it must be pre-registered this time
 
 Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below
