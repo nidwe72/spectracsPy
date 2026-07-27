@@ -1483,6 +1483,40 @@ discussion is **sample handling**, and re-seating still moves the spectrum ≈ 7
 §16.7.2b) *and* pins the path length to the jar's own 1.3 cm (the level channel, §16.7.4). One change, both
 channels — and it is the next thing to measure.
 
+#### 16.7.2d What the last run would have cost the S/Q ratio — and the missing measurement *(2026-07-27)*
+
+Putting §16.7.2c's two channels through the corrected algebra, per round of the sample run:
+
+| round | shape (tilt) | level | S/Q if the level was PATH | S/Q if it was THROUGHPUT |
+|---|---|---|---|---|
+| 1 | −6.5 % | 7.47 % | −6.5 % | **+16.3 %** |
+| 2 | +3.0 % | 0.35 % | +3.0 % | +3.9 % |
+| 3 | +3.7 % | 5.19 % | +3.7 % | **+18.5 %** |
+| 4 | −1.5 % | 14.21 % | −1.5 % | **+53.3 %** |
+| 5 | −1.9 % | 0.48 % | −1.9 % | −0.7 % |
+| 6 | +0.4 % | 2.03 % | +0.4 % | +5.7 % |
+| **mean \|error\|** | | | **2.8 %** | **16.4 %** |
+
+**The answer depends entirely on a split we have not yet measured** — and the two ends differ by 6×. That is the
+open question, not a detail.
+
+**The blank run already gives half of it.** With `A ≈ 0` the path length is **invisible** (pour any depth, the
+same light comes through), so a blank's level variation is **pure throughput**: measured **1.68 % mean /
+3.68 % max**. Reference and sample each get their own re-seat, so the mismatch that enters a real measurement is
+~√2 × one draw:
+
+| throughput mismatch R vs S | S/Q error |
+|---|---|
+| 2.4 % (typical) | **+6.3 %** |
+| 5.2 % (bad pair) | **+14.8 %** |
+
+⇒ **~6 % of S/Q error from throughput alone, on top of the tilt term.** The remainder of the sample run's larger
+level swings is then path length — harmless for the ratio, but it means the jar is not returning to the same
+depth-in-beam, which §16.7.4 already flagged.
+
+**The measurement that closes it: re-run the blank with the diffuser mounted.** Blank isolates throughput
+(no path sensitivity), and toggling only the diffuser isolates the diffuser. Two runs, one variable each.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
