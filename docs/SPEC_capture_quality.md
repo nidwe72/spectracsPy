@@ -1590,6 +1590,30 @@ extinction rather than the chlorophyll Q peak. Two consequences, one reassuring 
 **⇒ Next: diffuser back on (mounted to the cone, not the jar) + report the median of 3 fills.** Predicted CV
 ~2–4 %, i.e. discrimination restored.
 
+#### 16.7.2g The diffuser A/B, run by accident *(2026-07-27 — 001-003 WITH, 004-007 WITHOUT)*
+
+Edwin confirms the split: same sample, same 18 ml : 6 drops, same session, the diffuser removed after run 003.
+That is the one-variable test §16.7.2c asked for.
+
+| | S/Q | median | CV (all) | **CV without its one outlier** | blank ph/pump spread |
+|---|---|---|---|---|---|
+| **with diffuser** (001-003) | 4.972 · 4.924 · **6.691** | 4.972 | 18.2 % | **0.7 %** (n=2) | **1.4 %** |
+| **without** (004-007) | 4.225 · 4.482 · 4.137 · **5.569** | 4.353 | 14.3 % | 4.2 % (n=3) | 4.1 % |
+
+**Two findings, pulling in the same direction as the earlier control measurement** (0.02 % vs 0.09 %, §16.7.2c):
+the diffuser tightens the **blank ~3×** and the clean-run scatter **~6×**. *Caveat: n = 2 and n = 3 — encouraging,
+not established.*
+
+**But each group still contains exactly one large outlier.** The diffuser damps the *small* geometric changes and
+does nothing about the occasional bad seating — which is precisely what one expects while **it rides on the jar
+and is lifted with it every time**. That is the remaining half of the fix: mount it to the cone (§16.7.2c/(b)).
+
+**⚠ The two configurations do not share a calibration.** Medians 4.97 vs 4.35 — **14 % apart** on the same oil.
+A plausible mechanism is stray light (a directional beam and a diffused one fill the aperture differently, and
+stray light biases high absorbances low), but it is equally consistent with something else changing at that
+moment; it is not established. Either way the rule is firm: **pick one optical configuration, keep it, and
+re-anchor the 4.4 threshold to it.** Do not compare runs across the change.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
