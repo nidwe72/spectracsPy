@@ -1737,6 +1737,64 @@ CV even rises as more of the wandering baseline is included. This closes off a w
 **instrument stability** (remove the wander) or a **baseline-differential metric** (subtract the common term,
 §16.7.2h). That is the same conclusion three independent analyses have now reached.
 
+#### 16.7.2k ⭐ SNV — the textbook correction for the error we derived *(2026-07-27, promising, NOT adopted)*
+
+Edwin asked for the refined version of §16.7.2h: fit and subtract a baseline instead of one anchor number. Four
+models were tried; two matter.
+
+| metric | class gap | **SD today (n=9)** | **d_today** | 2023 d |
+|---|---|---|---|---|
+| **raw S/Q** (current) | 1.277 | 0.822 | **1.55** | **10.39** |
+| constant baseline `(S−R)/(Q−R)` | 3.378 | 2.031 | 1.66 | 9.79 |
+| **linear baseline** (2 anchor windows) | 3.277 | 1.259 | **2.60** | **10.27** |
+| **SNV difference** | 0.439 | **0.0325** | **13.52** | 6.69 |
+
+*(`d_today` = class gap ÷ today's SD, both in the metric's own units — the only scale-invariant comparison, and
+the decision-relevant one: can the classes be told apart given TODAY's reproducibility. `≥ 3.3` gives 95 %
+single-shot calls, `≥ 4.7` gives 99 %.)*
+
+**Two candidates worth carrying forward:**
+
+- **Linear baseline** — fit a straight line through two oil-quiet windows (520–540 and 600–630) and subtract it.
+  **The only variant that improves today's scatter while keeping the 2023 separation intact** (d 10.27 vs 10.39).
+  A conservative, physically plain change.
+- **SNV difference** — standardise each absorbance spectrum (`(A − mean)/SD` over the capture window), then take
+  `mean(440–460) − mean(560–580)`. **d_today = 13.52, nearly 9× the raw ratio.**
+
+**Why SNV is not a lucky fit.** §16.7.2h/j derived the error model from the data: `A_measured = k·A_true + b`,
+with a wandering multiplicative `k` (path/throughput) and additive `b` (baseline), `b` coherent across
+wavelength. **SNV is the standard chemometric correction for exactly that model** — dividing by the spectrum's
+own SD removes `k`, subtracting its own mean removes `b`. It was in the plan already as the "eureka preproc"
+idea (`SPEC_capability_proof.md`).
+
+**The evidence that it corrects the real failure, not the sample:**
+
+```
+run              003     007        <- the two runs that were WILD outliers in the raw ratio
+raw S/Q        6.691   5.569        <- +60 % and +33 % excursions
+SNV diff       2.615   2.672        <- ordinary members of the pack (all nine: 2.563 … 2.672)
+```
+
+The nine same-sample runs give **SD 0.0325 (CV 1.2 %)**, leave-one-out **0.019–0.035** — no single run carries
+it. And the 2023 classes remain cleanly split with **no overlap** (green 2.410–2.533, brown 1.920–2.158).
+
+**⚠ Why this is a lead and not a switch:**
+1. Nine runs, **one sample, one day, one instrument state**. The class gap still comes from the 2023 set.
+2. Under *stable* conditions the raw ratio is the better discriminator (2023 d 10.39 vs 6.69) — SNV buys immunity
+   by discarding information. It is the right choice only while `b` and `k` wander.
+3. It is **not a ratio**: the Roast Ampel thresholds (4.4 / band 6.0→3.0) would need complete re-derivation, and
+   today's sample reads 2.56–2.67, *above* the 2023 green range — consistent with fresh 2026 oils reading higher,
+   but it must be re-anchored, not translated.
+4. SNV normalises over the **capture window**, so the window (440–630) becomes part of the metric's definition
+   and must be pinned.
+5. Several candidates were compared on the same nine runs — the usual selection risk. SNV's defence is that it
+   was derived from the error model rather than chosen by score, and that it fixes the two known outliers.
+
+⇒ **Validation experiment before any adoption:** both oil classes, n ≥ 15, one fixed optical configuration, data
+not used to choose the metric. Test **linear-baseline** and **SNV difference** side by side against the raw
+ratio. Meanwhile the instrument fix remains first — with `b` and `k` held still, the raw ratio is still the best
+discriminator we have.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
