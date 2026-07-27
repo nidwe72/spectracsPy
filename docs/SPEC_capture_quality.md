@@ -1663,6 +1663,46 @@ from both bands. **Order of business: fix the instrument first** (the baseline w
 nature); if it proves irreducible, validate `(S−R)/(Q−R)` on data that was not used to choose it, both classes,
 n ≥ 15, one fixed optical configuration.
 
+#### 16.7.2i Narrowing the bands (Edwin's proposal) — tested *(2026-07-27)*
+
+Proposal: Soret **450–460** instead of 440–460, Q **560–570** instead of 560–580. Scored on both axes — class
+gap from the 2023 set, reproducibility from the nine same-sample runs:
+
+| bands (Soret / Q) | today CV | 2023 d | class gap | **gap / CV** |
+|---|---|---|---|---|
+| **CURRENT** 440–460 / 560–580 | 16.6 % | **10.39** | 41 % | 2.47 |
+| **EDWIN** 450–460 / 560–570 | 15.7 % | 8.89 | 47 % | **3.00** |
+| only Q narrowed 440–460 / 560–570 | 18.7 % | 8.95 | 42 % | 2.25 |
+| **only S narrowed 450–460 / 560–580** | **13.8 %** | 9.97 | 46 % | **3.34** |
+| Q avoids the crossover 555–570 | 21.2 % | 7.65 | 41 % | 1.96 |
+
+**The proposal improves the composite by 21 % — and the gain is entirely the SORET half.** Narrowing Q *alone*
+makes things **worse** (2.25). The best variant on this data is **Soret 450–460 with Q left at 560–580**: it is
+the only one that improves today's reproducibility *and* nearly keeps the 2023 separation (9.97 vs 10.39).
+
+**Two predictions of mine that the data refused:**
+
+1. *"440–450 is floor-limited, so dropping it removes the noisiest part."* **Wrong** — per sub-band:
+
+   | sub-band | sample DN | A | CV of A |
+   |---|---|---|---|
+   | Soret 440–450 | 45.8 | 1.351 | **5.7 %** (the steadiest) |
+   | Soret 450–460 | 98.3 | 0.611 | 9.0 % |
+   | Q 560–570 | 133.6 | 0.184 | **19.5 %** (the noisiest) |
+   | Q 570–580 | 104.1 | 0.223 | 16.3 % |
+
+2. *"560–580 straddles the green→red crossover (§16.8), so avoiding it should help."* **Wrong** — 570–580 is the
+   *less* noisy half of the Q band, and pushing the window to 555–570 is the worst variant tested (1.96).
+
+**The mechanism that does fit** is baseline-fraction matching: the wandering additive baseline (§16.7.2h) is
+~14 % of A(440–460), ~23 % of A(450–460) and ~70 % of A_Q. The narrower Soret window carries a baseline share
+closer to the denominator's, so the common term cancels better in the ratio. That is a *physical* prediction and
+therefore testable: the best window should be the one whose baseline fraction best matches the denominator's.
+
+**⚠ Not significant yet.** 16.6 % → 13.8 % is **F = 1.45 on df 8,8, needing 3.4**. Same discipline as §16.7.2h:
+**fix the instrument first**, and if the baseline wander survives, test *Soret 450–460* on fresh data — both
+classes, n ≥ 15, one optical configuration — before touching `PB_SORET_BAND`.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
