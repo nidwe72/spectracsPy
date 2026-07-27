@@ -44,6 +44,8 @@ PROMPTS = {
     "jar": "TAKE THE CUVETTE OUT AND PUT IT BACK IN",
     "camera": "NUDGE THE CAMERA / UPPER CONE SLIGHTLY — about 1 mm, the SAME direction and amount each round",
     "holder": "NUDGE THE JAR HOLDER SLIGHTLY — about 1 mm, the SAME direction and amount each round",
+    "cone": "LIFT THE UPPER CONE OFF AND PUT IT BACK — exactly as you would to change the jar, but WITHOUT "
+            "touching the jar itself",
     "stack": "NUDGE BOTH the camera/upper cone AND the jar holder — about 1 mm each, the SAME way each round",
     "none": "CHANGE NOTHING (null run — just wait a moment)",
 }
@@ -52,7 +54,7 @@ PROMPTS = {
 # nothing to the jar's optics. `holder` is the informative one — if moving an EMPTY holder shifts the spectrum,
 # the holder itself is intercepting light (it is part of the aperture), which would make it a second thing to
 # fix rigidly. If it does nothing, the holder only matters through the jar it carries.
-EMPTY_BEAM_MODES = ("holder", "stack")
+EMPTY_BEAM_MODES = ("holder", "stack", "cone")
 
 # Sensitivity constants from Edwin's NowSteirerkraftB run (SPEC_capture_quality.md §16.7): with A_Soret = 0.801
 # and A_Q = 0.144, a RELATIVE reference error d in a band moves that band's absorbance by 0.434*d, so the pigment
@@ -152,7 +154,8 @@ def settleReport(series, noiseFloor=0.26):
 def main():
     parser = argparse.ArgumentParser(description="Cuvette re-seating repeatability (SPEC_capture_quality §16.7.1)")
     parser.add_argument("--changes", type=int, default=6, help="number of disturbances (default 6)")
-    parser.add_argument("--disturb", choices=("jar", "camera", "holder", "stack", "none"), default="jar",
+    parser.add_argument("--disturb", choices=("jar", "camera", "holder", "stack", "cone", "none"),
+                        default="jar",
                         help="WHAT is disturbed each round. 'jar' = take the jar out and put it back "
                              "(§16.7.2). 'camera' = nudge the camera/upper cone instead, which probes the "
                              "alignment sensitivity the diffuser is supposed to remove (§16.9.3c). 'none' = a "
@@ -202,6 +205,11 @@ def main():
         print("\nNudge by a SIMILAR amount and in the SAME direction every round — comparisons between runs")
         print("only hold if the disturbance is comparable. Do NOT touch the jar at all: this run measures")
         print("ALIGNMENT sensitivity, not seating.\n")
+    elif arguments.disturb == "cone":
+        print("\nLift the cone exactly as you do for a real jar change — same grip, same care — but do NOT")
+        print("touch the jar. Run it with the beam EMPTY. This measures the half of every jar change that is")
+        print("NOT the jar, and it is the decisive split: if it comes back near the 2.84% of a full jar")
+        print("re-seat, the jar is largely innocent and the fix is a hinge, not an aperture (§16.9.3g).\n")
     elif arguments.disturb in EMPTY_BEAM_MODES:
         print("\nRun this with the beam EMPTY — no jar at all. Then whatever moves is the MECHANICAL STACK")
         print("alone, with none of the jar's optics involved. Nudge a similar amount, the same way, each")

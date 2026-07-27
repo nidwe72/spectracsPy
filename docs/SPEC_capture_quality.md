@@ -2404,6 +2404,38 @@ jar error for free**. If not, they are independent and both need fixing.
 ⇒ **Priority:** (1) **rigid stack / hinged access** — new, cheap, and possibly nested inside the jar figure;
 (2) **aperture built into the holder**; (3) **diffuser — removed for now**, on the evidence above.
 
+#### 16.9.3g ⭐ The jar re-seat is a COMPOUND — and the split is untested *(2026-07-27)*
+
+Edwin confirms: **changing the jar requires lifting the upper cone.** So every "jar re-seat" measured in §16.7.2
+was really **two** disturbances in one operation:
+
+```
+    jar re-seat (2.84 % tilt)  =  the jar seating  ⊕  the cone lifted off and replaced
+```
+
+**The nudge figure cannot settle the split, because it is a lower bound.** §16.9.3f's 0.98 % came from a ~1 mm
+*nudge*; **lifting the cone off and putting it back is a far larger disturbance than a nudge.** How the 2.84 %
+divides is therefore unknown, and the possibilities are not close together:
+
+| if a cone lift alone gives… | then the JAR itself is… | cone share of the variance |
+|---|---|---|
+| 0.98 % (the nudge, lower bound) | 2.67 % | 12 % |
+| 1.5 % | 2.41 % | 28 % |
+| 2.0 % | 2.02 % | 50 % |
+| 2.5 % | 1.35 % | **77 %** |
+| 2.84 % | 0 % | **100 % — the jar would be innocent** |
+
+**⇒ The decisive measurement, and it needs no hardware: `--disturb cone`.** Lift the upper cone off and put it
+back exactly as for a real jar change — same grip, same care — **with the beam empty and the jar untouched**.
+Whatever that produces is the half of every jar change that is *not* the jar.
+
+**This can invert the whole build plan.** If a cone lift alone lands near 2.5 %, then the aperture, the jar
+seating, the meniscus and the wall rings are all secondary, and **the fix is mechanical access — a hinge, a
+kinematic seat, or a side-loading holder that lets the jar be changed without lifting the cone.** If it lands
+near the 0.98 % nudge, the jar's own optics dominate after all and §16.9.2's aperture keeps its priority.
+
+**Do this before printing anything.** It is one 17-minute run and it decides which part gets built.
+
 ### 16.9.4 Verification — and it must be pre-registered this time
 
 Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below
