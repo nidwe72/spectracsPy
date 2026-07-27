@@ -1410,6 +1410,46 @@ pouring a *fixed* amount from each batch gives 1.333. The measured Soret ratio w
 but the experiment cannot say, which is the point. **Fill to the brim and close the lid**: the path becomes the
 jar's own 1.3 cm, and the free surface disappears with it.
 
+#### 16.7.2c The same test with the SAMPLE in the jar — two channels, moving opposite ways *(2026-07-27)*
+
+Edwin's question: does re-seating behave differently when the jar holds the light-green sample rather than the
+blank, and might the sample *reduce* the artefact? It does both — and the run exposes an error channel the blank
+run was structurally blind to.
+
+| | blank | **sample (green)** |
+|---|---|---|
+| **tilt** mean · max | 3.27 % · 5.23 % | **1.84 % · 3.76 %** *(−44 %)* |
+| implied pigment-ratio swing | 9.7 % | **5.5 %** |
+| **level** mean · max | 1.68 % · 3.68 % | **4.95 % · 14.21 %** *(2.9×)* |
+| untouched control (tilt) | 0.09 % | **0.02 %** |
+
+**1. The tilt — the part that corrupts the ratio — is nearly halved with the oil in.** That supports Edwin's
+liquid hypothesis in its refined form: two drops of oil in isopropanol act as a **surfactant**, changing wetting
+and contact angle, and a surfactant-stabilised meniscus re-forms more reproducibly. The artefact is genuinely
+smaller when measuring the sample than when measuring the blank — which also means **the blank is the weaker half
+of every measurement**, and is where a holder fix would pay most.
+
+**2. The level swings 3× more — and only an ABSORBING liquid can show this.** On a blank, `A ≈ 0`, so the path
+length is invisible: pour any depth and the transmitted intensity is the same. With the sample, intensity depends
+on path through Beer-Lambert, so a level change is a **path change**: at a mean `A ≈ 0.3`, the observed 5 %
+average implies ≈ 7 % of path (≈ 0.9 mm of a 13 mm jar), and the 14 % worst case implies ≈ 20 % (≈ 2.7 mm). The
+jar is not returning to the same *effective depth of liquid in the beam* — exactly the variable §16.7.4 flagged
+as unpinned.
+
+**3. The good news: a pure path change CANCELS in the pigment ratio.** `A = ε·c·l` in both bands, so
+`A_Soret/A_Q` is independent of `l`. The level channel therefore does **not** threaten the verdict — it scales
+absolute absorbance, which matters for cross-run comparability and for any future calibrated (rather than
+ratio-based) metric. **Tilt is the enemy of the verdict; level is the enemy of absolute numbers.** The probe now
+reports them separately for that reason.
+
+**4. The instrument itself is excellent.** The untouched control reached **0.02 % tilt / 0.04 % level** — so the
+camera, lamp and reduction chain contribute essentially nothing at this timescale. Every bit of the error under
+discussion is **sample handling**, and re-seating still moves the spectrum ≈ 70× more than leaving it alone.
+
+⇒ **Brim-filling gains a second, independent justification.** It removes the free surface (the tilt channel,
+§16.7.2b) *and* pins the path length to the jar's own 1.3 cm (the level channel, §16.7.4). One change, both
+channels — and it is the next thing to measure.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
