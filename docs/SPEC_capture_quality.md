@@ -1234,6 +1234,39 @@ Same instrument, same jar handling.
 **⇒ the jar is ~98 % of the variance.** The cone joint, which has a defined seat, is *more* repeatable than a
 1 mm nudge of the camera — **the fix is a keyed seat for the jar, not more careful handling.**
 
+#### What the tilt budget costs the PEAK RATIO
+
+The tilt figures only matter once converted: `ratio error = 0.434 × tilt / A_Q`. At the current recipe
+(`A_Q = 0.225`), and — crucially — remembering that **a real measurement contains TWO jar operations**, the
+blank fill and the sample fill:
+
+| source | tilt | → ratio error |
+|---|---|---|
+| **jar seating** (per operation) | 2.81 % | **5.4 %** |
+| jar **level** (per operation, additive offset — does *not* cancel) | 1.68 % | 2.4 % |
+| → combined, per jar operation | | **5.9 %** |
+| → **two operations (R and S), independent** | | **8.4 %** |
+| holder + camera + cone together | | 1.5 % |
+| **PREDICTED total** | | **8.5 %** |
+| *observed*, 8 clean runs at this recipe | | *11.2 %* |
+
+The budget accounts for **~76 %** of what was actually measured; the remainder is sample prep (drop count, fill
+level) and the heavy tail. **Close enough to trust the ranking, not close enough to claim it is complete.**
+
+**What a keyed jar seat would buy** — assuming the jar becomes as repeatable as the cone joint already is
+(0.39 % tilt / 0.25 % level, both measured):
+
+| | σ of the pigment ratio | 4.2 vs 4.8 (gap 13.3 %) | your 2026 pair (gap 24 %) |
+|---|---|---|---|
+| today, one measurement | 8.5 % | 78 % correct | 92 % |
+| today, **median of 3 fills** | 4.9 % | 91 % | 99 % |
+| **keyed seat**, one measurement | **1.9 %** | **100 %** | 100 % |
+| keyed seat + median of 3 | 1.1 % | 100 % | 100 % |
+
+⇒ **The keyed seat is worth ~4.4×, and it is the only single change that makes a one-shot borderline call
+reliable.** The median of 3 is worth ~1.7× and costs nothing but time — do both, and the borderline case stops
+being borderline. *(2023 for scale: gap 41 %, σ 3.6 % — never in doubt.)*
+
 #### The error budget — sample side
 
 | | 2023 series | 2026 fresh oil |
