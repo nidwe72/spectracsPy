@@ -2721,6 +2721,112 @@ diffuser*. Diffuser-only is optional; the aperture is expected to be the larger 
 
 ---
 
+## 16.10 Why the jar dominates — and the three levers that follow  *(2026-07-27; Edwin's three paths, answered)*
+
+After §16.7.2o showed a **26 % verdict error rate** on the 2026 oils, Edwin's reading was that the problem may be
+structural: *even if this rig's seating is fixed, another device will seat differently.* He proposed three ways
+out — build every unit identically, understand why seating matters so much, or find a more robust metric. **All
+three have an answer, and two of them are measured.**
+
+### 16.10.1 The mechanism — the jar is the only element that BENDS light
+
+Everything else in the stack merely *carries hardware*. The jar is a **refracting slab** — ~13 mm of liquid at
+n ≈ 1.377 between acrylic windows — and a tilted slab **steers the beam**:
+
+| jar tilted by | beam displaced at the slit |
+|---|---|
+| 0.2° | 12 µm |
+| **0.5°** | **31 µm** |
+| 1.0° | 62 µm |
+| 2.0° | 124 µm |
+
+A hand-spectrometer slit is **~100–200 µm** wide *(not yet measured on this rig — worth doing)*. **So a
+half-degree tilt moves the beam by roughly a third of the slit width.** The slit then converts that into a
+throughput change, and because the grating **disperses by angle**, the change is wavelength-dependent — which is
+exactly the **tilt** that corrupts the pigment ratio.
+
+Moving the camera by 1 mm, by contrast, moves the *detector*; the beam still fills the slit the same way. The
+measurements agree: **jar 2.81 %, camera 0.42 %, cone 0.39 %** — a 7× gap that the beam-steering picture
+explains and a "things wobble" picture does not.
+
+> **⇒ The jar must be constrained in ANGLE, not merely in position.** A flat jar on a flat surface is angularly
+> constrained only by the flatness of both faces and by whatever dust lies between them.
+
+**Falsifiable, and cheap:** deliberately **tilt** the jar by a small known angle (a shim under one edge) and
+compare against **translating** it by a known distance. The model predicts tilt dominates translation by roughly
+the ratio above; if translation turns out to matter equally, the beam-steering explanation is wrong.
+
+### 16.10.2 Lever A — the tilt-invariant metric *(measured, best of everything tested)*
+
+A tilt is **an offset *and a slope*** in absorbance. That is why the earlier candidates only half-worked: a
+constant-anchor subtraction removes the offset, SNV removes offset and scale — **neither removes a slope.**
+Fitting a straight line through two oil-quiet windows (520–540 and 600–630) and subtracting it removes both.
+
+| metric | green (n=8) | brown (n=6) | d | **misclassified (LOO)** | 2023 set d |
+|---|---|---|---|---|---|
+| S/Q (current) | 4.722 ± 0.529 | 4.105 ± 0.467 | 1.23 | 4 / 14 = **29 %** | **10.39** |
+| SNV difference | 2.597 ± 0.034 | 2.515 ± 0.072 | 1.55 | 2 / 14 = 14 % | 6.69 |
+| **LINEAR baseline** | 11.861 ± 1.055 | 9.354 ± 0.834 | **2.59** | **1 / 14 = 7 %** | **10.27** |
+
+**Four times fewer errors than S/Q on the 2026 oils, and it keeps the 2023 separation intact** (10.27 vs 10.39) —
+the only candidate to improve the bad case without paying for it in the good one. **Software only.**
+
+*Caveats: n = 14, one pair of oils, one day; and although the linear-baseline form was chosen from the physics of
+a tilt rather than from a scoreboard, it was scored on data that had already been explored. It needs the same
+validation as §16.7.2k — both classes, n ≥ 15, one optical configuration, fresh data — before `PB_SORET_BAND`'s
+neighbours are touched in code.*
+
+### 16.10.3 Lever B — a kinematic (3-point) jar seat
+
+Not "a tighter holder": **a seat that defines the jar's ANGLE.** Three hard contact points constrain tilt to a
+few arc-minutes and are indifferent to dust, where a flat-on-flat interface is not. Combine it with §16.9.2's
+aperture — the same printed part does both jobs, and §16.9.3h showed the target is modest: **get the jar to
+where the cone joint already is (0.39 % tilt), and the verdict error rate goes from 26 % to ~0 %.**
+
+The cone joint is the existence proof: it is *more* repeatable than a 1 mm nudge of the camera **because it has
+a defined seat**. The jar has none.
+
+### 16.10.4 Lever C — the median of 3 fills
+
+Costs nothing but time, needs no hardware, and is the right estimator for a **heavy-tailed** error (§16.7.2f).
+Worth ≈ 1.7×.
+
+### 16.10.5 The manufacturing question — you need less than it appears
+
+Edwin's worry: *another device will seat differently.* **Per-device differences largely do not matter, because
+`T = S/R` cancels a stable instrument.** A unit with a *different but stable* geometry measures its own
+reference in that geometry, and the ratio still reports the oil.
+
+What actually breaks a measurement is a unit that changes **between its own R and S captures**. That is a
+**stability** requirement, not a manufacturing-tolerance one — and it is far cheaper to meet:
+
+| requirement | why | how |
+|---|---|---|
+| **within a run: rigid** | the tilt error is a *change* between R and S | kinematic seat; ideally integrate the jar into the optical assembly (Edwin's own suggestion, and the strongest form of this) |
+| **between units: threshold only** | absolute level can shift with configuration (measured: **14 %** between two optical configurations, §16.7.2g) | one reference sample of known ratio, measured per device at commissioning |
+
+Second-order effects do remain per unit — stray light, and small differences in the px→nm calibration — so the
+per-device reference measurement is not optional. But **"every unit built identically" is not the requirement**;
+"every unit stable within a run, and calibrated once" is.
+
+### 16.10.6 Combined, and what is still open
+
+| lever | effect | status |
+|---|---|---|
+| linear-baseline metric | 29 % → 7 % errors | **measured**, needs fresh-data validation |
+| kinematic angular seat + aperture | σ 11 % → ~2 % | designed (§16.9), not built |
+| median of 3 fills | ×1.7 | free, adopt now |
+| sample clarification | attacks the *fragility* (§16.7.2l) | untested |
+
+They are independent and they multiply. **Nothing measured today suggests the approach is unsound** — the
+instrument resolves a 15 % class gap on oils whose *pigment* difference is genuinely small; what it lacks is a
+seat that returns the sample to the same angle twice.
+
+**Still open:** the slit width (unmeasured, and it sets the sensitivity), the tilt-vs-translation test above,
+the fresh-data validation of the linear baseline, and the 47/66 hue-band decision from §17.8.1.
+
+---
+
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).
