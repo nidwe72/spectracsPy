@@ -67,6 +67,43 @@ class LinearBaselineMetricTest(unittest.TestCase):
             scaled = _spectrum(lambda nm, k=factor: k * _oil(nm))
             self.assertAlmostEqual(self.__correctedRatio(clean), self.__correctedRatio(scaled), places=6)
 
+    def test_a_window_does_not_dominate_the_fit_by_having_more_points(self):
+        # A window is ONE piece of evidence about the baseline, not one per sample point. Sampling one window
+        # more densely — same span, same values — must not drag the fit toward it.
+        #
+        # This is a MUCH-REDUCED sensitivity, not an exact invariance: the within-window spread of λ still
+        # depends on the point count, so a small residual remains. What equal weighting buys is measured
+        # here rather than asserted as absolute — on this construction the corrected value at 450 nm shifts
+        # 8.03 % under the old unweighted fit and 0.31 % under equal weighting, a factor of ~26.
+        step = lambda nm: 0.10 if nm <= 560.0 else 0.20   # the windows disagree, so weighting has leverage
+        sparse = _spectrum(step)
+        dense = _spectrum(step)
+        denser = dict(sparse.valuesByNanometers)                          # 600-630 sampled 4x denser
+        denser.update({600.0 + 0.5 * i: step(600.0 + 0.5 * i) for i in range(61)})
+        dense.valuesByNanometers = denser
+
+        def shift(corrector):
+            a, b = corrector(sparse), corrector(dense)
+            return abs(a - b) / abs(a)
+
+        def equalWeighted(spectrum):
+            return self.module.linearBaselineCorrected(spectrum, WINDOWS).valuesByNanometers[450.0]
+
+        def unweighted(spectrum):
+            # What the op used to do — plain least-squares over every anchor point.
+            import numpy
+            lam = numpy.array(sorted(spectrum.valuesByNanometers))
+            val = numpy.array([spectrum.valuesByNanometers[k] for k in lam])
+            mask = numpy.zeros_like(lam, dtype=bool)
+            for low, high in WINDOWS:
+                mask |= (lam >= low) & (lam <= high)
+            slope, intercept = numpy.polyfit(lam[mask], val[mask], 1)
+            return step(450.0) - (slope * 450.0 + intercept)
+
+        self.assertGreater(shift(unweighted), 0.05)          # the old behaviour moves materially
+        self.assertLess(shift(equalWeighted), 0.01)          # the new one barely moves
+        self.assertLess(shift(equalWeighted) * 10, shift(unweighted))
+
     def test_the_correction_actually_zeroes_the_anchor_windows(self):
         corrected = self.module.linearBaselineCorrected(_spectrum(_oil), WINDOWS)
         for low, high in WINDOWS:
@@ -94,11 +131,12 @@ class RoastBaselineGaugeTest(unittest.TestCase):
     #   anchoring set  (§16.10.7)  20260727B = green, 20260727C = brown
     #   OUT-OF-SAMPLE  (§16.10.7a) 20260727E = green, 20260727D = brown — measured AFTER the threshold
     #                              was fixed, and classified 6/6 by it with nothing refitted.
-    ANCHORING_GREEN = [11.460, 12.048, 11.352, 14.186, 11.616, 11.675, 14.171, 10.564, 11.920]
-    ANCHORING_BROWN = [9.844, 9.999, 9.406, 9.644, 9.543, 7.714]
-    FRESH_GREEN = [13.395, 12.834, 12.116]
-    FRESH_BROWN = [9.475, 7.804, 8.023]
-    GREEN = ANCHORING_GREEN + FRESH_GREEN
+    ANCHORING_GREEN = [11.534, 12.119, 11.422, 14.273, 11.666, 11.725, 14.261, 10.604, 11.979]
+    ANCHORING_BROWN = [9.859, 10.011, 9.420, 9.662, 9.553, 7.722]
+    FRESH_GREEN = [13.500, 12.931, 12.194]
+    FRESH_BROWN = [9.469, 7.812, 8.032]
+    LATER_GREEN = [13.132, 11.936, 10.506, 11.051]   # 20260727E 004-007, added after the fresh check
+    GREEN = ANCHORING_GREEN + FRESH_GREEN + LATER_GREEN
     BROWN = ANCHORING_BROWN + FRESH_BROWN
 
     def setUp(self):

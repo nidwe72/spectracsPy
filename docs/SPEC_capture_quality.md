@@ -3041,6 +3041,33 @@ still gates any change to `PB_SORET_BAND`'s neighbours.
 
 Prototypes: `linear_metric.py`, `oil_table.py`, `dilution_invariance.py` (2026-07-27 session scratchpad).
 
+**Baseline fit = EQUAL WEIGHT PER WINDOW** *(implemented 2026-07-27)*. Each anchor window contributes total
+weight 1, not one unit per sample point. Compared on all 25 runs of the day against the two alternatives:
+
+| fit | green (n=16) | brown (n=9) | d | gap |
+|---|---|---|---|---|
+| unweighted least-squares over all points | 12.103 [10.452 .. 14.186] | 9.050 [7.714 .. 9.999] | 2.85 | +0.453 |
+| **equal weight per window** *(shipped)* | 12.177 [10.506 .. 14.273] | 9.060 [7.722 .. 10.011] | **2.88** | **+0.495** |
+| line through the two window centroids | 12.115 [10.446 .. 14.218] | 9.046 [7.707 .. 9.996] | 2.84 | +0.450 |
+
+**The choice is for predictability, NOT accuracy.** Run values move ≈0.5 %, *d* spans 2.84–2.88, within-series
+CV is identical to a tenth of a percent, and **no verdict changes on any of the 25 runs under any of the three
+fits** — a +0.495 vs +0.453 gap at n=25 with ~10 % scatter is not a real difference. What equal weighting buys
+is that a window's influence stops depending on how many points happen to fall in it: unweighted, 520–540's 135
+points were outvoted by 600–630's 212, and *widening a window would silently re-weight the baseline*. Measured:
+the corrected value at 450 nm shifts **8.03 %** under the unweighted fit when one window is sampled 4× denser,
+and **0.31 %** under equal weighting — a factor of ~26.
+
+*Not an exact invariance:* the within-window spread of λ still depends on the point count, so a small residual
+remains. Equal weighting also does **not** make the fit width-invariant — a wider window moves its own centroid,
+and that legitimately changes the line.
+
+**Still open (not implemented):** the near-zero denominator guard. `ratio()` clamps at `EPS = 1e-3`, so a run
+that drove the corrected Q to ≤ 0 would yield an enormous ratio, clamp to the band's left edge, and report a
+confident **"good — green"**. Today's denominators ran 0.062–0.114, i.e. ≥ 62× the guard, so it is nowhere near
+firing — but a silent false-green is the worst failure direction this instrument has, and the fix (return
+`None` so the gauge omits itself) is small.
+
 ---
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
