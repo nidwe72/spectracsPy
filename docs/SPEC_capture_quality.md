@@ -2327,9 +2327,26 @@ being ratioed against a jar-in measurement — each block is compared only again
 and the jar re-seat at 2.84 %. If the empty-beam blocks land near the control, that is a *useful negative*: it
 confines the entire problem to the jar's own optics, which is what §16.9.2's aperture addresses.
 
-#### 16.9.3f RESULT — ⚠ CONFOUNDED, the DIFFUSER moved too *(2026-07-27, `--disturb stack`, empty)*
+#### 16.9.3f RESULT — the STACK is a real error source; the dirt was the LEVEL half *(2026-07-27)*
 
-> **Read the conclusion below as provisional.** Edwin: the frosted glass was still in place during this run,
+> **✅ RE-RUN CLEAN (no diffuser, no jar) — the conclusion SURVIVES, and the confound is now measured.**
+>
+> | same disturbance, empty beam | tilt mean | tilt max | **level** | control |
+> |---|---|---|---|---|
+> | with the dirty diffuser | 0.99 % | 1.81 % | **2.23 %** | 0.05 % |
+> | **without it (clean)** | **0.98 %** | 2.07 % | **0.74 %** | 0.04 % |
+>
+> **The TILT is unchanged (0.99 → 0.98 %) — that error is the STACK. The LEVEL fell 3× (2.23 → 0.74 %) — that
+> error WAS the moving dirt.** Physically consistent: dust is broadly **grey**, so shifting it changes how much
+> light gets through but not the colour balance. The confound was real and it touched only the channel dust can
+> touch. *(23× the untouched floor, 76 % of each excursion permanent.)*
+>
+> ⇒ **Take the dirty diffuser out.** It has never demonstrated a measurable benefit (§16.7.2g), it adds a
+> level-noise channel of its own (~1.5 %), and removing it doubles the light — exposure 64 instead of 128, peak
+> 205 DN instead of 114. If a diffuser is ever reinstated it must be **clean and rigidly fixed**; of the three
+> properties, **immobility matters most, cleanliness second, placement last.**
+>
+> *(Original provisional note retained below.)* Edwin: the frosted glass was still in place during this run,
 > **it carries dirt that cannot be cleaned off** (it came from an old camera lens), and **it moved when the jar
 > holder was nudged.** So three things moved together — camera, holder, and a *patterned absorber* — and the
 > tilt/level below cannot be attributed to the holder. A retry with **no diffuser and no jar** is the clean
@@ -2371,9 +2388,21 @@ and S captures moves the pigment ratio by **≈ 6 %** (§16.7.2c's additive-offs
 have to be *touched* between reference and sample for this to bite — it only has to **relax**, and 73 % of each
 excursion here was permanent.
 
-⇒ **Priority, pending the clean retry:** (1) rigid stack / hinged access, (2) aperture built into the holder,
-(3) diffuser — now questionable at any position while it is dirty and loose; **immobility, then cleanliness,
-then placement**, in that order of importance.
+**RANKING of the tilt error, all measured on the same rig with the same probe and control:**
+
+| source | tilt | note |
+|---|---|---|
+| **jar re-seat** | **2.84 %** | the biggest single contributor |
+| **stack (camera + holder)** | **0.98 %** | 23× the floor, 76 % permanent |
+| camera alone | 0.42 % | so the holder adds ≈ 0.56 % |
+| untouched control | 0.04 % | |
+
+**⚠ The open question decides whether these add or nest:** *does changing the jar require lifting the upper
+cone?* If it does, the 2.84 % already contains the 0.98 %, and **making the stack rigid removes a third of the
+jar error for free**. If not, they are independent and both need fixing.
+
+⇒ **Priority:** (1) **rigid stack / hinged access** — new, cheap, and possibly nested inside the jar figure;
+(2) **aperture built into the holder**; (3) **diffuser — removed for now**, on the evidence above.
 
 ### 16.9.4 Verification — and it must be pre-registered this time
 
