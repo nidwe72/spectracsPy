@@ -1368,10 +1368,27 @@ positions (rotated 180°? resting against a different wall?) with slow settling 
 4. **Re-anchor expectations, not thresholds.** Nothing about the verdict maths changes; what changes is that a
    run's reference must be earned by not disturbing the optics. The Roast Ampel threshold and the 47/66 hue bands
    are unaffected by this finding.
-5. **Open question for the archive:** the 32-run Capability-Proof set has CV 3.6 %, *better* than the 9.6 % mean
-   re-seat error measured here — so those runs must have had ~3× less seating error. Did that series keep the
-   cuvette in place between reference and sample? If yes, it is direct confirmation of item 1; if no, the holder
-   or the handling was simply more repeatable then, and item 2 matters more.
+5. **⭐ The Capability Proof's noise floor WAS this — reconciled 2026-07-27.** Edwin confirms the 32-run series
+   also changed cuvettes, so the apparent contradiction (CV 3.6 % vs a 9.6 % mean re-seat error) needed
+   resolving. It resolves cleanly, because the re-seat error is **skewed**: the six measured tilts were
+   6.71 · 0.82 · 1.05 · 2.10 · 1.11 · 5.23 %, i.e. **median 1.60 %** with two large excursions dragging the mean
+   to 2.84 %. Predicted ratio error = tilt × 0.434/A_Q, and the two data sets differ in A_Q as well
+   (capability set **0.210 ± 0.068**, the new dilute pair **0.144–0.178**):
+
+   | | A_Q | typical re-seat (median) | bad re-seat (max) |
+   |---|---|---|---|
+   | 32-run capability set | 0.210 | **3.3 %** | 13.9 % |
+   | NowSteirerkraft A/B | 0.16 | 4.4 % | **18.2 %** |
+
+   **Observed: capability within-class CV 3.6 % / 4.5 %; A/B reference-attributable divergence 20–28 %.** Both
+   land on their predictions. ⇒ **Cuvette seating was never absent — it IS the dominant term in the published
+   proof's scatter**, and Edwin's A/B pair simply caught a bad re-seat at a thinner dilution.
+
+6. **Therefore the proof itself should get sharper.** Removing the seating term (no-touch arm: 0.26 % tilt →
+   0.5 % ratio error) leaves the non-seating noise, `√(3.6² − 3.3²) ≈ 1.4 %`, for a total near **1.5 % instead of
+   3.6 %** — about **2.4× tighter, i.e. Cohen's d ≈ 25 instead of 10.4**. That is a concrete, falsifiable
+   prediction: re-run a few oils with the cuvette left seated and the within-class SD should collapse. It also
+   means the *published* d = 10.39 understates the method — it was measuring the holder as much as the oil.
 
 ### 16.8 The Q band sits in the sensor's colour-filter CROSSOVER *(2026-07-27 — why the blank reads low at 580 nm)*
 
