@@ -1423,11 +1423,30 @@ run was structurally blind to.
 | **level** mean · max | 1.68 % · 3.68 % | **4.95 % · 14.21 %** *(2.9×)* |
 | untouched control (tilt) | 0.09 % | **0.02 %** |
 
-**1. The tilt — the part that corrupts the ratio — is nearly halved with the oil in.** That supports Edwin's
-liquid hypothesis in its refined form: two drops of oil in isopropanol act as a **surfactant**, changing wetting
-and contact angle, and a surfactant-stabilised meniscus re-forms more reproducibly. The artefact is genuinely
-smaller when measuring the sample than when measuring the blank — which also means **the blank is the weaker half
-of every measurement**, and is where a holder fix would pay most.
+**1. ⚠ CONFOUNDED — the surfactant reading below is WITHDRAWN (Edwin, 2026-07-27).** The two runs differ in
+**two** ways, not one: between them Edwin also laid a **frosted-glass diffuser** (from an old camera lens) on top
+of the jar. So the −44 % tilt cannot be attributed to the oil. *(The withdrawn reading was: two drops of oil act
+as a surfactant and stabilise the meniscus. It may still be true — it is simply not what this pair of runs
+shows.)*
+
+**The evidence actually points at the diffuser.** The **untouched control** also improved, 0.09 % → **0.02 %**,
+a 4.5× gain — and nothing is disturbed during a control interval, so meniscus reproducibility cannot explain it.
+A diffuser can: it scrambles the angular distribution of the beam, so *any* small geometric change — jar
+position, meniscus curvature, thermal creep — couples far more weakly into which part of the slit and grating is
+illuminated. Desensitising the optics to geometry is exactly what a diffuser is for.
+
+**And it plausibly fixes a specific defect Edwin identified: the jar's centre pin.** These acrylic jars carry a
+small **moulding gate — a nub of extra acrylic in the middle of the bottom**, sitting right in the beam, and it
+read visibly dark before the diffuser was added. A defect at the centre of the aperture whose *rotational
+position changes every time the jar is put back* is a strong candidate for the **discrete seating states**
+(0.667 vs 0.690, §16.7.2) — the jar returns at a different angle, the pin's shadow lands differently. The
+diffuser smooths that shadow out, which is what Edwin observed.
+
+**The clean experiment (one variable):** same liquid, same fill, toggle **only** the diffuser — 6 re-seats with,
+6 without. Two cautions for it: (a) the diffuser costs light (the exposure had to go 64 → 256, i.e. ~4× less
+signal, some of which is the sample's own absorption) so the SNR trade must be measured, not assumed; and (b) if
+the glass simply **rests on the jar**, it is lifted and replaced along with it and so becomes part of the
+disturbance — **mount it on the cone, not on the jar**, before drawing conclusions.
 
 **2. The level swings 3× more — and only an ABSORBING liquid can show this.** On a blank, `A ≈ 0`, so the path
 length is invisible: pour any depth and the transmitted intensity is the same. With the sample, intensity depends
