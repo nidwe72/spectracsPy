@@ -2271,6 +2271,34 @@ today's controls have ranged 0.02–0.26 % depending on configuration.
 | both blocks small | alignment is not a significant error source here — the seating error is about the jar's own optics (wall rings, meniscus), and the aperture matters more than the diffuser |
 | both blocks large | the diffuser does not fix alignment on this rig; look to mechanical rigidity of the two-cone stack instead |
 
+#### 16.9.3d RESULT — alignment is NOT the problem; the jar is *(2026-07-27, 6 camera nudges, no diffuser)*
+
+`--disturb camera`, 6 rounds, jar untouched throughout, ~1 mm nudges of the upper cone:
+
+| disturbance | tilt mean | tilt max | implied ratio swing |
+|---|---|---|---|
+| **jar re-seat** (§16.7.2c) | **2.84 %** | 6.71 % | 9.6 % |
+| **camera nudge** | **0.42 %** | 1.42 % | 1.3 % |
+| untouched control | 0.09 % | 0.23 % | 0.1 % |
+
+**The jar is ~7× the error source the camera alignment is** — and the practical gap is far wider than that,
+because **in normal use the camera is never touched while the jar is moved for every single measurement.**
+
+⇒ **This lands on the third row of §16.9.3c's outcome table.** Alignment sensitivity is real but small, so the
+**diffuser's ceiling is ~0.4 % of tilt** — it cannot fix a 2.8 % problem it does not touch. **The aperture
+(the jar's own optics: wall rings, meniscus) is the part worth building; the diffuser mount is a distant
+second.** That reverses the priority §16.9 was written with, on evidence, before anything was printed.
+
+**A second observation, useful for the mount design.** The response is **threshold-like, not proportional**:
+four of the six nudges produced nothing above the noise floor, and two produced 0.9 % and 1.6 %. That is the
+signature of **play or stiction in the cone stack** — a small push does nothing until something slips, then it
+stays slipped (61 % of each excursion was permanent). So the fix for alignment, if it is ever needed, is
+**mechanical rigidity, not damping**.
+
+*(Caveats: n = 6, the nudge magnitude is not calibrated, and the with-diffuser block was not run — it is now a
+low priority given the ceiling above. The comparison against the jar figures is fair in kind, since both used
+the same probe, the same rig, and the same paired control.)*
+
 ### 16.9.4 Verification — and it must be pre-registered this time
 
 Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below

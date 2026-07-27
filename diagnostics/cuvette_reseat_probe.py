@@ -226,21 +226,21 @@ def main():
             break
         describe("after re-seat", after)
         change = delta(before, after)
-        rounds.append(("re-seat", change))
+        rounds.append((arguments.disturb, change))
         previousAfter = after            # the NEXT round's "before" closes the no-touch control interval
         print("   -> tilt %+.2f%%, level %+.2f%%, would move the pigment ratio %+.1f%%\n"
               % (change["tilt"], change["level"], change["ratio"]))
 
     backend.release()
 
-    reseats = [d for kind, d in rounds if kind == "re-seat"]
+    reseats = [d for kind, d in rounds if kind == arguments.disturb]
     notouch = [d for kind, d in rounds if kind == "no-touch"]
     if not reseats:
         return 0
 
     print("\n=== RESULT — disturbance: %s ===" % arguments.disturb.upper())
     print("%-12s %3s   %-22s %-22s %s" % ("", "n", "tilt (phosphor/pump)", "implied ratio swing", "level"))
-    for label, group in (("re-seat", reseats), ("no-touch", notouch)):
+    for label, group in ((arguments.disturb, reseats), ("no-touch", notouch)):
         if not group:
             continue
         tilts = np.abs([d["tilt"] for d in group])
@@ -262,8 +262,8 @@ def main():
             # printed factor stays honest when the control is at the measurement floor.
             floored = max(notouchTilt, 0.02)
             factor = reseatTilt / floored
-            print("\n  re-seating moves the spectrum %s%.0fx as much as leaving it alone (control %.3f%%)."
-                  % (">=" if notouchTilt < 0.02 else "", factor, notouchTilt))
+            print("\n  disturbing the %s moves the spectrum %s%.0fx as much as leaving it alone (control %.3f%%)."
+                  % (arguments.disturb, ">=" if notouchTilt < 0.02 else "", factor, notouchTilt))
         if factor is None:
             pass
         elif reseatTilt < 0.5:
@@ -296,10 +296,15 @@ def main():
         if jumps.mean() < max(floor * 2.0, 0.4):
             print("\n  => NO REAL DISTURBANCE was applied (the jumps are at the noise floor), so there is")
             print("     nothing to settle and nothing to conclude. This is the null case.")
+        elif permanents.mean() <= 30.0:
+            print("\n  => WAITING WORKS. Most of the excursion settles out, so the disturbance is transient")
+            print("     (liquid slosh, mechanical relaxation) rather than a changed geometry. Protocol fix:")
+            print("     pause after every change - and the curves above say how long.")
         elif residuals.mean() <= max(floor * 2.0, 0.5):
-            print("\n  => WAITING WORKS. What survives the pause is down at the untouched noise floor, so the")
-            print("     disturbance is the LIQUID and the MECHANICS settling, not a changed geometry.")
-            print("     Protocol fix: pause after every jar change - and the curves above say how long.")
+            print("\n  => MOSTLY PERMANENT, but SMALL. %.0f%% of each excursion survives the pause, yet what")
+            print("     survives is close to the untouched floor (%.2f%% vs %.2f%%). The disturbance changes"
+                  % (permanents.mean(), residuals.mean(), floor))
+            print("     the geometry for good, but by little - this variable is not a major error source.")
         elif residuals.mean() >= jumps.mean() * 0.8:
             print("\n  => WAITING DOES NOT HELP. It is a PERMANENT STEP - the jar does not return to the same")
             print("     optical state. Fix the seating instead (fill to the brim, keyed holder), or never")
