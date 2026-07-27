@@ -547,6 +547,14 @@ Prepare a BATCH at 1:30–1:33 in the measuring glass, swirl until clear
 > **Why more drops for the same concentration:** drop count is the crudest step — ±½ drop is ±25 % at 2 drops,
 > ±17 % at 3, **±8 % at 6**.
 >
+> **⚠ CLARIFY THE SAMPLE (2026-07-27, untested lever).** Fresh unfiltered oil carries suspended solids that
+> scatter greyly across the whole window. Measured: the broad baseline is **72 %** of the Q band in the fresh
+> 2026 oils against **~50 %** in the three-year-old 2023 ones, and the pigment content of the denominator is
+> **halved** — which is why the same jar handling scatters 2-3x more now (`SPEC_capture_quality.md` §16.7.2l).
+> **Let the diluted sample stand overnight, or filter/centrifuge it, before measuring**, and check that `A_red`
+> (600-630 nm) drops. This is untested but it is the cheapest lever available: it attacks why the denominator is
+> fragile rather than the disturbance that exploits it.
+>
 > **Two rules that matter as much as the recipe:**
 > 1. **Fill the jar identically every time, blank and sample.** The beam is vertical, so the fill depth *is* the
 >    path length — 1 ml ≈ 11 % of absorbance (§16.7.4). Fill to the brim, or mark one volume and keep to it.

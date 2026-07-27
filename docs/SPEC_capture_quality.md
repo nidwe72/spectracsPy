@@ -1819,6 +1819,56 @@ not used to choose the metric. Test **linear-baseline** and **SNV difference** s
 ratio. Meanwhile the instrument fix remains first — with `b` and `k` held still, the raw ratio is still the best
 discriminator we have.
 
+#### 16.7.2l ⭐ Why 2023 did NOT wander: the oil changed, not the instrument *(2026-07-27)*
+
+Edwin's question, and the sharpest one of the investigation: *the instrument is the same and the jar was re-seated
+in both series — so why did the 2023 runs hold CV 3.6 % while the 2026 runs scatter 14–17 %?*
+
+**Because `A_Q` is not the same quantity in the two series.** Splitting the denominator into its broad baseline
+(measured at 600–630, where the oil should absorb little) and the rest:
+
+| | A_Soret | A_Q | A_red (baseline) | **pigment Q** = Q − red | baseline share |
+|---|---|---|---|---|---|
+| 2023 green | 0.647 | 0.172 | 0.093 | **0.079** | 54 % |
+| 2023 brown | 0.616 | 0.247 | 0.113 | **0.135** | 45 % |
+| **2026 fresh** | 0.992 | 0.212 | **0.154** | **0.059** | **72 %** |
+
+The *total* `A_Q` is unremarkable (0.212 against 0.172–0.247). Its composition is not: **the pigment content of
+the denominator is roughly halved and the broad baseline has gone from ~50 % of it to 72 %.**
+
+**The mechanism — why that alone reproduces the observed 2–3×.** The two halves of `A_Q` respond differently to
+a disturbance:
+
+- **The pigment half co-varies with the Soret band.** Same molecules, same concentration, same path length, so a
+  re-seat that changes the path moves both bands together and **the ratio cancels it**. This is precisely the
+  mechanism that makes the ratio dilution-invariant in the first place.
+- **The baseline half does not.** It is broad extinction from suspended matter, with its own geometry dependence.
+
+So the ratio's self-correction only ever applied to the *pigment fraction* of the denominator. In 2023 about half
+the denominator was self-correcting; in 2026 only ~28 % is. **The same jar wobble therefore produces 2–3× more
+ratio error, with no change to the instrument and no change in handling.** The numerator agrees: `A_Soret` CV is
+2.6 % in 2023 against 6.0 % now.
+
+**Where the extra baseline comes from — and a correction to §16.7.2f.** Most likely **suspended solids that have
+not settled**: fresh unfiltered pumpkin oil is cloudy, and the 2023 oils had three years to clarify themselves.
+§16.7.2f dismissed turbidity because the baseline does not rise toward the blue like Rayleigh scattering — **that
+test was too narrow.** Large particles (Mie / geometric regime, particle ≫ λ) scatter almost **greyly**, which
+looks exactly like the broad, near-flat offset observed. The two eras' baselines even carry opposite slopes
+(2023 −1.1e-3 /nm, 2026 +3.0e-3 /nm), consistent with different particle populations rather than with one
+wavelength law.
+
+**⭐ The lever this hands us — sample clarification.** Let a diluted sample **stand overnight**, or **filter /
+centrifuge** it, and re-measure. Falsifiable prediction: `A_red` falls, the pigment share of `A_Q` rises, and the
+S/Q scatter drops — **with the instrument untouched**. If it holds, this is a bigger and cheaper win than any
+optical fix discussed so far, because it attacks the reason the denominator is fragile rather than the
+disturbance that exploits it.
+
+**And an irony worth recording.** The 2026 oils read "greener" — the reason `SPEC_roast_ampel.md`'s threshold
+moved 2.8 → 4.4 — **precisely because their Q-pigment is low**. The property that raises the ratio is the same
+one that shrinks its denominator, so **the fresher and greener the oil, the more fragile its measurement.** That
+is a property of the metric, not of the rig, and it argues for the baseline-corrected or SNV form (§16.7.2k)
+independently of every instrument consideration.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
