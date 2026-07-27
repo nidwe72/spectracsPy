@@ -1869,6 +1869,45 @@ one that shrinks its denominator, so **the fresher and greener the oil, the more
 is a property of the metric, not of the rig, and it argues for the baseline-corrected or SNV form (§16.7.2k)
 independently of every instrument consideration.
 
+#### 16.7.2m Is the BROWN class safe even when the green wanders? *(Edwin's hypothesis, 2026-07-27)*
+
+Edwin: *maybe I must accept that the green oil is volatile, but the brown oil is not — so it stays below the
+Ampel threshold and the verdict still holds.* **The mechanism is right and 2023 confirms it. The 2026 oils do
+not inherit the comfort.**
+
+**2023 — hypothesis confirmed.** Per-oil, 4 runs each:
+
+| class | mean CV | baseline share | pigment Q |
+|---|---|---|---|
+| green (K,L,O,P) | **2.8 %** | 54 % | 0.079 |
+| **brown (M,N,Q,R)** | **2.0 %** | 45 % | **0.135** |
+
+oilN reaches CV **0.5 %**, oilQ 1.3 % — no green oil comes close. Exactly what §16.7.2l predicts: the brown oils
+carry **1.7× the pigment content in the denominator**, so more of it self-corrects. And every 2023 oil sat
+**5–65 SD** from its threshold: the classification was never in doubt for either class.
+
+**2026 — the ordering survives, the margin does not.** The 2026 brown has **1.8× the pigment-Q of the 2026
+green** (0.055 vs 0.031), so it *should* be the steadier of the two, as in 2023. But **both sit far below the
+2023 levels** (0.135 / 0.079 then), and both carry a **72 % baseline share** — beyond anything measured in 2023.
+The brown is relatively better off and absolutely worse off.
+
+**The margin is what settles it.** Against the 4.4 threshold:
+
+| | S/Q | gap to 4.4 | at CV 5 % | at CV 11 % |
+|---|---|---|---|---|
+| 2026 brown (`NowSBudget`) | 4.06 | 0.34 | **1.7 SD** | 0.8 SD |
+| 2026 green (`NowSteirerkraft`) | 5.18 | 0.78 | 3.0 SD | 1.4 SD |
+
+**Even at an optimistic 5 % CV the brown oil sits 1.7 SD below the threshold — a ~4 % misclassification rate,
+and worse if its CV is nearer the green's.** So the argument *"the brown is safe, so ignore the green's
+wander"* **does not hold for these oils**: they are intrinsically closer together than the 2023 pair (24 % apart
+vs 41 %) *and* individually more fragile. In 2023 that argument would have been sound; in 2026 it is not.
+
+**The missing measurement is small and decisive: 4–6 fills of the 2026 BROWN oil.** Its CV is the one number
+that decides whether the verdict is safe in the direction that matters (catching an over-roasted oil). If it
+lands near 4–5 % the brown side is workable while the green stays noisy; if it lands near the green's, the whole
+2026 pair needs the instrument fix or the SNV metric before any verdict is trustworthy.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
