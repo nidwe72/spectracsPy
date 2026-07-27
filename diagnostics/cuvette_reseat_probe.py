@@ -234,13 +234,16 @@ def main():
         notouchTilt = np.abs([d["tilt"] for d in notouch]).mean()
         # The control can read ~0 by luck on a short run; dividing by it manufactures a huge, meaningless
         # factor. Floor the denominator at the measured noise level and refuse a verdict on a weak control.
-        if len(notouch) < 2 or notouchTilt < 0.05:
-            print("\n  control arm too small/quiet to compare against (n=%d, %.3f%%) — run more rounds."
-                  % (len(notouch), notouchTilt))
+        if len(notouch) < 2:
+            print("\n  only %d control interval(s) — run more rounds before comparing." % len(notouch))
             factor = None
         else:
-            factor = reseatTilt / notouchTilt
-            print("\n  re-seating moves the spectrum %.1fx as much as leaving it alone." % factor)
+            # A very QUIET control is a good result, not an unusable one; only floor the denominator so the
+            # printed factor stays honest when the control is at the measurement floor.
+            floored = max(notouchTilt, 0.02)
+            factor = reseatTilt / floored
+            print("\n  re-seating moves the spectrum %s%.0fx as much as leaving it alone (control %.3f%%)."
+                  % (">=" if notouchTilt < 0.02 else "", factor, notouchTilt))
         if factor is None:
             pass
         elif reseatTilt < 0.5:
@@ -281,6 +284,13 @@ def main():
         else:
             print("\n  => PARTLY. Some settles out, a residual step remains - both mechanisms are present.")
             print("     Waiting is worth doing, but it is not sufficient on its own.")
+    levels = np.abs([d["level"] for d in reseats])
+    print("\n  TILT vs LEVEL — they cost different things:")
+    print("    tilt  mean %5.2f%%  max %5.2f%%   spectral shape -> corrupts the pigment RATIO" % (
+        np.abs([d["tilt"] for d in reseats]).mean(), np.abs([d["tilt"] for d in reseats]).max()))
+    print("    level mean %5.2f%%  max %5.2f%%   throughput/path -> scales ABSOLUTE absorbance; a pure path"
+          % (levels.mean(), levels.max()))
+    print("                                      change CANCELS in the ratio (both bands scale together)")
     print("\n  For scale: Edwin's A/B pair differed by 5.04% tilt, which swung the pigment ratio 20-28%.")
     return 0
 
