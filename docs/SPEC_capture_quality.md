@@ -3139,6 +3139,54 @@ The truthful statement is that **single-run precision does not support confident
 all**; a narrow zone is a compromise, not a rigorous interval. The real fix is the median of 3 fills (σ ÷ 1.7,
 §16.10.4) plus the seat, after which ±6 % would carry the weight ±10 % does today.
 
+#### 16.10.11a The honest form — distance ÷ measured scatter *(worked on the 25 runs, 2026-07-27)*
+
+Not a fitted classifier (§16.10.14 measured those as worse *and* mis-calibrated) — two arithmetic steps.
+
+**Step 1 — σ from repeat FILLS, never from repeat captures.** This choice is the whole method: re-capturing one
+fill without touching the jar gives ~1 % and excludes the dominant error, so a confidence built on it is a
+fiction. Repeat *fills* include the seating.
+
+| fill | n | CV |
+|---|---|---|
+| green B | 9 | 10.3 % |
+| green E | 7 | 9.1 % |
+| brown C | 6 | 8.9 % |
+| brown D | 3 | 10.7 % |
+| **pooled** | | **9.7 % → σ = 1.00 metric units at the threshold** (dof 21) |
+
+**Step 2 — `z = (x − T)/σ`, then `P = Φ(z)`.** Use a **t-distribution** on the real dof rather than the normal:
+the error is heavy-tailed (§16.7.2f), so the Gaussian is optimistic exactly where it matters.
+
+| confidence | decided | inconclusive | wrong |
+|---|---|---|---|
+| 80 % | 17/25 | 8 | **0** |
+| 90 % | 14/25 | 11 | **0** |
+| 95 % | 10/25 | 15 | **0** |
+| 99 % | 6/25 | 19 | **0** |
+
+**Zero errors at every level** — the mechanism does its job. But at 95 % the instrument decides only **40 % of
+single measurements**. That is the same fact as "the margin is 2 %", restated in the unit a user cares about.
+Median of 3 fills recovers part of it (≈16/25 decided at 95 %).
+
+⚠ **What the number means.** `P = 0.964` is **P(the true metric value is above the threshold)** — *not*
+P(the oil is green). Two uncertainties stack: measurement scatter, which this estimates, and whether 10.3
+divides green from brown oil at all, which 25 runs on one rig cannot establish. The wording must therefore be
+**"above threshold, 96 % confident"**, never "96 % green" — otherwise an unvalidated threshold is laundered
+through a respectable-looking probability.
+
+**σ should be measured per session**, not baked in, so the confidence self-calibrates. That is the real use of
+the B1 bracketing idea (§16.10.12): it cannot correct an individual run, but it does sample the seating spread.
+
+**This is what prices the seat (§16.9.4), in the only unit that matters:**
+
+| σ | decided at 95 % |
+|---|---|
+| 9.7 % (today) | 10/25 |
+| 3.0 % (cone-joint level, §16.10.3's target) | **≈21/25** *(estimate, same 25 values)* |
+
+From deciding 40 % of samples to deciding 84 %.
+
 ### 16.10.12 Idea backlog — marked, not built *(2026-07-27, Edwin)*
 
 | # | idea | status | note |
@@ -3256,6 +3304,53 @@ what little is left of an almost-white sample. This predicts colour would work b
 where absorbance saturates and the ratio stops working. **The two approaches want opposite concentrations.**
 
 Colour therefore stays a **visual aid** on this oil pair, not a discriminator.
+
+### 16.10.16 The sub-10 asymmetry — a real signal, and the re-run trap *(Edwin 2026-07-27)*
+
+**Edwin's observation, and it holds:** on all 25 runs, *nothing green ever read low.*
+
+```
+runs below 10.0:   8,  ALL brown
+lowest green:      10.506  (E006)
+highest brown:     10.011  (C002)
+empirical no-man's land:  10.011 .. 10.506
+```
+
+**A single sub-10 reading IS strong evidence.** Fitting each class with the measured σ (§16.10.11a):
+
+| | mean | σ | P(run < 10.0) |
+|---|---|---|---|
+| green | 12.18 | 1.18 | **3.3 %** (1 in 31) |
+| brown | 9.06 | 0.88 | 86 % |
+
+→ **likelihood ratio 26 : 1 for brown.** The intuition is well founded.
+
+**Caveat 1 — "no green was ever that low" ≠ green never goes there.** Zero events in 16 green runs is *exactly*
+what a 3.3 % rate predicts (expected 0.5). It bounds the rate as small, not zero; the nonparametric 95 % ceiling
+(rule of three) is **18.8 %**. Expect a sub-10 green eventually.
+
+**Caveat 2 — the PROCEDURE is weaker than the observation.** The proposed rule was: borderline reading, re-run,
+if it lands low call it brown. But the first reading cannot be discarded — the evidence is the **pair**:
+
+| first | re-run | mean | LR for brown |
+|---|---|---|---|
+| 10.4 | 9.8 | 10.10 | **5 : 1** |
+| 10.4 | 9.5 | 9.95 | 13 : 1 |
+| 10.4 | 10.1 | 10.25 | 2 : 1 |
+
+5 : 1, not 26 : 1 — the borderline 10.4 is itself mildly pro-green and pulls back.
+
+**Caveat 3 — the trap.** A rule that fires when **either** reading is low has, for green oil,
+`1 − (1 − 0.033)² = 6.5 %` false-brown — it **doubles** the error rate. Generalised: *"keep measuring until one
+lands low"* converges on calling everything brown. Selecting among readings is not the same as combining them.
+
+**The fix is small:** take the **mean or median of the fills and evaluate that** against the threshold, i.e.
+§16.10.11a with σ/√n. Edwin's rule is the special case; doing it this way captures the same intuition while
+keeping the error rate honest.
+
+Two conditions on any re-run: it must be a **new fill and a new seating** (re-capturing one fill repeats the
+same disturbance and is not a second opinion), and 10.0 is an **observed extreme on 25 runs** — observed extremes
+move outward as data accumulates, as the §16.10.7a margin trend already shows.
 
 **Still open (not implemented):** the near-zero denominator guard. `ratio()` clamps at `EPS = 1e-3`, so a run
 that drove the corrected Q to ≤ 0 would yield an enormous ratio, clamp to the band's left edge, and report a
