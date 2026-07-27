@@ -1622,6 +1622,47 @@ comparison at all.**
 then run n ≥ 6 per configuration** — below that, this experiment cannot answer the question it is asking. And
 report the **median**, which survives both outliers untouched.
 
+#### 16.7.2h Nine same-sample runs: the scatter is ALL in the denominator *(2026-07-27)*
+
+With runs 008 and 009 the diffuser arm reaches n = 5 and the comparison is still flat — **F = 1.47 (needs > 9.1),
+medians 4.97 vs 4.35 with Mann-Whitney p = 0.29.** The withdrawal in §16.7.2g stands: *a diffuser resting on the
+jar shows no measurable effect either way.*
+
+The nine runs together say something more useful. On **one sample**:
+
+| | range | CV |
+|---|---|---|
+| `A_Soret` (numerator) | 0.874 – 1.091 | **6.6 %** |
+| `A_Q` (denominator) | 0.134 – 0.243 | **17.7 %** |
+| `A_red` (baseline, 600–630) | 0.090 – 0.183 | 21.5 % |
+| **S/Q** | 4.137 – 6.691 | **16.6 %** |
+
+**The numerator is 2.7× steadier than the denominator, and the denominator moves with the baseline at
+r = +0.99 (p < 0.0001).** `A_Q` and `A_red` are, run to run, the same quantity: the Q band is mostly the broad
+baseline (74–77 %, §16.7.2f) and it is the baseline that wanders. Hold the denominator at its mean and the S/Q
+CV falls **16.6 % → 6.6 %**, i.e. *all* the excess scatter is there.
+
+**Consequence worth testing properly: a baseline-aware metric is immune to exactly this error.** Measuring each
+candidate's class gap on the 2023 set against **today's** reproducibility:
+
+| metric | class gap | today's CV | gap / CV |
+|---|---|---|---|
+| **S/Q** (current) | 41 % | 16.6 % | **2.47** |
+| **(S−R)/(Q−R)** de-baselined | 63 % | 13.7 % | **4.58** |
+| S/(Q−R) | 59 % | 11.7 % | 5.00 |
+| (S−R)/Q | 45 % | 20.0 % | 2.26 |
+
+Under the **2023** noise the raw ratio was best (d = 10.39 vs 9.79, §16.7.2f). Under **today's** noise the
+de-baselined form is ~1.9× better. Both are true and consistent: subtracting `A_red` removes the additive term
+that now dominates, at the cost of a noisier denominator when that term is quiet.
+
+**⚠ Do NOT switch the metric on this evidence.** The candidates were compared on the same nine runs that revealed
+the problem, which is how one overfits; `(S−Q)/(Q−R)` scores highest of all (5.24) and is a physically
+meaningless combination, which is the tell. Only `(S−R)/(Q−R)` has a principled reading — subtract the baseline
+from both bands. **Order of business: fix the instrument first** (the baseline wander is a symptom, not a fact of
+nature); if it proves irreducible, validate `(S−R)/(Q−R)` on data that was not used to choose it, both classes,
+n ≥ 15, one fixed optical configuration.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
