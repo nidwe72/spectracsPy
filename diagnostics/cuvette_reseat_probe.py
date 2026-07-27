@@ -92,6 +92,10 @@ def main():
                         help="seconds to let the sensor settle before starting (measured: ~1.6%% over 10 min)")
     parser.add_argument("--device", type=int, default=None)
     parser.add_argument("--exposure", type=int, default=None)
+    parser.add_argument("--relax", type=float, default=0.0,
+                        help="after each re-seat, watch for N seconds instead of capturing once. THE "
+                             "DISCRIMINATOR: liquid sloshing / mechanical settling RELAXES back over time, a "
+                             "changed geometry is a permanent STEP. The last reading is used as the 'after'.")
     parser.add_argument("--roi", default=None, help="X1,Y1,X2,Y2")
     parser.add_argument("--coeffs", default=None, help="A,B,C,D px->nm cubic")
     arguments = parser.parse_args()
@@ -140,7 +144,35 @@ def main():
             input("\n   >>> TAKE THE CUVETTE OUT AND PUT IT BACK IN, then press Enter ")
         except EOFError:
             print("   (non-interactive — continuing without a re-seat)")
-        after = capture(backend, roi, coefficients, arguments.frames)
+        if arguments.relax > 0:
+            print("   watching it settle for %.0fs — do NOT touch anything now" % arguments.relax)
+            relaxEnd = time.time() + arguments.relax
+            started, series = time.time(), []
+            while time.time() < relaxEnd:
+                sample = capture(backend, roi, coefficients, max(2, arguments.frames // 3))
+                if sample is None:
+                    break
+                elapsed = time.time() - started
+                tilt = ((sample["phosphor"] / sample["pump"])
+                        / (before["phosphor"] / before["pump"]) - 1.0) * 100
+                series.append((elapsed, tilt))
+                print("      t=%5.0fs  ph/pump %7.4f   tilt vs before %+6.2f%%" % (elapsed, sample["phosphor"] / sample["pump"], tilt))
+            after = sample
+            if len(series) >= 3:
+                # Settling shows as |tilt| shrinking from the first reading to the last; a geometry step holds.
+                firstTilt, lastTilt = abs(series[0][1]), abs(series[-1][1])
+                if firstTilt < 0.5:      # noise floor is ~0.26% — below this there is no jump to interpret
+                    print("      -> initial jump %+.2f%% is within the noise floor: nothing was disturbed"
+                          % series[0][1])
+                else:
+                    recovered = (firstTilt - lastTilt) / firstTilt * 100
+                    print("      -> initial %+.2f%% settled to %+.2f%% (%.0f%% of the jump recovered) => %s"
+                          % (series[0][1], series[-1][1], recovered,
+                             "SETTLING (liquid / mechanics — it relaxes back)" if recovered > 50 else
+                             "PERMANENT STEP (geometry — it stays put)" if recovered < 20 else
+                             "MIXED: part settles, part is permanent"))
+        else:
+            after = capture(backend, roi, coefficients, arguments.frames)
         if after is None:
             print("   no frames — aborting")
             break
