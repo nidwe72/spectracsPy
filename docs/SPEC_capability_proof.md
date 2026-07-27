@@ -522,6 +522,41 @@ Prepare a BATCH at 1:30–1:33 in the measuring glass, swirl until clear
 →  bench computes T = S/R, A = −log10(S/R), then the preprocessing matrix + metrics (§4.2)
 ```
 
+> ### ⭐ RECALIBRATED RECIPE — measured 2026-07-27, USE THIS ONE
+>
+> Derived from three same-sample runs that scattered **CV 14.2 %** (vs the 2023 series' 3.6 %), anchored on two
+> runs of known dilution (8 ml + 2 drops → A_Soret 0.664; 6 ml + 2 drops → 0.801). Diagnosis: **the sample had
+> been diluted 1.7× too far** — the Q band, which is the ratio's denominator, fell to `A_Q ≈ 0.09`, and the error
+> amplification `0.434/A_Q` rose from 2.1 (2023) to 4.5. See `SPEC_capture_quality.md` §16.7.
+>
+> **Standing recipe: 0.333 drops/ml.**
+>
+> ```
+> BATCH:  18 ml isopropanol + 6 drops oil   — swirl until clear, ~4 pot fills
+>         (9 ml + 3 drops if you need less; avoid 2-drop batches)
+> ```
+>
+> | recipe | drops/ml | A_Soret | A_Q | darkest bin | error amplification |
+> |---|---|---|---|---|---|
+> | 10 ml + 2 drops | 0.200 | 0.51 | 0.099 | 58 DN | 4.4 — **too weak** |
+> | 8 ml + 2 drops | 0.250 | 0.63 | 0.124 | 44 DN | 3.5 — weak |
+> | **18 ml + 6 drops** | **0.333** | **0.84** | **0.166** | **27 DN** | **2.6 ← target** |
+> | 8 ml + 3 drops | 0.375 | 0.95 | 0.186 | 21 DN | 2.3 — edge |
+> | 6 ml + 3 drops | 0.500 | 1.26 | 0.248 | 10 DN | 1.7 — **at the floor** |
+>
+> **Why more drops for the same concentration:** drop count is the crudest step — ±½ drop is ±25 % at 2 drops,
+> ±17 % at 3, **±8 % at 6**.
+>
+> **Two rules that matter as much as the recipe:**
+> 1. **Fill the jar identically every time, blank and sample.** The beam is vertical, so the fill depth *is* the
+>    path length — 1 ml ≈ 11 % of absorbance (§16.7.4). Fill to the brim, or mark one volume and keep to it.
+> 2. **Let the instrument confirm it.** Every capture prints `CAPTURE-LOWDN role=… minDn=…`:
+>    **20–40 DN = correct · < 16 DN = too strong, add solvent · > 50 DN = too weak, add a drop.** That makes the
+>    recipe self-correcting regardless of drop size or oil batch.
+>
+> **Expected:** CV 14.2 % → ~8 % from the recipe alone → ~4.5 % with a stabilised blank → **~2.6 % averaging 3
+> fills**, i.e. back to 2023-series quality and under the 4.1 % needed to separate S/Q 4.2 from 4.8.
+
 - **Glassware.** A 10 ml **graduated cylinder** (narrow bore, ~0.2 ml graduations) — not a beaker. Read the bottom
   of the meniscus at eye level. Volume error then ≈ 2 %, leaving the **drop count** as the dominant prep error.
 - **Drop count is the crude step.** ±½ drop is ±25 % at 2 drops, ±17 % at 3, ±8 % at 6. Preparing a larger batch

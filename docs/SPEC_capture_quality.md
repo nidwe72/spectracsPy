@@ -1517,6 +1517,38 @@ depth-in-beam, which §16.7.4 already flagged.
 **The measurement that closes it: re-run the blank with the diffuser mounted.** Blank isolates throughput
 (no path sensitivity), and toggling only the diffuser isolates the diffuser. Two runs, one variable each.
 
+#### 16.7.2e The live plot must be drawn in DN — the linearized trace caused a real measurement error
+
+§17.7/15 predicted the linearized trace would "look alarming" and listed a DN display as optional. It is not
+optional: on **2026-07-27 it cost a series of measurements.** Edwin saw the 440 nm end of the linear plot sitting
+on the axis, concluded the signal was vanishing, and diluted 1.7× further — which halved the Q band, doubled the
+error amplification, and took the run-to-run CV from 3.6 % to **14.2 %** (§16.7.5). The signal had in fact been
+**60 DN, four times the guard**.
+
+**Why the linear plot hides it.** Both axes are drawn 0…255, but the decode `255·(v/255)^2.2` crushes the bottom:
+
+| landmark | DN axis | linear axis |
+|---|---|---|
+| saturation | 255 (100 %) | 255 (100 %) |
+| AE target | 245 (96 %) | 234 (92 %) |
+| healthy blank | 180 (71 %) | 119 (47 %) |
+| healthy sample band | 120 (47 %) | 49 (19 %) |
+| a dim-but-fine bin | 60 (24 %) | 10.6 (**4.1 %**) |
+| **low-DN guard** | **16 (6 %)** | **0.58 (0.2 %)** |
+
+**The entire usable-but-dim range 16–60 DN occupies the bottom 4 % of a linear plot** — one or two pixels above
+the axis. Everything down there reads as "zero" whether it is healthy or dead.
+
+**The principle: linear light for the MATHS, DN for the EYES.** `T = S/R`, the CIE integrals and Beer-Lambert all
+require linear light — that is settled and stays (§17). But the live plot is not a physics readout, it is an
+*exposure instrument*, and every decision made from it is a sensor fact: clipping at 255, the AE target at 245,
+quantization taking over below 16. Those landmarks sit at fixed, recognisable heights **only on a DN axis** — the
+same reason a camera histogram shows raw levels and an audio meter shows dBFS rather than linear amplitude.
+
+**Implementation is display-only and trivial:** the decode is invertible and the inverse already exists
+(`SpectralColorUtil.encodeGammaFraction`), so the panel plots `encode(value)` while the pipeline keeps the linear
+values untouched. Label the axis **DN**, and draw the 16 DN guard line on it.
+
 #### 16.7.3 What follows from it
 
 1. **⭐ The real fix is procedural and free: do not remove the cuvette between reference and sample.** Leave it
