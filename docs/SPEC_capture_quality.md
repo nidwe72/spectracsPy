@@ -2307,22 +2307,28 @@ reduction (c), and — by elimination — only **(a) instrument stability** rema
 
 ## 16.9 Optical hardening — the aperture mask and the fixed diffuser  *(DESIGN, 2026-07-27; build on explicit request)*
 
-Two small parts that attack the two halves of the dominant error (§16.7.2n). They are **independent**, solve
-**different** problems, and stack:
+Three small parts that attack the dominant error (§16.7.2n). They are **independent**, solve **different**
+problems, and stack:
 
 | part | fixes | error it removes |
 |---|---|---|
 | **A — aperture mask** | *which* light is measured | wall-guided ring light (stray light), and the dependence on jar centring |
 | **B — diffuser mount** | *how* the light may arrive | angular/positional sensitivity of the grating response |
+| **C — kinematic jar seat** (§16.9.4) | *at what ANGLE* the sample sits | the re-seating tilt — **98 % of the instrument variance** |
 
-### 16.9.1 The one rule that decides whether either works
+### 16.9.1 The one rule that decides whether the OPTICAL parts work
 
-> **Both parts mount to the HOLDER or the CONE. Neither ever touches the jar.**
+> **Parts A and B mount to the HOLDER or the CONE. Neither ever touches the jar.**
 
 This is the whole lesson of §16.7.2g: a diffuser resting on the jar is **lifted and re-seated with it**, so it
 becomes part of the disturbance instead of a shield from it — which is why its A/B came out null (n=5, p = 0.29).
 An aperture glued to the jar would fail identically. Mounted to the holder, both parts define a **fixed optical
 geometry that the jar moves through**, rather than a geometry the jar carries with it.
+
+**Part C is the deliberate exception, and not a violation of the rule.** The seat (§16.9.4) is the one part that
+*must* touch the jar — but it touches it in order to **define the jar's angle**, not to ride along with it. The
+distinction is the same one: a component that the jar *carries* inherits the disturbance; a component the jar is
+*registered against* removes it. A and B are geometry the jar passes through; C is the datum it returns to.
 
 ### 16.9.2 Part A — the aperture mask
 
@@ -2692,7 +2698,113 @@ holder** — one printed part addressing 98 % of the error; (2) sample clarifica
 independent and attacks the *fragility* rather than the disturbance; (3) everything else — cone, camera,
 diffuser — is noise-floor housekeeping.
 
-### 16.9.4 Verification — and it must be pre-registered this time
+### 16.9.4 Part C — the kinematic jar seat *(DESIGN, 2026-07-27; build on explicit request)*
+
+The part that attacks the 98 % (§16.7.2n). Per the build order above it is **the same printed part as the
+aperture** (§16.9.2) — printing them separately would make their mutual alignment a second error source.
+
+#### 16.9.4a Do this FIRST — the zero-print experiment
+
+> **Do not re-seat the jar at all.** Leave it in the holder and change the liquid with a syringe.
+
+This removes the dominant error source outright, costs nothing, and can run today. For the §16.10.8 dilution
+series in particular the entire ≥4× concentration span can be built by **successive addition to a fixed blank**,
+never lifting the jar — which decouples the dilution-invariance experiment from the hardware fix entirely.
+Cost: rinse carryover. **Run this before printing anything**, both because it is faster and because it is the
+cleanest confirmation that the mechanism in §16.10.1 is what we think it is.
+
+#### 16.9.4b Why an FDM printer is good enough — repeatability ≠ accuracy
+
+The obvious objection: the printer holds ±0.1–0.3 mm, and the error budget is **31 µm** (§16.10.1). An order of
+magnitude short.
+
+It does not matter. **A kinematic mount never has to put the jar in a *known* place — only in the *same* place
+twice.** Repeatability is set by contact-point stability (surface finish, µm) and not by the absolute position of
+the features. A part printed 0.3 mm off nominal still returns the jar to arc-minute repeatability, because the
+seat's *job* is to be deterministic, not correct.
+
+What is wrong today is **over-constraint**. A flat jar bottom on a flat rest admits infinitely many contact sets,
+so the angle is decided by whichever dust grain or moulding high-spot wins that day. Three points admit exactly
+one. That is the whole fix.
+
+#### 16.9.4c Geometry
+
+```
+        TOP VIEW (seat plate, jar OD 30 mm — §16.9.2)
+
+              ● ball @ 120°
+         ▁▁▁▁▁▁▁▁▁▁▁▁▁
+      ▁▁▀   ┌───────┐   ▀▁▁
+    ▕  ▏    │ Ø16   │    ▕  ▏   ◀ wall pad (hard)
+    ▕  ▏    │ clear │    ▕  ▏
+      ▔▀▁   └───────┘   ▁▀▔
+         ▔▔▔▔▔▔▔▔▔▔▔▔▔
+        ●              ●
+                ╰─ flexure pad (sprung) presses the jar
+                   onto the two hard pads
+
+   balls on a Ø25 mm bolt circle  →  r = 12.5 mm, clear of the Ø16 mm aperture (r = 8 mm)
+```
+
+| feature | value | why |
+|---|---|---|
+| ball bolt circle | **Ø25 mm**, 3 × 120° | outside the Ø16 mm clear aperture, inside the Ø30 mm jar rim |
+| contact elements | **3 × Ø6 mm steel balls**, press-fit + CA into conical pockets | **do NOT print the contact points** — FDM layer ridges shift under load and wear |
+| *preferred variant* | **3 × M3 dome-head screws into heat-set inserts** | lets you **tram the seat perpendicular to the optical axis once, then lock** — turns print tolerance into a one-time adjustment |
+| rotational index | notch in the plate + sticker on the jar | a moulded jar bottom is **not flat**; three points on an irregular rim still repeat perfectly *provided the jar returns in the same rotation*. Costs nothing, probably worth as much as the balls |
+| lateral constraint | **2 hard pads + 1 sprung**, at 120°, offset 60° from the balls | sprung pad = printed PETG cantilever ≈ 1 mm × 15 mm. No play, and it absorbs jar-diameter variation |
+| preload | O-ring or light compression spring under the cone, **2–5 N, acting centrally** | without it the lateral flexure's friction can hold the jar off one ball |
+
+#### 16.9.4d Print settings that actually matter
+
+| setting | value | why |
+|---|---|---|
+| material | **PETG or ASA — not PLA** | PLA creeps under sustained preload and softens near the lamp |
+| perimeters / infill | 4+ / 40–60 % near the contacts | a floppy plate flexes under preload and returns differently |
+| orientation | plate flat, **pockets facing up** | Z is the printer's accurate axis; a sloped pocket is a layer staircase |
+| pockets | conical, ≥45° walls | self-supporting, no supports to scar the contact |
+| layer height | 0.15–0.2 mm | — |
+| combine | **one part with the §16.9.2 aperture** | their relative alignment stops being an error source |
+
+#### 16.9.4e Expected gain, and the honest limit
+
+Contact stability of ~5 µm over a Ø25 mm bolt circle is 5/25000 rad ≈ **0.7 arc-minutes**, against roughly **0.5°**
+today (§16.10.1) — order **40×**, with large margin over §16.10.3's target of merely reaching the cone joint's
+0.39 %.
+
+*That is the mount's own repeatability.* The real floor is set by debris and by whether the jar bottom itself
+deforms under preload — which is exactly why V2 below is a gate and not a formality.
+
+**Verification is already written**: `cuvette_reseat_probe.py --disturb jar`, run before and after. Tilt should
+fall from **2.81 % toward 0.39 %**.
+
+#### 16.9.4f Candidate — printed magnetic kinematic coupling *(noted 2026-07-27, Edwin; NOT adopted)*
+
+**Michael Hathaway, "Kinematic Bed Mounts"** — <https://www.printables.com/model/1057179-kinematic-bed-mounts>
+(`Dimple_1.5_V2.stl`, `Trough_1.5_V2.stl`). A **9–10 mm ball bearing between two printed pucks**; each puck holds
+4 × 3/8" cylinder magnets that clamp the joint shut. Dimple-against-dimple = a located point; dimple-against-trough
+= the ball slides along the groove. Author's BOM: 5 dimple + 3 trough prints, 4 balls, 32 magnets, high-temp epoxy;
+print in ABS/PC/nylon. Designed to replace Ender 5 bed adjusters.
+
+Recorded as a **candidate for the §16.9.4 carrier interface**, not as the design. What recommends it: correct
+topology, a steel ball as the moving contact, and **magnets supply the preload** that §16.9.4c specced as an
+O-ring or spring — centrally and symmetrically, which is better than the version above.
+
+What would have to change first:
+
+| issue | why it matters here | change |
+|---|---|---|
+| **4 joints** | four points on a plane is **over-constrained** — the exact defect being fixed; the author uses 4 because a printer bed is rectangular | use **3**: one dimple–dimple + two dimple–trough (Kelvin-style cone/groove/groove) |
+| **printed dimple + trough** | the ball is hard, its *seats* are not; under preload plastic creeps and the contact migrates. Fine at a bed's ~100 µm, marginal against our **31 µm** (§16.10.1) | PC/nylon for stiffness; consider a hardened washer or a second ball epoxied into each seat so steel runs on steel |
+| **32 magnets** | sized for a heavy heated bed at speed; excess preload is what indents printed seats | start at **one magnet per puck**, add only if the joint lifts |
+| **high-temp plastic** | the author's reason is the heated bed, which we do not have | same materials, different reason: creep and stiffness, not heat. PETG probably acceptable |
+| **troughs allow sliding** | deliberate thermal-expansion relief. Tolerable for us **only because §16.9.2's aperture pins the measured area**, so lateral drift does not change which liquid is read — three balls define a plane wherever they sit along their grooves | keep, but the aperture becomes a dependency rather than an option |
+
+**No repeatability figure is quoted by the author**, and printer bed mounts typically target 50–100 µm. Three
+contacts repeating to ~20 µm on a Ø60 mm carrier circle would be ≈0.019° — inside budget — but that is an
+estimate, not a measurement. It enters **V2 (§16.9.5)** like any other arm before anything is built around it.
+
+### 16.9.5 Verification — and it must be pre-registered this time
 
 Three of today's readings were overturned by the next run (§16.7.2g, §16.7.2i, §16.7.2f). The protocol below
 fixes the rules **before** the data:
@@ -2704,10 +2816,14 @@ fixes the rules **before** the data:
 | **V2** | **re-seat repeatability**, `cuvette_reseat_probe.py`, **n ≥ 6 per arm**, exclusion = documented physical cause only | tilt and level both fall against the no-hardware baseline (3.27 % / 4.95 %, §16.7.2c) |
 | **V3** | **end-to-end** — 6 fills of one sample | S/Q CV **≤ 4 %** (the level needed to separate 4.2 from 4.8, §16.7.2f) |
 
-**Arms for V2**, in this order, so a null result is still informative: *baseline → aperture only → aperture +
-diffuser*. Diffuser-only is optional; the aperture is expected to be the larger effect and is cheaper to build.
+**Arms for V2**, in this order, so a null result is still informative: *baseline → **no-re-seat control**
+(§16.9.4a, syringe fill) → seat only → seat + aperture → seat + aperture + diffuser*. Diffuser-only is optional.
 
-### 16.9.5 Consequences to plan for
+The **no-re-seat control is the most informative arm and needs no hardware at all**: it is the floor the seat is
+trying to reach. If tilt does *not* collapse when the jar is never lifted, the mechanism in §16.10.1 is wrong and
+Part C should not be built — so run that arm **before** printing.
+
+### 16.9.6 Consequences to plan for
 
 1. **The threshold must be re-anchored afterwards.** Changing the optical configuration shifted the measured S/Q
    by **14 %** between the diffuser and no-diffuser sets (§16.7.2g). Fix the final configuration **first**, then
@@ -2824,6 +2940,67 @@ seat that returns the sample to the same angle twice.
 
 **Still open:** the slit width (unmeasured, and it sets the sensitivity), the tilt-vs-translation test above,
 the fresh-data validation of the linear baseline, and the 47/66 hue-band decision from §17.8.1.
+
+### 16.10.7 Cross-group verification of the linear baseline *(2026-07-27, all 15 runs of the day)*
+
+**Grouping correction to §16.10.2:** that table sliced `20260727B` by wall-clock, which put runs 008/009 in the
+no-diffuser set. Per Edwin's own labelling the diffuser runs are 001–003 **and** 008–009; no-diffuser is 004–007.
+No run was excluded anywhere below — the two visible extremes (green 007 at 14.209, brown 006 at 7.714) are in
+every number.
+
+| series | n | S/Q (CV) | LINEAR base (CV) |
+|---|---|---|---|
+| green, no diffuser (`B` 004–007) | 4 | 4.605 (14.4 %) | 12.267 (10.8 %) |
+| green, diffuser (`B` 001–003, 008–009) | 5 | 5.212 (17.4 %) | 11.990 (11.0 %) |
+| brown (`C` 001–006) | 6 | 4.105 (11.4 %) | 9.361 (8.9 %) |
+
+CV improves in **all five** groups of the day (incl. the two not shown), mean factor 0.71 ≈ **1.4× better
+repeatability** — and the class gap widens at the same time, so both terms of *d* move the right way at once.
+
+**Ranked by LINEAR base, all 9 green runs sort above all 6 brown** (worst green 10.565 > best brown 10.002,
+gap 0.563). Ranked by S/Q the classes **interleave** — three greens fall below a brown, and no threshold
+classifies all 15. This is a *separation* result against Edwin's labels, **not** a threshold calibration; the
+implied 10.28 midpoint is provisional (±2.7 % margin at n=15, one day) and must not ship as an Ampel threshold.
+
+### 16.10.8 Dilution invariance — UNRESOLVED, and seating is why *(2026-07-27)*
+
+The 2023 library **cannot** answer it: each oil was measured 2–4 times at *one* dilution, within-oil level spread
+only ±4.5 %. Its weak-lever signal is merely suggestive — the linear baseline is about half as level-sensitive as
+S/Q (slope −0.435 vs −0.707).
+
+On today's green oil, across a real 2.19× dilution span (3.15× per run), **neither** metric shows a significant
+level dependence (LINEAR r=+0.248, t=0.89; S/Q r=−0.454, t=1.76; n=14, needs |t|>2.18). That is not a clean bill
+of health — it is a power failure:
+
+| | spread |
+|---|---|
+| metric spread from **seating alone** (9 runs, one dilution) | 1.34× |
+| metric spread across a **2.19× dilution change** | 1.35× |
+| absorbance *level* spread from seating alone | 1.57× |
+
+**Seating noise alone is as large as the entire dilution effect**, so the dilution term is buried. The last row
+also compromises absorbance level as a concentration proxy, which is what weakens the 2023 test above.
+
+*An earlier reading of two low green runs (NowSteirerkraftA 9.097, cap003 9.588) as evidence of dilution
+dependence was over-attributed — the A/B pair sits at near-identical level (0.1923 vs 0.1819) yet 35 % apart in
+metric, which is seating, not dilution.*
+
+**Consequence — this promotes Lever B.** The kinematic seat is no longer only "improves the numbers"; it is a
+**prerequisite for measuring dilution invariance at all**, which is the claim the Capability Proof rests on.
+The settling experiment: after the seat fix, one oil, ≥4× concentration span, n ≥ 5 per level, one session
+(≈20 runs) — enough power to resolve a log-log slope of ~0.1.
+
+### 16.10.9 ▶ NEXT TASK — implement the linear-baseline metric *(marked 2026-07-27; DESIGN only, do not implement until asked)*
+
+Fit a straight line through 520–540 and 600–630 of the ABSORPTION spectrum, subtract it, then take S/Q of the
+corrected spectrum. **One function, no hardware.** Keep the raw S/Q alongside for comparison.
+
+Carry these caveats into the implementation: separation is demonstrated at **fixed dilution only** (§16.10.8);
+the threshold is provisional; and the band edges plus the two quiet windows were chosen *after* seeing the tilt
+problem, so they are fitted, not independent. Fresh-data validation (both classes, n ≥ 15, one configuration)
+still gates any change to `PB_SORET_BAND`'s neighbours.
+
+Prototypes: `linear_metric.py`, `oil_table.py`, `dilution_invariance.py` (2026-07-27 session scratchpad).
 
 ---
 
