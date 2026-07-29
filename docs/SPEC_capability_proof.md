@@ -97,6 +97,31 @@ Cluster gap: **worst green 3.67 > best brown 2.59** — a clean, empty separatio
 > demonstrated on the oils that matter, and cannot be until the seat is fixed. **GO on discrimination, HOLD on
 > dilution invariance.**
 
+> ### ⭐ UPDATE 2026-07-30 — the seat WAS fixed, and the blocker moved
+>
+> Edwin rebuilt the jar holder, cone seat and camera mount and re-measured
+> ([`SPEC_capture_quality.md`](SPEC_capture_quality.md) **§16.11**, 12 fresh green runs across two dilutions plus
+> a full probe sweep). Three rows of the 2026-07-27 banner above have changed.
+>
+> | 2026-07-27 read | 2026-07-30 measurement |
+> |---|---|
+> | *the jar's re-seating, ~98 % of instrument variance — **the gate's real blocker*** | jar tilt **2.84 % → 1.34 %** (2.1×, floor unchanged at 0.07 % so the comparison holds). Metric σ **9.7 % → 2.96 %** — first result under §16.10.3's 3 % target, replicated on two dilutions (§16.11.3) |
+> | *dilution invariance **cannot be measured** until the seat is fixed* | **first evidence, in the right direction** (§16.11.6): two dilutions 16.8 % apart give metric means 1.9 % apart, `t = 1.14, p = 0.28`, and the pooled CV across both equals each alone. ⚠ n = 2 dilutions only 17 % apart — **§16.10.8 is partially unblocked, NOT resolved** |
+> | *GO on discrimination, HOLD on dilution invariance* | discrimination `d` **2.72 → 4.67** on the archived brown, and → 9.81 if brown's scatter improves as green's did. **The green side is finished** (4.82 σ clear, false-brown ~1-in-3700). **All residual risk is brown: ~10 % false-GREEN on one fill**, unmeasured since the rebuild (§16.11.12) |
+>
+> **⇒ The gate is one brown session away.** §16.11.11's series **D** (6 re-seats → the brown σ that decides it)
+> and **E** (6 fills → σ_fill). §16.7.2o's uncomfortable finding that brown scatters *like* green (11.4 % vs
+> 11.2 %) is now the argument in favour: same error source ⇒ the same fix should apply.
+>
+> **⚠ The blocker has MOVED, not disappeared — and it is no longer an instrument problem.** Everything measured
+> on 2026-07-29/30 improved **precision**, not **correctness**. `T = 10.6` dividing green from brown oil is still
+> **unvalidated** (§16.10.11a: `P = 0.964` is P(the *metric* exceeds the threshold), *not* P(the oil is green)),
+> and a precise instrument reading a wrong threshold is confidently wrong ~96 % of the time. **The instrument is
+> now precise enough that the threshold's correctness is the binding constraint** — which is this spec's territory,
+> and needs reference oils with independent ground truth. No further mechanical work can close it.
+>
+> ⚠ Also: **§7.3's recipe table is contradicted by measurement** — see the note in that section.
+
 ### ⚖ Where this stands after 2026-07-27 — will the mill profit? *(Edwin asked directly; honest read)*
 
 **The one-line summary of the day:** brown oil does read lower than green — in 2023 and again in 2026 — but a
@@ -603,6 +628,18 @@ Run 1 → UC2; Run 2 → UC3.)
 Order to run: UC0 (skeleton, done) → UC1 (repeatability) → UC2 (invariance) → UC3 (discrimination).
 
 ### 7.3 Per-capture procedure — **REVISED 2026-07-26 for the fresh 2026 oils (batch-and-pour)**
+
+> ⚠ **CONTRADICTED BY MEASUREMENT 2026-07-30 — do not act on the dilution table below until the drop volume is
+> weighed.** This section's recommendation (1:30–1:33) rests on a **simulation** predicting min DN @ 440 nm = 25
+> for green. The rebuilt rig **measures 0.65–0.85 DN** at the nominal 1:30 — the oil absorbs ~2.1× more than
+> modelled, implying a real ratio nearer **1:14** and a drop of **~0.21 ml**, not the **0.10 ml** this section's
+> "2 drops in 4 ml ≈ 1:20" arithmetic assumes. Separately, §7.3's *criterion* — keeping the 440 nm bins out of the
+> sRGB toe — has since been tested and **does not bind**: those bins do not hurt the metric, and moving the band
+> away from them is strictly worse. What §7.3 never checked is the metric's **scatter**, which goes as `1/A_Q`, so
+> the correct rule is the opposite of the one below: **among dilutions whose metric VALUE is invariant, pick the
+> STRONGEST that keeps the bands linear.** Full analysis, both tables, and the ▶ action (weigh 20 drops):
+> [`SPEC_capture_quality.md`](SPEC_capture_quality.md) **§16.11.15** and **§16.11.14**. Current working recipe is
+> **18 ml + 6 drops, fresh, ~15 min to settle, measured within the hour** (§16.11.7, §16.11.15).
 
 **Why it changed.** The lab conditions changed with the 2026 oils: they are **fresher and absorb far more** than
 the aged 2023 oils. At the old strength (2 drops in 4 ml ≈ **1:20**) the sample bottoms out at **DN 5 of 255** at

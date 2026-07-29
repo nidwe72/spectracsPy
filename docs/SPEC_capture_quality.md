@@ -3488,6 +3488,743 @@ firing — but a silent false-green is the worst failure direction this instrume
 
 ---
 
+## 16.11 ⭐ THE REBUILD — measured *(Edwin 2026-07-29/30; the jar halved, the camera took its place, first sub-3 % metric)*
+
+The first re-measurement of §16.7–§16.10 after mechanical work. Everything here is measured on Edwin's rig with
+the same `diagnostics/cuvette_reseat_probe.py` and the same paired untouched control, or extracted from the
+embedded `workflow.json` of the archived report PDFs. **Read §16.11.4 and §16.11.9 before quoting any number
+from §16.11.3** — the headline gain is real but its cause is not the one it appears to be.
+
+Data: `spectracs-references/tmp/reseat_20260729/` (probe logs, arms `none`/`jar`/`camera`),
+`tmp/20270829A/` (3 PDFs, 24 h-aged dilution), `tmp/20270729B/` and `tmp/20270729C/` (6 PDFs each, fresh green
+oil, two different dilutions). *Folder names carry typo'd years; the measurements are 2026-07-29/30.*
+
+⚠ **`spectracs-references/` is NOT under version control** (checked 2026-07-30). §16.11.3a preserves every
+*derived* per-run value, so nothing in §16.11 depends on those files surviving — but the **raw spectra** (1305
+bins per run, plus the reference/sample frames) exist on one disk only. §16.10.13 re-benched seven candidate
+metrics against archived runs, so that data has already proved reusable once. **`git init` there, or back it up.**
+
+### 16.11.0 Summary
+
+| | before | after | |
+|---|---|---|---|
+| `jar` re-seat tilt (composite) | 2.84 % | **1.34 %** | **2.1× better** |
+| `camera` 1 mm nudge | 0.42 % | **1.98 %** | now the dominant sensitivity |
+| `none` floor | 0.04–0.09 % | **0.07 %** | unchanged → the comparison is valid |
+| S/Q linear-baseline CV, one fill re-seated | 4.95 % *(n=3, aged oil)* | **2.96 % / 2.89 %** *(n=6 ×2)* | **first result under §16.10.3's 3 % target** |
+| σ at the threshold | 1.04 *(single fill)* | **0.367** *(re-seat only)* | tighter than §16.10.17b's median-of-**3** |
+
+**12/12 runs across both dilutions returned "good — green"**, worst run 3.4 σ clear of T = 10.6.
+
+### 16.11.1 What changed on the instrument
+
+Edwin rebuilt the jar holder, the upper-cone-on-lower-cone seat, and the camera mount, then added a **protocol**:
+when setting the upper cone into its ring on the lower cone, shift it against a **marked line** to take up the
+~1 mm play in the ring. That is a hand-executed approximation of §16.9.4's kinematic constraint — it removes the
+*translational* degree of freedom the ring leaves open, at zero hardware cost.
+
+### 16.11.2 Probe arms — old vs rebuilt
+
+| arm | old (§16.9.3) | rebuilt | factor over today's floor | permanent |
+|---|---|---|---|---|
+| `none` (null control) | 0.04–0.09 % | **0.07 %** | — | 29 % |
+| **`jar`** (out and back in; on this rig that necessarily lifts and re-seats the cone) | 2.84 % | **1.34 %** | 27× | 66 % |
+| **`camera`** (~1 mm nudge) | 0.42 % | **1.98 %** | 32× | 81 % |
+| `cone` / `holder` / `stack` | 0.39 / 0.56 / — | **NOT RUN** | | |
+
+**The unchanged floor is what licenses the comparison.** Same script, same measurement noise, so the halved jar
+figure is a change in the mechanics and not in the instrument that measures it. The `jar` arm's own no-touch
+control read 0.05 %, so nothing drifted underneath it either.
+
+⚠ **`jar` and `camera` are NOT equally comparable across sessions.** `jar` is a *defined operation* — "take the
+cuvette out and put it back" is the same physical act in both sessions, so 2.84 % → 1.34 % is a clean
+before/after. `camera` is *operator-calibrated* ("nudge about 1 mm, the same way each round"): reproducible
+within a session, not between them. **Do not conclude the camera mount got worse** — nudging harder tonight
+produces 4.7× on its own.
+
+What IS solid, because it is internal to one session: **the optical train is now more sensitive to camera
+position than to jar seating** — 1.98 % per mm against 1.34 % for a full jar re-seat. That reverses the old
+ranking, where the jar led by ~7×. It is a *sensitivity*, not a per-measurement error: nobody nudges the camera
+during a normal run. It is a fragility statement — one knock now costs more than a jar change.
+
+⚠ **The verdict string is unchanged and must not be read as a null result.** `jar.txt` still prints
+"CUVETTE SEATING IS AN ERROR SOURCE" because that test is `tilt ÷ floor ≥ 3`, and the floor is so low that
+1.34 % is still 27× it. It measures *detectability*, not magnitude.
+
+### 16.11.3 Six-run repeatability, replicated on two dilutions
+
+Fresh green oil (not the aged 2023 stock). **One fill, re-seated between every run** — same experimental basis as
+§16.11.4's aged-oil triplet, so the two are directly comparable.
+
+| | set B (`20270729B`) | set C (`20270729C`) | B+C pooled |
+|---|---|---|---|
+| A_Q raw (560–580) | 0.197 | 0.230 | — |
+| S/Q linear baseline, mean | 12.489 | 12.251 | 12.370 |
+| σ | 0.370 | 0.354 | **0.367** |
+| **CV** | **2.96 %** | **2.89 %** | **2.96 %** |
+| verdict | 6× green | 6× green | **12/12 green** |
+
+Two independent sets agreeing to 0.07 % on CV. Sub-3 % is the rig's repeatability, not a lucky draw. 95 % CI on
+2.96 % at n=6 is **[1.85 %, 7.26 %]** — much tighter than the aged triplet's [2.6 %, 31 %], still not a figure to
+hard-code.
+
+**The plain ratio, on the same runs, does not do this:** set B plain S/Q CV **11.13 %** against the linear
+baseline's 2.96 %. See §16.11.5.
+
+#### 16.11.3a The raw record — every run of both series
+
+`<<` marks a tilt event (|slope| > 0.015 A/100 nm). Note it fires only on **early** runs in both series
+independently — that is §16.11.7's finding, and it is visible in the timestamps alone.
+
+```
++------------------------------------------------------------------------+
+|               SERIES B  ·  tmp/20270729B  ·  dilution #1               |
+|     fresh green oil | ONE fill, re-seated each run | A_Q raw 0.197     |
++----------+---------+--------+--------+---------+--------------+--------+
+|   run    |  A_Sor  |  A_Q   |  S/Q   | S/Q_lin |  tilt/100nm  |verdict |
+|  +time   |   _lin  |  _lin  | plain  | SHIPPED |  vs median   | T=10.6 |
++==========+=========+========+========+=========+==============+========+
+|001 22:39 |  1.096  | 0.086  | 5.311  |  12.749 |  -0.0204 <<  | GREEN  |
+|002 22:44 |  1.022  | 0.078  | 6.864  |  13.021 |  -0.0398 <<  | GREEN  |
+|003 22:50 |  1.031  | 0.085  | 5.334  |  12.194 |   +0.0004    | GREEN  |
+|004 22:55 |  1.024  | 0.083  | 5.233  |  12.335 |   +0.0087    | GREEN  |
+|005 23:01 |  1.025  | 0.081  | 5.488  |  12.602 |   -0.0016    | GREEN  |
+|006 23:07 |  1.002  | 0.083  | 5.386  |  12.031 |   +0.0092    | GREEN  |
++==========+=========+========+========+=========+==============+========+
+|   mean   |  1.033  | 0.083  | 5.603  |  12.489 |              |        |
+|    sd    |  0.032  | 0.003  | 0.624  |  0.370  |              |        |
+|    CV    |  3.12%  | 3.48%  | 11.13% |  2.96%  |              |  6/6   |
++----------+---------+--------+--------+---------+--------------+--------+
+
++------------------------------------------------------------------------+
+|               SERIES C  ·  tmp/20270729C  ·  dilution #2               |
+|  same oil, fresh dil. | ONE fill, re-seated each run | A_Q raw 0.230   |
++----------+---------+--------+--------+---------+--------------+--------+
+|   run    |  A_Sor  |  A_Q   |  S/Q   | S/Q_lin |  tilt/100nm  |verdict |
+|  +time   |   _lin  |  _lin  | plain  | SHIPPED |  vs median   | T=10.6 |
++==========+=========+========+========+=========+==============+========+
+|001 23:35 |  1.188  | 0.093  | 4.863  |  12.807 |  -0.0188 <<  | GREEN  |
+|002 23:40 |  1.117  | 0.090  | 5.277  |  12.475 |  -0.0210 <<  | GREEN  |
+|003 23:46 |  1.085  | 0.089  | 5.626  |  12.204 |  -0.0188 <<  | GREEN  |
+|004 23:56 |  1.083  | 0.089  | 5.205  |  12.235 |   +0.0055    | GREEN  |
+|005 00:02 |  1.090  | 0.091  | 5.070  |  11.943 |   +0.0035    | GREEN  |
+|006 00:08 |  1.062  | 0.090  | 4.992  |  11.840 |   +0.0123    | GREEN  |
++==========+=========+========+========+=========+==============+========+
+|   mean   |  1.104  | 0.090  | 5.172  |  12.251 |              |        |
+|    sd    |  0.045  | 0.002  | 0.267  |  0.354  |              |        |
+|    CV    |  4.05%  | 1.67%  | 5.16%  |  2.89%  |              |  6/6   |
++----------+---------+--------+--------+---------+--------------+--------+
+
++-----------------------------------------------------------------------------+
+|                    B vs C  —  the two dilutions compared                    |
++--------------------------+----------------+----------------+----------------+
+|                          |    SERIES B    |    SERIES C    |   B+C pooled   |
++==========================+================+================+================+
+| A_Q raw (concentration)  |     0.197      |     0.230      |     +16.8%     |
+|  S/Q linear base, mean   |     12.489     |     12.251     |     12.370     |
+|    sd (metric units)     |     0.370      |     0.354      |     0.367      |
+|  CV  <-- SHIPPED metric  |     2.96%      |     2.89%      |     2.96%      |
+| plain S/Q CV (contrast)  |     11.13%     |     5.16%      |     8.53%      |
+|  worst run above T=10.6  |     3.9 sd     |     3.5 sd     |     3.4 sd     |
+|         verdicts         |    6x GREEN    |    6x GREEN    |  12/12 GREEN   |
++--------------------------+----------------+----------------+----------------+
+```
+
+**Three things to read off it directly:**
+
+1. **`A_Sor_lb` declines monotonically in both series** (1.096 → 1.002; 1.188 → 1.062) while `A_Q_lb` holds
+   almost constant. A settling fill, not fill-to-fill scatter → these were re-seats (§16.11.7).
+2. **`S/Q plain` and `S/Q_lin` disagree about which runs are outliers.** B/002 is the plain ratio's extreme
+   (6.864) and the linear baseline's near-median. C/003 likewise (5.626 plain, 12.204 lin). The metric is
+   *rejecting* exactly the runs the plain ratio over-reacts to (§16.11.5).
+3. **`S/Q_lin` never comes within 1.2 units of the threshold** in twelve runs across two dilutions.
+
+### 16.11.4 ⚠ What actually caused the gain — the CONCENTRATION, not the protocol
+
+Two variables moved at once: a fresh, properly-concentrated dilution **and** the marked-line protocol. The
+arithmetic assigns almost all of it to the oil.
+
+| | aged triplet | fresh sets |
+|---|---|---|
+| A_Q raw | 0.126 | 0.197 / 0.230 |
+| error amplification `0.434/A_Q` | 3.42 | 2.21 |
+| linear-baseline CV | 4.95 % | 2.96 % |
+
+> Rescale the aged set's 4.95 % for the A_Q change **alone**: `4.95 × 0.126/0.197` = **3.17 %**.
+> Observed: **2.96 %**. → **concentration explains ~93 % of the improvement.**
+
+The direct evidence agrees. Pairwise `phosphor/pump` tilt on the fresh sets is **2.10 % (reference) / 2.00 %
+(sample)** — statistically the same as the aged set's 2.2 / 3.1 %, and set B run 002 is the largest single tilt
+event in either. `F = 2.80, p = 0.15` on the CV difference: not significant on its own.
+
+**On the raw numbers the marked-line protocol has no demonstrated effect on tilt.** It may still be doing
+something (§16.11.7 shows the late runs of both sets are exceptionally clean) but this experiment cannot
+attribute it, because the oil changed in the same step. **The only clean test is the unrun `cone` arm** — empty
+beam, no oil, and the marked line is exactly what that arm disturbs.
+
+Corollary, and it retires an open question: **the aged dilution's low A_Q was the ageing, not the recipe.**
+A 24 h-old dilution read 0.126 where a fresh one reads 0.197–0.230.
+
+### 16.11.5 ⭐ The linear baseline eating a tilt event — the clearest case in the record
+
+Set B run **002** took a large tilt: slope **−0.0398 A/100 nm** against the median, twice anything in the aged
+set; raw Q 0.160 where the others read ~0.20; clarity 0.077 against ~0.092.
+
+| | run 002 | the other five | CV all 6 | CV dropping 002 |
+|---|---|---|---|---|
+| plain S/Q | **6.864** | 5.2–5.5 | **11.13 %** | 1.77 % |
+| S/Q linear baseline | **13.021** | 12.0–12.7 | **2.96 %** | 2.37 % |
+
+The plain ratio is wrecked — 002 inflates its CV **6.3×** and would have reported a spectacularly green oil. The
+linear baseline places it mid-pack; the same event costs it a factor of **1.25**.
+
+The aged triplet showed the identical mechanism at smaller scale: its run 001 carried by far the worst tilt, and
+came out as the plain ratio's *outlier* (5.452, highest of three) but the linear baseline's *median* (10.441).
+
+**This is the strongest evidence yet for the shipped metric, and it is exactly the behaviour §16.10.2 predicted
+but had never caught in a single identifiable run.**
+
+### 16.11.6 Dilution invariance — first evidence, and §16.10.8 is partially unblocked
+
+Sets B and C are two different dilutions of the same oil, **17 % apart in A_Q** (0.197 → 0.230).
+
+| | |
+|---|---|
+| metric means | 12.489 vs 12.251 — a **1.9 %** difference |
+| significance | `t = 1.14, p = 0.28` — **not significant** |
+| pooled CV across both dilutions | 2.96 % — *identical* to each set alone |
+| against the old σ_fill of 9.7 % | a gap this small had only an **11 %** chance of occurring |
+
+**The between-dilution term adds nothing measurable.** §16.10.8 declared dilution invariance *unmeasurable*
+because seating noise produced a spread as large as a deliberate 2.19× dilution change; that is no longer true,
+because σ finally dropped enough to see past it.
+
+⚠ **This does not resolve §16.10.8.** n = 2 dilutions, only 17 % apart, where the failed test used 2.19×. It is
+the first evidence in the right direction and nothing more. §16.11.8 also gives a mechanism by which invariance
+*must* fail at higher concentration.
+
+### 16.11.7 A fresh dilution is NOT stable for its first ~15 minutes — and this killed the learning hypothesis
+
+Absorbance tilt vs each set's median, **in run order**:
+
+| run | set B slope (ΔA/100 nm) | set C slope |
+|---|---|---|
+| 001 | −0.0204 | −0.0188 |
+| 002 | **−0.0398** | −0.0210 |
+| 003 | +0.0004 | −0.0188 |
+| 004 | +0.0087 | +0.0055 |
+| 005 | −0.0016 | +0.0035 |
+| 006 | +0.0092 | +0.0123 |
+
+Every tilt event is an **early** run, in both sets independently. Set B ran 22:39→23:07, set C 23:35→00:08, and
+in both the runs stop tilting about **11 minutes in**. Two supporting signals: the Soret · linear baseline
+declines monotonically through each set (B 1.096 → 1.002, C 1.188 → 1.062, ~10 % over 35 min), and the tilt moves
+from negative to positive — which is what sedimentation of blue-scattering particles looks like.
+
+**⇒ Protocol: let a fresh dilution equilibrate ~15 min before measuring.** Free, and it should shrink σ_fill too.
+
+This **withdraws** the operator-learning reading offered when only set B existed ("both events were the first two
+runs, probably getting the knack of the marked line"). It was flagged at the time as a post-hoc selection and
+therefore §16.10.16's trap; set C's independent replication of the *same time pattern* shows the cause is the
+liquid, not the operator. It also means the monotone decline is **one fill settling** — confirming these were
+re-seats, not fills.
+
+### 16.11.8 ⚠ Soret STRAY-LIGHT compression — do NOT raise the concentration
+
+Signal levels in the Soret band:
+
+| | reference | sample | A_Soret | T |
+|---|---|---|---|---|
+| set B | 110.2 DN | **14.8 DN** | 1.09 | 8.1 % |
+| set C | 111.4 DN | **12.8 DN** | 1.19 | **6.5 %** |
+
+From B to C, raw Q rose **+16.8 %** but Soret only **+6.9 %**. Under Beer-Lambert both scale identically. **A
+numerator that under-responds at high absorbance is the textbook signature of stray light / offset compression**,
+and T < 10 % is where it always begins. Reconciling the two sets requires ~9 DN of additive stray light, ~8 % of
+the reference level.
+
+**This withdraws the recommendation to raise concentration toward the recipe's A_Q = 0.225** (offered while
+diagnosing the aged oil's weak Q denominator, §16.11.10). The rig is at the top of its usable absorbance range:
+more concentration compresses the numerator and would **break** the dilution invariance §16.11.6 just found.
+
+Caveats: a two-point comparison, and the two dilutions may differ in more than concentration. But **12 DN of
+signal is marginal on its own merits** regardless of the fit, and it is cheap to check — the probe already
+captures dark frames at the operating exposure.
+
+### 16.11.9 The error budget now CLOSES — three convergent measurements
+
+§16.7.0's budget accounted for only ~76 % of the observed scatter. It now closes:
+
+| basis | predicted | observed |
+|---|---|---|
+| `jar` arm 1.34 %, 2 jar ops, at the aged oil's A_Q 0.126 → plain S/Q | 6.5 % | **6.95 %** *(aged triplet)* |
+| same, ×0.71 for the linear baseline, at the fresh oil's A_Q 0.197 | 2.98 % | **2.96 %** *(set B)* |
+| aged set's 4.95 % rescaled for A_Q alone | 3.17 % | 2.96 % |
+
+The first two are the notable ones: **a tilt probe run on a blank with no oil in the beam predicts the scatter of
+six real oil measurements.** (The 0.71 linear-baseline factor was fitted on the aged triplet, so row 2 is not a
+fully out-of-sample prediction; rows 1 and 3 are.)
+
+### 16.11.10 Claims made and WITHDRAWN during the rebuild *(kept deliberately, per §16.7.0's practice)*
+
+| claim | withdrawn because |
+|---|---|
+| "the aged triplet's tilt looks like LED phosphor thermal drift" *(monotone `phosphor/pump` decline)* | the `jar` arm predicts the same scatter from seating alone (§16.11.9); n=3 could not tell drift from a heavy tail |
+| "σ went 9.7 % → 4.95 %, a 2× win" | **9.7 % is fill-to-fill** (§16.10.11a) and contains sample prep; 4.95 % and 2.96 % are **re-seat only**. Invalid comparison — see §16.11.11 |
+| "raise the concentration to A_Q 0.225 to strengthen the Q denominator" | §16.11.8 — the Soret band is already stray-light compressed at T = 6.5 % |
+| "the two tilt events were the first two runs → operator learning on the marked line" | §16.11.7 — set C replicates the *time* pattern, so it is the dilution settling |
+| "the marked-line protocol delivered the sub-3 % CV" | §16.11.4 — concentration explains ~93 %; the protocol is untested until the `cone` arm runs |
+
+### 16.11.11 ▶ Next, in order *(Edwin marked these 2026-07-30; the D/E split is the merge of his steps 2 and 3)*
+
+1. **⭐ The `cone` arm** — `diagnostics/reseat_all.sh cone holder stack`. Ten minutes, empty beam, no oil, and the
+   rig is already set up for it. **The only clean test of the marked-line protocol** (§16.11.4 cannot attribute it
+   because the oil changed in the same step). Also splits the 1.34 % composite via `√(jar² − cone²)`, which
+   matters now that the cone's old 0.39 % is no longer negligible inside it. Do this first.
+2. **⭐ THE BROWN OIL, 12 runs as two series** — one session, and it answers **both** remaining questions on the
+   class where the risk actually lives (§16.11.12):
+   - **series D — brown, 6 RE-SEATS of one fill.** Directly comparable to B and C, so it yields the brown σ that
+     decides the discrimination question. This is the load-bearing measurement of the whole milestone.
+   - **series E — brown, 6 SEPARATE FILLS**, one stock, each given ~15 min to equilibrate (§16.11.7). Yields
+     **σ_fill** — the quantity §16.10.17b's decision table is built on, still unmeasured because everything in
+     §16.11.3 is re-seat-only.
+
+   σ_fill cannot be reasoned out: drop-count error (±10–20 %) changes concentration, which a *dilution-invariant*
+   ratio should cancel entirely — §16.11.6 suggests it largely does, but §16.10.8 is not resolved. Outcomes for
+   E: **~3 %** → invariance holds in practice, apply the projection below; **~5–6 %** → prep adds a modest term,
+   median-of-3 still wanted; **~9 %** → prep dominates, mechanical work is **done**, and attention moves to
+   §16.10.12's B4 (weigh the oil, ~€15 scale).
+3. **Green, 6 separate fills** — demoted, and deliberately. Green now sits **4.82 σ** clear of the threshold
+   (§16.11.12), so even a 3× worse σ_fill leaves it decided. Brown's fills are worth more than green's.
+4. **`camera` with the diffuser fitted.** §16.7.2g withdrew the diffuser A/B because jar noise buried it. At
+   1.98 %/mm, camera alignment is the variable the diffuser targets and the sensitivity is finally large enough
+   to measure the difference cleanly. Mount it to the cone, not the jar (§16.7.2n).
+5. **Stray-light check on the Soret band** if series D/E confirm the numerator misbehaving (§16.11.8).
+
+#### What σ = 0.367 would do to the decision table — CONDITIONAL on step 2's series E
+
+Not to be shipped until σ is measured **from fills**. Recorded because the consequence is large:
+
+| | shipped (σ₁ = 1.04) | projected (σ₁ = 0.367) |
+|---|---|---|
+| fill-1 GREEN gate | 13.28 | **11.55** |
+| fill-1 BROWN gate | 7.92 | 9.65 |
+| median-of-3 gates | ≥ 11.60 / ≤ 9.60 | ≥ 10.95 / ≤ 10.25 |
+| the 12 runs of §16.11.3 clearing on ONE fill | **0/12** | **12/12** |
+| brown `20260727C` (mean 9.361) deciding on ONE fill | no | **yes** (≤ 9.65) |
+
+That is §16.10.17b's "always three fills" compromise becoming unnecessary for most samples — the outcome
+§16.10.11a priced at "from deciding 40 % of samples to deciding 84 %". **It hangs entirely on step 2.**
+
+### 16.11.12 ⭐ Does green-vs-brown discrimination now work? — the gap never moved, the SCATTER did *(2026-07-30, Edwin's read, checked against the archived brown data)*
+
+Edwin's judgement after the rebuild: *"we could reach our goal of discriminating green versus brown."* Checked
+against the brown oil already on file — `20260727C`, 6 fills, mean **9.361**, CV 8.9 % (§16.10.2). **The archived
+data supports it, with one named assumption.**
+
+| | old rig | today |
+|---|---|---|
+| green mean | 12.130 | **12.370** |
+| brown mean (`20260727C`) | 9.361 | *not re-measured* |
+| **class gap** | 3.0 units = **27.7 %** | **unchanged** |
+| green σ | 1.322 | **0.367** |
+
+**The classes were always 27.7 % apart.** Discrimination failed because σ was a third of the gap; it is now an
+eighth. Nothing about the oils or the metric changed — only the instrument's noise.
+
+| scenario | Cohen's d | green reads BROWN | brown reads GREEN |
+|---|---|---|---|
+| old rig (the d = 2.88 regime of §16.10.13) | 2.72 | 9.0 % | 6.9 % |
+| **today — green measured, brown ASSUMED unchanged** | **4.67** | **0.03 %** | **9.9 %** |
+| today — brown improves by green's factor (0.28×) | **9.81** | 0.03 % | **0.15 %** |
+
+*t-distribution on the real dof, per §16.10.11a — the error is heavy-tailed, so the Gaussian is optimistic
+exactly where it matters. Gaussian would read 0.0001 % / 6.8 % on row 2.*
+
+**The green side is finished.** 4.82 σ clear of T = 10.6; a green oil misreading as brown is a ~1-in-3700 event
+on a single fill. That is better than the state §16.10.11a priced at "deciding 84 % of samples".
+
+**The brown side carries all the remaining risk — and it is the expensive direction.** ~10 % false-GREEN on one
+fill, which is precisely the failure §16.10.17d chose T = 10.6 to avoid. That figure is inherited entirely from
+old-rig, old-oil, fill-to-fill data and has not been re-measured.
+
+#### Why brown is EXPECTED to improve — §16.7.2o's sobering finding, re-read
+
+§16.7.2o measured brown CV **11.4 %** against green **11.2 %** and called it sobering: Edwin's hypothesis that
+the brown class would be inherently steadier was refuted. **That refutation is now the strongest argument in
+favour.** Brown scattering *like* green means brown's error had the **same source** — seating, not anything
+oil-specific. The fix that took green 11.2 % → 2.96 % therefore has no mechanism by which to skip brown.
+
+⚠ **This is a prediction, not a result.** It is exactly what series D measures, and the two outcomes are both
+informative:
+
+| series D returns | reading |
+|---|---|
+| σ ≈ 0.23–0.37 | brown improved with green → **discrimination is proven**, re-derive the decision table |
+| σ ≈ 0.83 (unchanged) | the rebuild helped green only → something oil-specific in the brown, itself a finding |
+
+⚠ **Caveats on the arithmetic above, all pointing the same way (optimistic):** the brown mean is old-rig / FILLS
+while the green is rebuilt-rig / RE-SEATS; the green mean moved +2 % between vintages so the gap mixes them; the
+brown groups are n = 6; and the tails are heavy (§16.7.2f), which the t-correction only partly absorbs. **None of
+this touches the central point** — the gap is 27.7 % and green's σ is 2.96 %, both measured, and that ratio is
+what discrimination depends on.
+
+**⇒ `SPEC_capability_proof.md`'s go/no-go gate is within reach of one brown session.** §16.11.11 step 2 is the
+measurement that closes it.
+
+### 16.11.13 What σ = 0.367 does to "first measurement gives the verdict" — the architecture INVERTS *(Edwin's question 2026-07-30; DESIGN, conditional on series D — do NOT ship before it)*
+
+§16.10.17b's shipped decision table stays authoritative until series D and E land. This section records what
+follows *if* brown behaves like today's green (§16.11.12's assumption), because the consequence is not a
+parameter change — it is a different protocol shape.
+
+**How often ONE fill decides**, for this green oil (mean 12.370) and the archived brown `20260727C` (mean 9.361),
+at T = 10.6. Gates are `T ± k·σ` on a **single pooled σ** — the operator does not know the class in advance:
+
+| σ₁ | gates BROWN / GREEN | green decided | brown decided | actual misclassification |
+|---|---|---|---|---|
+| **1.04 — SHIPPED (§16.10.17b)** | 7.92 / 13.28 | **19 %** | **8 %** | — |
+| 0.367 conservative, 99 % | 9.65 / 11.55 | 98.8 % | 78.7 % | 1·10⁻⁹ |
+| **0.367 conservative, 95 %** ← recommended | **9.88 / 11.32** | **99.8 %** | **92.2 %** | 5·10⁻⁸ |
+| 0.367 conservative, 90 % | 10.00 / 11.20 | 99.9 % | 95.8 % | 3·10⁻⁷ |
+| 0.307 expected (brown scales 0.28×), 99 % | 9.81 / 11.39 | 99.6 % | 97.4 % | 1·10⁻¹² |
+
+*Normal-tail arithmetic, to stay comparable with §16.10.17b's own 2.58/1.96 multipliers. §16.10.11a's heavy-tail
+correction applies and makes the ÜBERGANG rates somewhat worse; it does not move the misclassification column,
+which is buried many σ deep either way.*
+
+#### (a) "Always three fills" flips from nearly free to expensive
+
+§16.10.17b chose **"always three fills, no early exit"**, calling the shortcut *crude alpha-spending* and worth
+skipping. **That reasoning was correct for σ = 1.04** — the shortcut fired on only 19 % of green and 8 % of brown
+samples, so mandating three fills cost almost nothing that wasn't going to be spent anyway.
+
+At σ = 0.367 the shortcut fires on **~99 %** of samples. Mandating three fills would **triple the operator's work
+on nearly every measurement for zero information gain.** The recommendation therefore reverses: **the one-fill
+path becomes the normal path and the three-fill sequence becomes the exception.**
+
+⚠ **And this is statistically CLEANER, not dirtier** — which is the counter-intuitive part. A two-stage test that
+*usually continues* carries real alpha-spending problems; a one-stage test with a *rare* fallback carries almost
+none. §16.10.17b's warning was aimed at the first shape. The new numbers put us in the second.
+
+#### (b) The gate multiplier stops controlling the error rate — so choose it for the OPERATOR
+
+Read the misclassification column: **10⁻⁹ to 10⁻⁷ regardless of the gate.** With a 27.7 % class gap against a
+2.96 % σ (§16.11.12), real errors are set by class *separation*, not by gate placement. What the gate still
+controls is only **how often ÜBERGANG fires** — 21 % of browns at 99 %, 7.8 % at 95 %, 4.2 % at 90 %.
+
+**⇒ Pick the multiplier for user experience, not for statistics. Recommend 95 %:** it costs nothing measurable in
+error rate and cuts the brown fallback rate ~3× against the 99 % gate.
+
+This retires a habit worth naming: on the old rig, tightening the gate genuinely bought accuracy. It no longer
+does. Tightening now only buys *more re-measurements*.
+
+#### (c) The asymmetry survives — and creates a NEW human risk
+
+Green needs the fallback **0.2 %** of the time, brown **7.8 %** (95 % gates, conservative σ). The residual
+uncertainty concentrates on the class where being wrong is expensive — the safe direction, and §16.10.17d's
+threshold choice working exactly as intended.
+
+But it means **an ÜBERGANG is almost always a brown sample** (~97 % of them, at these class frequencies). That
+makes §16.10.17c's decision to **withhold the direction** *more* load-bearing than when it was written, not less:
+
+> An operator who notices that "measure again" nearly always ends in BROWN will begin treating ÜBERGANG **as** a
+> brown verdict and stop bothering with the two confirming fills. That reintroduces §16.10.16's optional-stopping
+> bias **through the human**, where no amount of statistics in the instrument can see it.
+
+The wording must survive an operator who has seen the message fifty times. §16.10.17c's text was written for a
+screen the user met occasionally; it now needs to hold up as a routine screen shown to one class of sample.
+
+#### The proposed shape
+
+```
+ONE fill
+   >= 11.32   ->  GREEN,  done              (T + 1.96 sigma_1)
+   <=  9.88   ->  BROWN,  done              (T - 1.96 sigma_1)
+   else       ->  ÜBERGANG -> two more fills, verdict on the MEDIAN of 3
+```
+
+One measurement, three outcomes, decided in ~99 % of green and ~92 % of brown cases. Against §16.10.17b's
+"prepare three fills, always" that is a materially different product, and the first time the measurements have
+supported it.
+
+#### ⚠ What the "96 %" is NOT — the rate is a property of the OIL POPULATION, not of the instrument
+
+A 50/50 mix of our two oils decides on one fill **96.0 %** of the time. That number is *"96 % of measurements of
+these two oils"* — **not** 96 % of samples a miller brings in. Per-oil, at the 95 % gates:
+
+| oil | µ | decides on ONE fill |
+|---|---|---|
+| our green (B+C, measured) | 12.370 | **99.8 %** |
+| archived brown `20260727C` — the **mild** one | 9.361 | **92.1 %** |
+| archived brown `D` — strongly brown | 8.440 | 100.0 % |
+| green `E006` — the worst green on record (§16.10.17d) | 10.565 | **5.1 %** |
+| `B008` — sat 0.004 above the old threshold (§16.10.17d) | 10.604 | **5.0 %** |
+| an oil sitting exactly **at** T | 10.600 | **5.0 %** |
+
+Blended over an assumed population instead of two known oils — **this is the commercially relevant number**:
+
+| assumed distribution of real oils | decides on one fill |
+|---|---|
+| all clearly green (11.8–13.0) | 98.6 % |
+| all clearly brown (9.0–10.0) | 78.7 % |
+| **uniform across the whole observed range (9.0–13.0)** | **64.1 %** |
+| concentrated near the threshold (10.0–11.5) | 23.3 % |
+
+**⇒ The defensible claim is "a clearly-green or clearly-brown oil now decides in ONE measurement."** The claim
+*"95 % of measurements give an instant verdict"* is **not** supported — it requires knowing how many real oils sit
+near the boundary, and two oils cannot tell us. We have no data on that distribution.
+
+This is not a defect. An oil truly at 10.6 **should** return ÜBERGANG, and §16.10.11a's principle stands:
+certainty where none exists is worse than useless. But it does mean the ÜBERGANG rate cannot be quoted as an
+instrument specification — it is half instrument, half agronomy.
+
+#### The assumption chain behind any of these numbers, worst first
+
+1. **T = 10.6 actually divides green from brown oil.** **UNVALIDATED**, and independent of everything in §16.11.
+   §16.10.11a states it exactly: `P = 0.964` is P(the *metric* is above the threshold), *not* P(the oil is green).
+   **Everything measured on 2026-07-29/30 improved PRECISION, not CORRECTNESS** — and a precise instrument
+   reading a wrong threshold is confidently wrong 96 % of the time. Needs reference oils with independent ground
+   truth; that is `SPEC_capability_proof.md`'s territory and the reason the lab-as-channel-partner route exists.
+2. **Brown σ improves like green's** — series D (§16.11.11).
+3. **σ_fill ≈ σ_reseat** — series E (§16.11.11).
+4. **Normal tails.** The error is heavy-tailed (§16.7.2f), so every percentage in §16.11.13 is optimistic.
+5. **These two oils represent the population** — the tables above.
+
+Items 2–3 are one brown session away. Item 1 is not an instrument problem and **no amount of mechanical work will
+close it.**
+
+**⭐ The real milestone of the rebuild, stated precisely:** the instrument is now precise enough that **the
+threshold's correctness has become the binding constraint.** It never was before — seating noise swamped it. That
+reframes the next phase of the project from instrument work to validation work.
+
+#### What must NOT change yet
+
+| | |
+|---|---|
+| **σ₁ = 0.367** | green only, and **RE-SEAT only** — series E measures the fill term |
+| **brown σ** | assumed, never measured on the rebuilt rig — series D |
+| **the shipped gates** | §16.10.17b's 13.28 / 7.92 / 11.60 / 9.60 remain authoritative until D and E |
+| **the stopping rule** | still must be **fixed in advance** (§16.10.17b's ⚠). Moving from "always 3" to "1, then 3 if ÜBERGANG" is a change to a pre-registered rule and must be decided *before* the brown data is seen, not after |
+
+That last row matters more than it looks: choosing the protocol shape *after* seeing series D would be the same
+optional-stopping error one level up. **The decision to adopt this shape should be made now, conditional on
+D's σ, with the acceptance criterion written down first.**
+
+⚠ **Open decision for Edwin (recommend deciding BEFORE series D runs):** adopt the one-fill-plus-fallback shape
+if series D returns brown σ ≤ 0.45, at 95 % gates? Or keep "always three fills" regardless, buying a simpler
+story and an unimpeachable stopping rule at 3× the operator time?
+
+### 16.11.14 The Soret band's LEFT EDGE — Edwin's "Knick" at 440 nm is real, moving the edge is REFUTED *(Edwin's question 2026-07-30, tested on series B + C + brown `20260727C`)*
+
+Edwin: *"the left interval of the Soret band at 440 nm might not be the best to use — there is a small Knick
+there — would starting at say 443 nm be better?"* **The observation is correct and its cause is worse than a
+spectral feature. Moving the edge is nevertheless refuted: every alternative tested is worse on separation.**
+
+#### The Knick is absorbance SATURATION at the ROI boundary, not a feature of the oil
+
+| set | ref DN @ 440 | **sample DN @ 440** | A | T |
+|---|---|---|---|---|
+| B | 87.3 | **0.85** | 2.02 | 1.0 % |
+| C | 88.3 | **0.65** | 2.14 | 0.7 % |
+
+**Sub-1 DN.** Most pixels read 0; the value is set by dark offset and stray light, not by the oil. Two
+corroborating signs: the first bin's gradient is **−0.53 A/nm** against a typical −0.05…−0.15, and **439.97 nm is
+the first bin in the data** — there is nothing to its left, so the "bend" is the curve flattening as it runs out
+of signal at the ROI edge. Signal only recovers around **448–451 nm** (5.9–7.5 DN at 448.6, 13–15 DN at 451.5).
+
+⇒ **Bins 440–447 are, strictly, not measurements.** This is a *direct observation* of the dynamic-range problem
+§16.11.8 inferred from the B→C non-proportionality — which hardens "do NOT raise the concentration" from a
+two-point argument into something visible in the raw DN.
+
+#### Sweep 1 — moving the left edge, band right edge held at 460
+
+| Soret left | B CV | C CV | brown CV | **d** | gap/CV | metric mean (B) |
+|---|---|---|---|---|---|---|
+| **440 — SHIPPED** | 2.97 % | 2.90 % | 8.93 % | **4.64** | 9.3 | 12.498 |
+| 441 | 2.92 % | 2.97 % | 9.08 % | 4.59 | 9.2 | 11.961 |
+| 442 | 2.94 % | 2.92 % | 9.17 % | 4.63 | 9.4 | 11.429 |
+| **443 — Edwin's proposal** | 2.97 % | 2.97 % | 9.22 % | **4.67** | 9.5 | 10.885 |
+| 445 | 2.91 % | 3.24 % | 9.39 % | 4.61 | 9.4 | 9.811 |
+| 448 | 2.89 % | 3.40 % | 9.67 % | 4.62 | 9.5 | 8.375 |
+| 450 | 2.76 % | 3.50 % | 9.88 % | 4.61 | 9.6 | 7.471 |
+| 455 | 2.88 % | 4.06 % | 10.52 % | 4.37 | 8.9 | 5.710 |
+
+**Flat.** A 20 nm band mean averages the 3–5 bad bins away. 443's `d` = 4.67 against 440's 4.64 is noise, not
+signal. **No statistical case for the change on this test.**
+
+#### Sweep 2 — the DECISIVE test: fixed 20 nm width, band slid right
+
+Sweep 1 confounds two effects — discarding bad bins *and* narrowing the band. Holding the width constant
+separates them:
+
+| band | B CV | C CV | brown CV | **d** | gap/CV |
+|---|---|---|---|---|---|
+| **440–460 — SHIPPED** | 2.97 % | **2.90 %** | **8.93 %** | **4.64** | **9.3** |
+| 443–463 | 2.95 % | 3.09 % | 9.32 % | 4.62 | 9.4 |
+| 445–465 | 2.87 % | 3.50 % | 9.61 % | 4.50 | 9.1 |
+| 448–468 | 2.83 % | 3.89 % | 10.13 % | 4.41 | 8.9 |
+| 450–470 | 2.74 % | 4.24 % | 10.61 % | 4.29 | 8.6 |
+| 453–473 | 2.77 % | 4.81 % | 11.38 % | 4.13 | 8.1 |
+
+**Sliding right monotonically degrades set C, the brown oil, and `d`.** Set B improves slightly — but B is the
+*less* concentrated sample, i.e. the easy case; every harder case gets worse. **440–460 is the best band of the
+six.**
+
+**Mechanism:** the Soret slope is steep here, so sliding right lands on the flank where absolute absorbance is
+lower. Class contrast is lost faster than noise is gained back by discarding the dim bins.
+
+#### Two tempting readings, both rejected
+
+| reading | why rejected |
+|---|---|
+| "B-vs-C agreement improves as the edge moves right (1.93 % → 0.93 %), exactly as stray light predicts" | **1.15 σ → 0.46 σ** on n = **2** dilutions. The right prediction with no power behind it. Do not quote it. |
+| "443 gives the best `d`, so adopt it" | 4.67 vs 4.64 — inside the noise, and sweep 2 shows the direction is wrong once band width is held constant |
+
+#### Cost of changing it, and when to revisit
+
+440 → 443 moves the metric **12.50 → 10.89 (−13 %)**, so T = 10.6 would become ~9.2 and **all of §16.10.17d's
+threshold work would need redoing.** For no measurable gain, that is not a trade worth making.
+
+**⇒ DECISION: keep 440–460. ▶ REVISIT at the next threshold recalibration** — which is coming anyway (series D/E,
+then the validation phase of §16.11.13). At that point the edge moves for free, and it should be chosen on a
+**signal-floor criterion** — e.g. require sample DN ≥ 10, which lands at **~450 nm** — rather than inherited from
+wherever the ROI happens to end. Doing it then costs nothing; doing it now costs the threshold.
+
+**A quiet win worth recording:** a metric whose band includes bins carrying **0.85 DN** still returns CV 2.9 % and
+`d` = 4.6. The linear baseline plus band-averaging is more robust than it had any right to be.
+
+### 16.11.15 The DILUTION recipe — keep 18 ml + 6 drops; and a conflict with `SPEC_capability_proof.md` §7.3 *(Edwin proposed 6 → 5 drops, 2026-07-30; REFUTED, but §7.3's premise needs re-testing)*
+
+Edwin: *"I think I should change the default dilution from 18 ml alcohol and 6 drops to 18 ml and 5 drops."*
+**Refuted on four checks. Keep 18 ml + 6 drops.** But the question exposed a genuine inconsistency between this
+spec and `SPEC_capability_proof.md` §7.3 — recorded at the end, because it matters more than the drop count.
+
+⚠ **TERMINOLOGY, and the source of a real confusion in the 2026-07-30 thread.** *Dilution* and *concentration* are
+**inverses**: more drops = more concentrated = **less** diluted. Advice phrased as "lower the dilution" and
+"raise the concentration" mean the *same* thing. Prefer stating **A_Q** (measured) or the **ratio** (nominal), never
+"stronger/weaker".
+
+#### The operating window — and 6 drops sits inside it
+
+```
+   too dilute                      GOOD                     too concentrated
+  ─────────────────┬──────────────────────────────────────┬──────────────────
+   A_Q < 0.15      │   A_Q 0.19 - 0.23                    │  A_Q > 0.25
+   0.434/A_Q       │   <- 18 ml / 6 drops, FRESH,          │  Soret compresses,
+   amplification   │      measured within the hour        │  dilution invariance
+   blows up        │                                      │  at risk (16.11.8)
+   set A: CV 4.95% │   CV 2.9%                            │
+```
+
+#### Check 1 — CV tracks 1/A_Q, so a weaker dilution costs precision
+
+| | A_Q | amplification `0.434/A_Q` | CV | n |
+|---|---|---|---|---|
+| set A (24 h-aged) | 0.126 | 3.44 | **4.95 %** | 3 |
+| set B | 0.197 | 2.20 | 2.96 % | 6 |
+| set C | 0.230 | 1.89 | **2.89 %** | 6 |
+
+Monotone over three points, and §16.11.4 attributed **93 %** of the B/C gain to exactly this mechanism.
+6 → 5 drops is −16.7 %, so A_Q 0.230 → 0.192 and **predicted CV 2.89 % → 3.47 %, ~20 % worse** — the wrong
+direction on the one number §16.11.12 and §16.11.13 both rest on.
+
+#### Check 2 — it does not fix the 440 nm floor it was meant to fix
+
+| drops | A @ 440 | sample DN | |
+|---|---|---|---|
+| 6 | 2.14 | 0.64 | floored |
+| **5** | 1.78 | **1.45** | **still floored** |
+| 4 | 1.43 | 3.31 | still floored |
+| 3 | 1.07 | 7.52 | still floored |
+
+You would have to reach **3 drops** to lift 440 nm to usability — putting A_Q at ~0.115, *worse than the aged
+oil*, with CV past 5 %. **The saturation is a dynamic-range problem, not a concentration problem**, and
+§16.11.14 already has the free fix (move the band edge at the next recalibration).
+
+#### Check 3 — the compression is not reaching the metric
+
+B → C is a +16.8 % concentration step:
+
+| | Soret | Q | |
+|---|---|---|---|
+| **raw** bands | +8.5 % | +16.8 % | diverge — §16.11.8's compression |
+| after **linear baseline** | +6.9 % | +8.4 % | near-proportional |
+
+The metric moves only **−1.4 %**. The baseline absorbs the compression before it reaches the ratio. So the
+*motivation* for backing off — "saturation is corrupting the reading" — does not hold at these levels. §16.11.8
+warns against going **higher**; it is not an argument for going lower.
+
+#### Check 4 — one drop is not yet a controllable quantity
+
+Sets B and C differ **16.8 %** in A_Q. If both were nominally the 6-drop recipe, **that 16.8 % IS the drop-size
+scatter** (§16.10.12 B4: "2 drops varies 10–20 %") — and one drop is 16.7 %. **Changing the nominal value by
+exactly one unit of its own noise cannot be expected to do anything reproducible.** §16.10.12's **B4 (weigh the
+oil, ~€15 scale)** is the lever that actually controls concentration; the drop count is not.
+
+#### The advice that was WITHDRAWN, and why it looked like a reversal
+
+Recorded because the sequence confused Edwin, reasonably:
+
+| when | data in hand | advice | status |
+|---|---|---|---|
+| after set A | A_Q 0.126, amplification 3.42 | "raise the concentration toward A_Q 0.225" | **WITHDRAWN** |
+| after set C | Soret 0.65 DN, non-proportional bands | "do not raise it further" (§16.11.8) | stands |
+| 2026-07-30 | the three-point trend above | "do not lower it either" | stands |
+
+**The first advice was aimed at the wrong target.** Set A's weak A_Q of 0.126 was the **24-hour ageing, not the
+recipe** (§16.11.4) — but that was not yet known when the advice was given. The *same* 18 ml / 6 drops produced
+A_Q 0.197 and 0.230 on fresh oil, squarely in range. **The recipe was never the problem; the age of the dilution
+was.** Net position across the whole investigation: **18 ml / 6 drops has been correct throughout.**
+
+#### ⇒ The actual guidance is about FRESHNESS, not the drop count
+
+| | A_Q | CV |
+|---|---|---|
+| 24 h old | 0.126 | 4.95 % |
+| fresh | 0.197–0.230 | 2.9 % |
+
+**Prepare fresh, wait ~15 min to settle (§16.11.7), measure within the hour.** That is the whole dilution
+protocol, and the 2026-07-29/30 session already followed it.
+
+#### ⚠ OPEN — this contradicts `SPEC_capability_proof.md` §7.3, which was decided on a SIMULATION
+
+§7.3 (revised 2026-07-26) moved the recipe from 1:20 to **1:30–1:33** *because* the sample bottomed out at 440 nm,
+and tabulated a simulated **min DN @ 440 = 16 (brown) / 25 (green)** at 1:30. Its own arithmetic ("2 drops in
+4 ml ≈ 1:20") implies **1 drop = 0.1 ml**, so **18 ml + 6 drops = 1:30 — exactly what §7.3 prescribes.**
+
+**But the measurement disagrees with the simulation by a wide margin:**
+
+| | @ 440 nm |
+|---|---|
+| §7.3 simulated at 1:30, green | DN **25** (⇒ A ≈ 1.01) |
+| measured 2026-07-29, set B | DN **0.85** |
+| measured 2026-07-29, set C | DN **0.65** (A = 2.14) |
+
+At the same *nominal* dilution the oil absorbs **~2.1× more** than §7.3 modelled. If A scales with concentration,
+the real ratio is nearer **1:14**, implying a drop of **~0.21 ml, not 0.10 ml**.
+
+*Caveat: §7.3's "DN 25 of 255" may assume a fuller-scale reference than today's 88 DN at 440 nm, which would
+absorb part of the gap. **The direction is robust; the factor is not.***
+
+**Two conclusions, and they pull opposite ways — do not resolve this from the armchair:**
+
+1. **We do not know what dilution ratio "18 ml + 6 drops" actually is.** The 1:30 label rests on an assumed drop
+   volume that today's absorbance contradicts. **▶ Measure it: weigh 20 drops (B4's scale does this in a minute).**
+   Until then every ratio in either spec is nominal.
+2. **§7.3's decision criterion has since been tested and does not bind.** §7.3 chose the weaker dilution to keep
+   the 440 nm bins out of the sRGB toe. §16.11.14 tested whether those bins hurt the metric — **they do not** (the
+   left-edge sweep is flat, and sliding the band away is strictly worse). §7.3 also found the metric's *value*
+   invariant across 1:20–1:33 (±0.35 %), which agrees with §16.11.6. What §7.3 never checked is the metric's
+   **scatter**, and that is what §16.11.15's Check 1 measures: **scatter goes as 1/A_Q.**
+
+**⇒ Synthesis: among dilutions that are value-invariant, pick the STRONGEST that keeps the bands linear** — the
+opposite of §7.3's conclusion, reached because §7.3 optimised the wrong quantity (toe-avoidance) while this
+section optimises σ. **Neither spec should be edited until the drop volume is weighed**; §7.3's table is a
+simulation, §16.11.15's is a measurement, and the discrepancy is currently unexplained.
+
+---
+
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).
