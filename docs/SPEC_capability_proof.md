@@ -1643,6 +1643,91 @@ Normalising by Q — which is exactly what the metric does:
 higher concentration, which lifts all of its absolute band means together. §11.5's physical story stands
 unchanged. *(Recorded per §16.7.0's practice — the claim was made, and it was wrong.)*
 
+### 11.4f 📌 PRE-REGISTRATION — predictions for series D/E and the butanol trial  *(written 2026-07-31, BEFORE the measurements)*
+
+**What "pre-registration" means here, and why it is worth the page.** Every number below is written down
+**before** the runs that will test it. Once data exists it is very easy — and completely unconscious — to decide
+after the fact which analysis was the intended one, which run was an outlier, and which prediction we "really"
+made. §16.10.16 named that trap and this spec has fallen into it twice already (`SPEC_capture_quality.md`
+§16.12.14's headline, §11.4e's withdrawn inversion). Writing the predictions and the **pass/fail criteria**
+first converts the next session from a *fit* into a *test*: whatever comes back, we already know what it means.
+
+**Rules of the game:** these numbers are not to be edited after the data lands. If a prediction is wrong, it is
+marked wrong and the reason recorded — that is the point of having made it.
+
+#### A · Series D — brown, 6 re-seats of one fill, post-rebuild, still isopropanol
+
+| quantity | today | **predicted** | basis |
+|---|---|---|---|
+| within-fill CV, `S/Q linear base` | 9.79 % *(pre-rebuild)* | **2.5 – 3.5 %** | brown and green had **identical** pre-rebuild noise (9.79 vs 9.72), so the rebuild's 3.33× should transfer |
+| within-fill CV, `S/Q raw` | 11–22 % *(pre-rebuild)* | 3 – 8 % | same, minus the pedestal term which the rebuild does not touch |
+| settling trend over ~30 min | unmeasured on brown | −3 to −8 % | green showed −5.4 / −6.9 % |
+
+**PASS** = brown within-fill CV ≤ 3.5 %. **FAIL** = ≥ 6 %, which would mean the rebuild does *not* transfer and
+brown carries an oil-specific noise term the mechanics cannot reach.
+
+#### B · Series E — brown, 6 separate fills, ~15 min equilibration each
+
+| quantity | today | **predicted** | note |
+|---|---|---|---|
+| σ_fill, `S/Q linear base` | 10.5 % *(n = 2 fills, t = 1.47, **not significant**)* | **3 – 6 %** | the load-bearing unknown of the whole milestone |
+| σ_fill, `S/Q raw` | 0.3 % *(n = 2)* | **1 – 4 %** | ⚠ see the split below |
+
+⚠ **The prediction that matters most, and it is a strange one.** On the two brown fills we have, the *raw* ratio
+agrees to **0.3 %** while the *baselined* ratio differs by **10.5 %** — and green runs the other way (raw 2.8 %,
+baselined 0.0 %). **Prediction: this split reproduces.** If it does, brown's "weak fill-to-fill" — the main open
+risk on the milestone — is **an artifact of the correction, not a property of the oil**, and the mechanism is
+§16.12.12's (the far anchor carries pigment; brown's far window is flat where green's rises, so the fitted slope
+responds differently by class).
+
+**⇒ Series E must report raw and baselined side by side.** If it only reports the shipped metric the question
+cannot be answered.
+
+#### C · The 1-butanol trial
+
+| quantity | today (IPA) | **predicted (butanol)** |
+|---|---|---|
+| **pedestal** `c/Q_true` | **1.72** | **≤ 0.9** *(f ≥ 0.5 — matching what three years of shelf-clearing achieved, §11.4e)* |
+| `S/Q raw`, green | 5.4 | **7.3 – 9.1** |
+| `S/Q raw`, brown | 4.1 | **5.5 – 6.7** |
+| `S/Q linear base`, green | 12.4 | 12.4 – 13.5 |
+| `S/Q linear base`, brown | 9.0 | 9.0 – 9.8 |
+| within-fill CV, raw | 8.2 % | **2 – 4.5 %** |
+| within-fill CV, baselined | 2.9 % | 1.6 – 2.4 % |
+| brown σ_fill | 10.5 % | **2 – 4 %** |
+| brown dilution error | +6.0 % | **1 – 2 %** |
+| settling trend / 30 min | −6 % | **≈ 0** |
+| band positions | — | **shift < 5 nm** *(ε 17.9 → 17.8, KB §8.4)* |
+
+**The single sharpest test — raw and baselined must CONVERGE.** Green sits at 5.38 raw against 12.37 baselined,
+and that entire factor of 2.3 *is* the pedestal by construction. Remove the pedestal and they must approach. No
+free parameters; the convergence ratio reads `f` straight off.
+
+**PASS** = pedestal ≤ 0.9 **and** raw/baselined converge. **FAIL** = pedestal unchanged, which would mean the
+dispersion is not what the pedestal is made of and §8.2's chemistry is wrong.
+
+#### D · Consequence if C passes — single-sample reliability
+
+Using §16.10.17's rule `P = Φ(d/2)` with the class gap of 3.37:
+
+| single-sample CV | d | P(correct call) |
+|---|---|---|
+| 9.5 % *(today's brown)* | 3.28 | **95 %** |
+| 6.6 % | 4.72 | 99 % |
+| **3 – 5 %** *(predicted)* | 6.2 – 10.4 | **99.9 – 99.99 %** |
+
+**Predicted: single-sample reliability moves from ~1 error in 20 to ≤ 1 in 1 000.**
+
+⚠ **This is P(above threshold), not P(the oil is good).** §16.10.17b's warning binds harder the better these
+numbers get: whether 10.6 divides green from brown *in general* is a panel question that 4 oils cannot answer,
+and no amount of precision substitutes for it. **The panel remains the gate.**
+
+#### E · What would make us abandon the butanol route
+
+- Odour unacceptable in a food premises *(a phone call, not an experiment)*.
+- Crazing of a polystyrene jar on an overnight soak.
+- Pedestal unchanged after the swap — the FAIL condition in C.
+
 ### 11.5 Physical interpretation — why it works, and why the brown oil looks reddish
 `A_blue` reads the **green chlorophyll-type pigment content** (its Soret band ~430–470 nm). Fresh/green oil = high
 pigment = high `A_blue`; roasted/aged brown oil = **degraded pigment = low `A_blue`**. This is **pigment degradation,

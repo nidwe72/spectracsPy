@@ -144,6 +144,7 @@ Each row is a section there.
 | 3.10 | **No dark-frame subtraction, no bad-pixel map** | Measured over 150 dark frames at the worst-case exposure: black level **0.00 %** of full scale. The offset the textbook correction removes is not there, and the ~10 hot pixels are already handled by §3.7. |
 | 3.11 | Clamp the captured range to **440–630 nm**, declared by the evaluation plugin | Outside that window the lamp is weak and the small optics roll off, so those wavelengths contribute noise dressed as data. The science declares what it needs; the capture layer obeys and fails loudly on a mismatch. |
 | 3.12 | Prepare the sample at **1:30 or 1:33**, not 1:20 | The fresh 2026 oils absorb far more than the aged ones used for validation: the sample bottomed out at **DN 5 of 255**, inside the least trustworthy part of the camera's response. Diluting lifts it to 16–25 DN and changes the verdict by ±0.35 %. |
+| 3.13 | Rebuild the **jar seat** and mark the fill line; document the sample's own **turbidity** as the next lever | The jar is lifted out and put back between the two captures a ratio is made of, and any change in how it sits enters absorbance as an offset *and* a slope. Rebuilding the seat took re-seat tilt from 2.84 % to **1.34 %** and metric scatter from 9.7 % to **2.9 %** — the largest fidelity gain in the project, and a printed part rather than an algorithm. It also handed the top of the error budget to the chemistry: a few drops of oil in isopropanol is not a solution but a dispersion, and the scatter it adds is **0.7–1.9× the pigment signal**. |
 
 Chapter 4 is the mirror image of this table — the things that were seriously considered and
 **deliberately not done**, with the reason for each.
@@ -157,7 +158,9 @@ Chapter 4 is the mirror image of this table — the things that were seriously c
 >
 > **2. It cancels multiplicative errors, not additive ones.** Anything that *scales* the light
 > cancels. Anything that *adds* to it — stray light, dark current, turbidity in the sample —
-> survives the division and biases the result.
+> survives the division and biases the result. **This is not a footnote: the sample's own turbidity
+> adds a floor 0.7–1.9× the size of the pigment signal, and it is now the largest known error left
+> in the instrument (§3.13).**
 >
 > **3. It cannot fix non-linearity.** The camera bends brightness on purpose (the "gamma" law). A
 > ratio of two bent numbers is not the ratio of the true numbers. This is the one instrument error
@@ -715,6 +718,62 @@ additive (§2.4) and does not cancel — a cloudy sample reads as absorption tha
 
 <!--PAGEBREAK-->
 
+### 3.13 The jar, and the sample's own turbidity
+
+*Added 2026-07-31. Everything before this section is about the instrument. This one is about the two
+things in front of it — the vessel and the liquid — which together turned out to dominate the error
+budget more than anything downstream of the grating.*
+
+**The mechanical half — measured, and fixed.** Absorbance is a ratio of two captures taken minutes
+apart with the jar lifted out and put back between them. Any change in how the jar sits changes the
+path through it, and that enters absorbance as an **offset *and* a slope**, not merely a level. A
+dedicated re-seating probe attributed the bulk of the run-to-run scatter to that one joint.
+
+A rebuilt seat and a marked-line fill protocol then cut it:
+
+| | before | after |
+|---|---|---|
+| jar re-seat tilt | 2.84 % | **1.34 %** |
+| metric CV, one fill re-seated | 9.7 % | **2.9 %** |
+
+**That was the single largest fidelity improvement in the project**, and it is worth noting *what
+kind* of improvement it was: not an algorithm, not a calibration — a printed part and a filling
+habit.
+
+**And a caveat found immediately afterwards.** Of that remaining 2.9 %, roughly **58 % is not
+seating at all** but a slow drift while the freshly-mixed dilution settles. Removing the time trend
+leaves a true seat-to-seat repeatability of about **1.9 %**. The mechanical work therefore
+over-delivered on its own terms — and handed the top of the error budget to the chemistry.
+
+**The chemical half — measured, not yet fixed.** A few drops of oil in isopropanol is **not a
+solution**. The two are only partially miscible, so what forms is a cloudy dispersion of oil
+droplets and never-soluble waxes. Scattered light does not reach the detector, so the instrument
+records it as absorbance: a broad additive floor under the whole curve, the **pedestal**.
+
+It is not small. Measured across eight fills, the pedestal runs **0.7 – 1.9 × the pigment signal in
+the Q band** — the plinth is bigger than the thing standing on it. And because the metric is a
+*ratio*, adding the same amount to numerator and denominator drags it toward 1:
+
+```
+true       12.37 / 1.00                    = 12.37
+measured  (12.37 + 1.59) / (1.00 + 1.59)   =  5.39
+```
+
+That compression is the entire difference between the two pigment-ratio rows in the report, and the
+reason a baseline correction exists at all.
+
+**How much it costs, from an accident.** Oils bought in 2023 and measured in 2026 had three years to
+clarify in the bottle. They carry **half** the pedestal of fresh oils — and they separated the two
+quality classes about **8× better**. Nobody designed that experiment; the shelf did. It makes sample
+clarity a **first-class instrument parameter**, and it is currently the largest known lever left.
+
+> **Background.** The miscibility gap, the ouzo effect, why the droplets sediment rather than cream,
+> the solvent-selection table and the vessel constraints are treated properly in
+> `KB_spectroscopy_physics.md` §8. The open work is owned by `SPEC_capture_quality.md` §16.12 and
+> `SPEC_capability_proof.md` §11.4e–f.
+
+<!--PAGEBREAK-->
+
 ## 4. What we deliberately did not do
 
 An engineering record is only useful if it also says what was considered and rejected, and why.
@@ -761,6 +820,9 @@ need revisiting on different hardware.
 | temporal | averaging | sigma-clipped mean, k = 3, ≤ 5 passes | 3.8 |
 | window | wavelength range | 440 – 630 nm, plugin-declared | 3.11 |
 | sample | dilution | 1:30 (6 ml + 2 drops) or 1:33 (10 ml + 3 drops) | 3.12 |
+| sample | solvent | isopropanol, ≥ 99.8 %, fresh bottle | 3.13 |
+| sample | equilibration after mixing | ≈ 15 min | 3.13 |
+| vessel | jar re-seat tilt, as rebuilt | 1.34 % *(was 2.84 %)* | 3.13 |
 | lamp | reference source | Yuji SunWave 6500 K, high-CRI white LED | 2.6 |
 
 ## 6. Known open items
@@ -778,9 +840,23 @@ Recorded honestly; none of these blocks a measurement today.
   burst frames are not persisted, only their mean. One instrumented bench run would settle it.
 - **The new dilution protocol is predicted, not yet confirmed on the rig** (§3.12). One oil measured
   at both the old and the new strength would verify the invariance directly.
-- **Prep noise and instrument noise have never been separated.** The 8.7 % run-to-run spread mixes
-  both. Filling the pot several times from a *single* prepared batch would isolate the instrument's
-  own contribution — and would give the quality threshold its first real error bar.
+- **Prep noise and instrument noise are now partly separated** (§3.13) — the rebuild took the
+  re-seat spread to 2.9 %, of which ~58 % is settling drift rather than seating. What remains
+  unmeasured is **fill-to-fill** noise: several fills from one batch, which is what gives the
+  quality threshold its first real error bar. Owned by `SPEC_capability_proof.md` §11.4f.
+- **Everything about the brown oil post-rebuild is projection** (§3.13). The mechanical work was
+  verified on green only; brown has not been measured since. Pre-rebuild the two classes had
+  *identical* noise, which is why the fix is expected to transfer — but expected is not measured.
+- **The sample's turbidity is the largest known remaining lever and nothing has been done about it**
+  (§3.13). Three candidate routes exist — a better solvent (1-butanol), a 0.22 µm filter, or simply
+  a fresher solvent bottle — and none has been tried. Owned by `SPEC_capture_quality.md` §16.12.
+- **The far baseline anchor is not what it was documented to be.** The 600–630 nm window was
+  described as oil-quiet; it carries real chlorophyll absorption and a substantial share of the
+  discrimination rests on it. The metric works, but the explanation attached to it has been
+  rewritten — `SPEC_capability_proof.md` §2.1a.
+- **The class threshold rests on four oils.** Precision is close to solved; whether the threshold
+  divides good from over-roasted oil *in general* is a panel question no amount of precision can
+  answer. This is the binding constraint on the claim, not the instrument.
 
 ## Appendix A — Knowledge base
 
