@@ -76,8 +76,20 @@ the bench + story, firming up as more 2026 runs land.
 ### 2a. A SECOND Ampel — the linear-baseline gauge *(✅ IMPLEMENTED 2026-07-27; see [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §16.10.9)*
 
 `RoastBaselineGaugeView` runs **alongside** `RoastGaugeView`, on its own scale. It is driven by the
-**linear-baseline pigment ratio** — a straight line fitted through the oil-quiet 520–540 and 600–630 windows and
+**linear-baseline pigment ratio** — a straight line fitted through the 520–540 and 600–630 windows and
 subtracted before taking Soret ÷ Q — rather than by the raw ratio §1 describes.
+
+> ⚠ **The words "oil-quiet" were removed from that sentence on 2026-07-31.** The far window (600–630 nm) is
+> **not** signal-free: it carries real green-pigment absorption at 5.1 σ, and a large share of this gauge's
+> discrimination rests on it. **This gauge is therefore a three-region measurement, not a two-band ratio with a
+> correction** — see [`SPEC_capability_proof.md`](SPEC_capability_proof.md) **§2.1a** for the restatement and the
+> algebra, and [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §16.12.12–14b for the evidence, plus the
+> baseline variants that were tried and rejected. **Nothing about this gauge's numbers or its 1/25 score
+> changes** — only the explanation attached to them.
+>
+> ⚠ **And the 10.6 threshold does not survive a solvent change.** It was derived on isopropanol dilutions; a
+> switch to 1-butanol (`SPEC_capture_quality.md` §16.12.7) removes much of the scatter pedestal and shifts both
+> classes. Re-derive rather than carry it over — pre-registered predictions in `SPEC_capability_proof.md` §11.4f.
 
 | | raw Soret/Q | linear baseline |
 |---|---|---|

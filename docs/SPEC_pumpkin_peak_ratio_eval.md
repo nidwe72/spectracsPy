@@ -92,6 +92,13 @@ which is exactly what makes a ratio informative.
 > ([`SPEC_project_structure.md`](SPEC_project_structure.md) → [`SPEC_plugin_distribution.md`](SPEC_plugin_distribution.md)).
 > Implement on explicit request only.
 
+> ⚠ **Amendment 2026-07-31 — "literature-anchored" is only two-thirds true.** The two bands below are indeed
+> anchored in the literature. But the shipped metric also draws on a **third region, 600–630 nm**, which entered
+> as a baseline anchor chosen for being *quiet* and turns out to carry real chlorophyll absorption (5.1 σ) plus a
+> large share of the discrimination. That region has **no literature anchor** — it was chosen for a property it
+> does not have. The metric works; the provenance story simply does not extend to all of it.
+> See [`SPEC_capability_proof.md`](SPEC_capability_proof.md) §2.1a.
+
 Edwin's decision, from the literature plus what the rig can actually capture:
 
 | # | Band | **Settled window** | Literature anchor | Why this window |

@@ -169,3 +169,67 @@ the invariance directly.
 **Open (minor):** low-DN guard (report per-capture band-minimum DN — largely obsolete once the protocol lands);
 `dilution` metadata field; one-batch repeatability run to split prep noise from instrument noise in the 8.7 %
 within-oil spread.
+
+---
+
+## Desk day — the sample, not the instrument  ·  _2026-07-31_  ·  _status: no rig time, 8 analyses, several claims withdrawn_
+
+**Question asked.** Why does a fresh dilution drift for its first ~15 minutes (§16.11.7), and would a different
+solvent or vessel help? **Everything below is analysis of PDFs already on disk.** New tools in `diagnostics/`:
+`settling_sweep`, `settling_plot`, `far_anchor_probe`, `far_anchor_sweep`, `baseline_vs_raw`,
+`baseline_variants`, `without_b002`, `pedestal_by_vintage`.
+
+**1 · The settling drift reaches the shipped metric.** −5.4 % (set B) / −6.9 % (set C, t = −5.60) over ~30 min.
+Detrending drops the pooled CV **2.92 % → 1.89 %**, so **58 % of what was counted as seating noise is a time
+trend**. True seat-to-seat repeatability is ≈1.9 %. ⇒ §16.11.9's budget closure does not hold — the `jar` arm
+over-predicts — and **the binding constraint moved from the mechanics to the liquid**. Curves:
+`spectracs-references/tmp/settling_curves.png`.
+
+**2 · The far baseline anchor is not oil-quiet — it measures pigment.** 600–630 nm carries real chlorophyll
+absorption at **5.1 σ** (rise: green 0.0535 vs brown 0.0159 under an identical lamp — 37 runs, 6 fills, 2
+sessions). It is the flank toward the true Q maximum near 665 nm, outside our clamp. **And it carries the
+discrimination**: sweep the far edge in and Cohen's *d* falls **2.88 → 0.94** until the classes overlap. The
+metric is a **three-region construction** (algebra verified against the code to 0.5 %) — restated in
+`SPEC_capability_proof.md` §2.1a, and the `DevSpectralPlugin` comment corrected.
+
+**3 · There is no better baseline available on a 440–630 window.** Twelve variants — offset-only, power-law,
+AsLS, ModPoly, rubber band, full-range line, quiet-anchored LSQ and polynomials. **Monotone trade-off**: the more
+spectrum a baseline may follow, the better it removes drift and dilution and the more class signal it removes
+with them. AsLS gave the best dilution invariance of anything tested (−0.72 %) *and* 21/25 errors. The escape is
+spectral coverage past ~700 nm — optics, not software.
+
+**4 · ⭐ The 2023-vs-2026 gap is SOLVED, and it was Edwin's hypothesis.** The 2023 oils were bought in 2023 and
+had three years to **clarify in the bottle**: pedestal **0.84 ± 0.19** against the fresh oils' **1.72 ± 0.23**,
+no overlap on a single fill. That was the item flagged as the one thing that could kill the concept; it
+decomposes into a **turbidity** half (raw CV 2.54 → 14.54 %, fixable three ways) and a **panel** half (Soret/Q
+separation 1.96× → 1.36×, i.e. two oil pairs are differently far apart). **Neither is fatal.** Full account:
+`SPEC_capability_proof.md` §11.4e.
+
+**⇒ Clearing the oil is worth ~6× in discriminating power** (*d* 24.25 at pedestal 0.84 vs 2.88 at 1.72) — an
+*observed* effect, not a projection, and the strongest argument yet for the 1-butanol trial.
+
+**5 · The aliquot step named.** The batch is mixed in a lab glass and a 4 ml aliquot goes to the jar — so the
+transfer is a **sampling step out of a settling dispersion**, and it is the best fit to the brown fill-to-fill
+asymmetry (green 0.0 %, brown 10.5 %). Pre-registered with the test that separates it from the competing
+baseline-artifact explanation: §11.4f B2–B4.
+
+**Claims made and WITHDRAWN today** *(nine; the full list is in `SPEC_capture_quality.md` §16.12.15 and
+§11.4e)*. The load-bearing ones: *"camera self-heating is the confound"* (the camera streamed continuously);
+*"λ⁻ⁿ scattering refuted"* (the test was **invalid**, not negative — one anchor contains pigment);
+*"the mechanism inverted between the oil eras"* (unnormalised band means across different concentrations);
+*"the rebuild made the baseline 120 % more valuable"* (**one run, B002, carries it**); *"heptane dissolves
+polystyrene"* (RED 1.10 — it swells and crazes). **B002 stays in**, per §16.11.11's V2 rule: it has no physical
+cause documented independently of the data, and dropping the worst re-seat from a re-seat-repeatability
+measurement is circular.
+
+**⇒ New practice: §11.4f is a PRE-REGISTRATION** — predictions and pass/fail for series D/E and the butanol
+trial, written before the runs and not to be edited afterwards. Two of today's nine withdrawals were
+after-the-fact-analysis traps; this is the cheapest available guard.
+
+**Also written today:** `KB_spectroscopy_physics.md` §8 (solvent chemistry, the pedestal, Hansen/RED for the
+vessel) and a new textbook document, `DOC_sample_physics.md` → *Light, Pigment and Solvent*
+(`spectracs-docs/internal/`, 17 pp) — the companion to *Capture Fidelity*, covering everything in front of the
+instrument.
+
+**▶ Next, unchanged by any of this:** **brown series D and E** — and E must report **raw and baselined side by
+side**, with the fills in **time order**.
