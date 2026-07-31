@@ -258,6 +258,20 @@ before Save; on reopen the same phase is editable and Save-changes updates it.)*
 **No open questions — spec is final + buildable** (build order: the §2.2 session fix → the ORM conversion →
 persist util → wizard VIEW mode + Home list + metadata + delete).
 
+## 8a. ▶ INCOMING — protocol provenance on the saved record  *(2026-08-01; DESIGN, owned by `SPEC_capture_quality.md` §16.10.17e)*
+
+The measurement **protocol** (how many fills, which gates, whether it completed) is about to become part of what
+a saved run means, not just how it was taken. §16.10.17e proposes persisting it alongside the existing A3
+`pluginVersion` stamp, for the same reason that stamp exists: **a verdict is uninterpretable without the rule
+that produced it**, and that rule is expected to change (§16.11.13 may invert "always three fills" into "one
+fill + fallback", and `T = 10.6` is unvalidated and will move).
+
+Proposed fields — `protocolId`/`protocolVersion`, `fillCount`/`fillsRequired`, `protocolComplete`,
+`threshold`/`gateMultiplier`, and the per-fill index values. **The load-bearing one is `protocolComplete`:
+false ⇒ no verdict may be rendered, exported to PDF, or published to the LIMS.** See §16.10.17e for the
+reasoning (the constraint is "an incomplete protocol yields no verdict", *not* "the user may not save") and
+for its three open questions.
+
 ## 9. Out of scope (later)
 - PUBLISHING (PDF/email) — separate spec.
 - Re-DRIVING a saved run (continuing a reopened workflow) — we persist + view/edit; re-execution is future.

@@ -1720,6 +1720,29 @@ residual, not 1.41 % vs 2.96 % — green's raw CV is inflated by a settling tren
 | σ_fill, `S/Q linear base` | 10.5 % *(n = 2 fills, t = 1.47, **not significant**)* | **3 – 6 %** | the load-bearing unknown of the whole milestone |
 | σ_fill, `S/Q raw` | 0.3 % *(n = 2)* | **1 – 4 %** | ⚠ see the split below |
 
+##### ⭐ What each outcome in that range MEANS — derived 2026-08-01, before the data
+
+*Not an edit to the prediction above — a derived consequence of it, written down first so the reading is fixed
+in advance. Computed in `diagnostics/one_fill_decision.py`; full table `SPEC_capture_quality.md` §16.11.13.*
+
+The gate rule is `T ± 2.576·σ₁`. Applied to the **measured** class means (green 12.251, brown 9.303), the
+question "does ONE measurement decide?" has a sharp boundary — and brown is the binding class because it sits
+closer to T (margin 1.297 against green's 1.651):
+
+| series E returns brown σ_fill | one measurement decides | reading |
+|---|---|---|
+| **≤ 3.3 % CV** (σ ≤ 0.307) | **≥ 95 %** | ✅ adopt §16.11.13's inversion — one fill, ÜBERGANG fallback |
+| 3.8 % | 85 % | marginal; probably still three fills |
+| 5.4 % | 39 % | ⛔ keep "always three fills" |
+| 10.5 % *(today's figure)* | 2 % | ⛔ unchanged, and prep is the dominant error term |
+
+⚠ **The pre-registered 3–6 % range straddles that boundary exactly.** At its optimistic end one measurement is
+enough; at its pessimistic end it is enough fewer than half the time. **There is no useful interpolation — the
+outcome is close to binary**, which is the right property for a pre-registration to have.
+
+**⇒ There is no failure mode, only a cost.** Small σ_fill → one measurement; large σ_fill → three fills, which
+is exactly what ships today (`SPEC_capture_quality.md` §16.10.17b). The downside of series E is the status quo.
+
 ⚠ **The prediction that matters most, and it is a strange one.** On the two brown fills we have, the *raw* ratio
 agrees to **0.3 %** while the *baselined* ratio differs by **10.5 %** — and green runs the other way (raw 2.8 %,
 baselined 0.0 %). **Prediction: this split reproduces.** If it does, brown's "weak fill-to-fill" — the main open
@@ -1796,9 +1819,21 @@ Record which protocol was used. If the result surprises, one hand-mixed comparis
 Stirring makes the sample representative; the filter then removes the particulate that stirring deliberately
 kept suspended. Neither alone gives both.
 
-#### C · The 1-butanol trial
+#### C · The butanol trial
 
-| quantity | today (IPA) | **predicted (butanol)** |
+> ⛔ **CANCELLED 2026-08-01 — the solvent programme is paused; see `SPEC_capture_quality.md` §16.12.7b.**
+> Isopropanol stays. This trial is not scheduled and its predictions are not live. Kept on record because
+> the reasoning still applies if series E/§11.4f D reopen the question.
+>
+> ⛔ **SUBSTANCE CHANGED 2026-08-01 — the predictions below were written for 1-BUTANOL and do NOT transfer.**
+> 1-butanol is rejected on hazard (**H318, serious eye damage Cat 1**); the candidate is now **2-butanol**
+> (`SPEC_capture_quality.md` §16.12.7a). Per §11.4f's rules the table is left exactly as written rather than
+> quietly re-tuned — but 2-butanol is a **branched** alcohol whose solvency sits *between* isopropanol and
+> 1-butanol, so **every "predicted" figure below is too optimistic for it**, and the last row is wrong
+> outright: ε goes 17.9 → **≈16**, not 17.8, so band positions may shift **more** than 5 nm.
+> **▶ Re-derive this table for 2-butanol before the trial runs, and pre-register the new numbers as C2.**
+
+| quantity | today (IPA) | **predicted (1-butanol — SUPERSEDED, see above)** |
 |---|---|---|
 | **pedestal** `c/Q_true` | **1.72** | **≤ 0.9** *(f ≥ 0.5 — matching what three years of shelf-clearing achieved, §11.4e)* |
 | `S/Q raw`, green | 5.4 | **7.3 – 9.1** |
@@ -1819,7 +1854,7 @@ free parameters; the convergence ratio reads `f` straight off.
 **PASS** = pedestal ≤ 0.9 **and** raw/baselined converge. **FAIL** = pedestal unchanged, which would mean the
 dispersion is not what the pedestal is made of and §8.2's chemistry is wrong.
 
-#### D · Consequence if C passes — single-sample reliability
+#### D · Consequence if C passes — single-sample reliability  *(⛔ dormant: C cancelled, §16.12.7b)*
 
 Using §16.10.17's rule `P = Φ(d/2)` with the class gap of 3.37:
 
@@ -1835,11 +1870,82 @@ Using §16.10.17's rule `P = Φ(d/2)` with the class gap of 3.37:
 numbers get: whether 10.6 divides green from brown *in general* is a panel question that 4 oils cannot answer,
 and no amount of precision substitutes for it. **The panel remains the gate.**
 
-#### E · What would make us abandon the butanol route
+#### E · What would make us abandon the butanol route  *(⛔ dormant: C cancelled, §16.12.7b)*
 
 - Odour unacceptable in a food premises *(a phone call, not an experiment)*.
 - Crazing of a polystyrene jar on an overnight soak.
 - Pedestal unchanged after the swap — the FAIL condition in C.
+
+#### F · 📌 THE FOUR-OIL CAMPAIGN — pre-registered 2026-08-01, BEFORE the runs
+
+> **⚠ This REPLACES series E as designed in §B above.** §B specified *six fills of one brown oil*
+> (df = 5, one oil). Edwin's campaign instead spends the same effort on *two fills each of four oils*
+> (df = 4, four oils). **The trade is a little statistical power for much better representativeness** —
+> and it attacks the oil *panel*, which §16.10.17d says is what the threshold actually needs. §B's
+> predictions for σ_fill still stand and are tested here; only the sampling design changes.
+
+**Edwin's plan, recorded as stated.** Four oils, two fills each, replacing series E's single-oil design:
+
+| step | oil | fills | note |
+|---|---|---|---|
+| 1 | **brown #1** *(today's, series D oil)* | series D **+ one fresh refill** (18 ml + 6 drops) | brown reaches 2 fills |
+| 2 | **green #1** | B + C — **already done** | 2 fills, two dilutions |
+| 3 | **green #2** *(new oil)* | series **U** + **V** | to be bought/prepared |
+| 4 | **brown #2** *(new oil)* | two series | oil not yet purchased |
+
+⇒ **4 oils × 2 fills = 8 fills.** Runs per fill as Edwin's existing practice (6 re-seats); see D3.
+
+##### D1 Why this design is nearly as powerful as series E — the point that justifies it
+
+Each oil's fill-pair contributes **1 degree of freedom** to a fill-to-fill variance. Four oils **pool to
+df = 4**, against series E's df = 5 from six fills of one oil — and the pooled figure is *spread across four
+oils*, so it is more representative of what a real sample does.
+
+| design | df | 95 % CI on σ spans | to **prove** σ_fill ≤ 0.307 needs σ̂ ≤ |
+|---|---|---|---|
+| 2 fills, one oil | 1 | **71×** | 0.019 (0.21 % CV) — unattainable |
+| **this campaign** | **4** | 4.8× | **0.129 (1.39 % CV)** |
+| series E | 5 | 3.9× | 0.147 (1.58 % CV) |
+
+⚠ **Step 1 alone therefore proves nothing about σ_fill** — two fills of one oil is df = 1. It is a
+**falsification** test: a second brown fill landing far from 9.303 would be highly informative; landing close
+is merely the absence of bad news. **The estimate only exists once the campaign completes.**
+
+##### D2 Predictions — fixed now, not to be edited afterwards
+
+| quantity | **predicted** | basis |
+|---|---|---|
+| brown #1, fill-2 mean | **9.0 – 9.6** *(within ~3 % of 9.303)* | series D's mean survived a rig rebuild *and* a different oil to −0.62 % |
+| **pooled σ_fill, `S/Q linear base`** | **2 – 5 % CV** | between series D's 1.41 % re-seat and the historical 10.5 %; §11.4f B predicted 3–6 % for brown alone |
+| green #2 vs green #1 class means | within **10 %** | oils of the same class differ, but far less than the 33 % class gap |
+| **any oil crossing T = 10.6 against Edwin's own read** | **none** | if one does, the threshold — not the instrument — is wrong |
+| the raw-vs-baselined split of §11.4f B | **reproduces** on brown, absent on green | unchanged prediction, now testable on 2 brown oils |
+
+**PASS** = pooled σ_fill ≤ 3.3 % CV ⇒ adopt §16.11.13's one-fill protocol.
+**FAIL** = ≥ 6 % ⇒ keep the three-fill protocol; prep dominates and §11.4f B2's aliquot work becomes the priority.
+**Between** = point estimate favourable but unproven at df = 4; decide on the operational cost, not the statistics.
+
+##### D3 Design details that matter
+
+- **Runs per fill.** σ_fill is estimated from the scatter of fill *means*, so re-seat noise enters as
+  σ_reseat/√n: at n = 1 it contributes 18 % of the variance budget, at n = 3 **6 %**, at n = 6 **1.5 %**.
+  Edwin's habitual 6 runs is statistically the best of the three; **3 would be an acceptable time-saver**.
+  Whatever is used, **record it** — the analysis must subtract the re-seat term.
+- **⭐ Record Edwin's own verdict for each oil BEFORE measuring it** (§16.10.17c's operator pre-read).
+  Without it the campaign yields four oils and four numbers; with it, four oils with **independent ground
+  truth** — which is what turns it from a precision experiment into a threshold-validation one. Costs nothing.
+- **Confounds** carry over unchanged from §11.4f B3: cover the beaker (evaporation), non-heating stirrer,
+  and **report the fills in time order** so any drift shows as a trend rather than inflating σ_fill.
+- **Report raw and baselined side by side** (§11.4f B), else the split prediction cannot be tested.
+
+##### D4 ⚠ What this campaign will NOT settle
+
+**It closes the precision half and not the threshold half.** All four oils are expected to be *clearly* green
+or *clearly* brown. Such a panel confirms **that the classes separate**; it cannot show **where the boundary
+belongs**, because nothing sits near it. `T = 10.6` would still rest on judgement (§16.10.17d).
+
+**⇒ One oil that Edwin would call *borderline* is worth more to this milestone than another clear one.** If
+such a sample can be obtained, it should replace one of the clear oils rather than be added to them.
 
 ### 11.5 Physical interpretation — why it works, and why the brown oil looks reddish
 `A_blue` reads the **green chlorophyll-type pigment content** (its Soret band ~430–470 nm). Fresh/green oil = high

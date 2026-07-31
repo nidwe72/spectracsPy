@@ -213,7 +213,9 @@ separation 1.96× → 1.36×, i.e. two oil pairs are differently far apart). **N
 `SPEC_capability_proof.md` §11.4e.
 
 **⇒ Clearing the oil is worth ~6× in discriminating power** (*d* 24.25 at pedestal 0.84 vs 2.88 at 1.72) — an
-*observed* effect, not a projection, and the strongest argument yet for the 1-butanol trial.
+*observed* effect, not a projection, and the strongest argument yet for the butanol trial.
+*(2026-08-01: 1-butanol subsequently rejected on hazard — H318 — and replaced by **2-butanol**; §16.12.7a.
+The argument for a butanol is unaffected, the substance changed.)*
 
 **5 · The aliquot step named.** The batch is mixed in a lab glass and a 4 ml aliquot goes to the jar — so the
 transfer is a **sampling step out of a settling dispersion**, and it is the best fit to the brown fill-to-fill

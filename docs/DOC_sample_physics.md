@@ -507,22 +507,47 @@ as how polar it is.**
 
 These can be varied nearly independently, and that is a lever.
 
-| solvent | ε (25 °C) | b.p. °C | flash pt °C | dissolves oil | polystyrene | field-usable |
+| solvent | ε (25 °C) | b.p. °C | flash pt °C | dissolves oil | polystyrene | usable here |
 |---|---|---|---|---|---|---|
 | water | 78 | 100 | — | not at all | ✅ | — |
-| **2-propanol** *(current)* | **≈ 17.9** | 82.6 | 12 | **marginal** | ✅ safe | ✅ drugstore |
-| 1-propanol | ≈ 20.1 | 97.2 | 22 | better | ✅ safe | specialist |
-| **1-butanol** | **≈ 17.5** | 117.7 | 35 | **good** | ✅ safe | specialist |
+| **2-propanol** *(in use, and staying)* | **≈ 17.9** | 82.6 | 12 | **marginal** | ✅ safe | ✅ **chosen** |
+| 1-propanol | ≈ 20.1 | 97.2 | 22 | better | ✅ safe | ⛔ H318 |
+| **1-butanol** | ≈ 17.5 | 117.7 | 35 | **good** | ✅ safe | ⛔ **H318** |
+| 2-butanol | ≈ 16 | 99.5 | 24 | between the two above | ~ caution | ⛔ not pursued |
+| acetone | ≈ 20.7 | 56.1 | **−20** | good | ⛔ **dissolves it** | ⛔ not pursued |
 | n-heptane | 1.9 | 98.4 | **−4** | ideal | ⛔ swells + crazes | ⛔ hazardous |
 | cyclohexane, isooctane | ≈ 2 | — | — | ideal | ⛔ cyclohexane **dissolves** it | ⛔ |
 
-**1-butanol is the interesting one.** Its dielectric constant is essentially that of isopropanol, so
-absorption bands should barely move — while its longer chain makes it a genuinely good triglyceride
-solvent. Dissolution without solvatochromism. Heptane, at `ε = 1.9`, would shift the bands
-substantially, attack the sample jar (§6.1), and introduce a flammability hazard no food producer
-should be asked to keep on a shelf.
+**In principle a longer-chain alcohol is the interesting direction.** Its dielectric constant is close
+to isopropanol's, so absorption bands should barely move, while its longer chain makes it a better
+triglyceride solvent — dissolution without solvatochromism.
 
-### 4.6 What the analytical literature actually uses
+### 4.6 ✅ The decision: isopropanol stays
+
+**The instrument keeps 2-propanol and its existing polystyrene vessel.** Not because the alternatives
+were untested in principle, but because each fails on a specific, checkable ground — and because the
+problem the swap would solve stopped being the one that limits the instrument.
+
+| candidate | why it is not used |
+|---|---|
+| **1-butanol** *(and 1-propanol, isobutanol)* | **H318 — "causes serious eye damage", Category 1: irreversible.** For an instrument meant to be operated by a miller in food premises, that is the wrong classification to accept. *(tert-butanol is excluded separately: it melts at 25.8 °C and is a solid at room temperature.)* |
+| **2-butanol** | The one butanol both liquid at room temperature and free of Cat-1 eye damage — but a **branched** alcohol, so its solvency gain over isopropanol is only partial; more volatile; and its ε near 16 rather than 17.8 weakens the very "bands barely move" argument that made a butanol attractive. Not enough gain for the disruption. |
+| **acetone** | Chemically appealing — 80 % acetone is the *standard* solvent in the pigment literature (§3.2), so it would place our band positions directly on the published scale. But it **dissolves polystyrene**, so it demands a new vessel, and no suitable one exists (§6.6). |
+| **n-heptane, cyclohexane** | Ideal solvents, but they attack the vessel and carry hazards no food producer should be asked to keep on a shelf. |
+
+**And the reason the question is closed rather than merely deferred:** the solvent work existed to
+reduce the scattering pedestal — that is, to buy **precision**. Precision is no longer what limits this
+instrument. The measured separation between a green and a brown oil is roughly **eleven standard
+deviations**, with no overlap between any two runs *(`SPEC_capture_quality.md` §16.13)*. What limits
+the instrument now is whether the **threshold** dividing the two classes is in the right place — a
+question no solvent can answer, and which a solvent change would actively set back, since every band
+position and therefore the threshold itself would have to be re-derived.
+
+> ⚠ **One condition attaches.** All of that rests on the *sample-preparation* scatter being modest, and
+> that quantity has not yet been measured (§5.5's aliquot trap). If it turns out to be large, turbidity
+> becomes the limiting term again and the solvent question genuinely reopens.
+
+### 4.7 What the analytical literature actually uses
 
 Standard methods for chlorophyll and carotenoids in edible oils read them in **cyclohexane**,
 **hexane**, **carbon tetrachloride**, or **ethanol/isooctane** and **ethanol/heptane** mixtures.
@@ -612,7 +637,9 @@ times better** *(measured; `SPEC_capability_proof.md` §11.4e)*.
 Four routes, in rough order of attractiveness:
 
 1. **A better solvent.** If the oil truly dissolves, there is nothing to scatter. This is why §4.5's
-   distinction between polarity and solvency matters.
+   distinction between polarity and solvency matters — but **this route is closed for this instrument**
+   (§4.6, §6.6): every solvent that dissolves the oil properly either carries an unacceptable hazard
+   classification or attacks the vessel, and the vessel sits above a mains-voltage lamp.
 2. **Filtration.** A syringe filter removes anything above its pore size. Note the limit: ouzo
    nanodroplets at 50–200 nm pass straight through a 0.22 µm membrane, so a filter distinguishes
    *which* population is responsible as much as it removes it.
@@ -684,11 +711,22 @@ Against **polystyrene** (δD 21.3, δP 5.8, δH 4.3, R₀ 12.7):
 | **cyclohexane** | **0.90** | **dissolves it** — the classic theta-solvent for polystyrene |
 | n-heptane | **1.10** | just outside — swells and stress-cracks, does **not** dissolve |
 | **1-butanol** | **1.23** | outside — safe; the closest of the alcohols |
+| 2-butanol | ⚠ **not computed** | likely **closer to PS** than 1-butanol — see below; not pursued (§4.6) |
 | isooctane | 1.27 | outside |
 | **2-propanol** | **1.29** | outside — safe |
 | 1-propanol | 1.33 | outside |
 | ethanol | 1.49 | comfortably outside |
 | water | 3.23 | inert |
+
+> ⚠ **2-butanol's RED is deliberately left blank rather than estimated.** Computing it needs the same source's
+> polystyrene parameters, and a value derived from a different source would not be comparable with the rows
+> above. **But the direction is predictable and it is the wrong one:** 2-butanol is a *secondary* alcohol, so
+> its hydrogen-bonding term δH is **lower** than 1-butanol's — which moves it **toward** polystyrene in Hansen
+> space, i.e. toward the swelling boundary that heptane sits on at 1.10. A resin-compatibility guide
+> independently rates 2-butanol against PS only as *"moderate–good, with caution"*, against 1-butanol's clean
+> "safe at 20 °C". **Two independent hints in the same direction ⇒ the overnight soak test
+> (`SPEC_capture_quality.md` §16.12.7 item b) is a gate, not a precaution.**
+
 
 Three things worth taking from that table:
 
@@ -750,11 +788,42 @@ Eliminating it — by letting a window contact the liquid — removes a variable
 ### 6.5 The awkward geometric constraint
 
 Because the light passes through the vessel *and* its lid, **both must be transparent** — and a clear
-vessel with a matching clear lid is not something one simply buys in glass. The practical answer is a
+vessel with a matching clear lid is not something one simply buys in glass. The usual answer would be a
 lid with an aperture carrying a clamped **fluorinated ethylene propylene (FEP)** film: better than
-95 % transmission across the visible, under 2 % haze, and chemically immune to everything discussed
-here. It must be **clamped, never glued** — the non-stick nature that makes it solvent-proof also
-means nothing adheres to it.
+95 % transmission across the visible, under 2 % haze, chemically immune to everything discussed here,
+and clamped rather than glued, since the non-stick nature that makes it solvent-proof also means
+nothing adheres to it.
+
+### 6.6 ✅ The decision: the polystyrene vessel stays — and a safety constraint decides it
+
+**The instrument keeps its existing sealed polystyrene jar.** Two reasons, and the second is the one
+that settles it.
+
+**First, nothing better is available off the shelf.** A one-piece vessel with an integral transparent
+lid does exist in food packaging — hinged sauce cups, for instance — but those are moulded in
+**polypropylene**, which is semi-crystalline and **hazy**. Haze is wide-angle scatter: precisely the
+pedestal chapter 5 is about, fed straight back into the beam. They are also tapered for stacking, with
+no flat reference surface, which is the opposite of what a repeatable optical seating needs. Disposable
+spectrophotometer cuvettes are made of polystyrene or PMMA exactly because those are optically clear.
+
+**Second — and this is decisive — the vessel sits above mains electricity.** The lamp is a **220 V**
+unit housed in the **lower cone**, directly beneath the sample, because the beam runs top-down. **Any
+leak runs down into it.**
+
+> **⇒ Vessel integrity is a safety property of this instrument, not a measurement property.** A milled
+> glass lid, a clamped polymer window, or any workshop adaptation is a *fabricated seal of unknown
+> reliability sitting over mains voltage* — and the more aggressive the solvent it is asked to contain,
+> the worse the consequence of a failure. **Any future vessel change must be argued on leak risk first
+> and optics second.** The sealed, single-piece, known-good jar in use today is doing more work than it
+> is usually given credit for.
+
+This is also what closes the acetone option of §4.6: the chemistry is attractive, but it requires a new
+vessel, and every available new vessel is either optically worse or a hand-made seal over a 220 V lamp.
+
+**The change that would dissolve the constraint** is a rebuild to **side illumination** — a horizontal
+beam, with the lamp no longer beneath the sample. That would also permit standard cuvettes, fixing path
+length and seating at the same time. It is a genuine option and a real redesign of the instrument; it is
+not currently planned.
 
 <!--PAGEBREAK-->
 

@@ -301,18 +301,31 @@ The key insight, and it is not obvious: **how well a solvent dissolves oil is no
 Solvency for a triglyceride tracks the **alkyl chain length**; solvatochromic band shifts track the
 **dielectric constant**. They can be varied almost independently.
 
-| solvent | ε (25 °C) | ρ g/mL | b.p. °C | flash °C | dissolves oil | polystyrene | field-usable |
-|---|---|---|---|---|---|---|---|
-| **2-propanol** *(current)* | **17.9** | 0.786 | 82.6 | 12 | **marginal** — the gap above | ✅ safe | ✅ drugstore |
-| 1-propanol | 20.1 | 0.803 | 97.2 | 22 | better (linear chain) | ✅ safe | ~ supplier |
-| **1-butanol** | **17.8** | 0.810 | 117.7 | 35 | **good** | ✅ safe *(soak-test for crazing)* | ~ supplier |
-| n-heptane | 1.92 | 0.684 | 98.4 | **−4** | ideal | ⛔ **swells + crazes** | ⛔ H225/H304/H411 |
-| cyclohexane / isooctane | ~2 | — | — | — | ideal *(the AOCS/IUPAC choice)* | ⛔ cyclohexane **dissolves** PS | ⛔ |
+| solvent | ε (25 °C) | ρ g/mL | b.p. °C | flash °C | GHS eye | dissolves oil | polystyrene | field-usable |
+|---|---|---|---|---|---|---|---|---|
+| **2-propanol** *(current)* | **17.9** | 0.786 | 82.6 | 12 | H319 | **marginal** — the gap above | ✅ safe | ✅ drugstore (**H225**) |
+| 1-propanol | 20.1 | 0.803 | 97.2 | 22 | ⛔ **H318** | better (linear chain) | ✅ safe | ⛔ rejected on hazard |
+| **1-butanol** | **17.8** | 0.810 | 117.7 | 35 | ⛔ **H318 Cat 1** | **good** | ✅ safe | ⛔ **REJECTED 2026-08-01** |
+| **⭐ 2-butanol** *(sec-)* | **≈16** ⚠ *unverified* | 0.808 | 99.5 | 24 | ✅ **H319 Cat 2A** | better than IPA, **weaker than 1-butanol** *(branched)* | ~ "moderate–good, caution" — **soak-test mandatory** | ✅ H226; costlier |
+| isobutanol | ~17.7 | 0.802 | 107.9 | 28 | ⛔ **H318 Cat 1** | good | ✅ | ⛔ rejected on hazard |
+| tert-butanol | 12.5 | 0.789 | 82.4 | 11 | H319 | good | ✅ | ⛔ **m.p. 25.8 °C — solid at room temperature** |
+| n-heptane | 1.92 | 0.684 | 98.4 | **−4** | — | ideal | ⛔ **swells + crazes** | ⛔ H225/H304/H411 |
+| cyclohexane / isooctane | ~2 | — | — | — | — | ideal *(the AOCS/IUPAC choice)* | ⛔ cyclohexane **dissolves** PS | ⛔ |
 
-**Why 1-butanol is the interesting one:** `ε = 17.8` against isopropanol's `17.9` — **essentially identical
-polarity, so band positions should barely shift** — while its longer alkyl chain makes it a genuinely good
-triglyceride solvent. You get the dissolution without the solvatochromism. Heptane (`ε = 1.9`) would move the
-bands hard, on top of dissolving the jar.
+**The original argument was for 1-butanol:** `ε = 17.8` against isopropanol's `17.9` — essentially identical
+polarity, so band positions should barely shift — while its longer alkyl chain makes it a genuinely good
+triglyceride solvent. Dissolution without solvatochromism.
+
+⛔ **1-butanol is REJECTED on hazard (2026-08-01, `SPEC_capture_quality.md` §16.12.7a).** It carries **H318 —
+serious eye damage, Category 1, irreversible** — as do 1-propanol and isobutanol. **2-butanol is the only
+butanol isomer that is both liquid at room temperature and free of Cat-1 eye damage** (tert-butanol melts at
+25.8 °C). Its flammability classification is also *better than the isopropanol we use today* (H226 vs H225).
+
+⚠ **But the substitution is not free.** 2-butanol is a **secondary (branched)** alcohol, so by this section's
+own chain-length rule its solvency sits **between** isopropanol and 1-butanol — a real but partial gain. It is
+more volatile (99.5 °C vs 117.7 °C). And critically, **its ε is around 16, not 17.8**, so the "bands barely
+move" argument that made a butanol attractive is weakened. ⚠ **That ε is unverified** — confirm it before
+relying on the argument. Heptane (`ε = 1.9`) would move the bands hard, on top of dissolving the jar.
 
 ⚠ **The literature does not use neat isopropanol for oil pigments.** The standard methods read chlorophyll and
 carotenoids in **cyclohexane** (445/470 nm), **hexane** (442/668 nm), **CCl₄**, or **ethanol + isooctane /
@@ -352,11 +365,22 @@ Against **polystyrene** (Hansen handbook: δD 21.3, δP 5.8, δH 4.3, R₀ 12.7)
 | **cyclohexane** | **0.90** | **dissolves it** — the classic theta-solvent for PS |
 | n-heptane | **1.10** | just outside — swells and stress-cracks, does **not** dissolve |
 | **1-butanol** | **1.23** | outside — safe; the closest of the alcohols |
+| **2-butanol** | ⚠ **not computed** | see the warning below — likely **closer to PS** than 1-butanol |
 | isooctane | 1.27 | outside |
 | **2-propanol** *(current)* | **1.29** | outside — safe |
 | 1-propanol | 1.33 | outside |
 | ethanol | 1.49 | comfortably outside |
 | water | 3.23 | inert |
+
+> ⚠ **2-butanol's RED is deliberately left blank rather than estimated.** Computing it needs the same source's
+> polystyrene parameters, and a value derived from a different source would not be comparable with the rows
+> above. **But the direction is predictable and it is the wrong one:** 2-butanol is a *secondary* alcohol, so
+> its hydrogen-bonding term δH is **lower** than 1-butanol's — which moves it **toward** polystyrene in Hansen
+> space, i.e. toward the swelling boundary that heptane sits on at 1.10. A resin-compatibility guide
+> independently rates 2-butanol against PS only as *"moderate–good, with caution"*, against 1-butanol's clean
+> "safe at 20 °C". **Two independent hints in the same direction ⇒ the overnight soak test
+> (`SPEC_capture_quality.md` §16.12.7 item b) is a gate, not a precaution.**
+
 
 **Three things this settles.** (1) **Butanol at 1.23 against isopropanol's 1.29 is not a borderline case** — both
 sit comfortably outside, butanol only marginally closer. (2) **Heptane does not dissolve polystyrene**; at 1.10

@@ -3034,7 +3034,47 @@ and not enough to have confirmed it; the value is that it had a real chance to f
 It is also the first evidence bearing on §16.10.8 — two fresh fills landing where predicted is *consistent*
 with fill-to-fill stability, but resolves nothing about dilution.
 
-### 16.10.8 Dilution invariance — UNRESOLVED, and seating is why *(2026-07-27)*
+### 16.10.8 Dilution invariance — ✅ RESOLVED FOR PRACTICAL PURPOSES *(2026-08-01; was "UNRESOLVED", 2026-07-27)*
+
+> **✅ ANSWERED 2026-08-01 — `diagnostics/dilution_pooled.py`.** Edwin's point: *drops are not drops and the
+> 18 ml is not measured exactly, by intent* — so every fill already sits at a slightly different dilution, and
+> the archive contains **three** within-oil dilution pairs, not the one §16.11.6 used. Pooling them:
+>
+> | pair | span | change in the index | slope *s* |
+> |---|---|---|---|
+> | green K/L *(pre-rebuild)* | 1.50× | +0.4 % | 0.01 ± 0.04 |
+> | brown N/M *(pre-rebuild)* | 1.50× | +4.9 % | 0.12 ± 0.05 |
+> | green B/C *(post-rebuild)* | 1.17× | −1.9 % | −0.12 ± 0.11 |
+>
+> **Pooled log-log slope `s` = +0.033 ± 0.029, t = 1.16, 95 % CI [−0.023, +0.089]** — consistent with zero,
+> and it **excludes the −0.124 slope** that §16.14.7 could previously only bound at. Translated:
+>
+> | dilution change | index moves | 95 % CI |
+> |---|---|---|
+> | **±17 %** *(one drop in six — real prep error)* | **≈ 0.6 %** | |
+> | 2× | +2.3 % | −1.6 … +6.4 % |
+> | 4× | +4.7 % | −3.1 … +13.2 % |
+>
+> **Against a class gap of 33 %.** Even at the pessimistic end of the interval a *fourfold* dilution error
+> moves the metric a third of the way to nothing; realistic prep sloppiness moves it under 1 %.
+>
+> **⭐ And the imprecision is itself the experiment.** If dilution dependence were large, the uncontrolled
+> concentration of every fill would inflate fill-to-fill scatter. Our CVs are 1.4–2.9 %; a ±17 % concentration
+> wobble at `s` = 0.033 contributes ~0.6 %. It is not there.
+>
+> ⚠ **Three caveats, all conservative.** (1) Each pair is a different **fill** as well as a different dilution,
+> so the fitted slope contains fill-to-fill noise — it is an **upper bound** on true dilution dependence.
+> (2) Two of the three pairs are pre-rebuild and noisier. (3) The brown N/M pair alone shows +4.9 % (t = 2.4),
+> plausibly fill scatter given brown's historical 10.5 %, but it is the one pair that does not look flat.
+>
+> **⇒ Status change.** The question is **resolved for the purpose this instrument exists for**: dilution error
+> at realistic magnitudes cannot threaten the verdict. It is **not** resolved to the precision of a dedicated
+> sweep, and §16.14's theory (invariance is exact but for pedestal curvature) is the reason to expect the
+> residual `s` to be small and positive rather than zero. **The dedicated ≥4× sweep below is DEMOTED** — worth
+> running if a reviewer demands it, or if `§11.4f F`'s campaign (which adds two more dilution pairs for free)
+> disagrees. It is no longer a gate item.
+
+*The original 2026-07-27 analysis follows, unchanged.*
 
 The 2023 library **cannot** answer it: each oil was measured 2–4 times at *one* dilution, within-oil level spread
 only ±4.5 %. Its weak-lever signal is merely suggestive — the linear baseline is about half as level-sensitive as
@@ -3062,6 +3102,10 @@ metric, which is seating, not dilution.*
 The settling experiment: after the seat fix, one oil, ≥4× concentration span, n ≥ 5 per level, one session
 (≈20 runs) — enough power to resolve a log-log slope of ~0.1.
 
+> ✅ **And read §16.10.8's 2026-08-01 header first — the pooled archive already answers the practical
+> question, and this sweep is DEMOTED.** What follows still describes the right experiment if a tighter
+> bound is ever needed.
+>
 > **▶ Read §16.14 before running that experiment (added 2026-07-31).** The algebra says `S/Q_lin` is invariant
 > **by construction** and that exactly one mechanism can break it — curvature in the turbidity pedestal. That
 > changes the readout: the signature to look for is a **curved** log–log plot flattening toward high
@@ -3438,7 +3482,8 @@ Outcomes:
 | ⚪ | **„Übergang — diese Probe liegt zwischen den beiden Klassen."** Drei Füllungen haben sie nicht getrennt. Das ist ein echtes Ergebnis: die Probe liegt im Übergangsbereich. |
 
 The third **must** read as an answer, not a failure — presented as a failure the operator keeps measuring until
-it tips, and the trap returns. And **no percentage labelled "% green"** may reach the UI: the number is
+it tips, and the trap returns. **▶ §16.10.17e turns this from wording into an enforced protocol** (an
+incomplete run yields no verdict) **and a persisted provenance stamp.** And **no percentage labelled "% green"** may reach the UI: the number is
 P(above threshold) (§16.10.11a). A qualitative "high confidence" badge is defensible; "96 % green" is not.
 
 #### 16.10.17d ⚠ BROWN is the harder call — and the threshold embeds an unmade decision
@@ -3493,6 +3538,83 @@ firing — but a silent false-green is the worst failure direction this instrume
 `None` so the gauge omits itself) is small.
 
 ---
+
+#### 16.10.17e Enforcing the protocol, and recording that it was followed  *(Edwin 2026-08-01; DESIGN — implement on explicit request)*
+
+§16.10.17c's withheld direction stops the operator *inferring* an early answer. It does not stop them simply
+**not finishing**. Edwin: the protocol should be enforced — the result saveable only once every required fill
+is done, or at minimum a confirming dialog — and the record should **carry a flag that it was produced this
+way**.
+
+##### E1 The principle — reframe "must not save" as "must not yield a VERDICT"
+
+A hard save-block is the obvious reading and the wrong one. A fill takes ~15 min of settling, so a three-fill
+run is the better part of an hour; blocking the save until it completes risks losing a genuinely interrupted
+session (out of sample, end of shift, app closed) and creates a dead-end state with no good exit.
+
+**The statistically meaningful constraint is narrower than "the user must do three":**
+
+> **An incomplete protocol must not produce a verdict.**
+
+That is what preserves the fixed-*n* stopping rule the gates in §16.10.17b assume. So:
+
+- **Always allow the save.** The measurements are real data and must not be destroyed by a UI rule.
+- **Withhold the verdict** on an incomplete record — it stores as `PROTOCOL_INCOMPLETE`, shows the fills it
+  has, and shows **no green/brown call and no ÜBERGANG call**.
+- **Warn on leaving**, in the §16.10.17c register: *"Two of three fills done — without the third this sample
+  cannot be classified. Leave it unfinished?"* Not a block; an informed choice with an honest consequence.
+
+⚠ **The wording must not leak the direction here either.** "Without the third this cannot be classified" is
+safe; *"currently leaning brown — one more to confirm"* re-opens exactly the trap §16.10.17c closes.
+
+##### E2 What "complete" means depends on which regime is in force
+
+| regime | complete when | status |
+|---|---|---|
+| **today** — §16.10.17b, always three fills, no early exit | **3 fills**, unconditionally | shipped |
+| **projected** — §16.11.13, one fill + fallback | 1 fill **if it clears a gate**; **3** if it lands in ÜBERGANG | ⚠ **gated on series E**, not to be built yet |
+
+**Both must be expressible**, because the second is the one §16.11.13 expects to adopt and the first is what
+ships today. That is the second reason for E3: a stored verdict is uninterpretable without the rule that
+produced it.
+
+##### E3 The provenance stamp — version the PROTOCOL, not just flag it
+
+Edwin's "persist a flag that it was done using this recipe" is right, and it should follow the pattern already
+built for plugins: **A3 stamps `pluginVersion` on every saved `SpectralWorkflow`** precisely so a run traces to
+the exact code that produced it (`SPEC_plugin_distribution.md`). A protocol stamp is the same idea one level up.
+
+A single boolean is not enough, because **§16.11.13 may invert the decision rule outright.** A verdict recorded
+today under "always three fills / gates 13.28 · 7.92" and one recorded next year under "one fill + fallback /
+gates 11.55 · 9.65" are *different measurements wearing the same word*. Suggested record:
+
+| field | why |
+|---|---|
+| `protocolId` + `protocolVersion` | e.g. `roast-3fill` v1 — the rule in force, versioned like a plugin |
+| `fillCount` / `fillsRequired` | what was actually done vs what the rule demanded |
+| `protocolComplete` | the E1 flag; **false ⇒ no verdict may be rendered or exported** |
+| `threshold` + `gateMultiplier` | T = 10.6 and the 2.576 of §16.11.13 — both are **expected to change** |
+| per-fill index values | so a re-analysis under a future rule is possible without re-measuring |
+
+⚠ **T = 10.6 is unvalidated (§16.10.11a) and will move when reference oils arrive.** Every stored verdict is
+therefore provisional, and storing the threshold *with* it is what makes the archive re-interpretable rather
+than merely historical. This is the same argument that justified `pluginVersion`, applied to the decision rule.
+
+##### E4 Consequences elsewhere
+
+- **The PDF report** must show the protocol and its completeness — a report carrying a verdict without them is
+  the artefact most likely to outlive the context (`SPEC_bench_pdf_export.md`).
+- **LIMS publishing** (`SPEC_lims_integration.md`) should refuse, or clearly mark, an incomplete record — an
+  unclassifiable sample must not reach a lab system looking classified.
+- **The saved-runs list** wants an "incomplete" affordance so unfinished work is visible and resumable.
+
+##### E5 Open for Edwin
+
+1. **Resumable or not?** May a session be re-opened the next day and its third fill added — or does an
+   interrupted run have to be restarted? Chemistry says restart (the dilution ages, §16.11.15), which argues
+   for *incomplete and closed* rather than *incomplete and resumable*.
+2. **Should an incomplete record be publishable to the LIMS at all**, even marked?
+3. **Does the operator's own pre-read (§16.10.17c) become mandatory** for the record to count as protocol-complete?
 
 ## 16.11 ⭐ THE REBUILD — measured *(Edwin 2026-07-29/30; the jar halved, the camera took its place, first sub-3 % metric)*
 
@@ -4006,6 +4128,115 @@ This is not a defect. An oil truly at 10.6 **should** return ÜBERGANG, and §16
 certainty where none exists is worse than useless. But it does mean the ÜBERGANG rate cannot be quoted as an
 instrument specification — it is half instrument, half agronomy.
 
+#### ⭐ The sensitivity table — read the answer off this when series E lands *(Edwin's question 2026-08-01)*
+
+**Series D did NOT answer the one-measurement question.** It measured the **re-seat** term; a field
+"measurement" is a **fill**. So the whole thing still hangs on σ_fill — and it hangs on it *steeply*.
+
+The decision rule reconstructed from this spec's own figures is `gate = T ± 2.576·σ₁` (it reproduces
+§16.10.17b's 13.28/7.92 at σ₁ = 1.04 and this section's 11.55/9.65 at 0.367 exactly). Applying it to the
+**measured** class means — green 12.251, brown 9.303:
+
+| σ_fill | as brown CV | green decides | brown decides | **both** | |
+|---|---|---|---|---|---|
+| 0.131 | 1.4 % | 100 % | 100 % | **100 %** | brown *re-seat* (series D) |
+| 0.250 | 2.7 % | 100 % | 99.5 % | **99.5 %** | |
+| **0.307** | **3.3 %** | 99.7 % | 95.0 % | **94.8 %** | ⬅ **the 95 % boundary** |
+| 0.354 | 3.8 % | 98.2 % | 86.1 % | **84.6 %** | green *re-seat* (series C) |
+| 0.500 | 5.4 % | 76.6 % | 50.7 % | **38.8 %** | |
+| 0.700 | 7.5 % | 41.4 % | 23.5 % | **9.7 %** | |
+| 0.977 | 10.5 % | 18.8 % | 10.6 % | **2.0 %** | historical brown σ_fill |
+| 1.040 | 11.2 % | 16.1 % | 9.2 % | **1.5 %** | §16.10.17b's shipped assumption |
+
+**Brown is the binding class** — it sits closer to T (margin 1.297 against green's 1.651):
+
+```
+green:  sigma_fill <= 0.391  (3.2 % CV)   for a 95 % one-measurement decision
+brown:  sigma_fill <= 0.307  (3.3 % CV)   <- the binding constraint
+```
+
+**⚠ And §11.4f B pre-registered brown σ_fill at 3–6 %, which straddles that boundary exactly.** At the
+optimistic end one measurement decides essentially always; at the pessimistic end it decides **fewer than
+half** the time. There is no useful interpolation to be had in advance — **the answer is genuinely unknown
+until series E runs**, and it is close to binary.
+
+#### Robustness — does set B's run 002 move any of this? **No.** *(Edwin asked 2026-08-01)*
+
+B002 is this project's most-discussed single run: §16.11.7's largest tilt event, and §16.12.14c's whole
+sensitivity study. The natural worry is that green's σ — and therefore the table above — rests on it.
+**It does not, and the reason is worth stating.**
+
+| green basis | n | mean | σ | CV | *d* vs brown | P(green decides) at that σ |
+|---|---|---|---|---|---|---|
+| set C only | 6 | 12.251 | 0.354 | 2.89 % | 11.04 | 98.2 % |
+| set B only | 6 | 12.489 | 0.370 | 2.96 % | 11.48 | 99.4 % |
+| set B **without run 002** | 5 | 12.382 | 0.293 | 2.37 % | 13.56 | 100.0 % |
+| **B+C pooled** *(the headline basis)* | 12 | 12.370 | 0.367 | 2.97 % | 11.13 | 98.8 % |
+| B+C without B002 | 11 | 12.311 | 0.319 | 2.59 % | 12.33 | 99.7 % |
+
+**Green's σ moves between 0.29 and 0.37 across every reasonable basis** — and *d* only ever improves when
+B002 is dropped. The one-measurement conclusion is unaffected: **brown remains the binding class**
+(σ_fill ≤ 0.307) on every one of these bases, because green's own limit is the looser 0.419.
+
+**⭐ And on the shipped metric, B002 is not an outlier at all.** Grubbs on the Pigment Index gives
+|z| = **1.44** against a critical 1.887 at n = 6 — and set **C's** high first run is actually the *larger*
+deviation at |z| = 1.57. B002 is dramatic only on the **uncorrected** ratio: plain S/Q **6.864** against
+5.23–5.49 for its siblings, a 29 % excursion, which the index absorbs into a 4 % one. That is §16.11.5's
+claim — *the linear baseline eats tilt events* — measured on the run that motivated it.
+
+**The two green sets fail differently, which is useful.** Set C's scatter is mostly a **significant settling
+trend** (−6.93 %, t = −5.60; residual CV 1.09 %). Set B's is **not** (−5.38 %, t = −1.84, not significant;
+residual 2.44 %) — B is closer to genuine seat-to-seat scatter plus one tilt event. **⇒ Plan on B, or on
+B+C, not on C alone**: C's raw σ flatters the seating and its residual σ (0.133) would flatter it wildly.
+
+⚠ **Three things this table is not.** (1) It is computed on **our two oils**, which are clearly-green and
+clearly-brown; an oil *near* the threshold never decides on one measurement at any σ — see the population
+warning below. (2) It uses the normal distribution, consistent with how the 2.576 gates were derived; the
+heavy tails of §16.10.11a make every figure **optimistic**. (3) It assumes T = 10.6 is correct, which is
+still unvalidated.
+
+#### ✅ POSITION — 95 % is the practicable bar, and "measure again" is a FEATURE  *(Edwin 2026-08-01)*
+
+**Edwin's read, adopted as the working position:** a one-measurement-decides rate **above 95 %** is a good
+and practicable result from the end user's point of view. The residual cases are not a defect — **an oil
+that does not decide on one measurement is genuinely an oil worth measuring again**, and saying so is a
+service to the miller rather than an admission of weakness.
+
+This is the standard shape of a diagnostic assay (decide / decide / **equivocal → retest**), and it is more
+honest than forcing a confident verdict onto a sample the instrument cannot separate.
+
+⚠ **It is a feature only if the ÜBERGANG verdict withholds its DIRECTION.** §16.11.13(c) measured the trap:
+the transition zone is ~97 % brown, so an operator who is told *which way* it leans will learn to read
+"measure again" as "it's brown" and skip the confirming fills — converting the feature back into a single
+measurement, and the least reliable one. **§16.10.17c's withhold-the-direction rule is therefore
+load-bearing for this position, not a nicety** — and §16.10.17e is what stops the operator simply not
+finishing, which withholding the direction does not address.
+
+**⇒ There is no failure mode here, only a cost.** If series E returns a small σ_fill, the operator does one
+measurement. If it returns a large one, the operator does three — which is exactly the protocol shipped
+today (§16.10.17b). The downside of series E is *the status quo*, and the upside is a threefold reduction
+in operator work.
+
+#### ⚠ And the SETTLING drift does not threaten this — because the binding class is immune
+
+The settling trend of §16.12.11 looked like a serious obstacle. Quantified against the one-measurement
+question, it is not. If measurement timing within a session were left **entirely uncontrolled**, a monotone
+ramp of total range `R` contributes `sigma = R/sqrt(12) = 0.289·R` to a single measurement:
+
+| | measured trend | σ from uncontrolled timing | + seat-to-seat | total | its limit |
+|---|---|---|---|---|---|
+| green (set B) | −5.38 % | 0.194 | 0.305 | **0.361** | 0.419 ✅ |
+| green (set C) | −6.93 % | 0.245 | — | — | — |
+| **brown (series D)** | **−0.15 %** | **0.004** | 0.147 | **0.147** | 0.307 ✅ |
+
+**Brown's settling contributes essentially nothing (σ ≈ 0.004), and brown is the binding class.** Green,
+which does settle measurably, still lands inside its own looser limit even with timing left free — and the
+shipped protocol does not leave it free (§16.11.15: *fresh, ~15 min settle, measure within the hour*).
+
+**⇒ Settling is a real effect on the metric (§16.12.11 stands) but it is not the term that decides whether
+one measurement is enough.** That term is **sample preparation** — the aliquot step of §11.4f B2 — which
+remains unmeasured. Attention should stay there.
+
 #### The assumption chain behind any of these numbers, worst first
 
 1. **T = 10.6 actually divides green from brown oil.** **UNVALIDATED**, and independent of everything in §16.11.
@@ -4399,22 +4630,131 @@ and C** (12 points, shared decay, separate offsets). The physics predicts an exp
 `a + b·exp(−t/τ)`, which would hand us **τ directly** for comparison against the diary's sensor τ = 2.9 min — but
 3 parameters on 6 points is thin. **Linear first; exponential only if the linear residuals show curvature.**
 
-### 16.12.7 ⭐ The solvent — 1-butanol is the branch that retires the others
+### 16.12.7 ⭐ The solvent — a butanol is the branch that retires the others  *(⛔ 1-butanol rejected on hazard 2026-08-01 → §16.12.7a; the candidate is now **2-butanol**)*
 
 Isopropanol is a *marginal* solvent for triglycerides; that marginality is the whole problem. The candidates:
 
 | solvent | dissolves oil | polystyrene-safe | practical for a mill | notes |
 |---|---|---|---|---|
 | **2-propanol** (today) | marginal | ✅ | ✅ drugstore | the miscibility gap ⇒ §16.12.2 |
-| **1-propanol** | better (linear, not branched) | ✅ | ~ specialist supplier | gentle intermediate step |
-| **1-butanol** | **good** | ✅ rated at 20 °C | ~ specialist supplier, cheap | bp 118 °C, flash 35 °C; **odour to be tested** |
+| **1-propanol** | better (linear, not branched) | ✅ | ⛔ **H318** — see §16.12.7a | gentle intermediate step |
+| **1-butanol** | **good** | ✅ rated at 20 °C | ⛔ **H318 — REJECTED, §16.12.7a** | bp 118 °C, flash 35 °C |
+| **⭐ 2-butanol** *(sec-butanol)* | better than IPA, weaker than 1-butanol *(branched)* | ~ "moderate–good, with caution" | ✅ **no H318** | **the surviving candidate** — §16.12.7a |
 | **n-heptane** | ideal | ❌ **dissolves PS** | ❌ H225/H304/H411 | bench reference method only |
 
-**1-butanol is strategically the strongest option, because one swap potentially retires three other work items at
-once:** polystyrene-safe → **no container work, no FEP window, no milling**; a genuine triglyceride solvent →
-**dissolves the waxes rather than requiring their removal, so no filter and no per-measurement consumable**; closes
-the miscibility gap → **no ouzo dispersion and no 15-minute wait.** Edwin 2026-07-31: cost and availability are
-both acceptable via specialist suppliers. **Marked as a track to try in practice.**
+The strategic case for a butanol is that one swap potentially retires three other work items at once:
+polystyrene-safe → **no container work, no FEP window, no milling**; a genuine triglyceride solvent →
+**dissolves the waxes rather than requiring their removal, so no filter and no per-measurement consumable**;
+closes the miscibility gap → **no ouzo dispersion and no 15-minute wait.**
+
+⛔ **But 1-butanol is REJECTED on hazard grounds (Edwin, 2026-08-01).** See §16.12.7a — the replacement is
+**2-butanol**, and the substitution is not free.
+
+### 16.12.7a ⛔ 1-butanol REJECTED on hazard — 2-butanol is the only butanol isomer that survives *(Edwin 2026-08-01, researched)*
+
+**The disqualifier is H318.**
+
+| | GHS hazard statements | eye classification |
+|---|---|---|
+| **1-butanol** (n-) | H226, **H302**, **H315**, **H318**, H335, H336 | ⛔ **Serious eye damage, Cat 1 — IRREVERSIBLE** |
+| **isobutanol** (2-methyl-1-propanol) | H226, H315, **H318**, H335, H336 | ⛔ **Cat 1** |
+| **1-propanol** | H225, **H318**, H336 | ⛔ **Cat 1** |
+| **tert-butanol** | H225, H319, H335 | ⚠ Cat 2A — but **m.p. 25.8 °C, solid at room temperature** ⇒ unusable |
+| **⭐ 2-butanol** (sec-) | H226, **H319**, H335, H336 | ✅ **Serious eye irritation, Cat 2A — reversible** |
+| *2-propanol (today, for reference)* | **H225**, H319, H336 | Cat 2 |
+
+**2-butanol drops three hazard statements relative to 1-butanol** — the Cat-1 eye damage, the acute oral
+toxicity (H302) and the skin irritation (H315). **It is the only butanol isomer that is both liquid at room
+temperature and free of Category-1 eye damage.** For an instrument to be operated by a miller rather than a
+chemist, in food premises, an irreversible-eye-damage classification is the right thing to refuse.
+
+**And flammability actually IMPROVES over what we use today:** isopropanol is **H225** (Cat 2, flash 12 °C);
+2-butanol is **H226** (Cat 3, flash ≈ 24 °C). It is a step back from 1-butanol's 35 °C, but a step *forward*
+from the status quo.
+
+#### ⚠ What the substitution costs — three things, stated plainly
+
+| | 1-butanol | **2-butanol** | consequence |
+|---|---|---|---|
+| chain | **linear** C4 | **branched** (secondary) C4 | §8.4's rule is that solvency tracks *chain length*; a branched C4 sits **between** isopropanol and 1-butanol. **The dissolution gain is real but partial** |
+| b.p. / flash | 117.7 °C / 35 °C | 99.5 °C / **≈ 24 °C** | more volatile ⇒ evaporation matters more (§11.4f B3), and a lower flash point |
+| ε (dielectric) | 17.8 | **≈ 16** ⚠ *unverified* | 1-butanol's headline argument was *"ε ≈ IPA's 17.9, so bands barely move — dissolution without solvatochromism."* **That argument weakens for 2-butanol** and the band positions may shift more than hoped |
+
+⚠ **The ε value is the one number I could not confirm from a primary source** — literature puts 2-butanol near
+15.8–16.6 at 25 °C but the searches did not settle it. **Verify before relying on the "bands barely move"
+argument**, because that argument is why a butanol was attractive in the first place.
+
+⚠ **Polystyrene compatibility is weaker evidence than for 1-butanol.** A resin-compatibility guide rates
+2-butanol against PS as *"moderate–good, with caution"*, not the clean "safe at 20 °C" that 1-butanol carries.
+**§16.12.7's soak test (item b) becomes mandatory, not precautionary.**
+
+⚠ **Odour is still an open item, and does not transfer as solved.** 2-butanol's measured detection threshold is
+**400 µg/m³ (≈120 ppb)**, recognition **1.2 mg/m³ (≈410 ppb)** — a low threshold, and it is described as having
+a strong odour. No comparable figure for 1-butanol was found in this research, so **no claim is made that
+2-butanol is the better of the two on odour**; §16.12.7's item (a) transfers unchanged.
+
+**Cost:** Edwin reports 2-butanol as **considerably more expensive** than 1-butanol. At ~4 ml per measurement
+that is unlikely to bind, but it should be priced before the trial is scheduled.
+
+**Sources.** [1-butanol SDS, BASF](https://download.basf.com/p1/000000000030034729_SDS_GEN_00/en_UN/n-BUTANOL_30034729_SDS_GEN_00_en_8-0.pdf) ·
+[1-butanol SDS, Sigma-Aldrich](https://www.sigmaaldrich.com/US/en/sds/sial/437603) ·
+[2-butanol SDS, Carl Roth](https://www.carlroth.com/medias/SDB-6336-GB-EN.pdf) ·
+[2-butanol properties, ChemicalBook](https://www.chemicalbook.com/ChemicalProductProperty_EN_CB0751661.htm) ·
+[isobutanol, Wikipedia/BASF SDS](https://en.wikipedia.org/wiki/Isobutanol) ·
+[tert-butanol m.p. 25.8 °C](https://en.wikipedia.org/wiki/Tert-butanol) ·
+2-butanol odour thresholds: Hellman & Small (1974), via ChemicalBook.
+
+**⇒ The 1-butanol trial of §16.12.16 item 3 becomes a 2-butanol trial**, with the soak test promoted from
+precaution to gate, and with ε verified first — **but see §16.12.7b: the whole solvent programme is now
+PAUSED, and 2-butanol is recorded as a candidate rather than a scheduled trial.**
+
+### 16.12.7b ⏸ DECISION — keep isopropanol; the solvent programme is PAUSED  *(Edwin 2026-08-01)*
+
+**Decision: keep the sample chemistry exactly as it is.** Not because the solvent question was answered, but
+because **it stopped being the binding constraint.**
+
+#### The reasoning, and it is sound
+
+The solvent programme existed to attack the **turbidity pedestal** — i.e. to buy **precision**. Series D
+(§16.13) then measured the separation we actually have: **Cohen's *d* ≈ 11 (Hedges' *g* ≈ 10.2)**, with the two
+classes not overlapping on any run and brown clearing T = 10.6 by **9.88 σ**. Precision is no longer what
+limits the milestone; **the unvalidated threshold is** (§1.4, §16.10.11a). A solvent change would buy precision
+we do not need **and cost a threshold re-derivation we cannot yet afford** — the bands shift with ε, and
+`SPEC_roast_ampel.md` already records that T = 10.6 does not survive a solvent change.
+
+#### ⚠ A safety constraint that was never written down, and it binds every future vessel design
+
+**The lamp is 220 V and sits in the LOWER cone, directly beneath the sample.** The illumination is top-down, so
+**any leak runs down into mains electrics.** This was not in §16.12.8's container analysis and it changes that
+analysis materially:
+
+- It makes **vessel integrity a safety property, not a measurement property.** A milled-lid glass jar, a
+  clamped FEP window, or any workshop "glass hack" is a *fabricated seal of unknown reliability sitting above
+  mains voltage* — and the more aggressive the solvent, the worse the consequence of a failure.
+- It is why **acetone plus an improvised glass vessel is rejected** even though the chemistry is attractive
+  (§16.12.7 note): no off-the-shelf clear-jar-with-clear-lid exists, and the DIY alternatives all put an
+  unqualified seal over the lamp.
+- ⇒ **Any future vessel change must be argued on leak risk first and optics second.** The sealed, one-piece,
+  known-good PS jar in use today is doing more work than the specs credited it with.
+
+**The alternative that would dissolve the constraint is a rig rebuild to side-illumination** (beam horizontal,
+lamp not under the sample). That is a real option — it would also permit standard cuvettes, which would fix
+path length and seating at the same time — but it is an instrument redesign, not a consumable change, and it
+is not scheduled.
+
+#### What this decision does and does not close
+
+| | |
+|---|---|
+| **Closed for now** | the 2-butanol trial (§16.12.16 item 3); acetone as a *shipping* solvent; the FEP-window / milled-lid branch (§16.12.8) |
+| **Recorded as candidates, not scheduled** | **2-butanol** — the only butanol isomer that is liquid at RT and free of Cat-1 eye damage (§16.12.7a), with its three costs documented; **acetone** — attractive because 80 % acetone is the *literature standard* for these pigments (§4.1), so it would put our bands on the published scale, but it attacks PS and is volatile |
+| **Still open, unaffected** | the 0.22 µm filter (§16.12.9) — it needs no solvent change and no new vessel; the settling drift itself; **series E** |
+
+⚠ **This decision is CONDITIONAL on series E.** It rests on precision being sufficient, and the precision we
+have measured is **re-seat only**. If σ_fill comes back near the historical 10 %, the aliquot-and-turbidity
+problem returns as the binding constraint and **the solvent question reopens with it** (§11.4f B2 names the
+aliquot step as the leading σ_fill mechanism, and turbidity is what makes the draw depth matter). Revisit here,
+not from scratch.
 
 Open items on it: (a) **odour** — 1-butanol's odour threshold is low and persistent, and an Ölmühle is a food
 premises; the quantity is ~4 ml in a closed jar so emission is small, but this is a *check*, not an assumption;
@@ -5076,7 +5416,7 @@ runs moves the gain from 2.79× to 1.32×" is exactly the fragility a reader of 
 | ~~2f~~ | ~~whole-spectrum baseline (AsLS / rubber band / ModPoly)?~~ | — | ⛔ **REJECTED 2026-07-31, §16.12.14a.** None beats the two-window line; AsLS scores 21/25 LOFO errors because it absorbs the class difference. **Structural: our 440–630 window has no peak-free region.** Revisit if the capture window widens past **~660 nm** *(revised down from "~700 nm" — the pigment's Qy is at ~623–626, not ~665; `KB_spectroscopy_physics.md` §4.1)* |
 | **2h** | **⭐ NEW — re-cost the WINDOW EXTENSION** *(2026-07-31)* | a lamp/optics question | §4.1's correction moves the pigment-free region from ">700 nm" to "~660 nm+". Extending the clamp ~30 nm would give a **true** peak-free anchor, which would in one step unblock AsLS (2f), remove the far anchor's class contamination (§16.12.13), and give a clean read of the Qy band we are currently clipping. Was priced as prohibitive on a wrong premise |
 | 2g | **⭐ The ALIQUOT step** — the batch is mixed in a lab glass and a 4 ml aliquot goes to the jar, i.e. a **sampling step out of a settling dispersion** | a stirrer | named 2026-07-31 as the leading σ_fill mechanism and the best fit to the green 0.0 % / brown 10.5 % asymmetry. Design + the test that separates it from the correction-artifact hypothesis: `SPEC_capability_proof.md` §11.4f **B2–B4** |
-| 3 | **⭐ 1-butanol trial** (§16.12.7) — odour test, PS soak test, then a rig run | ~€20 | the only **unblocked** line of attack on the drift while item 2 is open |
+| ~~3~~ | ~~butanol trial~~ | — | ⏸ **PAUSED 2026-08-01, §16.12.7b.** 1-butanol ⛔ rejected (H318); **2-butanol** recorded as the surviving candidate but not scheduled — with *d* ≈ 11 the binding constraint is the **threshold**, not precision, and a solvent change costs a threshold re-derivation. ⚠ Reopens if series E returns a large σ_fill |
 | 4 | 0.22 µm PTFE filter (§16.12.9) | ~€6 once | still discriminates micron particulate from sub-pore populations, independently of any baseline model |
 | 5 | Fresh ≥99.8 % IPA (§16.12.10) | ~€10 | control for solvent degradation |
 | 6 | Container / FEP window (§16.12.8) | — | **only if butanol fails and heptane becomes necessary** |
@@ -5323,7 +5663,9 @@ Consistent with §16.10.13's bench, on a class pair it had not seen.
 | **5** | **⭐ The ACID TEST — demetallate half of one oil and re-measure** | new, from §16.13.9. One bottle, split, half acidified; same turbidity, same dilution, **one variable**. Converts "the far-window slope tracks demetallation" from the best available explanation into a measured causal link. An afternoon and a drop of acid |
 | — | the `cone` arm and the mechanical programme | **stay demoted** (§16.12.11). Brown's seating is 1.58 % residual; there is no mechanical win of that size left to take |
 
-**Unchanged:** the 1-butanol trial (§16.12.7) remains the only unblocked line of attack on the drift itself, and
+**⏸ Superseded 2026-08-01 (§16.12.7b):** the butanol trial is paused and the solvent programme with it — the
+remaining unblocked line of attack on the drift is the **0.22 µm filter** (§16.12.9), which needs neither a new
+solvent nor a new vessel. The paragraph below stood when
 §16.13.4 raises its value — the settling it would remove is **larger on brown than anything green showed**.
 
 ### 16.13.9 ⭐ The far-window difference is SPECIATION, not concentration — and the instrument is not the limit  *(Edwin's question 2026-07-31, `diagnostics/qband_shape.py`)*
@@ -5562,6 +5904,11 @@ minimum.
 Taking §16.11.6 at face value, `ln(12.251/12.489) / ln(0.230/0.197) = −0.124`, i.e. an apparent log–log slope of
 ≈ **−0.12**, which via §16.14.5 implies `r_Q` of order **−0.01 A**.
 
+> **⭐ SUPERSEDED 2026-08-01 by the pooled estimate (§16.10.8).** Three within-oil dilution pairs pooled give
+> `s` = **+0.033 ± 0.029**, 95 % CI **[−0.023, +0.089]** — which **excludes** the −0.124 above. The bound on
+> the pedestal-curvature residual tightens correspondingly to **|r_Q| ≲ 0.008 A**, and its sign is no longer
+> even established. The single-pair figure below is kept only to show what one pair could and could not say.
+
 ⚠ **Do not quote that as a measurement.** It is not statistically distinguishable from zero (`p = 0.28`), it
 rests on `n = 2` dilutions only 17 % apart, and it uses `A_Q` as a concentration proxy — which §16.10.8 showed is
 itself compromised by seating. Treat `|r_Q| ≲ 0.01 A` as an **upper bound**, and note the sign is the direction
@@ -5577,7 +5924,7 @@ quantitative target and a distinctive shape to look for rather than a null hypot
 
 **⇒ A prediction that costs nothing and is worth writing down before the solvent work:** if the residual
 dilution error and the settling drift are both the pedestal, then **clearing the sample must shrink BOTH
-together** — the 1-butanol trial (§16.12.7) or the 0.22 µm filter (§16.12.9). If one collapses and the other
+together** — the 2-butanol trial (§16.12.7a) or the 0.22 µm filter (§16.12.9). If one collapses and the other
 does not, this model is wrong. That is a free extra readout on runs already planned, and §16.12.7's trial
 should record the dilution error alongside the CV it was designed to measure.
 

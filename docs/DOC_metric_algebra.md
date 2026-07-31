@@ -64,8 +64,8 @@ absorbance after subtracting a straight line fitted through **520–540** and **
 | | green `20270729C` | brown `20260731A` |
 |---|---|---|
 | **Pigment Index** | **12.251 ± 0.354** | **9.303 ± 0.131** |
-| at the shipped threshold **T = 10.6** | **+4.83 σ** above | **+9.88 σ** below |
-| misclassification *(t-distribution)* | 0.027 % | 0.009 % |
+| at the shipped threshold **T = 10.6** | **+4.66 σ** above | **+9.88 σ** below |
+| misclassification *(t-distribution, 5 df)* | 0.28 % | 0.009 % |
 
 The gap is **2.947 = 31.7 % of the brown mean**, against a pooled σ of 0.267 — **Cohen's *d* = 11.04**.
 
@@ -131,7 +131,7 @@ whole family is the **standardised mean difference (SMD)**; Cohen's *d* is one r
 | **Z-score, "sigma level"** | process control, Six Sigma | distance from a *limit*, not between two groups |
 | **peak resolution** $R_{s}$ | chromatography | separation ÷ typical width — the same shape of idea |
 
-**The Z-score row is already in use here without the label**: the **"+4.83 σ above T"** and
+**The Z-score row is already in use here without the label**: the **"+4.66 σ above T"** and
 **"+9.88 σ below T"** of §1.2 are Z-scores — one group measured against a threshold, rather than two
 groups against each other.
 
@@ -609,10 +609,12 @@ high $c$ (a constant slope would falsify the pedestal explanation); and the tota
 because curvature degrades invariance at *low* $c$ while Soret stray-light compression degrades it at
 *high* $c$ (`SPEC_capture_quality.md` §16.11.8). An optimal working concentration exists between them.
 
-**Against the record:** the baseline **halves** the dilution error (5.49 % → 2.75 %); two dilutions 17 %
-apart in $A_{Q}$ give means **1.9 %** apart, *t* = 1.14, *p* = 0.28. Taken at face value that implies
-$|r_{Q}| \lesssim 0.01$ A — an **upper bound**, not a measurement. Full derivation:
-`SPEC_capture_quality.md` §16.14.
+**Against the record:** the baseline **halves** the dilution error (5.49 % → 2.75 %). And the residual
+dependence is now bounded directly: pooling the three within-oil dilution pairs on record gives a log–log
+slope of **+0.033 ± 0.029** — consistent with zero *(`SPEC_capture_quality.md` §16.10.8)*. In practice a
+realistic preparation error of ±17 % moves the index by about **0.6 %**, and even a *fourfold* dilution error
+moves it under 5 %, against a class gap of 33 %. ⚠ That slope is an **upper** bound: each pair is a different
+fill as well as a different dilution, so it carries fill-to-fill scatter with it.
 
 ### 5.8 Performance
 
@@ -623,8 +625,14 @@ $|r_{Q}| \lesssim 0.01$ A — an **upper bound**, not a measurement. Full deriva
 | gap | **2.947 = 31.7 %** of the brown mean |
 | pooled σ | 0.267 |
 | **Cohen's *d*** | **11.04** |
-| green margin to T = 10.6 | **+4.83 σ** → false-BROWN **0.027 %** |
+| green margin to T = 10.6 | **+4.66 σ** → false-BROWN **0.28 %** |
 | brown margin to T = 10.6 | **+9.88 σ** → false-GREEN **0.009 %** |
+
+> ⚠ **Why this green margin differs from the spec's.** `SPEC_capture_quality.md` §16.13.5 reports **+4.83 σ
+> / 0.027 %** because it pools green sets **B+C** (n = 12, σ = 0.367, 11 df). This document declares green as
+> set **C alone** (n = 6, σ = 0.354, 5 df), which gives **+4.66 σ / 0.28 %** — a *lower* σ but far fewer
+> degrees of freedom, and the t-distribution charges heavily for that. Both are correct for their own data
+> set; neither may be quoted with the other's. The brown margin is identical in both, being the same six runs.
 
 **How well is σ known?** With n = 6 the point estimate is not what to plan on. A χ² interval on brown's σ
 gives [0.082, **0.322**] — and **even at the upper bound brown clears the threshold by 4.03 σ**

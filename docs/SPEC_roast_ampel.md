@@ -88,7 +88,12 @@ subtracted before taking Soret ÷ Q — rather than by the raw ratio §1 describ
 > changes** — only the explanation attached to them.
 >
 > ⚠ **And the 10.6 threshold does not survive a solvent change.** It was derived on isopropanol dilutions; a
-> switch to 1-butanol (`SPEC_capture_quality.md` §16.12.7) removes much of the scatter pedestal and shifts both
+> ⚠ **The ÜBERGANG zone now carries an enforced protocol** — `SPEC_capture_quality.md` §16.10.17e: an
+> incomplete run yields **no verdict** (no green/brown *and* no ÜBERGANG call), the gauge must not leak the
+> direction while incomplete, and the protocol + threshold are persisted with the record.
+>
+> switch to a butanol (**2-butanol** since 2026-08-01 — `SPEC_capture_quality.md` §16.12.7/§16.12.7a) removes
+> much of the scatter pedestal and shifts both
 > classes. Re-derive rather than carry it over — pre-registered predictions in `SPEC_capability_proof.md` §11.4f.
 
 | | raw Soret/Q | linear baseline |

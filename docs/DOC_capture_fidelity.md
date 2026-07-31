@@ -860,7 +860,10 @@ Recorded honestly; none of these blocks a measurement today.
   verified on green only; brown has not been measured since. Pre-rebuild the two classes had
   *identical* noise, which is why the fix is expected to transfer — but expected is not measured.
 - **The sample's turbidity is the largest known remaining lever and nothing has been done about it**
-  (§3.13). Three candidate routes exist — a better solvent (1-butanol), a 0.22 µm filter, or simply
+  (§3.13). ⚠ **The solvent route is now closed** — every solvent that dissolves the oil properly either
+  carries an unacceptable hazard classification (1-butanol: H318, irreversible eye damage) or attacks the
+  polystyrene vessel, which sits directly above a 220 V lamp. **Isopropanol and the existing jar stay.**
+  What remains is a 0.22 µm filter, or simply
   a fresher solvent bottle — and none has been tried. Owned by `SPEC_capture_quality.md` §16.12.
 - **The far baseline anchor is not what it was documented to be.** The 600–630 nm window was
   described as oil-quiet; it carries real pigment absorption — the approach to protochlorophyll's
