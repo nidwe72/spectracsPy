@@ -26,7 +26,7 @@ listed in Appendix B.
 
 **Its companion.** This document covers the **instrument** — camera to spectrum. Everything *in
 front of* it, the light and the sample, is covered by *Light, Pigment and Solvent*
-(`DOC_sample_physics.md`): absorption and Beer–Lambert, the chlorophyll bands and what roasting does
+(`DOC_sample_physics.md`): absorption and Beer–Lambert, the protochlorophyll bands and what roasting does
 to them, why oil in alcohol is a dispersion rather than a solution, and why the scattering it
 produces is the largest sample-side error we know of. The two are halves of one story.
 
@@ -863,7 +863,8 @@ Recorded honestly; none of these blocks a measurement today.
   (§3.13). Three candidate routes exist — a better solvent (1-butanol), a 0.22 µm filter, or simply
   a fresher solvent bottle — and none has been tried. Owned by `SPEC_capture_quality.md` §16.12.
 - **The far baseline anchor is not what it was documented to be.** The 600–630 nm window was
-  described as oil-quiet; it carries real chlorophyll absorption and a substantial share of the
+  described as oil-quiet; it carries real pigment absorption — the approach to protochlorophyll's
+  Qy(0,0) band at ~623–626 nm — and a substantial share of the
   discrimination rests on it. The metric works, but the explanation attached to it has been
   rewritten — `SPEC_capability_proof.md` §2.1a.
 - **The class threshold rests on four oils.** Precision is close to solved; whether the threshold

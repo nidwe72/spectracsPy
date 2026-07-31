@@ -56,7 +56,7 @@ warm-white is the bimodal pump+phosphor described above.
 |---|---|---|
 | UV-A (Schwarzlicht) | 390–410 nm | violet/UV edge |
 | UV-A / actinic | 410–420 nm | |
-| **hyper violet** | **430–435 nm** | near chlorophyll Soret band |
+| **hyper violet** | **430–435 nm** | near the protochlorophyll Soret band (~432 nm) |
 | **royal blue** (königsblau) | **440–450 nm** | |
 | blue | 455–460 nm | |
 | **green** (grün) | **515–525 nm** | sits in the oil's green transmission window |
@@ -101,8 +101,10 @@ with the **Beer–Lambert law + CIE colour-matching functions** — i.e. *exactl
 models*.
 
 **Mechanism (drives SAMPLE synthesis):** the oil has a narrow **green transmission window (~520–560 nm)**
-between a blue absorption (chlorophyll Soret ~430 nm + carotenoids 400–500 nm) and a red absorption
-(chlorophyll Q-band ~660–670 nm), plus **deep-red transmission beyond ~670 nm**. As **concentration ×
+between a blue absorption (**protochlorophyll Soret ~432 nm** + carotenoids 400–500 nm) and a red absorption
+(**protochlorophyll Qy(0,0) ~623–626 nm**), plus **deep-red transmission beyond ~660 nm**.
+⚠ *corrected 2026-07-31 — was "chlorophyll Soret ~430 / Q-band ~660–670 / beyond ~670"; wrong molecule,
+see `KB_spectroscopy_physics.md` §4.1. Note §2 below already read ~630 nm off the paper's own Fig. 3A.* As **concentration ×
 path length** rises (Beer–Lambert), the narrow green window is overwhelmed and the deep-red transmission
 dominates → the perceived colour rotates **green → red/brown**. Thin/low-conc → green.
 
@@ -151,7 +153,9 @@ real **protochlorophyll/protopheophytin Q-band**, a neat-oil version of Fig. 3A.
   `spectracs-references/articles/Fruhwirth_Hermetter_2007_SUMMARY.pdf`.
 
 ### Implication for SAMPLE synthesis (forward, physical)
-`A_oil(λ) = chlorophyll(Soret≈430, Q≈665) + carotenoid/lutein(≈440–480) + browning(rising toward blue) `,
+`A_oil(λ) = protochlorophyll(Soret≈432, Qy≈625) + carotenoid/lutein(≈440–480) + browning(rising toward blue) `,
+⚠ *corrected 2026-07-31 — was `chlorophyll(Soret≈430, Q≈665)`, the wrong molecule; see `KB_spectroscopy_physics.md` §4.1.
+Note §2 of THIS document already read ~630 nm off the paper's Fig. 3A, so the two halves disagreed.*
 scaled by **concentration × path** (the dichromatism knob). Then `SAMPLE S = R · 10^(−A_oil)`, colour from
 the **transmission** (S or T=S/R). Presets ("excellent" green vs "bad/over-roasted" brown) = different
 `(pigment amps, browning amp, conc×path)`; forward-run → verify against the preset's target HSL.

@@ -1,7 +1,8 @@
 """Sweep the linear baseline's FAR anchor window (SPEC_capture_quality.md §16.12.12).
 
 §16.12.12 showed the shipped far window 600-630 nm is NOT oil-quiet: it stands on real green-pigment
-absorption (the flank toward the chlorophyll Q max near 665 nm), 5.1 sigma, and ~3.4x stronger in green
+absorption (the flank toward the pigment's Qy band -- PROTOchlorophyll, ~623-626 nm, NOT chlorophyll's
+665 nm; corrected 2026-07-31, see KB_spectroscopy_physics.md 4.1), 5.1 sigma, and ~3.4x stronger in green
 than in brown. Because it sets the fitted baseline's SLOPE, and that slope is subtracted from a small Q
 denominator, the contamination does not cancel in the ratio.
 

@@ -885,3 +885,129 @@ question."*
 - `SPEC_pumpkin_integration.md` — the plugin/engine architecture this modifies (Track C, `PumpkinOilPlugin`).
 - `SPEC_measurement_evaluation_concept.md` — the green→brown roast-verdict concept.
 - [[spectracs-pumpkin-peak-ratio-task]] — origin; `spectracs-docs/ROADMAP.md` deferred thread.
+
+## 15. ▶ NEAR-TERM PLUGIN IMPROVEMENT — make the third band VISIBLE, and rename the metric family  *(Edwin 2026-07-31, HIGH PRIORITY, short task; DESIGN — implement on explicit request)*
+
+Prompted by `DOC_metric_algebra.md`. Two changes to the DEV plugin's EVALUATION tab, one substantive and
+one cosmetic. **Do them together** — they are the same misunderstanding, and the LIMS window for the
+cosmetic half is closing (§15.4).
+
+### 15.1 ⭐ The substantive half — surface `A_far` as a measurement, not a correction anchor
+
+**The problem.** The tab shows Soret, Q and clarity, plus rows labelled "· linear baseline". A reader has
+no way to learn that a **third band, 600–630 nm, supplies most of the discrimination** — it is disguised as
+a housekeeping correction. That framing is not merely unhelpful; it is the reason the far window was
+documented as "oil-quiet" for months before `SPEC_capture_quality.md` §16.12.12 caught it at 5.1 σ, and it
+is the reason a later reader nearly "cleaned up" the windows (§16.12.13 — doing so collapses Cohen's *d*
+from 2.88 to 0.94).
+
+**The change.** Add two rows beside the existing band means:
+
+| new row | value | tooltip should say |
+|---|---|---|
+| **Qy flank · 600–630 nm** | `A_far` = `bandMean(despiked, 600, 630)` | a **measuring** band, not a blank anchor: it stands on the rising edge of protochlorophyll's Qy(0,0) band (~623–626 nm) and carries a 5.1 σ green/brown difference |
+| Inter-band floor · 520–540 nm | `A_near` = `bandMean(despiked, 520, 540)` | the blue-side baseline anchor, between bands; the quieter of the two |
+
+Both are plain band means on the already-computed de-spiked absorbance — **no new computation**, no change
+to any verdict, no threshold impact. `A_near` is nearly `A_clarity` (510–540) but not identical, and showing
+both makes the baseline's two feet explicit.
+
+⚠ **Neither row is dilution-invariant** (`SPEC_capture_quality.md` §16.14.3), so they must render with the
+*normal* label style, never the bold "decision metric" style reserved for ratios.
+
+### 15.2 The cosmetic half — rename the family so the primary reads primary
+
+`"Pigment ratio · linear baseline"` is wrong three ways: it names the computation rather than the
+measurement; the `·` suffix reads as *a variant of* `"Pigment ratio"` when the plain one is in fact the
+deprecated one; and "baseline" says *housekeeping*, which is the framing §15.1 exists to undo.
+
+**Edwin's steer (2026-07-31): the names should carry the spectroscopy.** Use the transition labels — they
+are the standard vocabulary (Gouterman four-orbital model), they tell a reader *what* is being measured
+rather than *how*, and any lab partner will recognise them.
+
+**Band rows** — name by the transition, keep the window:
+
+| now | proposed | basis |
+|---|---|---|
+| Soret · 440–460 nm | **Soret (B) flank · 440–460** | red flank of the S₀→S₂ band at ~432 nm — solid |
+| Q · 560–580 nm | **Q band · 560–580** | in the Q region; ⚠ **do not** commit to Qx or Q(1,0) — the assignment is open (§15.5) |
+| Clarity · 510–540 nm | **Inter-band floor · 510–540** | between bands; turbidity/darkening floor |
+| *(new, §15.1)* | **Qy flank · 600–630** | the approach to Qy(0,0) at ~623–626 nm |
+| *(new, §15.1)* | **Inter-band anchor · 520–540** | the baseline's blue-side foot |
+
+**Ratio rows:**
+
+| now | proposed | note |
+|---|---|---|
+| Pigment ratio · linear baseline | **Pigment index (Soret/Q)** | the primary verdict metric; the three-region algebra belongs in the tooltip |
+| Pigment ratio | Soret/Q · uncorrected | demoted in the name, as it already is in fact |
+| Pigment ratio · clarity | Soret/floor · uncorrected | ditto |
+| Soret · linear baseline | Soret · above baseline | "above baseline" is what the number *means* |
+| Q · linear baseline | Q · above baseline | ditto |
+
+**Rejected names, with reasons:**
+
+- *Chlorophyll index* — wrong molecule, and §4.1 has just demonstrated what a wrong pigment assumption costs.
+- *Roast index* — conflates metric with verdict; the Ampel already owns that word.
+- **`Qx` / `Qxy` anywhere** — ⚠ **specifically rejected for now.** Qx/Qy is the nomenclature for a
+  **metal-free** ring, where the D₄ₕ→D₂ₕ symmetry drop has lifted the degeneracy. Our *intact* pigment is
+  magnesium-bearing, so its Q bands are properly Q(0,0)/Q(1,0), and only the *degraded* protopheophytin
+  fraction has true Qx/Qy. Naming the 560–580 window "Qx" would assert §15.5's open question as settled.
+  **"Qy flank" for 600–630 is safe** — that band is the long-wavelength origin under either nomenclature.
+
+### 15.5 ⚠ The open question the naming exposes — what IS the 560–580 band?
+
+Two candidates, and they are **not** equivalent:
+
+| candidate | implication |
+|---|---|
+| **Q(1,0)** — vibronic satellite of intact, Mg-bearing protochlorophyll | the metric compares two bands of the *same* intact molecule |
+| **Qx** — a band of protopheophytin, the metal-free degradation product | the metric is a direct **intact ÷ degraded** ratio, and its physical justification is far stronger |
+
+It matters because 560–580 is the **denominator of the shipped verdict**.
+
+**⭐ The evidence firmed up considerably on 2026-07-31** (`SPEC_capture_quality.md` §16.13.9,
+`diagnostics/qband_shape.py`) — three findings, all pointing at the second candidate:
+
+| finding | reading |
+|---|---|
+| `A_Q` is **equal** across classes (0.2300 vs 0.2251, *d* = 0.26) while `A_Soret` differs 9 % | 560–580 does **not** track the intact pigment |
+| the 572 feature is **stronger in brown** (0.1495 vs 0.1275, *d* = −3.16) despite brown having less Soret | a band that *grows* as the oil degrades is hard to attribute to the intact molecule |
+| rise ÷ Q-amplitude differs **5.3× at *d* = 10.26** | the Q-region **shape** changes; concentration scaling is excluded |
+
+With the porphyrin band-I-is-weakest rule (`KB_spectroscopy_physics.md` §4.1), this supports **Qx of the
+metal-free species** — making the shipped metric close to a literal **intact ÷ degraded** ratio.
+
+⚠ **Still not proven.** No source we hold assigns this specific band, and the comparison is between two
+different *bottles*, not one oil before and after demetallation.
+
+**Two experiments settle it, cheapest first:** the **acid test** (`SPEC_capture_quality.md` §16.13.8
+item 5 — split one oil, demetallate half, re-measure; if 560–580 *rises* while 600–630 collapses, the
+assignment is settled in an afternoon), then the **window extension** (§16.12.16 item 2h — the full Qy
+band would settle it by covariance). Until then, name it **"Q band"** and leave the assignment open in
+the tooltip.
+
+### 15.3 What must NOT change
+
+- **No band edges.** `SPEC_capture_quality.md` §16.11.14 defers window changes to the next threshold
+  recalibration; §16.12.13 shows the far window is load-bearing. This task is labels and rows only.
+- **No threshold.** T = 10.6 is unaffected — nothing computed changes.
+- **The machine key stays stable.** Introduce a display label distinct from any persisted identifier now,
+  so a future rename is never a data migration.
+
+### 15.4 Why "short time / higher priority" — the cost is rising
+
+The LIMS integration currently publishes **one generic analysis** (`SpectracsMeasurement`,
+`SPEC_lims_integration.md`), so there are **no per-metric keywords to break**. Once per-metric analyses
+land, a rename becomes a SENAITE-side data migration. Renaming is therefore near-free today and expensive
+later.
+
+Two carry-overs to handle in the same task:
+
+- **Archived report PDFs keep their old labels immutably.** Add an old→new mapping table — the natural home
+  is `DOC_metric_algebra.md` §10's reference sheet.
+- **`DevSpectralPlugin`'s `PB_BASELINE_WINDOWS` comment still says "chlorophyll Q max near 665 nm".** It is
+  a comment, not a computation, so nothing behaves wrongly — but it is *the* place a future developer will
+  read before touching the windows. ⚠ **Deliberately not edited yet:** the plugin is the unit that gets
+  signed and published (`SPEC_plugin_distribution.md`), so editing its source changes the artifact hash.
+  Fold it into this task rather than making it a standalone re-sign.

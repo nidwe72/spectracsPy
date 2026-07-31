@@ -3062,6 +3062,12 @@ metric, which is seating, not dilution.*
 The settling experiment: after the seat fix, one oil, ≥4× concentration span, n ≥ 5 per level, one session
 (≈20 runs) — enough power to resolve a log-log slope of ~0.1.
 
+> **▶ Read §16.14 before running that experiment (added 2026-07-31).** The algebra says `S/Q_lin` is invariant
+> **by construction** and that exactly one mechanism can break it — curvature in the turbidity pedestal. That
+> changes the readout: the signature to look for is a **curved** log–log plot flattening toward high
+> concentration (local slope ∝ 1/c), not a constant non-zero slope. Same runs, sharper test, and a quantitative
+> target (`r_Q`, bounded at ≲ 0.01 A by §16.14.7) instead of a null hypothesis to fail to reject.
+
 ### 16.10.9 ▶ NEXT TASK — implement the linear-baseline metric *(marked 2026-07-27; DESIGN only, do not implement until asked)*
 
 Fit a straight line through 520–540 and 600–630 of the ABSORPTION spectrum, subtract it, then take S/Q of the
@@ -3703,6 +3709,12 @@ because σ finally dropped enough to see past it.
 the first evidence in the right direction and nothing more. §16.11.8 also gives a mechanism by which invariance
 *must* fail at higher concentration.
 
+> **§16.14 (2026-07-31) reads these two numbers as a bound.** The 1.9 %-over-17 % gives an apparent log–log
+> slope of ≈ −0.12 ⇒ a pedestal-curvature residual `|r_Q| ≲ 0.01 A` — an **upper bound**, not a measurement
+> (`p = 0.28`, `n = 2`, and `A_Q` is a compromised concentration proxy). The sign is the direction a curved
+> pedestal predicts. §16.14.6 also explains why §16.11.8's high-concentration failure and this
+> low-concentration one are *different* mechanisms, making the total error **U-shaped** in concentration.
+
 ### 16.11.7 A fresh dilution is NOT stable for its first ~15 minutes — and this killed the learning hypothesis
 
 Absorbance tilt vs each set's median, **in run order**:
@@ -3785,6 +3797,9 @@ fully out-of-sample prediction; rows 1 and 3 are.)
    class where the risk actually lives (§16.11.12):
    - **series D — brown, 6 RE-SEATS of one fill.** Directly comparable to B and C, so it yields the brown σ that
      decides the discrimination question. This is the load-bearing measurement of the whole milestone.
+     ✅ **RUN 2026-07-31 — §16.13. σ = 0.131 (raw CV 1.41 %, residual 1.58 %), PASS; *d* = 11.13 (9.80
+     df-weighted, §16.13.5); brown clears
+     T = 10.6 by 9.88 σ.** The discrimination question is answered on re-seat data.
    - **series E — brown, 6 SEPARATE FILLS**, one stock, each given ~15 min to equilibrate (§16.11.7). Yields
      **σ_fill** — the quantity §16.10.17b's decision table is built on, still unmeasured because everything in
      §16.11.3 is re-seat-only.
@@ -3863,6 +3878,13 @@ informative:
 | σ ≈ 0.23–0.37 | brown improved with green → **discrimination is proven**, re-derive the decision table |
 | σ ≈ 0.83 (unchanged) | the rebuild helped green only → something oil-specific in the brown, itself a finding |
 
+✅ **RESOLVED 2026-07-31 — §16.13. σ = 0.131**, below the good branch's floor: brown improved *more* than green
+did, and the "expected to improve" argument above was right for the reason it gave. Measured *d* = **11.13**
+*(RMS pooled SD, unequal n — **9.80** df-weighted, §16.13.5)*, against the 4.67 of this section's row 2 and
+the 9.81 of its optimistic row 3. ⚠ Those two projections were themselves computed RMS-style, so the
+comparison is like-for-like. **Brown's ~10 % false-GREEN is
+0.009 %** (0.50 % at the 95 % upper bound on σ). ⚠ Still **re-seats, not fills** — §16.13.6.
+
 ⚠ **Caveats on the arithmetic above, all pointing the same way (optimistic):** the brown mean is old-rig / FILLS
 while the green is rebuilt-rig / RE-SEATS; the green mean moved +2 % between vintages so the gap mixes them; the
 brown groups are n = 6; and the tails are heavy (§16.7.2f), which the t-correction only partly absorbs. **None of
@@ -3877,6 +3899,11 @@ measurement that closes it.
 §16.10.17b's shipped decision table stays authoritative until series D and E land. This section records what
 follows *if* brown behaves like today's green (§16.11.12's assumption), because the consequence is not a
 parameter change — it is a different protocol shape.
+
+⚠ **Status 2026-07-31: series D has landed (§16.13) and it supports the assumption — but this section is
+STILL GATED, on series E.** Every gate multiplier below is derived from **σ₁, the single-*fill* σ**; series D
+measured re-seats of one fill, which excludes sample preparation entirely. σ_fill is unmeasured. **Nothing here
+ships until series E reports.**
 
 **How often ONE fill decides**, for this green oil (mean 12.370) and the archived brown `20260727C` (mean 9.361),
 at T = 10.6. Gates are `T ± k·σ` on a **single pooled σ** — the operator does not know the class in advance:
@@ -4392,8 +4419,9 @@ both acceptable via specialist suppliers. **Marked as a track to try in practice
 Open items on it: (a) **odour** — 1-butanol's odour threshold is low and persistent, and an Ölmühle is a food
 premises; the quantity is ~4 ml in a closed jar so emission is small, but this is a *check*, not an assumption;
 (b) **crazing** — soak a spare PS jar overnight, because alcohols craze *stressed* polystyrene even when the chart
-says "good", and injection-moulded jars are full of frozen-in stress; (c) **solvatochromism** — chlorophyll Soret
-and Q positions shift with solvent polarity, so `PB_SORET_BAND` / `PB_Q_BAND` and any threshold must be re-derived.
+says "good", and injection-moulded jars are full of frozen-in stress; (c) **solvatochromism** — the pigment's Soret
+and Q positions shift with solvent polarity (protochlorophyllide's Qy alone moves 623→626 nm between acetone and
+methanol, `KB_spectroscopy_physics.md` §4.1), so `PB_SORET_BAND` / `PB_Q_BAND` and any threshold must be re-derived.
 Edwin 2026-07-30: **acceptable, no valid threshold is load-bearing yet.**
 
 **n-Heptane keeps one valuable role: a bench-only reference method.** Run one oil in both solvents and the
@@ -4559,8 +4587,15 @@ subtracted from the far anchor the true ratio could well exceed 1. `S/Q power ba
 `PB_BASELINE_WINDOWS`' far window is load-bearing for every metric we ship, and it is standing on the lamp's cliff.
 
 Two candidates were raised for the rise: **(a)** the low-signal bias above, which the DN table made look like the
-leading explanation, and **(b)** the rising flank of the **real** chlorophyll Q maximum near 665 nm, outside the
-440–630 clamp. **✅ SETTLED the same day by §16.12.12: (a) is REFUTED and (b) is CONFIRMED at 5.1 σ.** The lamp's
+leading explanation, and **(b)** the rising flank of the pigment's **real** red (Qy) band. **✅ SETTLED the same
+day by §16.12.12: (a) is REFUTED and (b) is CONFIRMED at 5.1 σ.**
+
+> ⚠ **The band's identity and position were WRONG throughout §16.12 — corrected 2026-07-31, see
+> `KB_spectroscopy_physics.md` §4.1.** This section originally said "the chlorophyll Q maximum near 665 nm,
+> outside the 440–630 clamp". The pigment is **protochlorophyll**, not chlorophyll (Fruhwirth & Hermetter
+> 2007, the paper this project is built on), and its Qy band is at **~623–626 nm** — **at the edge of our
+> window, not outside it.** The 5.1 σ measurement is unaffected; only the attribution changes, and it gets
+> *stronger*. See §16.12.14a and §16.12.16 for the consequence that does change a decision. The lamp's
 collapse to 39 DN is real and worth knowing, but it is *not* what produces the rise — the rise is green-pigment
 absorption. Read §16.12.12 before acting on anything in this subsection.
 
@@ -4600,7 +4635,7 @@ reference sits at 35–39 DN throughout — yet the rise differs **3.4×** by oi
 which oil is in the jar. **For brown the far window is genuinely quiet (rise 0.007–0.021); for green it is not.**
 
 **⇒ Candidate (b) is CONFIRMED: the far anchor is standing on real green-pigment absorption** — the rising flank
-toward the true chlorophyll Q maximum near 665 nm, which lies outside the 440–630 capture clamp. Supporting:
+toward the pigment's red (Qy) band. Supporting:
 regressing `rise` on the raw greenness ratio `A_Soret/A_Q` gives **intercept −0.0013, i.e. zero** — the rise
 vanishes exactly when the greenness does, which is the pigment prediction and not the artifact one. (R² is only
 0.157 because concentration varies between fills; the *intercept* is the diagnostic here, not the fit quality.)
@@ -4853,8 +4888,14 @@ Fitting through the pigment drags the slope, exactly as §16.12.12 predicts.
 
 **⇒ Keep the two-window linear baseline.** Recorded so neither the chemometric family nor the naive full-range
 line is proposed again without new evidence — and note the *precondition* that would change the answer: **a wider
-capture window with a genuinely pigment-free region** (i.e. past the chlorophyll Q max beyond ~700 nm) would make
-AsLS viable. That is a lamp-and-optics change, not a software one.
+capture window with a genuinely pigment-free region** would make AsLS viable. That is a lamp-and-optics change,
+not a software one.
+
+> ⚠ **"beyond ~700 nm" was WRONG and this precondition is CHEAPER than recorded** *(2026-07-31,
+> `KB_spectroscopy_physics.md` §4.1)*. It rested on the pigment being chlorophyll with a Q maximum near
+> 665 nm. It is **protochlorophyll**, Qy ≈ **623–626 nm** — so the genuinely pigment-free region begins
+> around **660 nm**, not 700+. A window extension of ~30 nm past our present 630 clamp, rather than ~70,
+> may be enough to obtain a real peak-free anchor. **Re-cost before dismissing the optics route again.**
 
 *(Caveats as §16.12.14: pre/post is not a controlled A/B, post-rebuild is 2 green fills, discrimination is
 pre-rebuild only. AsLS parameters were not tuned beyond two settings — but the failure mode is structural, so
@@ -4915,9 +4956,11 @@ green↔brown information lives in the BROAD SPECTRAL SHAPE, not in the two narr
 flexible enough to flatten the broad shape flattens the discriminator with it. **There is no smarter baseline to
 be had on this window** — precision and separation are drawing on the same resource.
 
-**The only escape is more spectral coverage.** A window reaching past the chlorophyll Q maximum (~700 nm) would
-give a genuinely signal-free region to anchor on, and AsLS's −0.72 % dilution figure hints at real headroom
-there. That is a lamp-and-optics change, not software (§16.12.14a).
+**The only escape is more spectral coverage.** A window reaching past the pigment's red band would give a
+genuinely signal-free region to anchor on, and AsLS's −0.72 % dilution figure hints at real headroom there.
+That is a lamp-and-optics change, not software (§16.12.14a). ⚠ **How much more coverage is now a smaller
+number than this section assumed** — the band is at ~623–626 nm, not ~665, so "past ~660 nm" replaces
+"past ~700 nm" (`KB_spectroscopy_physics.md` §4.1).
 
 **⇒ Keep `linear NEAR+FAR`. No variant tested beats it on the quantity that decides the milestone.**
 
@@ -5028,9 +5071,10 @@ runs moves the gain from 2.79× to 1.32×" is exactly the fragility a reader of 
 | ~~2~~ | ~~restate the metric~~ | — | ✅ **DONE 2026-07-31** — `SPEC_capability_proof.md` **§2.1a** (three-region algebra, verified to 0.5 %) + the `PB_BASELINE_WINDOWS` comment in `DevSpectralPlugin` rewritten. Doc-only; 22 tests green |
 | ~~2d~~ | ~~raw-vs-baselined on dilution + settling~~ | — | ✅ **DONE, §2.1a** (`diagnostics/baseline_vs_raw.py`). **The baseline HALVES both errors** (dilution 5.49→2.75 %, settling 11.90→6.20 %) and **§11.4c's sign is vindicated** — the 11 h/30 min conflict is a **non-monotonic settling curve**, not a sign flip |
 | 2 | **⭐ Decide: declare 600–630 as an explicit third band?** (`SPEC_capability_proof.md` §2.1a) | a design call | now that it earns its place on **three** axes — discrimination, dilution invariance, settling immunity — it should arguably be named and error-budgeted rather than disguised as a correction anchor. Gated on post-rebuild data so the window is not fitted on today's 4 fills |
-| 2c | Re-run the sweep on POST-rebuild data with a proper brown series | rides on series D/E | today's sweep rests on pre-rebuild 07-27 fills (within-fill CV ~9.7 % vs 2.96 %) and only 2 brown fills |
+| 2c | Re-run the sweep on POST-rebuild data with a proper brown series | rides on series D/E | today's sweep rests on pre-rebuild 07-27 fills (within-fill CV ~9.7 % vs 2.96 %) and only 2 brown fills. **✅ UNBLOCKED 2026-07-31 — series D (§16.13) is the brown series it was waiting for** |
 | ~~2e~~ | ~~drop the red anchor now the rig is fixed?~~ | — | ⛔ **REFUTED 2026-07-31, §16.12.14.** The rebuild made the baseline **more** valuable (gain 1.27× → 2.79×); `offset NEAR only` costs 3.6× precision and is worse than no correction. **Keep the red anchor** |
-| ~~2f~~ | ~~whole-spectrum baseline (AsLS / rubber band / ModPoly)?~~ | — | ⛔ **REJECTED 2026-07-31, §16.12.14a.** None beats the two-window line; AsLS scores 21/25 LOFO errors because it absorbs the class difference. **Structural: our 440–630 window has no peak-free region.** Revisit only if the capture window widens past ~700 nm |
+| ~~2f~~ | ~~whole-spectrum baseline (AsLS / rubber band / ModPoly)?~~ | — | ⛔ **REJECTED 2026-07-31, §16.12.14a.** None beats the two-window line; AsLS scores 21/25 LOFO errors because it absorbs the class difference. **Structural: our 440–630 window has no peak-free region.** Revisit if the capture window widens past **~660 nm** *(revised down from "~700 nm" — the pigment's Qy is at ~623–626, not ~665; `KB_spectroscopy_physics.md` §4.1)* |
+| **2h** | **⭐ NEW — re-cost the WINDOW EXTENSION** *(2026-07-31)* | a lamp/optics question | §4.1's correction moves the pigment-free region from ">700 nm" to "~660 nm+". Extending the clamp ~30 nm would give a **true** peak-free anchor, which would in one step unblock AsLS (2f), remove the far anchor's class contamination (§16.12.13), and give a clean read of the Qy band we are currently clipping. Was priced as prohibitive on a wrong premise |
 | 2g | **⭐ The ALIQUOT step** — the batch is mixed in a lab glass and a 4 ml aliquot goes to the jar, i.e. a **sampling step out of a settling dispersion** | a stirrer | named 2026-07-31 as the leading σ_fill mechanism and the best fit to the green 0.0 % / brown 10.5 % asymmetry. Design + the test that separates it from the correction-artifact hypothesis: `SPEC_capability_proof.md` §11.4f **B2–B4** |
 | 3 | **⭐ 1-butanol trial** (§16.12.7) — odour test, PS soak test, then a rig run | ~€20 | the only **unblocked** line of attack on the drift while item 2 is open |
 | 4 | 0.22 µm PTFE filter (§16.12.9) | ~€6 once | still discriminates micron particulate from sub-pore populations, independently of any baseline model |
@@ -5038,6 +5082,504 @@ runs moves the gain from 2.79× to 1.32×" is exactly the fragility a reader of 
 | 6 | Container / FEP window (§16.12.8) | — | **only if butanol fails and heptane becomes necessary** |
 
 Items 1 and 2 are free and both bear on work already scheduled — do them before series D/E.
+
+⚠ **Superseded in part by §16.13.8** — series D ran on 2026-07-31 and re-ordered this list: item 1's
+re-scoping is done, 2c is unblocked, and **series E is now the only measurement between the milestone and its
+gate**.
+
+---
+
+## 16.13 ⭐ SERIES D — the brown oil, and the gate CLOSES  *(Edwin's rig session 2026-07-31; `diagnostics/brown_series_d.py`)*
+
+Six re-seats of one brown fill, post-rebuild, still isopropanol — §16.11.11 step 2's first half, and the
+load-bearing measurement of the whole milestone. Data: `spectracs-references/tmp/20260731A/` (6 PDFs).
+Scored against §11.4f A of `SPEC_capability_proof.md`, **written the day before and not edited since**.
+
+⚠ Read §16.13.3 before quoting the CV. The headline "1.41 % against green's 2.96 %" is **not** a like-for-like
+comparison, for exactly the reason §16.12.11 established.
+
+### 16.13.0 Summary
+
+| | green B+C *(n=12)* | **brown D** *(n=6)* |
+|---|---|---|
+| `S/Q linear base` mean | 12.370 | **9.303** |
+| σ | 0.367 | **0.131** |
+| raw CV | 2.96 % | **1.41 %** |
+| **residual CV** *(the comparable figure)* | **1.89 %** | **1.58 %** |
+| settling trend in the metric over the set | −5.4 % / −6.9 % | **−0.15 %** *(t = −0.08)* |
+
+**The pre-registered PASS criterion was brown within-fill CV ≤ 3.5 %. Measured: 1.41 %. PASS.**
+Cohen's *d* = **11.13** *(RMS pooled SD; **9.80** on the conventional df-weighted form — these groups are
+unequal in size, see §16.13.5)*; at the shipped T = 10.6 green sits **4.83 σ** above and brown **9.88 σ**
+below. The
+~10 % false-GREEN rate that §16.11.12 called "all the remaining risk" is gone.
+
+**⇒ `SPEC_capability_proof.md`'s discrimination gate is met on re-seat data.** What it is *not* yet met on is
+**fill-to-fill** — series E is untouched, and §16.13.6 says why that still matters.
+
+### 16.13.1 The raw record
+
+```
++-----------------------------------------------------------------------------+
+|          SERIES D  ·  tmp/20260731A  ·  BROWN oil, ONE fill, re-seated       |
++--------+--------+---------+--------+---------+--------+---------+-----------+
+|  run   |  min   | A_Soret |  A_Q   | A_near  | A_far  | S/Q raw | S/Q_lin   |
+|        |        |         |        | 520-540 |600-630 |         | SHIPPED   |
++========+========+=========+========+=========+========+=========+===========+
+|  001   |   0.0  |  1.122  | 0.236  |  0.108  | 0.143  |  4.760  |   9.451   |
+|  002   |   5.3  |  1.120  | 0.242  |  0.116  | 0.143  |  4.635  |   9.163   |
+|  003   |  10.5  |  1.104  | 0.239  |  0.115  | 0.142  |  4.622  |   9.146   |
+|  004   |  15.9  |  1.082  | 0.232  |  0.108  | 0.144  |  4.653  |   9.394   |
+|  005   |  21.5  |  1.064  | 0.211  |  0.095  | 0.117  |  5.043  |   9.403   |
+|  006   |  38.4  |  1.021  | 0.191  |  0.080  | 0.097  |  5.340  |   9.264   |
++========+========+=========+========+=========+========+=========+===========+
+|  mean  |        |  1.086  | 0.225  |  0.104  | 0.131  |  4.842  |   9.303   |
+|   sd   |        |  0.039  | 0.020  |  0.014  | 0.020  |  0.291  |   0.131   |
+|   CV   |        |  3.58%  | 8.86%  | 13.31%  | 15.19% |  6.00%  |  *1.41%*  |
++--------+--------+---------+--------+---------+--------+---------+-----------+
+```
+
+**The four inputs fall apart and the metric does not.** Runs 005–006 against 001–004, group means: `A_far`
+−25.4 %, `A_near` −21.7 %, `A_Q` −15.3 %, `A_Soret` −5.9 %, raw `S/Q` **+11.2 %** — while the shipped
+`S/Q_lin` moves **+0.5 %**.
+
+### 16.13.2 Scored against the pre-registration — one hit, one miss, one PASS by a wider margin than predicted
+
+Per §11.4f's rules the predictions stand as written and are marked right or wrong.
+
+| §11.4f A predicted | measured | verdict |
+|---|---|---|
+| within-fill CV `S/Q linear base` **2.5 – 3.5 %** | **1.41 %** | ✅ **PASS** on the criterion (≤ 3.5 %) — but the *range* is **wrong**, low by ~2×. The rebuild transferred to brown **better** than green's 3.33× predicted |
+| within-fill CV `S/Q raw` **3 – 8 %** | **6.00 %** | ✅ correct, inside the range |
+| settling trend over ~30 min **−3 to −8 %** | **−0.15 %** *(t = −0.08)* | ⛔ **WRONG** — and informatively so, see §16.13.4 |
+
+The failed prediction is the interesting one. It was extrapolated from green, where the metric trends −5 to
+−7 %. Brown's *underlying absorbances settled harder than green's* — and the metric still did not move.
+
+### 16.13.3 ⚠ The honest comparison is RESIDUAL, not raw — 1.58 % against 1.89 %
+
+§16.12.11 showed that green's 2.96 % is mostly a settling trend, not seating: detrended it is **1.89 %**. Brown
+has essentially no trend to remove, so its raw and residual figures are the same number.
+
+| | raw CV | residual CV | trend | t *(4 df)* |
+|---|---|---|---|---|
+| set B `S/Q linear base` | 2.96 % | 2.44 % | −5.38 % | −1.84 |
+| set C `S/Q linear base` | 2.89 % | 1.09 % | −6.93 % | **−5.60** |
+| pooled B+C | 2.92 % | **1.89 %** | — | — |
+| **brown D `S/Q linear base`** | **1.41 %** | **1.58 %** | **−0.15 %** | −0.08 |
+
+*(brown's residual exceeds its raw because detrending spends a degree of freedom — `n−2` — on a slope that is
+not there. That is the correct behaviour and it is the sign of a genuinely flat series.)*
+
+**⇒ On seat-to-seat repeatability the two classes are close: 1.58 % brown against 1.89 % green.** The
+2.96 % → 1.41 % headline overstates the gap roughly 2×. What brown really did better was **not accumulate a
+settling trend in the metric**, and that is a separate finding rather than a repeatability one.
+
+**⚠ Which figure belongs where.** The residual is the right number for the **error budget** (§16.11.9), because
+it isolates seating. The **raw** CV is the right number for the **deployed decision**, because a real sample is
+measured once, at whatever point in its settling curve it happens to be, and nobody detrends a single
+measurement. §16.13.5's margins therefore use raw σ throughout — the conservative choice for brown, and it is
+still decisive.
+
+### 16.13.4 ⭐ Brown settled ~3× harder than green, and the shipped metric absorbed all of it
+
+The strongest common-mode-rejection evidence in the record so far.
+
+| trend across the set | set B *(green)* | set C *(green)* | **brown D** |
+|---|---|---|---|
+| `A_Soret` 440–460 | −7.82 % | −9.13 % | **−10.00 %** |
+| `A_Q` 560–580 | −0.28 % | −8.02 % | **−23.15 %** |
+| `A_near` 520–540 | −6.36 % | −13.56 % | **−33.56 %** |
+| `A_far` 600–630 | +5.88 % | −11.08 % | **−39.14 %** |
+| `S/Q` **raw** | −9.66 % | −1.80 % | **+14.51 %** *(t = +3.36)* |
+| `S/Q` **linear baseline** *(shipped)* | −5.38 % | −6.93 % | **−0.15 %** *(t = −0.08)* |
+
+A **39 % fitted collapse in the far anchor** produced a **0.15 % move in the metric** *(trend statistics
+throughout, as in §16.12.11 — the raw first-to-last fall in `A_far` is −32 %)*. The two quiet windows and the Q
+band lost a fifth to two-fifths of their value while the Soret lost a tenth — the signature of a **scattering
+pedestal clearing** while the true pigment absorbance stays put (§16.12.2's mechanism, seen far more clearly
+than in any green set). The raw ratio reads that as a **+14.5 % rise**; the three-region construction
+(`SPEC_capability_proof.md` §2.1a) cancels it.
+
+**And it was not a smooth drift.** `A_far` sits at 0.143 / 0.143 / 0.142 / 0.144 through 16 minutes, then drops
+to 0.117 and 0.097. That is a **step between runs 004 and 005**, not a monotone relaxation — so the ~15-minute
+settling picture of §16.11.7 is not the whole story for brown. Not diagnosed; the session was not designed to.
+
+**⚠ Do not generalise this to green.** §16.12.12 measured that brown's far window is genuinely quiet
+(rise 0.007–0.021) where green's rises (0.0535). Brown's metric is therefore *structurally* less exposed to
+what the far anchor does. The immunity above is a **class-dependent property**, consistent with §16.12.12/13,
+not a general claim about the baseline.
+
+### 16.13.5 Discrimination — the numbers
+
+| | value |
+|---|---|
+| green mean / σ *(B+C, n=12)* | 12.370 / 0.367 |
+| brown mean / σ *(D, n=6)* | **9.303 / 0.131** |
+| gap | **3.066 = 33.0 %** of the brown mean |
+| pooled σ | 0.275 |
+| **Cohen's d** | **11.13** |
+| green margin to T = 10.6 | **+4.83 σ** → false-BROWN **0.027 %** *(t, 11 df)* |
+| brown margin to T = 10.6 | **+9.88 σ** → false-GREEN **0.009 %** *(t, 5 df)* |
+| midpoint of the class means | 10.837 |
+
+§16.11.12 pre-registered the two readings: *σ ≈ 0.23–0.37 → discrimination is proven*; *σ ≈ 0.83 → oil-specific
+noise*. **0.131 is below the good branch's floor**, and *d* = 11.13 beats even its optimistic
+"brown improves by green's factor" row (*d* = 9.81).
+
+**The brown mean did not move across a rig rebuild and a different oil.** Archived `20260727C` (old rig, six
+*fills*, §16.10.2) read **9.361**; series D reads **9.303**, a difference of **−0.62 %**. That retro-validates
+§16.11.12's arithmetic, which had no choice but to borrow that old mean.
+
+> ⚠ **Which pooled σ — the *d* above is convention-dependent, because these groups are UNEQUAL in size**
+> *(added 2026-07-31)*. Green here is sets B+C pooled (**n = 12**) against brown's **n = 6**. Two formulas
+> for the pooled SD are in circulation and they diverge when *n* differs:
+>
+> | | pooled σ | *d* |
+> |---|---|---|
+> | simple RMS — what `brown_series_d.py` computes | 0.2755 | **11.13** |
+> | df-weighted `sqrt(((n1-1)s1² + (n2-1)s2²)/(n1+n2-2))` — the conventional choice at unequal *n* | 0.3129 | **9.80** |
+>
+> **The df-weighted 9.80 is the more defensible figure to quote here**, and is what a statistician would
+> compute. Nothing downstream changes: both are far past any threshold, and the per-class σ-margins and
+> error rates below are computed separately and are untouched. ⚠ *d* is also biased upward at small *n* —
+> Hedges' correction on the df-weighted form gives **9.34**. `brown_series_d.py` now prints all three.
+> *(`DOC_metric_algebra.md` §1.3 is all 6-vs-6, where the two conventions coincide exactly.)*
+
+#### How well is σ actually known? — n = 6 is a loose estimator
+
+The point estimate is not the honest number to plan on. A χ² interval on six points:
+
+| σ used | margin | false-GREEN *(t, 5 df)* |
+|---|---|---|
+| point estimate 0.131 | 9.88 σ | 0.009 % |
+| **95 % upper bound 0.322** | **4.03 σ** | **0.50 %** |
+| if brown were green-like (0.367) | 3.53 σ | 0.83 % |
+| old-rig assumption (0.830) | 1.56 σ | 8.95 % |
+
+**⇒ Even at the upper end of what six runs can exclude, brown clears the threshold by 4 σ.** The conclusion does
+not depend on the point estimate being right. *(t-distribution per §16.10.11a — the error is heavy-tailed, so
+the Gaussian is optimistic exactly where it matters; it would read 0.000003 % on the 4.03 σ row.)*
+
+### 16.13.6 ⚠ What this does NOT settle — σ_fill, and series E is now the only thing left
+
+**Series D is re-seats of ONE fill.** Every number above excludes sample preparation. The shipped protocol
+(§16.10.17b) and the projected decision table (§16.11.11) are both built on **σ_fill**, which remains exactly as
+unmeasured as it was yesterday — the historical brown figure is **10.5 % on n = 2 fills, t = 1.47, not
+significant** (§11.4f B).
+
+**Nothing here may be shipped on the strength of series D alone.** §16.11.13's protocol inversion is explicitly
+gated on brown behaving like green *from fills*, and §16.11.11's "12/12 clearing on one fill" projection needs
+σ₁ from fills, not re-seats.
+
+**One weak prior update, offered as no more than that.** §11.4f B's competing hypotheses for brown's
+fill-to-fill weakness are (i) the aliquot step — real sampling variation — and (ii) an artifact of the baseline
+correction. Series D shows the correction *rescuing* brown from a 39 % pedestal collapse rather than injecting
+noise into it, which sits awkwardly with the crude form of (ii). It is not a test of (ii): re-seats of one fill
+are not fills, and the pre-registered discriminator remains series E reporting **raw and baselined side by
+side**, in **time order** (§11.4f B3).
+
+### 16.13.7 Two negative results from the same six runs
+
+**Colour does not discriminate these two classes at all.** All five chips of `SPEC_color_retrieval.md`, across
+green B+C and brown D:
+
+| chip | green *(n=12)* | brown *(n=6)* |
+|---|---|---|
+| Intrinsic | H 298–300° | H 298–300° |
+| Intrinsic-perceived | H 67–69° | H 68–69° |
+| Perceived | H 70° | H 70–71° |
+| hue-normalised variants | H 300° · S 38 % · L 34 % | H 300° · S 38 % · L 34 % — **identical** |
+
+This **confirms §16.10.15** ("colour channels do NOT discriminate this oil pair") on post-rebuild data and
+extends it from channels to the full HSL colour-retrieval path. The chips remain worth showing as a
+presentation feature; they are not a verdict input, and no threshold should ever be hung on them.
+
+**Metric ranking — only the shipped one works.** Cohen's *d*, green vs brown, on the despiked dev metrics.
+*(Green here is sets B+C pooled, n = 12, against brown's n = 6 — so these are RMS-convention values on
+unequal groups, §16.13.5. The **ranking** is unaffected: the convention scales every row alike.)*
+
+| metric | *d* | |
+|---|---|---|
+| **`S/Q linear base`** *(shipped)* | **11.13** | the only usable one |
+| `G'` (alt.) | −5.33 | **sign inverted** — brown reads *higher* |
+| Pigment `D_Q` | −2.48 | inverted |
+| Greenness `G` | −1.99 | inverted |
+| `A_Soret` | 1.18 | weak |
+| Clarity `A_green` | 0.54 | none |
+| **Pigment ratio · legacy** | **0.11** | **useless** |
+| Pigment ratio · clarity | — | raw CV 12.1 %, degraded further (clarity itself 13.3 %) |
+
+Consistent with §16.10.13's bench, on a class pair it had not seen.
+
+### 16.13.8 ▶ Next, revised
+
+| | action | why it moved |
+|---|---|---|
+| **1** | **⭐ Series E — brown, 6 separate fills, time-ordered, raw + baselined side by side** | now the **only** thing between the milestone and its gate. §16.12.16 item 1 already promoted it; series D removes every competing candidate for "most informative measurement available" |
+| 2 | §16.12.16 item **2c** — re-run the far-anchor sweep on post-rebuild data | **unblocked**: it was waiting on "a proper brown series" and now has one |
+| 3 | §16.12.16 item **2** — declare 600–630 an explicit third band? | also gated on post-rebuild brown data; §16.13.4 adds a fourth axis (settling immunity, class-dependent) to the argument |
+| 4 | Diagnose the **run-004→005 step** in the quiet windows | new, from §16.13.4. Cheap: it is visible in data already on disk, and it does not fit the ~15-min relaxation picture |
+| **5** | **⭐ The ACID TEST — demetallate half of one oil and re-measure** | new, from §16.13.9. One bottle, split, half acidified; same turbidity, same dilution, **one variable**. Converts "the far-window slope tracks demetallation" from the best available explanation into a measured causal link. An afternoon and a drop of acid |
+| — | the `cone` arm and the mechanical programme | **stay demoted** (§16.12.11). Brown's seating is 1.58 % residual; there is no mechanical win of that size left to take |
+
+**Unchanged:** the 1-butanol trial (§16.12.7) remains the only unblocked line of attack on the drift itself, and
+§16.13.4 raises its value — the settling it would remove is **larger on brown than anything green showed**.
+
+### 16.13.9 ⭐ The far-window difference is SPECIATION, not concentration — and the instrument is not the limit  *(Edwin's question 2026-07-31, `diagnostics/qband_shape.py`)*
+
+§16.12.12 measured that the 600–630 rise separates the classes at 5.1 σ but never asked **why**. Two
+explanations were live and had never been separated:
+
+| | prediction |
+|---|---|
+| **(a) concentration** — brown simply has less pigment | brown = *k* × green: one scale factor, **same shape** |
+| **(b) speciation** — brown has a different *mixture* of pigment molecules | the **shape** changes, not just the amplitude |
+
+#### The test has no free parameters
+
+Under (a), any ratio of two features taken **inside** the Q region is class-independent, because *k*
+cancels. So a class difference in such a ratio refutes (a) outright. Ratios are built from
+**differences** wherever possible, since a difference cancels the additive turbidity pedestal — the one
+large known contaminant (52–61 % of `A_Q`).
+
+| | green `20270729C` | brown `20260731A` | *d* |
+|---|---|---|---|
+| `A_Q` 560–580 | 0.2300 ± 0.0173 | 0.2251 ± 0.0199 | **0.26** — equal |
+| `A_Soret` 440–460 | 1.1864 | 1.0855 | 2.31 — 9 % apart |
+| `A_far / A_Q` | 0.6889 | 0.5794 | 2.49 |
+| rise (620–630 − 600–610) | 0.0547 | 0.0121 | 6.61 |
+| Q amplitude (572 − 550) | 0.1275 | **0.1495** | **−3.16** — brown HIGHER |
+| **rise ÷ Q-amplitude** | **0.4274 ± 0.039** | **0.0800 ± 0.028** | **10.26** |
+
+**⇒ (a) is REFUTED.** Pure scaling predicts *d* = 0 on the last row; measured *d* = **10.26**, a factor
+of **5.3**. Brown is not pigment-poor — `A_Q` is *equal* and its 572 feature is *stronger*. The
+Q-region shapes genuinely differ.
+
+#### Where the intensity went
+
+Normalising each class by its own Q amplitude:
+
+| region | green | brown | brown − green |
+|---|---|---|---|
+| 560–580 nm | 0.803 | 0.813 | +0.010 *(anchor)* |
+| 580–600 nm | 0.216 | 0.321 | +0.106 |
+| 600–615 nm | 0.076 | 0.150 | +0.074 |
+| **615–630 nm** | **0.407** | **0.215** | **−0.193** |
+
+Intensity has moved **out of 615–630 and into 580–615** at roughly constant total. That is the direction
+demetallation predicts: in a free-base porphyrin the longest-wavelength Q band (band I) is the **weakest
+of the four in every substitution class** — etio, rhodo, oxo-rhodo and phyllo alike
+(`KB_spectroscopy_physics.md` §4.1). Protochlorophyll's Qy(0,0) is its dominant long-λ band; on losing
+the Mg it becomes band I of four, i.e. the weakest.
+
+#### ⚠ The instrument is NOT the limiting factor — this is a WINDOW problem
+
+It is tempting to read "we cannot see the 2-vs-4 band structure" as a resolution limit. It is not:
+
+| | |
+|---|---|
+| grid spacing | 0.146 nm/bin, 1305 bins over 440–630 |
+| 473 nm lamp artifact | **FWHM 1.0 nm** |
+| 607 nm registration artifact | **FWHM 2.7 nm** |
+| Q bands to be resolved | **20–30 nm** |
+
+**The rig out-resolves the target by 10–20×.** What actually prevents the structure being seen is
+(1) **window truncation** at 630 nm — the dominant limit; (2) the two species **always coexisting**, so
+no pure spectrum of either is ever observed; (3) **20–30 nm intrinsic linewidths** in room-temperature
+solution, which merge the four free-base bands into shoulders; and (4) the **turbidity pedestal**
+suppressing contrast.
+
+**⇒ A better spectrometer buys nothing. A wider window buys everything.** This is an independent — and
+possibly the strongest — argument for §16.12.16 item 2h.
+
+#### Epistemic status, stated plainly
+
+| link | status |
+|---|---|
+| the pigments are protochlorophyll + protopheophytin | **sourced** (Fruhwirth & Hermetter 2007) |
+| roasting/ageing strips the Mg | **sourced** (same; storage range 1–36 %) |
+| Mg loss ⇒ D₄ₕ→D₂ₕ ⇒ 2 Q bands → 4 | **deduction** from group theory |
+| free-base band I is the weakest ⇒ long-λ intensity falls | **sourced** (etio/rhodo/oxo-rhodo/phyllo classification) |
+| the two classes' Q-region shapes differ | **measured** here, *d* = 10.26 |
+| the cause is *specifically* demetallation | ⚠ **abduction** — best available explanation, not a controlled result |
+
+The last row is the honest weak point: these are **two different bottles**, which differ in more than
+their protopheophytin fraction. Everything upstream survives even if it is wrong — the *speciation*
+reading holds regardless; only the *mechanism* would change.
+
+**▶ The experiment that would close it, and it is cheap.** Take **one** oil, split it, and deliberately
+demetallate half — acidification is the standard laboratory route from chlorophyll to pheophytin. Same
+bottle, same turbidity, same dilution, **one variable**. If the 600–630 slope collapses in the acidified
+half, the causal link is measured rather than inferred. An afternoon and a drop of acid.
+
+---
+
+## 16.14 The ALGEBRA of dilution invariance — which metrics are invariant by theory, and what actually breaks it  *(Edwin's question 2026-07-31, after `DOC_metric_algebra.md`; DERIVATION + one experiment design, nothing implemented)*
+
+§16.10.8 declared dilution invariance unmeasurable and §16.11.6 gave the first evidence in the right direction.
+Neither asked the prior question: **which of our metrics is invariant *by construction*, and what is the
+mechanism by which the shipped one fails?** The answer turns out to be sharp, and it converts §16.10.8's
+open question from "does it hold?" into a **bounded quantity with a distinctive experimental signature**.
+
+### 16.14.1 The model
+
+```
+A(λ)  =  ε(λ)·c·l   +   P(λ)
+         pigment        scattering pedestal
+```
+
+`ε` extinction, `c` concentration, `l` path length; `P` the turbidity pedestal, which does **not** track pigment
+concentration (§5 of `DOC_sample_physics.md`). Dilution invariance = unchanged under `c → k·c`.
+
+### 16.14.2 With no pedestal the shipped metric is EXACTLY invariant — and the proof is one line
+
+Every step from the curve to the two corrected band means is **linear and homogeneous** in the data: the band
+mean, the least-squares line fit through the anchors, and the subtraction. So scaling the input scales the
+output identically:
+
+```
+B_X  =  c·l·( ε̄_X − ℓ_ε(λ̄_X) )  ≡  c·l·e_X
+```
+
+where `ℓ_ε` is the line the fit produces on `ε` alone and `e_X` is the band's baseline-corrected extinction.
+Hence
+
+```
+S/Q_lin  =  e_Soret / e_Q
+```
+
+with `c` and `l` gone. **A degree-1 homogeneous functional over a degree-1 homogeneous functional is degree-0.**
+This is invariance by construction, not by approximation.
+
+⚠ One sub-step is worth recording because it is *exact* and is easily mistaken for an approximation:
+`B_X = A_X − L(λ̄_X)` holds exactly, because the mean of a straight line over a window equals that line at the
+window's centroid. The only approximation in the three-region identity (§2.1a of `SPEC_capability_proof.md`) is
+replacing the least-squares slope with the two-centroid slope — **not** this step.
+
+#### ⭐ The proof never mentions chlorophyll — so the far-anchor contamination is HARMLESS to invariance
+
+The homogeneity argument uses only that a component scales with `c`. §16.12.12's finding — that 600–630 nm
+carries real pigment — therefore **does not break dilution invariance at all**. That pigment scales with `c`
+exactly as the band pigment does and cancels in the quotient along with everything else. It changes the
+*effective* `e_X`, i.e. what the metric means chemically; it does not change whether it is invariant.
+
+This is worth stating loudly because the intuition runs the other way: the contamination looks like the metric's
+dirty secret, and on this axis it is not one. **§16.12.13's warning stands for discrimination, not for
+invariance.**
+
+### 16.14.3 The classification — every shipped metric
+
+The rule that falls out: **a ratio is dilution-invariant iff its numerator and denominator are both
+pedestal-free and corrected the same way.**
+
+| metric | invariant by theory? | why |
+|---|---|---|
+| every band mean — `A_Soret`, `A_Q`, `A_clarity`, `A_near`, `A_far`, `B_Soret`, `B_Q`, `A_blue`, `D_Q` | **never** | all scale with `c` by construction |
+| **`S/Q_lin`** *(shipped)* | **yes** — exactly, if `P` is linear in λ | both terms had the *same* line subtracted |
+| `S/Q_plain`, `S/Q_clarity`, `S/Q_legacy` | only if `P ≈ 0` | uncorrected; `P` survives in both terms and does not scale |
+| `G = D_Q/A_clarity`, `G' = D_Q/A_blue` | **no** | **mixed** — a locally baseline-corrected numerator over an *uncorrected* denominator |
+
+⚠ The `G`/`G'` row is a defect that had not been named before: these two are not merely weak discriminators
+(§16.13.7 measured `G` at *d* = −1.99, `G'` at −5.33), they are **structurally incapable** of dilution
+invariance, because the correction is applied to one side of the quotient only.
+
+### 16.14.4 What actually breaks it — pedestal CURVATURE, and nothing else
+
+Put `P` back. The fit is linear, so it splits cleanly:
+
+```
+B_X  =  c·l·e_X  +  r_X          with   r_X  =  P̄_X − ℓ_P(λ̄_X)
+```
+
+`r_X` is the pedestal's **departure from its own best-fit line**, evaluated at band X. Then:
+
+| pedestal | invariance |
+|---|---|
+| `P = 0` | exact ✓ |
+| `P` exactly **linear** in λ | **also exact** ✓ — the fit removes it completely, `r ≡ 0` |
+| `P` curved | broken, in proportion to `r` |
+
+**⇒ Invariance fails only to the extent that turbidity is non-linear in λ over 440–630.** Scattering goes
+roughly as λ⁻ⁿ, and a straight line is an approximation to a curve; that curvature is the *entire* residual
+error. Nothing else in the construction can produce a dilution dependence.
+
+*(This also re-frames §16.12.6 B's λ⁻ⁿ experiment. That test was withdrawn as invalid because an anchor contains
+pigment — but the quantity it was reaching for, the pedestal's shape, is exactly `r`. The experiment was asking
+the right question with the wrong instrument.)*
+
+### 16.14.5 The sensitivity — and why the denominator is hit ~10× harder, again
+
+Differentiating `S/Q_lin = (x·e_S + r_S)/(x·e_Q + r_Q)` with `x = c·l`, for small residuals:
+
+```
+d ln(S/Q_lin) / d ln c   ≈   r_Q/B_Q  −  r_S/B_Soret
+```
+
+Measured band values (§16.13 / `DOC_metric_algebra.md`): `B_Soret` ≈ 1.10 (green) / 1.01 (brown),
+`B_Q` ≈ 0.090 / 0.109. So `B_Soret/B_Q` is **12.3 (green), 9.3 (brown)** — the *same* absolute curvature
+residual is an order of magnitude more damaging in the denominator. The second term is negligible and
+
+```
+d ln(S/Q_lin) / d ln c   ≈   r_Q / B_Q
+```
+
+This is the same amplification structure that makes the plain ratio fail (§16.13 / §6 of the doc: the pedestal is
+~7 % of the Soret band but **52–61 % of the Q band**). The baseline shrinks it greatly; it never removes it.
+
+### 16.14.6 ⭐ The error is CONCENTRATION-DEPENDENT — and that gives a falsifiable signature
+
+`r_Q` is **fixed**; `B_Q = c·l·e_Q + r_Q` **grows with concentration**. Therefore
+
+```
+sensitivity  ≈  r_Q / (c·l·e_Q)     ∝  1/c
+```
+
+**The metric becomes more invariant as you concentrate, and degrades at high dilution.** Two consequences:
+
+**(a) A log–log plot of `S/Q_lin` against concentration must be CURVED, flattening toward high `c`.** A
+*constant* log–log slope would falsify the pedestal-curvature explanation and point at something else — genuine
+concentration-dependent chemistry, or stray light. This is a much sharper test than "is the slope zero?", which
+is what §16.10.8's design was reaching for, and it needs the same runs.
+
+**(b) The error curve is U-shaped, so there is an optimal working concentration.** Pedestal curvature degrades
+invariance at **low** `c`; §16.11.8's Soret stray-light compression degrades it at **high** `c` (the numerator
+saturates, `T` at the Soret is already 6.5 %). These are different mechanisms failing in opposite directions.
+The recipe should sit at the minimum between them — which is an argument that §16.11.15's "keep 18 ml + 6 drops"
+is defensible on a second, independent axis, and a reason not to move it in either direction casually.
+
+⚠ **This is in direct tension with any "just concentrate more" instinct.** Raising `c` improves dilution
+invariance *and* worsens the Soret compression. Neither effect is currently measured well enough to locate the
+minimum.
+
+### 16.14.7 Against the measured record
+
+| | |
+|---|---|
+| baseline halves the dilution error | 5.49 % → **2.75 %** (§16.12.16 item 2d, `baseline_vs_raw.py`) — consistent: the correction removes the linear part of `P` and leaves `r` |
+| §16.11.6's two dilutions | 17 % apart in `A_Q` → **1.9 %** in the metric, `t = 1.14, p = 0.28` |
+
+Taking §16.11.6 at face value, `ln(12.251/12.489) / ln(0.230/0.197) = −0.124`, i.e. an apparent log–log slope of
+≈ **−0.12**, which via §16.14.5 implies `r_Q` of order **−0.01 A**.
+
+⚠ **Do not quote that as a measurement.** It is not statistically distinguishable from zero (`p = 0.28`), it
+rests on `n = 2` dilutions only 17 % apart, and it uses `A_Q` as a concentration proxy — which §16.10.8 showed is
+itself compromised by seating. Treat `|r_Q| ≲ 0.01 A` as an **upper bound**, and note the sign is the direction
+§16.14.6(a) predicts for a curved pedestal.
+
+### 16.14.8 What this does and does not settle
+
+**Settles:** which metrics *can* be invariant (§16.14.3); that the far-anchor contamination is irrelevant to
+invariance (§16.14.2); and that there is exactly **one** mechanism to chase, not several (§16.14.4).
+
+**Does not settle:** whether `r_Q` is actually small. §16.10.8 stays open. But its experiment now has a
+quantitative target and a distinctive shape to look for rather than a null hypothesis to fail to reject.
+
+**⇒ A prediction that costs nothing and is worth writing down before the solvent work:** if the residual
+dilution error and the settling drift are both the pedestal, then **clearing the sample must shrink BOTH
+together** — the 1-butanol trial (§16.12.7) or the 0.22 µm filter (§16.12.9). If one collapses and the other
+does not, this model is wrong. That is a free extra readout on runs already planned, and §16.12.7's trial
+should record the dilution error alongside the CV it was designed to measure.
 
 ---
 

@@ -119,6 +119,29 @@ Cluster gap: **worst green 3.67 > best brown 2.59** — a clean, empty separatio
 > and **E** (6 fills → σ_fill). §16.7.2o's uncomfortable finding that brown scatters *like* green (11.4 % vs
 > 11.2 %) is now the argument in favour: same error source ⇒ the same fix should apply.
 >
+> ### ✅ 2026-07-31 — series D ran. Discrimination is PROVEN on re-seat data
+>
+> | | result |
+> |---|---|
+> | brown σ, `S/Q linear base` *(6 re-seats, one fill)* | **0.131** — raw CV **1.41 %**, residual **1.58 %** |
+> | pre-registered PASS criterion *(§11.4f A)* | ≤ 3.5 % → **PASS**, by ~2× more than predicted |
+> | green 12.370 ± 0.367 vs brown **9.303 ± 0.131** | gap 33.0 %, **Cohen's *d* = 11.13** *(RMS pooled SD; **9.80** df-weighted — unequal n, `SPEC_capture_quality.md` §16.13.5)* |
+> | at the shipped `T = 10.6` | green **+4.83 σ** *(false-brown 0.027 %)*, brown **+9.88 σ** *(false-green 0.009 %; 0.50 % at σ's 95 % upper bound)* |
+> | brown mean vs archived `20260727C` *(old rig, different oil)* | 9.303 vs 9.361 = **−0.62 %** — the mean survived the rebuild |
+>
+> **§16.11.12's "all residual risk is brown, ~10 % false-GREEN" is retired.** The row above it —
+> discrimination `d` → 9.81 *if* brown's scatter improves as green's did — is not just met but exceeded; brown
+> improved **more** than green.
+>
+> **⇒ The gate's DISCRIMINATION criterion is met. What remains is σ_fill.** Series D excludes sample
+> preparation entirely, so §11.4f **B** (series E, 6 separate fills, raw + baselined side by side, time-ordered)
+> is now the single outstanding measurement — and §16.11.13's protocol inversion stays gated on it. Full
+> account: [`SPEC_capture_quality.md`](SPEC_capture_quality.md) **§16.13**.
+>
+> ⚠ **This changes precision, not the threshold.** The paragraph below still stands in full: `T = 10.6` remains
+> **unvalidated**, and series D does nothing to validate it. A 9.88 σ margin against a possibly-wrong threshold
+> is a confident answer to the wrong question.
+>
 > **⚠ The blocker has MOVED, not disappeared — and it is no longer an instrument problem.** Everything measured
 > on 2026-07-29/30 improved **precision**, not **correctness**. `T = 10.6` dividing green from brown oil is still
 > **unvalidated** (§16.10.11a: `P = 0.964` is P(the *metric* exceeds the threshold), *not* P(the oil is green)),
@@ -396,9 +419,13 @@ sessions (`SPEC_capture_quality.md` §16.12.12):
 - Regressing that rise on the greenness ratio gives **intercept ≈ 0**: the rise vanishes exactly when the
   greenness does.
 
-It is **real chlorophyll absorption** — the rising flank toward the true Q maximum near 665 nm, which lies
-outside our 440–630 capture clamp. For brown oil the far window genuinely *is* quiet (rise 0.007–0.021); for
-green it is not.
+It is **real green-pigment absorption** — the rising flank toward the pigment's red (Qy) band. For brown oil
+the far window genuinely *is* quiet (rise 0.007–0.021); for green it is not.
+
+> ⚠ **Corrected 2026-07-31** (`KB_spectroscopy_physics.md` §4.1): this said *"chlorophyll … Q maximum near
+> 665 nm, outside our clamp"*. The pigment is **protochlorophyll** (Fruhwirth & Hermetter 2007) and its Qy
+> is at **~623–626 nm** — **at the edge of the clamp, not beyond it**. The measurement is untouched; the
+> attribution gets stronger, and the case for widening the window gets considerably cheaper.
 
 #### And it is carrying a large share of the discrimination
 
@@ -1665,6 +1692,26 @@ marked wrong and the reason recorded — that is the point of having made it.
 
 **PASS** = brown within-fill CV ≤ 3.5 %. **FAIL** = ≥ 6 %, which would mean the rebuild does *not* transfer and
 brown carries an oil-specific noise term the mechanics cannot reach.
+
+##### ✅ SCORED 2026-07-31 — series D ran the same day. **PASS.**
+
+*Full account: `SPEC_capture_quality.md` §16.13. Per the rules above, the predictions stand as written.*
+
+| predicted | measured | |
+|---|---|---|
+| within-fill CV `S/Q linear base` **2.5 – 3.5 %** | **1.41 %** | ✅ **PASS** on the criterion — ⛔ but the *range* is **wrong, low by ~2×**. The rebuild transferred to brown *better* than green's 3.33× |
+| within-fill CV `S/Q raw` **3 – 8 %** | **6.00 %** | ✅ correct |
+| settling trend over ~30 min **−3 to −8 %** | **−0.15 %** *(t = −0.08)* | ⛔ **WRONG.** Brown's *absorbances* settled harder than green's (`A_far` −39 %) and the shipped metric absorbed all of it — §16.13.4 |
+
+**⇒ Discrimination: *d* = 11.13, brown clears T = 10.6 by 9.88 σ (4.03 σ at the 95 % upper bound on σ).**
+*(That *d* uses the RMS pooled SD on unequal groups — 12 green runs against 6 brown. The conventional
+df-weighted form gives **9.80**, and Hedges' small-sample correction **9.34**. All three are far past the
+gate; quote the df-weighted figure externally. `SPEC_capture_quality.md` §16.13.5.)*
+The gate's discrimination criterion is **met on re-seat data**; §11.4f B is now the only thing outstanding.
+
+⚠ **Two honest qualifications.** (1) The comparable figure against green's 2.96 % is **1.58 % vs 1.89 %**
+residual, not 1.41 % vs 2.96 % — green's raw CV is inflated by a settling trend brown did not have
+(§16.13.3). (2) This is **one fill re-seated**; σ_fill is untouched.
 
 #### B · Series E — brown, 6 separate fills, ~15 min equilibration each
 

@@ -192,6 +192,13 @@ discrimination**: sweep the far edge in and Cohen's *d* falls **2.88 → 0.94** 
 metric is a **three-region construction** (algebra verified against the code to 0.5 %) — restated in
 `SPEC_capability_proof.md` §2.1a, and the `DevSpectralPlugin` comment corrected.
 
+> ⚠ **Correction added later the same day** (left in place per the withdrawn-claims practice): "real
+> **chlorophyll** absorption … flank toward the true Q maximum near **665 nm, outside our clamp**" names
+> the **wrong molecule**. The oil's pigment is **protochlorophyll / protopheophytin** (Fruhwirth &
+> Hermetter 2007 — the paper on our own disk), whose Qy band is at **~623–626 nm**, i.e. **at the edge of
+> the clamp, not beyond it**. The 5.1 σ measurement and every consequence drawn from it stand; the
+> attribution gets *stronger*. Sources and the full account: `KB_spectroscopy_physics.md` §4.1.
+
 **3 · There is no better baseline available on a 440–630 window.** Twelve variants — offset-only, power-law,
 AsLS, ModPoly, rubber band, full-range line, quiet-anchored LSQ and polynomials. **Monotone trade-off**: the more
 spectrum a baseline may follow, the better it removes drift and dilution and the more class signal it removes
@@ -233,3 +240,58 @@ instrument.
 
 **▶ Next, unchanged by any of this:** **brown series D and E** — and E must report **raw and baselined side by
 side**, with the fills in **time order**.
+
+---
+
+## Series D — the brown oil, and the gate's discrimination criterion closes  ·  _2026-07-31 (evening rig session)_  ·  _status: PASS, pre-registered_
+
+**Six re-seats of one brown fill** (`spectracs-references/tmp/20260731A/`), post-rebuild, still isopropanol —
+§16.11.11 step 2's first half and the load-bearing measurement of the milestone. Scored against §11.4f A,
+written the same morning and not edited. New tool: `diagnostics/brown_series_d.py`, deliberately built on
+`settling_sweep`'s `measure`/`detrend` so the numbers are comparable with the green sets.
+
+**1 · PASS, by twice the predicted margin.** Brown σ = **0.131** — raw CV **1.41 %** against a pre-registered
+2.5–3.5 %. §16.11.12 offered two branches (σ ≈ 0.23–0.37 proves discrimination; σ ≈ 0.83 says the rebuild
+helped green only); the result sits **below the good branch's floor**. Brown improved *more* than green did,
+which is what §16.7.2o's "sobering" refutation predicted once it was read the right way round.
+
+**2 · Discrimination.** Green 12.370 ± 0.367 vs brown **9.303 ± 0.131** — gap 33.0 %, **Cohen's *d* = 11.13**.
+*(Later the same day: that *d* pools unequal groups — 12 green against 6 brown — with the RMS convention.
+The conventional df-weighted form gives **9.80**; §16.13.5. The conclusion is unaffected.)*
+At the shipped T = 10.6: green **+4.83 σ**, brown **+9.88 σ**. The ~10 % false-GREEN that §16.11.12 called
+"all the remaining risk" becomes **0.009 %** — and **0.50 % even at the 95 % upper bound on σ**, so the
+conclusion does not rest on six points estimating σ well. The brown mean also **survived the rebuild and a
+different oil**: 9.303 against the archived 9.361, −0.62 %.
+
+**3 · ⚠ The headline overstates it ~2×, and the diary should say so.** Green's 2.96 % is mostly a settling
+trend (§16.12.11); detrended it is 1.89 %. Brown has **no trend to remove** (−0.15 %, t = −0.08), so the
+like-for-like comparison is **1.58 % brown vs 1.89 % green** — close, not 2×. What brown really did better was
+not accumulate a trend in the metric.
+
+**4 · ⭐ And that is the finding.** Brown's *absorbances* settled ~3× harder than green's — `A_far` **−39 %**,
+`A_near` −34 %, `A_Q` −23 %, against `A_Soret` −10 % — and the shipped metric moved **0.15 %**. The raw ratio
+reads the same session as **+14.5 %**. A 39 % collapse in a baseline anchor producing a 0.15 % move is the
+strongest common-mode-rejection evidence in the record, and it is the fourth independent argument for the
+three-region construction (§2.1a). ⚠ Class-dependent: §16.12.12 measured brown's far window as genuinely quiet
+where green's rises, so this does **not** generalise to green. Also **not a smooth drift** — `A_far` is flat for
+16 minutes then steps between runs 004 and 005, which the ~15-minute relaxation picture does not explain.
+
+**5 · One prediction wrong, recorded as such.** The −3 to −8 % settling trend predicted for brown's metric came
+back as −0.15 %. It was extrapolated from green and the extrapolation was invalid for the reason in item 4.
+
+**6 · Two negative results from the same six runs.** *Colour does not discriminate* — all five chips of
+`SPEC_color_retrieval.md` read the same for both classes (hue-normalised variants **identical**), confirming
+§16.10.15 on post-rebuild data and extending it from channels to the full HSL path. *Only the shipped metric
+works* — `G'` *d* = −5.33 (**sign inverted**), `D_Q` −2.48, Greenness −1.99, and **pigment-ratio-legacy 0.11,
+i.e. useless**.
+
+**⇒ What is left is σ_fill, and only σ_fill.** Series D is re-seats of ONE fill; sample prep is excluded
+entirely. §16.11.13's protocol inversion and §16.11.11's projected decision table are both built on σ₁ from
+*fills* and stay gated. **Series E** — 6 separate fills, time-ordered, **raw and baselined side by side**
+(§11.4f B/B2–B4) — is now the single measurement between the milestone and its gate.
+
+**⚠ Unchanged by any of this:** `T = 10.6` is still **unvalidated**. Series D improved precision, not
+correctness, and a 9.88 σ margin against a possibly-wrong threshold is a confident answer to the wrong question.
+
+**Also unblocked:** §16.12.16 item 2c (re-run the far-anchor sweep on post-rebuild data) — it was waiting on
+"a proper brown series" and now has one.

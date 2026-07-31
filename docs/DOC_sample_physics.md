@@ -65,15 +65,17 @@ near 440–460 nm, and a weak one in the yellow-green near 560–580 nm. Their *
 > are only partly miscible, so the oil arrives as suspended droplets alongside waxes that never
 > dissolve at all. That suspension scatters, and the scattering masquerades as absorbance (§4, §5).
 >
-> **5. The pigment chemistry is simple; the sample preparation is not.** Chlorophyll's two absorption
-> bands and their fate on roasting are textbook. Everything difficult about this measurement lives in
+> **5. The pigment chemistry is simple; the sample preparation is not.** The pigment's two absorption
+> bands and their fate on roasting are textbook — once you have the right molecule, which is
+> **protochlorophyll**, not chlorophyll (§3.1). Everything difficult about this measurement lives in
 > the jar, not in the molecule (§7).
 
 ### 1.3 The chain, in one paragraph
 
-Chlorophyll in the seed absorbs blue and red light and transmits green — that is why fresh
-Steirisches Kürbiskernöl is green. Roasting strips the magnesium out of the chlorophyll ring and the
-molecule becomes pheophytin, which absorbs differently; more roasting degrades it further. So the
+The pigment in the seed — **protochlorophyll**, chlorophyll's biosynthetic precursor — absorbs blue and
+red light and transmits green, which is why fresh Steirisches Kürbiskernöl is green. Roasting strips the
+magnesium out of the ring and the molecule becomes **protopheophytin**, which absorbs differently; more
+roasting degrades it further. So the
 shape of the blue absorption relative to the yellow-green absorption carries the roast history.
 Reading that shape requires diluting the oil, and diluting it into an alcohol produces a cloudy
 suspension whose light scattering sits underneath the pigment signal and compresses it. Most of the
@@ -92,7 +94,7 @@ absorbed is set by the size of that gap** — a large gap absorbs blue light, a 
 For the pigments that matter here the relevant electrons are those in **conjugated π systems**:
 alternating single and double bonds over which the electrons are delocalised. The longer the
 conjugated chain, the smaller the energy gap, and the redder the absorption. This one rule explains
-most of plant pigment colour, including why the carotenes are yellow-orange and chlorophyll is green.
+most of plant pigment colour, including why the carotenes are yellow-orange and the chlorophylls green.
 
 An absorption *band* rather than a sharp line appears because each electronic transition is dressed
 with vibrational and rotational sub-levels, and in solution the surrounding molecules smear those
@@ -171,44 +173,221 @@ This matters far more than it sounds, and chapter 5 is devoted to it.
 
 ## 3. The pigments
 
-### 3.1 Chlorophyll: two bands, one molecule
+### 3.1 The molecule in our jar is PROTOchlorophyll — not chlorophyll
 
-Chlorophyll is a **porphyrin** — a large flat ring of four nitrogen-containing subunits with a
-magnesium ion at the centre — carrying a long hydrocarbon tail that makes it fat-soluble. Its
-absorption spectrum has a characteristic two-part shape that all porphyrins share, explained by
-Gouterman's four-orbital model:
+This matters more than a prefix suggests, so it is worth being precise about.
 
-| band | position *(chlorophyll a in solution)* | strength |
+**Both molecules are tetrapyrroles**: a large flat ring built from four nitrogen-containing subunits,
+with a magnesium ion held at the centre and a long hydrocarbon tail (phytol) that makes the whole
+thing fat-soluble. The difference is one bond.
+
+| | ring D | class | consequence |
+|---|---|---|---|
+| **chlorophyll** *a* | **reduced** (C17–C18 saturated) | a **chlorin** | strong, far-red Qy band |
+| **protochlorophyll** *a* | **not reduced** | a **porphyrin** | Qy ~40 nm further to the blue, and weaker |
+
+![**Figure 1** — the macrocycle, and the single bond that separates the two molecules. Four pyrrole subunits (A–D) hold a magnesium ion between their four nitrogens; ring D carries the phytol ester that makes the pigment fat-soluble. In **protochlorophyll** the C17=C18 bond in ring D is intact, so the ring system is a **porphyrin**. In **chlorophyll** that one bond is reduced — two hydrogens added — making it a **chlorin**, and moving the red absorption band ~40 nm further into the red. Schematic: substituents and the isocyclic ring E are omitted.](figures/pigment_macrocycle.svg)
+
+Protochlorophyll is chlorophyll's biosynthetic *precursor* — the plant reduces that one ring to make
+chlorophyll. In the Styrian oil pumpkin's seed coat the reduction never happens, so the precursor
+accumulates. Fruhwirth & Hermetter identify the oil's colourants as **protochlorophyll (a and b)** and
+**protopheophytin (a and b)**.
+
+### 3.2 Where the bands come from — Gouterman's four orbitals
+
+All porphyrin-type spectra have the same two-part shape, and one model explains it. Gouterman (1961)
+showed that the visible spectrum is governed by just **four frontier orbitals** — two nearly-degenerate
+occupied and two nearly-degenerate empty ones. Their combinations give:
+
+| band | transition | character |
 |---|---|---|
-| **Soret band** (also called B) | ≈ 430 nm — blue | very strong |
-| **Q bands** | ≈ 578 nm (Qx) and ≈ 662 nm (Qy) — yellow-green and red | weak, roughly 1/5 to 1/10 of the Soret |
+| **Soret** (also **B**) | S₀ → S₂ | **very strong**, blue, ~430–440 nm |
+| **Q** | S₀ → S₁ | **weak** — 1/5 to 1/10 of the Soret — yellow-green to red |
 
-**Blue and red are absorbed; green in between is transmitted.** That is the whole reason chlorophyll
-is green, and the reason fresh pumpkin seed oil is green.
+**Blue and red are absorbed; the green in between is transmitted.** That is the whole reason these
+pigments are green, and the reason fresh pumpkin seed oil is green.
 
-> **Where our two measurement windows sit.** Our blue window, 440–460 nm, is on the **red flank of
-> the Soret band** — not its peak, which lies below our usable range. Our second window, 560–580 nm,
-> most plausibly catches the **Qx** transition. The strong **Qy** band near 660 nm lies *outside* the
-> capture range entirely — and its rising flank is exactly what we later found intruding into what
-> was supposed to be a signal-free part of the spectrum *(measured;
-> `SPEC_capability_proof.md` §2.1a)*. The physics and the surprise line up.
+#### Why the Q region has more than one peak — and what Qx / Qy mean
 
-### 3.2 What roasting does — pheophytin
+In a **metallo**porphyrin the magnesium sits on a four-fold symmetry axis (D₄ₕ). The two Q transitions
+are then **degenerate** — same energy, polarised at right angles to each other in the plane of the ring.
+What you see is one Q band plus a **vibronic satellite** at higher energy, conventionally labelled
+**Q(0,0)** (the origin, longest wavelength — also called α) and **Q(1,0)** (one quantum of vibration
+added — also called β).
 
-Heat and acid strip the central **magnesium ion** out of the chlorophyll ring, replacing it with two
-protons. The product is **pheophytin**, and the conversion is why green vegetables turn olive-drab
-when overcooked and why chlorophyll-containing oils brown with roasting.
+**Remove the metal and the symmetry drops to D₂ₕ.** The two protons that replace Mg²⁺ sit on one axis,
+so the ring is no longer four-fold symmetric, the degeneracy is **lifted**, and the two transitions
+separate into distinct bands — now properly called **Qx** and **Qy** after their polarisation axes.
+Each keeps its own vibronic satellite, so a metal-free (free-base) tetrapyrrole shows **four** Q bands,
+numbered **I to IV from the longest wavelength**: I = Qy(0,0), II = Qy(1,0), III = Qx(0,0), IV = Qx(1,0).
 
-Losing the metal changes the ring's electronic structure, and the spectrum changes with it: the Soret
-band **shifts toward the blue and sharpens**, while the Q bands redistribute. Further degradation —
-oxidation, ring cleavage — eventually destroys the conjugated system altogether and the absorption
-becomes a featureless slope.
+> **A word on "degenerate".** In spectroscopy *degenerate* means two states happen to share the same
+> energy — it carries no sense of decay. Symmetry is what enforces the sharing, so lowering the symmetry
+> **lifts** the degeneracy and the states separate. The pigment is not "degenerating"; its energy levels
+> are ceasing to coincide.
 
-**This is the physical basis of the verdict.** The ratio of blue absorption to yellow-green
-absorption tracks how much intact chlorophyll survives relative to its degradation products. It is a
+**⭐ And the redistribution has a direction.** Free-base porphyrin spectra are classified into four types
+by their Q-band intensity ordering — *etio* (IV > III > II > I), *rhodo* (III > IV > II > I),
+*oxo-rhodo* and *phyllo*. **Band I — the longest-wavelength band — is the weakest in every one of them.**
+So a pigment whose long-wavelength Q band *dominates* while it holds its magnesium finds that same band
+demoted to the weakest of four once the magnesium goes. Intensity moves toward the blue. That is not a
+guess; it is the standard classification, and §3.4 shows it is what we measure.
+
+![**Figure 2** — what losing the magnesium does. **Left:** with Mg on the four-fold axis (D₄ₕ) the two in-plane transition dipoles *x* and *y* are equivalent, the Q states are degenerate, and the spectrum shows one Q origin plus its vibronic satellite. **Right:** the two protons that replace Mg sit on one axis only (D₂ₕ), so *x* and *y* are no longer equivalent, the degeneracy is lifted into separate Qx and Qy states, and **four** Q bands appear where there were two. Free-base band numbering I–IV runs from the longest wavelength. Since demetallation is exactly what roasting does, this split is the spectroscopic signature of the degradation we measure.](figures/pigment_qband_symmetry.svg)
+
+> **⭐ This is the single most useful idea in this chapter.** *Losing the magnesium is exactly what
+> roasting does* (§3.3). So the **appearance of a Qx/Qy split is itself the spectroscopic signature of
+> the degradation we are trying to measure.** The green→brown axis is not merely "less pigment" — it is
+> a change in the *symmetry* of the surviving pigment, and symmetry changes rearrange bands rather than
+> just shrinking them.
+
+#### The numbers, for the molecule we actually have
+
+| | Soret | Q region | fluorescence |
+|---|---|---|---|
+| chlorophyll *a* *(textbook default — **not** ours)* | ≈ 430 nm | ≈ 578, **≈ 662 (Qy)** | ≈ 668–675 nm |
+| **protochlorophyll(ide) *a*** *(ours)* | **≈ 432–440 nm** | minor bands ≈ 505, 535, 606; **Qy(0,0) ≈ 623–626** | **≈ 630–636 nm** |
+
+The protochlorophyll figures are for alcoholic/acetone solution, which is what we measure in. They are
+corroborated from inside the oil itself: Fruhwirth & Hermetter record the oil's fluorescence maximum at
+**635 nm**, and a fluorescing molecule emits ~10 nm to the red of the transition it absorbs on — putting
+the absorber at ~625 nm and nowhere near chlorophyll's 662.
+
+#### Where our three measurement windows sit
+
+| window | sits on | confidence |
+|---|---|---|
+| **440–460 nm** | the **red flank of the Soret band** — not its peak, which is below our usable range | solid |
+| **560–580 nm** | a band in the **Q region**; the specific assignment is **open** — see below | ⚠ open |
+| **600–630 nm** | the approach to **Qy(0,0)** at ~623–626, plus the minor ~606 band | good |
+
+> **⚠ An honest gap: we do not know what the 560–580 band is.** Two candidates, and they are not
+> equivalent. It could be the **vibronic Q(1,0) satellite of the intact, Mg-containing protochlorophyll**;
+> or it could be a **Qx band of protopheophytin**, the metal-free degradation product, which only exists
+> *because* of the split described above. The published protochlorophyllide minor bands (505, 535, 606 nm)
+> do not obviously include it, which mildly favours the second reading — but the oil contains both
+> molecules plus carotenoids, and no source we have assigns this band.
+>
+> **Why it matters:** the 560–580 window is the *denominator* of the shipped verdict metric. If it is a
+> degradation-product band, the metric is a direct intact ÷ degraded ratio and its physical justification
+> is much stronger than we currently claim. **This is worth one measurement to settle** — and unusually,
+> a hint already exists in our own data: relative to the 560–580 band, the 600–630 Qy flank is
+> substantially *weaker* in brown oil than in green (ratio 0.58 vs 0.69), which is what you would expect
+> if 600–630 tracks the intact pigment more specifically than 560–580 does. Suggestive, not conclusive.
+
+### 3.3 What roasting does — protopheophytin
+
+Heat and acid **strip the central magnesium ion out of the ring**, replacing it with two protons. The
+product is **protopheophytin**.
+
+**Where the name comes from.** *Pheo-* is from the Greek *phaiós*, "dusky" — **pheophytin** is
+literally "the dusky plant pigment", the colour a chlorophyll turns once it loses its magnesium. It is
+the same reaction that makes overcooked greens go olive-drab. *Proto-* marks the unreduced ring D of
+§3.1. So the two prefixes describe **two independent modifications**, and there are four molecules:
+
+![**Figure 3** — the pigment family. Two independent changes, four molecules. Down the page: whether ring D is reduced (§3.1) — the difference between a porphyrin and a chlorin. Across the page: whether the magnesium is still held — the difference roasting makes. Our oil contains the **top row**: protochlorophyll and, as it degrades, protopheophytin. Ordinary leaf chlorophyll and its degradation product occupy the bottom row and are shown only for orientation.](figures/pigment_four_molecules.svg)
+
+**Why protopheophytin matters here, and why it has moved to the centre of the story.** It was named in
+the source all along — Fruhwirth & Hermetter list the oil's colourants as *"protochlorophyll (a and b)
+and protopheophytin (a and b), the latter being a protochlorophyll lacking the magnesium ion"*. What is
+new is the evidence that it is **spectroscopically active inside our measurement window**, which is
+§3.4.
+
+It is not only roasting that makes it. In pumpkin seeds, protopheophytins accumulate as a **storage**
+degradation product and have been reported anywhere from **1 % to 36 %** of the protochlorophylls. That
+wide natural range is the chemical quantity the verdict is ultimately reading — and it is why the oil's
+history, not only its roast, shows up in the measurement.
+
+Spectroscopically this is the D₄ₕ → D₂ₕ symmetry drop of §3.2: the Soret **weakens and shifts toward the
+blue**, and the Q region **gains structure** as the degeneracy lifts. Further degradation — oxidation,
+ring cleavage — eventually destroys the conjugated system altogether and the absorption decays to a
+featureless slope.
+
+**⭐ This is the physical basis of the verdict, and it is worth stating in its strongest form.** We are
+**not** measuring "how green the oil is", nor even "how much pigment is left". We are measuring the
+**ratio of two chemical species** — intact protochlorophyll against its magnesium-free degradation
+product protopheophytin. Roasting and storage move that ratio; the ratio moves the spectrum; we read the
+spectrum.
+
+That is a stronger and more falsifiable claim than "less pigment", and the data insists on it: across our
+two classes the **total** Q-region absorbance is essentially identical (0.2300 vs 0.2251) while the
+*shape* differs at *d* = 10.3. Nothing is missing — something has been **converted**. It is a
 *roast/freshness* index, not a measure of "browning" in the Maillard sense.
 
-### 3.3 The carotenoids
+### 3.4 Why this shows up as a change of SLOPE, not of level
+
+Spectroscopically the D₄ₕ→D₂ₕ drop of §3.2 does something specific: it **redistributes** the Q
+intensity rather than removing it. One tall origin band becomes several smaller ones spread toward the
+blue. Total Q-region absorbance barely changes — which is exactly what we measure *(green 0.2300 vs
+brown 0.2251 over 560–580; `SPEC_capture_quality.md` §16.13)*.
+
+So why does our 600–630 window see such a large difference? **Because that window is narrow and sits on
+a flank, not on a peak.**
+
+![**Figure 4** — the mechanism. **Top:** with the magnesium intact, one dominant Q origin sits just past our capture limit, and its rising flank sweeps straight through the 600–630 window — so the absorbance climbs steeply across it. **Bottom:** once the magnesium is gone, that same intensity is spread across several weaker bands further to the blue. Nothing tall is left near 630, the window now lies on a shallow shoulder, and the slope across it nearly vanishes. The total area under the two curves is similar; only its distribution differs. Schematic — the degraded band positions are illustrative — but the modelled slope ratio (4.8×) is close to the measured one (4.5×).](figures/pigment_far_window_slope.svg)
+
+**The slope across a narrow window reports the height of the nearest peak, not the amount of pigment.**
+That is the whole answer. A tall band whose edge crosses the window gives a steep rise; move that
+intensity 30–50 nm to the blue and split it, and the window is left on flat ground — even though just as
+much light is being absorbed overall, a little further to the blue.
+
+This makes the far window an unusually specific probe: it responds to *whether the intact, symmetric
+pigment is still there*, and is comparatively blind to how much total pigment the oil contains.
+
+⚠ **Measured, and it is not a concentration effect.** Under simple Beer–Lambert the two classes' curves
+would differ only by a scale factor, so any ratio taken *inside* the Q region would be identical for
+both. Measured on the two post-rebuild sets, the 620–630 rise divided by the Q band's own amplitude is
+**0.427 for green against 0.080 for brown — a factor of 5.3, at *d* = 10.3**. Scaling is excluded; the
+shape genuinely differs. *(`SPEC_capture_quality.md` §16.13.)*
+
+#### ⚠ Why we do not simply *look* at the two-versus-four bands — and it is not the instrument
+
+The natural objection is that we are inferring a band structure we cannot see, and that a better
+spectrometer would settle it. **It would not.** Measured on our own data:
+
+| | |
+|---|---|
+| grid spacing | 0.146 nm per bin, 1305 bins across 440–630 nm |
+| narrowest feature we resolve *(473 nm lamp artifact)* | **FWHM 1.0 nm** |
+| second artifact *(607 nm registration)* | **FWHM 2.7 nm** |
+| the Q bands we would need to separate | **20–30 nm wide** |
+
+The rig **out-resolves the target by ten to twenty times**. Four other things stand in the way instead:
+
+1. **Window truncation — the dominant limit.** Our capture stops at 630 nm and the longest-wavelength
+   band sits at ~623–630. We see a flank and nothing beyond it.
+2. **The two species always coexist.** Real oil is a mixture (protopheophytin 1–36 %), so a pure
+   two-band or pure four-band spectrum is never presented to us — only their superposition.
+3. **Intrinsic linewidth.** At room temperature in solution these bands are 20–30 nm wide and overlap
+   heavily. Even with a perfect instrument and an unlimited window, the four free-base bands appear as
+   partly merged shoulders, not four clean peaks.
+4. **The turbidity pedestal**, which contributes 52–61 % of the Q band's height and flattens what
+   contrast remains.
+
+**⇒ The remedy is a wider window, not a finer one.** That single conclusion redirects an entire class of
+"buy better hardware" thinking toward a much cheaper change.
+
+#### ⚠ What is measured, and what is inferred
+
+| link | status |
+|---|---|
+| the pigments are protochlorophyll and protopheophytin | **sourced** |
+| roasting and storage strip the magnesium | **sourced** |
+| losing the metal lifts the degeneracy: two Q bands become four | **deduction** from symmetry |
+| free-base band I is the weakest ⇒ long-wavelength intensity falls | **sourced** (the four-type classification) |
+| the two classes' Q-region shapes genuinely differ | **measured**, *d* = 10.3 |
+| the cause is *specifically* demetallation | ⚠ **best available explanation, not a controlled result** |
+
+The last row is the honest weak point: these are two different **bottles**, which differ in more than
+their protopheophytin content. Note what survives if it is wrong — the *speciation* reading holds
+regardless; only the *mechanism* would need replacing.
+
+**The experiment that would close it is cheap.** Take one oil, split it, and deliberately demetallate
+half — acidification is the standard laboratory route. Same bottle, same turbidity, same dilution, one
+variable. If the 600–630 slope collapses in the acidified half, the causal link stops being an
+interpretation and becomes a measurement.
+
+### 3.5 The carotenoids
 
 The second pigment family is the **carotenoids** — β-carotene, lutein and relatives. These are long
 conjugated polyenes with no ring metal, and they absorb in a broad three-peaked structure across
@@ -219,7 +398,7 @@ For us they are mostly a nuisance: their absorption tail reaches into the region
 as a quiet baseline, and unlike the suspended matter of chapter 5, **it is real absorbance that no
 amount of clarification will remove**.
 
-### 3.4 Why pumpkin seed oil is green — or brown
+### 3.6 Why pumpkin seed oil is green — or brown
 
 Styrian pumpkin seed oil contains chlorophyll and its derivatives from the seed coat, together with
 carotenoids. A fresh, gently pressed oil retains enough intact chlorophyll to look distinctly green
@@ -228,7 +407,7 @@ in a thin layer. Longer or hotter roasting pheophytinises it, and the green retr
 The commercial question — *"was this oil over-roasted?"* — is therefore a question about a molecular
 ratio, and that is a question a spectrometer is genuinely better at than an eye.
 
-### 3.5 Dichromatism: green in a film, red in the bottle
+### 3.7 Dichromatism: green in a film, red in the bottle
 
 Hold Kürbiskernöl in a thin film and it is green. Look through the bottle and it is deep red. Nothing
 about the oil changed — **the path length did.**

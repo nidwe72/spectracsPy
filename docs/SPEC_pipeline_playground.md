@@ -76,7 +76,8 @@ The page is a `PageWidget` whose main-container widget is a `QTabWidget` (mirror
 ## 5. Sample synthesis — `OilSampleSynthesisOp` (physical, 3 demo oils)
 
 - `S(λ) = R(λ) · 10^(−A_oil(λ) · c·l)` with
-  `A_oil(λ) = chlorophyll(Soret≈430, Q≈665) + carotenoid/lutein(≈440–480) + browning(↗ short-λ)`.
+  `A_oil(λ) = protochlorophyll(Soret≈432, Qy≈625) + carotenoid/lutein(≈440–480) + browning(↗ short-λ)`.
+  ⚠ *corrected 2026-07-31 — was `chlorophyll(Soret≈430, Q≈665)`; see `KB_spectroscopy_physics.md` §4.1.*
 - **`c·l` (concentration × path) + browning amplitude** are the green→brown knobs (Beer–Lambert
   dichromatism).
 - **3 fixed presets, named by roast state**, tuned so `colour(T)` lands on each demo hue (§8):

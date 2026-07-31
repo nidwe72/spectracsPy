@@ -45,22 +45,95 @@ IMAGE_ROOTS = [REPO, os.path.join(REPO, "docs"),
                os.path.abspath(os.path.join(REPO, "..", "spectracs-references", "tmp"))]
 
 
+# --------------------------------------------------------------------------- math
+
+# A deliberately tiny formula notation — enough to typeset the metric algebra without pulling in
+# KaTeX/MathJax, which would break the "Chrome, and nothing else" toolchain rule. Supported:
+#   _{...} ^{...}          subscript / superscript
+#   \frac{...}{...}        a real stacked fraction (rule line included)
+#   \sqrt{...}             radical
+#   a handful of \symbols  (see MATH_SYMBOLS)
+# Display form is a ```math fence; inline form is $...$ inside a paragraph.
+MATH_SYMBOLS = {
+    r"\lambda": "\u03bb", r"\Sigma": "\u03a3", r"\sigma": "\u03c3", r"\Delta": "\u0394",
+    r"\mu": "\u03bc", r"\epsilon": "\u03b5", r"\alpha": "\u03b1", r"\beta": "\u03b2",
+    r"\cdot": "\u00b7", r"\times": "\u00d7", r"\pm": "\u00b1", r"\approx": "\u2248",
+    r"\le": "\u2264", r"\ge": "\u2265", r"\ne": "\u2260", r"\to": "\u2192",
+    r"\Rightarrow": "\u21d2", r"\in": "\u2208", r"\infty": "\u221e", r"\propto": "\u221d",
+    r"\qquad": "\u2003\u2003", r"\quad": "\u2003", r"\,": "\u2009",
+    r"\equiv": "\u2261", r"\ell": "\u2113", r"\ldots": "\u2026", r"\sum": "\u03a3",
+    # delimiter sizing hints: ignore the hint, just draw the delimiter
+    r"\big(": "(", r"\big)": ")", r"\big[": "[", r"\big]": "]",
+    r"\Big(": "(", r"\Big)": ")", r"\Big[": "[", r"\Big]": "]",
+    r"\bigg(": "(", r"\bigg)": ")", r"\Bigg(": "(", r"\Bigg)": ")",
+    r"\left": "", r"\right": "",
+    r"\text{": "\\op{",                                  # \text{...} == \op{...}: upright words
+    r"\arg": r"\op{arg}", r"\ln": r"\op{ln}", r"\exp": r"\op{exp}",
+    # upright operator names \u2014 an italic "log" reads as l\u00b7o\u00b7g multiplied together
+    r"\log": r"\op{log}", r"\mean": r"\op{mean}", r"\median": r"\op{median}",
+    r"\max": r"\op{max}", r"\min": r"\op{min}", r"\std": r"\op{sd}",
+}
+
+
+def _math_markup(text, minus=True):
+    """Escape, then apply the small formula notation. Returns HTML.
+
+    `minus` converts ASCII hyphens to a real U+2212 minus; it is off for annotation lines, where a
+    hyphen is usually punctuation rather than an operator."""
+    text = _html.escape(text)
+    for token, glyph in sorted(MATH_SYMBOLS.items(), key=lambda kv: -len(kv[0])):
+        text = text.replace(token, glyph)
+    if minus:
+        text = text.replace("-", "\u2212")
+    text = re.sub(r"\\op\{([^{}]*)\}", r'<span class="op">\1</span>', text)
+    # sub/sup first: after this pass their braces are gone, so \frac can use a brace-free inner match
+    for _ in range(3):                                   # allow a little nesting (A_{Q}^{2})
+        new = re.sub(r"_\{([^{}]*)\}", r"<sub>\1</sub>", text)
+        new = re.sub(r"\^\{([^{}]*)\}", r"<sup>\1</sup>", new)
+        if new == text:
+            break
+        text = new
+    # Order matters, and each pass matches brace-free bodies ([^{}]), so an inner construct must be
+    # converted BEFORE the outer one that contains it:
+    #   \bar  before \frac  — we write \frac{\bar{x}}{...}
+    #   \frac before \sqrt  — we write \sqrt{\frac{...}{...}}
+    text = re.sub(r"\\bar\{([^{}]*)\}", r'<span class="bar">\1</span>', text)
+    for _ in range(3):                                   # innermost \frac first
+        new = re.sub(r"\\frac\{([^{}]*)\}\{([^{}]*)\}",
+                     r'<span class="frac"><span class="num">\1</span>'
+                     r'<span class="den">\2</span></span>', text)
+        if new == text:
+            break
+        text = new
+    text = re.sub(r"\\sqrt\{([^{}]*)\}", r'<span class="sqrt">\1</span>', text)
+    # LAST: literal braces. Substituting these earlier would defeat the _{...} / \frac{}{} patterns,
+    # whose bodies are matched with [^{}] and so must not contain braces of their own.
+    text = text.replace("\\{", "{").replace("\\}", "}")
+    return text
+
+
 # --------------------------------------------------------------------------- inline markup
 
 def _inline(text):
-    """Escape, then apply inline markup. Code spans are protected from the other rules."""
+    """Escape, then apply inline markup. Code spans and $formulas$ are protected from the other rules
+    (both are stashed as finished HTML, so the emphasis/link passes cannot reach inside them)."""
     spans = []
 
-    def stash(match):
-        spans.append(_html.escape(match.group(1)))
+    def stash(html_fragment):
+        spans.append(html_fragment)
         return "\x00%d\x00" % (len(spans) - 1)
 
-    text = re.sub(r"`([^`]+)`", stash, text)
+    text = re.sub(r"`([^`]+)`", lambda m: stash("<code>%s</code>" % _html.escape(m.group(1))), text)
+    text = re.sub(r"\$([^$\n]+)\$",
+                  lambda m: stash('<span class="math-inline">%s</span>' % _math_markup(m.group(1))), text)
     text = _html.escape(text)
     text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', text)
-    text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
+    # Non-greedy, and the body MAY contain single asterisks: `**bold with *italic* inside**` is common
+    # prose here. The old `[^*]+` body could not match it and the regex then latched onto the NEXT pair
+    # of `**`, emphasising the span between two bold runs instead of the runs themselves.
+    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
     text = re.sub(r"(?<![\w*])\*([^*\n]+)\*(?![\w*])", r"<em>\1</em>", text)
-    text = re.sub(r"\x00(\d+)\x00", lambda m: "<code>%s</code>" % spans[int(m.group(1))], text)
+    text = re.sub(r"\x00(\d+)\x00", lambda m: spans[int(m.group(1))], text)
     return text
 
 
@@ -165,13 +238,27 @@ def markdown_to_html(text):
             continue
 
         if stripped.startswith("```"):
+            info = stripped[3:].strip().lower()
             index += 1
             block = []
             while index < len(lines) and not lines[index].strip().startswith("```"):
                 block.append(lines[index])
                 index += 1
             index += 1
-            out.append("<pre><code>%s</code></pre>" % _html.escape("\n".join(block)))
+            if info == "math":
+                # Each non-blank line is one display equation; a line starting with two spaces is a
+                # continuation/annotation and is rendered smaller and left-aligned under the formula.
+                rendered = []
+                for raw in block:
+                    if not raw.strip():
+                        continue
+                    note = raw.startswith("  ")
+                    rendered.append('<div class="%s">%s</div>'
+                                    % ("math-note" if note else "math-line",
+                                       _math_markup(raw.strip(), minus=not note)))
+                out.append('<div class="math">%s</div>' % "".join(rendered))
+            else:
+                out.append("<pre><code>%s</code></pre>" % _html.escape("\n".join(block)))
             continue
 
         match = re.fullmatch(r"!\[([^\]]*)\]\(([^)]+)\)", stripped)
@@ -285,6 +372,26 @@ figure { margin:12px 0; break-inside:avoid; text-align:center; }
 figure img { max-width:100%; border:1px solid var(--line); border-radius:6px; }
 figcaption { font-size:8.8pt; color:var(--muted); margin-top:5px; text-align:left; }
 .missing { color:#b03030; font-style:italic; }
+/* Formulas — the ```math fence and $inline$ spans. Serif italic so a variable reads as a variable;
+   fractions are real stacked constructions with a rule line. No external math library is involved. */
+.math { margin:12px 0; padding:10px 14px; background:var(--panel); border:1px solid var(--line);
+        border-left:3px solid var(--green); border-radius:0 6px 6px 0; break-inside:avoid;
+        text-align:center; }
+.math-line { font-family:"DejaVu Serif",Georgia,"Times New Roman",serif; font-style:italic;
+             font-size:11.6pt; line-height:2.0; margin:5px 0; color:#141814; }
+.math-note { font-size:8.8pt; font-style:normal; color:var(--muted); text-align:left;
+             margin:2px 0 6px 4px; font-family:"Segoe UI",Arial,sans-serif; }
+.math-inline { font-family:"DejaVu Serif",Georgia,"Times New Roman",serif; font-style:italic;
+               font-size:1.02em; white-space:nowrap; }
+.frac { display:inline-block; vertical-align:middle; text-align:center; margin:0 0.25em;
+        line-height:1.25; }
+.frac .num { display:block; padding:0 0.45em 1px; border-bottom:1.1px solid #141814; }
+.frac .den { display:block; padding:1px 0.45em 0; }
+.sqrt { border-top:1.1px solid #141814; padding:0 0.2em; margin-left:0.1em; }
+.sqrt::before { content:"\\221A"; margin-left:-0.35em; border-top:none; }
+.bar { border-top:1.1px solid #141814; padding-top:0.5px; }
+.math sub, .math sup, .math-inline sub, .math-inline sup { font-style:normal; font-size:0.68em; }
+.math .op, .math-inline .op { font-style:normal; }
 .seealso { font-size:9pt; color:var(--green-dk); background:var(--panel);
            border-left:3px solid var(--green); border-radius:0 4px 4px 0;
            padding:5px 11px; margin:9px 0; break-inside:avoid; }

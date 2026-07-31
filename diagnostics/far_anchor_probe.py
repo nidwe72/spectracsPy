@@ -7,9 +7,13 @@ near anchor -> 39 DN at 620-630). Two candidates, not exclusive:
       is roughly class-INDEPENDENT in absolute absorbance, so relative to the pigment amplitude A_Q it is LARGER
       for brown (the weaker-pigment class), and regressing rise on A_Q gives a large INTERCEPT.
 
-  (b) REAL CHLOROPHYLL Q FLANK - the approach to the true Q maximum near 665 nm, which lies outside the 440-630
-      capture clamp. Predicts the rise SCALES WITH PIGMENT: larger for green in absolute terms, roughly constant
-      as a fraction of A_Q, and regressing rise on A_Q passes near the ORIGIN with a positive slope.
+  (b) REAL PIGMENT Qy FLANK - the approach to the pigment's red band. Predicts the rise SCALES WITH PIGMENT:
+      larger for green in absolute terms, roughly constant as a fraction of A_Q, and regressing rise on A_Q
+      passes near the ORIGIN with a positive slope.
+      NOTE (corrected 2026-07-31, KB_spectroscopy_physics.md 4.1): this said "the true chlorophyll Q maximum
+      near 665 nm, outside the 440-630 capture clamp". Wrong molecule - the pigment is PROTOchlorophyll and
+      its Qy is at ~623-626 nm, i.e. at the EDGE of our clamp, not beyond it. The test below is unaffected;
+      only the attribution changes, and it becomes more likely, not less.
 
 The decisive number is the regression of `rise` on `A_Q` across both classes: pigment must scale, an instrument
 floor must not.
