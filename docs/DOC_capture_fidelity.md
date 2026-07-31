@@ -767,6 +767,12 @@ clarify in the bottle. They carry **half** the pedestal of fresh oils — and th
 quality classes about **8× better**. Nobody designed that experiment; the shelf did. It makes sample
 clarity a **first-class instrument parameter**, and it is currently the largest known lever left.
 
+**One consequence for handling.** The batch is mixed in a lab glass and a 4 ml aliquot is
+transferred to the jar — so the transfer is a **sampling step out of a dispersion that is
+sedimenting the whole time**. How much particulate travels with the aliquot depends on when and from
+what depth it was drawn. Homogenise before drawing, or clarify after; doing neither leaves a large
+sample-to-sample variable that is invisible in the finished spectrum.
+
 > **Background.** The miscibility gap, the ouzo effect, why the droplets sediment rather than cream,
 > the solvent-selection table and the vessel constraints are treated properly in
 > `KB_spectroscopy_physics.md` §8. The open work is owned by `SPEC_capture_quality.md` §16.12 and

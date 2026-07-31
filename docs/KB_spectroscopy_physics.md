@@ -275,6 +275,11 @@ level and tilt. Polystyrene (`n = 1.59`) is a poorer match than borosilicate (`1
    hours (`SPEC_capture_quality.md` §16.12, `SPEC_capability_proof.md` §11.4a–e).
 3. **The solvent is a product decision, not only a chemical one.** Whatever we ship, a miller has to buy, store
    and handle it — which is why heptane is a bench-only reference method however good its chemistry is.
+4. **Every transfer out of a dispersion is a sampling step.** If the batch is mixed in one vessel and an aliquot
+   is measured in another, the particulate load that travels with the aliquot depends on *when* and *from what
+   depth* it was drawn — the dispersion is sedimenting the whole time. Homogenise before drawing (a stirrer) or
+   clarify after (a filter); doing neither leaves a large, invisible, sample-to-sample variable.
+   (`SPEC_capability_proof.md` §11.4f B2.)
 
 **Sources.** JAOCS, Rao & Arnold 1957, *Alcoholic extraction of vegetable oils IV — solubilities in aqueous
 2-propanol*, [10.1007/BF02637892](https://doi.org/10.1007/BF02637892) · the ouzo effect and its nanodroplet

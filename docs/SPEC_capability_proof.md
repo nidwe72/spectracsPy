@@ -1683,6 +1683,72 @@ responds differently by class).
 **⇒ Series E must report raw and baselined side by side.** If it only reports the shipped metric the question
 cannot be answered.
 
+#### B2 · ⭐ The ALIQUOT STEP — a σ_fill mechanism named *(2026-07-31, before series E)*
+
+**The prep as actually performed** *(Edwin, clarified 2026-07-31)*: 18 ml isopropanol + 6 drops of oil are mixed
+in a **lab glass**, and a **4 ml aliquot** is then transferred into the polystyrene jar that goes into the
+instrument. The mixing vessel and the measurement vessel are different.
+
+**⇒ The transfer is a SAMPLING step out of a settling dispersion, and it is currently uncontrolled.** While the
+batch stands, the particulate sediments (§11.4c — oil ρ 0.92 against IPA 0.785, it sinks). *When* and *from what
+depth* the 4 ml is drawn therefore decides how much scatterer travels into the jar. Off the top gives a clear
+aliquot; drawn low or poured, a loaded one. Two fills from the *same stock* can differ substantially in pedestal
+for no reason but draw timing and depth.
+
+**This is now the leading explanation for the brown asymmetry**, and it fits the observed pattern where the
+earlier candidates did not:
+
+| | green | brown |
+|---|---|---|
+| fill-to-fill, `S/Q linear base` | **0.0 %** | **10.5 %** |
+| particulate load (§11.4) | low | **high — brown carries more scatter** |
+
+A draw-sensitivity mechanism predicts exactly this: green has little to settle, so its aliquot is nearly
+insensitive to how it is taken; brown has much more, so it is not.
+
+**Prediction: stirring the batch during the draw collapses brown's σ_fill.** A magnetic stirrer keeps the
+suspension homogeneous, so the aliquot becomes representative regardless of timing or depth. That removes
+draw-timing and draw-depth from the error budget entirely.
+
+⚠ **Note this competes with §11.4f B's other pre-registered hypothesis** — that brown's fill-to-fill is an
+artifact of the baseline correction (raw fills agree to 0.3 %, baselined differ by 10.5 %). **The two are
+distinguishable and series E separates them:**
+
+| series E outcome | reading |
+|---|---|
+| brown σ_fill collapses on **both** raw and baselined | **the aliquot step** — sampling, fixed by stirring |
+| σ_fill stays ~10 % **baselined** but ~0 % **raw** | **the correction** — §16.12.12's far anchor, not fixable by prep |
+| both stay high | neither; something else, and the milestone needs rethinking |
+
+#### B3 · Confounds to control in series E
+
+Six fills from one stock over a session introduces two drifts that would **masquerade as σ_fill** by putting a
+monotone trend across the fills:
+
+- **Evaporation.** An open 18 ml of isopropanol on a running stirrer concentrates over an hour — increased
+  surface renewal, slight plate warming. Dilution invariance keeps the damage modest (green ~0.4 %, brown ~6 %
+  per 50 % concentration change) but it is free to avoid. **⇒ Cover the beaker.**
+- **Plate warming.** A warming stock dissolves more oil as the session runs, so the pedestal drifts *downward*
+  across the fills — the same signature, opposite sign. **⇒ Use a non-heating stirrer**, and do not leave it
+  running unnecessarily.
+
+**⇒ Report the fills in time order** so either drift is visible as a trend rather than absorbed into σ_fill.
+This is the same lesson as §16.12.11 A: a CV discards run order and a monotone drift then masquerades as
+repeatability.
+
+#### B4 · ⚠ A protocol decision to take DELIBERATELY before series E
+
+**Stirred aliquoting is a different protocol from the hand-mixed one the historical 10.5 % came from.** If the
+stirrer is used, series E measures the *new* protocol — which is the more useful number, since what matters is
+what the shipping procedure achieves, not what a superseded one did.
+
+**But it is then not strictly a test of B's pre-registered 3–6 %**, which was written against hand mixing.
+Record which protocol was used. If the result surprises, one hand-mixed comparison session resolves it.
+
+**The combination worth aiming at eventually: stir → aliquot → FILTER into the jar** (0.22 µm PTFE, §16.12.9).
+Stirring makes the sample representative; the filter then removes the particulate that stirring deliberately
+kept suspended. Neither alone gives both.
+
 #### C · The 1-butanol trial
 
 | quantity | today (IPA) | **predicted (butanol)** |
