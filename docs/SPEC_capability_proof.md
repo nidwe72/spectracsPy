@@ -136,8 +136,11 @@ that earns its confidence instead of asserting it.
 
 **Amendment to that summary:** the effect is **much smaller on fresh oils than 2023 suggested**. The 2023 set
 gave *d* ≈ 10; today's fresh oils give ***d* = 1.24 on the raw ratio**, and it took the linear baseline to reach
-2.88. ⏳ **That 2023-vs-2026 gap has no explanation yet, and the capability claim currently leans on the larger
-number.** Worth resolving before the claim is used externally.
+2.88. ✅ **SOLVED 2026-07-31 — see §11.4e.** The 2023 oils were bought in 2023 and had three years to **clarify in
+the bottle**: they carry **half the scatter pedestal** (0.84 vs 1.72, no overlap across eight fills). The gap
+decomposes into a **turbidity** half (raw CV 2.54 % → 14.54 %, fixable) and a **panel** half (Soret/Q separation
+1.96× → 1.36×, i.e. two different oil pairs are differently far apart). Neither is fatal, and the claim no
+longer needs to lean on the 2023 number.
 
 #### The uncomfortable observation
 
@@ -1571,6 +1574,74 @@ pigment* oil (that is exactly what a strong-Soret / weak-Q oil is), so it cannot
 (floor-subtraction made it worse, §11.4b) — only by the protocol. The brown oil needs no such care because its
 matched bands make the ratio self-cancel. **Net: freshness discipline is a green-oil requirement; the metric's
 own dilution-invariance protects the brown one for free.**
+
+### 11.4e ✅ SOLVED — why the 2023 oils separated 8× better: they were CLEARER  *(Edwin's hypothesis, measured 2026-07-31)*
+
+§16.10's amendment left this open: *"the 2023 set gave d ≈ 10; today's fresh oils give d = 1.24 on the raw ratio
+… that 2023-vs-2026 gap has no explanation yet, and the capability claim currently leans on the larger number."*
+**Edwin's explanation — the 2023 oils were bought in 2023 and are physically old — is correct, and it is
+measurable.**
+
+**Old oil is CLEAR oil.** §11.4c's dispersion settles in the *bottle* just as it does in the cuvette: three years
+lets the waxes and particulate drop out, so an aged oil carries far less turbidity into the dilution. That is
+directly quantifiable as the **pedestal** — the additive scatter floor under the whole absorbance curve,
+recoverable from the two metric variants as `c/Q_true = (baselined − raw)/(raw − 1)`
+(`diagnostics/pedestal_by_vintage.py`):
+
+| fill | oil vintage | **pedestal** | raw CV |
+|---|---|---|---|
+| K green | 2023 | 0.95 | 3.92 % |
+| L green | 2023 | 1.04 | 2.43 % |
+| M brown | 2023 | 0.67 | 3.32 % |
+| N brown | 2023 | 0.69 | 0.50 % |
+| B green | 2026 | 1.84 | 16.64 % |
+| E green | 2026 | 1.94 | 7.92 % |
+| C brown | 2026 | 1.70 | 11.38 % |
+| D brown | 2026 | 1.41 | 22.24 % |
+
+**2023 oils: pedestal 0.84 ± 0.19. 2026 oils: 1.72 ± 0.23 — 2.1× more scatter, with no overlap between the two
+groups on a single fill.** Pedestal vs raw CV correlates at r = 0.65 across all eight.
+
+#### The gap decomposes into two ORDINARY problems, not one frightening one
+
+| half | 2023 → 2026 | cause | fixable by |
+|---|---|---|---|
+| **precision** | raw CV 2.54 % → 14.54 % | **turbidity — confirmed above** | butanol (`SPEC_capture_quality.md` §16.12.7), filtering, or the rig rebuild |
+| **separation** | Soret/Q ratio 1.96× → 1.36× | the two oil **pairs** are differently far apart | **more oils** |
+
+⚠ **The second half is NOT evidence that the effect fails to transfer.** It is evidence that a **2-vs-2 panel
+cannot pin down class separation at all** — 1.96× vs 1.36× is the ordinary spread of picking two different pairs.
+That is the panel-breadth gate (§11.6), now quantified instead of feared.
+
+#### ⇒ The consequence, and it is encouraging
+
+**Clearing the oil is worth roughly 6× in discriminating power.** The 2023 oils, at half the pedestal, delivered
+**d = 24.25** against the 2026 oils' **2.88**. This is an *observed* instance of "halve the pedestal, d rises
+several-fold" — not a projection. **It is the strongest evidence available that
+`SPEC_capture_quality.md` §16.12.7's butanol route is worth running**, because butanol is meant to do chemically
+and immediately what three years in a bottle did by sedimentation, and to do it more completely (it dissolves
+waxes that would never settle).
+
+It also reframes the risk register: the item flagged in §16.10 as *the* thing that could kill the concept now has
+an explanation, and **neither half of it is fatal** — one has three independent fixes (one already delivered by
+the rebuild), the other is the confirmatory oil-panel work that was always the known gate.
+
+#### ⛔ WITHDRAWN in the same session — the "mechanism inversion"
+
+While chasing this I claimed the *discriminating mechanism had inverted* between the two eras, because the 2026
+brown's raw `A_Soret` (1.117) exceeds the green's (0.950) where in 2023 green led 0.785 to 0.494.
+
+**That was an error: I compared unnormalised band means across preparations at different concentrations.**
+Normalising by Q — which is exactly what the metric does:
+
+| | Soret/Q green | Soret/Q brown | green ÷ brown |
+|---|---|---|---|
+| 2023 oils | 6.64 | 3.38 | **1.96×** |
+| 2026 oils | 12.12 | 8.88 | **1.36×** |
+
+**Green leads brown in both eras, by the same mechanism.** Nothing inverted; the 2026 brown simply sits at a
+higher concentration, which lifts all of its absolute band means together. §11.5's physical story stands
+unchanged. *(Recorded per §16.7.0's practice — the claim was made, and it was wrong.)*
 
 ### 11.5 Physical interpretation — why it works, and why the brown oil looks reddish
 `A_blue` reads the **green chlorophyll-type pigment content** (its Soret band ~430–470 nm). Fresh/green oil = high
