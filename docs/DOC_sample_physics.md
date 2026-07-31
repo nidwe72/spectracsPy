@@ -334,13 +334,13 @@ These can be varied nearly independently, and that is a lever.
 | **2-propanol** *(current)* | **≈ 17.9** | 82.6 | 12 | **marginal** | ✅ safe | ✅ drugstore |
 | 1-propanol | ≈ 20.1 | 97.2 | 22 | better | ✅ safe | specialist |
 | **1-butanol** | **≈ 17.5** | 117.7 | 35 | **good** | ✅ safe | specialist |
-| n-heptane | 1.9 | 98.4 | **−4** | ideal | ⛔ **dissolves it** | ⛔ hazardous |
-| cyclohexane, isooctane | ≈ 2 | — | — | ideal | ⛔ | ⛔ |
+| n-heptane | 1.9 | 98.4 | **−4** | ideal | ⛔ swells + crazes | ⛔ hazardous |
+| cyclohexane, isooctane | ≈ 2 | — | — | ideal | ⛔ cyclohexane **dissolves** it | ⛔ |
 
 **1-butanol is the interesting one.** Its dielectric constant is essentially that of isopropanol, so
 absorption bands should barely move — while its longer chain makes it a genuinely good triglyceride
 solvent. Dissolution without solvatochromism. Heptane, at `ε = 1.9`, would shift the bands
-substantially *and* dissolve the sample jar *and* introduce a flammability hazard no food producer
+substantially, attack the sample jar (§6.1), and introduce a flammability hazard no food producer
 should be asked to keep on a shelf.
 
 ### 4.6 What the analytical literature actually uses
@@ -459,21 +459,94 @@ The sample sits in a small transparent jar. Which materials survive contact is d
 
 | material | alcohols | aliphatic hydrocarbons | note |
 |---|---|---|---|
-| **polystyrene** | ✅ resistant | ⛔ **dissolved** | cheap, optically clear, what we use |
+| **polystyrene** | ✅ resistant | ⛔ **attacked** | cheap, optically clear, what we use |
 | PET / PETG | ✅ | mostly ✅ | good general compromise |
 | polypropylene | ✅ | fair, swells slowly | translucent, poor optically |
 | PTFE / FEP | ✅ | ✅ | inert to essentially everything |
-| borosilicate glass | ✅ | ✅ | inert, but see §6.3 |
+| borosilicate glass | ✅ | ✅ | inert, but see §6.5 |
 
 **Alcohols are essentially the only organic family polystyrene tolerates.** That couples the solvent
 and the vessel into a single decision: stay with alcohols and the cheap clear jar keeps working; move
 to a hydrocarbon and the vessel must be replaced too.
 
-> Even with alcohols, test rather than trust the chart. Injection-moulded polystyrene carries
-> frozen-in stress from the mould, and alcohols craze *stressed* polystyrene at concentrations that
-> leave unstressed material untouched. An overnight soak of a spare part is the whole test.
+### 6.2 Putting a number on it: Hansen parameters and RED
 
-### 6.2 Refractive index, reflections and the meniscus
+Compatibility charts like the one above are qualitative, and at the margins they are unreliable —
+published charts contradict one another on cases such as acrylic against aliphatics. **Hansen
+solubility parameter theory replaces the judgement with arithmetic.**
+
+The idea is that "like dissolves like" can be made three-dimensional. Every substance gets three
+coordinates: `δD` for dispersion forces, `δP` for polar interactions, `δH` for hydrogen bonding. A
+*polymer* is not a point but a **sphere** of radius `R₀` — the region of that space whose solvents
+dissolve it. The distance from a solvent to the polymer's centre is
+
+```
+Ra² = 4·(δD₁ − δD₂)² + (δP₁ − δP₂)² + (δH₁ − δH₂)²
+```
+
+*(the factor 4 on the dispersion term is empirical — it is what makes the solubility region come out
+spherical rather than ellipsoidal)*, and the useful quantity is that distance scaled by the sphere:
+
+```
+RED = Ra / R₀              "Relative Energy Difference"
+```
+
+| RED | meaning |
+|---|---|
+| **< 1** | inside the sphere — the solvent dissolves the polymer |
+| **≈ 1** | on the boundary — swelling, crazing, environmental stress cracking |
+| **> 1** | outside — a non-solvent |
+
+Against **polystyrene** (δD 21.3, δP 5.8, δH 4.3, R₀ 12.7):
+
+| solvent | **RED** | reading |
+|---|---|---|
+| toluene | **0.65** | dissolves it |
+| **cyclohexane** | **0.90** | **dissolves it** — the classic theta-solvent for polystyrene |
+| n-heptane | **1.10** | just outside — swells and stress-cracks, does **not** dissolve |
+| **1-butanol** | **1.23** | outside — safe; the closest of the alcohols |
+| isooctane | 1.27 | outside |
+| **2-propanol** | **1.29** | outside — safe |
+| 1-propanol | 1.33 | outside |
+| ethanol | 1.49 | comfortably outside |
+| water | 3.23 | inert |
+
+Three things worth taking from that table:
+
+- **The alcohols are not borderline.** Butanol at 1.23 against isopropanol's 1.29 is a small
+  difference well outside the sphere, not a near-miss.
+- **Aliphatic hydrocarbons do not dissolve polystyrene** — heptane at 1.10 swells and crazes it. The
+  practical verdict is the same, but the mechanism is not, and confusing the two leads to the wrong
+  test.
+- **Cyclohexane, which the analytical literature favours for oil pigments, is the worst possible
+  choice for a polystyrene vessel** — at 0.90 it is a genuine solvent for it. A reminder that the
+  best solvent for the *sample* and the best for the *container* are separate questions.
+
+> **⚠ Do not mix parameter sets.** Published values differ by a few percent, and polystyrene's `δD`
+> is quoted as either ≈ 18.6 or ≈ 21.3 depending on convention. Combining a solvent from one set with
+> a polymer from another produces confidently wrong answers. The *ranking* is robust; treat absolute
+> values as indicative and always compare within a single source.
+
+### 6.3 Crazing, and why the failure mode is optical
+
+The realistic failure is not a dissolved jar. It is **environmental stress cracking**: a marginal
+liquid plus the frozen-in stress of an injection-moulded part, producing a network of fine surface
+crazes. It is cumulative in exposure time, and it starts where the stress is highest — around
+threads and gate marks rather than in the middle of a wall.
+
+**A crazed vessel does not crack. It goes very slightly hazy.** And haze scatters light, which this
+instrument records as absorbance (§5.1).
+
+> **This is the nastiest failure mode in the whole document**, because a slowly crazing jar would
+> look exactly like sample turbidity — the very thing one changes solvent to remove. The experiment
+> and its control would degrade together, and the conclusion drawn would be that the new solvent had
+> not worked.
+>
+> The check is cheap and uses the instrument itself: cycle a spare vessel through twenty
+> fill-and-empty cycles at realistic contact time, then **measure it as a blank against an unexposed
+> one**. A raised baseline is crazing, detected far below the threshold of the eye.
+
+### 6.4 Refractive index, reflections and the meniscus
 
 Every interface between two materials of different refractive index reflects a little light. For
 light arriving straight on, the reflected fraction is
@@ -495,7 +568,7 @@ surface. Second, and more importantly, a liquid–air surface is a **meniscus**:
 shape changes with fill level, wetting and tilt. It is a lens that is slightly different every time.
 Eliminating it — by letting a window contact the liquid — removes a variable, not just a reflection.
 
-### 6.3 The awkward geometric constraint
+### 6.5 The awkward geometric constraint
 
 Because the light passes through the vessel *and* its lid, **both must be transparent** — and a clear
 vessel with a matching clear lid is not something one simply buys in glass. The practical answer is a
@@ -522,7 +595,8 @@ Six consequences, each traceable to a chapter above.
    band shifts follow dielectric constant. They can be traded independently, and a good choice gets
    dissolution without moving the bands (§4.5).
 6. **Remember that the vessel and the solvent are one decision.** Polystyrene and alcohols go
-   together; hydrocarbons require replacing both (§6.1).
+   together; hydrocarbons require replacing both (§6.1–6.2). And watch the vessel optically, not
+   structurally — a crazing jar mimics a turbid sample (§6.3).
 
 > **What is still open.** Whether a better solvent removes the pedestal in practice; how much of the
 > remaining sample-to-sample variation is preparation rather than instrument; and whether a window
@@ -562,8 +636,11 @@ consequence, see the turbidity-correction literature on baseline fitting.
 [Chem. Papers](https://link.springer.com/article/10.2478/s11696-013-0502-x); and the standard
 cyclohexane-based determinations of olive-oil chlorophylls and carotenoids.
 
-**Materials.** Polystyrene and PMMA chemical-compatibility charts (note that published charts
-disagree on marginal cases — soak-test rather than trust); FEP optical data,
+**Materials and solubility.** C. M. Hansen, *Hansen Solubility Parameters — A User's Handbook*
+(2nd ed., CRC Press 2007) — the three-parameter model, the polymer-sphere construction and the RED
+metric of §6.2, together with the tabulated values used there. Polystyrene and PMMA
+chemical-compatibility charts are also in circulation but disagree on marginal cases; prefer the
+parameter calculation, and soak-test rather than trust either. FEP optical data,
 [AdTech transmission tables](https://adtech.co.uk/technical-data/fep-uv-transmission-data/).
 
 **Our own measurements**, wherever marked *(measured)*: `SPEC_capability_proof.md` §11 and

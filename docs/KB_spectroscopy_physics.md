@@ -234,8 +234,8 @@ Solvency for a triglyceride tracks the **alkyl chain length**; solvatochromic ba
 | **2-propanol** *(current)* | **17.9** | 0.786 | 82.6 | 12 | **marginal** — the gap above | ✅ safe | ✅ drugstore |
 | 1-propanol | 20.1 | 0.803 | 97.2 | 22 | better (linear chain) | ✅ safe | ~ supplier |
 | **1-butanol** | **17.8** | 0.810 | 117.7 | 35 | **good** | ✅ safe *(soak-test for crazing)* | ~ supplier |
-| n-heptane | 1.92 | 0.684 | 98.4 | **−4** | ideal | ⛔ **dissolves it** | ⛔ H225/H304/H411 |
-| cyclohexane / isooctane | ~2 | — | — | — | ideal *(the AOCS/IUPAC choice)* | ⛔ | ⛔ |
+| n-heptane | 1.92 | 0.684 | 98.4 | **−4** | ideal | ⛔ **swells + crazes** | ⛔ H225/H304/H411 |
+| cyclohexane / isooctane | ~2 | — | — | — | ideal *(the AOCS/IUPAC choice)* | ⛔ cyclohexane **dissolves** PS | ⛔ |
 
 **Why 1-butanol is the interesting one:** `ε = 17.8` against isopropanol's `17.9` — **essentially identical
 polarity, so band positions should barely shift** — while its longer alkyl chain makes it a genuinely good
@@ -254,9 +254,53 @@ practice is filtration or centrifugation before the cuvette, plus a fitted basel
 
 ### 8.5 The vessel
 
-**Polystyrene is safe with alcohols and destroyed by hydrocarbons.** Alcohols are essentially the *only*
+**Polystyrene is safe with alcohols and attacked by hydrocarbons.** Alcohols are essentially the *only*
 PS-compatible organic family, so the jar and the solvent are a coupled choice: stay on alcohols and the cheap
-transparent cosmetic jar keeps working; move to heptane and the vessel must be replaced.
+transparent cosmetic jar keeps working; move to a hydrocarbon and the vessel must be replaced.
+
+#### Quantifying it — Hansen solubility parameters and RED
+
+Compatibility charts are qualitative and, as we found when they contradicted each other on PMMA, unreliable at
+the margins. **Hansen solubility parameter theory gives a number instead.** Each substance carries three
+coordinates — `δD` dispersion, `δP` polar, `δH` hydrogen bonding — and a polymer occupies a *sphere* of radius
+`R₀` in that space:
+
+```
+Ra² = 4(δD₁−δD₂)² + (δP₁−δP₂)² + (δH₁−δH₂)²        RED = Ra / R₀
+```
+
+**RED** = **Relative Energy Difference**, i.e. how far outside the polymer's sphere a solvent sits, in units of
+that sphere's radius. `RED < 1` dissolves; `RED ≈ 1` swells and stress-cracks; `RED > 1` is a non-solvent.
+
+Against **polystyrene** (Hansen handbook: δD 21.3, δP 5.8, δH 4.3, R₀ 12.7):
+
+| solvent | **RED** | reading |
+|---|---|---|
+| toluene | **0.65** | dissolves it |
+| **cyclohexane** | **0.90** | **dissolves it** — the classic theta-solvent for PS |
+| n-heptane | **1.10** | just outside — swells and stress-cracks, does **not** dissolve |
+| **1-butanol** | **1.23** | outside — safe; the closest of the alcohols |
+| isooctane | 1.27 | outside |
+| **2-propanol** *(current)* | **1.29** | outside — safe |
+| 1-propanol | 1.33 | outside |
+| ethanol | 1.49 | comfortably outside |
+| water | 3.23 | inert |
+
+**Three things this settles.** (1) **Butanol at 1.23 against isopropanol's 1.29 is not a borderline case** — both
+sit comfortably outside, butanol only marginally closer. (2) **Heptane does not dissolve polystyrene**; at 1.10
+it swells and crazes it, which disqualifies it for an optical vessel just as thoroughly but by a different
+mechanism. (3) Of the hydrocarbons the analytical literature favours, **cyclohexane is the worst possible choice
+for a PS jar** — at 0.90 it is a genuine solvent for it.
+
+⚠ Published parameter sets disagree by a few percent, and polystyrene's `δD` is quoted as either ~18.6 or ~21.3
+depending on convention — **mixing sets gives badly wrong answers.** The *ranking* is robust; treat the absolute
+values as indicative and always compute a comparison within one set.
+
+**The failure mode to watch is optical, not structural.** A crazed jar does not crack — it goes faintly hazy, and
+haze scatters, which this instrument records as absorbance (§8.3). A slowly crazing vessel would therefore
+masquerade as sample turbidity: exactly the thing a solvent change is meant to remove. Cheap check: cycle a spare
+jar through ~20 fill/empty cycles and measure it as a blank against an unexposed one — far more sensitive than
+the eye.
 
 *(Even with alcohols, soak-test a spare jar overnight — injection-moulded PS carries frozen-in stress and
 alcohols craze stressed PS even when the compatibility chart says "good".)*
