@@ -24,6 +24,12 @@ appear `like this` and can be skipped.
 record of what was measured, decided, and built. Every claim here is traceable to a spec section
 listed in Appendix B.
 
+**Its companion.** This document covers the **instrument** — camera to spectrum. Everything *in
+front of* it, the light and the sample, is covered by *Light, Pigment and Solvent*
+(`DOC_sample_physics.md`): absorption and Beer–Lambert, the chlorophyll bands and what roasting does
+to them, why oil in alcohol is a dispersion rather than a solution, and why the scattering it
+produces is the largest sample-side error we know of. The two are halves of one story.
+
 **How to read it.** **Chapter 1 is a standalone summary** — the abstract plus a one-table
 overview of every decision, for a reader who wants the impression without the argument. Chapters 2
 and 3 then tell the story properly. Wherever a topic has more behind it than the story

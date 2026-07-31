@@ -162,6 +162,11 @@ is *grating-block + camera-lens + sensor* as one stack. Consequences for the res
 
 ## 8. The sample: solvent chemistry, turbidity and the vessel
 
+> **A readable version of this chapter exists.** `DOC_sample_physics.md` → *Light, Pigment and
+> Solvent* (internal PDF) covers the same ground as continuous prose, with the textbook background
+> — Beer–Lambert, the porphyrin band structure, Rayleigh vs Mie, dichromatism — that this KB entry
+> assumes. Use that for reading; use this for looking things up.
+
 *Added 2026-07-31 after the solvent investigation. Everything here is about what happens **before** the light
 reaches the grating — and it turns out to dominate the error budget more than anything downstream of it.*
 

@@ -2,6 +2,10 @@
 """
 Generator for the internal *Capture Fidelity* documentation PDF.
 
+Also used, via --source/--out/--title, to render the sibling *Light, Pigment and Solvent* document
+(see `build_sample_physics_pdf.py`). The renderer is document-agnostic; only the defaults below are
+specific to Capture Fidelity.
+
     SOURCE OF TRUTH:  docs/DOC_capture_fidelity.md   <- edit the prose THERE, never the PDF
     OUTPUT:           ../spectracs-docs/internal/Spectracs_CaptureFidelity.pdf
 
@@ -323,6 +327,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     parser.add_argument("--source", default=SOURCE_MD)
     parser.add_argument("--out", default=DEFAULT_OUT)
+    parser.add_argument("--title", default=None,
+                        help="document title; defaults to the first heading in the source")
     parser.add_argument("--html", action="store_true", help="also keep the intermediate HTML next to --out")
     args = parser.parse_args()
 
@@ -336,8 +342,8 @@ def main():
     if dangling:
         raise SystemExit("dangling internal link(s) — no heading has these anchors:\n  "
                          + "\n  ".join(dangling))
-    title = next((t for lvl, t, _ in toc), "Spectracs — Capture Fidelity")
-    page = SHELL.format(title=_html.escape("Spectracs — Capture Fidelity"), css=CSS, body=body)
+    title = args.title or "Spectracs — %s" % next((t for lvl, t, _ in toc), "internal documentation")
+    page = SHELL.format(title=_html.escape(title), css=CSS, body=body)
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     if args.html:
