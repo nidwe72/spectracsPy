@@ -4225,6 +4225,821 @@ simulation, §16.11.15's is a measurement, and the discrepancy is currently unex
 
 ---
 
+## 16.12 The settling drift and the solvent question  *(Edwin's research thread 2026-07-30/31; both analyses RUN — see §16.12.11)*
+
+§16.11.7 found that a fresh dilution is not stable for its first ~15 minutes and prescribed a wait. This section
+asks *why*, whether the number is standard practice, what the drift costs the metric, and whether the fix is a
+protocol step or a change of solvent.
+
+> **⚡ Read §16.12.11 first — it is the measurement, and it overturns half of what precedes it.**
+>
+> 1. **The drift is real and it reaches the shipped metric.** 58 % of the pooled "seating" variance is a time
+>    trend; true seat-to-seat repeatability is **≈1.9 %, not 2.96 %** — which unseats §16.11.9's budget closure
+>    and reorders §16.11.11.
+> 2. **The mechanism proposed in §16.12.2–§16.12.6 is UNTESTED, not confirmed.** The λ⁻ⁿ fit is anchored on a
+>    contaminated window, so §16.12.2–§16.12.6 are kept as the reasoning that led to the test, not as findings.
+> 3. **▶ And the test exposed a larger problem than the one it was aimed at: the shipped linear baseline's far
+>    anchor (600–630 nm) is NOT oil-quiet — it stands on real green-pigment absorption, 5.1 σ, and ~3.4× more for
+>    green than for brown (§16.12.12).** That anchor is load-bearing for every metric we ship, and the leak is
+>    class-dependent, so it does not cancel in a ratio. **▶ Next: sweep the far anchor (§16.12.12).**
+
+### 16.12.1 What §16.11.7 established, and what it did not
+
+Established: in sets B and C independently, the absorbance tilt settles about 11 minutes in, the tilt moves
+negative → positive, and `Soret · linear baseline` declines monotonically ~10 % over each 35-minute set. The
+negative→positive move is the signature of **blue-biased scattering leaving the beam**.
+
+Not established: that the *metric* drifts. Everything above is measured on the Soret band and on the raw tilt.
+The shipped metric is a **ratio**, and a ratio cancels any effect that moves numerator and denominator together.
+Whether the settling reaches the ratio is the open question of §16.12.5.
+
+**One confound was raised and is REFUTED.** The diary records camera sensor self-heating at τ = 2.9 min, settling
+by ~9 min — the same timescale, and it would reproduce the "early runs tilt, in both sets" pattern if the camera
+had cooled in the 28-minute gap between B and C. **Edwin (2026-07-30): the camera streamed continuously across
+both sets**, so self-heating had long since plateaued. §16.11.7's reading stands: the cause is the liquid.
+
+### 16.12.2 The mechanism has a name — miscibility gap, then the ouzo effect
+
+Oil + 2-propanol is a **partially miscible system with an upper critical solution temperature**. Below the UCST
+there is a miscibility gap; solubility rises with temperature until oil and solvent mix in all proportions, and
+**water content raises the critical temperature steeply** ([JAOCS, Rao & Arnold 1957](https://link.springer.com/article/10.1007/BF02637892);
+[UCST](https://en.wikipedia.org/wiki/Upper_critical_solution_temperature)).
+
+So at room temperature our "dilution" is plausibly not a solution but a **metastable dispersion** — the
+[ouzo effect](https://www.sciencedirect.com/topics/agricultural-and-biological-sciences/ouzo-effect): rapid
+dilution out of a marginal solvent throws spontaneous nanodroplets which then coarsen by Ostwald ripening
+([ACS Cent. Sci. 2023](https://pubs.acs.org/doi/full/10.1021/acscentsci.2c01194)). Fresh unfiltered pumpkin oil
+additionally carries waxes, phospholipids and press fines that isopropanol will not dissolve at all.
+
+Small particles scatter as ~λ⁻⁴ (blue-biased); as they ripen and cream out, the blue excess decays — **which is
+exactly the sign flip §16.11.7 measured.** Two populations are therefore in play, and they call for different
+fixes:
+
+| population | size | dissolves in butanol/heptane? | removable by filter? |
+|---|---|---|---|
+| waxes, phospholipids, press fines | ~0.5–50 µm | yes | **yes** |
+| ouzo nanodroplets | ~50–200 nm | yes (gap closes) | **no** — smaller than any practical pore |
+
+Separating the two is what §16.12.9 is for.
+
+### 16.12.3 Is "~15 min" known in the community? NO — and the literature says CLARIFY, not WAIT
+
+Two pieces of standard guidance were found, they point opposite ways, and **neither supports our wait**:
+
+- *"measure turbid samples within ~10 min of dispensing"* — that is **nephelometry**, where the particles **are
+  the analyte** ([JASCO](https://jascoinc.com/wp-content/uploads/2017/10/APP-Note-UV0014-Chromaticity-and-Turbidity.pdf)).
+  Opposite situation.
+- *"allow 10–15 min equilibration"* — **thermal equilibration and colour development** in wet-chemistry SOPs.
+  Different mechanism; the number matching ours is coincidence.
+
+Our case is the third one: **the particles are the interferent.** There the field's answer is not patience — it is
+**clarification (filtration or centrifugation) before the cuvette, plus a fitted baseline for the residual.**
+
+Corroborating: the standard oil-pigment methods **do not use neat isopropanol.** Chlorophyll and carotenoids in
+oils are read in **cyclohexane** (445/470 nm), **hexane** (442/668 nm), **CCl₄**, or **ethanol + isooctane /
+ethanol + heptane** ([Chem. Papers](https://link.springer.com/article/10.2478/s11696-013-0502-x);
+[olive-oil pigments](https://www.researchgate.net/publication/265295009_Rapid_Determination_of_Olive_Oil_Chlorophylls_and_Carotenoids_by_Using_Visible_Spectroscopy)).
+The field converged on hydrocarbons precisely because they give a true solution.
+
+**⇒ `~15 min` is our instrument's number, not a community constant.** It stays as the interim protocol, but it is a
+workaround for a solvent choice, not received practice — which is why §16.12.7 outranks it.
+
+### 16.12.4 ⛔ The linear baseline leaks HALF the scatter into the Soret band — *correct geometry, but the term is NOT PRESENT (§16.12.11 B)*
+
+`PB_BASELINE_WINDOWS = ((520, 540), (600, 630))` — anchors at ~530 and ~615 nm. The Soret band centroid is
+**450 nm, i.e. an 80 nm extrapolation beyond the nearest anchor**, which is where a wrong curve shape hurts most.
+
+Scattering goes as **λ⁻ⁿ** (n ≈ 4 for particles ≪ λ, falling toward 0 as they grow into the Mie regime). A straight
+line cannot follow it. Let the true scatter be `s·(530/λ)⁴`, amplitude `s` at 530 nm:
+
+| λ | the fitted line subtracts | true λ⁻⁴ scatter | **residual left behind** |
+|---|---|---|---|
+| 450 nm — Soret | 1.422 s | 1.924 s | **+0.502 s** |
+| 530 nm — anchor | 1.000 s | 1.000 s | 0 *(by construction)* |
+| 570 nm — Q | 0.789 s | 0.747 s | **−0.041 s** |
+| 615 nm — anchor | 0.552 s | 0.552 s | 0 *(by construction)* |
+
+**Half the scatter amplitude survives the correction and lands in the Soret band** — and with the *opposite* sign
+in Q, so both errors push the ratio the same way. This is the one mechanism that can carry a settling trend
+**through** a ratio.
+
+At §16.11.8's levels (A_Soret ≈ 1.1, A_Q ≈ 0.197) the relative ratio error is `0.502s/1.1 + 0.041s/0.197 ≈ **0.65 s**`.
+
+⚠ **Do not read that as "turbidity costs 3 %".** §16.11.9's budget closes at 2.98 % predicted vs 2.96 % observed
+from the `jar` arm alone — there is **no room in that closure for a large turbidity term**, so `s` is bounded from
+above by our own data. The **0.65 coefficient is geometry and stands**; the amplitude `s` is unmeasured. §16.12.6
+measures it.
+
+### 16.12.5 ⚠ OPEN — is set B's 2.96 % the SETTLING TREND rather than seating noise?
+
+A CV discards run order. Six numbers lying on a descending straight line still spread about their mean, so the CV
+is large — but that spread is **structure, not repeatability**, and the CV cannot tell them apart.
+
+A perfect linear ramp of total range R over n points contributes, by itself,
+`SD = R·√((n+1)/(12(n−1)))` — at n = 6 that is **0.342·R**. §16.11.7 reports the Soret declining ~9 % across each
+set, and **0.342 × 9 % ≈ 3.1 % — essentially the whole observed 2.96 %, with zero measurement noise in it.**
+
+**If the ratio trends the way the Soret does, then §16.11.9's closure is two similar numbers meeting by
+coincidence, and the `jar` arm is not the binding constraint.** The saving grace is that a ratio cancels a common
+trend — but §16.12.4 is precisely the mechanism that moves Soret and Q *differently*, so it would not cancel.
+
+This must be settled before series D/E, because §16.11.11 step 2 is scoped on the assumption that seating
+dominates.
+
+### 16.12.6 ▶ The two free analyses — one sweep, no rig time
+
+`diagnostics/metric_bench.py` already loads these PDFs and pulls the spectra from the embedded workflow JSON.
+Datasets: **sets B and C** (6 runs each, §16.11) as the primary target, and the **21 runs of 2026-07-27**
+(`20260727B` / `20260727E` / `20260727C`) as the wider sample with both oil classes.
+
+**A · Detrend.** Fit `metric = a + b·t + residual` against **elapsed time** (not run index) and report raw CV vs
+**residual** CV. The residual SD is the number that belongs in the error budget.
+- residual CV **collapses (≲1.5 %)** → settling dominated set B; §16.11.9's closure is coincidental; §16.11.11
+  reorders, liquid over mechanics.
+- residual CV **barely moves** → the ratio did cancel the trend; the closure stands; §16.11.7 matters less.
+
+**B · λ⁻ⁿ fit.** Per run, fit `A = k·λ⁻ⁿ` to **all wavelength points inside both baseline windows** (~50 points, so
+the fit is over-determined and yields a residual to judge it by), subtract it instead of the straight line, and
+recompute.
+- **the time series collapses onto its settled value** → mechanism confirmed *and* fixed in software.
+- **n lands in 2–4, and n *decreases* run-to-run within a set** → the droplets are growing: Ostwald ripening
+  observed directly, from data already on disk.
+- **n ≈ 0** → it is a flat offset, not scatter, and §16.12.2 is wrong.
+
+Caveats: fit `n` per run rather than pinning it at 4 (if the droplets grow, n changes); `k` and `n` trade off
+against a genuine flat offset; **6 points is an indication, not a verdict** — detrending leaves 4 df, so **pool B
+and C** (12 points, shared decay, separate offsets). The physics predicts an exponential relaxation
+`a + b·exp(−t/τ)`, which would hand us **τ directly** for comparison against the diary's sensor τ = 2.9 min — but
+3 parameters on 6 points is thin. **Linear first; exponential only if the linear residuals show curvature.**
+
+### 16.12.7 ⭐ The solvent — 1-butanol is the branch that retires the others
+
+Isopropanol is a *marginal* solvent for triglycerides; that marginality is the whole problem. The candidates:
+
+| solvent | dissolves oil | polystyrene-safe | practical for a mill | notes |
+|---|---|---|---|---|
+| **2-propanol** (today) | marginal | ✅ | ✅ drugstore | the miscibility gap ⇒ §16.12.2 |
+| **1-propanol** | better (linear, not branched) | ✅ | ~ specialist supplier | gentle intermediate step |
+| **1-butanol** | **good** | ✅ rated at 20 °C | ~ specialist supplier, cheap | bp 118 °C, flash 35 °C; **odour to be tested** |
+| **n-heptane** | ideal | ❌ **dissolves PS** | ❌ H225/H304/H411 | bench reference method only |
+
+**1-butanol is strategically the strongest option, because one swap potentially retires three other work items at
+once:** polystyrene-safe → **no container work, no FEP window, no milling**; a genuine triglyceride solvent →
+**dissolves the waxes rather than requiring their removal, so no filter and no per-measurement consumable**; closes
+the miscibility gap → **no ouzo dispersion and no 15-minute wait.** Edwin 2026-07-31: cost and availability are
+both acceptable via specialist suppliers. **Marked as a track to try in practice.**
+
+Open items on it: (a) **odour** — 1-butanol's odour threshold is low and persistent, and an Ölmühle is a food
+premises; the quantity is ~4 ml in a closed jar so emission is small, but this is a *check*, not an assumption;
+(b) **crazing** — soak a spare PS jar overnight, because alcohols craze *stressed* polystyrene even when the chart
+says "good", and injection-moulded jars are full of frozen-in stress; (c) **solvatochromism** — chlorophyll Soret
+and Q positions shift with solvent polarity, so `PB_SORET_BAND` / `PB_Q_BAND` and any threshold must be re-derived.
+Edwin 2026-07-30: **acceptable, no valid threshold is load-bearing yet.**
+
+**n-Heptane keeps one valuable role: a bench-only reference method.** Run one oil in both solvents and the
+difference **is** the measured cost of the IPA dispersion — it converts an unknown into a number, and it never
+ships.
+
+### 16.12.8 The container problem is DOWNSTREAM of the solvent — do not buy anything yet
+
+Only relevant **if heptane becomes necessary**. Every good triglyceride solvent attacks polystyrene; alcohols are
+essentially the only PS-safe organic family, so there is no drop-in. The binding constraint is that **light passes
+through the jar AND the lid — both must be transparent** (Edwin), and a clear jar with a matching clear lid is not
+an off-the-shelf glass item.
+
+- ⭐ **Milled glass lid + FEP window** *(Edwin's proposal, best of the options)*. Mill an aperture in a glass jar's
+  lid and clamp a fluorinated-ethylene-propylene film disc over it. FEP is >95 % transmissive across 400–700 nm
+  with <2 % haze at 100–200 µm ([FEP properties](https://eureka.patsnap.com/materials/fep-film-properties-applications),
+  [AdTech transmission data](https://adtech.co.uk/technical-data/fep-uv-transmission-data/)) and chemically immune
+  to everything under discussion. Sold cheaply as resin-3D-printer sheet.
+  - **Clamp, never glue** — FEP's non-stick nature is the same property that makes it solvent-proof; use an O-ring
+    groove or a screwed retaining ring.
+  - **Tension sets flatness** — a sagging film is a weak lens with run-to-run variation.
+  - **Possible bonus:** n(FEP) ≈ 1.344 against IPA 1.377 / heptane 1.387. Overfill so the film **contacts the
+    liquid** and that interface reflects ~0.015 % instead of the ~2.5 % of a liquid–air surface — **and the
+    meniscus disappears.** The meniscus is a curved surface whose shape varies with fill and tilt, i.e. exactly the
+    kind of term that lives in the `jar` arm. Worth a `reseat_all.sh jar` A/B if built.
+- **Rig-mounted window, open jar** — make the window part of the *instrument*, not the consumable. Takes the lid
+  out of the `jar` arm entirely (it is re-seated every run today) and a fixed element cancels in `S/R`. Cost:
+  evaporation from an open vessel.
+- **Glass Petri dish** — **rejected** (Edwin): spill risk in handling, and a loose lid on a shallow dish lets the
+  fill depth change, which is path length.
+- **PMMA lid** — **rejected**: the compatibility charts contradict each other on heptane (C at 20 °C in one,
+  aliphatics D in another, acceptable in a third). Not a basis for a measurement instrument.
+
+Whichever is built, `diagnostics/reseat_all.sh jar` gives a quantitative 10-minute A/B against the current 1.34 %.
+
+### 16.12.9 The 0.22 µm PTFE filter — a DIAGNOSTIC, not a protocol step
+
+A disposable Luer-fitted disc holding a solvent-resistant PTFE membrane; the dilution is pushed through from a
+syringe. Pigments are **dissolved molecules ~1 nm** and pass freely; waxes and press fines are **particles** that
+do not absorb selectively — they scatter, broadband and blue-biased. **So it removes pure interference and keeps
+the signal.**
+
+**Use 0.22 µm, and the pore size is the point.** Ouzo nanodroplets (~50–200 nm) are below any practical pore, so
+filtration **cannot** remove them. That makes the filter a clean mechanism discriminator:
+
+- **filtering removes the drift** → the culprit was micron-scale particulate ⇒ butanol should dissolve it.
+- **filtering does not remove the drift** → true nanodroplets ⇒ only a solvent change can help.
+
+**Both branches point at 1-butanol**, so this is cheap confirmation for the record rather than a fork in the road.
+
+**Demoted from "fix" to "diagnostic" (Edwin 2026-07-31):** ~€1 per filter plus an extra manual step is real
+friction for a miller. As a one-off bench test it needs 4–6 filters (~€6). Caveats: some pigment rides on the
+removed particles and the membrane can adsorb a little — both effects are roughly uniform across wavelength, so
+they shift absolute A but should barely touch a **ratio**. Validate by splitting one fill: if A_Q drops somewhat
+but the ratio holds, it is clean. *(If clarification ever were needed as a shipped step, a ~€40 mini-centrifuge
+beats filters — one-off cost, no consumable.)*
+
+### 16.12.10 Also worth one cheap check — the isopropanol bottle itself
+
+99 % is fine on the label, but **IPA is strongly hygroscopic** and an opened bottle pulls water from the air
+continuously. Per §16.12.2, water content is the *steep* lever on the critical solution temperature. Buy one fresh
+sealed ≥99.8 % bottle and compare against the working bottle; if the fresh one is visibly clearer, the solvent has
+been quietly degrading across the whole 2026 dataset.
+
+### 16.12.11 ✅ AS-RUN — `diagnostics/settling_sweep.py`, sets B and C  *(2026-07-31)*
+
+Both analyses of §16.12.6 ran on the twelve PDFs already on disk. **Analysis A answers its question yes.
+Analysis B refutes the mechanism this section proposed.**
+
+*(Note: the set directories are named `20270729{A,B,C}` on disk — a year typo. File mtimes are the real capture
+times and carry the elapsed-time axis, because `header.timestampIso` is `None` in every embedded workflow.)*
+
+#### A · The metric DOES trend with time — and the trend is most of the "seating" scatter
+
+| | raw CV | **residual CV** | trend over set | t *(4 df)* |
+|---|---|---|---|---|
+| **set B** `S/Q linear base` | 2.96 % | **2.44 %** | −5.38 % | −1.84 |
+| **set C** `S/Q linear base` | 2.89 % | **1.09 %** | −6.93 % | **−5.60** ✅ |
+| **pooled B+C** `S/Q linear base` | 2.92 % | **1.89 %** | — | — |
+| set B `A_Soret raw` | 3.30 % | 1.73 % | −7.82 % | **−3.76** ✅ |
+| set C `A_Soret raw` | 4.04 % | 2.07 % | −9.13 % | **−3.87** ✅ |
+
+**⇒ The shipped ratio does NOT cancel the settling.** It declines ~5–7 % across each 30-minute set, replicated in
+both, significant in C. §16.12.5's open question is answered: **58 % of the pooled variance is the time trend**
+(`1 − (1.89/2.92)²`), and in set C alone **86 %**. The true seat-to-seat repeatability is **≈1.9 %, not 2.96 %.**
+
+**⚠ This compromises §16.11.9's error-budget closure.** The `jar` arm predicted 2.98 % against an observed 2.96 %
+— but the observed figure is mostly a settling trend that a blank-beam tilt probe cannot produce. Against the
+detrended 1.89 %, the `jar` arm now **over**-predicts by ~1.6×. The three-way convergence was partly two unrelated
+numbers landing close together.
+
+**⇒ §16.11.11 reorders: the liquid, not the mechanics, is the binding constraint.** The `cone` arm and the
+mechanical programme drop below the dilution work. Series D/E should be planned around this — and series E's
+σ_fill, measured with 6 separate fills each given ~15 min, is now the single most informative number available.
+
+#### The complete error table for sets B and C — every quantity that feeds the metric
+
+| | set B raw CV | set B resid | set C raw CV | set C resid | **pooled raw** | **pooled resid** |
+|---|---|---|---|---|---|---|
+| `S/Q` **raw** *(no baseline)* | 11.14 % | 11.78 % | 5.16 % | 5.71 % | **8.68 %** | 9.26 % |
+| `S/Q` **linear baseline** *(shipped)* | 2.96 % | 2.44 % | 2.89 % | **1.09 %** | **2.92 %** | **1.89 %** |
+| `S/Q` power baseline *(rejected)* | 4.05 % | 3.60 % | 2.70 % | 0.51 % | 3.44 % | 2.57 % |
+| `A_Soret` 440–460 | 3.30 % | 1.73 % | 4.04 % | 2.07 % | 3.69 % | 1.91 % |
+| `A_Q` 560–580 | 9.98 % | 11.15 % | 7.52 % | 7.64 % | 8.83 % | 9.56 % |
+| `A_near` 520–540 | 9.82 % | 10.65 % | 8.89 % | 7.95 % | 9.36 % | 9.40 % |
+| `A_far` 600–630 | 19.91 % | 22.12 % | 13.97 % | 14.84 % | **17.20 %** | 18.84 % |
+
+**⭐ Read the first two rows against the last four.** The shipped metric's 2.92 % is **lower than three of its
+own four inputs** — `A_Q` 8.83 %, `A_near` 9.36 %, `A_far` 17.20 % — while the *raw* ratio, built from the same
+bands without a baseline, sits at 8.68 %. **The linear baseline is doing common-mode rejection**: a seating tilt
+moves all four windows together, and subtracting the fitted line cancels the shared part. That is why a
+correction anchored on a **17 %-noisy** window still produces a **3 %** metric, and it is a third independent
+reason the baseline earns its place (`SPEC_capability_proof.md` §2.1a).
+
+It is also visible run-by-run: set B's run 002 dips −18.7 % in `A_Q`, −15.9 % in `A_near` and −38.9 % in `A_far`
+while `A_Soret` barely moves (+0.6 %). Raw `S/Q` reads it as a wild outlier (6.86 against ~5.3); after the
+baseline it is a mild one (13.02 against ~12.4).
+
+**📈 Curves: `spectracs-references/tmp/settling_curves.png`** (`diagnostics/settling_plot.py`) — **six panels** against
+elapsed minutes: **A** raw `S/Q`, **B** the shipped baselined `S/Q`, then all four input absorbances as
+% deviation (**C** `A_Soret`, **D** `A_Q`, **E** `A_near`, **F** `A_far`). Two things to look at: `A_Soret`
+walks steadily downhill in both sets while `A_Q` is flat and noise-dominated — which is why the ratio cannot
+cancel the drift — and panels **E/F** show how noisy the two baseline anchors are in their own right, which is
+what makes the table above surprising.
+
+*(A_Q raw trends weakly and never significantly; the trend enters the ratio mainly through the Soret numerator.
+Set B run 002 is the known §16.11.7 tilt outlier — `A_Q` 0.160 against ~0.20 elsewhere — which inflates set B's
+raw-ratio CV to 11 % and is why set B's trend fails significance where set C's does not.)*
+
+#### B · ⛔ The λ⁻ⁿ test is INVALID as run — and it exposed something bigger: **the far baseline anchor is corrupted**
+
+The model-free diagnostic. Ratio of mean absorbance in the near window (520–540) to the far one (600–630):
+
+| predicted by | 530/615 |
+|---|---|
+| λ⁻⁴ — Rayleigh, particles ≪ λ (ouzo nanodroplets) | 1.81 |
+| λ⁻² | 1.35 |
+| wavelength-flat — particles ≫ λ (Mie), or a plain offset | 1.00 |
+| **measured, all 12 runs** | **0.687 – 1.019, median ≈ 0.73** |
+
+Absorbance in the "oil-quiet" windows is **higher at 615 nm than at 530 nm**; the free-fitted exponent is
+**n ≈ −2.6**, i.e. rising as ~λ^+2.6. No scattering law of any particle size is red-biased, so the first reading
+was that scattering is refuted. **That reading is wrong, and the cause is worse.** Reference levels, set B/C run
+001:
+
+| | 440–460 | 520–540 | 560–580 | 600–630 | **620–630** |
+|---|---|---|---|---|---|
+| REFERENCE (DN) | 110 | **130** | 65 | 57 | **39** |
+| SAMPLE (DN) | 13 | 101 | 40 | 40 | 25 |
+| ABSORPTION | 1.16 | 0.11 | 0.22 | 0.16 | **0.20** |
+
+**The CFL reference collapses from 130 DN at the near anchor to 39 DN at the top of the far anchor — a 3.3×
+drop — and absorbance rises monotonically as it does.** §9 already put the lamp's useful range at 440–630; the far
+window sits **on the cliff edge**, where quantization, residual dark offset and stray light all bias
+`−log₁₀(S/R)` at 25–39 DN.
+
+**⇒ The far anchor is inflated by a low-signal artifact, so the power law is fitted through a corrupted point and
+its n ≈ −2.6 is meaningless. The scattering hypothesis is UNTESTED, not refuted** — with an unknown artifact δ
+subtracted from the far anchor the true ratio could well exceed 1. `S/Q power base` scoring worse than linear
+(3.44 % vs 2.92 % pooled) fits this too: a power law is more sensitive to a bad end-anchor than a straight line.
+
+**⚠ The consequence reaches far past this section: the SHIPPED linear baseline uses the same corrupted anchor.**
+`PB_BASELINE_WINDOWS`' far window is load-bearing for every metric we ship, and it is standing on the lamp's cliff.
+
+Two candidates were raised for the rise: **(a)** the low-signal bias above, which the DN table made look like the
+leading explanation, and **(b)** the rising flank of the **real** chlorophyll Q maximum near 665 nm, outside the
+440–630 clamp. **✅ SETTLED the same day by §16.12.12: (a) is REFUTED and (b) is CONFIRMED at 5.1 σ.** The lamp's
+collapse to 39 DN is real and worth knowing, but it is *not* what produces the rise — the rise is green-pigment
+absorption. Read §16.12.12 before acting on anything in this subsection.
+
+#### What survives
+
+Analysis **A stands on its own** and does not depend on any of this: it compares the shipped metric against
+elapsed time, and the trend is there, replicated, and significant in set C. The drift is real, it reaches the
+shipped metric, and it resets with a fresh fill — the camera streamed continuously (§16.12.1) and the lamp is
+external and always on, so **the fill remains the only element that restarts between sets.**
+
+What analysis B delivered is not the mechanism but a **blocker**: with the far anchor corrupted, no baseline-shape
+question — λ⁻ⁿ or otherwise — can be settled on this data. **Fix the anchor first, then re-run B.** Until then the
+solvent track (§16.12.7) is the only *unblocked* line of attack on the drift.
+
+### 16.12.12 ✅ The far anchor carries PIGMENT, not a lamp artifact — 5.1 σ  *(`diagnostics/far_anchor_probe.py`, 2026-07-31)*
+
+§16.12.11 B left two candidates for the rise toward 630 nm and named the lamp cliff the leading one. **That was
+wrong.** The discriminator is the oil class, measured under the same lamp: 37 runs, 28 green and 9 brown, across
+six fills and two sessions. `rise` = A(620–630) − A(600–610), i.e. the slope **inside** the far anchor.
+
+| fill | class | A_Soret | A_530 | A_Q | A 600–610 | A 620–630 | **rise** | ref far DN |
+|---|---|---|---|---|---|---|---|---|
+| green B 07-27 | green | 0.981 | 0.113 | 0.204 | 0.122 | 0.178 | **0.055** | 45.4 |
+| green E 07-27 | green | 0.920 | 0.102 | 0.192 | 0.128 | 0.182 | **0.055** | 33.7 |
+| set B 07-29 | green | 1.093 | 0.098 | 0.197 | 0.124 | 0.172 | **0.048** | 37.3 |
+| set C 07-29 | green | 1.186 | 0.123 | 0.230 | 0.149 | 0.203 | **0.055** | 36.9 |
+| brown C 07-27 | brown | 1.242 | 0.163 | 0.306 | 0.217 | 0.237 | **0.021** | 34.7 |
+| brown D 07-27 | brown | 0.991 | 0.136 | 0.251 | 0.168 | 0.175 | **0.007** | 36.0 |
+
+| | green (n=28) | brown (n=9) | |
+|---|---|---|---|
+| **rise** | **0.0535 ± 0.007** | **0.0159 ± 0.010** | **5.10 σ separation** |
+| reference DN 620–630 *(control)* | 38.9 ± 8.0 | 35.2 ± 2.8 | **same lamp state** |
+
+**⇒ Candidate (a), the instrument artifact, is REFUTED.** The lamp is in the same state for both classes — the
+reference sits at 35–39 DN throughout — yet the rise differs **3.4×** by oil. An instrument effect cannot know
+which oil is in the jar. **For brown the far window is genuinely quiet (rise 0.007–0.021); for green it is not.**
+
+**⇒ Candidate (b) is CONFIRMED: the far anchor is standing on real green-pigment absorption** — the rising flank
+toward the true chlorophyll Q maximum near 665 nm, which lies outside the 440–630 capture clamp. Supporting:
+regressing `rise` on the raw greenness ratio `A_Soret/A_Q` gives **intercept −0.0013, i.e. zero** — the rise
+vanishes exactly when the greenness does, which is the pigment prediction and not the artifact one. (R² is only
+0.157 because concentration varies between fills; the *intercept* is the diagnostic here, not the fit quality.)
+
+⚠ **A regression of `rise` on any single band amplitude does NOT work as a test, and the first attempt at one was
+misleading.** Neither `A_Q` (which runs **higher** in brown — it is the metric's denominator, not a pigment
+axis) nor `A_Soret` (stray-light compressed at T < 10 %, §16.11.8 — brown reads 1.158 against green's 1.034) is a
+clean green-pigment amplitude. The class contrast under a fixed lamp is the valid test.
+
+#### Why this is worse than a lamp artifact would have been
+
+An instrument artifact is common-mode: both classes get it, and a ratio largely cancels it. **This does not
+cancel — it is the measured signal leaking into the baseline that is supposed to be signal-free, and it leaks
+~3.4× more for green than for brown.** The far anchor sets the fitted baseline's slope, that slope is subtracted
+from both bands, and the Q denominator is small enough that a slope error moves the ratio hard. **So an unknown
+part of the green↔brown separation we are shipping comes from the baseline construction rather than from the
+Soret band.**
+
+This does not mean the discrimination is wrong — §16.10's leave-one-fill-out scoring is empirical and stands.
+It means **we do not currently know how much of it is pigment physics and how much is window placement.**
+
+#### It also explains why analysis B could never have worked
+
+§16.12.11 B tried to fit a scatter pedestal through two "oil-quiet" windows. **One of them is not oil-quiet.**
+The scattering hypothesis is still untested, and the reason is now precisely identified: you cannot fit a
+baseline through a window that contains the analyte.
+
+#### ▶ The test this calls for — a far-anchor sweep, free, same PDFs
+
+§16.11.14 swept the Soret band's left edge and refuted moving it; **nobody has ever swept the baseline windows.**
+Slide the far anchor left in steps (e.g. 600–630 → 595–615 → 590–605 → 585–600) and re-score the green↔brown
+separation with §16.10's leave-one-fill-out. Outcomes:
+- **separation holds or improves** → move the window and the contamination is retired for free.
+- **separation degrades** → part of today's discrimination genuinely rests on the pigment flank, and that must be
+  said out loud in `SPEC_capability_proof.md` rather than left implicit in a window constant.
+
+Either way the answer belongs in the spec before the capability-proof verdict is defended.
+
+### 16.12.13 ⚠ AS-RUN — the far-anchor SWEEP: the contamination is CARRYING the discrimination  *(`diagnostics/far_anchor_sweep.py`, 2026-07-31)*
+
+§16.11.14 swept the Soret band's edges; the baseline windows had never been swept. Two sweeps, near anchor
+(520–540) held fixed throughout. Discrimination scored on §16.10.9's basis — 25 runs, 4 fills, 2026-07-27 —
+and the settling trend on sets B and C, mean of the two.
+
+**SWEEP 1 — right edge pulled in, left edge pinned at 600 nm**
+
+| far window | LOFO | \|d\| | gap | CV/fill % | trend % | resid CV % |
+|---|---|---|---|---|---|---|
+| **600–630 nm** | **1/25** | **2.88** | **+0.495** | 9.72 | **−6.15** | 1.76 ← *shipped* |
+| 600–625 nm | 2/25 | 2.65 | +0.166 | 9.50 | −5.90 | 1.75 |
+| 600–620 nm | 4/25 | 2.28 | OVERLAP | 9.41 | −4.96 | 1.68 |
+| 600–615 nm | 9/25 | 1.95 | OVERLAP | 9.13 | −3.68 | 1.45 |
+| 600–610 nm | 12/25 | 0.94 | OVERLAP | 10.04 | **−2.55** | **1.14** |
+
+**SWEEP 2 — fixed 20 nm width, window slid left**
+
+| far window | LOFO | \|d\| | gap | CV/fill % | trend % | resid CV % |
+|---|---|---|---|---|---|---|
+| **610–630 nm** | **1/25** | **3.28** | **+0.782** | 10.30 | **−7.60** | 2.08 |
+| 605–625 nm | 2/25 | 2.92 | +0.260 | 9.34 | −6.25 | 1.88 |
+| 600–620 nm | 4/25 | 2.28 | OVERLAP | 9.41 | −4.96 | 1.68 |
+| 595–615 nm | 11/25 | 1.76 | OVERLAP | 9.72 | −4.24 | 2.01 |
+| 590–610 nm | 13/25 | 1.06 | OVERLAP | 10.48 | −4.04 | 3.05 |
+| 585–605 nm | 12/25 | 1.04 | OVERLAP | 11.83 | −5.74 | 6.12 |
+
+#### Both sweeps say the same thing, monotonically
+
+**The redder the far anchor reaches, the better green separates from brown — and the worse the metric drifts.
+They are the same quantity.** Push the window further red than shipped (610–630) and Cohen's d *rises* 2.88 →
+3.28 and the clean gap widens +0.495 → +0.782, while the settling trend worsens −6.15 % → −7.60 %. Pull it in
+and both fall together, until at 600–610 the classes **overlap outright** (d 0.94) and the drift is at its
+mildest (−2.55 %, residual CV 1.14 %).
+
+**⇒ There is no free win. §16.12.12's contamination is not a defect sitting beside the measurement — it is
+doing a large share of the measuring.** Remove it and the discrimination goes with it.
+
+#### What this does and does not change
+
+**It does NOT show the metric is broken.** The shipped 600–630 window sits near the optimum of this trade-off,
+and §16.10's leave-one-fill-out scoring stands on its own as an empirical result. Nothing here says the verdicts
+were wrong.
+
+**It DOES falsify the documented rationale.** `DevSpectralPlugin`'s comment describes `PB_BASELINE_WINDOWS` as
+two *"OIL-QUIET"* windows that *"sit where the oil itself is featureless"*. For the far window that is
+demonstrably false (§16.12.12, 5.1 σ), and the sweep shows the falsity is load-bearing rather than incidental.
+
+**⇒ The metric must be restated.** It is not "Soret/Q with a seating-tilt correction". It is a **three-region
+construction** in which 600–630 nm contributes real green-pigment information with a negative sign, via the
+fitted baseline's slope. That belongs in `SPEC_capability_proof.md` explicitly — a reader currently cannot tell
+from either spec that a third pigment band is in the measurement.
+
+Two consequences follow from the restatement, and both are testable:
+1. **The metric is more exposed than documented to anything that moves the far window** — the settling
+   (§16.12.11 A) and the lamp's red-end collapse to 39 DN (§16.12.11 B) both act there.
+2. **▶ If that window carries useful pigment signal, declare it as an explicit third band** rather than
+   smuggling it in through the baseline. An honest three-band metric can be tuned, reasoned about and
+   error-budgeted; a baseline anchor that secretly measures cannot.
+
+#### ⚠ Caveats — do NOT adopt 610–630 on this evidence
+
+- **Choosing the best window from this sweep is exactly §16.10.16's trap.** The robust signal is the *monotone
+  trend across both sweeps*, not any single score. 1/25 against 2/25 is one run.
+- **LOFO here rests on 4 fills, only 2 of them brown** (one with just 3 runs).
+- **The 07-27 fills are PRE-rig-rebuild** — within-fill CV ~9.7 % against the 2.96 % of §16.11.3. This is the
+  noisy dataset. It is §16.10.9's published basis so the numbers are comparable, but **a post-rebuild re-run
+  with a proper brown series would be far stronger** — which is another reason series D/E matters.
+- The trade-off is measured on green↔brown discrimination only. The third "too-green" oil (§16.11.12) is not in
+  this data at all.
+
+### 16.12.14 ⛔ "Drop the red anchor now the rig is fixed" — REFUTED, and backwards  *(Edwin's hypothesis, `diagnostics/baseline_variants.py`, 2026-07-31)*
+
+**Edwin's reasoning, which is sound:** the far (red) window was adopted as a baseline anchor when the rig had
+much more mechanical wobble. §16.11 rebuilt it — jar tilt **2.84 % → 1.34 %**. If the red anchor was mostly
+compensating that wobble, its advantage should now have shrunk, and a simpler correction that never touches the
+red end might be enough.
+
+Five variants, all ratios of the **same two bands**, differing only in the correction:
+
+| variant | what it does |
+|---|---|
+| `raw` | no correction |
+| **`offset NEAR only`** | subtract the constant `mean(520–540)` — **Edwin's proposal, no red window** |
+| `offset FAR only` | subtract the constant `mean(600–630)` |
+| `linear NEAR+FAR` | the shipped metric |
+| `2nd derivative` | window-free; annihilates any linear baseline exactly |
+
+#### Precision — within-fill CV %
+
+| variant | grn B | grn E | brn C | **set B** | **set C** | **POST avg** | PRE avg |
+|---|---|---|---|---|---|---|---|
+| `raw` | 16.64 | 7.92 | 11.38 | 11.14 | 5.16 | **8.15** | 11.98 |
+| **`offset NEAR only`** | 9.21 | 13.70 | 12.02 | 14.12 | 6.67 | **10.39** | 11.64 |
+| `offset FAR only` | 13.70 | 14.62 | 7.86 | 7.63 | 8.87 | **8.25** | 12.06 |
+| **`linear NEAR+FAR`** | 10.35 | 9.09 | 8.91 | **2.96** | **2.89** | **2.92** | 9.45 |
+| `2nd derivative` | 68.17 | 81.40 | 46.57 | 60.23 | 60.84 | 60.54 | 65.38 |
+
+#### ⭐ The test — what the correction still BUYS, pre vs post rebuild
+
+`gain = raw CV / variant CV`. **If the red anchor were compensating wobble, its gain had to FALL after the
+rebuild.**
+
+| variant | PRE gain | POST gain | change |
+|---|---|---|---|
+| `raw` | 1.00× | 1.00× | — |
+| **`offset NEAR only`** | 1.03× | **0.78×** | **−24 %** *(worse than no correction at all)* |
+| `offset FAR only` | 0.99× | 0.99× | −1 % |
+| **`linear NEAR+FAR`** | 1.27× | **2.79×** | **+120 %** |
+| `2nd derivative` | 0.18× | 0.13× | −27 % |
+
+**⇒ REFUTED, and in the opposite direction: the rebuild made the baseline MORE valuable, not less — its gain
+more than DOUBLED.**
+
+> ⚠ **The +120 % is carried by ONE RUN — see §16.12.14c.** Drop set B's run 002 and the post-rebuild gain falls
+> to **1.32×** against the pre-rebuild 1.27 %, i.e. essentially unchanged. **The REFUTATION survives** (every
+> single-anchor variant is still worse than the two-anchor line, with or without B002); the *"more valuable
+> after the rebuild"* half does not. Read §16.12.14c before quoting the +120 %.
+
+The mechanism is worth stating, because it inverts the intuition. **Pre-rebuild, the mechanical wobble was so
+large that it swamped everything** — every variant landed at 9–12 % CV and no correction could reach past the
+noise. **Post-rebuild the mechanical term is gone, and what remains is exactly the common-mode offset-plus-slope
+the linear baseline was built to remove.** The wobble was not what the baseline was fixing; the wobble was
+*masking how much the baseline fixes*.
+
+**Edwin's specific proposal costs 3.6× in precision:** `offset NEAR only` reads **10.39 %** post-rebuild against
+`linear NEAR+FAR`'s **2.92 %** — and at 0.78× gain it is *worse than applying no correction at all*.
+
+#### Settling and dilution agree — post-rebuild sets only
+
+| variant | B trend % | C trend % | pooled CV % | B→C dilution % |
+|---|---|---|---|---|
+| `raw` | −9.66 | −1.80 | 8.15 | −7.68 |
+| `offset NEAR only` | **−16.22** | −7.56 | 10.39 | −2.27 |
+| `offset FAR only` | +1.86 | −9.15 | 8.25 | −2.74 |
+| **`linear NEAR+FAR`** | −5.38 | −6.93 | **2.92** | **−1.91** |
+| `2nd derivative` | −98.75 | −35.32 | 60.54 | +84.78 |
+
+#### Discrimination — PRE-rebuild only
+
+| variant | LOFO | \|d\| | gap |
+|---|---|---|---|
+| `raw` | 9/25 | 1.24 | OVERLAP |
+| `offset NEAR only` | 10/25 | 1.85 | OVERLAP |
+| `offset FAR only` | 3/25 | 2.71 | **+0.860** |
+| **`linear NEAR+FAR`** | **1/25** | **2.88** | +0.495 |
+| `2nd derivative` | 17/25 | 1.07 | OVERLAP |
+
+**Neither anchor alone works — it is the SLOPE between them that does the job.** `offset FAR only` is no better
+than raw on precision (0.99× gain) despite using the red window, and `offset NEAR only` is worse than raw. Only
+the two-anchor line delivers, which is consistent with §16.12.11 A's finding that the noise is common-mode
+offset **and** slope.
+
+*(`2nd derivative` is decisively out at 60 % CV — recorded so it is not proposed again.)*
+
+#### ⚠ Caveats
+
+- **The pre/post comparison is not a controlled A/B.** It also changes session, oil vintage (2023 vs 2026 stock)
+  and dilution recipe. The *direction* is robust — a −24 %/+120 % split is not a subtle effect — but the factor
+  is not.
+- **Post-rebuild is 2 fills, both green, 6 runs each.** Discrimination cannot be scored there at all.
+- Pre-rebuild `green B` raw CV of 16.64 % is anomalously high even for that dataset.
+
+**⇒ Keep the red anchor.** The hypothesis was worth testing and the instinct was reasonable; the data says the
+rebuild strengthened the case for the baseline rather than weakening it.
+
+### 16.12.14a ⛔ WHOLE-SPECTRUM baselines TRIED and REJECTED — the window has no peak-free region  *(Edwin, same harness, 2026-07-31)*
+
+The natural follow-up: stop fitting through two hand-chosen windows and let a standard chemometric baseline use
+the **whole spectrum**. Four added to the same harness — the naive full-range least-squares line, the classic
+**rubber band** (convex hull from below), **ModPoly** (Lieber & Mahadevan-Jansen: fit, clip above the fit,
+refit), and **AsLS** (Eilers & Boelens asymmetric least squares) at two smoothness/asymmetry settings.
+
+| variant | grn B | grn E | brn C | set B | set C | **POST CV** | PRE CV | **LOFO** | \|d\| | gap | B→C dil. |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **`linear NEAR+FAR`** *(shipped)* | 10.35 | 9.09 | 8.91 | 2.96 | 2.89 | **2.92** | 9.45 | **1/25** | **2.88** | **+0.495** | **−1.91** |
+| `full-range line` | 11.73 | 8.86 | 9.49 | 4.16 | 2.48 | **3.32** | 10.03 | **1/25** | 2.45 | +0.129 | −3.02 |
+| `ModPoly ord3` | 13.15 | 5.50 | 9.13 | 8.87 | 4.68 | 6.77 | 9.26 | 13/25 | 0.60 | OVERLAP | −5.14 |
+| `AsLS 1e5/0.01` | 10.88 | 5.26 | 7.00 | 8.28 | 5.29 | 6.78 | 7.71 | **21/25** | 0.29 | OVERLAP | **−0.72** |
+| `AsLS 1e6/0.001` | 11.60 | 11.16 | 10.45 | 9.45 | 6.34 | 7.90 | 11.07 | 4/25 | 0.94 | OVERLAP | −6.75 |
+| `rubber band` | 26.00 | 20.85 | 12.42 | 21.58 | 19.21 | 20.39 | 19.76 | 14/25 | 0.51 | OVERLAP | −21.07 |
+| `raw` *(reference)* | 16.64 | 7.92 | 11.38 | 11.14 | 5.16 | 8.15 | 11.98 | 9/25 | 1.24 | OVERLAP | −7.68 |
+
+**⇒ Not one of them beats the two-window line, and the sophisticated ones are the WORST.**
+
+#### Why — and it is structural, not a tuning problem
+
+**Every whole-spectrum baseline algorithm assumes the spectrum returns to baseline somewhere. Ours never does.**
+The capture clamp is 440–630 nm; the **Soret band starts at the very left edge** (440–460) and the **chlorophyll
+Q flank rises into the right edge** (§16.12.12). There is no peak-free region for a hull, a clipped polynomial or
+an asymmetric fit to sit on — so they anchor on the pigment itself and **absorb the signal into the baseline**.
+
+The failure is visible in the numbers rather than inferred:
+- **`AsLS 1e5/0.01` is the clearest case.** It gives the *best dilution invariance of any variant tested*
+  (**−0.72 %**) and a decent CV — and then scores **21/25 leave-one-fill-out errors with d = 0.29.** It has
+  removed the concentration term *and the class difference along with it*. A baseline that flexible eats exactly
+  what we are trying to measure.
+- **`rubber band` is catastrophic across the board** (CV 20 %, dilution −21 %): the hull's vertices land wherever
+  noise happens to dip lowest, so it is a noise amplifier here.
+- **`ModPoly ord3`** halves nothing and loses the classes outright.
+
+#### The one that nearly works, and what it teaches
+
+**`full-range line` — a plain least-squares line over all 440–630 nm — comes second on precision (3.32 % vs
+2.92 %) and ties the shipped metric on LOFO (1/25).** It is also a two-parameter offset-plus-slope removal; it
+just picks its slope from everything instead of from two windows.
+
+That is informative: **what the correction must do is remove an offset AND a slope — that much is settled by four
+variants agreeing (§16.12.14). Where you anchor it is a second-order choice, but not a free one:** the full-range
+line's class gap collapses to **+0.129** against the shipped **+0.495**, and its dilution error is 58 % larger.
+Fitting through the pigment drags the slope, exactly as §16.12.12 predicts.
+
+**⇒ Keep the two-window linear baseline.** Recorded so neither the chemometric family nor the naive full-range
+line is proposed again without new evidence — and note the *precondition* that would change the answer: **a wider
+capture window with a genuinely pigment-free region** (i.e. past the chlorophyll Q max beyond ~700 nm) would make
+AsLS viable. That is a lamp-and-optics change, not a software one.
+
+*(Caveats as §16.12.14: pre/post is not a controlled A/B, post-rebuild is 2 green fills, discrimination is
+pre-rebuild only. AsLS parameters were not tuned beyond two settings — but the failure mode is structural, so
+tuning is unlikely to rescue it while the window ends sit on pigment.)*
+
+### 16.12.14b Fit over MORE spectrum but anchor only where the oil is quiet — and the trade-off this exposes  *(Edwin, 2026-07-31)*
+
+The remaining reading of "use the whole spectrum": keep the *quiet-anchored* philosophy but stop fitting through
+only two window **means**. Five more variants, varying how much of the spectrum counts as quiet and how much
+freedom the fit has:
+
+| variant | fitted on | order |
+|---|---|---|
+| `lin 2win LSQ` | every point inside the **same two windows** (not just their means) | 1 |
+| `lin ex-bands` | everything in 440–630 **except** the Soret and Q bands | 1 |
+| `poly2 ex-bands` | same mask | 2 |
+| `poly3 ex-bands` | same mask | 3 |
+| `lin ex-band+carot` | also excludes 460–510 nm, where the carotenoids absorb | 1 |
+
+| variant | POST CV | PRE CV | mean \|trend\| | B→C dil. | **LOFO** | \|d\| | **gap** |
+|---|---|---|---|---|---|---|---|
+| **`linear NEAR+FAR`** *(shipped)* | **2.92** | 9.45 | 6.16 | −1.91 | **1/25** | **2.88** | **+0.495** |
+| `lin 2win LSQ` | **2.89** | 9.39 | 6.07 | −1.93 | **1/25** | 2.85 | +0.453 |
+| `lin ex-band+carot` | 3.19 | 9.39 | 5.54 | −2.75 | 2/25 | 2.47 | +0.127 |
+| `lin ex-bands` | 3.34 | 10.02 | 5.93 | −3.07 | **1/25** | 2.46 | +0.190 |
+| **`poly2 ex-bands`** | 3.35 | **5.39** | **1.78** | **−1.90** | 5/25 | 1.34 | OVERLAP |
+| `poly3 ex-bands` | 6.38 | 8.44 | 3.69 | −3.13 | 13/25 | 0.85 | OVERLAP |
+
+#### Two results
+
+**1. Fitting the two windows by least squares instead of through their means changes nothing.** `lin 2win LSQ`
+lands within ~1 % of the shipped metric on every measure (CV 2.89 vs 2.92, gap +0.453 vs +0.495). **The two
+window means are a sufficient statistic** — the within-window slope carries no usable extra information. Worth
+knowing: it closes off an obvious "improvement" that isn't one.
+
+**2. `poly2 ex-bands` is the best nuisance-remover found anywhere in this thread — and it cannot discriminate.**
+It halves the pre-rebuild CV (**5.39 %** against the shipped 9.45 %), gives the flattest settling of any variant
+(**mean \|trend\| 1.78 %** against 6.16 %), and matches the best dilution invariance (−1.90 %). Then it scores
+**5/25 LOFO with the classes OVERLAPPING.**
+
+#### ⭐ The axis this exposes — and it is the same finding as §16.12.13, from the other end
+
+Order every variant by **how much spectrum the baseline sees and how much freedom it has to follow it**:
+
+| baseline freedom | nuisance removal | class separation |
+|---|---|---|
+| none (`raw`) | poor (CV 8.15) | none (OVERLAP, 9/25) |
+| **2 windows, line** | **good (CV 2.92)** | **best (gap +0.495, 1/25)** |
+| whole spectrum − bands, line | good (CV 3.34) | degraded (gap +0.190) |
+| whole spectrum − bands, poly2 | **best (PRE CV 5.39, trend 1.78)** | gone (OVERLAP, 5/25) |
+| whole spectrum, AsLS | **best dilution (−0.72)** | destroyed (21/25) |
+
+**The more spectrum the baseline is allowed to follow, the better it removes drift, dilution and seating noise —
+and the more class signal it removes with them.** Monotone across seven variants.
+
+**⇒ This is §16.12.13's window sweep seen from the opposite direction, and together they say the same thing: the
+green↔brown information lives in the BROAD SPECTRAL SHAPE, not in the two narrow bands alone.** Any correction
+flexible enough to flatten the broad shape flattens the discriminator with it. **There is no smarter baseline to
+be had on this window** — precision and separation are drawing on the same resource.
+
+**The only escape is more spectral coverage.** A window reaching past the chlorophyll Q maximum (~700 nm) would
+give a genuinely signal-free region to anchor on, and AsLS's −0.72 % dilution figure hints at real headroom
+there. That is a lamp-and-optics change, not software (§16.12.14a).
+
+**⇒ Keep `linear NEAR+FAR`. No variant tested beats it on the quantity that decides the milestone.**
+
+*(One thing worth keeping in the drawer: if a future QC indicator needs a dilution- and settling-immune number
+that is **not** the class discriminator — "was this measurement stable?" rather than "which oil is it?" —
+`poly2 ex-bands` is the best candidate found. Different job, different tool.)*
+
+### 16.12.14c ⚠ SENSITIVITY — how much of §16.12 rests on set B's run 002?  *(Edwin asked, `diagnostics/without_b002.py`, 2026-07-31)*
+
+B002 is §16.11.7's largest tilt event, flagged **there, before any of the §16.12 work**: per-run tilt slope
+−0.0398 against ≤ −0.0204 for every other run in the set. This thread independently found it anomalous three
+more ways — quiet-window shape ratio 1.019 vs ~0.71, `A_far` −38.9 %, `A_Q` −18.7 % while `A_Soret` is +0.6 %.
+
+**Everything recomputed with it dropped. Nothing below is adopted** — see the verdict at the end.
+
+#### Set B, 6 runs vs 5
+
+| metric | CV % all 6 | t | **CV % w/o 002** | **t** |
+|---|---|---|---|---|
+| `S/Q raw` | 11.14 | −0.68 | **1.77** | +0.94 |
+| `S/Q linear base` | 2.96 | −1.84 | **2.37** | −1.36 |
+| `A_Soret` | 3.30 | **−3.76** | 3.68 | **−4.11** |
+| `A_Q` | 9.98 | −0.02 | **4.42** | **−5.79** |
+| `A_near` 520–540 | 9.82 | −0.50 | **6.56** | **−5.90** |
+| `A_far` 600–630 | 19.91 | +0.22 | **6.37** | **−3.73** |
+
+#### Baseline variants, post-rebuild
+
+| variant | POST CV all | dil. % | **POST CV w/o** | **dil. % w/o** |
+|---|---|---|---|---|
+| `raw` | 8.15 | −7.7 | **3.47** | −3.3 |
+| `offset NEAR only` | 10.39 | −2.3 | 4.72 | +3.6 |
+| `offset FAR only` | 8.25 | −2.7 | 6.23 | −5.4 |
+| **`linear NEAR+FAR`** | **2.92** | **−1.9** | 2.63 | −1.1 |
+| `lin 2win LSQ` | 2.89 | −1.9 | 2.58 | −1.1 |
+| `full-range line` | 3.32 | −3.0 | 2.22 | −1.5 |
+| **`poly2 ex-bands`** | 3.35 | −1.9 | **1.58** | **−0.1** |
+| `AsLS 1e5/0.01` | 6.78 | −0.7 | 3.46 | +2.7 |
+
+#### What CHANGES
+
+1. **⛔ §16.12.14's "+120 %" headline is B002.** Post-rebuild gain of the baseline over raw: **2.79× → 1.32×**,
+   against a pre-rebuild 1.27×. *"The rebuild made the baseline more valuable"* **does not survive** — the gain
+   is essentially unchanged by the rebuild. Caveat now carried at §16.12.14 itself.
+2. **⚠ §16.11.9's budget closure weakens further.** Set B observed CV **2.96 % → 2.37 %** (2.15 % detrended)
+   against the `jar` arm's 2.98 % prediction. The celebrated match at 2.96 vs 2.98 was **partly propped up by
+   the outlier**; the arm now over-predicts by ~1.3–1.4×. This *strengthens* §16.12.11 A's conclusion that the
+   mechanics are not the binding constraint.
+3. **The settling evidence gets STRONGER, not weaker.** With B002 gone, `A_Q`, `A_near` and `A_far` all trend
+   **significantly** downward (t −5.79, −5.90, −3.73) where they were flat before — B002's dip was *masking*
+   the trends. But note the corollary: in set B all four absorbances now sink together and **the ratios do not
+   trend** (`S/Q raw` t +0.94, `S/Q linear base` t −1.36). Set C's ratio still trends (t −5.60). So set B's
+   drift is common-mode and cancels; set C's does not. **Unresolved, and it needs the brown series.**
+4. **`poly2 ex-bands` becomes clearly best on precision AND dilution** — 1.58 % CV and −0.1 % dilution, beating
+   the shipped 2.63 % / −1.1 %. Its discrimination is **unchanged** (5/25, OVERLAP — scored on 07-27 data that
+   contains no B002), so §16.12.14b's trade-off axis is untouched and if anything starker.
+
+#### What SURVIVES
+
+- **Edwin's original hypothesis stays refuted.** `offset NEAR only` is still far worse than the two-anchor line
+  (4.72 vs 2.63) and its dilution error flips sign to **+3.6 %**; `offset FAR only` is worse still at 6.23.
+  **Both anchors are needed, with or without B002.**
+- **§16.12.11 A's headline holds.** Pooled `S/Q linear base` 2.92 → 2.67 % raw, 1.89 → 1.63 % detrended; the
+  trend's share of variance goes 58 % → **63 %**.
+- **§16.12.12 / §16.12.13 / §16.12.14a / §16.12.14b are untouched** — all scored on 07-27 fills.
+
+#### ⇒ VERDICT: do NOT exclude it
+
+**§16.11.11's V2 rule is "exclusion = documented physical cause only", and B002 has no cause documented
+independently of the measurement itself.** No bumped jar, no lamp event, no mis-fill was recorded — the anomaly
+is visible only in the data it would be excluded from.
+
+Worse, it is **circular**: §16.11.7 attributed the early-run tilts to **the dilution settling**, i.e. to the
+phenomenon under study. Sets B and C are *re-seat repeatability* measurements. **Dropping the worst re-seat from
+a re-seat-repeatability measurement removes signal, not noise** — it is the tail of the distribution being
+characterised. That is §16.10.16's trap in its purest form.
+
+**⇒ Keep B002 in every headline number. Keep this section as the sensitivity statement**, because "one of six
+runs moves the gain from 2.79× to 1.32×" is exactly the fragility a reader of §16.12.14 needs to know about.
+**The real fix is n, not exclusion** — series D/E's twelve brown runs.
+
+### 16.12.15 Claims made and WITHDRAWN in this thread *(per §16.7.0's practice)*
+
+| claim | withdrawn because |
+|---|---|
+| "camera self-heating (τ = 2.9 min) may be the §16.11.7 confound" | the camera streamed continuously across sets B and C, so it had plateaued *(Edwin 2026-07-30)* |
+| "s ≈ 0.05 A, so turbidity costs the entire 3 % error budget" | §16.11.9's closure bounds `s` from above — no room for a term that size. The **leak coefficient 0.65 is geometry and stands**; the amplitude was an illustration, not a measurement |
+| "use a 0.45 µm filter" | 0.45 µm and 0.22 µm both sit **above** the 50–200 nm nanodroplets; 0.22 µm is the right choice and the size limit is what makes it a discriminator (§16.12.9) |
+| "the filter is the highest value-per-euro fix" | ~€1/measurement + an extra step is not shippable to a mill *(Edwin 2026-07-31)*; demoted to bench diagnostic |
+| "the miller would not accept 1-butanol's odour" | unevidenced — I stated a guess as fact. Cost and availability are acceptable *(Edwin 2026-07-31)*; odour is an open **test**, not an objection |
+| "in-app countdown showing dilution age" | not practicable *(Edwin 2026-07-30)* |
+| "glass Petri dish as the transparent vessel" | spill risk and variable fill depth = variable path length *(Edwin 2026-07-30)* |
+| **"the drift is λ⁻ⁿ scattering, correctable by a power-law baseline"** | **untestable, not tested — §16.12.11 B. The far anchor sits on the lamp's cliff (39 DN at 620–630 vs 130 at 530), so the fit is anchored on a low-signal artifact. Re-run once the anchor is fixed** |
+| "the quiet windows rise with λ, therefore scattering is REFUTED" | **first reading of the run, corrected the same day.** The rise is not the sample's scattering shape — but nor is it the instrument. §16.12.12: it is **green-pigment absorption in the far window**. Refutation withdrawn; the scattering hypothesis returns to *untested* |
+| "the far-anchor rise is a low-signal artifact at the lamp's cliff (39 DN)" | **§16.12.12 — REFUTED at 5.1 σ.** Same lamp state for both classes (ref 35–39 DN), yet the rise differs 3.4× by oil. The lamp collapse is real; it is not the cause |
+| "regress `rise` on A_Q (then A_Soret) to test pigment-scaling" | neither is a green-pigment axis — A_Q runs **higher** in brown, A_Soret is stray-light compressed (§16.11.8). The first regression returned a nonsense −96 %/196 % decomposition. **The class contrast under a fixed lamp is the valid test** |
+| "s = 0.05 A is a plausible scatter amplitude" | unmeasurable on this data for the same reason; the amplitude question is open, not void |
+| "the ouzo nanodroplets explain the settling" | no measured support either way — treat as unevidenced pending a valid far anchor |
+
+### 16.12.16 ▶ Next, in order  *(revised after the §16.12.14 variant test)*
+
+| | action | cost | what it decides |
+|---|---|---|---|
+| ~~1~~ | ~~detrend + λ⁻ⁿ sweep~~ | — | ✅ **DONE 2026-07-31, §16.12.11.** Trend confirmed; λ⁻ⁿ refuted |
+| 1 | **⭐ Re-scope §16.11.11 around the detrended 1.89 %** | free | the `jar` arm over-predicts by ~1.6× — the `cone` arm and the mechanical programme are no longer the binding constraint. **Series E (σ_fill) becomes the most informative measurement available** |
+| ~~2a~~ | ~~far anchor: lamp or pigment?~~ | — | ✅ **DONE, §16.12.12.** PIGMENT, 5.1 σ |
+| ~~2b~~ | ~~sweep the far anchor~~ | — | ✅ **DONE, §16.12.13.** The contamination is CARRYING the discrimination — remove it and the classes overlap. No free win; the shipped window is near-optimal |
+| ~~2~~ | ~~restate the metric~~ | — | ✅ **DONE 2026-07-31** — `SPEC_capability_proof.md` **§2.1a** (three-region algebra, verified to 0.5 %) + the `PB_BASELINE_WINDOWS` comment in `DevSpectralPlugin` rewritten. Doc-only; 22 tests green |
+| ~~2d~~ | ~~raw-vs-baselined on dilution + settling~~ | — | ✅ **DONE, §2.1a** (`diagnostics/baseline_vs_raw.py`). **The baseline HALVES both errors** (dilution 5.49→2.75 %, settling 11.90→6.20 %) and **§11.4c's sign is vindicated** — the 11 h/30 min conflict is a **non-monotonic settling curve**, not a sign flip |
+| 2 | **⭐ Decide: declare 600–630 as an explicit third band?** (`SPEC_capability_proof.md` §2.1a) | a design call | now that it earns its place on **three** axes — discrimination, dilution invariance, settling immunity — it should arguably be named and error-budgeted rather than disguised as a correction anchor. Gated on post-rebuild data so the window is not fitted on today's 4 fills |
+| 2c | Re-run the sweep on POST-rebuild data with a proper brown series | rides on series D/E | today's sweep rests on pre-rebuild 07-27 fills (within-fill CV ~9.7 % vs 2.96 %) and only 2 brown fills |
+| ~~2e~~ | ~~drop the red anchor now the rig is fixed?~~ | — | ⛔ **REFUTED 2026-07-31, §16.12.14.** The rebuild made the baseline **more** valuable (gain 1.27× → 2.79×); `offset NEAR only` costs 3.6× precision and is worse than no correction. **Keep the red anchor** |
+| ~~2f~~ | ~~whole-spectrum baseline (AsLS / rubber band / ModPoly)?~~ | — | ⛔ **REJECTED 2026-07-31, §16.12.14a.** None beats the two-window line; AsLS scores 21/25 LOFO errors because it absorbs the class difference. **Structural: our 440–630 window has no peak-free region.** Revisit only if the capture window widens past ~700 nm |
+| 3 | **⭐ 1-butanol trial** (§16.12.7) — odour test, PS soak test, then a rig run | ~€20 | the only **unblocked** line of attack on the drift while item 2 is open |
+| 4 | 0.22 µm PTFE filter (§16.12.9) | ~€6 once | still discriminates micron particulate from sub-pore populations, independently of any baseline model |
+| 5 | Fresh ≥99.8 % IPA (§16.12.10) | ~€10 | control for solvent degradation |
+| 6 | Container / FEP window (§16.12.8) | — | **only if butanol fails and heptane becomes necessary** |
+
+Items 1 and 2 are free and both bear on work already scheduled — do them before series D/E.
+
+---
+
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).

@@ -43,6 +43,10 @@ cheaper). Goal = a **binary over-roast warning**, not a three-way roast scale.
 
 Class call = **simple nearest-cluster distance**, not a trained classifier (§2.4).
 
+> ⚠ **The first row's name is wrong.** The metric is not a two-band ratio — a **third pigment-bearing region at
+> 600–630 nm** enters through the baseline slope and carries a large share of the discrimination. **See the
+> restatement in §2.1a** *(2026-07-31)*. The results are unaffected; the description was.
+
 ### The evidence
 
 | Claim | Green (good) | Brown (over-roasted) | Separation | ✓ |
@@ -60,13 +64,15 @@ Cluster gap: **worst green 3.67 > best brown 2.59** — a clean, empty separatio
 | Aspect | State |
 |---|---|
 | Dilution-invariant good/brown discrimination | ✅ **Proven, not marginal** (10–13× noise) |
-| Physics understood (settling, matched/mismatched bands) | ✅ No hand-waving (§11.4a–d) |
+| Physics understood (settling, matched/mismatched bands) | ⚠ **PARTLY — 2026-07-31.** §11.4c's sign is ✅ **vindicated** (§2.1a: signs agree; the 11 h/30 min conflict is a **non-monotonic settling curve**, and §11.4a's +24.3 % reproduced to +24.25 %). But §11.5 is still **silent on the third region** the metric actually uses (§2.1a) |
 | Freshness-protocol repeatability (green ×5) | ✅ Validated (§11.4a) |
 | Verdict threshold | ✅ Exists (Ampel 2.8) |
 | Miller-facing verdict in-app | ✅ **Implemented** — the Roast Ampel gauge shows an easy green/brown read, not raw numbers ([`SPEC_roast_ampel.md`](SPEC_roast_ampel.md) §8) |
 | Sample preparation | ✅ **Easy** — a few drops of oil in isopropanol + a swirl; no lab skills |
 | Broaden panel: +1 brown, +4 green | ⏳ **The one open item — confirmatory** (§11.6) |
 | Brown ×5 fresh runs | ⏳ In progress (2 done; age-robust as predicted) |
+| Metric description matches the metric | ⚠ **Text FIXED 2026-07-31** (§2.1a + `DevSpectralPlugin`). Design decision still open: declare 600–630 as an explicit third band, or leave it covert-but-documented |
+| Linear baseline earns its place | ✅ **Measured 2026-07-31** (§2.1a) — halves BOTH error terms: dilution 5.49 → 2.75 %, settling 11.90 → 6.20 % |
 | ~~Third too-green oil~~ | ⛔ Retired — out of scope (§1a) |
 | ~~Amber-band sample~~ | ⛔ Retired — no intermediate oils in practice (§1a) |
 
@@ -341,6 +347,166 @@ this milestone just implements them; it does **not** re-derive them.
 offset `b` on the denominator (`A_green`, the smallest number in the chain) — §13/F5. → **baseline-correct the
 denominator** (at least for the new ratios). The preprocessing bench (§4) is where we confirm this actually
 tightens the within-oil cluster.
+
+### 2.1a ⚠ RESTATEMENT — the shipped metric is a **THREE-REGION** construction, not a two-band ratio  *(2026-07-31; DRAFT for Edwin. Forced by `SPEC_capture_quality.md` §16.12.12–§16.12.13)*
+
+Everything above describes the metric as a **ratio of two pigment bands** with a baseline correction applied to
+clean it up. **That description is incomplete, and the incompleteness is load-bearing.** This section restates
+what the shipped code actually computes. No result below is withdrawn — §11's verdicts stand — but the
+*explanation* attached to them has to change before the gate is defended.
+
+#### What the code actually computes
+
+`DevSpectralPlugin` + `SpectrumFeatureUtil.linearBaselineCorrected`, in three steps:
+
+1. Fit a straight line `b(λ)` through the mean absorbance of two anchor windows —
+   **near `W_n` = 520–540 nm** (centroid 530) and **far `W_f` = 600–630 nm** (centroid 615).
+2. Subtract it: `A'(λ) = A(λ) − b(λ)`.
+3. Metric = `mean(A' over 440–460) / mean(A' over 560–580)`.
+
+Expand step 1 at the two band centroids (450 and 570) and the metric written out in full is:
+
+```
+                A_Soret − 1.941·A_near + 0.941·A_far
+    S/Q   =   ──────────────────────────────────────
+                A_Q     − 0.529·A_near − 0.471·A_far
+```
+
+**`A_far` is not a correction term. It is a fourth measured quantity that enters the numerator with a POSITIVE
+coefficient (+0.941) and the denominator with a NEGATIVE one (−0.471) — both of which raise the ratio.** More
+signal in 600–630 nm means a higher green score, mechanically.
+
+*(Verified numerically, not just derived: the expanded formula reproduces `linearBaselineCorrected`'s own output
+to within **0.5 %** on both classes — green `20270729B/001` 12.690 vs 12.749, brown `20260727C/001` 9.841 vs
+9.859, green `20260727B/001` 11.621 vs 11.666. The small residual is the centroid approximation — the code uses
+band *means*, the formula uses the band centre.)*
+
+#### Why that matters: the far window is not signal-free
+
+`DevSpectralPlugin`'s own comment calls these *"the two OIL-QUIET windows"* that *"sit where the oil itself is
+featureless."* **For the far window this is false**, measured two ways on 37 runs across six fills and two
+sessions (`SPEC_capture_quality.md` §16.12.12):
+
+- Absorbance **rises** across 600→630 nm, and the rise is **green 0.0535 vs brown 0.0159 — 5.1 σ**, while the
+  reference lamp sits at the same 35–39 DN for both classes. An instrument effect cannot know which oil is in
+  the jar.
+- Regressing that rise on the greenness ratio gives **intercept ≈ 0**: the rise vanishes exactly when the
+  greenness does.
+
+It is **real chlorophyll absorption** — the rising flank toward the true Q maximum near 665 nm, which lies
+outside our 440–630 capture clamp. For brown oil the far window genuinely *is* quiet (rise 0.007–0.021); for
+green it is not.
+
+#### And it is carrying a large share of the discrimination
+
+The far-anchor sweep (`SPEC_capture_quality.md` §16.12.13), scored on §16.10.9's basis — 25 runs, 4 fills:
+
+| far window | LOFO errors | Cohen's d | class gap |
+|---|---|---|---|
+| 610–630 nm *(further red)* | 1/25 | **3.28** | **+0.782** |
+| **600–630 nm — shipped** | **1/25** | **2.88** | **+0.495** |
+| 600–620 nm | 4/25 | 2.28 | OVERLAP |
+| 600–615 nm | 9/25 | 1.95 | OVERLAP |
+| 600–610 nm *(contamination removed)* | 12/25 | **0.94** | OVERLAP |
+
+**Monotone, and replicated by a second sweep that slides the window instead of shrinking it.** The further red
+the anchor reaches, the better green separates from brown — because for green the window mean climbs the
+chlorophyll flank while for brown it barely moves. **Remove the contamination and the classes overlap outright.**
+
+#### ⇒ The restated claim
+
+> The pigment ratio is a **three-region measurement**: the Soret band (440–460), the Q band (560–580), and a
+> **third pigment-bearing region at 600–630 nm** which enters through the fitted baseline's slope and raises the
+> green score. It is **not** "two pigment bands with an instrument-artifact correction."
+
+**What this does NOT change.** §11's results are empirical — leave-one-fill-out scoring on real fills — and they
+stand. The shipped 600–630 window sits near the optimum of the trade-off it participates in. **Nothing here says
+a verdict was wrong.**
+
+**What it DOES change.**
+1. **The physical story in §11.5 is incomplete** — it explains Soret and Q, and is silent on the third region
+   that the sweep shows is doing comparable work.
+2. **The metric is more exposed than documented** to anything that moves 600–630 nm: the settling drift
+   (`SPEC_capture_quality.md` §16.12.11 A) and the lamp's red-end collapse to 39 DN (§16.12.11 B) both act
+   exactly there.
+3. **`SPEC_pumpkin_peak_ratio_eval.md` §1b.1's "literature-anchored bands" framing is only two-thirds true.**
+   440–460 and 560–580 are literature-anchored; the third region is not — it arrived as a baseline anchor
+   chosen for being *quiet*, and it turns out not to be.
+
+#### ▶ The decision this forces — covert or explicit?
+
+**(a) Declare it.** Make 600–630 an explicit third band in the plugin, with its own name and its own entry in
+`declaredEvalBands()`, and write the metric as a stated three-band formula. Then it can be tuned, error-budgeted,
+and defended. Costs: the metric's definition changes shape (values need not change at all if the coefficients
+are kept identical), and the spec text has to be rewritten in several places.
+
+**(b) Keep it covert, document it honestly.** Change nothing in code; add this restatement to the specs so no
+reader is misled. Cheapest, and it keeps every number stable — but it leaves a measuring band disguised as a
+correction, which is how this went unnoticed for months.
+
+**Recommendation: (a), after series D/E.** The sweep rests on **pre-rig-rebuild** 07-27 fills (within-fill CV
+~9.7 % against §16.11.3's 2.96 %) with only **two brown fills**, one of them 3 runs. Redesigning the metric on
+that basis would repeat §16.10.16's trap. **Do (b) now — it is free and it removes the misleading text — and
+schedule (a) on post-rebuild data with a real brown series.** ⚠ Do **not** adopt 610–630 on today's evidence
+even though it scores better; picking the best window out of a sweep is exactly the fitting trap.
+
+#### ✅ RESOLVED — §11.4c's sign is NOT contradicted, and the baseline EARNS ITS KEEP  *(`diagnostics/baseline_vs_raw.py`, 2026-07-31)*
+
+The draft above suspected the linear baseline of *reversing and amplifying* the settling effect, because §11.4c
+predicts settling **inflates** S/Q (§11.4a: 3.66 → 4.57 over 11 h) while `SPEC_capture_quality.md` §16.12.11 A
+measured the shipped metric **deflating** over 30 min. **Measured on the archived PDFs, that suspicion is wrong
+on both counts.** Raw and baseline-corrected S/Q, on every dataset on disk — every number is a change that
+*should be zero*:
+
+**Dilution invariance** — the metric's whole justification (§3):
+
+| pair | RAW % | **LIN. BASE %** | raw weak→strong | base weak→strong |
+|---|---|---|---|---|
+| green `oilK`→`oilL`, 2→3 drops *(§11.1 UC2)* | −3.20 | **+0.36** | 3.887 → 3.762 | 6.625 → 6.648 |
+| brown `oilN`→`oilM`, 2→3 drops *(§11.4)* | **+5.59** | +5.98 | 2.347 → 2.478 | 3.272 → 3.467 |
+| green set B→C, ~17 % apart *(§16.11.6)* | −7.68 | **−1.91** | 5.603 → 5.172 | 12.489 → 12.251 |
+| **mean \|error\|** | **5.49** | **2.75** | | |
+
+**Settling:**
+
+| interval | RAW % | **LIN. BASE %** | signs |
+|---|---|---|---|
+| green fresh→aged, ~11 h *(§11.4a)* | **+24.25** | **+6.28** | agree |
+| green set B, ~28 min *(§16.12.11 A)* | −9.66 | −5.38 | agree |
+| green set C, ~33 min | −1.80 | −6.93 | agree |
+| **mean \|error\|** | **11.90** | **6.20** | |
+
+**📈 `spectracs-references/tmp/baseline_vs_raw.png`.**
+
+**Three findings, and they change the tone of this section:**
+
+1. **No sign flip anywhere — the signs agree on every dataset.** What looked like a contradiction is a
+   **timescale difference**: over ~11 h the ratio *inflates*, over ~30 min it *deflates*. §11.4c's physics
+   describes the hours-scale clearing and remains correct; §16.12.11 A describes a different, faster,
+   opposite-signed phase. **⇒ The settling curve is NON-MONOTONIC**, which is new, and it explains why
+   §11.4a's "measure fresh, don't reuse an aged cuvette" and §16.11.7's "let a fresh dilution equilibrate
+   ~15 min" are both right — they guard different phases of the same curve.
+2. **§11.4a is reproduced exactly.** Its 3.66 → 4.57 is **+24.3 %**; the raw metric here measures **+24.25 %**
+   on the same PDFs. An independent confirmation of the whole toolchain, three months on.
+3. **⭐ The linear baseline HALVES BOTH error terms** — dilution 5.49 → 2.75 %, settling 11.90 → 6.20 %. It is
+   not a liability that happens to boost discrimination; it demonstrably improves **both invariances the metric
+   claims**, on data that long predates it.
+
+*(One exception, and it is the expected one: brown `oilN`→`oilM` is the single pair where the baseline does not
+help (+5.98 vs +5.59). §11.4 already established that the brown oil carries more particulate scatter and that
+its dilution-invariance is measurably weaker. Caveats: the aged-green point is **n = 1 PDF** against 8 fresh
+runs, and each dilution pair is 4 runs per level.)*
+
+#### ⇒ This strengthens the recommendation, and flips it toward (a)
+
+The far window is not a defect to be tolerated for the discrimination it buys. **It is earning its place on
+three independent axes — discrimination (§16.12.13), dilution invariance, and settling immunity.** A component
+doing that much work should not be disguised as a correction anchor: it should be **declared, named,
+error-budgeted and tunable**.
+
+**Revised recommendation: do (b) immediately** — the misleading text is already fixed in `DevSpectralPlugin`
+and in these specs — **and schedule (a) as a genuine design step**, still gated on post-rebuild data with a
+real brown series so the window choice itself is not fitted on today's four fills (§16.10.16's trap).
 
 ### 2.2 Intrinsic absorption colour  *(visual)*
 
