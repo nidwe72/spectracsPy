@@ -6449,8 +6449,8 @@ Read this before the detail. Everything below is the machinery for these four li
 one surrogate preparation  ->  4 runs  ->  r_Q  ->  the plugin computes  B_Soret / (B_Q - r_Q)
 ```
 
-**Twenty minutes per instrument, and one bottle of refined sunflower oil.** The physics never has to
-be explained to whoever runs it.
+**Twenty minutes per instrument, and one bottle of MCT oil.** The physics never has to be explained
+to whoever runs it.
 
 **⚠ But `r_Q` gives the NUMBER, not the VERDICT.** The corrected metric sits on a different scale
 (green ≈ 10, brown ≈ 7.6), so `T` = 10.6 is meaningless on it. Two constants are needed and they are
@@ -6473,7 +6473,7 @@ a per-sample property. That is what §16.16's Steirerkraft series tests. **If it
 gets built and the shipped metric stays as it is.**
 
 **⇒ The honest one-line summary: if A1 holds, a new instrument costs twenty minutes and a bottle of
-refined sunflower oil. That is the entire production burden the correction adds.**
+MCT oil. That is the entire production burden the correction adds.**
 
 ### 16.17.1 What is being calibrated — exactly one scalar
 
@@ -6545,12 +6545,33 @@ Master-only, per instrument, sitting beside the wavelength calibration in the ex
 
 | step | the technician | the app |
 |---|---|---|
-| **1 · Prepare** | 18 ml alcohol + 6 drops **refined** sunflower or rapeseed oil; stir; wait the standard latency | states *why refined* — it must contain no pigment — and shows the same stir-to-measure timer the measurement workflow uses (§16.16.6) |
+| **1 · Prepare** | 18 ml alcohol + 6 drops **MCT oil** *(pharmacopoeial grade — see the note below)*; stir; wait the standard latency | states *why MCT* — it must contain no pigment — and shows the same stir-to-measure timer the measurement workflow uses (§16.16.6) |
 | **2 · Reference** | pure alcohol | ordinary reference capture |
 | **3 · Measure ×4** | insert, capture, **re-seat**, repeat | shows turbidity per run so a bad preparation is visible immediately |
 | **4 · Check** | — | the three gates of §16.17.4 |
 | **5 · Result** | reads one number | `r_Q = −0.024 ± 0.001`, with `r_Soret` beside it |
 | **6 · Store** | confirms | writes the calibration entry of §16.17.5 |
+
+**⭐ Why MCT and not a refined vegetable oil**  *(changed 2026-08-02; the surrogate was originally
+specified as refined sunflower or rapeseed)*
+
+Refined sunflower is *cheap and available*, but it is not actually pigment-free: **bleaching reduces
+carotenoids, it does not remove them**, and carotenoids absorb across roughly **400–500 nm — straight
+through the Soret window.** Consequences:
+
+| | refined sunflower | **MCT** |
+|---|---|---|
+| `r_Q` (560–580) | clean — carotenoids are finished by ~520 nm | clean |
+| **`r_Soret` (440–460)** | **contaminated** — a positive reading could be carotenoid rather than baseline residual | **clean** |
+| assumption **A2** | **stays unmeasurable** | **becomes measurable** |
+| the §16.17.4 pigment gate | would have to tolerate a blue rise, weakening it | **stays strict as written** |
+
+MCT is **C8:0/C10:0 — fully saturated, no double bonds, no carotenoids**, and available in
+pharmacopoeial grade (§16.18.3). It is therefore *strictly better* as a surrogate: same procedure,
+same cost, one bottle — and it recovers the second number the wizard is supposed to produce.
+
+⚠ **This is the surrogate only. MCT was REJECTED as a replacement SOLVENT — see §16.18.0.** The two
+uses are unrelated: as a surrogate it never touches the sample chemistry.
 
 **Why four runs and not one.** One run already separates `r_Q` from zero by ~10 σ (run-to-run SD on
 `B_Q` is **0.0025 A** against a value near 0.025). Four are specified anyway: they guard against a
@@ -6590,7 +6611,7 @@ must refuse rather than store a doubtful constant.**
 | gate | rule | message on failure |
 |---|---|---|
 | **Did it scatter?** | turbidity `A@520–540` inside the normal sample range — measured sets sit at **0.09–0.12** | *"The oil dissolved instead of emulsifying. Stir harder, or use a different oil."* **Blocks** |
-| **Is it pigment-free?** | the absorbance curve smooth across 440–630 nm — no Soret rise, no Q bump | *"This oil contains pigment. Use a refined, bleached oil."* **Blocks** |
+| **Is it pigment-free?** | the absorbance curve smooth across 440–630 nm — **no Soret rise, no Q bump** | *"This oil is not pigment-free. Use pharmacopoeial-grade MCT."* **Blocks** |
 | **Is the sign right?** | `r_Q` **negative**, `r_Soret` **positive** (§16.16.9's geometry), both within a plausible band | *"Unexpected result — calibration not stored."* **Blocks** |
 
 ⚠ **The plausible band is not yet knowable.** One instrument has produced one value (−0.0246). The
@@ -6686,11 +6707,63 @@ decision rather than being discovered afterwards.**
 
 ---
 
-## 16.18 ⭐ THE MCT ROUTE — dissolving the oil instead of correcting for it  *(Edwin 2026-08-02: "couldn't that be used as an alternative to the IPA alcohol also?"; DESIGN + a one-evening test, nothing run)*
+## 16.18 THE MCT ROUTE — dissolving the oil instead of correcting for it  *(Edwin 2026-08-02; ⛔ **REJECTED as a solvent the same day — see §16.18.0**. Kept for the reasoning and the reopening condition; the surrogate use survives)*
 
 Edwin asked whether **MCT oil** could replace isopropanol as the solvent — *"MCT and some drops of
 pumpkin oil"* instead of *"pumpkin oil in IPA"*. **It is a much larger idea than the surrogate
 question that prompted it, and if it works it makes §16.15–§16.17 unnecessary rather than wrong.**
+
+### 16.18.0 ⛔ DECISION — REJECTED as a solvent; KEEP isopropanol  *(Edwin, 2026-08-02, after the literature check)*
+
+**The test proposed in §16.18.6 is NOT to be run.** The rest of this section is kept because the
+reasoning is worth having on record and because it is conditionally reopenable — not because it is
+scheduled.
+
+**Two objections, either of which is sufficient.**
+
+**1 · The red-side headroom is ~4 nm, and the shift direction cannot be predicted.**
+
+```
+detector upper limit          629.8 nm   (measured grid: 439.97 .. 629.82)
+protochlorophyll Qy           ~623-626 nm  (§4.1)
+headroom on the red side      ~4-7 nm
+possible solvent shift        up to 15-20 nm, DIRECTION NOT PREDICTABLE
+```
+
+⚠ **And the direction really is not predictable.** Chlorophyll shifts do not follow a simple polarity
+ordering — chlorophyll *a*'s Qy sits at 660.6 nm in diethyl ether, 661–663 in acetone, 665 in
+methanol and **666 in benzene**, a *nonpolar* solvent giving the longest of them. For Mg-bearing
+pigments the driver is **coordination to the central magnesium**, not polarity, and a triglyceride's
+ester carbonyls coordinate differently again.
+
+**⇒ A red shift of even 10 nm walks the Qy peak out of the instrument entirely** — and §15 records
+that this far window *"supplies most of the discrimination but is disguised as a correction anchor"*.
+On the blue side a window could be moved; **on the red side there is nowhere to move to.** The trade
+is a load-bearing feature staked on a coin-flip with no recovery.
+
+**2 · It may require centrifugation, and a field instrument cannot.**
+
+§16.18.2a records that the published olive-oil method centrifuges **even neat oil** to suppress
+scattering. Whether MCT + pumpkin oil would need it is unknown — and **adopting a chemistry that
+*might* require lab equipment is a product risk, not a bench inconvenience.** The end user is a
+miller, not a laboratory.
+
+**Supporting, though neither is decisive alone:** the cost is now known to be large — **both the band
+windows and the threshold would need re-deriving** (§16.18.5, corrected) — while the benefit is
+uncertain, since a particulate pedestal may survive the change anyway (§16.18.1, corrected).
+
+#### ✅ What is kept from this section
+
+**MCT becomes the pigment-free SURROGATE of §16.16/§16.17**, replacing refined sunflower oil. That is
+an unrelated use — it never enters the sample chemistry — and it is a strict improvement, because MCT
+carries no carotenoids and therefore makes `r_Soret`, and with it **assumption A2, measurable at last**
+(§16.17.3).
+
+#### ▶ The condition under which this reopens
+
+**If the ROI is ever extended past ~660 nm.** §16.12.16 item 2h notes the pigment-free region begins
+there rather than beyond 700 nm, making the extension cheaper than previously recorded. With headroom
+on the red side, objection 1 loses its force and this analysis should be re-read rather than redone.
 
 ### 16.18.1 Why oil-in-oil changes the problem instead of correcting it
 
@@ -6853,7 +6926,7 @@ Two further consequences:
 - **Polystyrene compatibility** still needs the soak test that gates any vessel change, though oils
   are generally far gentler on PS than alcohols or ketones.
 
-### 16.18.6 📌 PRE-REGISTRATION — the one-evening test  *(written 2026-08-02, BEFORE the runs)*
+### 16.18.6 📌 PRE-REGISTRATION — the one-evening test  *(written 2026-08-02 BEFORE the runs; ⛔ **NOT TO BE RUN**, §16.18.0. Retained so that a future reopening inherits a prediction made before any data, not after)*
 
 Prepare pumpkin oil in MCT at a comparable pigment level, measure it as an ordinary sample with pure
 MCT as the reference, 4 runs. **The primary readout is a number already computed on every run:
@@ -6885,8 +6958,8 @@ verdict is trustworthy" to "the fallback if MCT proves impractical":
 succeeds the correction becomes *unnecessary* rather than *wrong*, and the measurement remains the
 reason we knew the pedestal was worth removing at all.
 
-**⇒ Given the cost — one evening, one bottle of food-grade oil — and that it can retire an entire
-programme, this should be tested BEFORE §16.16's Steirerkraft dilution series.**
+**⇒ Written as: given the cost, this should be tested BEFORE §16.16's Steirerkraft dilution series.**
+**⛔ SUPERSEDED by §16.18.0 — it is not tested at all.** §16.16's queue is unchanged by this section.
 
 ⚠ **But weigh it against §16.18.5's corrected shift cost before committing to a solvent change.** The
 one-evening *test* is cheap; *adopting* MCT means re-deriving the band windows and the threshold.
