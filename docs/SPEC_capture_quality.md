@@ -6434,6 +6434,40 @@ which is exactly the contrast the archive cannot supply.
 instrument** obtains it without understanding any of the physics. It is a UX design; nothing here is
 implemented, and §16.17.8 lists what must be true before it should be.
 
+### 16.17.0 ⭐ What it comes down to — the whole production burden, in one place
+
+Read this before the detail. Everything below is the machinery for these four lines:
+
+```
+one surrogate preparation  ->  4 runs  ->  r_Q  ->  the plugin computes  B_Soret / (B_Q - r_Q)
+```
+
+**Twenty minutes per instrument, and one bottle of refined sunflower oil.** The physics never has to
+be explained to whoever runs it.
+
+**⚠ But `r_Q` gives the NUMBER, not the VERDICT.** The corrected metric sits on a different scale
+(green ≈ 10, brown ≈ 7.6), so `T` = 10.6 is meaningless on it. Two constants are needed and they are
+very different animals:
+
+| | where it comes from | how often | ships how |
+|---|---|---|---|
+| **`r_Q`** | the **surrogate**, on *this* instrument | **once per instrument** — 20 min | measured at build time, stored on the instrument record |
+| **`T`** | the **oil panel**, globally | **once for the product** — the P5 milestone | derived centrally, ships with the software |
+
+**⇒ A new instrument needs only the surrogate.** The threshold is not a per-unit quantity and never
+becomes one. *(§16.17.1 gives the conceptual version of this distinction; the table above is the
+operational one — what a build actually costs.)*
+
+**Read `Soret · linear baseline` in the same session.** If `r_Soret` proves non-negligible the model
+needs two constants and the correction grows a term (§16.17.1).
+
+**⚠ And the whole chain is conditional on A1** — that `r_Q` is one constant per instrument rather than
+a per-sample property. That is what §16.16's Steirerkraft series tests. **If it fails, none of this
+gets built and the shipped metric stays as it is.**
+
+**⇒ The honest one-line summary: if A1 holds, a new instrument costs twenty minutes and a bottle of
+refined sunflower oil. That is the entire production burden the correction adds.**
+
 ### 16.17.1 What is being calibrated — exactly one scalar
 
 The correction adds **one number per instrument**, and it is worth being precise about which of the
