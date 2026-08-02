@@ -6697,7 +6697,14 @@ question that prompted it, and if it works it makes §16.15–§16.17 unnecessar
 Pumpkin seed oil is a triglyceride. MCT is a triglyceride. **Like dissolves like — they are miscible
 in all proportions.**
 
-No droplets. No emulsion. **No scattering pedestal at all.**
+No droplets. No emulsion. **The pedestal that §16.15–§16.17 exist to correct is an EMULSION pedestal,
+and it should disappear.**
+
+⚠ **Corrected 2026-08-02 after the literature check (§16.18.2a): that is not the same as "no
+scattering at all".** The published olive-oil method centrifuges even *neat* oil "to minimise light
+scattering phenomena" — oils carry waxes, moisture and particulates of their own. **Expect the
+emulsion term to go and a smaller particulate term possibly to remain.** §16.18.6's turbidity reading
+is the measurement of which; it may land low rather than at zero.
 
 Everything in §16.15–§16.17 — `r_Q`, the 23–43 % inflation, the preparation-dependence, the turbidity
 gate, the calibration wizard — exists **because the oil does not dissolve in isopropanol.** It sits
@@ -6731,6 +6738,50 @@ the Soret band. Dissolving could therefore raise the Soret more than the Q band 
 **⇒ Read the turbidity as the clean signal and the metric as the informative-but-confounded one.** A
 value between 10 and 12 is ambiguous rather than a refutation.
 
+### 16.18.2a What the literature already does — this is precedented, not novel  *(web research 2026-08-02; sources at §16.18.8)*
+
+**Measuring chlorophyll-family pigments in a lipid environment is established practice.** Three
+configurations are in routine published use:
+
+| configuration | detail |
+|---|---|
+| **oil dissolved in cyclohexane** | the IUPAC / COI `K670` method — **7.5 g oil in 25 mL**, 1 cm path |
+| **NEAT oil, no solvent at all** | **0.5 cm** path length, spectra recorded directly |
+| **pigments dissolved in TRIOLEIN** | the reference spectra used for spectral deconvolution — **triolein is a triglyceride**, i.e. the closest published analogue to what this section proposes |
+
+Working wavelengths there are **670 nm** for chlorophylls/pheophytins and **470 nm** for carotenoids.
+*(Not directly transferable to us: those are chlorophyll-family Qy positions, and our pigment is
+**protochlorophyll**, whose Qy sits near 625 nm — §4.1.)*
+
+**⇒ The configuration Edwin proposes is one the field already uses. That removes the "is this even a
+sensible thing to do" question entirely.**
+
+#### ⚠ But the same source is where the "no pedestal" claim gets qualified
+
+That method **centrifuges to minimise light scattering — for neat oil**, with no emulsion present. So
+an oil matrix is not automatically scatter-free, and §16.18.1 has been corrected accordingly.
+
+#### Why not simply use cyclohexane, which is what the literature uses?
+
+On physics it is the better solvent: **~1 cP** against MCT's 25–33, fully transparent, and the
+protocol is already written and validated.
+
+**We cannot use it.** Flammable (flash point −20 °C), H304 aspiration hazard, volatile — it falls to
+exactly the constraint of §16.12.7b that rejected acetone: **the 220 V lamp sits under the beam, so
+any leak reaches mains electrics.**
+
+**⇒ MCT is the safe analogue of the solvent the field actually uses.** That is a defensible position
+to occupy, and it is worth stating in those terms rather than presenting MCT as an improvisation.
+
+#### What the literature does NOT settle
+
+- **No data on band positions in MCT specifically.** Triolein reference spectra exist; their values
+  were not retrieved.
+- **Nothing on protochlorophyll in a lipid matrix at all** — our actual pigment (§4.1).
+
+**⇒ The band shift for *our* system is unmeasured, which is precisely why §16.18.5 now says the
+windows must be re-derived empirically rather than merely re-checked.**
+
 ### 16.18.3 What MCT is
 
 Medium-chain triglycerides — C8 (caprylic) and C10 (capric) fatty acids on a glycerol backbone,
@@ -6739,8 +6790,20 @@ solid below ~24 °C), colourless, odourless, tasteless, **food-grade**. Sold as 
 health-food shops and pharmacies, or as *Neutralöl* / caprylic-capric triglyceride in cosmetics.
 Cheap and freely available.
 
-Optically it should be near-ideal for us: triglyceride absorption sits in the UV (< 300 nm) and the
-NIR (> 1100 nm), so the **440–630 nm window is essentially empty**.
+**⭐ And the optical advantage is better than "it happens to be pale" — it is structural.** Absorbance
+in vegetable oils across the near-UV and blue comes from **π electrons in UNSATURATED fatty acids**
+and from polyphenols. MCT is **C8:0 / C10:0 — fully saturated, no double bonds in the chains at all.**
+
+**⇒ MCT should be optically cleaner than sunflower, rapeseed or olive oil**, all of which are highly
+unsaturated — and cleaner, therefore, than the surrogate oil of §16.16/§16.17. Triglyceride absorption
+otherwise sits in the UV (< 300 nm) and the NIR (> 1100 nm), leaving **440–630 nm essentially empty**.
+
+Two practical facts worth having on record:
+
+- **Pharmacopoeial grades exist** — BP / Ph.Eur / USP-NF — so it is a *specified* material rather than
+  a variable commodity. That matters a great deal if it ever becomes a calibration reference.
+- **Viscosity 25–33 cP at 20 °C, refractive index 1.440–1.452.** The viscosity confirms §16.18.5's
+  bubble concern quantitatively: this is ~15× isopropanol.
 
 ### 16.18.4 Safety — and it answers the constraint that killed acetone
 
@@ -6770,9 +6833,21 @@ Two further consequences:
   old one**, and it would not announce itself; §16.18.6's turbidity reading is the check.
 - **Cleaning.** IPA would still be needed to wash the vessel between samples, so the alcohol does not
   leave the bench.
-- **Solvatochromic shift.** Porphyrin bands move by a few nm between polar and nonpolar solvents. The
-  band windows may need re-checking and **the threshold would need re-deriving** — the same cost the
-  butanol route carried, and the reason §16.12.7b paused it.
+- **⚠⚠ Solvatochromic shift — CORRECTED 2026-08-02, and it is the biggest cost here.** This section
+  first said "a few nm". **That was wrong.** The literature reports **Soret bands shifting up to
+  15–20 nm and Q bands up to 10 nm** across a solvent change, with a systematic red-shift as polarity
+  rises. Isopropanol → MCT is polar-protic → nonpolar, which is a large step.
+
+  **Our windows are 20 nm wide** (Soret 440–460, Q 560–580). **A shift of 15–20 nm is the width of the
+  window itself** — the band could move substantially out of the region meant to measure it, changing
+  numerator and denominator in ways that have nothing to do with the pigment.
+
+  ⇒ The earlier wording "the windows may need re-checking" is upgraded to **the windows must be
+  RE-DERIVED empirically**, and with them the threshold. That is a materially larger cost than the
+  butanol route carried, and it must be weighed against the gain rather than assumed away.
+
+  ⇒ It also reinforces §16.18.6's design: **band shifts corrupt the metric but cannot touch the
+  turbidity reading.** Turbidity being the primary readout is load-bearing, not stylistic.
 - **Package/sieve effect** (§16.18.2) — the metric changes scale, which is the point, but it means
   full re-derivation rather than a rescale.
 - **Polystyrene compatibility** still needs the soak test that gates any vessel change, though oils
@@ -6812,6 +6887,25 @@ reason we knew the pedestal was worth removing at all.
 
 **⇒ Given the cost — one evening, one bottle of food-grade oil — and that it can retire an entire
 programme, this should be tested BEFORE §16.16's Steirerkraft dilution series.**
+
+⚠ **But weigh it against §16.18.5's corrected shift cost before committing to a solvent change.** The
+one-evening *test* is cheap; *adopting* MCT means re-deriving the band windows and the threshold.
+
+### 16.18.8 Sources  *(web research 2026-08-02)*
+
+| claim | source |
+|---|---|
+| olive-oil pigments in cyclohexane and in neat oil; **triolein reference spectra**; centrifugation against scattering; 0.5 / 1 cm paths | *Determination of Pigments in Virgin and Extra-Virgin Olive Oils*, Foods 2019 — [PMC6352134](https://pmc.ncbi.nlm.nih.gov/articles/PMC6352134/) |
+| the `K670` index, 7.5 g oil in 25 mL cyclohexane, pheophytin-a as the reference pigment | IUPAC, *Determination of chlorophyll pigments in vegetable oils* — [publications.iupac.org](http://publications.iupac.org/pac/1995/pdf/6710x1781.pdf) |
+| **Soret shift up to 15–20 nm, Q up to 10 nm** across solvents; red-shift with polarity | *How to tune the absorption spectrum of chlorophylls*, PeerJ Phys Chem — [peerj.com](https://peerj.com/articles/pchem-26.pdf) |
+| oil absorbance in the near-UV/blue arises from **unsaturation** (π electrons) and polyphenols | *Study of UV Transmission through a Few Edible Oils*, J. Spectroscopy 2013 — [Wiley](https://onlinelibrary.wiley.com/doi/10.1155/2013/540417) |
+| MCT **viscosity 25–33 cP at 20 °C**, refractive index 1.440–1.452, BP/Ph.Eur/USP-NF grades | Ph.Eur/USP-NF MCT specification — [mubychem.com](https://mubychem.com/mediumchaintriglyceridesmanufacturers.html) |
+| MCT composition (C8:0 caprylic, C10:0 capric), liquid at RT, food use | *Triglycerides of medium-chain fatty acids: a concise review* — [PMC9217113](https://pmc.ncbi.nlm.nih.gov/articles/PMC9217113/) |
+
+⚠ **What the sources do NOT cover, and it is the load-bearing gap:** no band-position data for MCT
+specifically, and **nothing whatsoever on protochlorophyll in a lipid matrix.** Every shift figure
+above is for chlorophyll-family pigments in conventional solvents. **The shift for our system is
+unmeasured — which is why §16.18.5 demands empirical re-derivation rather than a literature lookup.**
 
 ---
 
