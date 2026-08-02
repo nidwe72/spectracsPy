@@ -297,3 +297,86 @@ correctness, and a 9.88 σ margin against a possibly-wrong threshold is a confid
 
 **Also unblocked:** §16.12.16 item 2c (re-run the far-anchor sweep on post-rebuild data) — it was waiting on
 "a proper brown series" and now has one.
+
+---
+
+## The Kiendler session — an experiment that failed, and the pedestal that explains why  ·  _2026-08-01/02 (evening rig session)_  ·  _status: green confirmed; dilution question NOT answered; `r_Q` measured_
+
+**Three preparations of one green oil** (`spectracs-references/tmp/20260801A|B|C/`, ten reports) — Ulrich
+Kiendler, §11.4f F step 3's "green #2", run so as to double as the deliberate dilution-invariance experiment
+§16.10.8 has wanted for weeks. Full account: `SPEC_capture_quality.md` §16.15. New tool:
+`diagnostics/kiendler_dilution.py`.
+
+**0 · The oils finally have names.** Kiendler (this session), **Steirerkraft** (`20270729B/C`, green #1),
+**Spar S-Budget** (`20260731A`, series D brown) — corroborated by the archive's own filenames. Edwin's visual
+read, *"Kiendler a little bit greener than Steirerkraft"*, is recorded **as** §11.4f D3's operator pre-read. It
+is the only independent ground truth the campaign has, and it costs nothing.
+
+**1 · The oil is green, decisively, and that part went exactly as designed.** A **14.279** ± 0.491, B **12.740**
+± 0.065, C **13.039** ± 0.126 against T = 10.6 — margins +7.5, +4.4, +5.0 σ. Cohen's *d* vs brown **7.59**;
+§16.13.9's parameter-free shape discriminator **9.73**, alongside Steirerkraft's 10.26, and flat across all
+three preparations. A fifth oil-set that does not cross the threshold against Edwin's own read.
+
+**2 · ⚠ The dilution experiment failed, and the Beer-Lambert control is how we know.** A nominal **1.214×**
+concentration step moved `A_Soret` 1.36×, `A_Q` 1.80× and the **520–540 turbidity anchor 2.43×**. The two
+*baseline-anchor* windows — pedestal, not pigment — moved the most. Set A's turbidity, 0.038, is the lowest of
+the six post-rebuild sets; the other five sit at 0.09–0.13. **Set A was the anomaly, not B and C.**
+
+**3 · And set A was still changing while it was measured.** Over 32 minutes: `A_near` **−36.8 %** (t = −6.93),
+`A_Q` −17.3 %, `A_Soret` −8.3 % (t = −14.36) — while the shipped metric moved −1.3 % (t = −0.30). The lamp was
+flat throughout, so this is the sample. Oil suspended rather than dissolved, separating in the beaker; B was
+restirred and C was fresh, both read promptly. Same term as §16.12.6's settling drift, three times larger, and
+for the first time **large enough to break a designed experiment**.
+
+**4 · ⭐ Edwin caught the write-up understating it, and he was right.** His reading of the raw table — *"the
+stronger dilutions have lower S/Q, so things are dilution-dependent?"* — is correct on every pair, and nominal
+concentration is in fact the **only** self-consistent axis (slopes −0.59/−0.59/−0.58, spread 0.01; turbidity
+fails the C→B pair in sign). The first draft of §16.15 had called the concentration axis "void". That was
+wrong and is recorded as wrong. What is true is weaker: the session contains **effectively one contrast** — set
+A against the two stirred preps — in which concentration and turbidity moved together, so it cannot separate
+them; and −0.59 is separately incompatible with the archive's 1.5× pairs (predicts −21 %, measured +0.4 % and
++4.9 %). Set A's depletion is only 8–21 %, where ~53 % would be needed to reconcile.
+
+**5 · ⭐⭐ And then the two readings turned out to be the same mechanism.** §16.14.4–6 had already *derived*
+that invariance breaks only through `r_Q`, the pedestal's departure from its own best-fit line, with an error
+`r_Q/B_Q` that is **concentration-dependent ∝ 1/c**. Set A had the smallest `B_Q` and read highest — the
+predicted shape exactly. **Turbidity sets `r_Q`; concentration sets `B_Q`; the bias is their ratio.** §16.15.5's
+either/or was a false dichotomy, and the argument between the two explanations dissolved rather than being won.
+
+Fitted without any concentration axis at all — `B_Soret = M_inf·B_Q + (r_S − M_inf·r_Q)`, a line whose
+**intercept is the residual**: Kiendler `r_Q` = **−0.0246 ± 0.0037 A** (intercept 7 σ from zero), Steirerkraft
+**−0.0212 ± 0.0193**. **Two independent oils, same residual, same `M_inf`.** §16.14's model, until now pure
+derivation, **describes measured data** — and its residual is **~3× §16.14.7's asserted bound of 0.008 A**,
+which is superseded.
+
+**6 · ⚠⚠ The corollary nobody will like.** Pedestal-free class index: Kiendler **10.00 ± 0.50**, Steirerkraft
+**9.93 ± 2.15**. The shipped threshold is **10.6 — above both.** Remove the pedestal and **both green oils fall
+below the threshold meant to certify them.** `T = 10.6` is not pigment-intrinsic; it is calibrated on inflated
+numbers and tied to the current turbidity regime. **A successful clarification — the 0.22 µm filter, the
+solvent programme — would silently invalidate it.** Nothing in the spec said so before today.
+
+Worse for the panel: on that scale the two green oils are **indistinguishable**, though their measured means
+differ by 10.9 %. So *"Kiendler is greener"* may be a pedestal difference, not a pigment one. Steirerkraft's
+error bar is too wide to decide. **OPEN.**
+
+**7 · The pre-registered prediction is not decidable, and that is the format's fault.** §11.4f D2's "green #2
+within 10 % of green #1" fixed a threshold but never named the estimator: all runs pooled **+10.9 % (FAIL)**,
+mean of set means +7.9 % (PASS), stirred fills only +4.2 % (PASS). Recorded **UNDECIDED** rather than picked
+after the fact. **A threshold without an estimator is not a pre-registration** — §11.4f's own §16.10.16 trap,
+sprung on the section that was written to avoid it.
+
+**8 · One encouraging number.** B vs C — independent preparations 1.041× apart — agree to **−2.29 %** on the
+shipped metric and **+0.15 %** raw. df = 1, so it falsifies rather than estimates, but it is the absence of bad
+news §11.4f F wanted.
+
+**▶ Next, and it is cheap:** repeat set A's recipe — **18 ml + 6 drops, read immediately after stirring**. Same
+concentration as A, same turbidity as B/C. Lands near **12.9** ⇒ the pedestal did it; near **14.3** ⇒ Edwin's
+dilution dependence is real and large. Nothing else in the queue separates them.
+
+**Also now due:** fix and record stir-to-measure latency; log `A@520–540` as a per-run QC covariate (free, and
+it would have flagged set A before anyone looked at the ratio); and **promote B4, the €15 scale** — at the
+corrected slope, 10–20 % drop-volume scatter is a 2–8 % metric error against a 1.4–3.4 % re-seat σ, which would
+make preparation the dominant term in the entire budget.
+
+**⚠ What this session may NOT be used for:** §16.10.8's dilution-invariance measurement. It stays **OPEN**, and
+the pooled archive figure `s = +0.033 ± 0.029` is **not** to be updated from these ten runs.

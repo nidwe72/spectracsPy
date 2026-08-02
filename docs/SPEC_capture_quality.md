@@ -5914,6 +5914,15 @@ rests on `n = 2` dilutions only 17 % apart, and it uses `A_Q` as a concentration
 itself compromised by seating. Treat `|r_Q| ≲ 0.01 A` as an **upper bound**, and note the sign is the direction
 §16.14.6(a) predicts for a curved pedestal.
 
+> **⭐⭐ SUPERSEDED AGAIN 2026-08-02 — `r_Q` is now MEASURED, and the bound above was too tight.** §16.15.6 fits
+> the model in a form that needs no concentration axis at all (`B_Soret` against `B_Q`, whose **intercept** is
+> the residual) and gets `r_Q` = **−0.0246 ± 0.0037 A** on Kiendler, intercept **7 σ** from zero, with
+> **−0.0212 ± 0.0193 A** on Steirerkraft as an independent confirmation. That is **~3× the `|r_Q| ≲ 0.008 A`
+> asserted above.** The pooled-archive bound was not wrong about the *sign*, and §16.14.6(a)'s predicted shape
+> — bias largest at LOW concentration — is exactly what the Kiendler session shows. But the magnitude stands
+> corrected, and with it the conclusion in §16.14.8 that "whether `r_Q` is actually small" was unsettled: it is
+> settled, and the answer is **no, it is not small**. See §16.15.7 for what that does to `T = 10.6`.
+
 ### 16.14.8 What this does and does not settle
 
 **Settles:** which metrics *can* be invariant (§16.14.3); that the far-anchor contamination is irrelevant to
@@ -5922,11 +5931,500 @@ invariance (§16.14.2); and that there is exactly **one** mechanism to chase, no
 **Does not settle:** whether `r_Q` is actually small. §16.10.8 stays open. But its experiment now has a
 quantitative target and a distinctive shape to look for rather than a null hypothesis to fail to reject.
 
+> **✅ ANSWERED 2026-08-02 (§16.15.6): `r_Q` ≈ −0.025 A, i.e. NOT small** — measured on two oils, from the
+> intercept of `B_Soret` against `B_Q`. §16.10.8 nevertheless **stays open**, because the session that measured
+> `r_Q` could not separate concentration from turbidity (§16.15.5) and must not be used as the invariance
+> measurement. The prediction in the next paragraph — that clearing the sample must shrink the dilution error
+> and the settling drift *together* — is now the sharpest test available and is unchanged.
+
 **⇒ A prediction that costs nothing and is worth writing down before the solvent work:** if the residual
 dilution error and the settling drift are both the pedestal, then **clearing the sample must shrink BOTH
 together** — the 2-butanol trial (§16.12.7a) or the 0.22 µm filter (§16.12.9). If one collapses and the other
 does not, this model is wrong. That is a free extra readout on runs already planned, and §16.12.7's trial
 should record the dilution error alongside the CV it was designed to measure.
+
+---
+
+## 16.15 ⭐ THE KIENDLER SESSION — three preparations of one oil, and the pedestal shows its hand  *(Edwin's rig session 2026-08-01/02; `diagnostics/kiendler_dilution.py`)*
+
+Intended as §11.4f F step 3 ("green #2") **and** as the deliberate dilution-invariance experiment §16.10.8 has
+wanted since it was opened. It delivers the first cleanly and the second not at all — but the *reason* it fails
+turns out to be §16.14's pedestal-curvature term, measured for the first time, and that is the section's real
+result.
+
+### 16.15.1 What was run, and the oil roster
+
+Data: `spectracs-references/tmp/20260801A|B|C/`, ten reports, one evening, one rig state.
+
+| set | preparation | drops/ml | vs A | runs |
+|---|---|---|---|---|
+| **A** | 18 ml alcohol + 6 drops — the **shipped recipe** | 0.3333 | 1.000× | 6 |
+| **B** | A's remaining **14 ml + 1 more drop**, restirred | 0.4048 | **1.214×** | 2 |
+| **C** | fresh **18 ml + 7 drops** | 0.3889 | **1.167×** | 2 |
+
+The concentration ratios survive Edwin's eyeballed volumes, which is why the design was worth running:
+`C/A = 7/6 = 1.1667` **exactly**, whatever "18 ml" really was, provided both pours matched; and
+`B/A = 1 + 3/V`, which moves only 1.2000 → 1.2308 as the 14 ml remainder ranges over 15 → 13 ml. **Drop
+*volume* cancels everywhere**, appearing in numerator and denominator alike.
+
+The design is also, by accident, **non-monotone**: time order is A < B < C but concentration order is A < C < B,
+so a drift in time predicts C > B while concentration predicts B > C. That was meant to be the session's
+protection against confounding. It survives — but only because a *third* variable moved further than either.
+
+**⭐ Oil roster, recorded now that Edwin has named them** (this belongs in the record — the campaign's oils were
+previously identified only by folder):
+
+| oil | sets | Edwin's own read |
+|---|---|---|
+| **Ulrich Kiendler** | `20260801A/B/C` | green — *"a little bit greener than"* Steirerkraft |
+| **Steirerkraft** | `20270729B/C` (green #1) | green |
+| **Spar S-Budget** | `20260731A` (series D) | brown |
+
+The naming is corroborated by the archive's own filenames (`measurement_report_NowSteirerkraftA/B.pdf`,
+`NowSBudget.pdf`) sitting in the same folder. Recording Edwin's visual read *is* §11.4f D3's operator pre-read,
+and it is the only independent ground truth the campaign has.
+
+### 16.15.2 The verdict — green, decisively, on every discriminator
+
+| | `S/Q linear base` | margin to T = 10.6 |
+|---|---|---|
+| Kiendler **A** | **14.279** ± 0.491 (n = 6) | **+7.5 σ** |
+| Kiendler **B** | **12.740** ± 0.065 (n = 2) | **+4.4 σ** |
+| Kiendler **C** | **13.039** ± 0.126 (n = 2) | **+5.0 σ** |
+| Steirerkraft B + C | 12.370 ± 0.367 (n = 12) | +4.8 σ |
+| S-Budget, series D | 9.303 ± 0.131 (n = 6) | — |
+
+Cohen's *d* against brown = **7.59**. §16.13.9's parameter-free shape discriminator (rise ÷ Q-amplitude, which
+cancels any single concentration factor by construction) gives **d = 9.73**, alongside Steirerkraft's 10.26 —
+and it is flat across A/B/C (`s = +0.21 ± 0.29`, expected 0). **No ambiguity anywhere.** §11.4f D2's
+"no oil crosses T against Edwin's read" holds for a fifth oil-set.
+
+### 16.15.3 The Beer-Lambert control FAILS — the concentration axis is not what moved
+
+If drop-counting described what was in the beam, every absolute band absorbance would have log–log slope ≈ 1.
+
+| quantity | A | B | C | **B/A** | slope A→B |
+|---|---|---|---|---|---|
+| `A_Soret raw` | 0.826 | 1.123 | 1.171 | 1.359× | 1.58 ± 0.13 |
+| `A_Q raw` | 0.111 | 0.199 | 0.208 | 1.800× | 3.03 ± 0.20 |
+| **`A_near 520–540`** | 0.038 | 0.092 | 0.102 | **2.429×** | **4.57 ± 0.35** |
+| `A_far 600–630` | 0.071 | 0.140 | 0.146 | 1.987× | 3.54 ± 0.30 |
+
+Expected under strict Beer-Lambert: **1.214×**. Every slope is far above 1, and **the two baseline-anchor
+windows — which carry the turbidity pedestal, not pigment — moved the most.** A 21 % change in oil content
+cannot raise the 520–540 anchor by 143 %.
+
+Splitting pigment from pedestal (`A_Soret/A_Q linear` are pedestal-removed; the 520–540 anchor is oil-quiet):
+
+| set | `A_Sor lin` | `A_Q lin` | **turbidity** | `S/Q lin` |
+|---|---|---|---|---|
+| Kiendler A | 0.8221 | 0.0576 | **0.0378** | 14.279 |
+| Kiendler B | 1.0819 | 0.0849 | 0.0919 | 12.740 |
+| Kiendler C | 1.1160 | 0.0856 | 0.1018 | 13.039 |
+| Steirerkraft B | 1.0331 | 0.0828 | 0.0981 | 12.489 |
+| Steirerkraft C | 1.1043 | 0.0901 | 0.1231 | 12.251 |
+| S-Budget D | 1.0093 | 0.1085 | 0.1038 | 9.303 |
+
+**Pigment moved ~1.3–1.5× against a nominal 1.17–1.21×. Turbidity moved 2.4–2.7×.** Set A's turbidity is the
+lowest of the six post-rebuild sets on record; the other five sit at 0.09–0.13. **Set A is the anomaly, not B
+and C.**
+
+### 16.15.4 Set A was still changing while it was being measured
+
+Over its 32.4 minutes, on 4 df (|t| > 2.78 is p < 0.05):
+
+| quantity | first | last | trend | t |
+|---|---|---|---|---|
+| `A_Soret raw` | 0.8660 | 0.7943 | **−8.3 %** | **−14.36** |
+| `A_Q raw` | 0.1192 | 0.0991 | **−17.3 %** | **−7.02** |
+| `A_near 520–540` | 0.0435 | 0.0292 | **−36.8 %** | **−6.93** |
+| `A_Soret linear` | 0.8604 | 0.8006 | −7.2 % | −8.50 |
+| `S/Q linear base` | 14.7176 | 14.9491 | −1.3 % | −0.30 |
+
+The reference lamp was flat throughout (`REF@530` 133 → 127 during set A, then 126.5–127.3 for all of B and C),
+so this is the **sample**, not the rig. Pigment and pedestal are both draining away.
+
+**Mechanism, offered as interpretation and not as measurement:** the oil is suspended rather than dissolved,
+set A's stock separated, and the beam saw a depleted, progressively clarifying layer. B was **restirred** and C
+was **fresh**, both read promptly. This is the same settling term §16.12.6 identified, but three times larger
+and, for the first time, large enough to break a designed experiment.
+
+### 16.15.5 ⭐ Edwin's challenge — "the stronger preps read LOWER, so it *is* dilution-dependent?"
+
+Edwin's observation, made on the raw table before any of the above: the more concentrated preparations returned
+the **lower** metric. It is true of every pair here, and it deserves to be tested rather than explained away.
+A power law must give the **same** slope on every pair:
+
+| pair | nominal c | pigment S | pigment Q | turbidity |
+|---|---|---|---|---|
+| A → B | −0.59 | −0.42 | −0.29 | −0.13 |
+| A → C | −0.59 | −0.30 | −0.23 | −0.09 |
+| C → B | −0.58 | +0.75 | +2.95 | +0.23 |
+| **spread** | **0.01** | 1.16 | 3.24 | 0.36 |
+
+Taken at face value **nominal concentration is the only axis that is self-consistent**, and turbidity fails the
+C→B pair in *sign*. Three things stop that from being the conclusion:
+
+1. **The comparison is rigged toward the nominal axis.** It is exact arithmetic with no measurement noise; every
+   measured axis divides a noisy change by a noisy span, and C→B's span is 4 %, so its measured slopes explode.
+   Discount that row entirely.
+2. **Which leaves effectively ONE informative contrast** — set A against the two stirred preps, since A→B and
+   A→C are nearly the same comparison. In it, concentration and turbidity moved **together** (1.2× and 2.4×).
+   **This session cannot separate them, and no re-analysis of it will.**
+3. **−0.59 is incompatible with the archive over LARGER spans**, where a power law would be *more* visible:
+
+| span | s = −0.59 predicts | archive measured |
+|---|---|---|
+| 1.500× | −21.3 % | **+0.4 %** — green K/L |
+| 1.500× | −21.3 % | **+4.9 %** — brown N/M |
+| 1.167× | −8.7 % | −1.9 % — Steirerkraft B/C |
+
+Nor does set A's depletion rescue it. Measured four ways (B and C against `A_Soret linear` and `A_Q linear`),
+**set A sat at 79–92 % of its nominal concentration** — 8–21 % depleted. Reconciling −0.59 with the archive
+would need ~53 %. Correcting for the real depletion moves the slope only to about **−0.23 … −0.42**.
+
+**⇒ Edwin is right that the direction is real** — Steirerkraft's own dilution pair gives **−0.12 ± 0.11**, the
+same sign — **and right that this spec had understated it.** He is not right that the magnitude is a dilution
+law; nothing that steep survives contact with the 1.5× pairs.
+
+### 16.15.6 ⭐⭐ THE RECONCILIATION — the two readings are ONE mechanism, and §16.14 already predicted it
+
+§16.14.4 derived that invariance breaks **only** through `r_Q`, the pedestal's departure from its own best-fit
+line, and §16.14.5–6 that the resulting error is `r_Q/B_Q` — which is **concentration-dependent, ∝ 1/c**, so the
+metric *degrades at high dilution*. That is exactly the observed shape: **set A had the smallest `B_Q` of any
+set here and read the highest.**
+
+**So "it is turbidity" and "it is dilution-dependent" are not rival explanations. Turbidity sets `r_Q`;
+concentration sets `B_Q`; the bias is their ratio.** The session's two readings are the same term seen from two
+sides, and the argument in §16.15.5 was a false dichotomy.
+
+The model has a directly measurable form that needs **no fitted concentration axis at all** — which matters,
+because the concentration axis is precisely what this session cannot trust:
+
+```
+B_Soret  =  M_inf · B_Q  +  (r_S − M_inf · r_Q)
+```
+
+Plot the baselined Soret against the baselined Q band. **With no pedestal residual the line passes through the
+ORIGIN; the intercept IS the residual.** Fitted at run level:
+
+| oil | n | `M_inf` (slope) | intercept | t(intercept) | ⇒ `r_Q` |
+|---|---|---|---|---|---|
+| **Kiendler** | 10 | 9.998 ± 0.502 | **+0.2463 ± 0.0351** | **7.01** | **−0.0246 ± 0.0037 A** |
+| **Steirerkraft** | 12 | 9.930 ± 2.149 | +0.2103 ± 0.1860 | 1.13 | −0.0212 ± 0.0193 A |
+| *§16.14.7's archive bound* | | | | | *\|r_Q\| ≲ 0.008 A* |
+
+**Two independent oils, fitted independently, return the same residual and the same `M_inf`.** Kiendler's
+intercept is 7 σ from zero. The pedestal-curvature model of §16.14 is **confirmed on measured data for the first
+time** — and its residual is **~3× the archive's bound**, so §16.14.7's `|r_Q| ≲ 0.008 A` is **too tight and is
+hereby superseded**.
+
+⚠ **Two cautions, both load-bearing.** (1) `B_Soret` and `B_Q` come from the same spectrum, so common-mode noise
+inflates the *slope*; the **intercept** is the claim, and it survives at t = 7. (2) Steirerkraft's `B_Q` span is
+narrow, so its fit alone proves nothing (t = 1.13) — **the agreement of the two point estimates is the evidence,
+not either fit**.
+
+### 16.15.7 ⚠⚠ The corollary nobody will like — `T = 10.6` lives on the INFLATED scale
+
+Pedestal-free class index: **Kiendler 10.00 ± 0.50, Steirerkraft 9.93 ± 2.15.** The shipped threshold is
+**10.6 — above both.**
+
+**Remove the pedestal entirely and both GREEN oils fall BELOW the threshold that is supposed to certify them.**
+`T = 10.6` is therefore **not a pigment-intrinsic constant**. It is calibrated on pedestal-inflated numbers and
+is tied to the current recipe *and* the current turbidity regime. It **must be re-derived, not carried over**,
+if the preparation ever gets cleaner — which is precisely what the 0.22 µm filter (§16.12.9) and the solvent
+programme were *for*. **A successful clarification would silently invalidate the shipped threshold**, and
+nothing in the spec currently says so.
+
+⚠ **A second, more awkward reading of the same fit.** On the pedestal-free scale the two green oils are
+**indistinguishable** (10.00 vs 9.93, overlapping errors) although their *measured* means differ by 10.9 %. So
+Edwin's "Kiendler is greener" may be a **pedestal difference rather than a pigment difference**. Steirerkraft's
+error bar is far too wide to decide it. **OPEN**, and it bears directly on what the four-oil panel can conclude.
+
+### 16.15.8 What follows for the campaign
+
+1. **⭐ The deciding experiment — one evening.** Repeat set A's recipe, **18 ml + 6 drops, read IMMEDIATELY
+   after stirring**: same concentration as A, same turbidity as B and C. Lands near **12.9** ⇒ the pedestal
+   carried it and dilution is fine; lands near **14.3** ⇒ concentration carried it and `s` is real and large.
+   Nothing else in the queue separates these, and the answer changes the protocol.
+2. **Stir-to-measure latency is now the largest uncontrolled variable** in the four-oil campaign. It must be
+   fixed by protocol and **recorded**, exactly as §11.4f D3 already requires for run counts.
+3. **Log turbidity (`A@520–540`) with every run as a QC covariate.** It is free, already computed, and **would
+   have flagged set A before the ratio was ever looked at.** Cheapest single improvement available.
+4. **⭐ B4 (weigh the oil, ~€15 scale) is no longer optional — promote it.** §16.15.6 gives the metric a real
+   sensitivity to `B_Q`, hence to how much oil is actually in the cuvette. Drops vary 10–20 %; at the corrected
+   slope of −0.23 … −0.42 that is a **2–8 % metric error**, against a re-seat σ of 1.4–3.4 %. **Preparation
+   error would become the dominant term in the whole budget — larger than everything the rig rebuild bought.**
+5. **σ_fill, the one encouraging number.** B vs C are independent preparations 1.041× apart, agreeing to
+   **−2.29 %** on `S/Q lin` and **+0.15 %** on `S/Q raw`. df = 1, so it falsifies rather than estimates — but
+   it is the absence of bad news §11.4f F was looking for.
+
+### 16.15.9 Scoring §11.4f F step 3, and what this does NOT settle
+
+**`green #2 vs green #1 within 10 %` — ⚠ NOT DECIDABLE AS WRITTEN.** §11.4f D2 fixed a threshold but never named
+the **estimator**, and the three defensible choices straddle it:
+
+| reading | Kiendler | Steirerkraft | Δ | |
+|---|---|---|---|---|
+| all runs pooled | 13.723 | 12.370 | **+10.9 %** | FAIL |
+| mean of set means | 13.353 | 12.370 | +7.9 % | PASS |
+| properly-stirred fills B + C only | 12.889 | 12.370 | +4.2 % | PASS |
+
+Recorded as **UNDECIDED**. Choosing among these after seeing them is exactly §16.10.16's trap. **The lesson is
+for the pre-registration format, not for the oil: a threshold without an estimator is not a pre-registration.**
+§11.4f's rules say predictions are not edited after the fact — they are not; this is scored as ambiguous, which
+is what it is.
+
+**Settles:** the oil roster and Edwin's operator pre-read; that Kiendler is green on every discriminator;
+that `r_Q` is real, is ≈ −0.025 A, and is ~3× the bound §16.14.7 asserted; and that §16.14's pedestal-curvature
+model — previously pure derivation — **describes measured data from two oils**.
+
+**Does NOT settle:** whether the residual dilution dependence is concentration or turbidity (§16.15.8 item 1);
+whether `T = 10.6` survives translation to a pedestal-free scale (§16.15.7); whether Kiendler is genuinely
+greener than Steirerkraft or merely more turbid; and σ_fill, which still needs the campaign's remaining fills.
+
+**⚠ And one thing it actively removes:** this session may **not** be used as the dilution-invariance measurement
+§16.10.8 has been waiting for. §16.10.8 stays **OPEN**. The pooled archive figure `s = +0.033 ± 0.029` stands
+unchanged — it is not to be updated with anything from these ten runs.
+
+---
+
+## 16.16 ⭐ MEASURING `r_Q` PROPERLY — the dilution-series design, and why the last attempt could not work  *(Edwin's question 2026-08-02: "I think I have to carry out the same different-dilution test for the Steirerkraft oil"; DESIGN + 📌 PRE-REGISTRATION, not yet run)*
+
+Yes — and **not the same test.** Repeating §16.11.3's design would return an unusable number for the
+same reason it did the first time. This section says what the experiment must look like instead, why,
+and what each outcome will mean. It is `DOC_pedestal_correction.md`'s **test T1**, made concrete.
+
+### 16.16.1 Why this is now the binding measurement
+
+§16.15.6 measured the pedestal-curvature residual `r_Q` = **−0.0246 ± 0.0037 A** on Kiendler and
+confirmed its *consequence* out-of-sample on Steirerkraft (§16.15's chapter-9 test: dilution slope
+−0.12 → −0.00). What is **not** established is the assumption the whole correction rests on:
+**is `r_Q` one constant within a rig state, or does every sample have its own?**
+
+Steirerkraft's own fit cannot answer it. Its 95 % interval is **−0.0590 … +0.0166 — it contains
+zero**, so that oil alone cannot even show a residual exists; and the formal comparison with Kiendler
+could only detect a difference of **0.0385, i.e. 156 % of `r_Q` itself.** It would miss a doubling.
+
+### 16.16.2 The failure was the SPAN, not the sample size
+
+`r_Q` is an **extrapolation back to `B_Q` = 0**. Steirerkraft's two fills sat at `B_Q` 0.083 and 0.090
+— a **1.08× span** — giving the fitted line almost no lever to pivot on. Twelve runs could not rescue
+a geometry that short.
+
+Predicted `se(r_Q)` for candidate designs, computed from **Steirerkraft's own residual scatter**
+(σ = 0.0311 A about the line), so these are not optimistic:
+
+| design | n | `B_Q` span | predicted `se(r_Q)` | |
+|---|---|---|---|---|
+| **today's** — 6 + 6 drops (0.083 / 0.090) | 12 | 1.08× | **0.0224** | useless |
+| 6 + 9 drops | 8 | 1.51× | 0.0056 | ⚠ blocked, §16.16.3 |
+| **3 + 6 drops** | **8** | **1.98×** | **0.0036** | ✅ Kiendler-grade |
+| 3 / 4.5 / 6 drops | 12 | 1.98× | 0.0035 | ✅ |
+| **2 / 4 / 6 drops** | **12** | **2.96×** | **0.0024** | ✅ best |
+
+**Eight runs at a 2× span beat twelve runs at today's span six-fold.** For reference Kiendler
+achieved `se` = 0.0037 from ten runs over 1.62× — and only because one of its three preparations was
+accidentally over-dilute (§16.15.4). **Span buys precision here; n barely does.**
+
+### 16.16.3 Go DOWN in concentration, never up
+
+Two independent reasons, and the first is a hard stop:
+
+1. **Upward is blocked by dynamic range.** At the shipped 6-drop recipe the 440–447 nm bins already
+   read **2.0–2.6 DN** against a reference near 88 (§16.11.14 — they are not measurements). Nine drops
+   pushes more of the Soret band into that floor, so the numerator degrades exactly as the denominator
+   improves.
+2. **Downward is where the leverage is.** The intercept lives at `B_Q` = 0, so a dilute point sits
+   *closer to the quantity being estimated* and shortens the extrapolation. This is the constructive
+   reading of §16.15.4: the over-dilute set A that ruined the Kiendler dilution test is the single
+   reason its `r_Q` is the precise one.
+
+⚠ The dilute points will sit **outside §16.11.15's operating window** (`A_Q` < 0.15). That is correct
+and intended: the window governs where a *verdict* is trustworthy; this experiment measures the
+untrustworthiness itself, and must therefore visit the region where it is largest.
+
+### 16.16.4 SERIAL DILUTION from one stock — not independent preparations
+
+**Do not** prepare each strength by counting drops into fresh alcohol. That yields three independent
+preparations with three possibly different suspension states, and re-creates §16.15's confound
+exactly: concentration and turbidity moving together, inseparably.
+
+**Do** make one stock and dilute it stepwise. Then the droplet population is *the same population*,
+and concentration is the only variable that moves.
+
+**Why diluting the droplets too does not defeat the measurement** — this is the subtle point and it is
+worth stating explicitly, because the objection is a natural one. Diluting the stock scales pigment
+*and* pedestal together, so one might expect `r_Q` to scale with `c` and the intercept to vanish. The
+fit **separates the two components automatically**:
+
+- whatever part of the pedestal **scales with `c`** is absorbed into the **slope**, where it is
+  harmless (§16.14.2 — it cancels in the ratio just as pigment does);
+- only the part that **does not scale** can produce an **intercept**.
+
+`r_Q` is defined as that non-scaling part. A non-zero intercept was informative in the first place
+precisely because it cannot be produced by anything proportional to concentration.
+
+### 16.16.5 The recipe
+
+| step | preparation | nominal | expected `B_Q` |
+|---|---|---|---|
+| 1 | **18 ml alcohol + 6 drops**, stirred | 6 drops | ≈ 0.083 |
+| 2 | take part of step 1, **dilute 1 : 1 with alcohol** | 3-drop equivalent | ≈ 0.042 |
+| 3 | take part of step 2, **dilute 1 : 1 again** | 1.5-drop equivalent | ≈ 0.021 |
+
+**4 runs at each point, 12 runs total.** Span ≈ 4×, predicted **`se(r_Q)` ≈ 0.002** — about ten times
+better than the last attempt, and better than Kiendler's.
+
+**The middle point is not optional.** It costs nothing in precision (see the table) and buys the only
+thing that actually tests the model: **a linearity check.** Two points cannot reveal whether `r_Q` is
+constant; three can, because a varying `r_Q` shows up as curvature in `B_Soret` against `B_Q`.
+
+If time is short, **3 + 6 drops with 4 runs each (8 runs)** already reaches Kiendler-grade precision —
+but it forfeits the linearity check, which is half the point.
+
+### 16.16.6 Three protocol controls, every one of them learned from §16.15
+
+1. **Fix the stir-to-measure latency** and use the identical wait before every run. §16.15.4's set A
+   drifted 8–37 % across 32 minutes because this was uncontrolled.
+2. **Log `A@520–540` (turbidity) with every run** as a QC covariate. Free, already computed, and it
+   would have flagged set A before anyone looked at a ratio.
+3. **⭐ Do NOT measure in monotone concentration order.** Running 6 → 3 → 1.5 in time order aliases
+   any drift onto concentration exactly as the August session did. Measure **3 → 6 → 1.5**, or
+   interleave the runs. This costs nothing and protects the entire experiment.
+
+### 16.16.7 📌 PRE-REGISTRATION — what each outcome will mean  *(written 2026-08-02, BEFORE the runs)*
+
+**Prediction:** Steirerkraft's `r_Q` lands in **−0.020 … −0.029 A**, i.e. replicating Kiendler's
+−0.0246. Basis: the consequence test already works out-of-sample (§16.15's chapter 9), which is hard
+to explain unless the constant genuinely transfers between oils.
+
+With the 3-point design's `se` ≈ 0.0024 against Kiendler's 0.0037, the difference carries
+`se` ≈ 0.0044, so:
+
+| outcome | reading |
+|---|---|
+| \|difference\| **< 0.005** | **PASS** — A1 supported across oils within a rig state. The correction becomes adoptable subject to T1b (re-measure after the next mechanical change) and a re-derived threshold. |
+| \|difference\| **> 0.010** | **FAIL** — `r_Q` is a per-sample property, not an instrument constant. The correction is **dead in this form**; the pedestal must be attacked physically instead (filtration, §16.12.9). |
+| between | **inconclusive at df available** — decide on a third oil, not on this one. |
+
+⚠ **A curved `B_Soret`-vs-`B_Q` relation is a FAIL regardless of where the intercept lands**, because
+it refutes the constant-`r_Q` model directly rather than merely failing to confirm it. That is what
+the middle point is for.
+
+### 16.16.8 ⇒ This is the template for the whole campaign, not a one-off
+
+§11.4f F's four-oil campaign currently specifies **two fills per oil at one strength**. Those fills
+will estimate σ_fill and will say **nothing** about `r_Q`, because two preparations at the same
+nominal strength give a span of ~1.1× — the design this section has just shown to be unusable.
+
+**⇒ Every oil in the campaign should be prepared as a serial dilution instead** (§16.16.5). It is the
+same rig time, it still yields the fill-to-fill comparison the campaign was designed for, and it adds
+a per-oil `r_Q` at no extra cost. Four independent `r_Q` values would settle A1 outright — which no
+amount of work on a single oil can do.
+
+### 16.16.9 Choosing the optical handle for T1b — the diffuser, NOT the camera
+
+`DOC_pedestal_correction.md`'s **T1b** predicts that `r_Q` must **move** when the optics change,
+because it is claimed to be the curvature of the scattering pedestal *as these optics present it*.
+That is a prediction of change rather than of constancy, which makes it hard to satisfy by accident —
+but only if the perturbation acts on the pedestal and not on something else.
+
+**The criterion any candidate handle must pass:** it must move the **pedestal** quantities
+(turbidity, baseline slope) while leaving the **pigment** quantities (`B_Q`, the metric) alone. A
+handle that moves both cannot distinguish "the pedestal changed" from "the instrument's response
+changed".
+
+**✅ The diffuser passes, on archived data.** `20260727B` was run with and without it on **one fill of
+one oil** (runs 001–003 + 008–009 vs 004–007):
+
+| | turbidity | baseline slope | `B_Q` | M shipped |
+|---|---|---|---|---|
+| diffuser in | 0.0981 | 0.0400 | 0.0739 | 12.047 |
+| diffuser out | 0.1318 | 0.0486 | 0.0761 | 12.337 |
+| difference | **−25.6 %** *(d 1.42)* | **−17.6 %** *(d 1.77)* | −2.9 % *(d 0.32)* | −2.4 % *(d 0.22)* |
+
+The diffuser moves the pedestal by ~20–25 % and leaves the pigment signal essentially untouched —
+exactly the required signature, from a discrete, reversible change needing no disassembly.
+
+⚠ **That archived pair cannot run T1b itself.** It is pre-rebuild, *n* = 5 vs 4, and the `B_Q` span
+*within* each subset is 1.11–1.37× — far too short to fit `r_Q` (§16.16.2). It establishes that the
+handle works, not what `r_Q` does.
+
+**❌ The camera fails the criterion, and `reseat_20260729/camera.txt` already shows why.** A ~1 mm
+nudge produces a **spectral tilt of 1.98 % mean / 3.07 % max, 81 % of it permanent, 32× the untouched
+control** — measured on the **lamp's own pump and phosphor peaks**, which are instrument features. The
+lamp did not change, so the nudge is moving the instrument's own wavelength-dependent response
+(registration, vignetting, which part of the slit and grating is lit). That route hits `B_Soret` and
+`B_Q` **directly**, not through the pedestal. If `r_Q` moved after a camera nudge, one could not tell
+which mechanism did it — and an uninterpretable result is the one outcome worth designing out.
+
+**⇒ T1b's concrete form: a full dilution series (§16.16.5) with the diffuser out — the current
+configuration — then fitted, and repeated.** 24 runs, two evenings, nothing dismantled.
+**Pre-registered prediction:** if the diffuser cuts the pedestal ~25 %, `r_Q` should shrink
+correspondingly, −0.0246 → about **−0.018**. At the 3-point design's `se` ≈ 0.0024 that is ~2.5 σ —
+detectable but not comfortably, so **do not run T1b with the 2-point shortcut.**
+
+### 16.16.10 ✅ ANSWERED FROM THE ARCHIVE — `r_Q` does NOT drift under ordinary re-seating  *(Edwin's observation 2026-08-02; `diagnostics/rq_stability.py`)*
+
+Before T1b was scheduled, Edwin pointed out that the disturbance is **already in every run**: the
+reference is taken on pure alcohol, the oil sample is then inserted, the jar is seated and the camera
+sits above it. **The within-set run-to-run scatter therefore already contains re-seating**, and the
+question can be answered from data on disk rather than with rig time.
+
+**The method — the scatter's DIRECTION identifies its cause.** Within one set the pigment
+concentration is fixed, so run-to-run movement in the (`B_Q`, `B_Soret`) plane points somewhere
+diagnostic:
+
+| direction | slope | cause |
+|---|---|---|
+| horizontal — `B_Q` moves alone | **0** | **`r_Q` drift** — the threat |
+| along the physical line | ≈ 10 (`M_inf`) | how much pigment is in the beam |
+| along the origin ray | ≈ 13 (`M`) | pure throughput scaling |
+
+Pooling the within-set deviations over the four post-rebuild sets with ≥ 4 runs (n = 24):
+
+**slope = 8.51 ± 2.10**, r² = 0.43
+
+| against | distance |
+|---|---|
+| **0 — pure `r_Q` drift** | **4.0 σ — rejected** |
+| `M_inf` — pigment in the beam | 0.7 σ — consistent |
+| 13 — throughput ray | 2.1 σ |
+
+**The two bands move together, not independently.** Converting the leftover scatter into `r_Q` units:
+
+```
+residual about the co-movement line = 0.0245 A   ->   ceiling on run-to-run drift = 0.0029 A
+```
+
+**⇒ Run-to-run `r_Q` drift is at most 12 % of `r_Q` itself.**
+
+⚠ **It is a CEILING, not an estimate.** The residual also contains ordinary measurement noise and all
+of it was attributed to drift — the maximally pessimistic split. The true figure is below this,
+possibly far below. That is the conservative direction, so the reassurance is real.
+
+⚠ **WITHIN-SESSION only.** It covers the routine described above. It says nothing about
+**between-session** stability — a different evening, the camera lifted off and replaced, weeks apart
+— and **the archive cannot answer that**, because Kiendler and Steirerkraft differ in *both* oil and
+session, so their `r_Q` difference confounds the two.
+
+### 16.16.11 ⇒ The test queue, in the order that risks the most first
+
+Threat tests before confirmation tests: an experiment that can *kill* the correction is worth more
+than one that can only support it, and should not wait behind it.
+
+| | test | what it can do | status |
+|---|---|---|---|
+| **1** | **§16.16.5 dilution series, Steirerkraft** | **can kill it** — A1, the binding assumption | ▶ next |
+| ~~2~~ | ~~camera nudge, within a session~~ | ~~could have killed it~~ | **✅ answered §16.16.10 — drift ≤ 12 % of `r_Q`** |
+| **2′** | **between-session stability** — one oil, fresh preparation, two sessions weeks apart | **can kill it** — and it is the case a multi-year history graph depends on | not scheduled |
+| 3 | **T1b, the diffuser** (§16.16.9) | confirms the mechanism only | after 1 |
+| 4 | **cross-instrument** — same oil and preparation on a second unit | the transferability question the lab channel will actually ask; a *different* question from T1b, needing a second instrument | future |
+
+**2′ can be absorbed by the campaign** at no extra cost: schedule one oil's dilution series to be
+repeated at the end of the campaign rather than adding a session. Oil held constant, session varied —
+which is exactly the contrast the archive cannot supply.
 
 ---
 

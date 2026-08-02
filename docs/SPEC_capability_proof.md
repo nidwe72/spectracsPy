@@ -1938,6 +1938,31 @@ is merely the absence of bad news. **The estimate only exists once the campaign 
   and **report the fills in time order** so any drift shows as a trend rather than inflating σ_fill.
 - **Report raw and baselined side by side** (§11.4f B), else the split prediction cannot be tested.
 
+##### ⭐ D3a AMENDMENT 2026-08-02 — prepare each oil as a SERIAL DILUTION, not two fills at one strength
+
+*Added after the fact, and flagged as such per §11.4f's rules. **No prediction above is edited** — this
+changes only how the remaining fills are prepared, and it is strictly additive to what D1–D3 measure.*
+
+The campaign as written gives each oil **two fills at the same nominal strength**. That estimates
+σ_fill, which is what it was designed for, and it says **nothing** about the pedestal residual `r_Q`
+— because two preparations at one strength span ~1.1× in `B_Q`, and
+`SPEC_capture_quality.md` §16.16.2 shows that geometry returns `se(r_Q)` ≈ 0.022, i.e. an interval
+that contains zero. **Steirerkraft was already run that way and produced exactly that non-result.**
+
+**⇒ Prepare each oil as a serial dilution instead** — one stock at 18 ml + 6 drops, then 1 : 1 and
+1 : 1 again, 4 runs at each of the three points (§16.16.5). Same rig time. It still yields the
+preparation-to-preparation comparison the campaign wanted, **and** adds a per-oil `r_Q` at
+`se` ≈ 0.002.
+
+**Why it is worth the change:** `r_Q` turned out to be the term that makes the shipped verdict depend
+on how the sample was prepared (§16.15.7), and whether it is one instrument constant or a per-sample
+property is currently unanswerable. **Four independent `r_Q` values settle it outright** — no amount
+of further work on a single oil can. §16.16.6's three protocol controls (fixed stir-to-measure
+latency, per-run turbidity log, **non-monotone measurement order**) apply to every oil.
+
+⚠ **This does not relax D3's other requirements** — runs per fill, the operator pre-read, the
+confound list and the raw-vs-baselined reporting all stand unchanged.
+
 ##### D4 ⚠ What this campaign will NOT settle
 
 **It closes the precision half and not the threshold half.** All four oils are expected to be *clearly* green
