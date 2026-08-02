@@ -4710,6 +4710,13 @@ PAUSED, and 2-butanol is recorded as a candidate rather than a scheduled trial.*
 
 ### 16.12.7b ⏸ DECISION — keep isopropanol; the solvent programme is PAUSED  *(Edwin 2026-08-01)*
 
+> **⭐ REOPENED FROM A DIFFERENT DIRECTION 2026-08-02 — see §16.18.** Edwin proposed replacing the
+> alcohol with **MCT oil** rather than with a better alcohol. Because oil dissolves in oil, that
+> removes the emulsion entirely rather than improving it — so it does not merely unpause this
+> programme, it **supersedes** it, and it would make §16.15–§16.17's whole pedestal correction
+> unnecessary. It is also food-grade and non-volatile, which answers the 220 V leak constraint that
+> rejected acetone below. **The pause on the BUTANOL route stands; the solvent question does not.**
+
 **Decision: keep the sample chemistry exactly as it is.** Not because the solvent question was answered, but
 because **it stopped being the binding constraint.**
 
@@ -6676,6 +6683,135 @@ curve.
 **⇒ This section is a design held in reserve. It is written now because the shape of the calibration
 step decides how much the correction costs in production, and that cost belongs in the adoption
 decision rather than being discovered afterwards.**
+
+---
+
+## 16.18 ⭐ THE MCT ROUTE — dissolving the oil instead of correcting for it  *(Edwin 2026-08-02: "couldn't that be used as an alternative to the IPA alcohol also?"; DESIGN + a one-evening test, nothing run)*
+
+Edwin asked whether **MCT oil** could replace isopropanol as the solvent — *"MCT and some drops of
+pumpkin oil"* instead of *"pumpkin oil in IPA"*. **It is a much larger idea than the surrogate
+question that prompted it, and if it works it makes §16.15–§16.17 unnecessary rather than wrong.**
+
+### 16.18.1 Why oil-in-oil changes the problem instead of correcting it
+
+Pumpkin seed oil is a triglyceride. MCT is a triglyceride. **Like dissolves like — they are miscible
+in all proportions.**
+
+No droplets. No emulsion. **No scattering pedestal at all.**
+
+Everything in §16.15–§16.17 — `r_Q`, the 23–43 % inflation, the preparation-dependence, the turbidity
+gate, the calibration wizard — exists **because the oil does not dissolve in isopropanol.** It sits
+there as suspended droplets and scatters. Remove the emulsion and `r_Q → 0`, and there is nothing left
+to correct or to calibrate.
+
+This is `DOC_pedestal_correction.md`'s **T3** — attack `r_Q` physically rather than arithmetically —
+reached by a cleaner route than filtration (§16.12.9): **filtered droplets re-form; dissolved oil
+never becomes droplets.**
+
+⚠ **And a realisation that follows from it.** If the oil does not dissolve in IPA, then the pigment is
+still *inside the droplets* — we have been measuring pigment in suspended particles all along, not in
+solution. In MCT it would be in genuine homogeneous solution, which is also its native environment: it
+is dissolved in the pumpkin oil to begin with.
+
+### 16.18.2 ⭐ It is also a THIRD independent test of the pedestal model
+
+If §16.15's account is right, removing the scatterer must move the metric to the pedestal-free value:
+
+> **Prediction: a green oil in MCT reads ≈ 10, not 12–14.**
+
+Three methods that share no assumptions would then agree — the fit through pigment (§16.15.6), the
+direct read on a pigment-free surrogate (§16.16), and the removal of the pedestal altogether. **If it
+still reads 12–14 with the turbidity gone, today's entire model is wrong.**
+
+⚠ **One confound, and it is not small: the package (sieve) effect.** Pigment inside particles absorbs
+*less* than the same quantity dissolved, and the flattening is strongest where absorbance is highest —
+the Soret band. Dissolving could therefore raise the Soret more than the Q band and push the ratio
+**up**, partly cancelling the pedestal removal that pushes it **down**.
+
+**⇒ Read the turbidity as the clean signal and the metric as the informative-but-confounded one.** A
+value between 10 and 12 is ambiguous rather than a refutation.
+
+### 16.18.3 What MCT is
+
+Medium-chain triglycerides — C8 (caprylic) and C10 (capric) fatty acids on a glycerol backbone,
+fractionated from coconut or palm kernel oil. **Liquid at room temperature** (unlike coconut oil,
+solid below ~24 °C), colourless, odourless, tasteless, **food-grade**. Sold as "MCT oil" in
+health-food shops and pharmacies, or as *Neutralöl* / caprylic-capric triglyceride in cosmetics.
+Cheap and freely available.
+
+Optically it should be near-ideal for us: triglyceride absorption sits in the UV (< 300 nm) and the
+NIR (> 1100 nm), so the **440–630 nm window is essentially empty**.
+
+### 16.18.4 Safety — and it answers the constraint that killed acetone
+
+| | isopropanol *(current)* | 1-butanol | **MCT** |
+|---|---|---|---|
+| flammability | **H225 highly flammable** | H226 | **none — a food oil** |
+| eye / health | — | **H318 Cat 1, irreversible** | **edible** |
+| volatility | evaporates — a known confound | evaporates | **does not evaporate** |
+
+§16.12.7b recorded a hard constraint: **the 220 V lamp sits in the lower cone under a top-down beam,
+so any leak runs into mains electrics** — which is what rejected acetone and the DIY glass vessel. A
+**non-flammable, non-volatile** liquid is dramatically safer there than any alcohol, including the
+one currently in use.
+
+Two further consequences:
+
+- **It makes the butanol programme moot.** That programme existed to *improve* solvency (§16.12.7);
+  MCT makes solvency **total**, and does so with a food-grade liquid rather than one rated for
+  irreversible eye damage.
+- **No evaporation retires a protocol control** — §16.16.6's covered-beaker requirement, and the
+  evaporation term in §11.4f B3's confound list, both disappear.
+
+### 16.18.5 The honest downsides
+
+- **Viscosity** ~25–30 cP against IPA's ~2. Slower mixing, harder filling, and — the real worry —
+  **bubbles may not rise out.** Bubbles scatter. ⚠ **A new pedestal source could simply replace the
+  old one**, and it would not announce itself; §16.18.6's turbidity reading is the check.
+- **Cleaning.** IPA would still be needed to wash the vessel between samples, so the alcohol does not
+  leave the bench.
+- **Solvatochromic shift.** Porphyrin bands move by a few nm between polar and nonpolar solvents. The
+  band windows may need re-checking and **the threshold would need re-deriving** — the same cost the
+  butanol route carried, and the reason §16.12.7b paused it.
+- **Package/sieve effect** (§16.18.2) — the metric changes scale, which is the point, but it means
+  full re-derivation rather than a rescale.
+- **Polystyrene compatibility** still needs the soak test that gates any vessel change, though oils
+  are generally far gentler on PS than alcohols or ketones.
+
+### 16.18.6 📌 PRE-REGISTRATION — the one-evening test  *(written 2026-08-02, BEFORE the runs)*
+
+Prepare pumpkin oil in MCT at a comparable pigment level, measure it as an ordinary sample with pure
+MCT as the reference, 4 runs. **The primary readout is a number already computed on every run:
+`A@520–540`.**
+
+| turbidity `A@520–540` | metric | reading |
+|---|---|---|
+| **< 0.03** | **9 – 11** | **PASS** — the emulsion is gone, the pedestal with it, and the §16.15 model is confirmed a third way. §16.16/§16.17 become optional |
+| **< 0.03** | still **12 – 14** | **the pedestal model is WRONG.** Stop and re-open §16.15 before anything else |
+| < 0.03 | 10 – 12 | ambiguous — the package effect (§16.18.2) can account for it. Informative, not decisive |
+| **still 0.09 – 0.12** | any | **VOID, not a failure** — it did not dissolve, or bubbles replaced the droplets. Diagnose which before concluding anything |
+
+**Current value for comparison: 0.09–0.12 in IPA**, across every post-rebuild set of every oil.
+
+### 16.18.7 What it would do to the queue
+
+**If it passes**, the whole pedestal programme is demoted from "the thing that decides whether the
+verdict is trustworthy" to "the fallback if MCT proves impractical":
+
+- §16.16's dilution series and §16.17's calibration wizard become **unnecessary** — no constant, no
+  per-instrument calibration, no maintenance obligation, no history-graph discontinuity at rig changes
+- the threshold still needs deriving, but **once, on a scale that no longer depends on preparation**
+- §16.12.7's solvent programme is **superseded**, not merely unpaused
+
+**If it fails or is void**, nothing is lost: the pedestal work stands unchanged and the queue is as
+§16.16.11 leaves it.
+
+⚠ **It does not invalidate today's work either way.** `r_Q` was measured and the model tested; if MCT
+succeeds the correction becomes *unnecessary* rather than *wrong*, and the measurement remains the
+reason we knew the pedestal was worth removing at all.
+
+**⇒ Given the cost — one evening, one bottle of food-grade oil — and that it can retire an entire
+programme, this should be tested BEFORE §16.16's Steirerkraft dilution series.**
 
 ---
 
