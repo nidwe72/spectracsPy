@@ -6428,6 +6428,223 @@ which is exactly the contrast the archive cannot supply.
 
 ---
 
+## 16.17 THE PEDESTAL CALIBRATION — how `r_Q` becomes a step in the app  *(Edwin 2026-08-02: "at building a new spectrometer I just want a recipe resp. a user interface with some guide"; DESIGN ONLY — blocked, see §16.17.8)*
+
+§16.16 says how to *measure* `r_Q` on the bench. This section says how a **technician building a new
+instrument** obtains it without understanding any of the physics. It is a UX design; nothing here is
+implemented, and §16.17.8 lists what must be true before it should be.
+
+### 16.17.1 What is being calibrated — exactly one scalar
+
+The correction adds **one number per instrument**, and it is worth being precise about which of the
+three quantities in play that is:
+
+| | what it is | scope |
+|---|---|---|
+| **`r_Q`** | **the calibration constant** | **one per instrument / rig state** |
+| `M_inf` | the **measurement result** — the pedestal-free index of whatever oil is in the cuvette | varies per sample; that is the point of it |
+| `T` | the verdict threshold | a decision boundary, not an instrument property |
+
+`M_inf` appears in `r_Q = −k / M_inf` only as an artefact of *how* the constant is extracted from a
+fitted line — it is not itself stored. The division is a unit conversion: the intercept `k` is in
+Soret-band absorbance and the residual lives at the Q band.
+
+⚠ **"One scalar" holds under assumption A2** (`r_Soret` negligible). If the surrogate test shows
+`r_Soret` is not small, the model needs two constants and the correction grows a term. The wizard
+must therefore *measure and record both*, even while only one is used.
+
+### 16.17.2 ⭐ Two candidate procedures — and the surrogate test decides which wizard gets built
+
+**The straight line of §16.15.6 is a workaround.** It exists only because pigment and pedestal are
+mixed together in a real sample; fitting was the way to separate them. **In a pigment-free sample
+there is nothing to separate**, so `r_Q` is read directly off the baselined Q band with no line, no
+slope and no fit.
+
+| | procedure | per instrument |
+|---|---|---|
+| **SHORT** *(preferred)* | one **pigment-free surrogate** preparation, 4 runs, read the number | ~20 min |
+| **LONG** *(fallback)* | three preparations at different strengths, 4 runs each, **fit** the line, take the intercept | ~1 evening |
+
+**⇒ Build neither until the surrogate test (§16.16, "what to do with the number") has run.** It
+decides which of the two wizards is correct, and building the wrong one is expensive.
+
+### 16.17.2a ⚠ Does the surrogate's drop count matter? — the assumption this section nearly made silently  *(Edwin 2026-08-02: "assumption is however that we have exactly '6 drops' of sunflower oil?"; `diagnostics/rq_stability.py`)*
+
+The short wizard prescribes *"18 ml + 6 drops"* — and whether that tolerance is critical depends
+entirely on a question §16.17 had not asked:
+
+| model | consequence for the wizard |
+|---|---|
+| **A — `r_Q` is a constant** | the surrogate's drop count is **irrelevant**; 3 or 12 drops read the same `r_Q` |
+| **B — `r_Q = κ · turbidity`** | drop count is **critical**, and a 10–20 % drop-volume error (§16.11.15's own figure) becomes a 10–20 % calibration error |
+
+**Tested against the archive.** Both models have two parameters, so their residual scatter is directly
+comparable:
+
+| oil | n | turbidity span | A: constant | B: ∝ turbidity | better |
+|---|---|---|---|---|---|
+| **Kiendler** | 10 | 3.60× | **0.0216** | 0.0318 | **A** |
+| **Steirerkraft** | 12 | 1.73× | **0.0311** | 0.0330 | **A** |
+
+**The constant model wins on both** — clearly on Kiendler, whose turbidity spans 3.6×; only
+marginally on Steirerkraft, whose 1.7× span barely discriminates.
+
+⚠ **A three-parameter fit carrying both terms is deliberately not quoted.** `B_Q` and turbidity are
+too collinear at this n, and it returns uninterpretable coefficients (`M_inf` of 0.96 and −4.9). It
+says nothing and is recorded only so nobody re-derives it and believes it.
+
+⚠ **This is evidence, not settlement — and it must not be designed upon.** It infers the answer from
+the very model the calibration is meant to be independent of. §16.17.4 and §16.17.5 therefore make
+the wizard robust to *either* outcome rather than betting on this one.
+
+### 16.17.3 The SHORT wizard — the preferred design
+
+Master-only, per instrument, sitting beside the wavelength calibration in the existing setup flow
+(`SPEC_connection_and_calibration_ux.md` §4).
+
+| step | the technician | the app |
+|---|---|---|
+| **1 · Prepare** | 18 ml alcohol + 6 drops **refined** sunflower or rapeseed oil; stir; wait the standard latency | states *why refined* — it must contain no pigment — and shows the same stir-to-measure timer the measurement workflow uses (§16.16.6) |
+| **2 · Reference** | pure alcohol | ordinary reference capture |
+| **3 · Measure ×4** | insert, capture, **re-seat**, repeat | shows turbidity per run so a bad preparation is visible immediately |
+| **4 · Check** | — | the three gates of §16.17.4 |
+| **5 · Result** | reads one number | `r_Q = −0.024 ± 0.001`, with `r_Soret` beside it |
+| **6 · Store** | confirms | writes the calibration entry of §16.17.5 |
+
+**Why four runs and not one.** One run already separates `r_Q` from zero by ~10 σ (run-to-run SD on
+`B_Q` is **0.0025 A** against a value near 0.025). Four are specified anyway: they guard against a
+single bad seating and they yield an uncertainty, without which the value cannot be compared against
+a stored one at re-check time.
+
+**⭐ The FIRST TIME the procedure is ever run, sweep. Every calibration after that is a single point.**
+
+*(Wording note: "the first time, ever" — not "the first instrument". This is one occasion in the
+project's life, on the bench, not something a new build repeats.)*
+
+Because §16.17.2a is evidence rather than settlement, **that one occasion** should run the surrogate at
+**three drop counts — 3, 6 and 12 — instead of one**, 4 runs each, and record `r_Q` at all three.
+
+**It is not a different way of obtaining `r_Q`.** One preparation already gives `r_Q`; the sweep tests
+the **procedure**, and answers exactly one question:
+
+> **Does the reading depend on how much surrogate oil happened to go in?**
+
+| the three readings | meaning | consequence |
+|---|---|---|
+| **agree** | the recipe is forgiving | "6 drops" is a **guideline**; the sweep is never repeated |
+| **disagree** | the recipe is a **tolerance** | either specify the drop count tightly, or normalise by the measured turbidity (§16.17.5's stored ratio) |
+
+Cost: two extra preparations in one evening. Thereafter — on this rig, on a new build, on a customer's
+unit — calibration is the single 6-drop preparation above.
+
+This is how instrument calibration procedures normally work: **characterise once, then run the short
+form.** It is the same logic as checking that a balance reads alike across its pan — done when the
+balance is new, not before every weighing.
+
+### 16.17.4 The three gates — where the wizard earns its keep
+
+A technician cannot be expected to judge whether the preparation was valid. **The app must, and it
+must refuse rather than store a doubtful constant.**
+
+| gate | rule | message on failure |
+|---|---|---|
+| **Did it scatter?** | turbidity `A@520–540` inside the normal sample range — measured sets sit at **0.09–0.12** | *"The oil dissolved instead of emulsifying. Stir harder, or use a different oil."* **Blocks** |
+| **Is it pigment-free?** | the absorbance curve smooth across 440–630 nm — no Soret rise, no Q bump | *"This oil contains pigment. Use a refined, bleached oil."* **Blocks** |
+| **Is the sign right?** | `r_Q` **negative**, `r_Soret` **positive** (§16.16.9's geometry), both within a plausible band | *"Unexpected result — calibration not stored."* **Blocks** |
+
+⚠ **The plausible band is not yet knowable.** One instrument has produced one value (−0.0246). The
+range must be set from the first several calibrations and **must not be invented now** — until then
+the gate should warn rather than block on magnitude, while still blocking on sign.
+
+**The sign gate is the strong one** and costs nothing: it is a two-way prediction from the chord
+geometry (§16.16.9), it holds whatever the droplet size distribution, and a violation means the
+model is wrong rather than the preparation.
+
+#### ⭐ Why the turbidity gate is there — it is NOT merely a "did it emulsify" check
+
+This is the gate's real purpose and it should be stated, because at present the protection it gives is
+accidental rather than designed.
+
+§16.17.2a leaves open the possibility that `r_Q` scales with turbidity, in which case the surrogate's
+drop count would be critical and a 10–20 % drop-volume error would land directly on the calibration.
+**The turbidity gate bounds that error whether or not the possibility is real:**
+
+```
+gate window 0.09 - 0.12  =  +/- 14 % about its centre
+worst case (r_Q fully proportional to turbidity):  +/- 14 % x 0.0246  =  +/- 0.0035 A
+current fitted uncertainty on r_Q                                     =  +/- 0.0037 A
+```
+
+**⇒ Any surrogate that passes the gate yields an `r_Q` no worse than today's measurement uncertainty,
+even under the pessimistic model.** The gate is therefore what makes the drop count a *guideline*
+rather than a tolerance — and it must not be widened without redoing this arithmetic.
+
+### 16.17.5 What is stored — and the part that must not be forgotten
+
+**On the instrument record:** `r_Q`, its uncertainty, `r_Soret`, the date, the operator, the surrogate
+recipe, and the software version. Marked "pedestal-calibrated".
+
+**⭐ And the TURBIDITY the calibration was measured at — plus the ratio `r_Q / turbidity`.** Two extra
+numbers, both already computed, and they cost nothing. The reason is §16.17.2a: the constant-versus-
+scaled question is not settled, and storing only `r_Q` bets on one answer.
+
+- if `r_Q` proves a **constant**, the ratio is simply ignored;
+- if it proves **turbidity-scaled**, every calibration ever performed can be **reinterpreted** rather
+  than re-run — the stored turbidity is exactly what is needed to rescale it.
+
+Recording both is the difference between a model revision costing nothing and costing a re-calibration
+of every instrument in the field.
+
+**⭐ On EVERY measurement thereafter: a stamp of the `r_Q` that was in force.** This is the same
+argument `SPEC_workflow_persistence.md` §8a already makes for the threshold and gate multiplier, both
+persisted precisely because they are expected to change. **Without the stamp a history graph cannot be
+re-derived when the constant is refined** — and there is no way to recover it afterwards. It is nearly
+free now and impossible to retrofit once a customer has two years of points.
+
+### 16.17.6 The re-check mode — answering "how do I know it went stale?"
+
+A second, shorter entry point: **"Re-check pedestal"**, 1–2 runs of the same surrogate, comparing
+against the stored value.
+
+- **agrees** → nothing to do, the record gets a "verified on <date>" line
+- **drifted** → offer a full re-calibration
+
+⇒ The operator does not have to *remember* the trigger rules of §16.16 (which mechanical changes move
+`r_Q`, which do not). **They run a two-minute check after any work on the instrument**, and the app
+decides. That is the practical answer to the per-rig-state maintenance worry.
+
+### 16.17.7 The LONG wizard — the fallback, if the surrogate fails
+
+Same storage, same gates, different data collection: **three preparations of a real pigmented oil at
+1 : 1 : 1 serial dilution** (§16.16.5), 4 runs each. The app then **fits and displays the straight
+line** `B_Soret` against `B_Q`, shows the intercept it landed on, and derives `r_Q = −k / M_inf`.
+
+The fitted line should be **shown, not hidden** — its distance from the origin is the entire
+justification for the constant, and a technician who sees a line passing through the origin has
+learned something important without needing the theory.
+
+Additional gate for this route: **the fit must be linear.** Curvature refutes the constant-`r_Q`
+model outright (§16.16.7), so the wizard must detect it and refuse rather than fit a line through a
+curve.
+
+### 16.17.8 ⚠ What must be true before ANY of this is built
+
+1. **A1 settled** (§16.16.11 item 1) — if `r_Q` is a per-sample property there is no constant to
+   calibrate and the whole section is void.
+2. **The surrogate test run** — it decides between §16.17.3 and §16.17.7, i.e. between a twenty-minute
+   and an evening-long procedure.
+3. **`r_Soret` measured** — it decides whether one constant suffices or two are needed (§16.17.1).
+4. **The threshold re-derived** on the corrected scale — without it the calibration has nothing to
+   feed, since the verdict is still computed on the shipped index.
+5. **A decision to adopt the correction at all** — `DOC_pedestal_correction.md` chapter 13 currently
+   recommends *against* it, pending 1–4.
+
+**⇒ This section is a design held in reserve. It is written now because the shape of the calibration
+step decides how much the correction costs in production, and that cost belongs in the adoption
+decision rather than being discovered afterwards.**
+
+---
+
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).

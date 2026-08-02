@@ -327,6 +327,13 @@ hardware (live-during-burst → spectrum graph). Adds dependency on capture trac
 - `spectracs-docs/ROADMAP.md` — item #3 (direction-changed to serial-keyed) + the "Real-hardware capture &
   connection/calibration" section (this spec = the `CX` design step).
 - `KB_spectroscopy_physics.md` §7 — hardware construction (hand-held grating-on-lens; CFL vs LED sources).
+- ⭐ `SPEC_capture_quality.md` **§16.17 — the PEDESTAL calibration** *(added 2026-08-02, DESIGN, blocked)*.
+  A **second** per-instrument calibration alongside the wavelength one: a single scalar `r_Q` measured from
+  a pigment-free surrogate sample (~20 min, master-only), with three refuse-rather-than-store gates and a
+  two-minute "re-check" mode. **It belongs to this spec's authoring flow (§4) when it is built** — but it is
+  gated on §16.17.8, and on whether the pedestal correction is adopted at all.
+  ⚠ It also imposes a **persistence requirement** on every measurement (the `r_Q` in force must be stamped,
+  §16.17.5), which is a knock-on for `SPEC_workflow_persistence.md` §8a.
 
 ---
 

@@ -92,6 +92,50 @@ def main():
     print()
     print("   ⚠ WITHIN-SESSION only. Between-session stability is untested and untestable from the")
     print("     archive; see §16.16.11 item 2'.")
+    print()
+    scalingCheck(runs)
+
+
+def scalingCheck(runs):
+    """Is r_Q a CONSTANT, or does it scale with the pedestal? (§16.17.2a — Edwin's question 2026-08-02)
+
+    It decides whether the surrogate calibration's drop count is critical:
+
+        model A   B_Soret = M_inf*B_Q + k                 r_Q constant       -> drop count irrelevant
+        model B   B_Soret = M_inf*B_Q - M_inf*kappa*T     r_Q = kappa*T      -> drop count critical
+
+    Both have two parameters, so their residual scatter is directly comparable."""
+    print("=== IS r_Q A CONSTANT, OR DOES IT SCALE WITH TURBIDITY?   (§16.17.2a)")
+    print("   %-14s %4s %10s %14s %14s %s" % (
+        "oil", "n", "turb span", "A: constant", "B: ~turbidity", "better"))
+    print("   " + "-" * 72)
+    oils = {"Kiendler": ["Kiendler A"], "Steirerkraft": ["Steirerkraft B", "Steirerkraft C"]}
+    # Kiendler's B and C sets are only 2 runs each but carry the concentration span — include them.
+    extra = {"Kiendler": [("20260801B/%03d.pdf" % i) for i in (1, 2)]
+                         + [("20260801C/%03d.pdf" % i) for i in (1, 2)]}
+    for oil, names in oils.items():
+        rows = [r for n in names for r in runs[n]]
+        for path in extra.get(oil, []):
+            rows.append(measure(path))
+        y = np.array([r["A_Soret linear"] for r in rows])
+        x = np.array([r["A_Q linear"] for r in rows])
+        t = np.array([r["A_near 520-540"] for r in rows])
+        n = len(y)
+
+        def scatter(columns):
+            matrix = np.column_stack(columns)
+            coefficients, *_ = np.linalg.lstsq(matrix, y, rcond=None)
+            return np.sqrt(((y - matrix @ coefficients) ** 2).sum() / (n - matrix.shape[1]))
+
+        constant, scaled = scatter([x, np.ones(n)]), scatter([x, t])
+        print("   %-14s %4d %9.2fx %14.4f %14.4f %s" % (
+            oil, n, t.max() / t.min(), constant, scaled,
+            "A" if constant < scaled else "B"))
+    print()
+    print("   ⇒ the CONSTANT model fits better on both oils — clearly on Kiendler (whose turbidity")
+    print("     spans 3.6x), only marginally on Steirerkraft (span 1.7x, so it barely discriminates).")
+    print("   ⚠ A three-parameter fit with BOTH terms is not reported: B_Q and turbidity are too")
+    print("     collinear at this n and it returns uninterpretable coefficients.")
 
 
 if __name__ == "__main__":
