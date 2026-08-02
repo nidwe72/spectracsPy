@@ -6545,7 +6545,7 @@ Master-only, per instrument, sitting beside the wavelength calibration in the ex
 
 | step | the technician | the app |
 |---|---|---|
-| **1 · Prepare** | 18 ml alcohol + 6 drops **MCT oil** *(pharmacopoeial grade — see the note below)*; stir; wait the standard latency | states *why MCT* — it must contain no pigment — and shows the same stir-to-measure timer the measurement workflow uses (§16.16.6) |
+| **1 · Prepare** | 18 ml alcohol + 6 drops **MCT oil, Ph. Eur.** *(see the specification below)*; stir; wait the standard latency | states *why MCT* — it must contain no pigment — and shows the same stir-to-measure timer the measurement workflow uses (§16.16.6) |
 | **2 · Reference** | pure alcohol | ordinary reference capture |
 | **3 · Measure ×4** | insert, capture, **re-seat**, repeat | shows turbidity per run so a bad preparation is visible immediately |
 | **4 · Check** | — | the three gates of §16.17.4 |
@@ -6569,6 +6569,34 @@ through the Soret window.** Consequences:
 MCT is **C8:0/C10:0 — fully saturated, no double bonds, no carotenoids**, and available in
 pharmacopoeial grade (§16.18.3). It is therefore *strictly better* as a surrogate: same procedure,
 same cost, one bottle — and it recovers the second number the wizard is supposed to produce.
+
+#### The material, specified — buy **Ph. Eur.** grade, not merely "MCT oil"
+
+The European Pharmacopoeia monograph **"Triglycerides, Medium-Chain"** *specifies* the two properties
+this whole surrogate depends on, which is what turns a bottle of oil into a **reference material**:
+
+| Ph. Eur. limit | what it buys us |
+|---|---|
+| **appearance: colourless or slightly yellowish** | optical cleanliness is guaranteed rather than hoped for |
+| **iodine value ≤ 1.0** | **essentially no double bonds** — the structural reason it cannot absorb in the blue as unsaturated oils do |
+| **content ≥ 95 % C8 + C10 saturated** | a defined composition, not a variable commodity |
+
+*(also acid value ≤ 0.2, hydroxyl value ≤ 10, saponification 310–360)*
+
+Sold in pharmacies and to compounders as **"Neutralöl Ph. Eur."**, **"Mittelkettige Triglyceride
+Ph. Eur."** or under the brand **Miglyol 812**. A 1 L bottle is ≈ 55 calibrations at 18 ml each.
+
+**⭐ Record the LOT/batch number with every calibration**, alongside the recipe already required by
+§16.17.5. If a future bottle ever disagrees with an earlier one, that is the only way to trace it —
+and a reference material without a traceable batch is not a reference material.
+
+⚠ **The monograph permits "slightly yellowish", so §16.17.4's pigment-free gate is still required.**
+In practice this grade is water-clear; the gate exists so that a bad bottle is *refused* rather than
+silently absorbed into the constant.
+
+⚠ **Food-grade MCT is adequate for the one-off bench TEST** — it answers "does `r_Q` read −0.025?"
+just as well. Ph. Eur. matters when the material becomes the *production* reference, because §16.17.5
+stores the recipe with the constant and instruments calibrated years apart must be comparable.
 
 ⚠ **This is the surrogate only. MCT was REJECTED as a replacement SOLVENT — see §16.18.0.** The two
 uses are unrelated: as a surrogate it never touches the sample chemistry.
@@ -6974,6 +7002,7 @@ one-evening *test* is cheap; *adopting* MCT means re-deriving the band windows a
 | oil absorbance in the near-UV/blue arises from **unsaturation** (π electrons) and polyphenols | *Study of UV Transmission through a Few Edible Oils*, J. Spectroscopy 2013 — [Wiley](https://onlinelibrary.wiley.com/doi/10.1155/2013/540417) |
 | MCT **viscosity 25–33 cP at 20 °C**, refractive index 1.440–1.452, BP/Ph.Eur/USP-NF grades | Ph.Eur/USP-NF MCT specification — [mubychem.com](https://mubychem.com/mediumchaintriglyceridesmanufacturers.html) |
 | MCT composition (C8:0 caprylic, C10:0 capric), liquid at RT, food use | *Triglycerides of medium-chain fatty acids: a concise review* — [PMC9217113](https://pmc.ncbi.nlm.nih.gov/articles/PMC9217113/) |
+| **Ph. Eur. monograph limits** — colourless or slightly yellowish, **iodine value ≤ 1.0**, ≥ 95 % C8+C10 saturated, acid ≤ 0.2, saponification 310–360 (cited in §16.17.3) | USP-NF / Ph.Eur. medium-chain triglycerides monograph — [pharmacopeia.cn](http://www.pharmacopeia.cn/v29240/usp29nf24s0_m85460.html) · [Miglyol 812 N TDS](https://marcordev.com/wp-content/uploads/2019/08/MIGLYOL_812_N_Excipient_TDSH.pdf) |
 
 ⚠ **What the sources do NOT cover, and it is the load-bearing gap:** no band-position data for MCT
 specifically, and **nothing whatsoever on protochlorophyll in a lipid matrix.** Every shift figure
