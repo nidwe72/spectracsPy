@@ -4476,6 +4476,14 @@ absorb part of the gap. **The direction is robust; the factor is not.***
 1. **We do not know what dilution ratio "18 ml + 6 drops" actually is.** The 1:30 label rests on an assumed drop
    volume that today's absorbance contradicts. **▶ Measure it: weigh 20 drops (B4's scale does this in a minute).**
    Until then every ratio in either spec is nominal.
+   > ⭐ **A third estimate, and it disagrees with BOTH** *(2026-08-03)*. Tate's law for the pipette actually in
+   > use — a 3 mL transfer pipette with a fine drawn tip — gives an oil drop of **10–15 µL**, so 6 drops is
+   > **0.06–0.09 mL** and the ratio is **~1:240**, not 1:30 and not 1:14. Oil's surface tension is 33 mN/m
+   > against water's 73, so an oil drop is about **half** a water drop from the same tip; §7.3's implied
+   > 0.10 mL/drop would be *twice* a water drop, which no pipette gives. The three estimates now span **17×**
+   > and every ratio in every spec remains nominal.
+   > ⇒ **§16.23 dissolves this item rather than answering it:** dose the oil with a capillary of known bore and
+   > there are no drops to calibrate. The weighing is still worth doing — as §16.23.4's G2, on the capillary.
 2. **§7.3's decision criterion has since been tested and does not bind.** §7.3 chose the weaker dilution to keep
    the 440 nm bins out of the sRGB toe. §16.11.14 tested whether those bins hurt the metric — **they do not** (the
    left-edge sweep is flat, and sliding the band away is strictly worse). §7.3 also found the metric's *value*
@@ -4911,6 +4919,10 @@ PAUSED, and 2-butanol is recorded as a candidate rather than a scheduled trial.*
 **Decision: keep the sample chemistry exactly as it is.** Not because the solvent question was answered, but
 because **it stopped being the binding constraint.**
 
+> ℹ **The PREPARATION changes in §16.23; the solvent does not.** A capillary and a capped tube replace drops
+> and an open measuring glass. The jar stays the cuvette, so the vessel-integrity argument below is untouched —
+> the tube never enters the beam.
+>
 > ⭐ **The flammability half of this decision was never actually worked — §16.12.7c does it** *(2026-08-03)*.
 > The finding does not change the decision but it changes its justification: on autoignition (399 vs 465 °C)
 > and on saturated headspace (**IPA's sits INSIDE its flammable range at bench temperature, acetone's is
@@ -8796,6 +8808,128 @@ sensitivity check on each other.
 - **Not σ_fill.** That is §16.21's F1, and it is the one with a product consequence.
 - **Not comparability with the archive.** Band shifts (§16.22.3) plus a possible path-length change mean the
   verdict numbers do not travel. Compare **pedestals and band positions**, never `M1/M2/M3`.
+
+## 16.23 ⭐⭐ THE PREPARATION PROTOCOL — a capillary and a capped tube replace drops and a measuring glass  *(Edwin 2026-08-03, working from the hardware he already owns; DESIGN — ⛔ two gates below must pass before it is adopted)*
+
+### 16.23.0 What it replaces, and the four errors it removes at once
+
+Today's recipe is **"18 ml isopropanol + 6 drops of oil"**, prepared in an open measuring glass and decanted
+into the jar. It has four independent problems, and this protocol removes all of them with hardware already
+on the bench:
+
+| today | the problem | this protocol |
+|---|---|---|
+| **6 drops counted** | ±8 % quantisation, and the drop volume is UNKNOWN — §16.11.15's open item, with three estimates on record spanning **17×** | one capillary of **known bore** |
+| **transferred from a pipette** | oil is viscous; the film left behind is an error you cannot see | the capillary is **dropped into the solvent** — nothing is transferred |
+| **an open measuring glass** | evaporation, and swirling rather than shaking | a **screw-capped, graduated tube** |
+| **one batch, many fills** | a standing dilution AGES into a browner oil within 24 h (§16.11.16) | **one tube = one preparation**, timestamped |
+
+⭐ **And it does not touch the cuvette.** The jar stays exactly as it is — 3 cm × 1.3 cm, vertical beam,
+9.2 mL at the brim (§16.7.4). The tube is a **mixing vessel only and never enters the beam**, so
+§16.12.7b's binding constraint — *a leak runs down into mains electrics, so vessel integrity is a safety
+property* — **does not apply to it at all.** That is the reason this change is cheap where every previous
+vessel proposal was not.
+
+### 16.23.1 The equipment
+
+| | |
+|---|---|
+| **oil dose** | **Hirschmann 9100160** haematocrit capillary — 75 mm, **ID 0.9–1.0 mm**, nominal **60 µL**, €0.04 each *(Edwin owns 1000)* |
+| **mixing vessel** | **15 mL graduated screw-cap centrifuge tube**, plastic, disposable *(pack of 20)* |
+| **cuvette** | ⭐ **unchanged** — the existing jar |
+| **scale** | 0.01 g, for the one-off calibration of §16.23.4 |
+
+### 16.23.2 The protocol
+
+1. **Fill one capillary with oil.** Hold it **horizontal** — oil's vertical capillary rise limit is ~13 mm
+   against the tube's 75 mm, which is why haematocrit tubes are filled horizontally in the first place. It
+   fills in tens of seconds, not instantly: oil is ~12× blood's viscosity.
+2. **Drop the filled capillary into the tube**, then add isopropanol **to the 15 mL graduation** *(see
+   §16.23.4 — it may need to be 13 mL)*.
+3. **Cap and invert to mix.** ⚠ **Invert, do not shake hard** — a 75 mm glass capillary can break against
+   the tube wall. The oil dissolves out of the bore completely, so **transfer loss is zero by construction.**
+4. **Decant into the jar, holding the capillary back**, and **brim-fill** — §16.7.2c/§16.7.4: brim-filling
+   pins the path length at the jar's own 1.3 cm and removes the free surface, two error channels for one act.
+5. **Log** the tube, the preparation time, and which oil. §16.11.17 needs the clock; a capped tube standing
+   on the bench is exactly the storage that section prescribes.
+
+⭐ **Three tubes prepared independently = a σ_fill triplet.** σ_fill is the only term in §16.21.1's budget
+that protocol cannot fix, and it is what gates the one-measurement protocol (§16.11.13). This protocol makes
+an independent preparation cost one capillary and one tube.
+
+### 16.23.3 The numbers — why 60 µL and 15 mL
+
+**60 µL / 15 mL = 1:250**, against today's estimated working point of **~1:243**. A 3 % difference, i.e.
+`A_Q` ≈ **0.224** against today's 0.230 — inside §16.10.8's 0.19–0.23 window, and **no threshold needs
+re-deriving.**
+
+⚠ **"Nominal 60 µL" is at the TOP of what the bore permits.** From the vendor's own ID spec at 75 mm length:
+
+| ID | actual volume |
+|---|---|
+| 0.90 mm | **47.7 µL** |
+| 0.95 mm | 53.2 µL |
+| 1.00 mm | 58.9 µL |
+
+| capillary | with 15 mL | `A_Q` | |
+|---|---|---|---|
+| 48 µL | 1:312 | 0.179 | ⚠ **below the window** |
+| 53 µL | 1:283 | 0.198 | ✅ |
+| 59 µL | 1:254 | 0.220 | ✅ |
+| 60 µL | 1:250 | 0.224 | ✅ |
+
+⇒ **If the calibration of §16.23.4 comes in below ~53 µL, use the 13 mL graduation instead of 15 mL.** The
+tube is graduated, so the correction is free.
+
+#### ⭐ And the tolerances no longer matter — this is §16.20.9 paying off in the workshop
+
+| error source | metric moves | % of class gap |
+|---|---|---|
+| tube graduation ±5 % | −0.24 % | **0.7 %** |
+| capillary ID band ±10 % | −0.47 % | **1.4 %** |
+| **both, worst case ±15 %** | **−0.68 %** | **2.0 %** |
+
+**Stacking every tolerance moves the verdict by 2 % of the class gap — less than a single re-seat**
+(11.3 %, §16.21.1). On the 600–630 anchor the same stack would have cost ~5 %. **Moulded graduations are
+good enough *because* the anchor moved**, which is the most concrete thing §16.20.9's slope change has
+bought so far.
+
+### 16.23.4 ⛔ TWO GATES — neither has been run, and the protocol is not adopted until both pass
+
+**G1 — THE ADDITIVE BLANK.** Haematocrit capillaries are sold plain **and** sodium-heparinised, and REF
+9100160's listing does not say which these are.
+- Heparin has **no chromophore in 440–630 nm**, so it cannot put a band anywhere. *That is not the risk.*
+- ⚠ Heparin is a polysaccharide and is **essentially insoluble in isopropanol** — IPA is what one would use
+  to precipitate it. An undissolved coating would sit in the fill as **fine particulate**, i.e. as scatter,
+  in the one system whose central unexplained problem is a scattering pedestal (§16.19).
+- **The test costs one capture:** one capillary into 15 mL of isopropanol, **no oil**, measured as a sample
+  against the normal reference.
+  - `A`@520–540 unchanged and the baseline slope untilted ⇒ **PASS**, use them.
+  - Either lifts ⇒ **FAIL** — buy the plain version; it is the same product without the coating.
+- ℹ Read the vial, not the ring: red-for-heparinised / blue-for-plain is common but not universal.
+
+**G2 — THE VOLUME, WEIGHED ONCE.** "Nominal 60 µL" is not a calibration, and these tubes are made for a
+*ratio* measurement (packed cell volume) where absolute volume is not what they are specified to.
+- **Fill ten and weigh them together.** 10 × 60 µL of oil = **0.55 g** — 55 divisions on a 0.01 g scale,
+  ±0.9 %. Subtract the mass of ten empty capillaries.
+- Divide by 10 and by 0.92 g/mL. That single weighing gives the true dose, the true ratio, **and closes
+  §16.11.15's open item permanently** — the drop volume stops mattering because there are no drops.
+
+### 16.23.5 What it fixes, and what it does not
+
+| | |
+|---|---|
+| ✅ **fixes** | drop counting; the unknown drop volume; pipette transfer loss; evaporation from an open glass; poor mixing; batch ageing; cross-contamination between oils |
+| ✅ **enables** | an independent preparation per tube ⇒ **σ_fill triplets at ~€0.10 each** |
+| ⛔ **does NOT change** | the cuvette, the path length, the concentration, the bands, or any threshold — *that is the point*. `A_Q` lands within 3 % of today, so nothing downstream is re-derived |
+| ⛔ **does NOT address** | the settling drift, re-seat wobble, `r_Q`'s mechanism, or the unvalidated `T` |
+| ⚠ **still unmeasured** | how long a prepared tube stays valid — **§16.11.17 is the run that bounds it**, and this protocol makes that run easier rather than replacing it |
+
+**⇒ Adopt after G1 and G2, and record the first prepared tube's `A_Q` beside the prediction above.** If it
+lands outside 0.19–0.23, adjust the isopropanol volume once — do **not** adjust the capillary, which is the
+only known quantity in the system.
+
+---
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
