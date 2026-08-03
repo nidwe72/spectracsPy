@@ -30,7 +30,7 @@ from far_anchor_probe import spectra
 from metric_bench import BASE, feature, plugin
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
 
-SORET, Q, WINDOWS = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS
+SORET, Q, WINDOWS = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS_LEGACY_600   # 600-630 — the anchor this script's published numbers were measured on (§16.20)
 
 REPORT = "measurement_report_oil%s_%03d.pdf"
 GREEN_WEAK = [REPORT % ("K", i) for i in range(1, 5)]        # 2 drops

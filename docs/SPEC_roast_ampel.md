@@ -60,6 +60,10 @@ Why this metric and not raw colour:
 
 ## 2. The two states (traffic-light threshold) — *one line; RECALIBRATED for 2026 oils 2026-07-25*
 
+> ⛔ **SUPERSEDED 2026-08-03 — see §2b.** The gauge described here (raw Soret/Q at `T` = 4.4) **no longer
+> ships**, and on post-rebuild data it called the brown reference oil "good — green" on every run. §2b has
+> the three verdicts that replaced it and the evidence for the retirement.
+
 A **single** threshold at **4.4** (the earlier three-state 2.6–2.8 amber band was **dropped** — see the note):
 
 | Ratio band | Verdict | Light | Miller action |
@@ -73,7 +77,56 @@ fresh oils read higher, so the whole scale shifts up. The 2023 numbers in §5 ar
 the evidence trail. **⚠ 4.4 is still PROVISIONAL** — set from the new oils, not yet a broad calibration; good for
 the bench + story, firming up as more 2026 runs land.
 
-### 2a. A SECOND Ampel — the linear-baseline gauge *(✅ IMPLEMENTED 2026-07-27; see [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §16.10.9)*
+### 2b. ⭐⭐ SUPERSEDED 2026-08-03 — THREE verdicts, and the raw-ratio Ampel is RETIRED  *(`SPEC_capture_quality.md` §16.20.7; implemented, 329 tests green)*
+
+**⛔ READ THIS BEFORE §2 OR §2a. Both describe gauges that no longer ship.**
+
+The DEV plugin now shows the pigment index **three ways**, in decreasing order of correction, all on the
+**620–630 nm** far baseline anchor (§16.20):
+
+| # | caption | metric | threshold | band |
+|---|---|---|---|---|
+| **1** | `Verdict · baseline + pedestal` | `B_Soret / (B_Q − r_Q)`, `r_Q` = **−0.0184** | **10.6** *(retained, Edwin)* | 14.0 → 7.5 |
+| **2** | `Verdict · baseline` | `B_Soret / B_Q` | **12.5** *(derived: corridor midpoint)* | 19.0 → 9.0 |
+| **3** | `Verdict · raw Soret/Q` | `A_Soret / A_Q`, no baseline | ⛔ **none — value only, no gauge** | — |
+
+All three sit on **different scales**. Compare verdicts, never numbers.
+
+#### ⛔ Why the raw-ratio Ampel of §2 was retired, and why it was already wrong
+
+On post-rebuild data the raw Soret/Q **cannot classify at all**:
+
+| | green | brown | Cohen's *d* | corridor |
+|---|---|---|---|---|
+| raw Soret/Q | 5.387 ± 0.510 | 4.842 ± 0.290 | **1.20** | **−0.48 — the classes OVERLAP** |
+| 620–630 baseline | 15.559 ± 0.615 | 10.160 ± 0.197 | 10.35 | +4.26 |
+| 620–630 + pedestal | 12.331 ± 0.465 | 8.590 ± 0.156 | 9.46 | +2.84 |
+
+**No threshold separates them** — the lowest green run (4.863) sits *below* the highest brown run (5.340).
+
+**⚠⚠ And worse: the shipped `T` = 4.4 sat BELOW the entire brown class** (minimum 4.622), so **every run of
+the brown S-Budget oil read "good — green"**. That defect was live on the **PUBLISHING badge** — the one
+screen a miller or a lab sees — and it was latent since §2's 2026-07-25 recalibration, which predates series
+D, the first proper post-rebuild brown. The badge now uses metric 1.
+
+⇒ The raw ratio is kept as a **displayed value with no verdict pill**, for continuity with older reports and
+as the uncorrected end of the ladder. **A pill on a metric whose classes overlap would be a guess wearing a
+verdict's clothes.**
+
+#### What §2 and §2a still document
+
+They remain the record of how the 2.8 → 4.4 and 10.3 → 10.6 decisions were reached, and §16.10.17d's policy
+(*a false GREEN ships bad oil; a false BROWN costs a re-check*) still governs. **`T` = 10.6 carried across to
+metric 1 unchanged** on Edwin's call — it lands inside that metric's corridor and classifies all 28 archived
+runs correctly, though ⚠ **it is inherited, not derived on the new scale**: green's margin is +3.72 σ against
+the corridor midpoint's +4.60 σ. §16.20.7 records 10.2 as the derived alternative.
+
+⚠ `RoastGaugeView` and `RoastBaselineGaugeView` still exist and are still tested; they are simply **no longer
+instantiated by the plugin**. They are the historical record of the 600–630 scale.
+
+### 2a. A SECOND Ampel — the linear-baseline gauge *(✅ IMPLEMENTED 2026-07-27; ⛔ **SUPERSEDED 2026-08-03**; see [`SPEC_capture_quality.md`](SPEC_capture_quality.md) §16.10.9)*
+
+> ⛔ **HISTORICAL — this gauge is no longer instantiated.** `RoastBaselineGaugeView` was replaced by `RoastFar620GaugeView` (§2b metric 2) when the far anchor moved to **620–630 nm**. Every window, threshold and scale below belongs to the **600–630** construction and none of them transfer. Kept because §2b's numbers are quoted as changes *from* these.
 
 `RoastBaselineGaugeView` runs **alongside** `RoastGaugeView`, on its own scale. It is driven by the
 **linear-baseline pigment ratio** — a straight line fitted through the 520–540 and 600–630 windows and

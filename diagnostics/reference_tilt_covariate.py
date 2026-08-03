@@ -23,7 +23,7 @@ from sciens.spectracs.plugins.dev.DevSpectralPlugin import DevSpectralPlugin
 
 BASE = "/home/nidwe72/development/spectracs/spectracs-references/tmp/"
 plugin, feature = DevSpectralPlugin(), SpectrumFeatureUtil()
-SORET, Q, WINDOWS = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS
+SORET, Q, WINDOWS = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS_LEGACY_600   # 600-630 — the anchor this script's published numbers were measured on (§16.20)
 
 FILLS = [("green", "green B", ["20260727B/%03d.pdf" % i for i in range(1, 10)]),
          ("green", "green E", ["20260727E/%03d.pdf" % i for i in range(1, 8)]),

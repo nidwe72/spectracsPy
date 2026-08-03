@@ -280,6 +280,23 @@ for its three open questions.
 
 ## 10. As-built — implemented + polished (2026-07-02)
 
+> ⚠ **THIS SECTION WAS MISSED ONCE, AND THE MISTAKE IS WORTH RECORDING** *(2026-08-03,
+> `SPEC_capture_quality.md` §16.20.8)*. A search for `SpectralWorkflow.fromJson` came up empty and the
+> conclusion drawn was *"persistence is DESIGN only, there is no deserializer"* — which blocked a PDF
+> regeneration task on a milestone that had been shipped for a month.
+>
+> **Both halves were false, and §8's Option A is exactly why.** The workflow classes ARE the entities, so a
+> saved run reloads through the ORM with cascade and **no serializer was ever needed** — §4 says it outright:
+> *"No serializer/gather step — the graph is already the entity graph."* The app DB holds **79
+> `spectral_workflow` rows** (395 phases, 1006 steps, 385 containers, 316 spectra).
+>
+> ⇒ **A grep proves a NAME is absent, not a CAPABILITY.** When a search for a mechanism comes up empty, read
+> the owning spec's as-built section before concluding the feature is missing.
+>
+> ℹ What genuinely did not exist was a reconstructor for the **report JSON** — `toReportJson()` is one-way,
+> and 66 of 124 archived reports predate the save-runs habit. That is `diagnostics/report_reconstruct.py`,
+> kept in diagnostics on purpose: the DB path is the supported way to reload a workflow.
+
 Shipped as specced (§8 decisions all hold: Option A entities, short-lived save session, EAV metadata,
 data-driven Home table, wizard VIEW mode, cascade delete + ownership guard). Deltas folded in from Edwin's
 click-through review:

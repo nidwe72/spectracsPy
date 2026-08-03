@@ -57,6 +57,13 @@ IMAGE_ROOTS = [REPO, os.path.join(REPO, "docs"),
 MATH_SYMBOLS = {
     r"\lambda": "\u03bb", r"\Sigma": "\u03a3", r"\sigma": "\u03c3", r"\Delta": "\u0394",
     r"\mu": "\u03bc", r"\epsilon": "\u03b5", r"\alpha": "\u03b1", r"\beta": "\u03b2",
+    # An unlisted \symbol renders as its own literal source text, silently \u2014 so the lowercase Greek
+    # letters are listed even where no document uses them yet.
+    r"\delta": "\u03b4", r"\gamma": "\u03b3", r"\rho": "\u03c1", r"\tau": "\u03c4",
+    r"\theta": "\u03b8", r"\phi": "\u03c6", r"\varphi": "\u03c6", r"\pi": "\u03c0",
+    r"\omega": "\u03c9", r"\Omega": "\u03a9", r"\nu": "\u03bd", r"\kappa": "\u03ba",
+    r"\eta": "\u03b7", r"\zeta": "\u03b6", r"\xi": "\u03be", r"\psi": "\u03c8",
+    r"\Phi": "\u03a6", r"\Theta": "\u0398", r"\Lambda": "\u039b", r"\Pi": "\u03a0",
     r"\cdot": "\u00b7", r"\times": "\u00d7", r"\pm": "\u00b1", r"\approx": "\u2248",
     r"\le": "\u2264", r"\ge": "\u2265", r"\ne": "\u2260", r"\to": "\u2192",
     r"\Rightarrow": "\u21d2", r"\in": "\u2208", r"\infty": "\u221e", r"\propto": "\u221d",
@@ -441,6 +448,17 @@ def main():
 
     with open(args.source, encoding="utf-8") as handle:
         markdown = handle.read()
+
+    # An image directive is matched with re.fullmatch against ONE stripped line, so an alt text that
+    # wraps does not raise — it silently falls through to the paragraph branch and the reader gets
+    # `...](figures/x.svg)` as body text where a figure should be. Catch it here instead.
+    for number, line in enumerate(markdown.split("\n"), start=1):
+        stripped = line.strip()
+        if stripped.startswith("![") and not re.fullmatch(r"!\[([^\]]*)\]\(([^)]+)\)", stripped):
+            raise SystemExit("%s:%d — image directive spans more than one line (the alt text wraps).\n"
+                             "  Put the whole ![alt](path) on a single line.\n  %s"
+                             % (os.path.basename(args.source), number, stripped[:100]))
+
     body, toc = markdown_to_html(markdown)
     # Cross-references into the knowledge base are only useful if they resolve. Fail loudly rather
     # than shipping a PDF with dead links (they are silent in a PDF — nothing looks broken).

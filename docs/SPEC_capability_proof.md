@@ -71,7 +71,7 @@ Cluster gap: **worst green 3.67 > best brown 2.59** — a clean, empty separatio
 | Sample preparation | ✅ **Easy** — a few drops of oil in isopropanol + a swirl; no lab skills |
 | Broaden panel: +1 brown, +4 green | ⏳ **The one open item — confirmatory** (§11.6) |
 | Brown ×5 fresh runs | ⏳ In progress (2 done; age-robust as predicted) |
-| Metric description matches the metric | ⚠ **Text FIXED 2026-07-31** (§2.1a + `DevSpectralPlugin`). Design decision still open: declare 600–630 as an explicit third band, or leave it covert-but-documented |
+| Metric description matches the metric | ✅ **Settled 2026-08-03** — text fixed 2026-07-31 (§2.1a), and the covert-vs-explicit decision below was then answered by moving the anchor to **620–630 nm**, where it sits *on* protochlorophyll's Qy band and is declared in `declaredEvalBands()` — i.e. option **(a)**, arrived at by relocating the band rather than renaming it (`SPEC_capture_quality.md` §16.20) |
 | Linear baseline earns its place | ✅ **Measured 2026-07-31** (§2.1a) — halves BOTH error terms: dilution 5.49 → 2.75 %, settling 11.90 → 6.20 % |
 | ~~Third too-green oil~~ | ⛔ Retired — out of scope (§1a) |
 | ~~Amber-band sample~~ | ⛔ Retired — no intermediate oils in practice (§1a) |
@@ -84,7 +84,13 @@ Cluster gap: **worst green 3.67 > best brown 2.59** — a clean, empty separatio
 > | row above | 2026 reality |
 > |---|---|
 > | *Dilution-invariant discrimination ✅ proven (10–13× noise)* | **UNRESOLVED on the 2026 oils** (§16.10.8). Not refuted — **unmeasurable**: seating noise alone produces a 1.34× metric spread, as large as a deliberate 2.19× dilution change, so the dilution term is buried. The 2023 evidence stands for the 2023 oils; it does not transfer. |
-> | *Verdict threshold ✅ exists (Ampel 2.8)* | 2.8 → **4.4** (2026-07-25 recalibration), plus a **second** gauge at **10.3** on the linear-baseline metric ([`SPEC_roast_ampel.md`](SPEC_roast_ampel.md) §2a). Both provisional. |
+> | *Verdict threshold ✅ exists (Ampel 2.8)* | 2.8 → **4.4** (2026-07-25 recalibration), plus a **second** gauge at **10.3** on the linear-baseline metric ([`SPEC_roast_ampel.md`](SPEC_roast_ampel.md) §2a). Both provisional. ⛔ **BOTH SUPERSEDED 2026-08-03** — see the note below. |
+>
+> ⛔ **THRESHOLDS SUPERSEDED 2026-08-03 (`SPEC_roast_ampel.md` §2b, `SPEC_capture_quality.md` §16.20.7).** The
+> plugin now shows **three** verdicts on the **620–630 nm** far anchor: `baseline + pedestal` at `T` = 10.6,
+> `baseline` at `T` = 12.5, and the **raw Soret/Q as a VALUE WITH NO VERDICT**. The raw gauge was retired
+> because on post-rebuild data its classes **overlap** (Cohen's *d* 1.20) — and ⚠ its shipped `T` = 4.4 sat
+> **below the entire brown class**, so the PUBLISHING badge reported brown oil as "good — green" on every run.
 > | *Proven, not marginal (10–13× noise)* | On the 2026 oils the raw Soret/Q ratio gives **d = 1.24 and the classes OVERLAP** — 9/25 wrong under leave-one-fill-out. The margin that made 2023 look easy is largely absent here. |
 >
 > **What rescued the gate is a metric change, not new hardware.** The linear-baseline pigment ratio
@@ -434,7 +440,7 @@ The far-anchor sweep (`SPEC_capture_quality.md` §16.12.13), scored on §16.10.9
 | far window | LOFO errors | Cohen's d | class gap |
 |---|---|---|---|
 | 610–630 nm *(further red)* | 1/25 | **3.28** | **+0.782** |
-| **600–630 nm — shipped** | **1/25** | **2.88** | **+0.495** |
+| **600–630 nm — shipped *at the time of this sweep*** | **1/25** | **2.88** | **+0.495** |
 | 600–620 nm | 4/25 | 2.28 | OVERLAP |
 | 600–615 nm | 9/25 | 1.95 | OVERLAP |
 | 600–610 nm *(contamination removed)* | 12/25 | **0.94** | OVERLAP |
@@ -464,6 +470,8 @@ a verdict was wrong.**
    chosen for being *quiet*, and it turns out not to be.
 
 #### ▶ The decision this forces — covert or explicit?
+
+> ⭐⭐ **ANSWERED 2026-08-03 — option (a), by RELOCATION.** The window was moved to **620–630 nm** so that it stands squarely on protochlorophyll's Qy(0,0) band instead of straddling its foot, and it is declared in `declaredEvalBands()`. That converts the covert third region into a stated one without inventing a new coefficient, so the recommendation below (*"do (b) now, schedule (a) after series D/E"*) is **superseded**. The fitting-trap warning in the last paragraph still stands and was honoured: 620–630 was adopted on **post-rebuild** data with a real brown series, and it was not the top scorer of the sweep below. `SPEC_capture_quality.md` §16.20; the pedestal residual was re-fitted with the anchor (−0.0246 → −0.0184).
 
 **(a) Declare it.** Make 600–630 an explicit third band in the plugin, with its own name and its own entry in
 `declaredEvalBands()`, and write the metric as a stated three-band formula. Then it can be tuned, error-budgeted,

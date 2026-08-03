@@ -865,11 +865,16 @@ Recorded honestly; none of these blocks a measurement today.
   polystyrene vessel, which sits directly above a 220 V lamp. **Isopropanol and the existing jar stay.**
   What remains is a 0.22 µm filter, or simply
   a fresher solvent bottle — and none has been tried. Owned by `SPEC_capture_quality.md` §16.12.
-- **The far baseline anchor is not what it was documented to be.** The 600–630 nm window was
-  described as oil-quiet; it carries real pigment absorption — the approach to protochlorophyll's
-  Qy(0,0) band at ~623–626 nm — and a substantial share of the
-  discrimination rests on it. The metric works, but the explanation attached to it has been
-  rewritten — `SPEC_capability_proof.md` §2.1a.
+- **The far baseline anchor was not what it was documented to be — and has since been moved.** The
+  600–630 nm window was described as oil-quiet; it carries real pigment absorption — the approach to
+  protochlorophyll's Qy(0,0) band at ~623–626 nm — and a substantial share of the discrimination rests
+  on it. ⭐ **Resolved 2026-08-03:** rather than keep a measuring band disguised as a correction, the
+  anchor was **narrowed to 620–630 nm** so that it sits squarely *on* the Qy band, starting clear of the
+  607 nm lamp line — and it is now declared in `declaredEvalBands()` like any other measured band. The
+  pedestal residual was re-fitted with it (`r_Q` −0.0246 → **−0.0184**, which belongs to the new anchor
+  and must never be paired with the old one). See `SPEC_capture_quality.md` §16.20 and the restatement
+  in `SPEC_capability_proof.md` §2.1a. **No measurement changed — only which window the line is drawn
+  through, and hence every index value's scale.**
 - **The class threshold rests on four oils.** Precision is close to solved; whether the threshold
   divides good from over-roasted oil *in general* is a panel question no amount of precision can
   answer. This is the binding constraint on the claim, not the instrument.

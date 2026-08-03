@@ -45,7 +45,7 @@ from metric_bench import BASE, bestThreshold, feature, plugin
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
 from settling_sweep import detrend
 
-SORET, Q, WINDOWS = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS
+SORET, Q, WINDOWS = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS_LEGACY_600   # 600-630 — the anchor this script's published numbers were measured on (§16.20)
 NEAR, FAR = WINDOWS
 
 PRE = [("green", "green B", ["20260727B/%03d.pdf" % i for i in range(1, 10)]),

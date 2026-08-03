@@ -324,7 +324,7 @@ brown 0.2251 over 560–580; `SPEC_capture_quality.md` §16.13)*.
 So why does our 600–630 window see such a large difference? **Because that window is narrow and sits on
 a flank, not on a peak.**
 
-![**Figure 4** — the mechanism. **Top:** with the magnesium intact, one dominant Q origin sits just past our capture limit, and its rising flank sweeps straight through the 600–630 window — so the absorbance climbs steeply across it. **Bottom:** once the magnesium is gone, that same intensity is spread across several weaker bands further to the blue. Nothing tall is left near 630, the window now lies on a shallow shoulder, and the slope across it nearly vanishes. The total area under the two curves is similar; only its distribution differs. Schematic — the degraded band positions are illustrative — but the modelled slope ratio (4.8×) is close to the measured one (4.5×).](figures/pigment_far_window_slope.svg)
+![**Figure 4** — the mechanism. **Top:** with the magnesium intact, one dominant Q origin sits just past our capture limit, so the far red — and with it the **620–630 baseline anchor** — stands **high**, and the line fitted through the two anchor windows is **steep**. **Bottom:** once the magnesium is gone, that same intensity is spread across several weaker bands further to the blue; nothing tall is left near 630, the anchor drops, and the same line goes **nearly flat**. The total area under the two curves is similar; only its distribution differs. **The two solid bars are the only numbers the instrument takes from the curve** — one mean per anchor window — and the dashed line through them is the baseline it subtracts. ⚠ Schematic — the degraded band positions are illustrative, and with no turbidity pedestal modelled the contrast is exaggerated against the measured 1.65×; the two near anchors differ here where the real ones nearly coincide, so **compare the right-hand ends.**](figures/pigment_far_window_slope.svg)
 
 **The slope across a narrow window reports the height of the nearest peak, not the amount of pigment.**
 That is the whole answer. A tall band whose edge crosses the window gives a steep rise; move that
@@ -386,6 +386,12 @@ regardless; only the *mechanism* would need replacing.
 half — acidification is the standard laboratory route. Same bottle, same turbidity, same dilution, one
 variable. If the 600–630 slope collapses in the acidified half, the causal link stops being an
 interpretation and becomes a measurement.
+
+> ⭐ **Read the slope on BOTH windows when that run happens.** Since 2026-08-03 the shipped far anchor is
+> **620–630 nm**, not 600–630 (`SPEC_capture_quality.md` §16.20). The prediction above is about the
+> *pigment*, so it is anchor-agnostic and stands as written — but 620–630 is what the instrument now acts
+> on, and it is only 10 nm wide, so it is also the noisier of the two. Recording both costs nothing (the
+> diagnostics compute both) and keeps the prediction falsifiable on the window that matters.
 
 ### 3.5 The carotenoids
 

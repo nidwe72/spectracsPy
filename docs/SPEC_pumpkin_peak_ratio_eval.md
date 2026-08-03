@@ -906,6 +906,20 @@ from 2.88 to 0.94).
 | new row | value | tooltip should say |
 |---|---|---|
 | **Qy flank · 600–630 nm** | `A_far` = `bandMean(despiked, 600, 630)` | a **measuring** band, not a blank anchor: it stands on the rising edge of protochlorophyll's Qy(0,0) band (~623–626 nm) and carries a 5.1 σ green/brown difference |
+
+> ⭐⭐ **RESOLVED 2026-08-03 — the far window was MOVED to 620–630 nm and the "covert third band" question
+> answers itself** (`SPEC_capture_quality.md` §16.20, implemented §16.20.7). Edwin's proposal: start the
+> anchor *after* the 607 nm lamp line and let it sit **on** the Qy band rather than straddling it —
+> protochlorophyll's Qy is at ~623–626 nm, so 620–630 is centred on it.
+>
+> ⚠ **This is the direction NOBODY had tried.** §16.12.13's sweep pulled the RIGHT edge in and §16.19.3a's
+> "clean anchor" deleted 618–630 — both remove the Qy flank, and both were refuted. This one *keeps* it and
+> drops 600–615 instead. On post-rebuild data: Cohen's *d* 9.80 → **10.35**, dilution slope −0.12 → **−0.05**,
+> `r_Q` −0.0246 → **−0.0184**, and re-seat noise and σ_fill level-or-better against the class gap.
+>
+> ⇒ **§15's renaming question is now settled by construction: the far window is a measuring band by DESIGN,
+> not by accident.** It should be named and error-budgeted as one. ⚠ `T` must be re-derived on the new scale;
+> §16.20.7 retains 10.6 on Edwin's call, with 10.2 as the derived alternative.
 | Inter-band floor · 520–540 nm | `A_near` = `bandMean(despiked, 520, 540)` | the blue-side baseline anchor, between bands; the quieter of the two |
 
 Both are plain band means on the already-computed de-spiked absorbance — **no new computation**, no change

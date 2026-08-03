@@ -35,7 +35,7 @@ plugin = DevSpectralPlugin()
 
 # The far anchor 600-630 split into its own halves: if the window is internally sloped, it cannot be "quiet".
 FAR_LOW, FAR_HIGH = (600.0, 610.0), (620.0, 630.0)
-NEAR = plugin.PB_BASELINE_WINDOWS[0]                  # 520-540
+NEAR = plugin.PB_BASELINE_WINDOWS[0]                  # 520-540 — same in the legacy constant, nothing to choose
 Q = plugin.PB_Q_BAND                                  # 560-580
 
 FILLS = [("green", "green B  2026-07-27", ["20260727B/%03d.pdf" % i for i in range(1, 10)]),

@@ -3624,7 +3624,7 @@ embedded `workflow.json` of the archived report PDFs. **Read §16.11.4 and §16.
 from §16.11.3** — the headline gain is real but its cause is not the one it appears to be.
 
 Data: `spectracs-references/tmp/reseat_20260729/` (probe logs, arms `none`/`jar`/`camera`),
-`tmp/20270829A/` (3 PDFs, 24 h-aged dilution), `tmp/20270729B/` and `tmp/20270729C/` (6 PDFs each, fresh green
+`tmp/20270729A_aged24h/` (3 PDFs, 24 h-aged dilution — **folder renamed 2026-08-03**; ⭐ **read §16.11.16 before using it**: that set is not merely *less precise* than B and C, it reads as a **browner oil** and misclassifies on 3 of 3 runs), `tmp/20270729B/` and `tmp/20270729C/` (6 PDFs each, fresh green
 oil, two different dilutions). *Folder names carry typo'd years; the measurements are 2026-07-29/30.*
 
 ⚠ **`spectracs-references/` is NOT under version control** (checked 2026-07-30). §16.11.3a preserves every
@@ -4371,9 +4371,15 @@ spec and `SPEC_capability_proof.md` §7.3 — recorded at the end, because it ma
    A_Q < 0.15      │   A_Q 0.19 - 0.23                    │  A_Q > 0.25
    0.434/A_Q       │   <- 18 ml / 6 drops, FRESH,          │  Soret compresses,
    amplification   │      measured within the hour        │  dilution invariance
-   blows up        │                                      │  at risk (16.11.8)
-   set A: CV 4.95% │   CV 2.9%                            │
+   blows up        │      (16.11.16 - a VERDICT rule,     │  at risk (16.11.8)
+   set A: CV 4.95% │       not a precision one)  CV 2.9%  │
 ```
+
+> ⭐ **"FRESH, measured within the hour" is understated here** *(corrected 2026-08-03, §16.11.16)*. This
+> diagram justifies it by precision, and set A is quoted for its CV. The real cost is a **wrong verdict**:
+> after 24 h that same fill misclassifies as brown on 3 of 3 runs, because the pigment has demetallated in
+> the solvent. The hour itself has never been tested from either side — §16.11.17 pre-registers the run
+> that would bound it.
 
 #### Check 1 — CV tracks 1/A_Q, so a weaker dilution costs precision
 
@@ -4480,6 +4486,191 @@ absorb part of the gap. **The direction is robust; the factor is not.***
 opposite of §7.3's conclusion, reached because §7.3 optimised the wrong quantity (toe-avoidance) while this
 section optimises σ. **Neither spec should be edited until the drop volume is weighed**; §7.3's table is a
 simulation, §16.11.15's is a measurement, and the discrepancy is currently unexplained.
+
+---
+
+### 16.11.16 ⭐⭐ THE AGED FILL IS A BROWNER OIL, NOT A NOISIER ONE — "measure within the hour" is a VERDICT requirement  *(Edwin's question 2026-08-03: "don't understand why 29th A differs from B and C in the metric"; diagnosed the same day on archived data, no rig time)*
+
+The `2026-07-29` session left three Steirerkraft sets: **A**, a dilution that had stood **24 hours**, and
+**B** and **C**, fresh fills of the same bottle at two concentrations. Set A has been excluded from every
+scoring basis in §16 — `settling_sweep`, `pedestal_correction`, `far_anchor_sweep` and §16.11.0's own
+*"12/12 runs across both dilutions"* all omit it — and the reason recorded each time is **precision**
+(CV 4.95 % against 2.9 %, §16.11.15's Check 1).
+
+**That was never the whole story, and the missing half is the one that matters.**
+
+| | M base+pedestal | M baseline | M raw | `M 600-630 legacy` |
+|---|---|---|---|---|
+| **A — 24 h aged** | **9.099** | **12.606** | 5.073 | **10.357** |
+| B — fresh, dilution 1 | 12.281 | 15.619 | 5.603 | 12.489 |
+| C — fresh, dilution 2 | 12.380 | 15.499 | 5.172 | 12.251 |
+
+Set A is not a scattered version of B and C. It sits **21 % below** them, on a scale where the whole
+green→brown class gap is 52 %. **⚠ The folder was renamed `20270729A` → `20270729A_aged24h` on 2026-08-03**
+so that no future reader can take it for an ordinary green fill.
+
+#### The elimination — three independent lines, none of which needs a new measurement
+
+**1 — It is NOT the dilution, and dilution points the wrong way.** B and C are the same fresh oil at two
+concentrations, so they *measure* the slope rather than assuming it:
+
+| | `A_Q` | M baseline |
+|---|---|---|
+| B | 0.1968 | 15.619 |
+| C | 0.2300 | 15.499 |
+
+log–log slope **s = −0.049**, which reproduces §16.20.4's −0.05 on this anchor. A sits at `A_Q` = 0.1265,
+**55 % of C**. Propagating C forward at that slope predicts **15.96** — because a *weaker* fill reads
+**higher**, not lower (§16.19: `r_Q` is negative and fixed while `B_Q` shrinks with concentration). A reads
+**12.61**. The shortfall is **21 %, in the direction dilution cannot produce.**
+
+⚠ The lever arm is short: `s` is fitted on a 1.17× span and applied to a 1.82× one. A sign flip to
+`s` ≈ +0.5 would close the gap — ten times the fitted magnitude and the opposite sign. Line 2 does not
+depend on this extrapolation at all, which is why it, not this, is the decisive one.
+
+**2 ⭐ — It is NOT the baseline or the pedestal.** `rise/Q amp` is built from two *differences* —
+`[A(620–630) − A(600–610)] ÷ [A(571–573) − A(549–551)]` — so a constant offset, a linear tilt and the
+concentration all cancel identically (§16.13.9). No baseline choice can move it.
+
+| | rise/Q amp |
+|---|---|
+| **A** | **0.2925** |
+| B | 0.3868 |
+| C | 0.3990 |
+
+**27 % below C on a quantity no baseline can touch.** The *shape* of the spectrum changed, not its height.
+
+**3 ⭐⭐ — The two halves move in OPPOSITE directions, which names the mechanism.** Splitting that ratio and
+normalising each half by the Soret band, so concentration divides out:
+
+| | Qy rise / Soret | 572 nm amplitude / Soret |
+|---|---|---|
+| **A — 24 h aged** | **0.0383** | **0.1315** |
+| C — fresh | 0.0460 | 0.1151 |
+| | **−17 %** | **+14 %** |
+
+**Opposite signs mean conversion, not loss.** Selective settling, evaporation or a mis-measured dilution
+would move both the same way; only a chemical change can take intensity *out* of one band and put it *into*
+another. §7.4 of `DOC_metric_algebra.md` reads the 572 nm feature as most likely a **protopheophytin** band —
+the demetallated product — and §3.3 is the mechanism. A protochlorophyll dilution in isopropanol left
+standing 24 hours at room temperature, demetallating, is textbook chemistry.
+
+**⇒ The metric read set A as browner because set A HAD got browner.** This is not a metric failure; it is
+the metric doing exactly what it is built to do, on a sample that really did age. ⚠ The attribution to
+demetallation specifically is **inference from band positions**, not a chemical assay — §7.4 records that
+the 560–580 assignment is itself open.
+
+#### What it costs — a known-green oil misclassifies
+
+| run | M baseline *(T = 12.5)* | M base+pedestal *(T = 10.6)* |
+|---|---|---|
+| 001 | 12.668 good — green | **9.148 TOO BROWN** |
+| 002 | **11.584 TOO BROWN** | **8.552 TOO BROWN** |
+| 003 | 13.567 good — green | **9.597 TOO BROWN** |
+
+**3 of 3 runs wrong on the primary metric**, 1 of 3 on the secondary. And the set read brown on the
+**superseded** anchor too — 10.357 against that anchor's T = 10.6 — so this is a property of the oil, not of
+the 2026-08-03 window change.
+
+**⇒ §16.10.8's working-window diagram already says *"FRESH, measured within the hour"*, and justifies it by
+CV. The justification is wrong by an order of magnitude in importance: the real cost is a FALSE BROWN on
+good oil, which is §16.10.17d's cheap error but still a wrong verdict on a fresh sample.** The words stay;
+the reason attached to them changes.
+
+#### ⚠ What is NOT established
+
+1. **The decay RATE is unmeasured.** One point at 24 h, **n = 3**, against a t = 0 that is a different fill.
+   Whether the safe window is 1 hour or 8 is unknown; "within the hour" is a guess that has never been
+   tested from either side.
+2. **It is confounded.** Set A is aged **and** at 55 % concentration **and** n = 3. The −17 % / +14 % split
+   is concentration-free and survives that, but its *size* is one sample of one fill.
+3. **The driver is unidentified.** Time, light exposure under the lamp, dissolved oxygen and the solvent's
+   own water content all co-vary over 24 h on a bench. Nothing here separates them.
+4. **⛔ It says nothing about the OIL in its bottle.** This is the *dilution* ageing in isopropanol over a
+   day. Shelf-life of the product is a different question on a different timescale, and §16.13's oil roster
+   is the evidence base for that, not this.
+
+### 16.11.17 📌 PRE-REGISTRATION — the decay-rate run  *(written 2026-08-03, BEFORE any timed series has been captured)*
+
+⚠ **Read §16.16.9 and §16.21.3 first.** The scoring rules are fixed *now*, including which outcomes are
+**not** evidence, because §16.11.16's own history is a case of a real effect sitting mis-labelled in the
+archive for five days behind a precision explanation that happened to also be true.
+
+**The design — one fill, five reads, one evening.** Prepare **one** 18 ml + 6 drops fill of the *green*
+reference oil (Steirerkraft), and read it at **t = 0** *(after §16.11.7's 15-minute settle, which is the
+earliest a reading is valid at all)*, **1 h, 2 h, 4 h and 24 h**. Three re-seats at each time point, so
+each point carries its own σ. **The jar stays capped, in the dark, and ON THE BENCH between reads** — not
+in the instrument. That removes light as a covariate for free and is what a user would actually do; a second
+arm left in room light is the obvious follow-up and is **not** part of this run.
+
+> ⭐⭐ **"On the bench" is not a detail — it is the difference between measuring time and measuring
+> time × temperature** *(added 2026-08-03 after Edwin measured the running rig)*. **Nothing on the rig
+> exceeded 40 °C after 1½ hours of running** (§16.22.1a). A sample resting in that beam is therefore
+> ~15 °C above bench temperature, and chemical degradation is strongly temperature-dependent — a
+> conventional Q₁₀ of 2–3 puts 40 °C at roughly **3–5× the 25 °C rate**. A fill stored in the instrument
+> would age several times faster than one stored beside it, and the resulting curve would answer neither
+> question cleanly.
+>
+> **⇒ Three additions to the protocol, all free:**
+> **(a)** store the fill on the bench, away from the lamp, and record where;
+> **(b)** **log the sample temperature at every read** — a cheap probe against the jar wall is enough, and
+> the number is worthless only if it is never taken;
+> **(c)** record the **elapsed in-beam time** per read as well as the elapsed since-preparation time. They
+> are different clocks and only one of them is warm.
+>
+> ⚠ **This is not hypothetical for the shipped protocol either.** A six-run set takes ~30 minutes with the
+> fill in the beam throughout. If 40 °C accelerates demetallation as above, part of what §16.12 has
+> attributed to **particulate settling** may be **thermal degradation** — a second process with the same
+> sign and the same timescale. §16.12.11 A measured the shipped metric deflating over 30 minutes and read
+> it as settling; nothing in that analysis could have distinguished the two. **⛔ This is a hypothesis, not
+> a result** — it is listed here because P4 below can test it at no extra cost.
+
+⚠ **One fill, deliberately.** Fill-to-fill scatter (σ_fill 0.307, §16.13) is larger than the effect at the
+short end, so a between-fill design would drown it. The cost is that the result is one fill's decay curve
+and generalises no further until repeated.
+
+**P1 ⭐ — `rise/Q amp` falls monotonically with time.** The concentration-free shape ratio of §16.11.16
+line 2, which is the cleanest handle and needs no baseline, no `r_Q` and no threshold.
+- **A monotone fall reaching ≤ 0.34 by 24 h** ⇒ CONFIRMED — the archive's single point becomes a curve.
+- **Flat to within ±0.02 across all five points** ⇒ **REFUTED**, and §16.11.16's attribution to ageing is
+  wrong: the difference would then belong to set A's *preparation*, not to its age, and the folder name
+  must be corrected back.
+- ⛔ **Non-monotone with a 24 h fall** is the awkward outcome and must be reported as inconclusive, not
+  quietly smoothed. It would point at a settling transient superposed on a slow decay.
+
+**P2 — the split reproduces: Qy rise DOWN, 572 nm amplitude UP, both per unit Soret.** The signature that
+distinguishes conversion from loss.
+- Both moving the **same** way ⇒ the mechanism is settling or evaporation, **not** demetallation, and
+  §16.11.16's mechanism paragraph is withdrawn even if P1 passes.
+- ⚠ **This is the prediction that can fail while P1 passes**, and it is the more informative of the two.
+
+**P3 — the verdict survives 1 hour.** `M base+pedestal` at t = 1 h stays **above T = 10.6**, with margin.
+- **> 11.1** *(≈ 2σ_reseat clear)* ⇒ PASS — "within the hour" is vindicated as written.
+- **10.6 – 11.1** ⇒ the rule is too loose; tighten it to 30 minutes and re-test.
+- **≤ 10.6** ⇒ ⛔ **the shipped protocol produces false BROWNs inside its own stated window**, which is a
+  release blocker for the miller-facing verdict, not a research finding.
+
+**P4 — the half-life, reported with an interval or not at all.** Fit `rise/Q amp` against `log t`; quote the
+time to lose 5 % of the fresh value **with its confidence interval**. ⛔ **A point estimate from five points
+and one fill must not be quoted bare** — that is the §16.19.3 mistake (a mean where an interval was
+required) in a different costume.
+
+**P5 — the two clocks separate, or they do not.** Because (c) logs in-beam time alongside since-preparation
+time, and the two diverge (the 24 h point is overwhelmingly bench time, the 1 h point comparatively more
+in-beam), the design already carries a weak test of the thermal hypothesis above.
+- **`rise/Q amp` tracks since-preparation time and ignores in-beam time** ⇒ the process is ambient, and
+  §16.12's settling attribution is untouched.
+- **It tracks in-beam time** ⇒ ⭐ temperature is a driver, and §16.12.11 A's 30-minute drift needs
+  re-reading.
+- ⚠ **The lever arm here is poor by construction** — this design was not built to separate them, and with
+  five points it may well resolve neither. **Report it as inconclusive rather than as a null.** A design
+  that *would* settle it is two fills from one stock, one stored in the beam and one on the bench, read
+  alternately — one evening again, and worth doing only if P5 hints.
+
+**Cost:** one fill, one evening, 15 captures, one thermometer, no consumables beyond a jar of solvent.
+**⇒ Run it before the filter arm (§16.21) and before the acetone arm (§16.22)** — both of those hold a fill for an unrecorded time
+between preparation and reading, so an unmeasured decay rate is a confound sitting inside *their* designs
+too.
 
 ---
 
@@ -4720,6 +4911,13 @@ PAUSED, and 2-butanol is recorded as a candidate rather than a scheduled trial.*
 **Decision: keep the sample chemistry exactly as it is.** Not because the solvent question was answered, but
 because **it stopped being the binding constraint.**
 
+> ⭐ **The flammability half of this decision was never actually worked — §16.12.7c does it** *(2026-08-03)*.
+> The finding does not change the decision but it changes its justification: on autoignition (399 vs 465 °C)
+> and on saturated headspace (**IPA's sits INSIDE its flammable range at bench temperature, acetone's is
+> above the UEL**) isopropanol is the *worse* of the two. It is acceptable on **flux** — 5.1× less volatile —
+> and on **containment** — the jar is capped where the acetone cups have no lid. **Safe by margin, not by
+> kind**, and the margin rests on the jar staying closed and the rig staying cool.
+
 #### The reasoning, and it is sound
 
 The solvent programme existed to attack the **turbidity pedestal** — i.e. to buy **precision**. Series D
@@ -4743,6 +4941,14 @@ analysis materially:
   unqualified seal over the lamp.
 - ⇒ **Any future vessel change must be argued on leak risk first and optics second.** The sealed, one-piece,
   known-good PS jar in use today is doing more work than the specs credited it with.
+
+> ⭐ **A ONE-OFF BENCH PROBE WAS AUTHORISED 2026-08-03 (§16.22) AND THIS REJECTION IS NOT WITHDRAWN.** Edwin
+> bought smooth-walled **PP** cups (acetone-compatible, unlike PS) and acetone for an intermediary test of
+> whether dissolving the suspension collapses the pedestal. §16.22.1 restates this exact geometry — sinking
+> vapour above a mains-powered lamp, and the cups have **no lid** — and lists the mitigations that address it
+> (fill and cap away from the instrument, lamp off during handling, cover between runs, never leave an open
+> vessel standing in the beam). **A probe under mitigation is not a route to a shipped solvent**, and nothing
+> in §16.22 licenses reopening the DIY-vessel route this bullet closed.
 
 **The alternative that would dissolve the constraint is a rig rebuild to side-illumination** (beam horizontal,
 lamp not under the sample). That is a real option — it would also permit standard cuvettes, which would fix
@@ -4774,6 +4980,98 @@ Edwin 2026-07-30: **acceptable, no valid threshold is load-bearing yet.**
 **n-Heptane keeps one valuable role: a bench-only reference method.** Run one oil in both solvents and the
 difference **is** the measured cost of the IPA dispersion — it converts an unknown into a number, and it never
 ships.
+
+### 16.12.7c ⭐⭐ THE FLAMMABILITY COMPARISON, DONE PROPERLY — and isopropanol wins on FLUX, not on chemistry  *(Edwin 2026-08-03: "what is the according situation for IPA by the way?" — asked after §16.22.1b; desk chemistry, no rig time)*
+
+§16.12.7b rejected acetone and kept isopropanol on **solvency, hazard classification and vessel integrity**.
+It never put the two solvents' *flammability* numbers side by side. Doing so now produces a result that is
+worth having in writing, because **on two of the six axes isopropanol is the WORSE of the two**, and the real
+reason it is acceptable is not a property of the molecule at all.
+
+#### The constants, side by side
+
+| | acetone | **isopropanol** | |
+|---|---|---|---|
+| vapour density vs air | 2.01× | **2.08×** | ≈ identical |
+| mixture density at its LEL | +2.5 % | **+2.2 %** | ≈ identical |
+| **autoignition** | 465 °C | **399 °C** | ⚠ IPA ignites on a *cooler* surface |
+| flash point | −20 °C | **+12 °C** | IPA better — but still below any working bench |
+| flammable range | 2.5 – 12.8 vol % | **2.0 – 12.7 vol %** | ≈ identical |
+| **vapour pressure @ 25 °C** | 30.7 kPa | **6.0 kPa** | ⭐ IPA **5.1× less volatile** |
+| boiling point | 56.1 °C | 82.6 °C | |
+
+**⇒ §16.22.1b's geometry argument transfers to isopropanol unchanged.** 2.08× against 2.01×, +2.2 % against
++2.5 % at the LEL — so for IPA too, the buoyancy at ignitable concentrations is negligible, the 40 °C plume
+(§16.22.1a: air 4.8 % lighter) dominates it, and nothing pools anywhere. **Neither solvent behaves the way
+the SDS one-liner describes.**
+
+**⇒ Hot-surface ignition stays closed for IPA, with less cushion.** 399 °C against the measured 40 °C is
+still 10×, but IPA's autoignition is **66 °C lower** than acetone's. Same conclusion, thinner margin. ⚠ Sources
+differ on this constant (399 °C NFPA, 425 °C elsewhere); the lower figure is used here on purpose.
+
+#### ⭐ The result that inverts the intuition — saturated headspace against each solvent's OWN range
+
+| saturated headspace | 20 °C | 25 °C | 40 °C |
+|---|---|---|---|
+| acetone | 24.3 % — above UEL | 30.3 % — above UEL | 55.7 % — above UEL |
+| **isopropanol** | **4.4 % — ⚠ INSIDE the range** | **5.9 % — ⚠ INSIDE the range** | 14.0 % — above UEL |
+
+**The vapour immediately above OPEN isopropanol at bench temperature is directly ignitable. Above open
+acetone it is too rich to burn.** Acetone's ignitable region is a shell further out in the dilution gradient
+— which is exactly what §16.22.1b derived. **Isopropanol has no such buffer:** at 20–25 °C its equilibrium
+headspace sits near **stoichiometric**, the most readily ignitable concentration there is.
+
+That is what a flash point *means*, and it cuts against intuition. Acetone's −20 °C sounds far worse than
+IPA's +12 °C, and in one sense it is — acetone is above its flash point always. But **both are above their
+flash points on a working bench**, and once you are there, *being above the UEL* is a protection acetone has
+and isopropanol does not.
+
+#### ⇒ So why is isopropanol acceptable and acetone not?
+
+**Not the intrinsic hazard. FLUX and CONTAINMENT — and neither is a property of the molecule.**
+
+1. **5.1× less vapour per unit time.** Headspace composition says what a saturated pocket *would* be; vapour
+   *pressure* says how fast one is made. This is the dominant term for whether a flammable volume ever exists.
+2. **The IPA jar is CAPPED. The acetone cups have NO LID** (§16.22.2). IPA's release is **bounded** — one
+   jar-opening's worth of headspace, ≈ 10 mL at 14 vol % after a warm run ≈ **1.4 mL of vapour**, below the LEL
+   once diluted into ≈ 70 mL of air. Acetone's is **unbounded**: an open cup evaporating continuously at 5× the
+   rate for the whole set.
+
+**That ratio — a transient few tens of mL against a continuous open source — is larger than every molecular
+difference in the first table put together.** It is the whole of the case.
+
+#### ⚠ What this means for the shipped setup
+
+**Isopropanol is safe by MARGIN, not by KIND.** The margin is real and large, and nothing here asks for a
+change. But it rests on two conditions that are ordinary things, not laws of nature:
+
+- **the jar stays capped** — leaving it open removes the containment term, and IPA's open headspace is
+  *inside* its flammable range where acetone's is not;
+- **the rig stays cool** — at 40 °C IPA makes 14.2 kPa against 6.0 at 25 °C, **2.4× the vapour**. §16.22.1a
+  measured 40 °C after 1½ h, so this is the operating point, not a worst case.
+
+ℹ **One quantified non-issue, recorded so it is not re-derived as a worry.** A capped jar warmed 25 → 40 °C
+in the beam gains roughly **0.13 bar** internal pressure — trivial for a screw cap. Opening it straight after
+a run therefore releases a small puff of headspace that dilutes **down through** the flammable range beside
+the instrument. At ≈ 1.4 mL of vapour that is not an ignition scenario; it is listed because the quantity is
+worth having computed rather than assumed.
+
+#### ⛔ Limits of this section
+
+- **Desk chemistry.** Every number is a published constant or an Antoine evaluation. **No concentration has
+  been measured anywhere near this instrument**, for either solvent.
+- **It does not reopen anything.** §16.12.7b's decision stands, §16.22's probe stays a probe under mitigation,
+  and the §16.12.7b vessel-integrity argument — a leak runs down into mains electrics — is untouched by any
+  of this and remains the binding one for vessel design.
+- **It does not make acetone safer.** It makes isopropanol's advantage *specific and conditional*, which is
+  more useful than "isopropanol is the safe one".
+- ⭐ **The one measure that closes the electrical hazard for BOTH solvents** is §16.22.1a's item 1: **switch
+  the lamp from a socket OUTSIDE the cone.** It depends on no assumption about airflow, concentration or
+  solvent, and it is the cheapest item on any list in §16.
+
+**Constants used.** Acetone: MW 58.08, flash −20 °C, AIT 465 °C, LEL/UEL 2.5–12.8 vol %, Antoine (mmHg, °C)
+7.02447 − 1161.0/(224 + T). Isopropanol: MW 60.10, flash +12 °C (closed cup), AIT 399 °C, LEL/UEL
+2.0–12.7 vol %, Antoine 8.11778 − 1580.92/(219.61 + T). Air MW 28.96, ambient 101.3 kPa.
 
 ### 16.12.8 The container problem is DOWNSTREAM of the solvent — do not buy anything yet
 
@@ -4956,6 +5254,12 @@ external and always on, so **the fill remains the only element that restarts bet
 What analysis B delivered is not the mechanism but a **blocker**: with the far anchor corrupted, no baseline-shape
 question — λ⁻ⁿ or otherwise — can be settled on this data. **Fix the anchor first, then re-run B.** Until then the
 solvent track (§16.12.7) is the only *unblocked* line of attack on the drift.
+
+> ⭐ **RE-READ 2026-08-02 — this result was more informative than "the test is broken" (§16.19.2).** The fit
+> returning **n ≈ −2.6**, i.e. a background *rising* toward the red, is not merely an artifact of a bad anchor:
+> no scattering law of any particle size is red-biased, so it says the far window contains something large
+> enough to dominate a whole-baseline fit. §16.19 picks this up as the leading candidate for the **size** of
+> `r_Q`, which §16.19.1 shows scattering cannot supply. ⚠ Leading candidate, not established — §16.19.3.
 
 ### 16.12.12 ✅ The far anchor carries PIGMENT, not a lamp artifact — 5.1 σ  *(`diagnostics/far_anchor_probe.py`, 2026-07-31)*
 
@@ -5424,7 +5728,7 @@ runs moves the gain from 2.79× to 1.32×" is exactly the fragility a reader of 
 | **2h** | **⭐ NEW — re-cost the WINDOW EXTENSION** *(2026-07-31)* | a lamp/optics question | §4.1's correction moves the pigment-free region from ">700 nm" to "~660 nm+". Extending the clamp ~30 nm would give a **true** peak-free anchor, which would in one step unblock AsLS (2f), remove the far anchor's class contamination (§16.12.13), and give a clean read of the Qy band we are currently clipping. Was priced as prohibitive on a wrong premise |
 | 2g | **⭐ The ALIQUOT step** — the batch is mixed in a lab glass and a 4 ml aliquot goes to the jar, i.e. a **sampling step out of a settling dispersion** | a stirrer | named 2026-07-31 as the leading σ_fill mechanism and the best fit to the green 0.0 % / brown 10.5 % asymmetry. Design + the test that separates it from the correction-artifact hypothesis: `SPEC_capability_proof.md` §11.4f **B2–B4** |
 | ~~3~~ | ~~butanol trial~~ | — | ⏸ **PAUSED 2026-08-01, §16.12.7b.** 1-butanol ⛔ rejected (H318); **2-butanol** recorded as the surviving candidate but not scheduled — with *d* ≈ 11 the binding constraint is the **threshold**, not precision, and a solvent change costs a threshold re-derivation. ⚠ Reopens if series E returns a large σ_fill |
-| 4 | 0.22 µm PTFE filter (§16.12.9) | ~€6 once | still discriminates micron particulate from sub-pore populations, independently of any baseline model |
+| 4 | 0.22 µm PTFE filter (§16.12.9) | ~€6 once | ⭐ **RE-AIMED 2026-08-03 — see §16.21.** Filters ordered. It is NOT a pedestal fix: §16.19 bounds scattering at ≤17 % of `r_Q`, and the coarse population it removes is wavelength-FLAT, which a linear baseline already removes completely. Its real target is **σ_fill via the aliquot step**, which gates the one-measurement protocol |
 | 5 | Fresh ≥99.8 % IPA (§16.12.10) | ~€10 | control for solvent degradation |
 | 6 | Container / FEP window (§16.12.8) | — | **only if butanol fails and heptane becomes necessary** |
 
@@ -5857,6 +6161,13 @@ error. Nothing else in the construction can produce a dilution dependence.
 pigment — but the quantity it was reaching for, the pedestal's shape, is exactly `r`. The experiment was asking
 the right question with the wrong instrument.)*
 
+> ⚠ **AMENDED 2026-08-02 (§16.19): the ALGEBRA above is untouched; the sentence "turbidity is non-linear in λ"
+> is not.** §16.19.1 shows that a λ⁻ⁿ pedestal of the largest magnitude this data allows produces at most ~17 %
+> of the measured `r_Q` — reaching it would need n ≈ 15 against a ceiling of 4. **So `r` is real and the algebra
+> that uses it stands, but identifying `r` with *sample scattering curvature* is refuted as the main term.**
+> Read `P` here as **everything that is not pigment, instrument terms included**, and every line remains
+> correct. ⚠ What actually supplies the missing ~83 % is **OPEN** — §16.19.0.
+
 ### 16.14.5 The sensitivity — and why the denominator is hit ~10× harder, again
 
 Differentiating `S/Q_lin = (x·e_S + r_S)/(x·e_Q + r_Q)` with `x = c·l`, for small residuals:
@@ -6131,6 +6442,15 @@ inflates the *slope*; the **intercept** is the claim, and it survives at t = 7. 
 narrow, so its fit alone proves nothing (t = 1.13) — **the agreement of the two point estimates is the evidence,
 not either fit**.
 
+> ⚠ **A third caution added 2026-08-02 (§16.19), and it is about the WORDS, not the numbers.** *"The
+> pedestal-curvature model is confirmed"* claims more than the fit supports. What is confirmed is that **a
+> concentration-independent residual exists** — the intercept is real at 7 σ. What is **not** confirmed is that
+> it is *pedestal curvature*: §16.19.1 shows scattering can supply at most ~17 % of its size. Read this section
+> as *"`r_Q` measured"*, not *"the mechanism confirmed"*.
+> ⚠ Related: the quantity fitted here is $-k/M_{\infty}$, which bundles `r_Soret` with `r_Q` and cannot separate
+> them (§16.19.5b). It is an **effective** residual. The correction is valid on the combination; the *name* is
+> not.
+
 ### 16.15.7 ⚠⚠ The corollary nobody will like — `T = 10.6` lives on the INFLATED scale
 
 Pedestal-free class index: **Kiendler 10.00 ± 0.50, Steirerkraft 9.93 ± 2.15.** The shipped threshold is
@@ -6372,6 +6692,14 @@ configuration — then fitted, and repeated.** 24 runs, two evenings, nothing di
 correspondingly, −0.0246 → about **−0.018**. At the 3-point design's `se` ≈ 0.0024 that is ~2.5 σ —
 detectable but not comfortably, so **do not run T1b with the 2-point shortcut.**
 
+> ⛔ **THIS PREDICTION IS INVALIDATED — do NOT run T1b as written *(2026-08-02, §16.19)*.** It assumes `r_Q`
+> is turbidity-driven. §16.19.1 bounds the scattering share at **≤ 17 %**, so a 25 % turbidity cut moves `r_Q`
+> by roughly 0.256 × 0.17 × 0.0246 ≈ **0.001 A = 0.4 σ** — invisible at this design's `se`.
+> ⚠ **Run unchanged, T1b returns "no change" and gets scored as a FAILURE of the pedestal model when it is
+> actually a confirmation of §16.19.** Either re-derive the prediction from the corrected budget, or pick a
+> handle that moves the **far anchor** rather than the **turbidity**. The diffuser choice itself (over the
+> camera) is unaffected and still correct — it is the *predicted effect size* that was wrong.
+
 ### 16.16.10 ✅ ANSWERED FROM THE ARCHIVE — `r_Q` does NOT drift under ordinary re-seating  *(Edwin's observation 2026-08-02; `diagnostics/rq_stability.py`)*
 
 Before T1b was scheduled, Edwin pointed out that the disturbance is **already in every run**: the
@@ -6493,6 +6821,18 @@ Soret-band absorbance and the residual lives at the Q band.
 ⚠ **"One scalar" holds under assumption A2** (`r_Soret` negligible). If the surrogate test shows
 `r_Soret` is not small, the model needs two constants and the correction grows a term. The wizard
 must therefore *measure and record both*, even while only one is used.
+
+> ⛔ **CORRECTED 2026-08-02 (§16.19.5b) — "one scalar" is right in COUNT and wrong in IDENTITY.** Any offset on
+> the far anchor produces `r_Q` = −0.471 δ **and** `r_Soret` = +0.941 δ — the Q window is *interpolated* between
+> the anchors, the Soret window *extrapolated* beyond them, so the Soret residual is **opposite in sign and
+> twice the size**. A2 is therefore doubtful for a structural reason, independent of how big the far-anchor term
+> turns out to be.
+>
+> The consequence for this section is concrete: the fit never sees `r_Q`, it sees
+> $k = r_{Soret} - M_{\infty} r_{Q}$, and the shipped correction uses $-k/M_{\infty}$. **A wizard that measures
+> `r_Q` directly off a surrogate and stores *that* would under-correct.** ⇒ **store and apply
+> $-(r_{Soret} - M_{\infty} r_{Q})/M_{\infty}$** — one scalar, but that one. The measure-and-record-both
+> instruction above is right and becomes mandatory rather than precautionary.
 
 ### 16.17.2 ⭐ Two candidate procedures — and the surrogate test decides which wizard gets built
 
@@ -6717,6 +7057,16 @@ Additional gate for this route: **the fit must be linear.** Curvature refutes th
 model outright (§16.16.7), so the wizard must detect it and refuse rather than fit a line through a
 curve.
 
+> ⭐⭐ **THE PRIOR QUESTION, added 2026-08-02: this wizard may not need to exist at all.** §16.20.4a
+> shows the far-anchor move (route B) reaches a dilution slope of −0.05 with **no stored constant and
+> no calibration step**, against this section's −0.00 with both. And §16.20.4a measures the residual it
+> leaves as **~1/5 of the run-to-run noise floor**, i.e. below anything observable. **Settle the anchor
+> question before building any of the machinery below** — the whole production burden of §16.17.0 is on
+> the table.
+>
+> ⚠ Not retired: route A remains the fallback if the anchor move fails its pre-registration, and the
+> correction can be layered on later if precision ever improves enough for a −0.05 slope to matter.
+
 ### 16.17.8 ⚠ What must be true before ANY of this is built
 
 1. **A1 settled** (§16.16.11 item 1) — if `r_Q` is a per-sample property there is no constant to
@@ -6728,6 +7078,19 @@ curve.
    feed, since the verdict is still computed on the shipped index.
 5. **A decision to adopt the correction at all** — `DOC_pedestal_correction.md` chapter 13 currently
    recommends *against* it, pending 1–4.
+6. **⛔ NEW 2026-08-02 (§16.19.5b) — settle WHICH SCALAR is stored.** The wizard as drafted measures
+   `r_Q` directly; the correction actually needs
+   $-(r_{Soret} - M_{\infty} r_{Q})/M_{\infty}$. Building the current draft would ship a
+   systematically under-correcting calibration. This blocker is **cheap** — it is a definition, not an
+   experiment — but it must be resolved before any code, because it changes what the procedure
+   measures, not merely how it is worded.
+
+⚠ **Blocker 2 also needs re-reading in light of §16.19.** The surrogate route assumes the residual is a
+property of the *sample's* scattering. If it is substantially an **instrument** term in the far anchor,
+a pigment-free surrogate still carries it (it is in the lamp and the optics) — which is *good* for the
+short wizard — but §16.17.4's **turbidity gate** would then be gating on the wrong quantity, since a
+surrogate that scatters too little could still give the right constant. Do not build the gate until
+§16.19.6 item 1 has run.
 
 **⇒ This section is a design held in reserve. It is written now because the shape of the calibration
 step decides how much the correction costs in production, and that cost belongs in the adoption
@@ -7010,6 +7373,1429 @@ above is for chlorophyll-family pigments in conventional solvents. **The shift f
 unmeasured — which is why §16.18.5 demands empirical re-derivation rather than a literature lookup.**
 
 ---
+## 16.19 ⭐⭐ THE SIZE OF `r_Q` IS UNEXPLAINED — scattering ruled out, the far anchor ruled out too  *(found 2026-08-02 while drawing a figure for `DOC_pedestal_correction.md`; `diagnostics/pedestal_correction.py` sections 7–8)*
+
+### 16.19.0 Summary — and what is and is not established
+
+§16.14.4 named **pedestal curvature** as the mechanism behind `r_Q`, and §16.15.6 measured `r_Q` for
+the first time. Nobody had checked the mechanism for **size**. Doing so gives one solid negative result
+and one under-determined positive one, and it matters that they are not confused:
+
+| | status |
+|---|---|
+| **λ⁻ⁿ scattering cannot account for `r_Q`'s magnitude** — it reaches ~17 % at best, and closing the gap would need n ≈ 15 against a hard ceiling of 4 | **SOLID.** Rests only on the pedestal's magnitude, which is bounded by the raw absorbance |
+| **The fitted baseline RISES toward the red**, by 0.052 A across the anchors — scattering must fall | **SOLID.** Directly observable; and it is why §16.12.11 B's λ⁻ⁿ fit returned n ≈ −2.6 |
+| **The far anchor's non-scaling contamination supplies the rest** | **⛔ TESTED AND REFUTED — §16.19.3a.** Excluding the contaminated stretches and refitting makes the residual **bigger**, not smaller |
+
+**⇒ The honest headline is that the MECHANISM for `r_Q`'s size is OPEN, and now more so than when this
+section was started.** §16.14.4's identification of it with sample scattering is refuted as the main
+term; the far anchor was the obvious replacement and has now been refuted too. **`r_Q` is real,
+reproducible and measurable, and nothing on record explains its size.**
+
+**⚠ None of this touches the correction**, which is fitted from an intercept and never derived from a
+mechanism. What it changes is what `r_Q` may be *called*, what is expected to move it, and — §16.19.5 —
+what a calibration wizard would have to store.
+
+#### ⛔ A claim made and WITHDRAWN inside this section *(per §16.7.0's practice)*
+
+The first draft of §16.19 asserted **"61 % of `r_Q` is far-anchor corruption"**. That was **wrong**, and
+the error is instructive enough to keep on the record: it took the **mean** far-anchor excess (+0.0320 A)
+where the argument requires the **non-scaling part** of it. A contamination that scales with
+concentration moves points *along* the fitted line and lands in the **slope**; only a term that does not
+scale can produce an **intercept**, and `r_Q` is defined as the intercept. **This is A6's own argument,
+quoted approvingly two paragraphs earlier and then not applied.** Corrected, the figure falls from 61 %
+to **32 % ± 34 %**. Recorded because the same slip is available to anyone who repeats this analysis.
+
+### 16.19.1 The check nobody had run — the mechanism for SIZE, not sign
+
+§16.14.4 and `DOC_pedestal_correction.md` ch. 4 argue qualitatively: scattering is convex, a chord
+across a convex curve over-subtracts in the middle, therefore `r_Q` < 0. **The sign came out right.**
+But a mechanism that predicts the right sign and the wrong magnitude is not yet the right mechanism —
+and the sign is weak evidence in any case, because more than one mechanism predicts it (§16.19.5a).
+
+The pedestal at 530 nm is **at most 0.1018 A** — that is the entire raw absorbance there, and the
+pigment takes some of it (A6), so this is a hard **upper bound**. A pure $P \propto \lambda^{-n}$
+pedestal of that size leaves, at the Q band:
+
+| exponent `n` | residual at Q | |
+|---|---|---|
+| 2 | 0.0015 A | |
+| **4 — Rayleigh, particles ≪ λ** | **0.0042 A** | **the steepest real scattering law** |
+| 6 | 0.0077 A | unphysical |
+| 10 | 0.0155 A | unphysical |
+| | **0.0246 A** | **measured** |
+
+**Reaching the measured value from a power law alone requires n ≈ 15.** n = 4 is the *ceiling*, not the
+middle: as particles grow toward the Mie regime the exponent **falls toward 0**, never rises. No
+particle size in the sample can do this — the same bound §16.12.2's scattering argument rests on,
+applied in the opposite direction.
+
+**⇒ Scattering curvature accounts for at most ~17 % of `r_Q`.** This is the one firm number in the
+section, and it is an upper bound at that.
+
+### 16.19.2 The baseline RISES to the red — and scattering cannot do that
+
+Plotting one real run with its fitted baseline (Kiendler C run 1) shows what the numbers imply: the
+fitted line **climbs 0.052 A** from the near anchor to the far one. Scattering falls off with
+wavelength. **Whatever the fitted "pedestal" is tracking, it is not scattering** — which is exactly
+what §16.12.11 B found when its λ⁻ⁿ fit returned **n ≈ −2.6** (rising as λ^+2.6) and was withdrawn as
+invalid. That result was read at the time as *"the test is broken, fix the anchor and re-run it."* It
+should **also** have been read as *"whatever is in that anchor is large enough to dominate a fit."*
+
+### 16.19.3 The far anchor — and why the obvious calculation is the wrong one
+
+The far window 600–630 nm is not clean. Averaging only its uncontaminated stretches (600–606 and
+610–618 nm) and comparing against the window as actually used:
+
+| set | `A_far` as used | `A_far` clean | excess $\delta_{far}$ |
+|---|---|---|---|
+| Kiendler A | 0.0705 | 0.0505 | +0.0200 |
+| Kiendler B | 0.1401 | 0.1050 | +0.0351 |
+| Kiendler C | 0.1462 | 0.1100 | +0.0362 |
+| Steirerkraft B | 0.1322 | 0.0976 | +0.0346 |
+| Steirerkraft C | 0.1591 | 0.1194 | +0.0397 |
+| S-Budget D | 0.1311 | 0.1045 | +0.0266 |
+| | | **mean** | **+0.0320** |
+
+The Q band sits at interpolation weight 0.471 between the anchors, so an anchor reading $\delta$ high
+depresses `B_Q` by $0.471\delta$. **It is tempting to multiply the mean and call it done — that is the
+withdrawn claim of §16.19.0.**
+
+#### ⚠ Why: most of that excess SCALES with the pigment, and a scaling term cannot make an intercept
+
+Decomposing the excess and regressing each part on the pigment amplitude `A_Q` across the six sets:
+
+| component of the excess | slope on `A_Q` | intercept | R² | what it can do |
+|---|---|---|---|---|
+| the **607 nm** feature | +0.361 | **−0.0053** | 0.94 | **scales** ⇒ goes into the SLOPE, cannot make an intercept |
+| the **rise past 618 nm** | +0.261 | +0.0129 | 0.90 | mostly scales |
+
+**This is §16.12.12 confirming itself from a new direction.** That section established at **5.1 σ** that
+the 620–630 rise tracks the *oil class* under a fixed lamp, i.e. it is **green-pigment Qy absorption,
+not a lamp artifact** — and pigment scales with concentration. The decomposition above agrees: both
+components are dominated by a term proportional to the pigment. **§16.12.12 is not contradicted by this
+section; it is the reason the naive attribution fails.**
+
+⚠ Note also that the 607 feature scaling with pigment sits awkwardly against §16.13.9's reading of it as
+a **lamp emission line failing to cancel** — a fixed line should contribute a roughly fixed absorbance.
+Not resolved here; flagged.
+
+#### The number that is actually relevant, with its error bar
+
+Regressing the whole excess $\delta_{far}$ on `B_Q` and taking the **intercept** — the only part that
+can produce an intercept in the `r_Q` fit:
+
+```math
+\delta_{far,non-scaling} = +0.0169 \pm 0.0177 A \qquad t = 0.96
+  read: the part of the far anchor's contamination that does NOT grow with the pigment. It is the only
+  part that can bias r_Q, and on six sets it is not significantly different from zero.
+```
+
+| | contribution to `r_Q` | share of the measured −0.0246 A |
+|---|---|---|
+| far-anchor **non-scaling** contamination | −0.0079 ± 0.0083 A | **32 % ± 34 %** |
+| λ⁻⁴ scattering curvature *(upper bound)* | −0.0042 A | ≤ 17 % |
+| **unaccounted** | ~−0.0125 A | **~51 %** |
+
+**⇒ No identified mechanism accounts for the majority of `r_Q`.** The far anchor is the leading suspect
+and the estimate has the right *sign* and a plausible *size*, but on six sets it cannot be distinguished
+from zero. **This is a hypothesis with a number attached, not a result** — which is precisely why the
+next subsection tests it rather than adopting it.
+
+### 16.19.3a ⛔ THE TEST — and the far-anchor hypothesis is REFUTED  *(`diagnostics/pedestal_correction.py` section 8, run 2026-08-02; new metric `M clean-anchor`)*
+
+§16.19.3 left the far anchor as a suspicion at *t* = 0.96. **The test costs no rig time**: the red
+anchor is a *parameter*, every archived spectrum is on disk, and the shipped
+`linearBaselineCorrected` already takes a window list. Excise the **607 nm lamp line (606–610 nm)**
+from the red anchor, refit, and see what happens to `r_Q`.
+
+> ⛔ **A FIRST DRAFT OF THIS TEST ALSO EXCLUDED 618–630 nm AS "THE LAMP'S RED CLIFF". THAT WAS WRONG,
+> and it is recorded here because the mistake was available in the spec's own text.** §16.12.11 B does
+> describe a cliff there — and it carries an explicit instruction, *"Read §16.12.12 before acting on
+> anything in this subsection"*. §16.12.12 **refuted the instrument reading at 5.1 σ**: the 620–630
+> rise tracks the *oil class* under a fixed lamp, so it is the pigment's own **Qy flank**, and
+> protochlorophyll's Qy sits at **~623–626 nm — inside that stretch**. Excluding it does not clean the
+> anchor; it **deletes the most information-rich part of the window**, which is what §16.12.13
+> independently measured (remove it and the classes overlap). The corrected variant excises the 607 nm
+> line and nothing else.
+
+⚠ **One implementation detail decides whether the test is fair.** `linearBaselineCorrected` gives
+**each window equal total weight**. Splitting the red end into two windows would hand it 2/3 of the fit
+and the near anchor 1/3, changing the baseline for a reason that has nothing to do with cleanliness.
+The near window is therefore **listed twice**, restoring the shipped 1:1 near:red balance
+(`diagnostics/settling_sweep.py`, `CLEAN_WINDOWS`). The comparison then isolates exactly one change:
+which red points are used.
+
+**Pre-registered before running:** if the anchor supplies ~32 %, `|r_Q|` falls 0.0246 → ~0.017; if it
+supplies nothing, `r_Q` does not move; if it supplies everything, `r_Q` collapses toward zero.
+
+| oil | anchor | `M_inf` (slope) | `k` (intercept) | *t*(k) | `r_Q` = −k/M_inf |
+|---|---|---|---|---|---|
+| **Kiendler** | shipped | 9.998 ± 0.502 | 0.2463 ± 0.0351 | 7.01 | **−0.0246 ± 0.0037** |
+| **Kiendler** | **CLEAN** | **7.468 ± 0.274** | **0.3044 ± 0.0225** | **13.53** | **−0.0408 ± 0.0034** |
+| | | | | | **`\|r_Q\|` +65.5 %** |
+| Steirerkraft | shipped | 9.930 ± 2.149 | 0.2103 ± 0.1860 | 1.13 | −0.0212 ± 0.0193 |
+| Steirerkraft | **CLEAN** | 5.763 ± 1.385 | 0.4295 ± 0.1440 | 2.98 | **−0.0745 ± 0.0307** |
+| | | | | | **`\|r_Q\|` +252 %** |
+
+**⇒ Every outcome the pre-registration allowed for was a decrease. The residual got BIGGER, on both
+oils.** Cleaning the anchor does not remove the concentration-independent residual — it enlarges it,
+and makes it *more* significant (Kiendler *t* 7.01 → **13.53**), so this is not a noise artifact.
+
+#### Reading it properly — the intercept and the slope move separately
+
+`r_Q` = −`k`/`M_inf` compounds two changes, and they should be quoted apart:
+
+| | shipped | clean | change |
+|---|---|---|---|
+| intercept `k` — **the claim** | 0.2463 | 0.3044 | **+24 %** |
+| slope `M_inf` — the scale | 9.998 | 7.468 | **−25 %** |
+
+**The intercept — the thing that must vanish if the anchor is the cause — went UP by a quarter.** The
+remaining inflation of `r_Q` is the slope collapsing, which is a *scale* change, not a residual change.
+
+**The slope collapse is expected and is not a defect of the test:** §16.12.13 measured that the far
+window's contamination is **carrying discrimination**, so removing those points removes real pigment
+information and the pedestal-free index falls. ⚠ **It does mean the two variants are not on the same
+scale**, and `M clean-anchor` must never be compared against `T` = 10.6.
+
+#### Exactly which wavelengths were dropped — and it is more than half the window
+
+| | range | width | grid points | what lives there |
+|---|---|---|---|---|
+| kept | 600.0 – 606.0 nm | 6 nm | 43 | clean |
+| **excised** | **606.0 – 610.0 nm** | **4 nm** | **28** | the **607 nm lamp emission line** — a genuine artifact (§16.13.9) |
+| kept | 610.0 – 630.0 nm | 20 nm | 141 | includes the **pigment's Qy flank** — KEPT, see the note above |
+
+**Only 28 of 212 points (13 %) are removed, and the red anchor's centroid barely moves — 615.1 →
+616.1 nm.** The near-red lever is therefore essentially unchanged, so there is **no geometry confound**
+in the corrected variant. *(The rejected draft removed 113 of 212 points and moved the centroid to
+609.4 nm; the table below quantifies what that cost.)*
+
+#### ⭐ Which exclusion does the damage — and it is NOT the geometry
+
+Dropping the **607 line alone** moves the centroid by only **+1 nm**, so it is the control that
+isolates cleanliness from lever arm. Anchor weighting is held at 1:1 near:red in every row.
+
+| far anchor | centroid | `M_inf` | `k` | *t*(k) | `r_Q` | **dilution `s`** |
+|---|---|---|---|---|---|---|
+| **shipped 600–630** | 615.1 | 9.998 | 0.2463 | 7.01 | **−0.0246** | **−0.12** |
+| **drop the 607 line ONLY** *(the valid test)* | **616.1** | 8.748 | 0.2836 | 10.53 | **−0.0324** | **−0.20** |
+| ⛔ also drops the Qy flank 618+ | 609.1 | 8.806 | 0.2549 | 9.16 | −0.0289 | −0.16 |
+| ⛔ drops the 607 line AND the Qy flank | 609.4 | 7.468 | 0.3044 | 13.53 | −0.0408 | −0.22 |
+
+*(`s` = log–log dilution slope on the post-rebuild pair 0729B → 0729C. `s` = 0 is perfect invariance.)*
+
+**Read row 2 — it is the only fair test.** It removes one genuine artifact and nothing else, at a
+centroid shift of +1 nm, so neither the lever arm nor the pigment signal has been touched.
+
+1. **Removing the 607 line makes `r_Q` BIGGER**, −0.0246 → −0.0324, and *more* significant
+   (*t* 7.01 → 10.53). The prediction allowed only for a decrease.
+2. **And the metric becomes measurably MORE DILUTION-VARIANT**: `s` −0.12 → **−0.20**. Since the
+   dilution sensitivity is `r_Q`/`B_Q` (§16.14.5), a larger residual *must* show up this way, and it
+   does. **This is the practical form of the result and the one to quote.**
+3. **Rows 3–4 are not tests of the artifact hypothesis at all** — they delete the pigment's Qy flank
+   as well. They are retained only to price that mistake: `M_inf` collapses 9.998 → 7.468 and `s`
+   worsens to −0.22, which is §16.12.13's "remove it and the classes overlap" seen from another angle.
+
+**⇒ The 607 line was REDUCING the residual, not causing it.** Whatever produces `r_Q`, the one genuine
+artifact in the far anchor was partially cancelling it — the opposite of the hypothesis.
+
+#### ⇒ What this leaves
+
+- **The far anchor's artifact is not the source of `r_Q`.** If anything the 607 line was *partly
+  cancelling* it.
+- **§16.12.12 and §16.12.13 are both reinforced**, from a third direction.
+- **Two candidate mechanisms are now dead** — sample scattering curvature (too small, §16.19.1) and
+  anchor contamination (wrong direction, here). `r_Q` is real, reproducible, transfers between oils
+  within a rig state, does not survive a rebuild, and **is unexplained.**
+- **⇒ The correction remains empirically justified and mechanistically unexplained**, and
+  `DOC_pedestal_correction.md` chapter 13's recommendation — report both numbers, do not change the
+  shipped verdict — is *strengthened*, not weakened, by this.
+
+#### The new metric, and where it lives
+
+`M clean-anchor` is now computed per run alongside `M shipped` and `M corrected`, and all three **lead**
+the printed tables and both CSVs (`all_metrics_table.py`, `all_metrics_archive.py` — 122 measurements
+across 40 series). ⚠ **It is a DIAGNOSTIC on a different scale, not a candidate metric.** It exists so
+that this test can be re-run against any future series without re-deriving it.
+
+### 16.19.4 What the anchor reading WOULD have explained — recorded, now moot
+
+⚠ **§16.19.3a ran that test and the hypothesis failed.** This subsection is kept because the three
+observations below are still unexplained and still want a common cause — whatever eventually supplies
+it must account for all three. What is now excluded is that the cause is the far anchor.
+
+| observation still wanting an explanation | where |
+|---|---|
+| `r_Q` **transfers between oils but NOT across a rig rebuild** | `DOC_pedestal_correction.md` ch. 9 |
+| `r_Q` behaves as a **constant**, not ∝ turbidity | §16.19.4a |
+| the λ⁻ⁿ fit returned a red-biased **n ≈ −2.6** | §16.12.11 B |
+
+**All three point to an INSTRUMENT term rather than a sample property** — that much survives. The far
+anchor was the obvious candidate instrument term and is now excluded, so **the search should move to
+the parts of the chain the far window does not cover**: the lamp's spectrum outside the anchors, the
+reference/sample cancellation itself, and the near anchor at 520–540, which has never been examined
+the way the far one has.
+
+⚠ **Three consistent observations are not a measurement** — that caution is what §16.19.3a acted on,
+and it is why a cheap test was worth running before any of this was believed.
+
+#### 16.19.4a The model comparison — constant `r_Q` beats `r_Q` ∝ turbidity
+
+If `r_Q` were scattering curvature it should scale with turbidity, and the sets differ by 2.7× in it
+(Kiendler A 0.0378 vs C 0.1018) while being fitted with one `r_Q`. Fitting both models:
+
+| oil | **constant `r_Q`** | `r_Q` ∝ turbidity |
+|---|---|---|
+| **Kiendler** | R² = **0.9802**, intercept *t* = 7.01 | R² = 0.9575, τ coefficient **−2.53** |
+| **Steirerkraft** | R² = **0.6810** | R² = 0.6411, τ coefficient +0.14 |
+
+The constant model wins on both oils, and the proportional one fails in two different ways: on Kiendler
+it wants a **negative** τ coefficient, implying a **positive** `r_Q` — contradicting both the sign
+prediction and the measurement; on Steirerkraft the implied `r_Q` ≈ −0.0016 A is an order of magnitude
+too small. ⚠ τ is the raw 520–540 absorbance, collinear with `B_Q` — **a check, not a proof.**
+
+### 16.19.5 ⭐ The structural corollary — A2 is doubtful, and the fitted number is an EFFECTIVE residual
+
+This part does **not** depend on the size of the far-anchor term, only on the geometry, so it survives
+§16.19.0's withdrawal intact. It is the consequence with the most reach, and it lands on §16.17.
+
+A far anchor reading $\delta$ **high** shifts *both* bands, because the Soret window is
+**extrapolated** from the anchors while the Q window is **interpolated** between them:
+
+```math
+r_{Q} = -0.471 \cdot \delta \qquad r_{Soret} = +0.941 \cdot \delta
+  read: the Q band sits BETWEEN the anchors and the Soret band OUTSIDE them, so one moves down and the
+  other up — and the Soret one moves twice as far.
+```
+
+#### (a) The §16.17.4 sign gate survives — but it can no longer be called evidence
+
+The anchor artifact predicts `r_Q` < 0 **and** `r_Soret` > 0 — exactly what the convex-chord geometry
+predicts. **The gate remains valid** (a violation still means the model is wrong, whichever model).
+But *"the sign was predicted before it was measured"* must stop being quoted as support for the
+scattering mechanism specifically: **two rival mechanisms make the same prediction.**
+
+#### (b) ⛔ A2 is doubtful, and it changes what a wizard must store
+
+The fit only ever sees the combination $k = r_{Soret} - M_{\infty} r_{Q}$, so it cannot separate the two.
+Any far-anchor offset puts a **positive `r_Soret` roughly twice the size of the negative `r_Q`** into
+that combination — and A2 assumes `r_Soret` = 0.
+
+At the non-scaling $\delta$ = 0.0169 A the predicted intercept is `k` ≈ 0.095 against a measured
+0.2463, i.e. ~39 % — consistent with §16.19.3's share and with the same wide error bar.
+
+**⇒ The quantity we call `r_Q` = −0.0246 A is not a Q-band residual. It is an EFFECTIVE residual that
+bundles `r_Soret` and `r_Q` into one number**, and it is defined as $-k/M_{\infty}$.
+
+**This does not break the correction.** $B_{Soret}/(B_{Q} - r_{Q})$ with $r_Q = -k/M_{\infty}$ is
+algebraically the removal of the intercept, and the intercept *is* the combination — so the correction
+is self-consistent however `k` splits. It is why the out-of-sample test passed.
+
+**⛔ But it does break the SHORT wizard as designed.** §16.17.3 proposes reading `r_Q` and `r_Soret`
+**separately and directly** off a pigment-free surrogate. Those two numbers would **not** reproduce the
+fitted −0.0246; a wizard storing the directly-measured `r_Q` alone would **under-correct**. ⇒ **the
+wizard must store and apply the same combination the fit uses**, $-(r_{Soret} - M_{\infty} r_{Q})/M_{\infty}$
+— and §16.17.1's *"exactly one scalar"* is right in count but **wrong in identity**.
+
+### 16.19.6 ▶ What follows, in order
+
+1. ~~**Measure the non-scaling far-anchor term properly.**~~ ✅ **DONE 2026-08-02 — §16.19.3a, and it
+   REFUTED the hypothesis.** Cost no rig time, as predicted. **The `M clean-anchor` metric it produced
+   is retained** so the test re-runs automatically against any future series.
+1b. **⭐ NEW — examine the NEAR anchor the way §16.12.12 examined the far one.** It is the only part of
+   the baseline construction never audited, it is now the leading unexamined instrument term, and the
+   same class-contrast method applies. Also cheap, also archive-only.
+2. **Measure `r_Soret`** rather than assuming it (A2). §16.19.5 makes it a large, falsifiable target,
+   and the MCT surrogate (§16.18's surviving half) is what makes it measurable.
+3. **Re-derive §16.16.9's T1b prediction before that test is run** — see below.
+4. **Then** revisit §16.17's wizard, with §16.19.5b's stored-quantity question settled first.
+5. ⚠ **"Do not change the far window" was too broad — see §16.20.** What §16.12.13 and §16.19.3a close
+   is **removing the red end**. Edwin's proposal moves the other way — *keep* the Qy flank and drop
+   everything **before** it — and on the archive it improves discrimination *and* dilution invariance
+   at once. That is a live candidate, not a closed one.
+
+⚠ **The Steirerkraft dilution series (§16.16) is NOT displaced by any of this.** It remains the test
+that can kill the constant-`r_Q` model outright, and it is unaffected by *why* the residual exists.
+
+#### ⛔ §16.16.9's T1b prediction must be re-derived before the test is run
+
+§16.16.9 pre-registered *"`r_Q` should shrink −0.0246 → ≈ −0.018"* when the diffuser goes in, on the
+strength of the diffuser cutting turbidity by 25.6 %. **That assumed `r_Q` is turbidity-driven.** If
+scattering supplies ≤ 17 % of it, the diffuser moves `r_Q` by roughly
+$0.256 \times 0.17 \times 0.0246 \approx 0.001$ A — **0.4 σ at the design's se of 0.0024, i.e.
+invisible.**
+
+⚠ **Run as written, T1b would return "no change" and be scored as a FAILURE of the pedestal model when
+it is actually a confirmation of this section.** Either re-derive the prediction, or choose a handle
+that moves the **anchor** rather than the **turbidity**. Caught before the runs rather than after —
+which is what §16.10.16 exists for.
+
+### 16.19.7 What this does NOT change
+
+- **The correction's arithmetic and its out-of-sample result.** Fitted, not derived.
+- **§16.14's algebra.** Its `r_X` is *the pedestal's departure from its own best-fit line*; nothing
+  requires the pedestal to be scattering. Widen "pedestal" to "everything that is not pigment, including
+  instrument terms" and every line still holds.
+- **§16.12.12 and §16.12.13.** Both stand, and §16.19.3 leans on the first of them.
+- **The verdict, the threshold, or any shipped code.** Nothing here is implemented.
+
+### 16.19.8 Where this is recorded elsewhere
+
+| section | change |
+|---|---|
+| §16.12.11 B | its withdrawn λ⁻ⁿ result is **re-read**: the red-biased `n` says an instrument term dominates the baseline fit — though §16.19.3a shows that term is not the far anchor's contamination |
+| §16.14.4 | the algebra untouched; the *physical identification* of `r_Q` with sample curvature is withdrawn as the main term |
+| §16.15.6 | the measurement stands; its interpretation as scattering curvature does not |
+| **§16.16.9** | ⛔ **T1b's pre-registered prediction is invalidated** — re-derive before running |
+| **§16.17.1 / .3 / .8** | the stored scalar's **identity** (§16.19.5b); a sixth blocker |
+| `DOC_pedestal_correction.md` | new **§4.1**, plus amendments to chs. 8, 9, 13 and assumptions A3/A6 |
+
+## 16.20 ⭐⭐ THE FAR ANCHOR SHOULD PROBABLY START AT ~615 nm, NOT 600  *(Edwin's proposal 2026-08-02: "the window to be used should be 615-630 nm"; `diagnostics/far_anchor_sweep.py` SWEEP 3 + the pedestal refit)*
+
+### 16.20.0 The proposal, and why it is not the same idea as §16.19.3a
+
+Edwin: *"the main problem is that the window for taking the slope is 600–630. I think the window should
+be **615–630 nm** — excluding the 607 nm lamp artefact. We are speaking about the slope of the FIRST
+baseline correction, not the pedestal correction."*
+
+**This is the opposite move to the one §16.19.3a refuted, and the distinction matters:**
+
+| | what it does to the red anchor | verdict |
+|---|---|---|
+| §16.19.3a's "clean anchor" | keeps 600–618, **deletes the Qy flank** | ⛔ refuted — deletes signal |
+| §16.12.13's right-edge sweep | pulls the right edge **in**, toward 600 | ⛔ refuted — classes overlap |
+| **§16.20 — push the LEFT edge right** | **drops 600–615, keeps the Qy flank** | **⭐ improves on both axes** |
+
+The first two remove the pigment's Qy information. **This one concentrates the anchor on it** while
+excluding the 607 nm lamp line. Protochlorophyll's Qy sits at **~623–626 nm**, so a 615–630 window sits
+squarely on it. **Sweeps 1 and 2 both moved away from the red end; this direction had never been
+tested.**
+
+### 16.20.1 Discrimination, precision and settling  *(`far_anchor_sweep.py` SWEEP 3, §16.10.9's 4-fill basis)*
+
+| far window | LOFO | \|d\| | gap | CV/fill % | trend % | resid CV % |
+|---|---|---|---|---|---|---|
+| **600–630** *(shipped)* | 1/25 | 2.88 | +0.495 | **9.72** | **−6.15** | **1.76** |
+| 610–630 | 1/25 | **3.28** | +0.782 | 10.30 | −7.60 | 2.08 |
+| **615–630** *(Edwin)* | 1/25 | 3.09 | **+0.826** | 10.22 | −8.46 | 2.17 |
+| 618–630 | **0/25** | 3.14 | +0.974 | 10.29 | −8.35 | 2.32 |
+| 620–630 | 1/25 | 3.15 | **+1.097** | 10.46 | −8.84 | 2.47 |
+
+**The class gap roughly doubles** (+0.495 → +0.826) and Cohen's *d* rises 2.88 → 3.09–3.28. ⚠ **The
+costs are real**: within-fill CV worsens ~5 % and the settling trend worsens ~37 % (−6.15 → −8.46),
+both expected — the window is narrower and sits entirely in the lamp's low-signal region (~39 DN
+against 130 at 530).
+
+#### ⛔ 16.20.1a — AND THE DISCRIMINATION GAIN DOES NOT SURVIVE POST-REBUILD DATA
+
+**This sweep's scoring basis is the 2026-07-27 fills, which are PRE-rebuild** and carry ~3× the seating
+noise (§16.12.13's own caveat). Re-scoring on post-rebuild data — series D's brown against Steirerkraft
+B+C, the basis §16.13 used to close the discrimination gate — gives a different answer:
+
+| metric | green | sd | brown | sd | **Cohen's *d*** | green CV | brown CV |
+|---|---|---|---|---|---|---|---|
+| **M shipped** *(600–630)* | 12.370 | 0.367 | 9.303 | 0.131 | **9.80** | **2.97 %** | **1.41 %** |
+| **M far615** *(615–630)* | 13.607 | 0.506 | 9.414 | 0.150 | **9.81** | 3.72 % | 1.59 % |
+| **M far620** *(620–630)* | 15.559 | 0.615 | 10.160 | 0.197 | **10.35** | 3.95 % | 1.94 % |
+
+**At 615–630 the class gap grows — 3.07 → 4.19 — but σ grows with it, and *d* is unchanged to two
+decimal places.** The separation was not improved there; it was rescaled.
+
+**⭐ 620–630 is different.** The gap grows faster than σ does (+76 % against +68 %), so *d* genuinely
+rises, 9.80 → **10.35**. It is the only window tested that improves discrimination on post-rebuild data.
+
+⚠ **Why *d* can improve while CV worsens, since it looks contradictory.** CV is σ against the metric's
+*own mean*, and the mean rises only 26 % while σ rises 68 %. *d* is the class gap against σ, and the
+gap rises 76 %. **`d` is the quantity that decides verdicts; CV is the quantity that decides whether a
+single reading is repeatable.** They can move opposite ways, and here they do. Independent check on the
+Kiendler preparations: CV 1.48 % → 1.92 % → **2.38 %**, confirming the precision cost is real.
+
+*(Pooling both green oils gives 9.07 → 10.53, but that comparison mixes oil-to-oil variation into the
+green σ and is not a clean discrimination measure. It is recorded, not relied on.)*
+
+**⇒ On the cleanest data available, 615–630 buys NO discrimination and costs ~25 % precision, while
+620–630 buys ~6 % on *d* and costs ~33 %.** The large pre-rebuild gain in §16.20.1 is mostly the
+narrower window interacting with seating noise that the rebuild has since removed. **This is the second
+time in this thread that a pre-rebuild result has deflated on post-rebuild data** — the first was
+§16.12.13's own sweep.
+
+### 16.20.2 ⭐ And it improves the PEDESTAL side too — which nothing else has done
+
+The same windows, refitted through the straight-line test and the archive's three dilution pairs:
+
+| far window | `M_inf` | `k` | *t*(k) | `r_Q` | `B_Q` | dilution `s` — green pre / brown pre / **green POST** |
+|---|---|---|---|---|---|---|
+| **600–630** *(shipped)* | 9.998 | 0.2463 | 7.01 | **−0.0246** | 0.0687 | +0.01 / +0.12 / **−0.12** |
+| 610–630 | 9.737 | 0.2673 | 7.00 | −0.0274 | 0.0685 | −0.02 / +0.13 / −0.10 |
+| **615–630** *(Edwin)* | 10.646 | 0.2523 | 5.84 | −0.0237 | 0.0646 | −0.01 / +0.11 / **−0.06** |
+| 618–630 | 11.705 | 0.2370 | 4.99 | −0.0203 | 0.0606 | −0.01 / +0.10 / −0.07 |
+| 620–630 | 12.450 | 0.2287 | 4.43 | **−0.0184** | 0.0580 | −0.01 / +0.09 / **−0.05** |
+
+**Dilution invariance on the post-rebuild pair improves ~2×** (−0.12 → −0.06), the brown pre-rebuild
+pair improves too (+0.12 → +0.09), and **`r_Q` itself shrinks** by ~25 % at 620–630.
+
+⭐ **This is the part that survives §16.20.1a**, and it matters: the invariance figure is computed on
+**post-rebuild** data (the 0729B → 0729C pair), so unlike the discrimination gain it is not an artifact
+of the old seating noise. **Dilution invariance is the one axis on which the 615 nm anchor is measurably
+better on clean data.**
+
+⚠ `M_inf` rises 9.998 → 10.6–12.5, so **the scale changes and `T` = 10.6 would have to be re-derived**
+— the same cost the pedestal correction carries.
+
+### 16.20.3 ⚠ What would have to be true before adopting it
+
+**The encouraging part is that this is not a single lucky window.** All three axes move
+**monotonically** across five windows, and the three pieces of evidence rest on **different data** —
+discrimination on the 2026-07-27 fills, `r_Q` on Kiendler, invariance on the archive's dilution pairs.
+That is much harder to explain as overfitting than a single best score would be.
+
+**But it is still a sweep scored on data already in hand, which is exactly §16.10.16's trap.** Before
+this becomes a shipped change:
+
+1. **Pre-register the window and the predictions**, then test on data not used here — the four-oil
+   campaign is the natural vehicle.
+2. **Price the settling cost properly.** A 37 % worse time trend is the one clear regression, and
+   §16.12.11 A's drift is already a live problem. It may be acceptable if the protocol fixes
+   stir-to-measure latency (§16.15.8); it may not.
+3. **Re-derive `T`.** Non-negotiable — the scale moves.
+4. **Decide 615 vs 618 vs 620 on a principle, not on the table.** Picking the best cell is the trap;
+   the defensible choice is the one with a physical justification (start after the 607 line's wing has
+   fully decayed) rather than the one with the largest gap.
+
+### 16.20.4 ⇒ The verdict, after the post-rebuild check
+
+#### ⛔ First — "CV" and "trend %" are NOT comparable across anchors, and an earlier draft compared them
+
+Both statistics are normalised by **the metric's own mean**: `CV = σ/mean`, and
+`trendOverSet% = slope·span/mean`. Moving the far anchor **changes that mean** — 12.370 → 15.559, a
+26 % inflation that has nothing to do with noise (the baseline simply subtracts less, so `B_Q` shrinks
+and the ratio grows). **Dividing by a mean that moved makes a metric look noisier when it is not.**
+
+The scale-free reference is the **class gap** — the thing the metric exists to resolve:
+
+| anchor | class gap | re-seat σ | **σ / gap** | settling drift (absolute) | **drift / gap** |
+|---|---|---|---|---|---|
+| **600–630** *(shipped)* | 3.066 | 0.367 | **12.0 %** | −0.760 | **24.8 %** |
+| 615–630 | 4.193 | 0.506 | 12.1 % | −1.150 | 27.4 % |
+| **620–630** | 5.399 | 0.615 | **11.4 %** | −1.374 | **25.4 %** |
+
+**⇒ Expressed against what it has to distinguish, 620–630 is slightly BETTER on re-seat noise
+(12.0 → 11.4 %) and level on settling drift (24.8 → 25.4 %).** The "~33 % worse precision" and "~37 %
+worse settling" of the earlier draft were **artifacts of the changing scale**, not measurements of
+degradation. *(This is the third time in this thread that a statistic normalised the wrong way produced
+a false conclusion — after the mean-vs-intercept slip of §16.19.0 and the pre-vs-post-rebuild basis of
+§16.20.1a.)*
+
+Everything below is **post-rebuild** unless marked otherwise.
+
+| axis *(all scale-free)* | 600–630 *(shipped)* | 615–630 | **620–630** |
+|---|---|---|---|
+| **discrimination, Cohen's *d*** | 9.80 | 9.81 *(no gain)* | **⭐ 10.35** |
+| **dilution invariance `s`** | −0.12 | −0.06 | **⭐ −0.05** |
+| **`r_Q`** | −0.0246 | −0.0237 | **⭐ −0.0184** |
+| **re-seat σ / class gap** | 12.0 % | 12.1 % | **⭐ 11.4 %** |
+| **settling drift / class gap** | **24.8 %** | 27.4 % | 25.4 % *(level)* |
+| green margin to the class midpoint | 4.18 σ | 4.15 σ | **⭐ 4.39 σ** |
+| `M_inf` — the scale | 9.998 | 10.646 | 12.450 ⇒ **`T` must be re-derived** |
+| *(pre-rebuild `d`, for contrast)* | *2.88* | *3.09* | *3.15* |
+
+**⇒ Corrected verdict: 620–630 does not lose on any axis once the statistics are made scale-free.** It
+improves discrimination, dilution invariance and the pedestal residual, and is level-to-slightly-better
+on noise and drift measured against the class gap. **615–630 is the weaker of the two proposals** — no
+discrimination gain and the worst drift of the three.
+
+**⇒ Still NOT adopted, but the remaining objections are procedural rather than performance-based:**
+
+1. **`T` must be re-derived.** Non-negotiable at `M_inf` 12.450 — and the threshold is already the
+   binding constraint on the whole project.
+2. **σ_fill has never been measured on ANY anchor**, and §16.11.13's one-measurement gate keys on it,
+   not on *d*. Everything above is **re-seat** noise, which excludes sample preparation. This is the
+   real gap and the four-oil campaign is what closes it.
+3. **This is still a sweep scored on data in hand** — §16.10.16. Pre-register before adopting.
+4. **Pick the edge on a principle**, not on the table. The monotone trend toward the red is the robust
+   signal; the exact cell is not.
+
+> ⭐⭐ **What that slope change is worth in practice is §16.20.9** *(added 2026-08-03)* — a preparation
+> error costs **2.4–2.6× less** across the whole range tested, one miscounted drop falls from 5.3 % to
+> **2.2 %** of the class gap, and **dilution becomes the smallest named term in the error budget.** ⚠ It also
+> weakens the pedestal correction's own dilution argument: on this anchor the correction drives the pair
+> −0.05 → **+0.05**, i.e. it overshoots, where on 600–630 it drove −0.12 → −0.00.
+
+### 16.20.4a ⭐⭐ TWO ALTERNATIVE ROUTES TO THE SAME FIX — and route B deletes §16.17 entirely  *(Edwin 2026-08-02: "thought that we need r_Q stored and now you say we don't — I am confused")*
+
+The confusion is fair and the documents caused it. **The pedestal correction and the anchor move are
+not a sequence. They are two independent ways of attacking the same defect, and adopting either makes
+the other unnecessary.**
+
+| | **Route A — correct the pedestal** | **Route B — move the anchor** |
+|---|---|---|
+| far window | stays 600–630 | **becomes 620–630** |
+| what is computed | $B_{Soret} / (B_{Q} - r_{Q})$ | $B_{Soret} / B_{Q}$, unchanged |
+| **stored constant** | **`r_Q`, per instrument** | **none** |
+| **calibration step** | **§16.17's wizard — surrogate, 4 runs, gates, storage** | **none** |
+| after any mechanical change | **re-measure `r_Q`** | nothing |
+| per-oil assumption | **A1 — one `r_Q` for every oil, unverified on brown** | none |
+| dilution slope achieved | **−0.00** | −0.05 |
+| what it costs to implement | a wizard, a stored constant, a maintenance rule | **two numbers in `PB_BASELINE_WINDOWS`** |
+
+**⇒ Route A is better on paper and far more expensive in practice.** It reaches a dilution slope of
+−0.00 against route B's −0.05 — but it buys that last 0.05 with a per-instrument calibration procedure,
+a constant that goes stale silently, and an assumption (A1) that is currently unverifiable on the brown
+class.
+
+#### ⭐ And the residual that route B leaves is already below the noise floor
+
+This is the argument that decides it, and it is measurable rather than rhetorical. Everything below is
+a percentage of the class gap, so the two anchors are comparable (§16.20.4):
+
+| error term | shipped 600–630 | **620–630** |
+|---|---|---|
+| **run-to-run wobble** *(the noise floor)* | **±10.2 %** | **±10.2 %** |
+| dilution error from miscounting one drop | 7.4 % — *comparable to the noise* | **2.2 % — well under it** |
+| dilution error from a doubled dose | 32.2 % | 9.8 % |
+
+**On the shipped anchor the dilution error is the same size as the measurement noise, so correcting it
+is worth doing. On 620–630 it is already about a fifth of the noise — driving it to zero buys nothing
+anyone can observe.**
+
+#### ⇒ What this means for §16.17, stated plainly
+
+**If route B is adopted, the pedestal calibration wizard is not built at all.** §16.17.0 calls that
+wizard *"the whole production burden"* — a per-instrument step at manufacture, a re-check after every
+service, a stored constant with a provenance and a review schedule. **Route B removes that burden
+entirely**, and replaces it with a one-line change to `PB_BASELINE_WINDOWS`.
+
+⚠ **This does not retire §16.17, and it must not be deleted.** Route A remains the fallback if the
+anchor move fails its pre-registration, and the two are not mutually exclusive forever: if the
+instrument later becomes precise enough that a −0.05 slope rises above the noise floor, the correction
+can be added on top (it since HAS been — it ships as `Verdict · baseline + pedestal`, column `M baseline + pedestal` in both CSVs). **The
+decision is about sequencing, not about which is right.**
+
+**⇒ Recommendation: test route B first.** It is cheaper to try, cheaper to ship, cheaper to maintain,
+and it makes no assumption that could be wrong per oil. Route A stays on the shelf.
+
+### 16.20.5 ⭐ σ_fill, measured for the first time — and it does NOT degrade  *(Edwin 2026-08-02: "can you do this? you have the data")*
+
+§16.20.4 listed σ_fill as the open question. It is partly answerable from the archive after all: several
+oils were measured as **two independent fills**, and each pair carries 1 df on the fill-to-fill spread.
+
+| pair | rig | 600–630 | 615–630 | **620–630** |
+|---|---|---|---|---|
+| Kiendler B/C | post | 0.211 *(6.9 %)* | 0.226 *(5.4 %)* | 0.325 *(6.0 %)* |
+| Steirerkraft B/C | post | 0.168 *(5.5 %)* | 0.084 *(2.0 %)* | 0.085 *(1.6 %)* |
+| **pooled, post-rebuild** | | **0.191 = 6.2 % of gap** | 0.171 = **4.1 %** | 0.238 = **4.4 %** |
+| green 0727 B/E | pre | 0.002 *(0.1 %)* | 0.535 *(12.7 %)* | 0.889 *(16.5 %)* |
+| brown 0727 C/D | pre | 0.660 *(21.5 %)* | 0.758 *(18.1 %)* | 0.860 *(15.9 %)* |
+| pooled, pre-rebuild | | 0.467 = 15.2 % | 0.656 = 15.6 % | 0.874 = 16.2 % |
+
+*(σ_fill from a pair = |difference of means| / √2. Absolute value first, then as a percentage of that
+anchor's class gap so the anchors are comparable — §16.20.4's rule.)*
+
+**⇒ Against the class gap, σ_fill does not degrade on the new anchors — it improves, 6.2 % → 4.4 %.**
+Taken with §16.20.4 this closes the last performance objection: **re-seat noise, settling drift AND
+fill-to-fill spread are all level-or-better at 620–630.**
+
+⚠ **Read with the uncertainty it deserves — this is 2 df.** A two-pair estimate has a 95 % interval
+spanning roughly a factor of six, so the ranking between anchors is **suggestive, not established**. Two
+further caveats, both of which make this an **upper bound**:
+
+- The fills also differ in **concentration** (deliberately — §16.15.1), so the spread contains a
+  dilution term as well as a preparation term. That likely *flatters* 620–630, which is the most
+  dilution-invariant of the three (§16.20.2) — the improvement may be partly the same finding twice.
+- The pre-rebuild rows are dominated by seating noise and should not be pooled with the post ones.
+
+**⇒ It does not replace series E or the four-oil campaign**, both of which measure σ_fill with fills
+prepared at *one* strength. It does remove the concern that the narrower window would inflate it.
+
+### 16.20.6 Where the edge should sit — and it is NOT the artifact that justifies 620
+
+§16.20.3 item 4 says pick the boundary from a principle rather than from the best cell. Measuring the
+607 nm line's own profile in the reference makes that concrete:
+
+| | |
+|---|---|
+| peak, above the local continuum | **+11.9 DN at 607.8 nm** |
+| the excess collapses between | **609 and 610 nm** (+94.9 % of peak at 608–609, −24.8 % at 609–610) |
+
+**⇒ On an artifact-avoidance principle the edge belongs at ~610 nm.** The line is finished by then.
+
+**But 610–630 is beaten by 620–630 on both `d` and invariance** — so whatever the extra 10 nm buys, it
+is *not* artifact avoidance. The remaining explanation is the one Edwin's proposal gestured at without
+resting on: **protochlorophyll's Qy band is at ~623–626 nm** (`KB_spectroscopy_physics.md` §4.1), and a
+620–630 anchor is centred on it.
+
+**⇒ Two candidate principles, and they give different edges:**
+
+| principle | edge it implies | supported by the data? |
+|---|---|---|
+| *"start after the 607 nm line"* | ~610 nm | yes, but it is not where the gain is |
+| **"centre the anchor on the Qy band"** | **~620 nm** | **yes — this is the operative one** |
+
+⚠ **This matters for how the change is justified, not just chosen.** An anchor placed to avoid an
+artifact is an instrument fix; an anchor placed **on** a pigment band is a **third measuring region**,
+which is what `SPEC_capability_proof.md` §2.1a already argues the far window has become. Adopting
+620–630 should be written up as *"the far window is promoted from baseline anchor to Qy measuring
+band"*, and error-budgeted as such.
+
+⚠ My 7.5 nm FWHM for the 607 line disagrees with §16.13.9's 2.7 nm; my continuum subtraction is crude
+(it returns negative excess at 610–619, so the shoulders are not flat). **The robust observation is the
+collapse between 609 and 610 nm, not the width.**
+
+⚠ **One practical consequence worth stating for the operator-facing side:** the absolute spread of
+readings *does* grow (green σ 0.367 → 0.615). A user comparing two measurements sees larger differences
+even though the verdict is at least as safe. That is a UI and expectation-setting matter, not a
+measurement defect — but it should not be discovered in the field.
+
+⚠ Note also that **610–630 already appeared in SWEEP 2** with the best Cohen's *d* of any window tested
+anywhere (3.28) and was not followed up — though §16.20.1a now suggests that *d*, too, was a
+pre-rebuild artifact.
+
+---
+
+### 16.20.7 AS-BUILT — the three-verdict EVALUATION  *(implemented 2026-08-03 on Edwin's instruction; P0–P6 done, P7–P8 BLOCKED, P9–P10 need the rig)*
+
+**Decisions taken (Edwin 2026-08-03):** three verdicts in the order *pedestal-corrected → baseline-only →
+raw*; window named in the caption; the raw ratio shown as a value with **no** gauge; `T` = **10.6 retained**
+for the primary verdict; archived PDFs to be **replaced after a verified backup**.
+
+| phase | what was done | status |
+|---|---|---|
+| **P0** | `spectracs-references/tmp` → `tmp_backup_pre620_20260803/` | ✅ **141 files, 507 824 232 bytes, every file checksum-identical** |
+| **P1** | `PB_BASELINE_WINDOWS = ((520,540),(620,630))`, `PB_R_Q = −0.0184`, declared in `declaredEvalBands()`; the superseded window kept as `PB_BASELINE_WINDOWS_LEGACY_600` for the diagnostics that publish on it | ✅ |
+| **P2** | `RoastPedestalGaugeView` — `T` = 10.6, band 14.0 → 7.5 | ✅ |
+| **P3** | `RoastFar620GaugeView` — `T` = 12.5 *(derived: corridor midpoint)*, band 19.0 → 9.0 | ✅ |
+| **P4** | EVALUATION wired to the three, in order; **LIMS publish badge re-pointed** | ✅ |
+| **P5** | metric rows moved to the 620–630 anchor | ✅ |
+| **P6** | `tests/test_three_verdicts.py`, 10 tests | ✅ **329 tests green** (306 + 23) |
+| **P7** | PDF regeneration tool | ⛔ **BLOCKED — §16.20.8** |
+| **P8** | run the regeneration | ⛔ blocked by P7 |
+| **P9/P10** | M3 publish + assign, rig click-through | ▶ runbook only — needs the rig |
+
+#### ⛔ A defect found while wiring P4, and it was on the end-user screen
+
+The PUBLISHING step's verdict badge — **the one screen a miller or a lab actually sees** — was driven by
+`RoastGaugeView` on the **raw Soret/Q** ratio at `T` = 4.4. On post-rebuild data that metric cannot classify
+at all (Cohen's *d* = 1.20; the classes overlap outright), and **4.4 sits below the entire brown class**
+(minimum 4.622). **Every run of the brown S-Budget oil was reported as "good — green" on the publish
+badge.** The badge now uses the primary metric. `RoastGaugeView`'s 4.4 recalibration dates from 2026-07-25
+and predates series D, the first proper post-rebuild brown — so this was latent, not introduced here.
+
+#### Verified end to end on archived runs
+
+| run | 620–630 + pedestal | 620–630 | raw *(no verdict)* |
+|---|---|---|---|
+| Steirerkraft B 001 *(green)* | 12.800 → good — green | 16.198 → good — green | 5.311 |
+| Kiendler C 001 *(green)* | 12.905 → good — green | 16.213 → good — green | 5.570 |
+| S-Budget D 001 *(brown)* | 8.763 → probably too brown | 10.329 → probably too brown | 4.760 |
+
+*(The brown run's raw value, 4.760, is what the retired `T` = 4.4 would have called green.)*
+
+#### Regression guards the rubber-duck asked for, now tests
+
+`PB_BASELINE_WINDOWS` is asserted **unchanged** — eleven diagnostics read it, and `settling_sweep` /
+`far_anchor_sweep` would silently redefine every historical number if it were repointed. The 620–630 window
+is asserted to be in `declaredEvalBands()`, since 630 nm equals `WAVELENGTH_MAX_NM` exactly and the grid
+actually stops at 629.8.
+
+### 16.20.8 ⛔ A WRONG DIAGNOSIS, CORRECTED — and how the reports were actually regenerated
+
+#### What I got wrong, recorded because the reasoning was sound and the premise was false
+
+The first pass at P7 concluded *"there is no workflow deserialiser, persistence is DESIGN only, therefore
+regenerating a report needs a milestone built first"* and stopped. **Both halves of that were wrong.**
+
+`SPEC_workflow_persistence.md` §10 records the milestone as **as-built, 2026-07-02**. Its design is *"Option
+A: the workflow IS the record"* — the workflow classes were promoted to **SQLAlchemy entities**, so a saved
+run reloads through the ORM with cascade, and the spec says so explicitly: *"No serializer/gather step — the
+graph is already the entity graph."* **That is exactly why `SpectralWorkflow.fromJson` does not exist: it was
+never needed.** I searched for the wrong mechanism, found nothing, and concluded the feature was unbuilt.
+
+The app DB holds it: **79 `spectral_workflow` rows**, 395 phases, 1006 steps, 385 containers, 316 spectra.
+
+**⚠ The lesson, and it is cheap to apply: when a search for a mechanism comes up empty, read the owning
+spec's as-built section before concluding the feature is missing.** A grep proves a *name* is absent, not a
+capability.
+
+#### What was actually missing, and what was built
+
+Nothing blocked the 58 runs that are in the DB. The real gap was narrower: **66 of the 124 archived reports
+predate the habit of saving runs** (they cluster before 2026-07-24), and for those the PDF's embedded
+`workflow.json` is the only record — and `toReportJson()` is one-way.
+
+⇒ **`diagnostics/report_reconstruct.py`** inverts it. Deliberately in `diagnostics/`, not the model tier: the
+DB path is the supported way to reload a workflow, and this exists only so historical artifacts can be
+re-rendered. It reconstructs exactly what `toReportJson` emits, and the docstring records the three things
+that do **not** come back (step `view` vs `evaluationResult` cannot be told apart — harmless, since the
+report builder merges them; capture pixels; transient plugin state).
+
+⇒ **`diagnostics/regenerate_reports.py`** rebuilds each report on today's plugin and writes it back.
+
+**It uses the PDF's own JSON for all 124, not the DB, even where a DB row exists.** Matching a PDF to a
+`spectral_workflow` row is by timestamp — a guess — whereas the embedded JSON is the authoritative record
+*of that PDF*. No matching, no ambiguity.
+
+#### Two traps that would have caused silent data loss
+
+**Capture pixels.** `SpectrumCaptureView.toJson` carries the descriptor only, and
+`WorkflowReportBuilder.__prepareCapture` **silently skips** any capture whose `reportImage` is None. Without
+re-injection from the PDF's own attachments every regenerated report would quietly lose its capture pages,
+and nothing would report an error. `attachImages()` restores them and the tool asserts the count.
+
+**Verify-after-write protects nothing.** The first version wrote in place and then checked the result — by
+which point the original was already gone. Each file is now rendered to a temporary path, verified, and only
+then `os.replace`d into position, so a failure leaves the original untouched.
+
+*(A third, smaller one: the attachment check first compared against the count of `SpectrumCaptureView`s. Four
+capture views share two attachment names — full-frame and cropped renditions of the same role — so the count
+never matches. The check now asserts that every attachment the ORIGINAL carried is still present, which is
+the property that actually matters.)*
+
+#### As-built
+
+| | |
+|---|---|
+| reports regenerated | **122** *(124 PDFs less the two capability-proof documents, which carry no `workflow.json` — the same two `all_metrics_archive.SKIP` excludes)* |
+| failures | **0** |
+| verified per file, during the run | every original attachment present, all captures restored, rendered to a temp file and `os.replace`d only after verification |
+| verified after the run, against the backup | **0 reports lost a page, an image or an attachment.** 41 identical in structure, 78 with MORE content, 3 summary reports 42 images against 35 |
+| the two non-measurement documents | byte-identical to the backup — untouched, as intended |
+| backup | `tmp_backup_pre620_20260803/` — 141 files, checksum-identical, made and verified **before** anything was touched |
+
+⚠ **A regenerated report is a RE-EVALUATION, not a patch.** The spectra are the originals — nothing was
+re-measured — but every rendered row is recomputed by today's plugin, so anything else that changed since
+capture changed too, not only the three verdicts. `savePdf` rewrites the embedded `workflow.json` with the
+current `captureDecode` descriptor, so the era stays readable off the artifact.
+
+⚠ **Pre-rebuild reports now display a metric calibrated on post-rebuild data.** §16.19 says `r_Q` must never
+be applied retroactively across a rig rebuild; the same caution applies to the 620–630 thresholds. The
+regenerated pre-2026-07-29 reports show the new numbers, and those numbers are **not** on a scale their own
+data supports. The backup holds what the instrument actually said at the time.
+
+### 16.20.9 ⭐⭐ WHAT THE DILUTION-INVARIANCE GAIN MEANS IN PRACTICE — dilution leaves the top of the error budget  *(Edwin 2026-08-03: "the dilution invariance improvement is pretty important — outline what this means in practice")*
+
+§16.20.4 records the slope going **−0.12 → −0.049** and treats it as one row of a comparison table. It is
+worth more than a row, because it is the only number in §16 that speaks to the **capability-proof claim
+itself** rather than to a supporting quantity: the gate is not *"the instrument separates two bottles"*, it
+is ***"the verdict is about the oil, not about how much you diluted it."***
+
+The slope is log–log — `s = d ln(index) / d ln(concentration)` — so a preparation error of factor `f` moves
+the reading by `f^s`. Everything below is a **green** reading, expressed in the only scale-free unit that
+applies: **percent of the class gap** (5.339 units, green 15.499 against brown 10.160, metric 2).
+
+#### What a preparation error costs, before and after
+
+| preparation error | old, `s` = −0.12 | **new, `s` = −0.049** | |
+|---|---|---|---|
+| 6 drops → 7 *(+16.7 %)* | −5.3 % | **−2.2 %** | 2.4× better |
+| 6 drops → 5 *(−16.7 %)* | +6.4 % | **+2.6 %** | 2.5× |
+| 6 drops → 8 *(+33 %)* | −9.9 % | **−4.1 %** | 2.4× |
+| 6 drops → 4 *(−33 %)* | +14.5 % | **+5.8 %** | 2.5× |
+| half strength *(2× too dilute)* | +25.2 % | **+10.0 %** | 2.5× |
+| quarter strength *(4× too dilute)* | **+52.5 %** | **+20.4 %** | 2.6× |
+
+**Read the last row.** On the old anchor a 4× preparation error moved the reading by **the entire
+green-to-brown separation** — at that point the metric is reporting the dilution, not the oil. It now costs a
+fifth of it.
+
+#### 1 ⭐ Dilution has dropped OUT of the error budget's top ranks — a ranking change, not just a smaller number
+
+Against §16.21.1's post-rebuild budget, on the same scale:
+
+| error term | % of class gap |
+|---|---|
+| settling drift over a 30-min set | **~25 %** green · ~0.5 % brown |
+| re-seat wobble (1 sd) | 11.3 % |
+| σ_fill | 4.4 % green *(2 df)* · 21.5 % brown *(pre-rebuild)* |
+| **dilution error, one drop** | **2.2 %** ← was 5.3 % |
+
+At 5.3 % dilution was comparable to green's σ_fill. At **2.2 % it is the smallest named term in the budget —
+smaller than a single re-seat.** ⇒ **Preparation is no longer something the protocol has to defend against.
+Seating and settling are.** And §16.11.16 has since shown that the "settling" term may not be settling.
+
+⇒ **It also softens §16.11.15's open item.** That section ends with *"we do not know what dilution ratio
+'18 ml + 6 drops' actually is — weigh 20 drops"*. Worth doing, but at `s` = −0.049 an unverified drop volume
+buys much less error than it did: the weighing is now about **knowing the recipe**, not about **protecting
+the verdict**.
+
+#### 2 ⭐⭐ It WEAKENS the case for the pedestal correction — and that is a real finding, not a footnote
+
+On the 600–630 anchor the pedestal correction's strongest single result was driving this pair
+**−0.12 → −0.00** (`DOC_pedestal_correction.md` ch. 9's out-of-sample test). On **620–630 it drives
+−0.05 → +0.05**: same magnitude, **opposite sign — it OVERSHOOTS.**
+
+**The anchor move already did the work the correction existed to do.** So **metric 1** (*baseline +
+pedestal*, `T` = 10.6) has lost its principal dilution argument. It still ships, and §16.20.2's within-oil
+reproducibility evidence for `r_Q` stands — but on the shipped anchor **metric 2 alone may be sufficient for
+invariance, and applying both can over-correct.** This is exactly §16.20.4a's point, now visible in the
+numbers: the two are **alternative routes to the same fix**, not a correction stacked on an improvement.
+
+⚠ **Not a recommendation to drop metric 1.** Three verdicts were shipped precisely so the two routes can be
+compared on real runs (§16.20.7), and the comparison needs rig data. Recorded so that a future reader does
+not quote ch. 9's −0.12 → −0.00 as if it still applied — **on the shipped anchor it does not.**
+
+#### ⛔ 3 — Limits, and one figure that must NOT be quoted
+
+**(a) The headroom arithmetic is meaningless past ~1.5×.** From green's 15.499 down to `T` = 12.5, the
+crossing point is now an **81× over-concentration** against 6× before. ⛔ **Do not use those numbers.**
+Over-concentration hits **Soret stray-light compression** (§16.11.8) long before 6×, so beyond ~1.5× the
+failure mode is a different one entirely and this slope does not describe it. They are recorded only so that
+nobody re-derives them and believes them.
+
+**(b) Extrapolating this slope is the §16.11.16 lever-arm error in a new costume.** `s` = −0.049 is fitted on
+a **1.17× span**; the table above already stretches it at 4×, and the 2× and 4× rows should be read as
+*"roughly 2.5× better"*, not as absolute predictions.
+
+**(c) One pair, one oil, effectively 2 df.** §16.10.8's pooled estimate across three within-oil pairs is
+**+0.033 ± 0.029** — a different number on the legacy anchor, confounded because each pair is a different
+*fill* as well as a different dilution. **−0.05 is the cleanest figure available, not a well-bounded one, and
+§16.10.8 stays OPEN.**
+
+**⇒ In one sentence:** a miller can now miscount a drop and it costs **2.2 % of the separation, less than one
+re-seat** — and the failure modes that remain are **how the jar sits** and **how long the fill has stood**,
+the second of which §16.11.16 has just shown is larger than anything previously recorded.
+
+## 16.21 THE 0.22 µm FILTER — what clarification can and cannot buy  *(Edwin ordered hydrophilic PTFE syringe filters 2026-08-03; DESIGN + 📌 PRE-REGISTRATION, not yet run)*
+
+### 16.21.0 Summary — and the one thing this is really for
+
+A 0.22 µm filter has been on the list since §16.12.9 as "attack the pedestal physically". **That framing is
+now wrong and the experiment is worth more than it.** §16.19 measured scattering at **≤ 17 %** of `r_Q`, and
+§16.12.2's own population table says the filter removes the coarse fraction and passes the fine one:
+
+| population | size | filter removes it? | how it scatters |
+|---|---|---|---|
+| waxes, phospholipids, press fines | ~0.5–50 µm | **yes** | ≫ λ ⇒ `Q_ext` → 2 ⇒ **wavelength-FLAT** |
+| ouzo nanodroplets | ~50–200 nm | **no** — below any practical pore | ≪ λ ⇒ **λ⁻⁴, strongly CURVED** |
+
+⇒ **The filter removes the population the linear baseline already handles perfectly and leaves the one that
+generates the residual.** §16.14.4: a pedestal exactly linear in λ is removed *completely*, `r ≡ 0`. A flat
+contribution has zero departure from its own best-fit line, so subtracting it cannot move `r_Q` at all.
+
+⇒ **§16.22 is the sibling arm** — acetone attacks the whole suspension by *solvency* where this attacks the
+coarse fraction by *size*. Together they bracket §16.19's open question; separately, only this one has a
+product consequence (σ_fill).
+
+⇒ It also answers the question directly: **filtration cannot make the pedestal correction less important**
+(§16.21.0a), and the three metrics respond in a pattern that names the mechanism without needing an `r_Q`
+fit at all (§16.21.3 P4). What the result does and does not license is §16.21.6.
+
+**⇒ The prize is not `r_Q`. It is σ_fill.** §16.12.16 item 2g names the aliquot step — *"a sampling step out
+of a settling dispersion"* — as the leading σ_fill mechanism, and §16.12.16 states the coupling directly:
+***"turbidity is what makes the draw depth matter."*** Filtration removes the precondition rather than
+averaging the consequence: with no stratifying population, every 4 mL aliquot is the same 4 mL.
+
+### 16.21.0a ⭐ "Would the pedestal correction become less important?" — NO, and it can only go the other way  *(Edwin 2026-08-03)*
+
+The correction's importance IS the inflation factor `F` = 1 − `r_Q`/`B_Q`, currently **1.256** — it divides
+out 25.6 %. For `F` to shrink, either `r_Q` must fall or `B_Q` must rise. **A 0.22 µm filter does neither:**
+
+| | why filtration does not move it |
+|---|---|
+| **`r_Q`** | it is the *curved* part of the pedestal. The filter removes the FLAT coarse population and passes the 50–200 nm droplets that do the curving |
+| **`B_Q`** | a flat component drops the raw band **and both anchors** by the same amount, so the fitted baseline drops with it — `B_Q` is unchanged **by construction**. That is what the baseline is *for* (§16.14.4) |
+
+And if the filter also strips oil, `B_Q` falls while `r_Q` stays put, so `F` **grows**:
+
+```
+   F = 1.256 today   ->   1.285 if 10 % of the oil is filtered out
+```
+
+**⇒ Filtration leaves the correction equally important, or makes it MORE so. It cannot make it less.** To
+shrink `r_Q` you would have to remove the *nanodroplets* — below ~50 nm, which is ultrafiltration and would
+take the oil with it. **0.22 µm is the wrong pore size for that job, and no pore size that keeps the analyte
+is the right one.**
+
+### 16.21.1 Why σ_fill is the term worth buying
+
+It is the **only** error term in the budget that protocol cannot fix. Drift yields to a fixed
+stir-to-measure latency (§16.15.8); re-seat noise yielded to the marked-line seating protocol (§16.11).
+**Nothing in the operator's control makes an unrepresentative aliquot representative.**
+
+| error term | size *(% of class gap, post-rebuild)* | fixable by protocol? | filter? |
+|---|---|---|---|
+| settling drift over a 30-min set | **~25 %** green · ~0.5 % brown | ✅ fixed latency | ⚠ maybe — §16.21.4 |
+| re-seat wobble (1 sd) | **11.3 %** | ✅ seating protocol | ✗ |
+| **σ_fill** | 4.4 % green *(2 df)* · **21.5 % brown** *(pre-rebuild)* | ⛔ **no** | ✅ **directly** |
+| **dilution error, one drop** | **2.2 %** *(620–630 — was 5.3 % on 600–630, §16.20.9)* | ✅ weighing (B4) | ✗ `Δr_Q` ≈ 0 |
+
+And it gates the protocol. §16.11.13's one-measurement rule binds on **brown**:
+
+```
+green:  sigma_fill <= 0.391  (3.2 % CV)
+brown:  sigma_fill <= 0.307  (3.3 % CV)   <- binding
+```
+
+**The only brown fill pair on record gives σ_fill = 0.660 — 2.1× over the gate** (0727 C/D, §16.20.5), and
+it is **pre-rebuild**. Post-rebuild brown σ_fill has never been measured; series E never ran. Worked at a
+0.7 margin, that difference is:
+
+| σ_fill | one reading wrongly calls a brownish oil GREEN |
+|---|---|
+| 0.307 | **~1 %** |
+| 0.660 | **~14 %** |
+
+⇒ **above the gate the sample must be prepared three times (~1 h); below it, once (~20 min)** — per sample,
+for the life of the product. That is the payoff, and it is operational, not cosmetic.
+
+### 16.21.2 Design — three runs, each answering one question
+
+**⚠ Do not attempt this as one factorial.** 3 strengths × 2 arms × 2 fills × 6 runs is 144 measurements.
+Each run below is one evening and stands on its own.
+
+| run | oil | design | delivers |
+|---|---|---|---|
+| **F1** ⭐ | **brown** (S-Budget) | 2 independent fills × {filtered, unfiltered} × 6 runs = **24** | **post-rebuild brown σ_fill on both arms** — the gate number |
+| **F2** | green (Steirerkraft) | same shape, **24** | the drift discriminator (§16.21.4) + green σ_fill |
+| **F3** | either | serial dilution 2/4/6 drops from ONE stock, split each strength into {filtered, unfiltered}, 4 runs each = **24** | **Δ`r_Q`** between arms |
+
+**F1 first.** It is the only one that can change the product, and brown is the binding class.
+
+⭐ **F3's design detail that matters:** make the serial dilution **once**, then split each strength. The
+concentration axis is then identical for both arms *by construction* — no reliance on two independently
+prepared series matching — and the arms are paired at every strength.
+
+### 16.21.3 📌 PRE-REGISTRATION — written 2026-08-03, BEFORE any filter has been used
+
+> ⚠⚠ **AN UNMEASURED CONFOUND SITS INSIDE THIS DESIGN** *(added 2026-08-03, §16.11.16)*. Every arm below
+> holds a prepared fill for an **unrecorded** time between preparation and reading, and the pigment
+> demetallates in the solvent: a 24 h-old fill reads **21 % lower** and misclassifies on 3 of 3 runs. The
+> decay rate is unknown, so an arm that happens to be read later than its control will show a shift that
+> has nothing to do with filtration. **⇒ Two requirements, neither of which costs anything:**
+> **(a)** timestamp preparation and every capture, and report the elapsed time beside every number;
+> **(b)** interleave the arms — A, B, A, B — rather than running one arm through and then the other;
+> **(c)** log the **sample temperature**, because the rig reaches **40 °C** (§16.22.1a) and an arm that
+> spends longer in the beam ages faster for a reason that has nothing to do with what is being tested.
+> ⭐ Better still, run §16.11.17's decay-rate series **first**; it is one evening and it converts this
+> confound into a correction.
+
+⚠ **Read §16.16.9 first.** That pre-registration predicted a change, the design could not have resolved it,
+and a null would have been mis-scored as refuting the model. The scoring rules below are therefore fixed
+*now*, including which outcomes are **not** evidence of anything.
+
+**P1 — turbidity falls.** `A`@520–540 on the filtered arm is **lower** than on its paired unfiltered fill.
+*Direction only.* The magnitude is the result, not the test: it is the first direct read we have on how much
+of the pedestal is coarse. ⛔ **No threshold is set, because none can be justified in advance.**
+
+**P2 ⭐ — brown σ_fill, filtered, lands below 0.307.** The product-relevant call.
+- **≤ 0.307** ⇒ PASS — one-measurement protocol viable, §16.11.13's inversion unblocks.
+- **0.307 – 0.42** ⇒ inconclusive; repeat with more fills before deciding.
+- **> 0.42** ⇒ FAIL — three fills stay, and filtration has not bought the protocol.
+⚠ **Scored on the FILTERED arm against the gate, and separately as filtered-vs-unfiltered.** The second
+comparison is what attributes any gain to the filter rather than to the rig rebuild.
+
+**P3 — `Δr_Q` between arms is consistent with ZERO.** Predicted |`Δr_Q`| < 0.005.
+- At F3's design `se(r_Q)` ≈ 0.0024 per arm (§16.16.2), so `se(Δ)` ≈ 0.0034 and the 2σ resolution is
+  **0.0068 ≈ 28 % of `r_Q`.**
+- **⛔ A NULL HERE IS THE PREDICTED OUTCOME AND MUST BE SCORED AS A PASS.** Flat scattering cannot shift an
+  intercept; that is the whole §16.21.0 argument.
+- **A drop of ≥ 28 % REFUTES it** and would say the coarse population is not flat after all — which is
+  possible, since the population starts at ~0.5 µm, only ~1× λ, where Mie extinction still has structure.
+
+**P4 ⭐ — the THREE metrics respond in a fixed pattern, and the pattern names the mechanism.** This is the
+sharpest thing the experiment does and it needs no `r_Q` fit at all. The two mechanisms hit different
+metrics:
+
+| what the filter removes | **M1** baseline+pedestal | **M2** baseline | **M3** raw |
+|---|---|---|---|
+| **flat scatter** (the coarse population) | unchanged | **unchanged** | **rises hard** |
+| **oil / pigment** (a fraction *f*) | **falls** | **unchanged** | unchanged |
+| both | falls | **unchanged** | rises |
+| nothing | unchanged | unchanged | unchanged |
+
+Sensitivity, as % of **each metric's own class gap** (M1 3.741 · M2 5.399 · M3 0.545), computed on
+Kiendler C 001. ⚠ **The run-to-run wobble is 11.3 % of the gap on all three** — that is the visibility floor:
+
+```
+   perturbation                          M1 pedestal    M2 baseline         M3 raw
+   --------------------------------------------------------------------------------
+   flat pedestal removed, p = 0.01              0 %            0 %            41 %
+   flat pedestal removed, p = 0.02              0 %            0 %            86 %
+   flat pedestal removed, p = 0.03              0 %            0 %           137 %
+   oil removed, f =  5 %                     -3.7 %            0 %             0 %
+   oil removed, f = 10 %                     -7.6 %            0 %             0 %
+   oil removed, f = 20 %                    -16.7 %            0 %             0 %
+```
+
+**Scoring:**
+- **M2 is the CONTROL.** It is invariant to a flat offset (baseline) *and* to dilution (both bands scale
+  together), so it must not move under either mechanism. **M2 moving by more than 11.3 % of its gap is the
+  alarm** — it would mean a *curved* component was removed, or the membrane stripped pigment selectively,
+  and nothing else here can be read until that is understood.
+- **M3 is the INSTRUMENT.** The tiny class gap that disqualifies it as a verdict (§16.20.7) makes it the most
+  sensitive detector we have of a flat removal — four times the noise floor for a 0.01 turbidity drop.
+- **M1 is the PIGMENT-LOSS detector**, and it responds *downwards*: a more dilute sample is corrected harder.
+
+⚠ **M1 falling is NOT the correction working better.** It is `F` growing (§16.21.0a). Read it as oil loss.
+
+**P5 — `A_Soret` and `A_Q` fall TOGETHER or not at all.** A *selective* drop means the membrane is stripping
+pigment. Scored as the ratio: if `A_Soret`/`A_Q` shifts by more than P4's bound while both bands fall, the
+material is unsuitable and everything above is void.
+
+**Not predicted, recorded as a watch item:** `A_Soret` may read slightly **higher** on the filtered arm.
+Less scatter means more light through a band that transmits only ~6.5 % (§16.11.8), so stray-light
+compression eases — assumption A4 improving. No threshold; observation only.
+
+### 16.21.4 The drift — biggest term, weakest expectation, cleanest fork
+
+The settling drift is the largest instability on record (~25 % of the class gap across a 30-minute green
+set). §16.12.2 offers two mechanisms and the filter separates them:
+
+| if the drift is… | filtered arm should… |
+|---|---|
+| sedimentation of coarse droplets | **lose most of it** — that population is gone |
+| Ostwald ripening / pigment redistribution | **keep it** — nanodroplets pass the pore |
+
+**⚠ I expect the second, and the reason should be on record before the run.** Green drifts −46 to −50 %/h
+of the gap; brown drifts **−0.7 %/h** — yet their turbidities are the same (0.098–0.123 against 0.104). So
+it is not "greens are cloudier". §16.12.12's 5.1 σ result fits better: the far anchor stands on **green
+pigment**, so when green settles the anchor moves and tilts the baseline, while brown's far window is quiet.
+On the 620–630 anchor, which sits harder on the Qy band, set C is marginally *worse* (−55 % against −50 %).
+
+⇒ Scored as an **observation, not a prediction**. It is the cheapest place in this experiment to be proven
+wrong, and F2 resolves it either way.
+
+### 16.21.5 Material and handling
+
+**PTFE is the right choice and worth saying why:** it is the low-binding membrane HPLC uses precisely to
+avoid analyte adsorption, and it is chemically inert to isopropanol — unlike nylon or cellulose esters,
+which can leach and which bind pigments. Hydrophilic vs standard PTFE is immaterial here; IPA wets both.
+
+- **Discard the first ~1 mL** through each filter. The membrane adsorbs until it saturates; the first
+  millilitre carries that loss plus any leachables. This is what P5 is guarding against, and skipping it is
+  the most likely way to fail P5 for a reason that is not the material's fault.
+- **One filter per sample.** They are ~€0.30 each; re-use risks carry-over between oils.
+- Filter **into** the jar, not into an intermediate vessel — every extra transfer is another aliquot step.
+- Keep §16.16.6's three controls: **fixed stir-to-measure latency**, **log `A`@520–540 per run**, and a
+  **non-monotone measurement order** so drift cannot alias onto arm or concentration.
+
+### 16.21.6 How to read the result — and what it does NOT license  *(Edwin 2026-08-03: "would I then know whether the pedestal is caused primarily by using IPA, or also by sediment?")*
+
+**Broadly yes.** The filter splits the pedestal at 0.22 µm, and that size cut maps closely onto the two
+origins:
+
+| outcome | reading |
+|---|---|
+| **turbidity drops a lot** *(M3 jumps)* | a real coarse fraction exists — matter the **oil carries** |
+| **turbidity barely moves** *(M3 flat)* | nearly all sub-pore ⇒ the **ouzo droplets IPA creates** because it suspends rather than dissolves. **Clarification by filtration is then a dead end** |
+
+⚠ **But SIZE is not quite ORIGIN, and the mapping leaks in one place: droplets ripen.** §16.12.2 has Ostwald
+ripening and coalescence growing them until sedimentation takes over — so part of the >0.22 µm material may
+be **grown ouzo droplets**, not press fines. Both are "oil that failed to dissolve"; only one is a solvency
+problem that could be designed away. Two cheap controls close the gap:
+
+- **fresh vs aged** — filter a dilution measured immediately and one left to stand. A coarse fraction that
+  *grows with time* is ripening, not press fines.
+- **filter the NEAT oil before diluting** — fines are in the oil already; droplets do not exist until IPA
+  meets it. Awkward (viscous) but the conceptually clean control.
+
+#### ⚠⚠ And it does NOT tell you where `r_Q` comes from
+
+**The pedestal's HEIGHT and the residual `r_Q` are different quantities**, and §16.19 already separated them:
+*all* scattering, coarse and fine together, accounts for **at most 17 %** of `r_Q`; the far-anchor hypothesis
+was then refuted too, leaving ≥ 80 % of it with **no identified cause**.
+
+⇒ **Even "the pedestal is 100 % nanodroplets" would not mean that dissolving them fixes `r_Q`.** It would
+remove the turbidity and leave most of the residual standing. This experiment characterises **the pedestal**;
+it does not test **the correction's necessity**. That is why §16.21.1 aims it at σ_fill instead.
+
+#### What it would legitimately reopen — the solvent question, on a NEW argument
+
+A "nearly all sub-pore" result would be the first real evidence for the solvent programme §16.12.7b paused —
+but the reasoning changes. It was paused because it *"existed to buy precision, and precision is no longer
+binding"*. A sub-pore result argues something else: **remove the suspension at source rather than correct
+for it.**
+
+⚠ **The constraint that killed acetone still stands, and it is not chemical.** The 220 V lamp sits in the
+LOWER CONE under a top-down beam, so vessel integrity is a **safety** property and any leak runs into mains
+electrics (§16.12.7b). Acetone survives as a **bench reference only** — 80 % acetone being the literature
+standard for protochlorophyll, which would put our bands on the published scale.
+
+### 16.21.7 What this does NOT settle
+
+- **Not `r_Q`'s mechanism.** §16.19 leaves that open after ruling out both scattering and the far anchor.
+  P3 constrains what filtration *does* to `r_Q`; it does not explain where `r_Q` comes from — §16.21.6.
+- **Not the correction's necessity.** §16.21.0a: `F` can only stay put or grow. Nothing here is a route to
+  retiring the pedestal correction.
+- **Not the threshold.** `T` remains the project's binding unvalidated constant regardless of the outcome.
+- **Not dilution invariance.** F3 measures `r_Q` per arm; §16.10.8 stays open on its own terms.
+- ⚠ **Not whether filtration should be in the shipped protocol.** A per-sample consumable is a production
+  and cost decision (§16.17.0's "production burden" argument applies here too), and P2 passing is a reason
+  to *consider* it, not to adopt it.
+
+## 16.22 THE ACETONE ARM — dissolve the suspension instead of filtering it  *(Edwin 2026-08-03, after ordering PP cups; DESIGN + 📌 PRE-REGISTRATION, not yet run)*
+
+### 16.22.0 What it is, and why it is worth more than the filter
+
+§16.21 removes the **coarse** population by size. Acetone attacks the **whole** suspension by solvency: on
+Hansen distances (approximate, oil ≈ δD 16 · δP 3 · δH 4),
+
+```
+   acetone       (15.5, 10.4,  7.0)   Ra ≈  8.0     <- much closer to the oil
+   isopropanol   (15.8,  6.1, 16.4)   Ra ≈ 12.8
+```
+
+⇒ far less of the oil should remain as droplets. **Acetone + filtration together remove essentially all
+suspended matter**, which makes this the strongest available test of the question §16.19 left open:
+
+| outcome | what it means |
+|---|---|
+| turbidity collapses **and `r_Q` survives** | **`r_Q` cannot be scattering of any kind.** §16.19 confirmed the hard way — the mechanism is instrumental or in the pigment |
+| turbidity collapses **and `r_Q` goes with it** | the ≥80 % §16.19 could not account for **was** solvency. §16.19 wrong; the solvent route becomes the fix |
+| **turbidity barely moves** | the ~0.10 A at 520–540 was **never scattering** — a pigment tail or an instrument floor |
+
+All three are worth an evening. ⚠ **But note what it does NOT do: it cannot make the pedestal correction less
+important** — §16.21.0a's argument is about `F` = 1 − `r_Q`/`B_Q`, and it holds whatever removes the
+suspension. Only `r_Q` itself falling would do that, which is exactly outcome 2 above.
+
+### 16.22.1 ⚠⚠ SAFETY — the decisive constraint, and it is not chemical
+
+**This is the combination §16.12.7b rejected acetone over, and an open vessel makes it worse, not better.**
+
+| | |
+|---|---|
+| flash point | **−20 °C** — the vapour is above its flash point at room temperature, always |
+| vapour density | **heavier than air — it sinks** |
+| the ignition source | **the 220 V lamp sits in the LOWER CONE**, under a top-down beam |
+
+That is a sinking-vapour source directly above a mains-powered ignition source. It is a geometry problem, not
+a spill problem, and the PP cups have **no lid**.
+
+**If this is run anyway — Edwin's call — the mitigations that actually address the geometry:**
+
+- **fill and cap the vessel AWAY from the instrument**; carry it in, measure, carry it out
+- **lamp OFF during every handling step**, not merely "be careful"
+- ⛔ **and lamp ON and WARM *before* the cup goes in** — never switched on with acetone already present.
+  §16.22.1b shows why these are two different rules: the first removes the spark while you handle, the
+  second removes the cold-enclosure window in which switch-on is itself the spark
+- **cover the cup between runs** — a foil square is enough and also fixes §16.22.5's evaporation problem
+- smallest workable volume; cross-ventilation; no other ignition sources on the bench
+- ⛔ **do not leave an open acetone vessel standing in the instrument between measurements**
+
+⇒ Recorded so that a future reader does not find "we ran acetone" and conclude the §16.12.7b objection was
+withdrawn. **It was not.** This is a one-off bench probe under mitigation, not a route to a shipped solvent.
+
+#### 16.22.1a ⭐ MEASURED — the rig runs cool, which narrows the objection but does not lift it  *(Edwin 2026-08-03: the rig ran 1½ h and nothing measured hotter than 40 °C)*
+
+**What this rules out: HOT-SURFACE ignition, decisively.**
+
+| | |
+|---|---|
+| acetone autoignition temperature | **465 °C** |
+| conventional derate for surfaces in contact with vapour | ~80 % of AIT ≈ **370 °C** |
+| **measured, hottest surface after 1½ h** | **≤ 40 °C** |
+| acetone boiling point | 56 °C — **16 °C of headroom**, so no boiling either |
+
+That is an order of magnitude below the derated limit, and it is what a **Yuji SunWave white LED** should
+give: an LED's envelope and heatsink run 60–90 °C at worst, against the 200–500 °C of the halogen this rig
+does not use. **⇒ The thermal half of the hazard is closed.**
+
+**What it does NOT rule out, because §16.12.7b's objection was never thermal.**
+
+| | |
+|---|---|
+| flash point | **−20 °C** — the vapour is above its flash point at *every* room temperature. 40 °C changes nothing |
+| the ignition source | an **electrical spark**, not a hot surface: mains switch contacts, the lamp socket, the LED **driver** |
+| the geometry | a mains spark source sits **inside an enclosure the vapour passes through** — see §16.22.1b, which corrects an earlier and wrong version of this row |
+| the concentration that matters | the **flammable range, 2.5 – 12.8 vol %** — and it is a *shell in the dilution gradient*, not a pool |
+
+An LED lamp carries a mains-powered switched-mode driver, and that driver sits in the cone. A
+surface-temperature reading says nothing about it.
+
+**⚠ Two limits on the measurement itself, neither of which weakens it as far as it goes.** An IR thermometer
+reads **accessible** surfaces; the driver board and the socket contacts inside the lower cone are not among
+them. And 1½ h is a soak time, not a worst case — a hotter ambient day, or the cone closed rather than open,
+would both raise it. Neither matters for a 10× margin, and both would matter if the margin were 2×.
+
+**⇒ The §16.12.7b objection stands, narrowed from *thermal and electrical* to *electrical only*.** That makes
+§16.22.1's mitigations the whole of the answer rather than part of it. ⭐ **Two cheap changes would close it
+properly, and both are worth doing before any acetone reaches the bench:**
+1. **Switch the lamp from a socket OUTSIDE the cone**, so the only spark source is out of the vapour path
+   entirely. This is the single highest-value change on the list — and §16.22.1b is why it ranks first.
+2. **Measure inside the lower cone**, not just its outside — a probe on the driver board and on the socket,
+   with the cone closed as it is in use.
+
+#### 16.22.1b ⛔ CORRECTION — "the vapour pools at the bottom" was WRONG, and the right argument is stronger  *(Edwin 2026-08-03: "so the vapour collects at the bottom? really?" — he was right to ask; §16.22.1's geometry row was the SDS boilerplate applied without checking it against this rig)*
+
+**What was claimed:** heavier-than-air vapour sinks into the lower cone and *accumulates there*, pooling on
+the lamp. **What is true:** pure acetone vapour is 2.01× air — but nothing ignites at pure.
+
+| acetone–air mixture | denser than air by |
+|---|---|
+| **LEL, 2.5 vol %** | **+2.5 %** |
+| stoichiometric, ~5 vol % | +5.0 % |
+| **UEL, 12.8 vol %** | **+12.9 %** |
+| saturated headspace @ 25 °C, 30 vol % | +30.7 % |
+| saturated headspace @ 40 °C, 56 vol % | +56.1 % |
+
+**Two things follow, and both were missed.**
+
+**1 — At ignitable concentrations the buoyancy is tiny, and the running rig's own convection beats it.**
+§16.22.1a measured the rig at up to 40 °C, and **air at 40 °C is 4.8 % *lighter* than air at 25 °C** — a
+larger force than the +2.5 % excess of an LEL-strength mixture and comparable to the +5.0 % of a
+stoichiometric one. **On a warm, running rig the plume points UP and carries the lean mixture with it.**
+Pooling is what a *cold* enclosure would do.
+
+**2 — The space over the liquid is TOO RICH TO BURN.** Saturated headspace is **30 vol %** at 25 °C and
+**56 vol %** at 40 °C, both far above the **UEL of 12.8 %**. So the ignitable region is neither at the cup
+nor at the floor of the cone: it is a **shell in the dilution gradient**, where concentration falls through
+12.8 % to 2.5 %, and **its position is set by airflow.**
+
+**⇒ The objection SURVIVES, on better grounds.** Not *"the vapour pools on the lamp"* — rather **the
+ignitable shell's location cannot be predicted**, it moves with the lamp's own convection, and a mains spark
+source sits inside the same enclosure. *An argument that cannot be run in either direction is not a safe
+one.*
+
+**⭐ And the numbers isolate a worst case the old wording hid.** The protective plume exists only while the
+lamp is **on and warm**. The dangerous combination is therefore **switch-on with the rig still cold** —
+spark source live, no convection yet, vapour possibly already sunk during handling — and **the switch-on arc
+is itself the ignition event**. Specific and avoidable, which a general "heavier than air" warning is not:
+
+- ⛔ **Never switch the lamp on with acetone already in the instrument.** Lamp on and warmed **first**, cup
+  in **after**.
+- This is a *stronger* rule than §16.22.1's "lamp OFF during every handling step", and it does not replace
+  it: lamp off during handling removes the spark; lamp warm before the cup arrives removes the cold-pool
+  window. Both are needed and they are not the same rule.
+- ⚠ Mitigation 1 above (switch outside the cone) is the only measure that does **not** depend on predicting
+  airflow, which is why it ranks first.
+
+**Sources for the constants:** flash point −20 °C; LEL 2.5 vol %, UEL 12.8 vol %; AIT 465 °C; vapour
+pressure 30.7 kPa @ 25 °C and 56.4 kPa @ 40 °C (Antoine, 7.02447 − 1161.0/(224 + T)); MW 58.08 against air
+28.96. ⚠ **All of this is desk chemistry, not a measurement of this enclosure.** It bounds the argument; it
+does not license running acetone.
+
+⭐ **The same treatment applied to ISOPROPANOL is §16.12.7c**, and it is worth reading next: the geometry
+argument above transfers to IPA unchanged (2.08× vapour density, +2.2 % at the LEL), but the *headspace*
+result inverts — IPA's saturated headspace is **inside** its flammable range at bench temperature where
+acetone's is above the UEL. The shipped solvent is acceptable on flux and containment, not on chemistry.
+
+### 16.22.2 The vessel
+
+PP cups, smooth-walled and flat-bottomed (39 mm rim · 28 mm base · 33 mm tall, ≈ 26 mL). 18 mL fills to
+roughly **24 mm** depth.
+
+- **PP is the right polymer for acetone** — one of the few that is. ⚠ Verify the code: the pack of
+  *Schnapsgläser* examined on 2026-08-03 carried **PP (05), PS (06) and PAP (21)** without saying which part
+  is which. **PS dissolves in acetone.** The float test settles it: PP (0.90) floats, PS (1.05) sinks.
+- **Smooth walls matter.** A ribbed or faceted vessel steers the beam and makes re-seating rotate a different
+  optical path into it — handing back the re-seat noise §16.11 spent a rebuild removing.
+- ⚠ **Path length changes** if this replaces the jar, so absolute absorbances are not comparable to the
+  archive on that axis either.
+
+### 16.22.3 ⭐ The band shifts — and BOTH window edges are constrained
+
+`KB_spectroscopy_physics.md` §4.1 has the numbers for our pigment:
+
+| | Soret | Qy |
+|---|---|---|
+| protochlorophyll(ide) *a* | ≈ **432–440 nm** | **623 nm (80 % acetone)** · **626 nm (methanol)** |
+
+Isopropanol should behave like methanol, so **IPA → acetone ≈ a 3 nm BLUE shift**, and pure 99.5 % acetone
+probably lands Qy around **620–624 nm**. ⚠ Held loosely: the KB is explicit that the driver is **coordination
+to the central Mg, not polarity** — chlorophyll *a* is 666 nm in benzene, which no polarity ranking predicts.
+
+**The red ROI edge is therefore NOT the risk** — unlike MCT (§16.18.0), whose unpredictable 15–20 nm shift
+could have walked Qy past the detector's 629.8 nm. Acetone moves *away* from it. **Two other edges bind
+instead:**
+
+**(a) Our 620–630 anchor is exposed from BELOW.** It was placed to sit *on* Qy (§16.20.6). At 626 nm the band
+sits comfortably right of the window's centre; at ~621 nm it sits **on the window's lower edge**, and the
+band mean starts averaging red flank instead of peak.
+
+```
+   window:   620 |=============================| 630
+   IPA        Qy ~626                  ▲             comfortably inside
+   acetone    Qy ~621  ▲                             at the very edge
+```
+
+⇒ **The 620–630 anchor is the least solvent-portable version of the metric.** The old 600–630 window is
+wider and rides the shift far better. ⭐ **Evaluate any acetone run on BOTH anchors** — the diagnostics still
+compute the 600–630 metric (column `M 600-630 legacy` in both CSVs, even though the plugin no longer shows it), so the
+comparison is free and separates "the solvent moved" from "the window is too narrow".
+
+**(b) The blue end has NO headroom at all.** The Soret peak is at **432–440 nm** and the **ROI starts at
+439.97 nm** — the peak is already at or below our lower edge (§8.3b: we read the flank, not the band). A blue
+shift pushes it **further out of the instrument**, and unlike the red end we cannot follow it: 439.97 is a
+hard limit.
+
+⇒ On a flank falling ~0.06 A/nm, a 3 nm shift moves `A_Soret` by **0.15–0.20 A, of order 10–20 %**. The
+numerator moves and the denominator largely does not. **That alone makes `M1/M2/M3` incomparable across
+solvents** — and it is the concrete reason, not a generic caution.
+
+### 16.22.4 📌 PRE-REGISTRATION — written 2026-08-03, BEFORE any acetone has been used
+
+> ⚠⚠ **AN UNMEASURED CONFOUND SITS INSIDE THIS DESIGN** *(added 2026-08-03, §16.11.16)*. Every arm below
+> holds a prepared fill for an **unrecorded** time between preparation and reading, and the pigment
+> demetallates in the solvent: a 24 h-old fill reads **21 % lower** and misclassifies on 3 of 3 runs. The
+> decay rate is unknown, so an arm that happens to be read later than its control will show a shift that
+> has nothing to do with the solvent. **⇒ Two requirements, neither of which costs anything:**
+> **(a)** timestamp preparation and every capture, and report the elapsed time beside every number;
+> **(b)** interleave the arms — A, B, A, B — rather than running one arm through and then the other;
+> **(c)** log the **sample temperature**, because the rig reaches **40 °C** (§16.22.1a) and an arm that
+> spends longer in the beam ages faster for a reason that has nothing to do with what is being tested.
+> ⭐ Better still, run §16.11.17's decay-rate series **first**; it is one evening and it converts this
+> confound into a correction.
+
+⚠ Scoring rules fixed now, including which outcomes are **not** evidence — the §16.16.9 lesson.
+
+**A1 — turbidity falls.** `A`@520–540 in acetone is **lower** than in IPA at the same oil mass and filtration
+state. *Direction only; the magnitude IS the result.* ⛔ No threshold — none can be justified in advance.
+
+**A2 — the curve loses its sloping background.** In a true solution there is no λ-dependent scattering term,
+so between the bands the absorbance should be flat or structured only by pigment. Scored **by inspection of
+the shape**, against the §3.1-style plot, not by a number.
+
+**A3 ⭐ — band positions, measured.** Qy peak in pure acetone predicted **620–624 nm**; Soret peak predicted
+**at or below 439.97 nm** (i.e. still not resolvable). ⚠ **This is the one prediction that could fail
+usefully in either direction**, and no literature value exists for protochlorophyll in *pure* acetone from a
+*lipid matrix* — so the measurement is new information regardless of the pedestal question.
+
+**A4 — `A_Soret` falls by 10–20 %, `A_Q` moves much less.** The internal control: the **same oil mass means
+the same pigment**, in solution or in droplets, so any large `A_Soret` change is a **band shift**, not a
+concentration change. If both bands move together instead, something else happened — read nothing until it
+is understood.
+
+**A5 — evaporation is measured, not assumed.** Weigh the filled cup before and after the set. ⚠ With no lid
+the volume falls, concentration rises, and **every absorbance climbs**. An *upward* drift is evaporation, not
+chemistry. Cover the cup between runs and take single runs rather than a six-run time series.
+
+> ⭐ **And it is worse than the boiling point suggests.** Acetone does not need to boil to leave — what drives
+> evaporation is its **vapour pressure**, ≈ 31 kPa at 25 °C and **≈ 56 kPa at 40 °C**. §16.22.1a measured the
+> rig at up to 40 °C, so a cup standing in the beam evaporates at roughly **1.8× the bench rate**, from an
+> **open** vessel, for the whole set. **⇒ A5 is not optional and the cover is not a nicety.** Weigh the cup,
+> log the sample temperature beside the weight, and treat any absorbance drift as evaporation until the mass
+> says otherwise. ⚠ The same 40 °C also accelerates the pigment demetallation of §16.11.16 — so an acetone
+> set carries **two** upward-and-downward drifts at once, which is why §16.11.17 should run first.
+
+**A6 — vessel integrity.** The blank (acetone, no oil) must not degrade across the set. If acetone hazes or
+crazes the cup wall, **the vessel becomes the scatterer** and everything above is void. Free to check — the
+blank is already the reference.
+
+**⛔ NOT pre-registered: `r_Q`.** It cannot be fitted from a single fill — it is the intercept of an
+extrapolation to `B_Q` = 0 and needs a concentration lever (§16.16.2). Stage 2, if stage 1 justifies it, is
+§16.21's F3 design **run in acetone**: a serial dilution 2/4/6 drops from one stock, 4 runs each. Only then
+does §16.22.0's three-way fork resolve.
+
+### 16.22.5 The prize that is independent of all of the above
+
+§8.3b of `DOC_pedestal_correction.md` records that `M∞` ≈ 10.0 is *"our windows' number, not a molar ratio
+anyone could look up"*, and that putting it on the published scale would mean measuring in **80 % acetone —
+the literature standard for protochlorophyll**.
+
+⇒ If acetone is on the bench anyway, **run one blank + one sample in 80 % acetone alongside the pure-acetone
+test.** It costs almost nothing and produces the literature-comparable number the project has wanted since
+§8.3b was written. ⚠ Note 80 % ≠ pure: the 20 % water is more polar, will coordinate the Mg differently, and
+will hurt oil solubility — so the two are different experiments answering different questions, not a
+sensitivity check on each other.
+
+### 16.22.6 What this does NOT settle
+
+- **Not the pedestal correction's necessity** — §16.21.0a. Only outcome 2 of §16.22.0 would touch it.
+- **Not a shipped solvent.** §16.12.7b's safety rejection stands (§16.22.1); this is a bench probe.
+- **Not σ_fill.** That is §16.21's F1, and it is the one with a product consequence.
+- **Not comparability with the archive.** Band shifts (§16.22.3) plus a possible path-length change mean the
+  verdict numbers do not travel. Compare **pedestals and band positions**, never `M1/M2/M3`.
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 

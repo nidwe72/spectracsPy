@@ -14,11 +14,25 @@ Everything is computed through the SHIPPED code paths (`DevSpectralPlugin.__comp
 
   1  The archive spans a RIG REBUILD (2026-07-29) and several protocol changes. Pre-rebuild series
      carry ~3x the seating noise and are NOT directly comparable with post-rebuild ones.
-  2  The corrected index uses ONE constant, r_Q = -0.0246 A, fitted on Kiendler in August. Applying
-     it to a pre-rebuild series assumes r_Q survived the rebuild, which is UNTESTED. Treat the whole
-     column as exploratory — see `DOC_pedestal_correction.md` chapter 10.
+  2  `r_Q` = -0.0184 was fitted on Kiendler in August, on the POST-rebuild rig, and it belongs to the
+     620-630 anchor and to no other. Applying it to a pre-rebuild series assumes r_Q survived the
+     rebuild, which is UNTESTED and which the dilution check at the end of this script shows is FALSE.
+     Treat `M baseline + pedestal` as exploratory above the rebuild line — `DOC_pedestal_correction.md`
+     chapter 10.
+  2b THE VERDICT BLOCK IS THE THREE METRICS THE BENCH SHOWS and nothing else (2026-08-03, Edwin):
+     `M baseline + pedestal` (T = 10.6), `M baseline` (T = 12.5) and `M raw Soret/Q` (no threshold),
+     all on the shipped 620-630 anchor, in the bench's own order. They are on THREE DIFFERENT SCALES:
+     read a column against itself across runs, and compare the three only by their verdicts.
+     `M 600-630 legacy` is kept further right — §16.21's acetone protocol requires reading acetone runs
+     on both anchors — but it is NOT a verdict and carries no threshold that still applies. The 615-630
+     columns were dropped outright; that anchor never shipped. See `all_metrics_table.py`'s docstring.
+     ℹ The earlier `M clean-anchor` diagnostic is RETIRED -- §16.19.3a answered it (excising the lamp
+     line makes r_Q WORSE) and `pedestal_correction.py`'s anchor sweep still reproduces it.
   3  Oil identities are filled in only where a specification or the lab diary names them. Blank means
      "not documented", not "unknown to Edwin".
+
+⭐ The three verdict numbers LEAD both the printed tables and the CSV. They used to sit mid-way
+through ~20 columns.
 
 Prints one table per metric group, and writes the whole matrix to
     spectracs-references/tmp/all_metrics_archive.csv
@@ -42,7 +56,7 @@ from all_metrics_table import GROUPS, rowFor
 OILS = {
     "20260727B": "green", "20260727E": "green",
     "20260727C": "brown", "20260727D": "brown",
-    "20270729A": "Steirerkraft", "20270729B": "Steirerkraft", "20270729C": "Steirerkraft",
+    "20270729A_aged24h": "Steirerkraft", "20270729B": "Steirerkraft", "20270729C": "Steirerkraft",
     "20260731A": "Spar S-Budget",
     "20260801A": "Kiendler", "20260801B": "Kiendler", "20260801C": "Kiendler",
     "oilK": "green, 2 drops", "oilL": "green, 3 drops",
@@ -156,13 +170,17 @@ def dilutionCheck():
     r_Q was fitted on ONE oil (Kiendler) on the POST-rebuild rig. Every within-oil dilution pair in the
     archive is therefore an OUT-OF-SAMPLE test of it: if the correction is right, it should push each
     pair's log-log slope TOWARD zero. It does exactly that on the post-rebuild pair and the opposite on
-    both pre-rebuild ones -- which says r_Q is tied to the RIG STATE, not universal."""
+    both pre-rebuild ones -- which says r_Q is tied to the RIG STATE, not universal.
+
+    ⚠ THIS TEST IS RUN ON THE LEGACY 600-630 ANCHOR, deliberately: it is the historical record of how
+    the correction was validated, and its published numbers (-0.12 -> -0.00) are quoted throughout §16.
+    The SHIPPED 620-630 anchor's own dilution slopes are in `far_anchor_sweep.py` and §16.20.4."""
     print("=== ⭐ OUT-OF-SAMPLE TEST — what the correction does to the archive's DILUTION PAIRS")
     print("   s = 0 is perfect dilution invariance. r_Q was fitted on post-rebuild Kiendler only,")
     print("   so every pair below is out-of-sample for it.")
     print()
     print("   %-24s %-13s %6s %20s %20s"
-          % ("pair", "rig state", "span", "SHIPPED  chg   s", "CORRECTED chg   s"))
+          % ("pair", "rig state", "span", "LEGACY   chg   s", "LEG CORR  chg   s"))
     print("   " + "-" * 88)
 
     def series(paths):
@@ -185,8 +203,8 @@ def dilutionCheck():
     print("   ⇒ On BOTH pre-rebuild pairs it moves them from ~0 to ~+0.27 — it makes them WORSE.")
     print("   ⇒ READING: r_Q is real and transfers BETWEEN OILS, but NOT across a rig rebuild. It is a")
     print("     per-rig-state calibration constant, and it must never be applied retroactively to")
-    print("     pre-rebuild data. The `M corrected` column above is therefore MEANINGLESS above the")
-    print("     rebuild line — it is printed only to show that it is.")
+    print("     pre-rebuild data. The `M 600-630 legacy corrected` column is therefore MEANINGLESS")
+    print("     above the rebuild line — it is printed only to show that it is.")
     print()
 
 

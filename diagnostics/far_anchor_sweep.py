@@ -10,6 +10,8 @@ denominator, the contamination does not cancel in the ratio.
 
   SWEEP 1  right edge pulled in, left edge pinned at 600  - "chop off the contaminated red end"
   SWEEP 2  fixed 20 nm width slid left                    - separates WHERE from HOW WIDE
+  SWEEP 3  LEFT edge pushed right, right edge pinned      - "start after the 607 line, sit on the Qy
+           at 630 (Edwin 2026-08-02)                        flank" - the only direction untested
 
 Each candidate is judged on three things that must be read together:
   * DISCRIMINATION - leave-one-FILL-out errors + Cohen's d (does green still separate from brown?)
@@ -32,8 +34,12 @@ from metric_bench import BASE, bestThreshold, feature, plugin
 from settling_sweep import detrend
 
 SORET, Q = plugin.PB_SORET_BAND, plugin.PB_Q_BAND
+# The near anchor is 520-540 in BOTH the shipped and the legacy constant, so there is nothing to choose.
 NEAR = plugin.PB_BASELINE_WINDOWS[0]                       # 520-540, held fixed throughout
-SHIPPED_FAR = plugin.PB_BASELINE_WINDOWS[1]                # 600-630
+# `SHIPPED_FAR` is used ONLY to hang a `<- SHIPPED` label on whichever swept row matches it; it never
+# enters a fit. It now points at 620-630 (§16.20 adopted it), so the label marks the current anchor.
+# The legacy 600-630 row is still swept and appears in every table on its own merits.
+SHIPPED_FAR = plugin.PB_BASELINE_WINDOWS[1]                # 620-630 since §16.20
 
 # 07-27 fills are the established scoring basis (§16.10.9 quotes 1/25 errors on exactly these four).
 # The 07-29 sets are a later session and BOTH green, so they are reported separately, never mixed into
@@ -48,6 +54,13 @@ SETTLING_SETS = [("set B", ["20270729B/%03d.pdf" % i for i in range(1, 7)]),
 
 SWEEP_1 = [(600.0, 630.0), (600.0, 625.0), (600.0, 620.0), (600.0, 615.0), (600.0, 610.0)]
 SWEEP_2 = [(610.0, 630.0), (605.0, 625.0), (600.0, 620.0), (595.0, 615.0), (590.0, 610.0), (585.0, 605.0)]
+# SWEEP 3 (Edwin 2026-08-02) - the direction neither of the first two tested: LEFT edge pushed right,
+# right edge pinned at 630. Sweeps 1 and 2 both move away from the red end; this one moves TOWARD it.
+# The reasoning: 600-630 straddles the 607 nm lamp line AND the pigment's Qy flank (~623-626 nm), so
+# an anchor starting at 615 excludes the artifact while sitting squarely on the Qy information.
+# ⚠ It also sits entirely in the lamp's low-signal region (~39 DN against 130 at 530), so the precision
+# column is the one to watch.
+SWEEP_3 = [(600.0, 630.0), (610.0, 630.0), (615.0, 630.0), (618.0, 630.0), (620.0, 630.0)]
 
 
 def load(paths):
@@ -148,6 +161,8 @@ def main():
            SWEEP_1, scoring, settling, runCount)
     report("SWEEP 2 - fixed 20 nm width, window slid left",
            SWEEP_2, scoring, settling, runCount)
+    report("SWEEP 3 - LEFT edge pushed right, right edge pinned at 630 nm  (Edwin 2026-08-02)",
+           SWEEP_3, scoring, settling, runCount)
 
 
 if __name__ == "__main__":

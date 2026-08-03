@@ -381,8 +381,26 @@ def bandSum(lam, peaks):
     return sum(a * math.exp(-((lam - c) / s) ** 2 / 2) for c, a, s in peaks)
 
 
-def slopePanel(x, y, w, h, peaks, title, subtitle, colour, lo=530.0, hi=690.0):
-    """A Q-region spectrum with the 600-630 window shaded and the in-window trend drawn."""
+def slopePanel(x, y, w, h, peaks, title, subtitle, colour, lo=512.0, hi=690.0):
+    """A Q-region spectrum with BOTH anchor windows shaded, their mean LEVELS drawn as bars, and the
+    baseline the metric fits through those two levels drawn as a line.
+
+    The two bars are what `linearBaselineCorrected` actually computes: each anchor window is reduced to a
+    SINGLE number, its mean absorbance. Nothing about the shape INSIDE a window survives that averaging.
+    The line through the two bars is the fitted baseline, and its slope is the difference of the two
+    levels divided by the gap between the window centroids -- so the far anchor's HEIGHT is the whole of
+    what it contributes, and the line makes that visible in one step (Edwin 2026-08-03).
+
+    ⚠ The near anchor is drawn from the pigment model alone. In reality 520-540 is dominated by the
+    TURBIDITY pedestal, which this schematic does not model, and the two classes measure nearly the same
+    there (0.1231 green against 0.1038 brown) -- so the real pair of lines pivots about a near-common near
+    anchor. Here the panels' near levels differ, which exaggerates the effect. See figureSlope()'s caption.
+
+    (An earlier version shaded 600-630 and drew a chord across it. That was the anchor's OLD span, and the
+    chord was the rise statistic of §3.5 -- a different quantity, on a window the instrument no longer
+    uses. Both removed 2026-08-03: a superseded window painted beside the live one is exactly the confusion
+    the anchor move was meant to end.)
+    """
     def px(nm):
         return x + (nm - lo) / (hi - lo) * w
 
@@ -395,18 +413,28 @@ def slopePanel(x, y, w, h, peaks, title, subtitle, colour, lo=530.0, hi=690.0):
            'text-anchor="middle">%s</text>' % (x + w / 2, y - 26, FONT, colour, title),
            '<text x="%.1f" y="%d" %s font-size="11.5" fill="%s" text-anchor="middle">%s</text>'
            % (x + w / 2, y - 8, FONT, MUTED, subtitle),
-           # the measurement window
-           '<rect x="%.1f" y="%d" width="%.1f" height="%d" fill="%s" opacity="0.13"/>'
-           % (px(600), y, px(630) - px(600), h, ACCENT),
+           # the NEAR anchor -- the line's other foot
+           '<rect x="%.1f" y="%d" width="%.1f" height="%d" fill="%s" opacity="0.12"/>'
+           % (px(520), y, px(540) - px(520), h, MUTED),
            '<text x="%.1f" y="%d" %s font-size="10.5" font-weight="700" fill="%s" '
-           'text-anchor="middle">600–630 window</text>' % ((px(600) + px(630)) / 2, y + 14, FONT, ACCENT),
+           'text-anchor="middle">520–540</text>' % ((px(520) + px(540)) / 2, y + 14, FONT, MUTED),
+           '<text x="%.1f" y="%d" %s font-size="9" font-weight="700" fill="%s" '
+           'text-anchor="middle">near anchor</text>'
+           % ((px(520) + px(540)) / 2, y + 25, FONT, MUTED),
+           # the ONE window the metric reads out here
+           '<rect x="%.1f" y="%d" width="%.1f" height="%d" fill="%s" opacity="0.20"/>'
+           % (px(620), y, px(630) - px(620), h, ACCENT),
+           '<text x="%.1f" y="%d" %s font-size="10" font-weight="700" fill="%s" '
+           'text-anchor="start" transform="rotate(-90 %.1f %d)">620–630 far anchor</text>'
+           % ((px(620) + px(630)) / 2 + 3.5, y + h - 8, FONT, ACCENT,
+              (px(620) + px(630)) / 2 + 3.5, y + h - 8),
            # the capture clamp
            '<line x1="%.1f" y1="%d" x2="%.1f" y2="%d" stroke="%s" stroke-width="1.6" '
            'stroke-dasharray="5,3"/>' % (px(630), y, px(630), y + h, RED),
            '<text x="%.1f" y="%d" %s font-size="10" font-weight="700" fill="%s">we see nothing</text>'
-           % (px(630) + 5, y + h - 26, FONT, RED),
+           % (px(630) + 6, y + 14, FONT, RED),
            '<text x="%.1f" y="%d" %s font-size="10" font-weight="700" fill="%s">beyond here</text>'
-           % (px(630) + 5, y + h - 13, FONT, RED),
+           % (px(630) + 6, y + 26, FONT, RED),
            '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="%s" stroke-width="1.3"/>'
            % (x, y + h, x + w, y + h, MUTED)]
 
@@ -424,30 +452,43 @@ def slopePanel(x, y, w, h, peaks, title, subtitle, colour, lo=530.0, hi=690.0):
         path.append("L %.1f %.1f" % (px(nm), py(bandSum(nm, peaks))))
     out.append('<path d="%s" fill="none" stroke="%s" stroke-width="2.4"/>' % (" ".join(path), INK))
 
-    left = sum(bandSum(nm, peaks) for nm in (600, 603, 606, 610)) / 4.0
-    right = sum(bandSum(nm, peaks) for nm in (620, 623, 626, 630)) / 4.0
-    out.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="3.4"/>'
-               % (px(605), py(left), px(625), py(right), colour))
-    for nm, value in ((605, left), (625, right)):
-        out.append('<circle cx="%.1f" cy="%.1f" r="3.6" fill="%s"/>' % (px(nm), py(value), colour))
-    # fixed position just left of the window and below its caption: clear of the curve in both panels
-    out.append('<text x="%.1f" y="%d" %s font-size="12" font-weight="700" fill="%s" '
-               'text-anchor="end">slope %s</text>'
-               % (px(598), y + 42, FONT, colour,
-                  "STEEP" if right - left > 0.25 else "nearly FLAT"))
+    # THE two quantities the metric takes from this curve: one mean per anchor window, and nothing else.
+    near = sum(bandSum(520.0 + step * 0.5, peaks) for step in range(41)) / 41.0
+    height = sum(bandSum(620.0 + step * 0.5, peaks) for step in range(21)) / 21.0
 
-    for nm in (550, 575, 600, 625, 650, 675):
+    # the fitted baseline: the straight line through the two window means, read at their centroids.
+    nearC, farC = 530.0, 625.0
+    gradient = (height - near) / (farC - nearC)
+
+    def onLine(nm):
+        return near + gradient * (nm - nearC)
+
+    out.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1.9" '
+               'stroke-dasharray="7,4" opacity="0.9"/>'
+               % (px(514), py(onLine(514)), px(668), py(min(onLine(668), 1.15)), colour))
+    out.append('<text x="%.1f" y="%.1f" %s font-size="10.5" font-weight="700" fill="%s" '
+               'text-anchor="end">the fitted baseline — slope %s</text>'
+               % (px(572), py(onLine(572)) - 14, FONT, colour,
+                  "STEEP" if gradient > 0.004 else "nearly FLAT"))
+    for lo_nm, hi_nm, value in ((520.0, 540.0, near), (620.0, 630.0, height)):
+        out.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="3.8"/>'
+                   % (px(lo_nm), py(value), px(hi_nm), py(value), colour))
+    out.append('<text x="%.1f" y="%.1f" %s font-size="11.5" font-weight="700" fill="%s">'
+               'A_far stands %s</text>'
+               % (px(633), py(height) + 17, FONT, colour, "HIGH" if height > 0.6 else "LOW"))
+
+    for nm in (520, 540, 560, 580, 600, 620, 640, 660, 680):
         out.append('<line x1="%.1f" y1="%d" x2="%.1f" y2="%d" stroke="%s" stroke-width="1"/>'
                    % (px(nm), y + h, px(nm), y + h + 4, MUTED))
         out.append('<text x="%.1f" y="%d" %s font-size="9.5" fill="%s" text-anchor="middle">%d</text>'
                    % (px(nm), y + h + 16, FONT, MUTED, nm))
     out.append('<text x="%.1f" y="%d" %s font-size="10.5" fill="%s" text-anchor="middle">'
                'wavelength (nm)</text>' % (x + w / 2, y + h + 33, FONT, MUTED))
-    return "".join(out), right - left
+    return "".join(out), height - near
 
 
 def figureSlope():
-    width, height = 900, 660
+    width, height = 900, 700
     intact = [(624, 1.00, 13), (572, 0.42, 14)]
     degraded = [(630, 0.36, 13), (592, 0.22, 13), (568, 0.60, 13), (536, 0.32, 13)]
 
@@ -455,26 +496,35 @@ def figureSlope():
            % (width, height, width, height),
            '<rect width="%d" height="%d" fill="#ffffff"/>' % (width, height),
            '<text x="450" y="26" %s font-size="14.5" font-weight="700" fill="%s" '
-           'text-anchor="middle">Why redistributing the Q intensity FLATTENS the 600–630 slope</text>'
-           % (FONT, INK)]
+           'text-anchor="middle">Why redistributing the Q intensity LOWERS the 620–630 anchor — '
+           'and FLATTENS the baseline through it</text>' % (FONT, INK)]
 
-    topPanel, riseIntact = slopePanel(60, 96, 780, 170, intact,
-                                      "INTACT protochlorophyll  —  magnesium present",
-                                      "one dominant Q origin, sitting just past our window edge",
-                                      GREEN_DK)
-    bottomPanel, riseDegraded = slopePanel(60, 372, 780, 170, degraded,
-                                           "DEGRADED protopheophytin  —  magnesium gone",
-                                           "the same intensity split across four bands, spread to the blue",
-                                           ACCENT)
+    topPanel, heightIntact = slopePanel(60, 96, 780, 170, intact,
+                                        "INTACT protochlorophyll  —  magnesium present",
+                                        "one dominant Q origin, at the very edge of what we capture",
+                                        GREEN_DK)
+    bottomPanel, heightDegraded = slopePanel(60, 372, 780, 170, degraded,
+                                             "DEGRADED protopheophytin  —  magnesium gone",
+                                             "the same intensity split across four bands, spread to the blue",
+                                             ACCENT)
     out += [topPanel, bottomPanel]
 
-    out.append('<text x="450" y="624" %s font-size="11.5" fill="%s" text-anchor="middle">'
-               'The window is narrow and sits on a FLANK, so its slope reports the height of the nearest '
-               'peak — not the total pigment.</text>' % (FONT, INK))
-    out.append('<text x="450" y="644" %s font-size="11" fill="%s" text-anchor="middle">'
-               'Schematic; band positions for the degraded form are illustrative. Modelled slope ratio '
-               '%.1f× — measured 4.5× (green 0.0547, brown 0.0121).</text>'
-               % (FONT, MUTED, riseIntact / riseDegraded if riseDegraded else 0))
+    out.append('<text x="450" y="612" %s font-size="11.5" fill="%s" text-anchor="middle">'
+               'The far window sits on a FLANK, not on a peak, so its height reports the height of the '
+               'nearest band — not the total pigment.</text>' % (FONT, INK))
+    out.append('<text x="450" y="630" %s font-size="11" fill="%s" text-anchor="middle">'
+               'Measured: A(620–630) − A(520–540) = 0.0804 green vs 0.0488 brown (1.65×), over the '
+               '95.0 nm between the window centroids — 8.46 vs 5.14 × 10⁻⁴ A/nm,</text>' % (FONT, MUTED))
+    out.append('<text x="450" y="647" %s font-size="11" fill="%s" text-anchor="middle">'
+               'which is §5.3\u2019s fitted 8.56 / 5.22 to within 1 %%. Schematic: pigment bands only, no '
+               'turbidity pedestal, so its own contrast (%.0f×) is far larger than the measured 1.65×.</text>'
+               % (FONT, MUTED, heightIntact / heightDegraded if heightDegraded else 0))
+    out.append('<text x="450" y="668" %s font-size="10.5" fill="%s" text-anchor="middle">'
+               '\u26a0 The NEAR anchor is turbidity-dominated in reality, and the two classes nearly '
+               'coincide there (0.1231 green vs 0.1038 brown), so the real</text>' % (FONT, MUTED))
+    out.append('<text x="450" y="684" %s font-size="10.5" fill="%s" text-anchor="middle">'
+               'pair of lines pivots about a common left foot. This model has no pedestal, so its left '
+               'feet differ — read the RIGHT ends against each other.</text>' % (FONT, MUTED))
     out.append("</svg>")
     return "".join(out)
 

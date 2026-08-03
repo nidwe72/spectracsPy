@@ -18,7 +18,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from metric_walkthrough import BASE, GREEN, BROWN, SORET, Q, NEAR, FAR, absorption, fittedLine, plugin, feature
+# NEAR/FAR/WINDOWS follow `metric_walkthrough`'s METRIC_ANCHOR, so the figures cannot drift from the
+# numbers in the text: set METRIC_ANCHOR=600 there and BOTH move to the legacy anchor together.
+from metric_walkthrough import (BASE, GREEN, BROWN, SORET, Q, NEAR, FAR, WINDOWS, absorption,
+                                fittedLine, plugin, feature)
 
 OUT = os.path.join(BASE)
 GREEN_COLOUR, BROWN_COLOUR = "#2e7d32", "#8d5524"
@@ -30,7 +33,7 @@ def meanCurve(paths, corrected=False):
     for path in paths:
         spectrum = absorption(path)
         if corrected:
-            spectrum = feature.linearBaselineCorrected(spectrum, plugin.PB_BASELINE_WINDOWS)
+            spectrum = feature.linearBaselineCorrected(spectrum, WINDOWS)
         lam = np.array(sorted(spectrum.valuesByNanometers))
         values = np.array([spectrum.valuesByNanometers[k] for k in lam])
         if grids is None:
@@ -48,7 +51,8 @@ def meanLine(paths):
 def shade(axis, label=True):
     bottom, top = axis.get_ylim()
     for (lo, hi), colour, name in ((SORET, "#4a6fd0", "Soret\n440–460"), (Q, "#c04a4a", "Q\n560–580"),
-                                   (NEAR, "#9e9e9e", "near\n520–540"), (FAR, "#9e9e9e", "far\n600–630")):
+                                   (NEAR, "#9e9e9e", "near\n%g–%g" % NEAR),
+                                   (FAR, "#9e9e9e", "far\n%g–%g" % FAR)):
         axis.axvspan(lo, hi, color=colour, alpha=0.13, lw=0)
         if label:                                   # along the BOTTOM: the legend owns the top-right
             axis.text((lo + hi) / 2, bottom + 0.035 * (top - bottom), name, ha="center", va="bottom",
@@ -80,7 +84,8 @@ def main():
                       fontsize=10.5)
     axes[0].legend(fontsize=8, loc="upper right", framealpha=0.95)
     axes[1].set_title("same curves, magnified onto the weak-absorbance region — no part of this "
-                      "window is signal-free (note the ~473 and ~607 nm lamp lines)", fontsize=9)
+                      "window is signal-free (note the ~473 and ~607 nm lamp lines, both now OUTSIDE "
+                      "every window the metric reads)", fontsize=8.4)
     axes[1].set_xlabel("wavelength (nm)")
     figure.tight_layout()
     figure.savefig(os.path.join(OUT, "metric_algebra_bands.png"), dpi=170)

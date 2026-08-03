@@ -30,8 +30,56 @@ from sciens.spectracs.plugins.dev.DevSpectralPlugin import DevSpectralPlugin
 
 BASE = "/home/nidwe72/development/spectracs/spectracs-references/tmp/"
 plugin, feature = DevSpectralPlugin(), SpectrumFeatureUtil()
-SORET, Q, WINDOWS = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS
+# ⚠ The `... linear` keys below are the LEGACY 600-630 anchor, ON PURPOSE. They are the reference every
+# comparison table in SPEC_capture_quality.md §16 is built on; repointing them would silently redefine
+# every historical number. The SHIPPED 620-630 anchor is exposed separately as the `... far620` keys.
+SORET, Q = plugin.PB_SORET_BAND, plugin.PB_Q_BAND
+WINDOWS = plugin.PB_BASELINE_WINDOWS_LEGACY_600
 PIVOT = 530.0                       # the amplitude `s` is quoted AT this wavelength (§16.12.4's table)
+
+# ---------------------------------------------------------------- the CLEAN-ANCHOR variant (§16.19.6 item 1)
+# The far anchor 600-630 carries ONE genuine instrument artifact: the 607 nm lamp emission line, which
+# fails to cancel in S/R (§16.13.9 measured its FWHM at 2.7 nm and its reference excess at +20 %;
+# `DOC_metric_algebra.md` §5.9). This variant fits the SAME baseline through the SAME near anchor with
+# that line excised, and nothing else.
+#
+# ⛔ 618-630 IS **NOT** EXCLUDED, and a first draft of this constant wrongly excluded it as "the lamp's
+# red cliff". §16.12.11 B does describe a cliff there (39 DN against 130 at 530) -- but it carries an
+# explicit warning to read §16.12.12 first, and §16.12.12 REFUTED the instrument reading at 5.1 sigma:
+# the 620-630 rise tracks the OIL CLASS under a fixed lamp, so it is the pigment's own Qy flank. The
+# pigment is protochlorophyll, Qy ~623-626 nm (`KB_spectroscopy_physics.md` §4.1) -- i.e. the band sits
+# INSIDE 618-630. Excluding it removes the most information-rich part of the window, which is the
+# opposite of cleaning the anchor. §16.12.13 measured the cost directly: remove it and the classes
+# overlap.
+#
+# ⚠ WHY THE NEAR WINDOW IS LISTED TWICE, and it is not a typo. `linearBaselineCorrected` gives EACH
+# window equal total weight. Splitting the red end into two windows would hand it 2/3 of the fit and the
+# near anchor 1/3, so the variant would differ from the shipped metric for a reason that has nothing to
+# do with cleanliness. Duplicating the near window restores the shipped 1:1 near:red balance, and the
+# comparison then isolates exactly one change: whether the 607 nm line is in the anchor.
+CLEAN_WINDOWS = (WINDOWS[0], WINDOWS[0], (600.0, 606.0), (610.0, 630.0))
+
+# ---------------------------------------------------------------- the 615 nm FAR ANCHOR (§16.20)
+# Edwin's proposal 2026-08-02: start the far anchor AFTER the 607 nm lamp line rather than trying to
+# excise it, and let the window sit on the pigment's Qy flank (protochlorophyll Qy ~623-626 nm).
+#
+# This is the OPPOSITE move to CLEAN_WINDOWS above and to §16.12.13's right-edge sweep, both of which
+# remove the Qy flank and both of which were refuted. This one KEEPS it and drops 600-615 instead.
+# On the archive it improves discrimination AND dilution invariance together -- the only change tried
+# in §16 that moves both the same way. ⚠ NOT ADOPTED: §16.20.3 lists what must be true first, and the
+# settling trend measurably WORSENS. One near + one far window, so the 1:1 weighting needs no trick.
+FAR615_WINDOWS = (WINDOWS[0], (615.0, 630.0))
+
+# The red-most variant of the same idea (§16.20.4). It gives the BEST dilution invariance of any window
+# tested (post-rebuild pair s = -0.05 against the shipped -0.12) and the SMALLEST r_Q (-0.0184), at the
+# cost of the narrowest window and the lowest signal. Only 10 nm wide, entirely inside the lamp's
+# collapse, so precision is the column to watch.
+FAR620_WINDOWS = (WINDOWS[0], (620.0, 630.0))
+
+# The pedestal residual REFITTED ON THE 620-630 ANCHOR (§16.20.2, Kiendler run-level straight-line fit).
+# It is NOT the shipped anchor's -0.0246: move the anchor and the residual changes with it, so pairing
+# the 620-630 bands with the 600-630 constant would be a category error.
+R_Q_620 = -0.0184
 
 # The rig-rebuild sets of 2026-07-29 (§16.11). Directory names carry a 2027 typo on disk; the mtimes
 # are the real capture times and are what the elapsed-time axis is built from - `timestampIso` is
@@ -115,6 +163,9 @@ def measure(path):
     lam, raw = asArrays(spectrum)
     linear = feature.linearBaselineCorrected(spectrum, WINDOWS)
     _, linearValues = asArrays(linear)
+    _, cleanValues = asArrays(feature.linearBaselineCorrected(spectrum, CLEAN_WINDOWS))
+    _, far615Values = asArrays(feature.linearBaselineCorrected(spectrum, FAR615_WINDOWS))
+    _, far620Values = asArrays(feature.linearBaselineCorrected(spectrum, FAR620_WINDOWS))
     baseline, amplitude, exponent = powerLawBaseline(lam, raw)
     powerValues = raw - baseline
     floor, floorAmplitude, floorExponent = offsetPlusScatter(lam, raw)
@@ -135,6 +186,24 @@ def measure(path):
             "A_Soret linear": bandMean(lam, linearValues, SORET),
             "A_Q linear": bandMean(lam, linearValues, Q),
             "S/Q linear base": bandMean(lam, linearValues, SORET) / bandMean(lam, linearValues, Q),
+            # The clean-anchor variant — same construction, contaminated red points excluded.
+            "A_Soret clean": bandMean(lam, cleanValues, SORET),
+            "A_Q clean": bandMean(lam, cleanValues, Q),
+            "S/Q clean base": bandMean(lam, cleanValues, SORET) / bandMean(lam, cleanValues, Q),
+            # The 615-630 far anchor (§16.20).
+            "A_far 615-630": bandMean(lam, raw, (615.0, 630.0)),
+            "A_Soret far615": bandMean(lam, far615Values, SORET),
+            "A_Q far615": bandMean(lam, far615Values, Q),
+            "S/Q far615": bandMean(lam, far615Values, SORET) / bandMean(lam, far615Values, Q),
+            # The 620-630 far anchor (§16.20.4) — the red-most variant.
+            "A_far 620-630": bandMean(lam, raw, (620.0, 630.0)),
+            "A_Soret far620": bandMean(lam, far620Values, SORET),
+            "A_Q far620": bandMean(lam, far620Values, Q),
+            "S/Q far620": bandMean(lam, far620Values, SORET) / bandMean(lam, far620Values, Q),
+            # ⭐ THE ADOPTED CANDIDATE (Edwin 2026-08-02): the 620-630 anchor AND the pedestal
+            # correction, together. Uses that anchor's OWN r_Q.
+            "S/Q far620 corr": (bandMean(lam, far620Values, SORET)
+                                / (bandMean(lam, far620Values, Q) - R_Q_620)),
             "S/Q power base": bandMean(lam, powerValues, SORET) / bandMean(lam, powerValues, Q),
             "scatter s @530": amplitude,
             "scatter n": exponent,

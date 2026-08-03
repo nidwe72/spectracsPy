@@ -15,6 +15,7 @@ Run:
         ./venv/bin/python diagnostics/metric_walkthrough.py
 """
 import json
+import os
 
 import numpy as np
 from pypdf import PdfReader
@@ -29,7 +30,15 @@ BROWN = ["20260731A/%03d.pdf" % i for i in range(1, 7)]
 
 plugin, feature = DevSpectralPlugin(), SpectrumFeatureUtil()
 SORET, Q, CLARITY = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.GREEN_BAND
-NEAR, FAR = plugin.PB_BASELINE_WINDOWS
+
+# ---------------------------------------------------------------- which far anchor the document describes
+# `DOC_metric_algebra.md` chapters 4-5 are written on the SHIPPED anchor, so that is the default. The
+# superseded 600-630 window stays reachable because §5a quotes the before/after side by side, and because
+# §5.9's 607 nm question only exists while the line is INSIDE the anchor.
+#     METRIC_ANCHOR=600 ./venv/bin/python diagnostics/metric_walkthrough.py
+ANCHOR = os.environ.get("METRIC_ANCHOR", "620")
+WINDOWS = (plugin.PB_BASELINE_WINDOWS if ANCHOR == "620" else plugin.PB_BASELINE_WINDOWS_LEGACY_600)
+NEAR, FAR = WINDOWS
 
 
 def absorption(path, despike=True):
@@ -56,7 +65,7 @@ def fittedLine(spectrum):
     """Re-derive the weighted least-squares baseline line (slope, intercept) the shipped code fits."""
     points = sorted((nm, v) for nm, v in spectrum.valuesByNanometers.items() if v is not None)
     anchors, weights = [], []
-    for low, high in plugin.PB_BASELINE_WINDOWS:
+    for low, high in WINDOWS:
         inWindow = [(nm, v) for nm, v in points if low <= nm <= high]
         anchors.extend(inWindow)
         weights.extend([1.0 / len(inWindow)] * len(inWindow))
@@ -68,7 +77,7 @@ def fittedLine(spectrum):
 def walk(path):
     """Every quantity of the chain for one run."""
     despiked = absorption(path)
-    baselined = feature.linearBaselineCorrected(despiked, plugin.PB_BASELINE_WINDOWS)
+    baselined = feature.linearBaselineCorrected(despiked, WINDOWS)
     slope, intercept = fittedLine(despiked)
     row = {
         "A_Soret": feature.bandMean(despiked, *SORET),
@@ -88,6 +97,7 @@ def walk(path):
 
 def main():
     print(__doc__.split("Run:")[0].strip().splitlines()[0])
+    print("    far anchor: %s  (METRIC_ANCHOR=%s)" % (FAR, ANCHOR))
     print()
 
     _, sample = walk(GREEN[0])
@@ -108,8 +118,10 @@ def main():
               % (name, bandC, nearC, farC, nearC, t, name, name, -(1 - t), -t))
     print()
 
+    collected = {}
     for label, paths in (("GREEN  20270729C", GREEN), ("BROWN  20260731A", BROWN)):
         rows = [walk(p)[0] for p in paths]
+        collected[label.split()[0]] = rows
         print("=== %s" % label)
         print("   %-5s %8s %7s %8s %7s %7s | %8s %7s | %7s %7s %8s" % (
             "run", "A_Soret", "A_Q", "A_clar", "A_near", "A_far",
@@ -142,7 +154,7 @@ def main():
             mean["slope"] * soretC + mean["intercept"], mean["slope"] * qC + mean["intercept"]))
         print()
 
-        # three-region expansion check (the PB_BASELINE_WINDOWS comment / SPEC_capability_proof §2.1a)
+        # three-region expansion check (SPEC_capability_proof §2.1a)
         tS = (soretC - nearC) / (farC - nearC)
         tQ = (qC - nearC) / (farC - nearC)
         errors = []
@@ -153,6 +165,68 @@ def main():
         print("   three-region expansion vs the shipped code: max |error| %.2f %%  (coeffs %.3f / %.3f"
               " near, %.3f / %.3f far)" % (max(abs(e) for e in errors), 1 - tS, 1 - tQ, tS, tQ))
         print()
+
+    discrimination(collected)
+    naiveVsFitted(collected, nearC, farC, soretC, qC)
+
+
+def cohensD(green, brown):
+    """Equal-n RMS pooled SD -- the convention DOC_metric_algebra Appendix B.2 declares and uses."""
+    g, b = np.array(green), np.array(brown)
+    pooled = float(np.sqrt((g.std(ddof=1) ** 2 + b.std(ddof=1) ** 2) / 2))
+    return (float(g.mean()) - float(b.mean())) / pooled, pooled
+
+
+def discrimination(collected):
+    """§5.4 and §5.8 -- what each quantity separates, and how the index's margins fall."""
+    green, brown = collected["GREEN"], collected["BROWN"]
+    print("=== §5.4  WHAT EACH QUANTITY SEPARATES")
+    print("   %-16s %9s %9s %9s %8s" % ("quantity", "green", "brown", "green/brown", "d"))
+    print("   " + "-" * 58)
+    for key in ("A_Q", "B_Q", "B_Soret", "S/Q lin"):
+        g = [r[key] for r in green]
+        b = [r[key] for r in brown]
+        d, _ = cohensD(g, b)
+        print("   %-16s %9.4f %9.4f %9.3f %8.2f"
+              % (key, np.mean(g), np.mean(b), np.mean(g) / np.mean(b), d))
+    print()
+
+    print("=== §5.8  PERFORMANCE of the index, and its margins")
+    g = [r["S/Q lin"] for r in green]
+    b = [r["S/Q lin"] for r in brown]
+    d, pooled = cohensD(g, b)
+    gap = float(np.mean(g)) - float(np.mean(b))
+    print("   green  mean %.4f  sd %.4f   (n=%d)" % (np.mean(g), np.std(g, ddof=1), len(g)))
+    print("   brown  mean %.4f  sd %.4f   (n=%d)" % (np.mean(b), np.std(b, ddof=1), len(b)))
+    print("   gap %.4f = %.1f %% of the brown mean;  pooled sd %.4f;  Cohen's d %.2f"
+          % (gap, 100 * gap / float(np.mean(b)), pooled, d))
+    # The threshold belongs to the anchor: 12.5 was DERIVED on 620-630 (§16.20.4); 10.6 was the
+    # 600-630 gauge's line and does not transfer.
+    threshold = 12.5 if ANCHOR == "620" else 10.6
+    for name, values in (("green", g), ("brown", b)):
+        sd = float(np.std(values, ddof=1))
+        print("   %s margin to T = %.1f: %+.2f sigma"
+              % (name, threshold, abs(float(np.mean(values)) - threshold) / sd))
+    print()
+
+
+def naiveVsFitted(collected, nearC, farC, soretC, qC):
+    """§5.5's caveat -- the real least-squares line is steeper than the two-centroid chord, and the
+    extra steepness pivots near the Q band, which is why the identity survives as an approximation."""
+    print("=== §5.5  THE REAL FIT vs THE TWO-CENTROID CHORD")
+    weighted = (nearC + farC) / 2.0          # equal window weight => the midpoint of the two centroids
+    print("   anchor centroids  near %.2f nm   far %.2f nm   -> weighted centroid %.2f nm"
+          % (nearC, farC, weighted))
+    print("   Q band centroid %.2f nm  -> the extra steepness pivots %.1f nm from Q"
+          % (qC, abs(weighted - qC)))
+    print("   %-8s %14s %14s %10s" % ("class", "chord slope", "fitted slope", "steeper by"))
+    print("   " + "-" * 52)
+    for name, rows in (("green", collected["GREEN"]), ("brown", collected["BROWN"])):
+        chord = float(np.mean([(r["A_far"] - r["A_near"]) / (farC - nearC) for r in rows]))
+        fitted = float(np.mean([r["slope"] for r in rows]))
+        print("   %-8s %14.3e %14.3e %9.1f %%"
+              % (name, chord, fitted, 100 * (fitted / chord - 1)))
+    print()
 
 
 if __name__ == "__main__":

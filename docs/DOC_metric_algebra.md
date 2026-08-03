@@ -57,24 +57,29 @@ One number decides the verdict. It is the **Pigment Index** — internally
 ```
 
 with $B_{Soret}$ over **440–460 nm** and $B_{Q}$ over **560–580 nm**, both read on the de-spiked
-absorbance after subtracting a straight line fitted through **520–540** and **600–630 nm**.
+absorbance after subtracting a straight line fitted through **520–540** and **620–630 nm**.
+
+> ⭐ **The far anchor moved from 600–630 to 620–630 on 2026-08-03** (`SPEC_capture_quality.md` §16.20).
+> **This document is written throughout on the shipped 620–630 window**; §5a records what the move changed
+> and why, and is the only place the old window's numbers appear as a live comparison. Two consequences
+> worth carrying into every table below: the **scale moved**, so no threshold survives the change
+> untouched; and `r_Q`, the pedestal residual, belongs to its anchor and moved with it (§5a.2).
 
 ### 1.2 What it achieves
 
 | | green `20270729C` | brown `20260731A` |
 |---|---|---|
-| **Pigment Index** | **12.251 ± 0.354** | **9.303 ± 0.131** |
-| at the shipped threshold **T = 10.6** | **+4.66 σ** above | **+9.88 σ** below |
-| misclassification *(t-distribution, 5 df)* | 0.28 % | 0.009 % |
+| **Pigment Index** | **15.499 ± 0.714** | **10.160 ± 0.197** |
+| at the shipped threshold **T = 12.5** | **+4.20 σ** above | **+11.87 σ** below |
 
-The gap is **2.947 = 31.7 % of the brown mean**, against a pooled σ of 0.267 — **Cohen's *d* = 11.04**.
+The gap is **5.339 = 52.5 % of the brown mean**, against a pooled σ of 0.524 — **Cohen's *d* = 10.20**.
 
 **The two classes do not overlap, on any run, in either set.**
 
 ### 1.3 What Cohen's *d* means
 
 The figure is used throughout this document, so it is worth defining once. A raw gap between two class
-means is uninformative on its own: 2.947 units is impressive only if the measurement's own run-to-run
+means is uninformative on its own: 5.339 units is impressive only if the measurement's own run-to-run
 scatter is much smaller than that. **Cohen's *d*** divides one by the other:
 
 ```math
@@ -86,13 +91,13 @@ The subscripts 1 and 2 label the two groups being compared — here **1 = green,
 
 | symbol | meaning | value here |
 |---|---|---|
-| $\bar{x}_{1}$ | the **mean** of group 1 — the average of green's six runs | 12.251 |
-| $\bar{x}_{2}$ | the **mean** of group 2 — the average of brown's six runs | 9.303 |
-| $s_{1}$ | the **standard deviation** of group 1 — how much green's runs scatter about their own mean | 0.354 |
-| $s_{2}$ | the standard deviation of group 2 — brown's scatter | 0.131 |
-| $s_{pooled}$ | the two scatters combined into one, as the root-mean-square of $s_{1}$ and $s_{2}$ | 0.267 |
+| $\bar{x}_{1}$ | the **mean** of group 1 — the average of green's six runs | 15.499 |
+| $\bar{x}_{2}$ | the **mean** of group 2 — the average of brown's six runs | 10.160 |
+| $s_{1}$ | the **standard deviation** of group 1 — how much green's runs scatter about their own mean | 0.714 |
+| $s_{2}$ | the standard deviation of group 2 — brown's scatter | 0.197 |
+| $s_{pooled}$ | the two scatters combined into one, as the root-mean-square of $s_{1}$ and $s_{2}$ | 0.524 |
 
-So $d = (12.251 - 9.303) / 0.267 = 2.947 / 0.267 = 11.04$. Note that only the **standard deviations**
+So $d = (15.499 - 10.160) / 0.524 = 5.339 / 0.524 = 10.20$. Note that only the **standard deviations**
 enter, not the sample sizes: *d* describes how far apart the two *populations* look, not how confident we
 are about it. Confidence comes from n, and is handled separately in §5.8.
 
@@ -106,10 +111,10 @@ metrics**. That is why every metric in this document is scored with it.
 | 0.5 | medium | heavy |
 | **0.8** | **large** | substantial |
 | 3 | very large | the distributions barely touch |
-| **11.04** | **our Pigment Index** | **none observed** |
+| **10.20** | **our Pigment Index** | **none observed** |
 
-**Our *d* = 11.04 means the class means sit eleven pooled standard deviations apart** — which is why no
-run of either set comes near the other's range.
+**Our *d* = 10.20 means the class means sit ten pooled standard deviations apart** — which is why no run
+of either set comes near the other's range.
 
 ⚠ Three reading notes. With n = 6 per class the *value* of *d* is loosely estimated, even though its sign
 and rough size are not in doubt; §5.8 gives the interval that actually matters. A **negative** *d* in this
@@ -154,8 +159,8 @@ groups against each other.
 
 ### 1.5 What the claim is *not*
 
-⚠ **Precision is not correctness.** *d* = 11.04 says the instrument reliably distinguishes *these two
-bottles*. Whether **T = 10.6** is the right place to cut the population of real pumpkin oils is a
+⚠ **Precision is not correctness.** *d* = 10.20 says the instrument reliably distinguishes *these two
+bottles*. Whether **T = 12.5** is the right place to cut the population of real pumpkin oils is a
 separate, still-unvalidated question requiring reference oils with independent ground truth
 (`SPEC_capture_quality.md` §16.10.11a). A precise instrument reading a wrong threshold is confidently
 wrong.
@@ -223,8 +228,9 @@ enough to kill single hot pixels.
 
 > **⚠ It does not remove the two named instrument artifacts.** Two narrow features near **473 nm**
 > (FWHM 1.0 nm) and **607 nm** (FWHM 2.7 nm) are wider than the kernel and survive it. Both are **lamp
-> emission lines** that fail to cancel in $S/R$ (§5.9). The 473 nm one sits outside every measurement
-> window and is harmless; the 607 nm one does **not** — it lies inside the 600–630 anchor.
+> emission lines** that fail to cancel in $S/R$ (§5.9). **Since the far anchor moved to 620–630, both now
+> sit outside every measurement window** and both are harmless to the index. On the old 600–630 anchor the
+> 607 nm line lay *inside* it — one of the reasons the window moved (§5a.1).
 
 <!--PAGEBREAK-->
 
@@ -253,7 +259,9 @@ oil's own fluorescence maximum of **635 nm** [1] corroborates it — a fluoresci
 the red of the transition it absorbs on, putting the absorber at ~625 nm and nowhere near 662.
 
 **This matters because our capture window ends at 630 nm.** The red band is therefore *at the edge of what
-we can see*, not beyond it — which is the whole reason the 600–630 window behaves as it does (§3.4).
+we can see*, not beyond it — which is the whole reason the far window behaves as it does (§3.4), and, once
+that was understood, the reason the anchor was narrowed onto **620–630** so as to sit on the band rather
+than straddle its foot (§5a.1).
 
 ### 3.2 Soret and Q — where the bands come from
 
@@ -297,9 +305,37 @@ pigment is present.
 
 ### 3.4 ⭐ Why this appears as a change of SLOPE
 
-![**Figure 1** — the mechanism. **Top:** with the magnesium intact, one dominant Q origin sits just past our capture limit and its rising flank sweeps through the 600–630 window, so absorbance climbs steeply across it. **Bottom:** once the magnesium is gone that intensity is spread across weaker bands further blue; nothing tall is left near 630, the window lies on a shallow shoulder, and the slope nearly vanishes. Total area is similar — only its distribution differs. Schematic, but the modelled slope ratio (4.8×) matches the measured one (4.5×).](figures/pigment_far_window_slope.svg)
+![**Figure 1** — the mechanism, and the whole of what the baseline does. **Top:** with the magnesium intact, one dominant Q origin sits at the very edge of our capture window, so the far red — and with it the **620–630 anchor** — stands **high**, and the fitted line through the two anchors is **steep**. **Bottom:** once the magnesium is gone that intensity is spread across weaker bands further blue; nothing tall is left near 630, the anchor drops, and the same line goes **nearly flat**. Total area is similar; only its distribution differs. **The two solid bars are the only numbers the metric takes from the curve** — one mean per anchor window — and the dashed line through them is what gets subtracted before Soret and Q are read. ⚠ Schematic: it models the pigment bands only, with no turbidity pedestal, so its contrast is far larger than the measured 1.65×, and its two near anchors differ where the real ones nearly coincide — **compare the right-hand ends.**](figures/pigment_far_window_slope.svg)
 
-Our 600–630 window is **narrow and sits on a flank, not on a peak**. The slope across such a window
+> ⚠ **"Slope" means the FITTED BASELINE's slope, which lives *between* the two windows.** It is easy to read
+> it as the slope *inside* the far window, and the metric never sees that: `linearBaselineCorrected` reduces
+> each anchor to a **single number — its mean absorbance** — and fits a line through the two means. A 10 nm
+> window collapses to one value, so its internal shape is averaged away before the fit begins.
+>
+> What the far anchor contributes is therefore its **height**, and the slope follows from the two heights by
+> arithmetic — the table below.
+
+<!-- ⚠ This table must stay OUT of the block quote above: the renderer does not typeset tables inside
+     block quotes and they come out as raw pipe characters (caught 2026-08-03 by verifying the built PDF). -->
+
+| | `A_near` 520–540 | `A_far` 620–630 | difference | ÷ 95.0 nm = slope |
+|---|---|---|---|---|
+| green | 0.1231 | 0.2035 | **0.0804** | 8.46 × 10⁻⁴ A/nm |
+| brown | 0.1038 | 0.1526 | **0.0488** | 5.14 × 10⁻⁴ A/nm |
+
+— which reproduces §5.3's fitted **8.56 / 5.22 × 10⁻⁴** to within 1 %, the remainder being the anchor
+windows' *internal* slope that the least-squares fit does see and the two-centroid chord does not (§5.5).
+
+> ⚠ **An unresolved tension, visible only at this zoom.** The sourced Qy is **623–626 nm**
+> (`KB_spectroscopy_physics.md` §4.1), which would put the band's *maximum* inside 620–630 — yet the measured
+> green absorbance **rises monotonically** across the window (+0.0766 A over 10 nm) rather than peaking and
+> falling. Either the band shifts red in isopropanol relative to the acetone and methanol values, or the
+> lamp's red collapse biases it: the reference reads 39 DN at 620–630 against 130 at 530 (§16.12.11 B), and a
+> dim reference inflates absorbance. **Both are testable and neither has been tested.** It matters because
+> the shipped anchor sits exactly there — §16.11.17's timed series would see it for free, as would any run
+> that logs the reference level per bin.
+
+Our far window is **narrow and sits on a flank, not on a peak**. The slope across such a window
 reports **the height of the nearest peak**, not the total pigment. A tall band whose edge crosses the
 window gives a steep rise; move that intensity 30–50 nm blue and split it, and the window is left on flat
 ground even though just as much light is absorbed overall.
@@ -309,7 +345,7 @@ pigment is still there*, and is comparatively blind to how much total pigment th
 
 ### 3.5 The far window is a measuring band — measured, not assumed
 
-The 600–630 window was introduced as an "oil-quiet" anchor. It is not quiet. Across 37 runs, six fills and
+The far window was introduced as an "oil-quiet" anchor. It is not quiet. Across 37 runs, six fills and
 two sessions under an identical lamp, the *rise* $A(620\!-\!630) - A(600\!-\!610)$ is **0.0535 for green
 against 0.0159 for brown — a 5.1 σ separation** (`SPEC_capture_quality.md` §16.12.12). The reference sits
 at 35–39 DN in both classes, so the lamp is in the same state: an instrument artifact cannot know which
@@ -318,6 +354,12 @@ oil is in the jar.
 **And it is load-bearing.** Sweeping the far window's right edge inward, Cohen's *d* falls **2.88 → 0.94**
 and the classes overlap outright by 600–610 nm (§16.12.13). The contamination *carries* the
 discrimination.
+
+> ⭐ **Both measurements above were made across 600–630**, the anchor of the day, and the shipped window is
+> its red third. They are quoted unchanged because the direction they establish is what motivated the
+> narrowing: the further red the window reaches, the more of the intact pigment it sees. §4.2 shows the
+> shipped 620–630 window separating the classes by **33 %** — a wider class difference than the 30 nm
+> window it replaced, from a third as many points.
 
 > **⛔ Changing these windows is a metric redesign, not a tidy-up**, and it is gated on post-rebuild data
 > (`SPEC_capture_quality.md` §16.12.16).
@@ -370,7 +412,7 @@ Everything downstream is built from four wavelength windows — two pigment band
 | $A_{Soret}$ | **440–460 nm** | red flank of the **Soret (B)** band, ~432 nm | `PB_SORET_BAND` |
 | $A_{Q}$ | **560–580 nm** | a band in the **Q region** — assignment open, §7.4 | `PB_Q_BAND` |
 | $A_{near}$ | **520–540 nm** | between bands — the quieter anchor | `PB_BASELINE_WINDOWS[0]` |
-| $A_{far}$ | **600–630 nm** | the approach to **Qy(0,0)** — a *measuring* band (§3.5) | `PB_BASELINE_WINDOWS[1]` |
+| $A_{far}$ | **620–630 nm** | **on** the **Qy(0,0)** band, ~623–626 nm — a *measuring* band (§3.5) | `PB_BASELINE_WINDOWS[1]` |
 
 ![**Figure 2** — the de-spiked absorbance of both classes, with the four windows shaded and each curve's own fitted baseline drawn dashed. The lower panel magnifies the weak-absorbance region — **no part of this window is signal-free** (§3.5). Note how little separates the two curves inside the Q window, and how much separates them inside the far window.](metric_algebra_bands.png)
 
@@ -384,7 +426,7 @@ W_{X} = \{\lambda : lo_{X} \le \lambda \le hi_{X}\}
   read: "all wavelengths λ between the window's lower and upper edge". |W_{X}| is how many there are.
 ```
 
-So $W_{Soret}$ is the 138 grid points between 440 and 460 nm, $W_{far}$ the 212 points between 600 and
+So $W_{Soret}$ is the 138 grid points between 440 and 460 nm, $W_{far}$ the 71 points between 620 and
 630 nm, and so on. The **band mean** is then simply their average:
 
 ```math
@@ -404,10 +446,16 @@ an integral would inject a bandwidth factor into the unequal-width comparisons
 | Soret 440–460 | 138 | 449.98 nm | 1.1864 | 1.0855 | 4.04 % | 3.58 % |
 | Q 560–580 | 137 | 570.02 nm | 0.2300 | 0.2251 | 7.52 % | 8.86 % |
 | near 520–540 | 135 | 529.93 nm | 0.1231 | 0.1038 | 8.89 % | 13.31 % |
-| far 600–630 | 212 | 615.06 nm | 0.1591 | 0.1311 | 13.97 % | 15.19 % |
+| **far 620–630** | **71** | **624.96 nm** | **0.2035** | **0.1526** | 12.99 % | 14.54 % |
 
 The centroids matter in §5.5. **Read the $A_{Q}$ row**: 0.2300 against 0.2251, a 2 % difference against
 7–9 % scatter. On its own the Q band carries no usable class information (*d* = 0.26).
+
+**Now read the $A_{far}$ row against it.** 0.2035 against 0.1526 — the two classes differ by **33 %** in
+the window that was introduced as a *baseline anchor*. That is the largest class difference of any window
+in the table, and it is why §3.5 calls the far window a measuring band. The 620–630 window is only 10 nm
+wide and holds a third as many points as its 600–630 predecessor, yet it separates the classes better,
+because it stands **on** the Qy band instead of straddling its foot (§5a.1).
 
 <!--PAGEBREAK-->
 
@@ -423,8 +471,8 @@ through two separated anchor windows removes both (`SPEC_capture_quality.md` §1
 ### 5.2 The definition
 
 Take every grid point inside **either anchor window** — $W_{near}$ (520–540 nm, 135 points) and
-$W_{far}$ (600–630 nm, 212 points), in the notation of §4.1 — and fit **one straight line** through all
-347 of them at once.
+$W_{far}$ (620–630 nm, 71 points), in the notation of §4.1 — and fit **one straight line** through all
+206 of them at once.
 
 The line is $A = m\lambda + c$, with **$m$ its slope** in absorbance per nanometre and **$c$ its
 intercept** — the value the line would take at $\lambda = 0$ nm. The intercept has no physical meaning on
@@ -456,21 +504,27 @@ Measured fits, mean over each set:
 
 | | slope $m$ | intercept $c$ | baseline under Soret | baseline under Q |
 |---|---|---|---|---|
-| green | +4.808 × 10⁻⁴ A/nm | −0.1342 A | 0.0822 | **0.1399** |
-| brown | +3.376 × 10⁻⁴ A/nm | −0.0758 A | 0.0761 | **0.1166** |
+| green | +8.563 × 10⁻⁴ A/nm | −0.3312 A | 0.0541 | **0.1569** |
+| brown | +5.216 × 10⁻⁴ A/nm | −0.1730 A | 0.0618 | **0.1244** |
 
 ```math
-B_{Soret} = 1.1864 - 0.0822 = 1.1043 \qquad B_{Q} = 0.2300 - 0.1399 = 0.0901 \quad (green)
+B_{Soret} = 1.1864 - 0.0541 = 1.1323 \qquad B_{Q} = 0.2300 - 0.1569 = 0.0731 \quad (green)
 ```
 
 | | $A_{Soret} \to B_{Soret}$ | $A_{Q} \to B_{Q}$ |
 |---|---|---|
-| green | 1.1864 → 1.1043 *(−7 %)* | 0.2300 → **0.0901** *(−61 %)* |
-| brown | 1.0855 → 1.0093 *(−7 %)* | 0.2251 → **0.1085** *(−52 %)* |
+| green | 1.1864 → 1.1323 *(−5 %)* | 0.2300 → **0.0731** *(−68 %)* |
+| brown | 1.0855 → 1.0237 *(−6 %)* | 0.2251 → **0.1008** *(−55 %)* |
 
 **The Soret barely notices; the Q band loses more than half its value.** That asymmetry follows from
 geometry — the baseline is a small fraction of a large absorbance and a large fraction of a small one —
 and it is the whole story of §5.4.
+
+> **The fitted line is now roughly twice as steep** as it was on the 600–630 anchor (+8.56 against
+> +4.81 × 10⁻⁴ A/nm for green). Nothing about the oil changed: the far anchor moved 10 nm redder and
+> 33 % higher up the Qy flank, so a line pinned through the same near window has to climb harder to reach
+> it. Both lines cross at ≈525 nm, inside the near anchor, which is where two lines fitted through the
+> same window must meet.
 
 ![**Figure 3** — the same two curves after each has had its own baseline subtracted. The two anchor windows are pinned to zero by construction; everything else is now measured relative to them.](metric_algebra_corrected.png)
 
@@ -479,19 +533,19 @@ and it is the whole story of §5.4.
 | | green | brown | green ÷ brown | *d* | separation |
 |---|---|---|---|---|---|
 | $A_{Q}$ *(before)* | 0.2300 | 0.2251 | 1.02 | 0.26 | overlap |
-| $B_{Q}$ *(after)* | **0.0901** | **0.1085** | **0.83** | **−6.48** | **clean, inverted** |
-| $B_{Soret}$ | 1.1043 | 1.0093 | 1.09 | 2.44 | clean |
-| **Pigment Index** | **12.251** | **9.303** | **1.32** | **11.04** | **clean** |
+| $B_{Q}$ *(after)* | **0.0731** | **0.1008** | **0.73** | **−10.83** | **clean, inverted** |
+| $B_{Soret}$ | 1.1323 | 1.0237 | 1.11 | 2.70 | clean |
+| **Pigment Index** | **15.499** | **10.160** | **1.53** | **10.20** | **clean** |
 
 Before correction the two classes' Q bands are indistinguishable. After correction the ordering
-**reverses** and becomes decisive: brown's corrected Q band is 20 % *higher*, at *d* = −6.48 with no
+**reverses** and becomes decisive: brown's corrected Q band is 38 % *higher*, at *d* = −10.83 with no
 overlap between the two sets of six runs.
 
 ![**Figure 4** — the Q band before and after correction. Left: the curves lie on top of each other inside the shaded window. Right: after each curve's own baseline is removed, brown stands clearly above green. Nothing about the oils changed between the panels — only what the band is measured *above*.](metric_algebra_qzoom.png)
 
-**Why.** The baseline under the Q band differs by class — **0.1399** green against **0.1166** brown — so
-green has *more* subtracted. And green's baseline sits higher because $A_{far}$ is 0.1591 against 0.1311:
-600–630 carries real intact pigment (§3.5). The causal chain:
+**Why.** The baseline under the Q band differs by class — **0.1569** green against **0.1244** brown — so
+green has *more* subtracted. And green's baseline sits higher because $A_{far}$ is 0.2035 against 0.1526:
+620–630 *is* intact pigment (§3.5). The causal chain:
 
 ```math
 intact pigment raises A_{far} \Rightarrow raises the fitted baseline \Rightarrow lowers B_{Q} \Rightarrow raises the index
@@ -500,11 +554,20 @@ intact pigment raises A_{far} \Rightarrow raises the fitted baseline \Rightarrow
 **The two effects multiply:**
 
 ```math
-\frac{\op{index}_{green}}{\op{index}_{brown}} = \frac{B_{Soret,green}}{B_{Soret,brown}} \times \frac{B_{Q,brown}}{B_{Q,green}} = 1.094 \times 1.204 = 1.317
+\frac{\op{index}_{green}}{\op{index}_{brown}} = \frac{B_{Soret,green}}{B_{Soret,brown}} \times \frac{B_{Q,brown}}{B_{Q,green}} = 1.106 \times 1.379 = 1.525
 ```
 
-The numerator contributes ×1.09 and the **denominator ×1.20** — the inverted Q band is the larger term. A
-*d* = 2.44 numerator and a *d* = −6.48 denominator compose into *d* = 11.04.
+The numerator contributes ×1.11 and the **denominator ×1.38** — the inverted Q band is by far the larger
+term, and moving the anchor onto the Qy band nearly doubled its lead (it was ×1.20 on 600–630). A
+*d* = 2.70 numerator and a *d* = −10.83 denominator compose into *d* = 10.20.
+
+> ⚠ **Why the composed *d* is not simply bigger.** Both components improved, and the class gap grew from
+> 31.7 % to 52.5 % of the brown mean — yet *d* slipped from 11.04 to 10.20 on this pair, because the
+> **scatter grew too**: green's run-to-run CV went 2.89 % → 4.61 %. A 10 nm window collects a third as
+> many points as a 30 nm one and sits in the lamp's dimmest stretch, so it is noisier. On the spec's
+> pooled-green basis the comparison comes out the other way (*d* 9.80 → **10.35**, `SPEC_capture_quality.md`
+> §16.20.4) because pooling two fills adds fill-to-fill scatter, which cost the old anchor more than the
+> new one. **Both are measured; neither transfers to the other's data set.** See §5.8.
 
 **This is why the uncorrected ratio fails** (Appendix D.1): it divides a signal-bearing Soret band by a Q
 band that carries nothing. Only after the baseline is removed does the denominator become a
@@ -516,7 +579,7 @@ Because the baseline is a straight line read at the band centroids, the metric c
 mentioning a baseline at all. With $t_{X}$ the position of band $X$ between the anchor centroids:
 
 ```math
-t_{X} = \frac{\bar{\lambda}_{X} - \bar{\lambda}_{near}}{\bar{\lambda}_{far} - \bar{\lambda}_{near}} \qquad t_{Soret} = -0.939 \qquad t_{Q} = +0.471
+t_{X} = \frac{\bar{\lambda}_{X} - \bar{\lambda}_{near}}{\bar{\lambda}_{far} - \bar{\lambda}_{near}} \qquad t_{Soret} = -0.841 \qquad t_{Q} = +0.422
 ```
 
 ```math
@@ -524,8 +587,8 @@ B_{X} \approx A_{X} - \big[(1 - t_{X})\,A_{near} + t_{X}\,A_{far}\big]
 ```
 
 ```math
-\op{Pigment Index} \approx \frac{A_{Soret} - 1.939\,A_{near} + 0.939\,A_{far}}{A_{Q} - 0.529\,A_{near} - 0.471\,A_{far}}
-  Verified against the shipped code: max error 0.52 % (green), 0.21 % (brown).
+\op{Pigment Index} \approx \frac{A_{Soret} - 1.841\,A_{near} + 0.841\,A_{far}}{A_{Q} - 0.578\,A_{near} - 0.422\,A_{far}}
+  Verified against the shipped code: max error 0.02 % (green), 0.05 % (brown).
 ```
 
 **Read the signs.** $A_{far}$ enters the numerator **positively** and the denominator **negatively** —
@@ -533,12 +596,17 @@ both *raise* the index. This is not "Soret over Q with a correction"; it is a **
 in which the red window participates twice, with the largest coefficient of any numerator term save the
 Soret band itself.
 
-> **Why the identity is approximate.** The real fit is a least-squares line through ~347 points and is
-> **steeper** than the naive two-centroid line (+13.8 % green, +5.4 % brown), because both anchor windows
-> have internal slope. It survives as a good approximation for a structural reason: the windows' weighted
-> centroid sits at **572.5 nm** and the Q band's centroid at **570.0 nm** — 2.5 nm away. The extra
-> steepness pivots almost exactly *on* the Q band, leaving $B_{Q}$ nearly untouched while moving
-> $B_{Soret}$, 122 nm away, by ~0.6 %. The two shifts partly cancel in the quotient.
+> **Why the identity is now all but exact.** The real fit is a least-squares line through ~206 points and
+> is **steeper** than the naive two-centroid chord — but only by **+1.2 % (green) and +1.6 % (brown)**,
+> against +13.8 % / +5.4 % on the 600–630 anchor. The excess steepness comes from the anchor windows'
+> *internal* slope, and a 10 nm window climbing the Qy flank has far less of it to contribute than a
+> 30 nm one. With the chord and the fit nearly coincident, the identity's error falls to **0.02 %**.
+>
+> ⚠ This improvement arrives **despite** the geometry getting worse, not because of it. The windows'
+> weighted centroid moved from 572.5 nm to **577.5 nm** while the Q band stays at 570.0 — so the extra
+> steepness now pivots **7.4 nm** from the Q band rather than 2.5 nm, and no longer cancels there. It
+> simply has almost nothing left to pivot *with*. The old anchor's identity held by a lucky cancellation;
+> this one holds because the two lines are nearly the same line.
 
 ### 5.6 ⭐ Dilution invariance — the proof
 
@@ -596,7 +664,7 @@ roughly as $\lambda^{-n}$ and a line approximates a curve; that curvature is the
 \frac{d \ln (\op{index})}{d \ln c} \approx \frac{r_{Q}}{B_{Q}} - \frac{r_{Soret}}{B_{Soret}} \approx \frac{r_{Q}}{B_{Q}}
 ```
 
-The second term drops because $B_{Soret}/B_{Q}$ is **12.3** (green) and **9.3** (brown).
+The second term drops because $B_{Soret}/B_{Q}$ is **15.5** (green) and **10.2** (brown).
 
 **And the error is concentration-dependent**, since $r_{Q}$ is fixed while $B_{Q}$ grows with $c$:
 
@@ -610,52 +678,84 @@ because curvature degrades invariance at *low* $c$ while Soret stray-light compr
 *high* $c$ (`SPEC_capture_quality.md` §16.11.8). An optimal working concentration exists between them.
 
 **Against the record:** the baseline **halves** the dilution error (5.49 % → 2.75 %). And the residual
-dependence is now bounded directly: pooling the three within-oil dilution pairs on record gives a log–log
-slope of **+0.033 ± 0.029** — consistent with zero *(`SPEC_capture_quality.md` §16.10.8)*. In practice a
-realistic preparation error of ±17 % moves the index by about **0.6 %**, and even a *fourfold* dilution error
-moves it under 5 %, against a class gap of 33 %. ⚠ That slope is an **upper** bound: each pair is a different
-fill as well as a different dilution, so it carries fill-to-fill scatter with it.
+dependence is bounded directly: pooling the three within-oil dilution pairs on record gives a log–log slope
+of **+0.033 ± 0.029** — consistent with zero *(`SPEC_capture_quality.md` §16.10.8)*. In practice a realistic
+preparation error of ±17 % moves the index by about **0.6 %**, and even a *fourfold* dilution error moves it
+under 5 %, against a class gap of **52 %**. ⚠ That slope is an **upper** bound: each pair is a different fill
+as well as a different dilution, so it carries fill-to-fill scatter with it.
+
+> **Those two figures were measured on the 600–630 anchor** and are quoted here because they are what the
+> record holds — the halving experiment has not been repeated on 620–630. What *has* been measured on both
+> is the cleanest single dilution pair, post-rebuild: log–log slope **−0.12** on the old anchor against
+> **−0.05** on the new one (§5a.1). The anchor move more than halved the residual concentration dependence
+> — the one number in this chapter that improves for a reason the theory predicts, since a narrower window
+> further from the Soret band gives the pedestal's curvature less room to differ across it.
 
 ### 5.8 Performance
 
 | | value |
 |---|---|
-| green mean / σ *(n = 6)* | 12.251 / 0.354 |
-| brown mean / σ *(n = 6)* | **9.303 / 0.131** |
-| gap | **2.947 = 31.7 %** of the brown mean |
-| pooled σ | 0.267 |
-| **Cohen's *d*** | **11.04** |
-| green margin to T = 10.6 | **+4.66 σ** → false-BROWN **0.28 %** |
-| brown margin to T = 10.6 | **+9.88 σ** → false-GREEN **0.009 %** |
+| green mean / σ *(n = 6)* | 15.499 / 0.714 |
+| brown mean / σ *(n = 6)* | **10.160 / 0.197** |
+| gap | **5.339 = 52.5 %** of the brown mean |
+| pooled σ | 0.524 |
+| **Cohen's *d*** | **10.20** |
+| green margin to T = 12.5 | **+4.20 σ** |
+| brown margin to T = 12.5 | **+11.87 σ** |
 
-> ⚠ **Why this green margin differs from the spec's.** `SPEC_capture_quality.md` §16.13.5 reports **+4.83 σ
-> / 0.027 %** because it pools green sets **B+C** (n = 12, σ = 0.367, 11 df). This document declares green as
-> set **C alone** (n = 6, σ = 0.354, 5 df), which gives **+4.66 σ / 0.28 %** — a *lower* σ but far fewer
-> degrees of freedom, and the t-distribution charges heavily for that. Both are correct for their own data
-> set; neither may be quoted with the other's. The brown margin is identical in both, being the same six runs.
+**The threshold is T = 12.5 and it was DERIVED, not inherited** — the midpoint of the empty corridor
+between the highest brown run and the lowest green run, rounded (`SPEC_capture_quality.md` §16.20.4). There
+was no predecessor on this scale to inherit from. ⚠ **T = 10.6 belongs to a different metric** — the
+pedestal-corrected index of §5a.3 — and to the old 600–630 gauge before it. Reading this chapter's numbers
+against 10.6 is the single easiest mistake to make with this document.
+
+> ⚠ **Why this green margin differs from the spec's.** `SPEC_capture_quality.md` §16.20.4 scores green as
+> sets **B+C** pooled (n = 12); this document declares green as set **C alone** (n = 6, 5 df). Fewer degrees
+> of freedom, and the t-distribution charges heavily for that. Both are correct for their own data set;
+> **neither may be quoted with the other's.**
+
+> ⚠⚠ **The comparison that must not be made.** The 600–630 anchor scored *d* = **11.04** on exactly this
+> pair, against **10.20** here. That is not a regression in the metric: the class gap grew from 31.7 % to
+> 52.5 % while the noise grew alongside it, and *d* is their quotient. On the spec's pooled basis the same
+> anchor move reads *d* 9.80 → **10.35**, i.e. an improvement. **A single *d* is not a property of a metric
+> — it is a property of a metric and a data set together.** What the anchor move buys is stated in §5a.1
+> and it is not primarily discrimination; it is dilution invariance, fill-to-fill repeatability, and a
+> baseline anchor that no longer straddles a lamp line.
 
 **How well is σ known?** With n = 6 the point estimate is not what to plan on. A χ² interval on brown's σ
-gives [0.082, **0.322**] — and **even at the upper bound brown clears the threshold by 4.03 σ**
-(false-GREEN 0.50 %). The conclusion does not depend on six points estimating σ well.
+gives [0.123, **0.483**] — and **even at the upper bound brown clears the threshold by 4.84 σ**. The
+conclusion does not depend on six points estimating σ well.
 
-**The brown mean also survived a rig rebuild and a different oil**: archived `20260727C` read 9.361 on the
-old rig from six *fills*; series D reads **9.303**, a difference of **−0.62 %**.
+**The brown mean also survived a rig rebuild and a different oil**: archived `20260727C` reads **10.268**
+on this anchor from six *fills* on the old rig; series D reads **10.160**, a difference of **−1.05 %**.
+⚠ Its scatter does not survive: σ = 0.917 against series D's 0.197, i.e. **4.7×**. That is the rebuild, not
+the anchor — §16.11 measures the same factor on the old metric — but it is worth seeing that the narrower
+window did nothing to rescue a badly-seated rig.
 
 *(t-distribution throughout, per `SPEC_capture_quality.md` §16.10.11a — the error is heavy-tailed, so the
 Gaussian is optimistic exactly where it matters.)*
 
-### 5.9 ⚠ The 607 nm artifact sits inside the far anchor
+### 5.9 ✅ The 607 nm artifact no longer touches the metric
 
-Bridging it by interpolation across 604–612 nm and recomputing:
+The lamp's 607 nm emission line used to sit **inside** the far anchor, because that anchor began at
+600 nm. On the 620–630 window it does not: **no band this metric reads contains it.**
 
-| | $A_{far}$ as measured | artifact bridged | contribution |
-|---|---|---|---|
-| green | 0.1591 | 0.1484 | **+7.2 %** |
-| brown | 0.1311 | 0.1209 | **+8.4 %** |
+| window | range | contains the 607 nm line? |
+|---|---|---|
+| Soret | 440–460 | no |
+| Q | 560–580 | no |
+| near anchor | 520–540 | no |
+| **far anchor** | **620–630** | **no** *(600–630 did)* |
 
-Its effect on the index is a **near-common-mode shift**: −5.9 % (green) and −4.9 % (brown) when removed,
-with *d* going 11.04 → 11.65 — slightly *better* without it. So the artifact is not creating the
-discrimination, but it **is** baked into the absolute scale on which **T = 10.6 was calibrated**.
+On the old anchor its contribution was measurable: bridging the line by interpolation across 604–612 nm
+lowered $A_{far}$ by **7.2 %** (green) and **8.4 %** (brown), moving the index −5.9 % / −4.9 % and *d* from
+11.04 to 11.65 — slightly *better* without it. It was never creating the discrimination, but it **was**
+baked into the absolute scale on which that anchor's threshold had been calibrated. It no longer is.
+
+⚠ **This is a reason the thresholds could not be carried across.** A scale that included a lamp line and a
+scale that excludes it are not the same scale, whatever else changed with them. It is also why the line's
+physics still matters below: the lamp is the same lamp, and a *different* lamp would still move things —
+just no longer through this particular door.
 
 #### What the artifact actually is
 
@@ -685,6 +785,95 @@ high-contrast line — has not been excluded.
 lamp, or an ageing one) or to **the reference↔sample alignment** (calibration, jar seating, optics). A
 different *camera* is at most a second-order influence, through how the sensor grid samples the line —
 an earlier draft of this document overstated it.
+
+<!--PAGEBREAK-->
+
+## 5a ⭐⭐ Where the far anchor came from — and the three verdicts  *(2026-08-03; `SPEC_capture_quality.md` §16.20)*
+
+Everything above is written on the shipped **620–630 nm** far anchor. It was **600–630** until 2026-08-03,
+and every number in chapters 4–5 changed when it moved — not because the oils or the instrument changed,
+but because the line the bands are measured above is drawn through a different window. §5's algebra is
+unchanged in *form*; only where the second window sits.
+
+This chapter is the record of that move: why it was made, what it cost, and why the bench now shows the
+index three ways rather than one.
+
+### 5a.1 Why the window moved — and why it is the direction nobody tried
+
+§5.9 and §5.5 together make the problem plain: the far anchor **straddles** two things it should not.
+It contains the **607 nm lamp line**, and it stands on the **pigment's own Qy band** — protochlorophyll's
+Qy is at ~623–626 nm, not chlorophyll's ~665, so that band sits *inside* the window rather than beyond it.
+
+Two earlier attempts moved the wrong way. Pulling the right edge **in** (600→620) collapses the class gap;
+excising 618–630 as "the lamp's red cliff" deletes the Qy flank and makes the residual *worse*. **Both
+remove the pigment information.** The move that works keeps it and drops 600–615 instead:
+
+```
+   old  600 |==============================| 630
+            straddles the 607 nm line AND the Qy band
+
+   new                      620 |==========| 630
+            starts clear of the line, centred on Qy
+```
+
+Measured on post-rebuild data, against the shipped anchor:
+
+| | 600–630 *(old)* | **620–630** *(new)* |
+|---|---|---|
+| Cohen's *d*, green vs brown *(pooled green B+C)* | 9.80 | **10.35** |
+| Cohen's *d*, green vs brown *(this document's pair)* | **11.04** | 10.20 |
+| dilution slope `s` | −0.12 | **−0.05** |
+| pedestal residual `r_Q` | −0.0246 | **−0.0184** |
+| re-seat σ / class gap | 12.0 % | **11.4 %** |
+| σ_fill / class gap | 6.2 % | **4.4 %** |
+| `M∞` — the scale | 9.998 | 12.450 |
+| three-region identity error (§5.5) | 0.52 % | **0.02 %** |
+| 607 nm lamp line inside the anchor | **yes** | **no** |
+
+⚠ **Read the first two rows together.** Discrimination improves on the pooled-green basis and slips
+slightly on this document's declared pair. That is not a contradiction: *d* is a gap divided by a scatter,
+and which data set supplies the scatter decides the answer. **The honest summary is that the anchor move
+is roughly neutral for discrimination** and buys its keep elsewhere — halving the dilution slope, cutting
+fill-to-fill scatter by a third, and removing a lamp line from the measurement.
+
+⚠ **The scale moves, so `T` must be re-derived** — that cost is real and is the reason this is not simply
+an improvement. And the gains are **not** what a first look suggested: a sweep scored on *pre-rebuild*
+fills showed the class gap doubling, and that gain **did not survive** re-scoring on clean data. What
+survives is the table above.
+
+### 5a.2 ⚠ `r_Q` belongs to its anchor
+
+`r_Q` is defined as the pedestal's departure from **its own best-fit line** (§5.7). Move the anchor and
+the line moves, so the residual moves with it:
+
+```math
+r_{Q}(600-630) = -0.0246 A \qquad r_{Q}(620-630) = -0.0184 A
+```
+
+**Pairing 620–630 band means with the 600–630 constant is a category error**, and it is an easy one to
+make because both are called `r_Q`. The shipped constant is per-anchor and per-rig-state (§5.7's residual
+does not survive a mechanical rebuild).
+
+### 5a.3 The three verdicts, and why the raw ratio lost its
+
+| | metric | `T` | why |
+|---|---|---|---|
+| **1** | $B_{Soret} / (B_{Q} - r_{Q})$ | **10.6** | the pedestal-corrected index — the primary |
+| **2** | $B_{Soret} / B_{Q}$ | **12.5** | the same anchor, uncorrected — **this document's Pigment Index** |
+| **3** | $A_{Soret} / A_{Q}$ | ⛔ **none** | the raw ratio — **shown as a value, with no verdict** |
+
+Each adjacent pair isolates one step of the construction. ⚠ The three sit on **different scales**: compare
+verdicts, never numbers.
+
+**The raw ratio carries no threshold because none exists.** On post-rebuild data green reads 5.387 ± 0.510
+and brown 4.842 ± 0.290 — Cohen's *d* **1.20**, and the classes **overlap outright** (lowest green run
+4.863 below the highest brown run 5.340). No line separates them.
+
+⚠⚠ **And its shipped threshold had been wrong for weeks.** `T` = 4.4 sat **below the entire brown class**
+(minimum 4.622), so every run of the brown reference oil was reported *"good — green"* — on the
+PUBLISHING badge, the one screen an end user sees. §5.4's argument for why the baselined index
+discriminates and the raw one does not was right all along; the gauge had simply never been re-scored
+against a post-rebuild brown series.
 
 <!--PAGEBREAK-->
 
@@ -752,7 +941,7 @@ share. The metric wins precisely because it looks at **narrow windows**; colour 
 
 ### 7.1 A band mean is not dilution-invariant
 
-$A_{Soret}$ separates our two sets at *d* = 2.31 and $B_{Soret}$ at *d* = 2.44, with no overlap. **Do not
+$A_{Soret}$ separates our two sets at *d* = 2.31 and $B_{Soret}$ at *d* = 2.70, with no overlap. **Do not
 use them.** The two sets happen to share a dilution recipe, so the comparison is valid only *within* that
 accident. Only ratios divide the common factor out — which is why the UI marks ratios in bold as decision
 metrics and shows the band means without thresholds.
@@ -767,11 +956,21 @@ locally baseline-corrected numerator over an uncorrected denominator. They are n
 discriminators; they are *structurally* incapable of dilution invariance (`SPEC_capture_quality.md`
 §16.14.3).
 
-### 7.3 The two gauges are not on the same scale
+### 7.3 The three verdicts are not on the same scale
 
-The tab shows two gauges: the first driven by the uncorrected Soret/Q (threshold 4.4), the second by the
-Pigment Index (threshold 10.3 in the gauge, T = 10.6 in the decision table). **Only the verdicts are
-comparable — never the numbers.** They are ratios of different quantities.
+The tab shows **three** readings of the same capture (§5a.3), each on its own scale:
+
+| | metric | threshold |
+|---|---|---|
+| **1** | $B_{Soret}/(B_{Q} - r_{Q})$ — baseline **and** pedestal | **10.6** |
+| **2** | $B_{Soret}/B_{Q}$ — baseline only *(this document's Pigment Index)* | **12.5** |
+| **3** | $A_{Soret}/A_{Q}$ — raw | **none** |
+
+**Only the verdicts are comparable — never the numbers.** They are ratios of different quantities, and the
+two thresholds are not interchangeable: 10.6 belongs to metric 1 and 12.5 to metric 2. ⚠ That 10.6 was
+*also* the old 600–630 gauge's threshold is a coincidence of arithmetic, not a shared scale — it was
+retained on metric 1 by explicit decision after being checked against the new corridor, not carried over
+(`SPEC_roast_ampel.md` §2b).
 
 ### 7.4 ⚠ We do not know what the 560–580 band is
 
@@ -785,7 +984,7 @@ one oil before and after demetallation. Open: `SPEC_pumpkin_peak_ratio_eval.md` 
 
 ### 7.5 Precision is not correctness, and these are re-seat numbers
 
-Both restated from §1.4 because they are the two most commonly dropped caveats. **T = 10.6 is
+Both restated from §1.4 because they are the two most commonly dropped caveats. **T = 12.5 is
 unvalidated**; and σ_fill — the scatter a real single measurement is subject to — is unmeasured for brown.
 
 <!--PAGEBREAK-->
@@ -799,11 +998,13 @@ Green = `20270729C`, brown = `20260731A`, both the mean of six runs.
 | Soret · 440–460 | $A_{Soret}$ | mean $A_{d}$ over 440–460 | 1.186 | 1.086 | 2.31 |
 | Q · 560–580 | $A_{Q}$ | mean $A_{d}$ over 560–580 | 0.230 | 0.225 | 0.26 |
 | Clarity · 510–540 | $A_{clarity}$ | mean $A_{d}$ over 510–540 | 0.114 | 0.095 | 1.62 |
-| Pigment ratio | — | $A_{Soret} / A_{Q}$ | 5.172 | 4.842 | 1.18 |
+| far · 620–630 | $A_{far}$ | mean $A_{d}$ over 620–630 | 0.204 | 0.153 | 2.08 |
+| Pigment ratio *(verdict 3)* | — | $A_{Soret} / A_{Q}$ | 5.172 | 4.842 | 1.18 |
 | Pigment ratio · clarity | — | $A_{Soret} / A_{clarity}$ | 10.409 | 11.572 | −1.08 |
-| Soret · linear baseline | $B_{Soret}$ | mean $B$ over 440–460 | 1.104 | 1.009 | 2.44 |
-| Q · linear baseline | $B_{Q}$ | mean $B$ over 560–580 | 0.090 | 0.109 | −6.48 |
-| **Pigment ratio · linear baseline** | **Pigment Index** | $B_{Soret} / B_{Q}$ | **12.251** | **9.303** | **11.04** |
+| Soret · linear baseline | $B_{Soret}$ | mean $B$ over 440–460 | 1.132 | 1.024 | 2.70 |
+| Q · linear baseline | $B_{Q}$ | mean $B$ over 560–580 | 0.073 | 0.101 | −10.83 |
+| **Pigment ratio · linear baseline** *(verdict 2)* | **Pigment Index** | $B_{Soret} / B_{Q}$ | **15.499** | **10.160** | **10.20** |
+| **· with the pedestal put back** *(verdict 1)* | — | $B_{Soret} / (B_{Q} - r_{Q})$ | **12.380** | **8.590** | **9.33** |
 | Greenness G | $G$ | $D_{Q} / A_{clarity}$ | — | — | −1.99 |
 | Pigment D_Q | $D_{Q}$ | peak above a local line | — | — | −2.48 |
 | Soret A_blue | $A_{blue}$ | reference-gated 450–490 | — | — | 1.18 |
@@ -821,7 +1022,10 @@ Green = `20270729C`, brown = `20260731A`, both the mean of six runs.
 | division guard $\epsilon$ | 10⁻³ | `DevSpectralPlugin` |
 | hue-normalised S / L | 38 % / 34 % | `DevSpectralPlugin` |
 | achromatic chroma guard | 8 % | `EvaluationColorUtil` |
-| verdict threshold T | 10.6 on the Pigment Index | `SPEC_capture_quality.md` §16.10.17d |
+| **far anchor** | **520–540 + 620–630 nm** | `PB_BASELINE_WINDOWS` |
+| pedestal residual $r_{Q}$ | **−0.0184 A** *(this anchor's own, §5a.2)* | `PB_R_Q` |
+| verdict threshold T | **12.5** on the Pigment Index | `SPEC_capture_quality.md` §16.20.4 |
+| verdict threshold T | 10.6 on the pedestal-corrected index | `SPEC_roast_ampel.md` §2b |
 
 <!--PAGEBREAK-->
 
@@ -916,8 +1120,8 @@ groups differ in size, and then the df-weighted form is the conventional choice.
 
 | comparison | *n* | conventions agree? | *d* |
 |---|---|---|---|
-| **everything in this document** — green `20270729C` vs brown `20260731A` | **6 vs 6** | ✔ **identical** | **11.04** |
-| `SPEC_capture_quality.md` §16.13.5 — green sets **B+C pooled** vs brown | **12 vs 6** | ⛔ **differ** | RMS **11.13** / df-weighted **9.80** |
+| **everything in this document** — green `20270729C` vs brown `20260731A` | **6 vs 6** | ✔ **identical** | **10.20** |
+| `SPEC_capture_quality.md` §16.20.4 — green sets **B+C pooled** vs brown | **12 vs 6** | ⛔ **differ** | df-weighted **10.35** |
 
 ⚠ **The one unequal-*n* comparison is in the spec, not here**, and there the two conventions differ by
 12 %. `diagnostics/brown_series_d.py` computes the RMS form; the **df-weighted 9.80 is the more
@@ -931,10 +1135,10 @@ most of that bias:
 
 ```math
 g = d \cdot \Big(1 - \frac{3}{4\,df - 1}\Big), \qquad df = n_{1} + n_{2} - 2 = 10
-g = 11.04 \cdot 0.923 = 10.19
+g = 10.20 \cdot 0.923 = 9.42
 ```
 
-**So the bias-corrected separation is ≈ 10.2, not 11.04** — about 8 % lower. It changes no conclusion in
+**So the bias-corrected separation is ≈ 9.4, not 10.20** — about 8 % lower. It changes no conclusion in
 this document, both being far beyond "large", but *g* is what a statistician would ask for at this sample
 size and the figure to quote externally.
 
@@ -953,6 +1157,7 @@ document cannot drift from the application.
 | script | produces |
 |---|---|
 | `diagnostics/metric_walkthrough.py` | every intermediate quantity of the chain, both classes |
+| ↳ `METRIC_ANCHOR=600 …` | the same, on the superseded 600–630 anchor — the §5a comparison column |
 | `diagnostics/qband_shape.py` | the speciation-vs-concentration test and the resolution measurement |
 | `diagnostics/brown_series_d.py` | the series-D discrimination statistics |
 | `diagnostics/metric_algebra_plots.py` | figures 2–4 |
@@ -960,6 +1165,12 @@ document cannot drift from the application.
 
 Cohen's *d* is the pooled-SD standardised difference on n = 6 per class (defined in §1.3); with six runs
 a *d* of this size is bounded well away from zero but its point value is loose.
+
+⭐ **`METRIC_ANCHOR` is the one switch that reproduces this whole document on either anchor.**
+`metric_walkthrough.py` reads it, and `metric_algebra_plots.py` follows whatever the walkthrough is set
+to, so text and figures cannot drift apart. Default **620** — the shipped window. Every number in
+chapters 4–5 and every figure 2–4 comes out of one run at that default; §5a's comparison column comes
+out of one run at `METRIC_ANCHOR=600`.
 
 <!--PAGEBREAK-->
 
@@ -1014,7 +1225,7 @@ G = \frac{D_{Q}}{A_{clarity}} \qquad G' = \frac{D_{Q}}{A_{blue}} \qquad S/Q_{leg
 
 | metric | *d* | note |
 |---|---|---|
-| **Pigment Index** *(§5, for comparison)* | **11.04** | the only usable one |
+| **Pigment Index** *(§5, for comparison)* | **10.20** | the only usable one |
 | $G'$ | −5.33 | **sign inverted** — brown reads higher |
 | $D_{Q}$ | −2.48 | inverted |
 | $G$ "Greenness" | −1.99 | inverted — despite the name |
