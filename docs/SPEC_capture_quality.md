@@ -2076,6 +2076,25 @@ of oils.
 than the green at the same dilution (`A_Soret` 1.25 vs 0.99). **Dilute the brown ~25 % further**, or the Soret
 band starts trading into the quantization floor.
 
+> ⭐⭐ **2026-08-04 — THE COST OF IGNORING THIS GUARD HAS NOW BEEN MEASURED, AND IT IS IN THE METRIC.**
+> The 440–447 nm bins read **2.0–2.6 DN against a reference near 88**, and they sit **inside the shipped
+> Soret window 440–460**. Because a camera's floor adds counts, `A` reads low there — and *more* so for
+> stronger samples, since the junk is a bigger fraction of a smaller number (+1 count costs 0.17 A at
+> S = 2 but 0.014 A at S = 30). So `B_Soret` grows sub-linearly with concentration while `B_Q` grows
+> honestly.
+>
+> **Measured consequence:** deleting those bins removes **47 % of the intercept** in
+> `DOC_pedestal_correction.md`'s chapter-6 test and **28 % of `r_Q`** (−0.0184 → −0.0133, *t* 4.43 →
+> 2.92). ⇒ **Roughly a quarter of the pedestal residual is this guard being missed**, not the baseline
+> misbehaving. It also costs the metric ~7 % of class separation, ~11 % of within-green separation and
+> ~15 % of its dilution robustness.
+>
+> ⇒ **The guard is not a hygiene rule — it is a term in the verdict.** Two fixes, both capture-side:
+> raise **R** (the §14.9 per-camera exposure ceiling is still open, and AE targets the max *channel*, so
+> there is real headroom in the blue), and dose to a **common optical density** rather than a common
+> volume — which makes the guard and the dilution target one and the same constraint for every oil.
+> Working: `SPEC_metric_research.md` §7.13.
+
 ⇒ **The next step is no longer a measurement — it is the keyed jar seat.** Every alternative has now been tested
 and none of them substitutes for it: not the bands, not the reduction, not the diffuser, not the metric, not
 waiting, not averaging alone.
@@ -8928,6 +8947,215 @@ bought so far.
 **⇒ Adopt after G1 and G2, and record the first prepared tube's `A_Q` beside the prediction above.** If it
 lands outside 0.19–0.23, adjust the isopropanol volume once — do **not** adjust the capillary, which is the
 only known quantity in the system.
+
+### ⛔⭐ 16.23.6 A CONFLICT THIS PROTOCOL INHERITS — the two ends of the spectrum want opposite dilutions *(2026-08-04)*
+
+**§16.23 was designed to reproduce today's working point (1:250) so that no threshold moves. That was the
+right call for a protocol change.** What follows is the observation that **two constraints already in these
+specs, written by different investigations, have never been compared — and they point opposite ways.**
+
+> ### ⚠⚠ READ THIS FIRST — the conflict below is CONTINGENT on an unresolved contradiction
+>
+> Two statements in our own documents disagree about the same quantity:
+>
+> | source | says the darkest bin reads |
+> |---|---|
+> | `DOC_pedestal_correction.md` §7 | **2.0–2.6 DN** at 440–447 nm |
+> | **§16.7.2e of this document** | *"verified to put the **darkest bin at 18–26 DN** ✅"* |
+>
+> ⛔ **They cannot both be right.** §16.23.6a below takes the first, because the pedestal document states
+> it flatly — but **if the second is correct the guard is already satisfied and there is no conflict at
+> all.**
+>
+> ⭐ **What does NOT depend on this:** §16.23.6b's trim result. Removing 440–447 nm removes **28 % of
+> `r_Q`** and improves all three metric axes **monotonically across four windows**. That is measured, and
+> it holds whatever those bins read. What is contingent is the *explanation* (floor-limiting) and the
+> conflict that follows from it.
+>
+> ⇒ **Settle it by logging min(S) on one live capture.** The archived report PDFs store derived spectra,
+> not raw counts, so it cannot be recovered retrospectively — but §16.23.8 already specifies recording
+> min DN per measurement, so **the DN-guard implementation resolves this as a side effect.** Do not act on
+> §16.23.6c–f until it is resolved.
+
+#### 16.23.6a The two constraints, and why they cannot both be met
+
+| end | constraint | source | requires |
+|---|---|---|---|
+| **blue** — the Soret | the darkest bins must clear the **16 DN guard** (target 20–40) | §16.7.2e, and `SPEC_metric_research.md` §7.13 | `A_Soret` ≲ **0.64** |
+| **red** — the Q band | `A_Q` must stay in **0.19–0.23**, because **scatter goes as 1/`A_Q`** | §16.10.8, §16.11.15 Check 1 | `A_Q` ≳ **0.19** |
+
+At the measured band ratio `A_Soret`/`A_Q` ≈ **4.9**, those map to:
+
+| | required dilution, relative to today |
+|---|---|
+| blue constraint satisfied | **≥ 1.8× more dilute** |
+| red constraint satisfied | **≤ 1.2× more dilute** |
+
+⛔ **There is no dilution that satisfies both.** Meeting the Q band's precision requirement forces
+`A_Soret` to **0.93–1.13**, i.e. deep inside the compressed regime; meeting the Soret's accuracy
+requirement forces `A_Q` to ~0.11, roughly half the specified floor.
+
+⇒ **This is a dynamic-range problem, not a recipe problem.** The Soret is ~5× stronger than the Q band, and
+the instrument's usable window is narrower than that ratio demands. It is the same structural limit as
+§16.20's flank problem, seen from the intensity axis instead of the wavelength axis.
+
+#### 16.23.6b What the blue end currently costs — measured, not argued
+
+`SPEC_metric_research.md` §7.13 quantified it. The **440–447 nm bins read 2.0–2.6 DN** against a reference
+near 88, and they sit **inside the Soret window 440–460**:
+
+| deleting those 8 nm | effect |
+|---|---|
+| chapter-6 intercept `k` | 0.2294 → **0.1214** *(−47 %)* |
+| its significance *t* | 4.43 → **2.92** |
+| **`r_Q`** | −0.0184 → **−0.0133** *(−28 %)* |
+| class separation *d* | 6.91 → 7.37 |
+| within-green *d* | 1.21 → 1.34 |
+| dilution spread | 10.3 % → 8.8 % |
+
+⇒ **About a quarter of the pedestal residual is the camera hitting its floor**, not the baseline
+misbehaving. That is assumption **A4** failing — a mechanism `DOC_pedestal_correction.md` ch. 10 named and
+never measured. Full derivation: `SPEC_metric_research.md` §7.13.
+
+#### 16.23.6c ⭐ Three ways out, and only one avoids a trade-off
+
+| route | what it does | verdict |
+|---|---|---|
+| ⭐⭐ **raise R in the blue** | more reference light ⇒ higher `S` at the same dilution ⇒ **both constraints met at 1:250** | **the only route with no cost** — but see the caveat |
+| **trim the Soret window to 448–460** | drops the dead bins without changing the recipe | ✅ free, already measured (+7 %/+11 %/−15 %), ⚠ `B_Soret` 1.03 → 0.69 so the scale — and any threshold — moves |
+| **dilute to the blue guard** | `A_Soret` → ~0.45, i.e. ~2.4× more dilute (60 µL in ~36 mL) | ⚠ trades Soret accuracy for Q-band precision; violates §16.10.8 |
+
+⚠ **The brightness route has a real constraint.** Reaching 20 DN at 1:250 needs R ≈ 250 at 440 nm against
+today's 88 — **2.9×**. A uniform exposure increase cannot deliver it: R is already 130 at 530 nm, so 2.9×
+would clip the green channel.
+
+#### ⭐ 16.23.6d The gain is ANALOG — measured, 2026-08-04
+
+`diagnostics/gain_analog_or_digital.py`, on the ELP `32e4:8830`, exposure pinned at 250, AE and AWB off.
+**A digital gain multiplies an already-quantised code, so the output can only land on multiples of the
+factor and the histogram develops gaps. An analog gain acts before the ADC, so every code stays
+reachable.**
+
+| gain set | reads back | mean DN *(blue channel)* | **gap fraction** |
+|---|---|---|---|
+| 0 | 0 | 38.13 | **0.000** |
+| 16 | 16 | 45.41 | 0.000 |
+| 32 | 32 | 49.88 | 0.000 |
+| 64 | 64 | 54.55 | 0.000 |
+| 128 | **100** *(the range caps here)* | 57.59 | 0.000 |
+
+⇒ ⭐ **ANALOG.** The control reads back, the mean genuinely moves, and there are **no gaps at any
+setting**. Raising gain therefore spreads the same photons over more codes and **does shrink the
+quantisation error** — the blue floor is improvable in software, in principle.
+
+⚠ **But the usable range is only 1.51×, which is not enough on its own:**
+
+| | today | at max gain | required |
+|---|---|---|---|
+| Soret `S` at 1:250 | ~7 DN | ~10.6 DN | **≥ 16 DN** |
+| darkest bins 440–447 | 2.3 DN | 3.5 DN | |
+| quantisation error there | ±22 % | **±14 %** | |
+
+A third off the quantisation error is worth having, but the guard needs **2.3×** and gain gives 1.51×.
+And the shortfall cannot be made up with exposure: 1.51 × 1.5 × 130 = **294 at 530 nm ⇒ clipped.**
+
+#### ⭐⭐ 16.23.6e The fix this points at — DUAL-EXPOSURE ABSORBANCE *(DESIGN)*
+
+The two captures need not share an exposure. Since
+
+```math
+A = \log_{10}\frac{R}{S} + \log_{10}\frac{E_{S}}{E_{R}}
+  read: exposure is a linear integration time, so measuring the reference and the sample at DIFFERENT
+  exposures costs only a known additive constant.
+```
+
+⇒ **Low exposure for R** (bright, no oil — the green cannot clip) and **high exposure for S** (dark, with
+oil — the blue lifts off the floor). §3.10 of `DOC_capture_fidelity.md` measured black level at **0.00 % of
+full scale**, so a longer exposure adds no dark offset to pay for it.
+
+**That dissolves §16.23.6's conflict outright** — the DN guard and the `A_Q` window can both be met at
+1:250, with no dilution trade-off and no lamp purchase. ⚠ It requires exposure linearity, which is
+testable on the bench in minutes.
+
+#### ⛔ 16.23.6f THE GATE — quantisation or stray light? One capture decides it
+
+**Everything above assumes the 2.3 DN is real transmitted light.** If it is **stray light** instead, then
+gain and exposure both scale it exactly like signal, the ratio is unchanged, and **neither lever helps.**
+
+**⇒ Block the beam completely and read `S`.**
+
+| result | meaning |
+|---|---|
+| ~0 DN | ⭐ the 2.3 DN is real transmitted light, quantisation-limited ⇒ **gain and dual exposure both work** |
+| ~2 DN | ⛔ it is stray light ⇒ **neither helps**; the fix is baffling inside the optical path |
+
+**One capture, one minute, and it decides whether §16.23.6e is worth building.** Run it before anything
+else on this thread.
+
+⇒ **Recommended interim, revised:** adopt §16.23 as written (1:250, no threshold moves), trim the Soret
+window to 448–460, **run §16.23.6f's stray-light gate**, and only then decide between dual exposure
+(§16.23.6e) and a bluer source.
+
+⇒ **Recommended interim: adopt §16.23 as written (1:250, no threshold moves), trim the Soret window to
+448–460, and treat the blue brightness as the next capture-side task.** Diluting further is the option of
+last resort, because it degrades the band the verdict actually depends on.
+
+### ⭐ 16.23.7 What the capillary buys beyond the four errors of §16.23.0 *(2026-08-04)*
+
+§16.23.0 lists what the protocol *removes*. Three things it **enables** emerged today, and they are larger
+than the removals:
+
+**1 · ⭐⭐ It is the enabling change for within-green grading.** Measured on the 28-run corpus: `M`'s
+green-vs-green difference is **0.98 units** while the preparation-induced spread is **1.665 units** —
+**the noise from filling the tube exceeds the signal being read.** That, not the metric, is why
+green-vs-green grading fails.
+
+| dosing | concentration error | induced `M` spread | vs the 6 % signal |
+|---|---|---|---|
+| drops | ~±15 % | ~3.4 % | SNR **1.8** |
+| **capillary** | **±1.5 %** | **~0.34 %** | SNR **18** |
+
+⇒ **A ~10× improvement on the one task with commercial value** (`SPEC_metric_research.md` §7.5–§7.7 show no
+choice of metric achieves this).
+
+**2 · ⭐⭐ It supplies a real concentration axis.** `DOC_pedestal_correction.md` ch. 6 exists *only* because
+concentration was unknown. With a known dose, each band can be plotted **against `c` directly**:
+`B_Q` vs `c` gives **`r_Q`** as an intercept, `B_Soret` vs `c` gives **`r_Soret`** — so **assumption A2
+stops being an assumption** — and either line bending tests **A4**. Three long-standing assumptions become
+measurements.
+
+**3 · ⭐ It makes dosing to a target *optical density* possible**, rather than to a fixed volume. Then `F` =
+1 + \|`r_Q`\|/`B_Q` is the **same constant for every sample**, so the pedestal correction becomes a pure
+rescaling that **cannot change any ranking, any Cohen's *d*, or any verdict** — and **A1 is retired with
+it**, because a shared `r_Q` no longer has to be assumed. It also equalises `S` across oils, so the
+dead-bin bias of §16.23.6b becomes identical rather than class-dependent.
+
+⚠ Note (3) conflicts with §16.23's fixed-volume design; it is the direction to move **after** §16.23.6's
+brightness question is settled, not before.
+
+### 16.23.8 Software support required *(DESIGN — not implemented)*
+
+None of the above works if the recipe is not known to the software.
+
+| | |
+|---|---|
+| **input** | capillary count and IPA volume entered **before** the capture — not inferred afterwards |
+| **guard** | evaluate **min(S) over the analysis range** after the sample capture; two-sided: **< 16 DN** too concentrated, **> ~60 DN** too dilute, **20–40 DN** in window |
+| **prompt** | out of window ⇒ offer a concrete correction: *"measured `A` = 1.09 in 15 mL, target 0.45 → top up to 36 mL"*, computed as $V_{new} = V_{old} \times A_{measured}/A_{target}$ |
+| **⚠ behaviour** | **warn, never block** — an out-of-window run is still a valid diagnostic, and blocking loses data |
+| **record** | achieved `A_Soret`, `A_Q`, min DN and the recipe into the report, so every measurement carries its own concentration |
+
+⭐ **Why the target is 0.434 and not a matter of taste.** For a detector limited by a roughly constant
+absolute error in the transmitted signal, the *relative* error in absorbance is minimised at
+
+```math
+A = \frac{1}{\ln 10} = 0.434 \qquad (T = 36.8\ \%)
+  read: too dark and the floor dominates; too dilute and the band vanishes into the noise. The optimum is
+  genuinely in the middle, which is why the guard must be two-sided.
+```
+
+With R ≈ 88 that is **S ≈ 32 DN — the centre of the existing 20–40 DN band.** ⇒ **The spec's target was
+already right, for a reason nobody had written down.**
 
 ---
 

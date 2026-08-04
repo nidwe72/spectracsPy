@@ -14,15 +14,19 @@ Prints, in the document's own order:
   6  constant r_Q vs r_Q proportional to turbidity -- which model the data prefers
   7  how concentrated one would have to work to shrink the inflation instead
 
-Writes six SVG figures into docs/figures/:
-    pedestal_chord.svg       THE central picture: one real run, the four windows, the fitted chord,
+Writes the document's eight SVG figures into docs/figures/. The FIGURE numbers below are the ones
+the document prints in its captions and cross-references -- they follow order of APPEARANCE there,
+which is why 3 and 4 are listed out of order relative to the calls that draw them:
+    pedestal_chord.svg       FIGURE 1 -- THE central picture: one real run, the four windows, the fitted chord,
                              and -- zoomed -- what the far anchor is actually sitting on
-    pedestal_cases.svg       convex / straight / concave, and which way each sends the index
-    pedestal_bands.svg       the same 0.025 A against each band, on ONE absorbance scale
-    pedestal_attribution.svg what r_Q is made of, and how far a pure scattering law gets (doc §4.1)
-    pedestal_faces.svg       the same residual as a gap, an intercept, and an inflation
-    pedestal_line.svg        the straight-line test, with the intercept that should not be there
-    pedestal_inflation.svg   inflation vs B_Q, with the six sets and the working window marked
+    pedestal_cases.svg       FIGURE 2 -- convex / straight / concave, and which way each sends the index
+    pedestal_bands.svg       FIGURE 4 -- the same 0.025 A against each band, on ONE absorbance scale
+    pedestal_attribution.svg FIGURE 3 -- what r_Q is made of, and how far a pure scattering law gets (doc §4.1)
+    pedestal_faces.svg       FIGURE 5 -- the same residual as a gap, an intercept, and an inflation
+    pedestal_anatomy.svg     FIGURE 6 -- which of the fit's three numbers is r_Q -- slope vs intercept vs
+                             x-intercept, on a range wide enough to show the crossing
+    pedestal_line.svg        FIGURE 7 -- the straight-line test, with the intercept that should not be there
+    pedestal_inflation.svg   FIGURE 8 -- inflation vs B_Q, with the six sets and the working window marked
 
 Run:
     PYTHONPATH="./diagnostics:.:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracsPy-server:../spectracs-plugins" \
@@ -123,21 +127,26 @@ def main():
     print("   " + "-" * 88)
     residual = {}
     for oil in oils:
-        if oil == "S-Budget":
-            print("   %-14s %4d %18s %20s %8s %20s" % (
-                oil, 6, "—", "—", "—", "one concentration only"))
-            continue
         fit, x, _ = fitOil(runs, oil)
         rq = -fit.intercept / fit.slope
         se = abs(rq) * np.sqrt((fit.intercept_stderr / fit.intercept) ** 2
                                + (fit.stderr / fit.slope) ** 2)
-        residual[oil] = rq
-        print("   %-14s %4d %9.3f +/- %-5.3f %10.4f +/- %-7.4f %8.2f %10.4f +/- %.4f" % (
+        # S-Budget IS fitted and printed -- "cannot be fitted" is a statement about what the numbers
+        # are worth, not about whether scipy will return them, and showing them is the clearest way
+        # to say so. It is kept OUT of `residual`, which is what the rest of the document consumes.
+        if oil != "S-Budget":
+            residual[oil] = rq
+        print("   %-14s %4d %9.3f +/- %-5.3f %10.4f +/- %-7.4f %8.2f %10.4f +/- %.4f%s" % (
             oil, len(x), fit.slope, fit.stderr, fit.intercept, fit.intercept_stderr,
-            fit.intercept / fit.intercept_stderr, rq, se))
-        print("   %-14s %4s B_Q spans %.4f .. %.4f  (this spread is what makes the fit possible)"
-              % ("", "", x.min(), x.max()))
+            fit.intercept / fit.intercept_stderr, rq, se,
+            "   <-- ONE FILL: no dilution spread, NOT a usable fit" if oil == "S-Budget" else ""))
+        print("   %-14s %4s B_Q spans %.4f .. %.4f  = %.1f%% of the mean%s"
+              % ("", "", x.min(), x.max(), 100 * (x.max() - x.min()) / x.mean(),
+                 "  (this spread is what makes the fit possible)" if oil == "Kiendler" else ""))
     shared = residual["Kiendler"]
+    print()
+    print("   The SHARED r_Q used everywhere else in this document is KIENDLER's: %+.4f A." % shared)
+    print("   It is the only one of the three with a lever arm long enough to mean anything.")
     print()
 
     # ------------------------------------------------------------------ 4 inflation
@@ -725,6 +734,69 @@ def powerLawSag(exponent, magnitude, far=None):
     return value(near) + (value(far) - value(near)) * weight - value(band)
 
 
+def writeAnatomyFigure(runs):
+    """Which of the fit's three numbers is r_Q.
+
+    The straight-line figure labels each line with its r_Q, and r_Q is the one quantity of the three
+    that is NOT visible anywhere on that plot -- the x-intercept sits at a NEGATIVE B_Q, off the
+    left edge. Reading the label as a slope is then the natural mistake. This figure exists purely
+    to separate the three, on the same Kiendler numbers, over an x-range wide enough to show the
+    crossing."""
+    fit, _, _ = fitOil(runs, "Kiendler")
+    rq = -fit.intercept / fit.slope
+    figure, axis = plt.subplots(figsize=(6.4, 3.9))
+    grid = np.linspace(-0.035, 0.088, 60)
+    axis.plot(grid, fit.slope * grid + fit.intercept, c=GREEN, lw=1.8, zorder=3)
+    axis.plot(grid, fit.slope * grid, c=MUTED, lw=1.1, ls=(0, (4, 3)), zorder=2)
+    axis.axhline(0, c=MUTED, lw=0.8)
+    axis.axvline(0, c=MUTED, lw=0.8)
+    axis.axvspan(-0.035, 0, color=MUTED, alpha=0.07, zorder=0)
+
+    # --- 1 the slope: a rise-over-run triangle, labelled ABOVE the line where nothing else sits.
+    # NOT "the corrected index" -- that is a per-run quantity. This is dB_Soret/dB_Q = e_Soret/e_Q,
+    # an ensemble property of the pigment, and it is pedestal-free because a slope is a difference:
+    # a constant offset in either band cancels from it whether or not r_Q is known.
+    x0, x1 = 0.012, 0.030
+    y0, y1 = fit.slope * x0 + fit.intercept, fit.slope * x1 + fit.intercept
+    axis.plot([x0, x1, x1], [y0, y0, y1], c=GREEN_DK, lw=1.0, ls=(0, (2, 2)), zorder=4)
+    axis.annotate("slope = dB$_{Soret}$ / dB$_Q$ = %.2f\noffsets cancel from a slope —\nthis IS the "
+                  "estimate of M$_\\infty$" % fit.slope,
+                  xy=(x1, y1), xytext=(0.002, 1.10), fontsize=8, color=GREEN_DK, va="center",
+                  arrowprops=dict(arrowstyle="-", color=GREEN_DK, lw=0.8))
+
+    # --- 2 the intercept: what the regression literally returns
+    axis.annotate("", xy=(0, fit.intercept), xytext=(0, 0),
+                  arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.4))
+    axis.text(0.0035, fit.intercept / 2 - 0.06,
+              "intercept = k = %+.3f A\nwhat the fit RETURNS\nk = r$_{Soret}$ − M$_\\infty$·r$_Q$"
+              % fit.intercept, fontsize=8, color="#c0392b", va="center")
+
+    # --- 3 r_Q: the x-intercept, and the only one of the three that lives off the data. The callout
+    # goes in the clear strip below every line, which is why ylim reaches further down than the data.
+    axis.scatter([rq], [0], s=70, marker="X", c="#7b1fa2", zorder=5, edgecolors="white",
+                 linewidths=0.7)
+    axis.annotate("r$_Q$ = −k / M$_\\infty$ = %.4f A   —   the X-INTERCEPT, not the slope\n"
+                  "\"drive the pigment to zero and the Q band still reads −0.018 A\"" % rq,
+                  xy=(rq, 0), xytext=(-0.020, -0.40), fontsize=8, color="#7b1fa2",
+                  ha="left", va="top", arrowprops=dict(arrowstyle="-", color="#7b1fa2", lw=0.9))
+    axis.text(-0.0335, 1.24, "extrapolated —\nno data here", fontsize=7.4, color=MUTED, va="top")
+    axis.annotate("no leftover ⇒ k = 0: through the origin", xy=(0.055, fit.slope * 0.055),
+                  xytext=(0.086, 0.30), fontsize=7.6, color=MUTED, ha="right", va="top",
+                  arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
+
+    axis.set_xlim(-0.035, 0.088)
+    axis.set_ylim(-0.62, 1.30)
+    axis.set_xlabel("B$_Q$  —  baselined Q band 560–580 nm  (A)")
+    axis.set_ylabel("B$_{Soret}$  (A)")
+    axis.set_title("The fit returns three numbers — only one of them is r$_Q$",
+                   fontsize=9.5, color=INK)
+    axis.spines["top"].set_visible(False)
+    axis.spines["right"].set_visible(False)
+    figure.tight_layout()
+    figure.savefig(os.path.join(FIGURES, "pedestal_anatomy.svg"))
+    plt.close(figure)
+
+
 def writeFigures(runs, residual, shared):
     os.makedirs(FIGURES, exist_ok=True)
     plt.rcParams.update({"font.size": 8.5, "axes.edgecolor": MUTED, "axes.labelcolor": INK,
@@ -735,41 +807,61 @@ def writeFigures(runs, residual, shared):
     writeBandsFigure(runs, shared)
     writeAttributionFigure(runs, shared)
     writeFacesFigure(runs, shared)
+    writeAnatomyFigure(runs)
 
-    # --- figure 1: the straight-line test ---------------------------------------------------
-    figure, axis = plt.subplots(figsize=(6.4, 4.0))
-    for oil in ("Kiendler", "Steirerkraft"):
+    # --- FIGURE 7: the straight-line test ---------------------------------------------------
+    # The x-axis deliberately runs NEGATIVE. r_Q is the x-intercept, so on an axis starting at 0 the
+    # one quantity the figure is about is off the page -- and the legend's "r_Q = ..." then reads as
+    # a slope label. Extending left puts each crossing on the plot where it can be pointed at.
+    figure, axis = plt.subplots(figsize=(6.4, 4.3))
+    right = max(column(runs, n, Q_KEY).max() for n, _, _ in SETS) * 1.06
+    grid = np.linspace(-0.036, right, 60)
+    crossings = []
+    for oil in ("Kiendler", "Steirerkraft", "S-Budget"):
         fit, x, y = fitOil(runs, oil)
-        axis.scatter(x, y, s=26, c=COLOUR[oil], marker=MARKER[oil], zorder=3,
-                     label="%s  (r$_Q$ = %+.4f)" % (oil, residual[oil]), edgecolors="white",
-                     linewidths=0.5)
-        grid = np.linspace(0, max(x) * 1.08, 50)
-        axis.plot(grid, fit.slope * grid + fit.intercept, c=COLOUR[oil], lw=1.2, zorder=2)
-    for name, oil, _ in SETS:
-        if oil == "S-Budget":
-            axis.scatter(column(runs, name, Q_KEY), column(runs, name, SORET_KEY),
-                         s=26, c=BROWN, marker="^", zorder=3, edgecolors="white", linewidths=0.5,
-                         label="S-Budget (one concentration — cannot be fitted)")
+        broken = oil == "S-Budget"          # one fill only: drawn to show WHERE it would sit, not as a result
+        axis.scatter(x, y, s=26, c=COLOUR[oil], marker=MARKER[oil], zorder=4, edgecolors="white",
+                     linewidths=0.5,
+                     label="%s  (slope M$_\\infty$ = %.2f)%s"
+                           % (oil, fit.slope, "  ⚠ one fill — not a valid fit" if broken else ""))
+        axis.plot(grid, fit.slope * grid + fit.intercept, c=COLOUR[oil], zorder=2,
+                  lw=1.0 if broken else 1.3, ls=(0, (5, 3)) if broken else "-",
+                  alpha=0.55 if broken else 1.0)
+        crossings.append((oil, -fit.intercept / fit.slope))
     axis.axhline(0, c=MUTED, lw=0.7)
     axis.axvline(0, c=MUTED, lw=0.7)
+    axis.axvspan(-0.036, 0, color=MUTED, alpha=0.07, zorder=0)
+    axis.text(-0.034, -0.30, "extrapolated —\nno data here", fontsize=7.4, color=MUTED, va="top")
+
     fit, _, _ = fitOil(runs, "Kiendler")
     axis.annotate("", xy=(0, fit.intercept), xytext=(0, 0),
                   arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.4))
-    axis.annotate("the intercept that\nshould not be there\nk = %+.3f A" % fit.intercept,
-                  xy=(0.004, fit.intercept / 2), fontsize=8, color="#c0392b", va="center")
-    axis.set_xlim(left=0)
-    axis.set_ylim(bottom=0)
+    axis.text(0.0035, fit.intercept / 2 + 0.02, "the intercept that\nshould not be there\n"
+              "k = %+.3f A" % fit.intercept, fontsize=8, color="#c0392b", va="center")
+
+    # each line crosses zero at its OWN r_Q -- the quantity the whole document is about. The callout
+    # sits in the strip below every line; ylim is opened downward to make room for it.
+    for oil, cross in crossings:
+        axis.scatter([cross], [0], s=58, marker="X", c=COLOUR[oil], zorder=5,
+                     edgecolors="white", linewidths=0.7)
+    axis.annotate("each line crosses B$_{Soret}$ = 0 at its OWN r$_Q$  —  THIS is r$_Q$, not the slope\n"
+                  "%s" % "    ·    ".join("%s %.4f" % (o, c) for o, c in crossings),
+                  xy=(crossings[0][1], 0), xytext=(-0.020, -0.52), fontsize=7.6, color="#7b1fa2",
+                  ha="left", va="top", arrowprops=dict(arrowstyle="-", color="#7b1fa2", lw=0.9))
+
+    axis.set_xlim(-0.036, right)
+    axis.set_ylim(-0.78, 1.42)
     axis.set_xlabel("B$_Q$  —  baselined Q band 560–580 nm  (A)")
     axis.set_ylabel("B$_{Soret}$  —  baselined Soret band 440–460 nm  (A)")
-    axis.set_title("Pure pigment would put this line through the origin", fontsize=9.5, color=INK)
-    axis.legend(frameon=False, fontsize=7.6, loc="lower right")
+    axis.set_title("Pure pigment would put these lines through the origin", fontsize=9.5, color=INK)
+    axis.legend(frameon=False, fontsize=7.4, loc="upper left", bbox_to_anchor=(0.015, 0.985))
     axis.spines["top"].set_visible(False)
     axis.spines["right"].set_visible(False)
     figure.tight_layout()
     figure.savefig(os.path.join(FIGURES, "pedestal_line.svg"))
     plt.close(figure)
 
-    # --- figure 2: inflation vs B_Q ----------------------------------------------------------
+    # --- FIGURE 8: inflation vs B_Q ----------------------------------------------------------
     figure, axis = plt.subplots(figsize=(6.4, 3.6))
     grid = np.linspace(0.035, 0.30, 400)
     axis.plot(grid, 100 * (-shared / grid), c=INK, lw=1.4, zorder=2)
@@ -788,15 +880,24 @@ def writeFigures(runs, residual, shared):
                   arrowprops=dict(arrowstyle="-", color="#c0392b", lw=0.8))
     cluster = np.array([column(runs, n, Q_KEY).mean()
                         for n, _, _ in SETS if n != "Kiendler A"])
+    # Placed well to the RIGHT: at (40, 26) this ran straight through the Kiendler A callout, which
+    # sits just above and left of the cluster.
     axis.annotate("the five properly-prepared sets",
-                  xy=(cluster.mean(), 100 * (-shared / cluster.mean())), xytext=(40, 26),
-                  textcoords="offset points", fontsize=7.6, color=MUTED,
+                  xy=(cluster.mean(), 100 * (-shared / cluster.mean())), xytext=(95, 8),
+                  textcoords="offset points", fontsize=7.6, color=MUTED, va="center",
                   arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
     axis.text(0.29, 4.5, "below 10 % — unreachable by dilution alone", fontsize=7.2,
               color=GREEN_DK, ha="right", va="center")
+    # The curve IS (F - 1), the inflation factor of doc §5.1 minus one, in percent. Naming it on the
+    # axis matters: §5.1 explicitly retires the bare phrase "inflation of the index" as the wording
+    # used before F had a symbol, and this axis was the last place still carrying it.
+    axis.text(0.135, 52, "the curve is  F − 1 = |r$_Q$| / B$_Q$\n"
+                         "with the shared r$_Q$ = −0.0184 A\n"
+                         "= by how much M exceeds M$_\\infty$, relatively",
+              fontsize=7.8, color=INK, va="center")
     axis.legend(frameon=False, fontsize=7.6, loc="upper right")
     axis.set_xlabel("B$_Q$  —  how much pigment signal survives the baseline  (A)")
-    axis.set_ylabel("inflation of the index  (%)")
+    axis.set_ylabel("F − 1  —  the inflation of the index  (%)")
     axis.set_title("The error is not a constant — it grows as the sample gets fainter",
                    fontsize=9.5, color=INK)
     axis.set_xlim(0.035, 0.30)
@@ -808,8 +909,8 @@ def writeFigures(runs, residual, shared):
     plt.close(figure)
 
     for name in ("pedestal_chord.svg", "pedestal_cases.svg", "pedestal_bands.svg",
-                 "pedestal_attribution.svg", "pedestal_faces.svg", "pedestal_line.svg",
-                 "pedestal_inflation.svg"):
+                 "pedestal_attribution.svg", "pedestal_faces.svg", "pedestal_anatomy.svg",
+                 "pedestal_line.svg", "pedestal_inflation.svg"):
         print("wrote", os.path.join(FIGURES, name))
 
 

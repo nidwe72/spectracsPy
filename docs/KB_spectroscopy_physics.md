@@ -470,6 +470,17 @@ chemical data, [AdTech transmission tables](https://adtech.co.uk/technical-data/
 - **Chlorophyll *a* comparison values** (the molecule we do *not* have): Qy 662–665 nm solvent-dependent —
   [PhotochemCAD, chlorophyll a](https://omlc.org/spectra/PhotochemCAD/html/122.html).
 
+⚠ **2026-08-04 — OUR OWN INSTRUMENT DOES NOT CONFIRM THE Qy POSITION, and cannot at this range.**
+Two independent tests on the 28-run post-rebuild corpus (`SPEC_metric_research.md` §7.11a): **28/28 runs
+are still RISING at the 629.8 nm cut-off**, and a fixed-template fit returns a **negative amplitude** at
+623–626 nm — physically impossible for an absorption band — while its residual bottoms at **~630 nm**.
+So our spectra show **no resolvable Qy maximum at 623–626**. Three explanations cannot be separated:
+solvent/matrix shift (literature is 80 % acetone and methanol; ours is oil in IPA), aggregation in the
+lipid matrix, or ⚠ **instrument** — 620–630 nm is exactly where the lamp collapses
+(`SPEC_capture_quality.md` §16.12.11 B) and a rising edge artifact is indistinguishable from a
+red-shifted band edge. §16.12.12's 5.1 σ result confirms pigment IS present there; it does not exclude a
+mixture. **This is an open discrepancy, not a correction — the values below are correctly sourced.**
+
 ⚠ **Not yet independently verified:** a primary measurement of *protopheophytin a*'s band positions. The
 green→brown direction in §4.1 is argued from demetallation symmetry-lowering, which is textbook porphyrin
 photochemistry, but the specific numbers for this molecule are not sourced here. Treat the mechanism as

@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-08-03T04:21:23.500712</dc:date>
+    <dc:date>2026-08-03T22:54:34.484846</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -40,17 +40,17 @@ z
    <g id="line2d_1">
     <path d="M 19.285938 203.759687 
 L 19.285938 85 
-" clip-path="url(#p2b88a4d2e6)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#pfec2310bca)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="line2d_2">
     <path d="M 84.866387 203.759687 
 L 84.866387 85 
-" clip-path="url(#p2b88a4d2e6)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#pfec2310bca)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="line2d_3">
     <path d="M 150.446837 203.759687 
 L 150.446837 85 
-" clip-path="url(#p2b88a4d2e6)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#pfec2310bca)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="matplotlib.axis_1"/>
    <g id="matplotlib.axis_2"/>
@@ -84,7 +84,7 @@ L 141.878537 177.831383
 L 149.128637 177.941121 
 L 150.446837 177.942364 
 L 150.446837 177.942364 
-" clip-path="url(#p2b88a4d2e6)" style="fill: none; stroke: #1c211c; stroke-width: 1.5; stroke-linecap: square"/>
+" clip-path="url(#pfec2310bca)" style="fill: none; stroke: #1c211c; stroke-width: 1.5; stroke-linecap: square"/>
    </g>
    <g id="patch_3">
     <path d="M 84.866387 142.895665 
@@ -126,7 +126,7 @@ L 83.166387 156.367711
    <g id="line2d_5">
     <path d="M 19.285938 100.490394 
 L 150.446837 177.942364 
-" clip-path="url(#p2b88a4d2e6)" style="fill: none; stroke-dasharray: 4.81,2.08; stroke-dashoffset: 0; stroke: #c0392b; stroke-width: 1.3"/>
+" clip-path="url(#pfec2310bca)" style="fill: none; stroke-dasharray: 4.81,2.08; stroke-dashoffset: 0; stroke: #c0392b; stroke-width: 1.3"/>
    </g>
    <g id="legend_1">
     <g id="line2d_6">
@@ -161,17 +161,17 @@ z
    <g id="line2d_8">
     <path d="M 189.025937 203.759687 
 L 189.025937 85 
-" clip-path="url(#p3633ec1c9f)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#pdf8a73dc1f)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="line2d_9">
     <path d="M 254.606387 203.759687 
 L 254.606387 85 
-" clip-path="url(#p3633ec1c9f)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#pdf8a73dc1f)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="line2d_10">
     <path d="M 320.186837 203.759687 
 L 320.186837 85 
-" clip-path="url(#p3633ec1c9f)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#pdf8a73dc1f)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="matplotlib.axis_3"/>
    <g id="matplotlib.axis_4"/>
@@ -179,7 +179,7 @@ L 320.186837 85
     <path d="M 189.025937 100.490394 
 L 320.186837 177.942364 
 L 320.186837 177.942364 
-" clip-path="url(#p3633ec1c9f)" style="fill: none; stroke: #1c211c; stroke-width: 1.5; stroke-linecap: square"/>
+" clip-path="url(#pdf8a73dc1f)" style="fill: none; stroke: #1c211c; stroke-width: 1.5; stroke-linecap: square"/>
    </g>
    <g id="patch_5">
     <path d="M 254.606387 140.89343 
@@ -221,7 +221,7 @@ L 252.906387 134.333931
    <g id="line2d_12">
     <path d="M 189.025937 100.490394 
 L 320.186837 177.942364 
-" clip-path="url(#p3633ec1c9f)" style="fill: none; stroke-dasharray: 4.81,2.08; stroke-dashoffset: 0; stroke: #c0392b; stroke-width: 1.3"/>
+" clip-path="url(#pdf8a73dc1f)" style="fill: none; stroke-dasharray: 4.81,2.08; stroke-dashoffset: 0; stroke: #c0392b; stroke-width: 1.3"/>
    </g>
   </g>
   <g id="axes_3">
@@ -236,17 +236,17 @@ z
    <g id="line2d_13">
     <path d="M 358.765938 203.759687 
 L 358.765938 85 
-" clip-path="url(#p53c42a166b)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#p2a3b23fc61)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="line2d_14">
     <path d="M 424.346387 203.759687 
 L 424.346387 85 
-" clip-path="url(#p53c42a166b)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#p2a3b23fc61)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="line2d_15">
     <path d="M 489.926837 203.759687 
 L 489.926837 85 
-" clip-path="url(#p53c42a166b)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
+" clip-path="url(#p2a3b23fc61)" style="fill: none; stroke-dasharray: 0.6,0.99; stroke-dashoffset: 0; stroke: #5c655c; stroke-width: 0.6"/>
    </g>
    <g id="matplotlib.axis_5"/>
    <g id="matplotlib.axis_6"/>
@@ -279,7 +279,7 @@ L 479.381237 163.828883
 L 484.654037 170.678765 
 L 489.926837 177.942364 
 L 489.926837 177.942364 
-" clip-path="url(#p53c42a166b)" style="fill: none; stroke: #1c211c; stroke-width: 1.5; stroke-linecap: square"/>
+" clip-path="url(#p2a3b23fc61)" style="fill: none; stroke: #1c211c; stroke-width: 1.5; stroke-linecap: square"/>
    </g>
    <g id="patch_7">
     <path d="M 424.346387 135.537201 
@@ -321,7 +321,7 @@ L 426.046387 122.419208
    <g id="line2d_17">
     <path d="M 358.765938 100.490394 
 L 489.926837 177.942364 
-" clip-path="url(#p53c42a166b)" style="fill: none; stroke-dasharray: 4.81,2.08; stroke-dashoffset: 0; stroke: #c0392b; stroke-width: 1.3"/>
+" clip-path="url(#p2a3b23fc61)" style="fill: none; stroke-dasharray: 4.81,2.08; stroke-dashoffset: 0; stroke: #c0392b; stroke-width: 1.3"/>
    </g>
   </g>
   <g id="text_18">
@@ -329,13 +329,13 @@ L 489.926837 177.942364
   </g>
  </g>
  <defs>
-  <clipPath id="p2b88a4d2e6">
+  <clipPath id="pfec2310bca">
    <rect x="8.793066" y="85" width="152.146643" height="118.759687"/>
   </clipPath>
-  <clipPath id="p3633ec1c9f">
+  <clipPath id="pdf8a73dc1f">
    <rect x="178.533066" y="85" width="152.146643" height="118.759687"/>
   </clipPath>
-  <clipPath id="p53c42a166b">
+  <clipPath id="p2a3b23fc61">
    <rect x="348.273066" y="85" width="152.146643" height="118.759687"/>
   </clipPath>
  </defs>

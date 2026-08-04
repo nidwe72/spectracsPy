@@ -1020,8 +1020,15 @@ Two carry-overs to handle in the same task:
 
 - **Archived report PDFs keep their old labels immutably.** Add an old→new mapping table — the natural home
   is `DOC_metric_algebra.md` §10's reference sheet.
-- **`DevSpectralPlugin`'s `PB_BASELINE_WINDOWS` comment still says "chlorophyll Q max near 665 nm".** It is
-  a comment, not a computation, so nothing behaves wrongly — but it is *the* place a future developer will
-  read before touching the windows. ⚠ **Deliberately not edited yet:** the plugin is the unit that gets
-  signed and published (`SPEC_plugin_distribution.md`), so editing its source changes the artifact hash.
-  Fold it into this task rather than making it a standalone re-sign.
+- ~~**`DevSpectralPlugin`'s `PB_BASELINE_WINDOWS` comment still says "chlorophyll Q max near 665 nm".**~~
+  ✅ **CORRECTED 2026-08-04.** It is a comment, not a computation, so nothing behaved wrongly — but it is
+  *the* place a future developer reads before touching the windows, and it **contradicted the block
+  directly beneath it**, which already said protochlorophyll's Qy is at ~623–626 nm and that 620–630 is
+  centred on the band. Both halves of the old sentence were wrong: the molecule (chlorophyll, a chlorin,
+  vs protochlorophyll, a porphyrin) and the conclusion (*"outside our capture clamp"* — it is inside).
+  ⚠ **`LAB_DIARY_capability_proof.md` §2 claimed on 2026-07-31 that this comment had been corrected. It
+  had not** — the diary's own correction block landed, the code edit did not.
+  ⚠ **Re-sign consideration still stands:** the plugin is the unit that gets signed and published
+  (`SPEC_plugin_distribution.md`), so its source hash has now changed. Comment-only, no behaviour
+  change — but if a **sealed** DB row exists for this codeRef it must be re-published, and if only the
+  built-in fallback is in use nothing further is needed. **Edwin to confirm which.**

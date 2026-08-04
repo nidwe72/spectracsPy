@@ -88,7 +88,8 @@ def fittedBaseline(lam, raw, mask, order):
 
 # --------------------------------------------------------------------------- whole-spectrum baselines
 # ⚠ Shared limitation: our window is only 440-630 nm and BOTH ENDS SIT ON PIGMENT - the Soret band starts
-# at the very left edge and the chlorophyll Q flank rises into the right edge (§16.12.12). A whole-spectrum
+# at the very left edge and the PROTOchlorophyll Qy flank rises into the right edge (§16.12.12; "chlorophyll"
+# here until 2026-08-04 — the wrong molecule, `KB_spectroscopy_physics.md` §4.1). A whole-spectrum
 # baseline has no genuinely peak-free region to anchor on, which is exactly the condition these algorithms
 # assume. Measured anyway rather than argued about.
 
