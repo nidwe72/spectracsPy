@@ -1723,16 +1723,25 @@ of them on the same wall: **both principal bands are flanks** and the range is c
 
 ⇒ **Every remaining lever is a LAB or CAPTURE change, not an analysis one.** In priority order:
 
+#### ⭐⭐ Software — can start TODAY, no hardware, no bench time
+
+| | action | what it costs | status |
+|---|---|---|---|
+| ⭐⭐ **S1** | **Trim the Soret window 440–460 → 448–460** (`DevSpectralPlugin.PB_SORET_BAND`) | one line, **plus a threshold re-derivation** (`B_Soret` 1.03 → 0.69) **plus a plugin re-sign**, since the window lives in the signed artifact | ⭐ **ADOPTED (Edwin 2026-08-04)** — ship it *with* the next threshold work, not twice |
+| ⭐⭐ **S2** | **The DN guard** — two-sided, per §16.23.8: record min(S), warn out of window, propose the correction | recipe becomes an input; guard warns, never blocks | **to implement** |
+| ⛔ **S3** | **Resolve the DN contradiction** — 2.0–2.6 vs 18–26 DN for the same darkest bin (`DOC_pedestal_correction.md` §7 vs `SPEC_capture_quality.md` §16.7.2e) | nothing — **S2 logs it as a side effect** | ⛔ **§16.23.6's whole dilution conflict is contingent on this** |
+
+⚠ **S1 and S2 are the only items on this page needing neither the capillaries nor an evening at the bench.**
+
+#### Bench and hardware
+
 | | action | what it unblocks | status |
 |---|---|---|---|
 | ⭐⭐ **1** | **The capillary protocol** — `SPEC_capture_quality.md` §16.23, gates G1/G2 first | ⭐ within-green grading (SNR 1.8 → 18); a real concentration axis ⇒ **A2 and A4 become measurable**; OD-dosing ⇒ **retires the pedestal correction and A1** | ⏳ capillaries arriving |
 | ⭐ **2** | ⭐ **R0b SIMPLIFIED — three oils, ONE evening, standard recipe, one tube each, plus one MCT blank** | the session confound (§3.4); a second brown fill (§2.2); the background *measured* rather than inferred (§7.12) | ⏸ postponed, **now 4 tubes not 9** |
-| **3** | ⭐ **The DN guard** — two-sided, per §16.23.8 | stops the blue end silently entering the compressed regime; a precondition for trusting any absolute value | **to implement** |
-| **4** | ⭐ **Trim the Soret window to 440–460 → 448–460** | free +7 % / +11 % / −15 % on the three axes; drops the bins §7.13 shows are contributing 28 % of `r_Q`; ⚠ moves the scale | ⭐ **ADOPTED (Edwin 2026-08-04)** |
-| ⛔ **4a** | ⭐⭐ **RESOLVE THE DN CONTRADICTION** — our own specs disagree: 2.0–2.6 DN (`DOC_pedestal_correction.md` §7) vs 18–26 DN (`SPEC_capture_quality.md` §16.7.2e) for the same darkest bin | ⛔ **§16.23.6's entire dilution conflict is contingent on which is right.** Archived PDFs store derived spectra, not raw counts, so it needs one live capture — **and the DN guard (item 3) logs it anyway** | ⭐ **resolves itself with item 3** |
-| ⛔ **4b** | ⭐ **THE STRAY-LIGHT GATE — block the beam, read `S`** (§16.23.6f) | decides whether the blue floor is quantisation (fixable in software) or stray light (needs baffling). **One capture, one minute** | gated on 4a |
-| **4c** | **Dual-exposure absorbance** — low exposure for R, high for S, corrected by log(E_S/E_R) (§16.23.6e) | ⭐ dissolves §16.23.6's dilution conflict outright — both constraints met at 1:250, no lamp purchase | gated on 4b |
-| **4d** | ~~analog-vs-digital gain test~~ | ✅ **DONE 2026-08-04: the gain is ANALOG** (no histogram gaps at any setting). ⚠ But the range is only **1.51×**, short of the 2.3× the guard needs — helpful, not sufficient (§16.23.6d) | done |
+| ⛔ **3** | ⭐ **THE STRAY-LIGHT GATE — block the beam, read `S`** (§16.23.6f) | decides whether the blue floor is quantisation (fixable in software) or stray light (needs baffling). **One capture, one minute** | gated on **S3** |
+| **4** | **Dual-exposure absorbance** — low exposure for R, high for S, corrected by log(E_S/E_R) (§16.23.6e) | ⭐ dissolves §16.23.6's dilution conflict outright — both constraints met at 1:250, no lamp purchase | gated on **3** |
+| **4b** | ~~analog-vs-digital gain test~~ | ✅ **DONE 2026-08-04: the gain is ANALOG** (no histogram gaps at any setting). ⚠ But the range is only **1.51×**, short of the 2.3× the guard needs — helpful, not sufficient (§16.23.6d) | done |
 | **5** | **Extend the red range to ~660 nm** | ⭐ the structural fix — turns both flanks into bands and gives the first genuinely quiet region (§7.8, §7.9b) | hardware, cost unknown |
 | **6** | **The validation study** — 12+ greens, 2–3 browns, jury **visual sub-score** recorded separately, plus **roast level** as objective ground truth | whether the instrument measures what it claims. **Never done, and not on any milestone** | open |
 | **7** | **Q3** — a primary UV-Vis of *protopheophytin a* | C7, band decomposition; not on the open web (§3.12a) | purchase/library |
