@@ -468,6 +468,43 @@ slope together** — the whole curve lifts *and* rotates. A constant subtraction
 standard normal variate removes offset and scale; **neither removes a slope.** A straight line fitted
 through two separated anchor windows removes both (`SPEC_capture_quality.md` §16.10.2).
 
+This construction is not new and not ours. It is the **Morton–Stubbs correction for irrelevant absorption**,
+introduced by Morton and Stubbs in 1946 for the spectrophotometric assay of vitamin A in liver oils, and still
+in pharmacopoeial use today — in its three-point **Allen** form it is the standard correction for serum
+haemoglobin against interference from bilirubin and turbidity. *Irrelevant absorption* is the pharmacopoeial
+term for any absorbance that does not come from the analyte: impurities, degradation products, or, as here, a
+scattering pedestal. The method asks two things of the measurement: that this irrelevant absorption is
+**linear across the analytical window**, and that the anchors it is fitted from lie **outside the analyte's own
+absorption**, so that what they measure is background and nothing else.
+
+Naming it matters, but not as a certificate. Morton–Stubbs rests on two conditions, and this instrument
+satisfies neither of them.
+
+The first is that the irrelevant absorption is **linear** across the window. A scattering pedestal is convex,
+so a straight chord over-subtracts in the middle; the size of that over-subtraction is the residual $r_Q$ to
+which `DOC_pedestal_correction.md` is devoted. It is worth about a quarter of the Q band at working strength.
+
+The second is that the flanking anchors contain **none of the substance being measured**. Ours plainly do. The
+red anchor at 620–630 nm sits on the pigment's own Qy flank, and comparing it against the scattering law that
+should govern a true background — the pedestal at 625 nm can be at most about half its value at 530 nm for
+small particles, or three-quarters for large ones — puts between **half and four-fifths of that anchor's
+absorbance down to pigment rather than background**. By the method's own standard it is not a correction
+window at all.
+
+Neither deviation is an oversight, and the second is deliberate. Removing the Qy flank from the anchor has
+been tried, and the oil classes then overlap: the contamination is carrying the speciation signal the metric
+exists to detect. Nor does it break the dilution invariance derived later in this chapter, because anchor
+pigment scales with concentration exactly as the bands do and divides out of the ratio.
+
+What it does cost is comparability. Because a concentration-proportional amount is subtracted from both bands
+before the ratio is taken, $M_\infty$ is not the pigment's Soret-to-Q ratio in any absolute sense — it is that
+ratio as seen through this window, on this instrument. That is the deeper reason the threshold is tied to this
+rig and this recipe rather than to the molecule.
+
+So the honest statement is narrower than "we use the standard method". We use its construction, knowingly
+outside its stated conditions, and the two departures are quantified above. Naming it earns its place by
+supplying those conditions as a checklist — which is how the departures came to be measured at all.
+
 ### 5.2 The definition
 
 Take every grid point inside **either anchor window** — $W_{near}$ (520–540 nm, 135 points) and
@@ -527,6 +564,104 @@ and it is the whole story of §5.4.
 > same window must meet.
 
 ![**Figure 3** — the same two curves after each has had its own baseline subtracted. The two anchor windows are pinned to zero by construction; everything else is now measured relative to them.](metric_algebra_corrected.png)
+
+### 5.3a What the asymmetry costs — the error budget it implies
+
+The table above is usually read as a statement about signal. It is equally a statement about error, and in
+that reading it is much sharper. If the baseline lands in the wrong place by some small amount, the two bands
+do not suffer equally: the same absolute error is divided by 1.13 at the Soret and by 0.073 at the Q band.
+
+| a 0.001 A baseline error is worth | on the metric |
+|---|---|
+| at the Q band | **1.4 %** |
+| at the Soret | 0.09 % |
+
+The metric is therefore about **fifteen times** more sensitive to where the baseline lands under the Q band
+than under the Soret — the ratio is simply $B_{Soret}/B_{Q}$, so it is exactly the band asymmetry read as an
+error budget. The figure grows as the fill weakens: at roughly half the standard concentration the corrected
+Q band falls to 0.036 A and the same error costs 2.8 %, a seventeen-fold asymmetry
+(`SPEC_capture_quality.md` §16.24.2). Weak fills do not merely add noise; they multiply the leverage of every
+error that reaches the denominator. Everything at the blue end is a rounding error, and the precision of the whole
+construction is set by one number: the fitted line's height at roughly 570 nm.
+
+This overturns the intuition that the geometry suggests. The Soret window sits **outside** both anchors — it
+is an extrapolation some 80 nm beyond the nearest one, which looks like the exposed end and is the first thing
+a reader worries about. It is not: the baseline lands near zero there, so the long lever costs about one per
+cent. The fragile band is the **interpolated** one, sitting between the anchors where the geometry is
+comfortable. The quantity to reason about is not how far a window is from its anchors, but what fraction of
+that window's absorbance the baseline removes.
+
+### 5.3b The objection this raises, and what the archive says
+
+If the denominator is that exposed, and if the red anchor is the noisier of the two — it is a third the width
+of the near window, sits where the lamp is dimmest, and rides the Qy flank — then the metric ought to be
+hostage to it. On one archived set the far anchor scatters by 0.031 A between re-seats of a single fill, while
+the entire corrected Q band is 0.068 A. Roughly two fifths of that scatter feeds the baseline at the Q band,
+so a denominator built this way should carry something like 0.013 A of noise. The measured figure is
+**0.0019 A**, some seven times smaller.
+
+The reason is that the far anchor and the Q band do not wander independently. Across the runs of a set they
+move together, and what the subtraction removes is largely the part they share. Measured as a correlation
+between the two band means, run by run within a set, the figure runs from 0.84 to 0.99, and the corrected
+band's scatter comes out four to eighteen times below what independent noise would predict.
+
+That result needs one qualification, because part of that agreement is trivial. The fill also changes slowly
+during a set, and both bands follow concentration, which would correlate them whatever else were true.
+Removing that axis and correlating what remains separates the two cases. In one set the agreement survives
+almost untouched — concentration accounts for three per cent of the far anchor's variance, and the two bands
+still track at 0.99, which is common-mode rejection in the strict sense. In another, concentration accounts
+for most of the variance and the remaining correlation falls to 0.34, so there the subtraction is removing a
+concentration drift that the ratio would have divided out anyway. Both mechanisms are present, in proportions
+that differ from fill to fill.
+
+What survives the qualification is the measured consequence rather than a single explanation: the corrected
+Q band's scatter really is far below the independent prediction in every set examined. What varies is how
+much credit the baseline deserves for it, and this is one session's worth of evidence across five sets. It is
+recorded here because it answers the objection that §3.5 otherwise leaves open — an anchor placed on signal,
+and on the noisiest part of the spectrum, would seem to be the worst possible choice for the denominator, and
+in practice it is not.
+
+### 5.3c Why that is not a coincidence — the two windows share one axis and differ on the other
+
+There is a physical reason the arrangement behaves this way, and it is worth stating because it turns a lucky
+empirical result into a designed one. The two windows sample the same Q manifold of the same molecule, and
+that manifold can be moved along two independent axes.
+
+The first is simply **how much pigment is in the beam** — concentration, path length, how the jar happens to
+sit. Beer–Lambert scales every band of a fixed pigment population by the same factor, so this axis moves the
+far window and the Q window *together*. It is the axis that varies between re-seats of one fill, and it is
+precisely what the correlation of §5.3b measures. That the correlation is *positive* is the diagnostic: if
+speciation were driving the run-to-run scatter, intensity would be moving *between* the two windows and they
+would vary in opposition.
+
+The second is **speciation** — the loss of magnesium that turns protochlorophyll into protopheophytin. As §3.3
+describes, that lowers the symmetry from $D_{4h}$ to $D_{2h}$, lifts the degeneracy of the Q states and
+redistributes intensity out of the reddest band toward the blue. This axis moves intensity *from* one window
+*into* the other, and leaves the total roughly where it was.
+
+The two axes are cleanly separable in the archive, and the separation is stark:
+
+| between green and brown | green | brown | Cohen's *d* |
+|---|---|---|---|
+| far window alone | 0.1566 | 0.1526 | **0.08** |
+| Q window alone | 0.1792 | 0.2251 | −0.95 |
+| Soret window alone | 1.0353 | 1.0855 | −0.35 |
+| **far ÷ Q — the split between them** | 0.8673 | 0.6750 | **3.43** |
+
+**No single window separates the classes.** The far window on its own is worthless for it, at *d* = 0.08. What
+separates them is how the intensity is *divided* between the two, which is exactly what a redistribution
+mechanism predicts and what a change in amount cannot produce.
+
+This is what makes the far anchor defensible despite §16.10.2a's second violation. It shares the amount axis
+with the band it is subtracted from, so the fluctuations they have in common — seating, path, concentration —
+partly cancel in the subtraction. And it differs from that band on the speciation axis, so the quantity the
+metric exists to detect survives the same subtraction. An anchor genuinely free of pigment, as Morton–Stubbs
+requires, would share neither: it would cancel less noise and carry no signal. The window is doing two jobs at
+once because the physics of the two axes allows it to.
+
+⚠ The argument is a reading of the measurements above rather than an independent prediction, and the
+within-set evidence behind it is one session. It is offered as the reason the arrangement is not accidental,
+not as proof that it must hold on another instrument.
 
 ### 5.4 ⭐ Why it discriminates — the denominator inverts
 

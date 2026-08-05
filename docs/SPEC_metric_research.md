@@ -1278,10 +1278,16 @@ denominator is a small difference of large numbers, and the ratio inherits all o
 | **B** derivatives | the far D2 term is 3× noisier — a flank has no curvature | 7.7 |
 | **C** smooth background | a smooth baseline cannot distinguish a monotonic flank from a rising background | 7.6 |
 | **D** third band pair | 7:1 band asymmetry ⇒ no pedestal cancellation | 7.5 |
+| **E** λ⁻ⁿ turbidity baseline *(added 2026-08-05)* | the far anchor **rises** toward the red, so no physical `n` exists | **7.14** |
 
 **Three of the four died on the same fact: the Qy maximum lies beyond 629.8 nm, so the far band is a
 truncated flank rather than a resolved band.** A flank has no peak to bracket (C16), no curvature to
 differentiate (B), and no turning point for a smooth baseline to pass under (C).
+
+⭐ **Route E, added 2026-08-05, dies on the SAME window from the other side** (§7.14.2): it needs a
+scattering-only anchor, and the far window rises 2.3× toward the red instead of falling, so the power-law fit
+has no admissible exponent at all. That makes five routes, and it is the cleanest disproof of assumption A6 in
+this document because it rests on no metric comparison.
 
 ⇒ ⭐⭐ **This is no longer an analysis problem. It is 30 nm of missing spectrum.** Extending capture to
 roughly **660 nm** — which `KB_spectroscopy_physics.md` §4.1 already anticipated (*"if Qy is at ~625,
@@ -1641,6 +1647,111 @@ against a 0.108 A change in `k`.
    classes disappears rather than being corrected.
 
 ---
+
+### ⛔⭐ 7.14 · EXTERNAL-LITERATURE AUDIT — the orthodox scatter corrections, priced against our window  *(Edwin 2026-08-05: "that's a real, standard technique … make a web research on this and tell me what and how we could use this")*
+
+Tool: **`diagnostics/scatter_correction_audit.py`** (reproduces every number below).
+Prompted by a proposal of Edwin's that turned out to be single-point baseline anchoring
+(`SPEC_capture_quality.md` §16.24.9 — proved a no-op on `M`). The question behind it is fair and had never
+been asked head-on: **the wider spectroscopy community has standard machinery for removing a scattering
+pedestal. Why are we not using it?** This section prices each named method against our actual window.
+
+⚠ **This section CONFIRMS §7.8, it does not extend it.** The conclusion below was already reached there from
+the inside; what is new is (a) the naming of the incumbent, (b) a **fifth** closed route with a sharper
+diagnostic than the other four, and (c) the fact that the *literature's own prerequisites* independently
+select the same fix. Treat it as corroboration from a second direction, not as a new finding.
+
+#### 7.14.1 ⭐ The incumbent has a NAME, and it is the pharmacopoeial standard
+
+| method | model assumed | what it requires |
+|---|---|---|
+| **Morton–Stubbs / Allen correction** | irrelevant absorption is **linear** across the band, corrected from flanking points | flanking points free of analyte |
+| **Dual-wavelength (Chance)** | difference of λ_sample and λ_ref cancels scatter | a λ where the analyte does not absorb |
+| **λ⁻ⁿ turbidity baseline** | scattering is a power law, n ≈ 4 (Rayleigh) → 2 (Mie) | a **scattering-only** window to fit `n` |
+| **EMSC** | `x = Σᵢcᵢλⁱ + m·x_ref + Σⱼgⱼzⱼ + ε`; `x_corr = (x − baseline − interferents)/m` | a reference spectrum **and a training set** |
+| **2nd derivative** | annihilates any locally-quadratic baseline exactly | resolved peaks with real curvature |
+
+⭐ **Our shipped two-window linear baseline IS the Morton–Stubbs correction** — linear irrelevant absorption
+removed from two flanking anchors, the same construction used for vitamin A in liver oils and, as the Allen
+variant, for serum haemoglobin against bilirubin and turbidity. ⇒ **The incumbent is not a naive choice that
+the literature would improve on; it is the textbook method.** Worth stating plainly, because §16.10.2 argues
+for it from first principles and never noted that it has a century-old name.
+
+#### ⛔ 7.14.2 ROUTE E — the λ⁻ⁿ power-law baseline. Closed, with the sharpest diagnostic in §7.
+
+Physics-matched and already coded (`settling_sweep.powerLawBaseline`), so it cost nothing to test. Fitted
+through the SHIPPED anchors, against the shipped linear baseline:
+
+| set | n | LINEAR mean / CV | POWER-LAW mean / CV | `n` fitted |
+|---|---|---|---|---|
+| 20260804A controls | 4 | 17.465 / **0.69 %** | 16.043 / 1.21 % | **−4.00** |
+| Steirerkraft B green | 6 | 15.619 / 3.58 % | 14.549 / 5.39 % | −3.37 |
+| Steirerkraft C green | 6 | 15.499 / 4.61 % | 14.566 / 4.03 % | −3.07 |
+| Kiendler A green | 6 | 17.115 / 4.99 % | 16.026 / 4.86 % | **−4.00** |
+| S-Budget D brown | 6 | 10.160 / 1.94 % | 9.949 / **1.36 %** | −2.36 |
+
+**Class separation: Cohen *d* 6.60 → 5.88.** No improvement on the two artifact runs either
+(`20260804A` 002 −13.5 % → −13.7 %; 006 −8.8 % → −10.2 %).
+
+⭐⭐ **But the number that matters is `n`, which RAILS AT THE −4 BOUND.** The reason is one line of data,
+and it holds on **every set in the corpus, both classes, both rig states**:
+
+| set | near 520–540 | far 620–630 | **far/near** |
+|---|---|---|---|
+| 20260804A ctrl | 0.0365 | 0.0891 | **2.44** |
+| Steirerkraft B | 0.0981 | 0.1716 | **1.75** |
+| Steirerkraft C | 0.1231 | 0.2035 | **1.65** |
+| Kiendler A | 0.0378 | 0.0947 | **2.50** |
+| S-Budget D *(brown)* | 0.1038 | 0.1526 | **1.47** |
+
+**Scattering MUST fall toward the red** (λ⁻ⁿ with n > 0). **Ours rises, on all five sets.** No physical
+exponent can fit that, so `curve_fit` runs to its bound and returns a curve bending the wrong way. ⇒ **Our far
+window is not a turbidity window — it is the Qy flank**, which §16.12.12 kept deliberately *because* it
+carries pigment. The two purposes are mutually exclusive and one window cannot serve both.
+
+⚠ **Note the brown set is the least extreme (1.47) and still rises.** So this is not a green-oil artifact; it
+is the instrument's window, and no oil in the archive escapes it.
+
+⚠ **This is the cleanest available proof that assumption A6 (a quiet far anchor) is FALSE on this instrument** —
+sharper than the four routes of §7.8, because it does not rest on a metric comparison at all: the fit simply
+has no admissible solution.
+
+#### 7.14.3 The other three, priced
+
+- **2nd derivative** — re-run as a `|d²A|` band ratio: green 5.573 ± 2.051 vs brown 4.854 ± 1.085,
+  **Cohen *d* = 0.38, classes OVERLAP**, CV 16–24 % per set. ⇒ **reproduces §7.7's route-B result from a
+  different formulation.** A flank has no curvature; differentiating removes the baseline and the signal
+  together.
+- **Dual-wavelength (Chance)** — designed to track *changes* in one turbid suspension against a
+  non-absorbing reference λ. Our two-window baseline already generalises it, and it needs the same
+  non-absorbing λ we do not have.
+- **EMSC** — the most powerful of the family, and the least applicable. It needs a **reference spectrum and a
+  training set**, which would put fitted, data-derived components inside a **sealed, signed plugin**
+  (`SPEC_plugin_distribution.md`) — a provenance problem as much as a science one. And its polynomial
+  baseline term needs a **third** anchor window to be determined at all, which is the same blocker again.
+
+#### ⇒ ⭐⭐ 7.14.4 Every method is gated by the SAME missing 30 nm
+
+Each orthodox correction needs one of exactly two things, and our window supplies neither:
+
+| requirement | needed by | do we have it? |
+|---|---|---|
+| an **absorption-free region** | λ⁻ⁿ, Allen/Morton–Stubbs, dual-wavelength | ⛔ no — 440–629.8 nm is pigment everywhere |
+| a **resolved peak with curvature** | 2nd derivative, EMSC, band fitting | ⛔ no — both bands are flank-only |
+
+⇒ **This is §7.8's conclusion arrived at from outside.** §7.8 closed four internal routes and concluded *"this
+is no longer an analysis problem, it is 30 nm of missing spectrum"*; the external literature turns out to
+require **precisely the same 30 nm**, for its own independent reasons. Two disjoint lines of argument now
+select the same fix.
+
+⚠ **Nothing here is newly actionable without the window.** The one deliverable available today is
+documentary: §7.14.1's naming of the incumbent, which means the shipped baseline needs **defending less**,
+not more — a reviewer asking *"why not use a proper scatter correction?"* can be answered *"we do; it is
+Morton–Stubbs, and the alternatives need a quiet region this instrument does not have."*
+
+⚠ **Cost caveat unchanged from §7.8:** the S-mount optics roll off past ~630 nm and the lamp collapses there,
+so the red extension remains a **hardware** question that may be expensive or impossible. This section raises
+its value; it does not lower its price.
 
 ## 8 · Open questions for Edwin
 

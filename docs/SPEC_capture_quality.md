@@ -2897,6 +2897,95 @@ A tilt is **an offset *and a slope*** in absorbance. That is why the earlier can
 constant-anchor subtraction removes the offset, SNV removes offset and scale — **neither removes a slope.**
 Fitting a straight line through two oil-quiet windows (520–540 and 600–630) and subtracting it removes both.
 
+> ⭐ **THIS CONSTRUCTION HAS A NAME, AND IT IS THE PHARMACOPOEIAL STANDARD.** It is the **Morton–Stubbs
+> correction for irrelevant absorption** (Morton & Stubbs 1946, *Analyst*; *Biochem. J.* **42**, 195 — vitamin A
+> in liver oils), in its **Allen** variant when three points are used. *"Irrelevant absorption"* is the
+> pharmacopoeial term for absorbance from anything other than the analyte — impurities, degradation products,
+> turbidity — and the correction assumes it is **LINEAR across the analytical window**, so it can be fitted from
+> flanking anchors and subtracted. That is the **construction** of our two-window fit, with the pedestal as the
+> irrelevant absorber. It is still in pharmacopoeial use (the Allen form: `1.68·A415 − 0.84·A380 − 0.84·A450`
+> for serum haemoglobin against bilirubin **and turbidity**). ⇒ **The shipped baseline is not an ad-hoc
+> invention** — the geometry is the textbook one, arrived at here independently.
+>
+> ⛔⛔ **BUT WE DO NOT SATISFY EITHER OF ITS TWO CONDITIONS — see §16.10.2a. Do not quote this as "we use the
+> pharmacopoeial method" without that section.** Full literature audit of the alternatives:
+> `SPEC_metric_research.md` §7.14.
+
+#### ⛔⛔ 16.10.2a WE USE THE MORTON–STUBBS CONSTRUCTION, AND SATISFY NEITHER OF ITS CONDITIONS  *(Edwin 2026-08-05: "does this mean that we do not follow the Morton–Stubbs method exactly?" — he is right, and the earlier wording above was too generous)*
+
+Morton–Stubbs rests on two preconditions. **Both are violated here**, and both violations were already
+documented in this spec — but had never been connected to the method's own validity conditions.
+
+| # | Morton–Stubbs requires | our status | what it costs |
+|---|---|---|---|
+| **1** | the irrelevant absorption is **LINEAR** across the window | ⛔ **violated** — the scattering pedestal is **convex**, so a chord over-subtracts in the middle | **`r_Q`** ≈ −0.0184, i.e. **25 % of `B_Q`** at working strength and **54 %** at `20260804A`'s dilution (§16.20.2, §16.24.7, `DOC_pedestal_correction.md` ch. 4) |
+| **2** | the flanking anchors are **FREE OF THE ANALYTE** | ⛔ **violated, DELIBERATELY** — 620–630 sits on the pigment's Qy flank (§16.12.12) | `M∞` is **instrument-specific and NOT literature-comparable**; the anchor does double duty as a discriminator |
+
+**How badly is condition 2 violated? Measured.** If the near anchor were pure scattering, the pedestal at
+625 nm would be `near × (530/625)^n` — 52 % of the 530 value at n = 4 (Rayleigh), 72 % at n = 2 (Mie).
+Everything above that is analyte:
+
+| set | near | far | **analyte share of the far anchor** (n=4 / n=2) |
+|---|---|---|---|
+| Steirerkraft B | 0.0981 | 0.1716 | **70 % / 59 %** |
+| Steirerkraft C | 0.1231 | 0.2035 | 69 % / 57 % |
+| Kiendler A | 0.0378 | 0.0947 | **79 % / 71 %** |
+| S-Budget D *(brown)* | 0.1038 | 0.1526 | 65 % / 51 % |
+| `20260804A` *(filtered)* | 0.0365 | 0.0891 | 79 % / 71 % |
+
+⇒ **Between half and four-fifths of the "baseline" anchor is the substance being measured.** By Morton–Stubbs'
+own standard that is not a correction window at all.
+
+#### ⇒ Why this is a design choice and not a defect — and where it genuinely costs
+
+⭐ **Violation 2 is load-bearing, not sloppiness.** §16.12.12 measured the alternative directly: strip the Qy
+flank out of the anchor and **the classes overlap**. The contamination carries the speciation signal, and
+§16.24.4 shows its scatter is largely common-mode with the Q band so it cancels rather than adds noise.
+⚠ **And it does NOT break dilution invariance** — §16.14: anchor pigment scales with `c` exactly as the bands
+do, so it divides out of the ratio. Formally, with `S = σc`, `q = κc` and anchor pigment `ac`, the corrected
+ratio is `(σ−a)c / (κ−b)c = (σ−a)/(κ−b)` — concentration-free.
+
+⛔ **What it DOES cost, and this is the honest bill:**
+1. **`M∞` is not the pigment's Soret/Q ratio.** It is that ratio *after* a concentration-proportional
+   subtraction, so it cannot be compared to a literature value or across instruments with a different window
+   (`DOC_pedestal_correction.md` ch. 8.3b). ⚠ **This is why `T` is tied to this rig and this recipe.**
+2. **The two purposes of the window are mutually exclusive**, which is exactly why §7.14's λ⁻ⁿ route has no
+   admissible exponent (`SPEC_metric_research.md` §7.14.2): a window cannot be a turbidity anchor and a
+   discriminator at once.
+3. **It removes the standard defence.** ⛔ *"We use the pharmacopoeial method"* is **not** available as an
+   answer to a reviewer. The available answer is narrower and needs the evidence: *"we use the Morton–Stubbs
+   construction outside its stated conditions, deliberately; here is what each deviation costs, and here is
+   the measurement showing the alternative is worse."*
+
+⇒ **Naming the method is still worth it** — it locates us in the literature and it supplies the two conditions
+as a **checklist**, which is how this deviation got found at all. But the earlier framing ("we are already at
+the standard, the design needs defending less") was **wrong, and is corrected here.**
+
+#### ✅ DECISION 2026-08-05 (Edwin) — KEEP THE BASELINE CONSTRUCTION AS-IS
+
+*"I think the baseline construction is worth as-is as (a) it seems to work for discrimination, (b) it can be
+argued for, and (c) we have nothing better for now."* Recorded as the standing position, with the evidence
+behind each leg:
+
+| | |
+|---|---|
+| **(a) it works** | Cohen's *d* = **6.60**, no overlap, on the post-rebuild archive (`diagnostics/scatter_correction_audit.py`) |
+| **(b) it can be argued for** | on **two** independent grounds — the Morton–Stubbs construction (§16.10.2), and the two-axis physics of §16.24.4b: the anchor shares the *amount* axis so noise cancels, and differs on the *speciation* axis so signal survives. A pigment-free anchor would do neither |
+| **(c) nothing better exists** | **five** routes now closed in `SPEC_metric_research.md` §7.8 (A–E), plus §7.14's audit of the orthodox alternatives — λ⁻ⁿ, EMSC, dual-wavelength, derivative — **all blocked on the same missing 30 nm** |
+
+⚠ **What this decision does NOT settle, and must not be read as settling:**
+- **`T` = 10.6 remains UNVALIDATED.** This is a decision about the *construction*, i.e. precision and
+  mechanism — not about where the class boundary sits. That still needs reference oils with independent
+  ground truth.
+- **A1 — whether `r_Q` transfers between oils — is still open**, and §16.16.5's serial dilution series is
+  still unrun (§16.16.12).
+- **The red-end extension past ~660 nm is still the one change that could alter the picture** (§7.8, §7.14.4).
+  Keeping the construction is the right call *given the present window*; it is not an argument against
+  widening it.
+
+⇒ ⭐ **The decision is stable against everything measured so far, and is expected to be revisited only if the
+capture window changes.**
+
 ⚠ **The LOO column below is SUPERSEDED — read §16.10.10's scoring note first.** Leave-one-*run*-out is
 optimistic here: runs within a fill share a seating state, so holding out one run leaves its near-twins in
 training. The honest figure is leave-one-**fill**-out, and on the 25-run set it is **1/25 for the linear
@@ -6602,6 +6691,11 @@ Two independent reasons, and the first is a hard stop:
 and intended: the window governs where a *verdict* is trustworthy; this experiment measures the
 untrustworthiness itself, and must therefore visit the region where it is largest.
 
+⚠ **AMENDED 2026-08-05 (§16.16.12): DOWN, but NOT PAST THE `A_Q` FLOOR.** Below `A_Q` ≈ 0.19 the
+correction reaches 54 % of its own denominator (§16.24.7) and the fit returns a nonsense `M∞` — `20260804A`
+at `A_Q` = 0.093 gave 18.5 against the oil's 11.2. The dilute rungs buy lever arm only while the model still
+holds there.
+
 ### 16.16.4 SERIAL DILUTION from one stock — not independent preparations
 
 **Do not** prepare each strength by counting drops into fresh alcohol. That yields three independent
@@ -6782,7 +6876,7 @@ than one that can only support it, and should not wait behind it.
 
 | | test | what it can do | status |
 |---|---|---|---|
-| **1** | **§16.16.5 dilution series, Steirerkraft** | **can kill it** — A1, the binding assumption | ▶ next |
+| **1** | **§16.16.5 dilution series, Steirerkraft** | **can kill it** — A1, the binding assumption | ▶ **still next — and ⛔ §16.16.12 closes the archive shortcut that looked like it** |
 | ~~2~~ | ~~camera nudge, within a session~~ | ~~could have killed it~~ | **✅ answered §16.16.10 — drift ≤ 12 % of `r_Q`** |
 | **2′** | **between-session stability** — one oil, fresh preparation, two sessions weeks apart | **can kill it** — and it is the case a multi-year history graph depends on | not scheduled |
 | 3 | **T1b, the diffuser** (§16.16.9) | confirms the mechanism only | after 1 |
@@ -6791,6 +6885,80 @@ than one that can only support it, and should not wait behind it.
 **2′ can be absorbed by the campaign** at no extra cost: schedule one oil's dilution series to be
 repeated at the end of the campaign rather than adding a session. Oil held constant, session varied —
 which is exactly the contrast the archive cannot supply.
+
+### ⛔⛔ 16.16.12 THE SERIES IS STILL NOT RUN — and the tempting shortcut is a TRAP  *(Edwin 2026-08-05: "what are the r_Q values we now have? I think we have done the dilution test for the Steirerkraft oil now")*
+
+`20260804A` is a Steirerkraft fill at roughly half the archive's concentration, so pooling it with
+`20270729B/C` gives a `B_Q` span of **2.4×** — exactly the span §16.16.2 says is needed. **It looks like the
+experiment. It is not.** Recorded here in full because the pooled fit is *persuasive*: wide span, tight
+interval, excludes zero. Everything a good measurement looks like.
+
+**All four fits, on the SHIPPED 620–630 anchor** *(`B_Soret = M∞·B_Q + k`, `r_Q = −k/M∞`; 4000-sample
+bootstrap)*:
+
+| grouping | n | `B_Q` span | `M∞` | `r_Q` | bootstrap 95 % CI | |
+|---|---|---|---|---|---|---|
+| **Kiendler A+B+C** *(the reference)* | 10 | 0.0445–0.0725 | **12.450** | **−0.0184** | [−0.0292, −0.0085] | ✅ excludes 0 |
+| Steirerkraft B+C *(as before)* | 12 | 0.0652–0.0751 | 11.181 | −0.0275 | [−0.1083, **+0.0170**] | ⚠ contains 0 |
+| **Steirerkraft B+C + `20260804A`** | 16 | 0.0313–0.0751 | 13.638 | −0.0098 | [−0.0147, −0.0067] | ⛔ **INVALID** |
+| `20260804A` alone | 4 | 0.0313–0.0379 | **18.544** | +0.0020 | [−0.0024, +0.0077] | ⚠ contains 0, wrong sign |
+
+✅ **Row 1 is a real result worth keeping: the shipped constant reproduces exactly on the shipped anchor**,
+`r_Q` = −0.0184 with `M∞` = 12.450 and an interval excluding zero.
+
+#### ⛔ Why row 3 must not be used — the collinearity check that settles it
+
+Fit the line on B+C alone, then ask whether the new session lies on it. If the model holds, it must:
+
+```
+Steirerkraft B+C line:   B_Soret = 11.181 * B_Q + 0.3078
+
+run     B_Q     B_Soret obs   predicted   residual
+001   0.0379        0.6642      0.7312     -0.0670
+003   0.0358        0.6306      0.7085     -0.0779
+004   0.0341        0.5906      0.6885     -0.0979
+005   0.0313        0.5441      0.6577     -0.1136
+
+   cluster offset = -0.0891 A  =  2.0 sigma against the B+C residual sd
+```
+
+And `M∞`, which is supposed to be a property of the **oil**: **11.181** for Steirerkraft B+C against
+**18.544** for `20260804A` — *the same oil*. ⇒ **These are not two ends of one line. They are two clusters,
+and the "fit" is the chord between them.**
+
+⚠⚠ **THE TIGHT INTERVAL IS THE TRAP, NOT THE REASSURANCE.** The bootstrap CI is narrow **because** the
+clusters are far apart — maximum lever arm on the extrapolation to `B_Q` = 0. That is precisely the geometry
+in which non-collinearity does the most damage, and **a bootstrap cannot detect model misspecification**: it
+resamples the points, not the assumption that one line generates them. ⇒ **A tight CI on a mis-specified
+model is worse than a wide one on a sound one**, because it invites belief. Cf. §16.15's shortcut estimator,
+which failed the opposite way (sharp point estimate, CI wider than the regression it was to improve) — the
+same lesson from both directions: **the interval never validates the model.**
+
+#### Three further disqualifications, any one sufficient
+
+1. **§16.16.4 requires SERIAL DILUTION FROM ONE STOCK.** These are three fills across three sessions, so
+   §16.15's preparation confound is fully back — the thing §16.16.4 exists to prevent.
+2. ⛔ **`20260804A` is FILTERED.** §16.21.0a: filtration removes the flat coarse population and keeps the
+   curving fine one, i.e. it changes the pedestal's **composition** — so a filtered fill has a **different
+   `r_Q` by construction**. Filtered and unfiltered points cannot enter one pedestal fit.
+3. **Between-session `r_Q` stability is untested** (§16.16.11 item 2′), so pooling across sessions assumes
+   exactly what is unverified.
+
+⚠ **One coincidence not to over-read:** row 3's −0.0098 would, if believed, say *"filtering shrank `r_Q`"* —
+which §16.21.0a argues is impossible. Two independently-derived reasons to distrust the same number; neither
+is evidence against §16.21.0a, because the fit is void for the reasons above.
+
+#### ⇒ What still has to be run — §16.16.5 unchanged, plus two additions
+
+The recipe stands: serial dilution from one stock, **18 ml + 6 drops → 1:1 → 1:1**, 4 runs each = 12 runs,
+span ≈ 4×, se ≈ 0.002, with §16.16.6's three controls (fixed stir-to-measure latency, log `A@520–540`,
+non-monotone order **3 → 6 → 1.5**). Two additions from `20260804A`:
+
+- ⭐ **All rungs either filtered or unfiltered — never mixed** (disqualification 2 above).
+- ⭐ **Keep `A_Q` ≥ 0.19 at the MOST DILUTE rung** (§16.23.9 Rule 2). Below the floor `r_Q` reaches 54 % of
+  its own denominator (§16.24.7) and the model is being read outside the range where it behaves.
+  ⚠ This tightens §16.16.3's "go DOWN in concentration": down, but **not past the floor** — `20260804A` at
+  `A_Q` = 0.093 is what that looks like, and it returned `M∞` = 18.5.
 
 ---
 
@@ -8876,6 +9044,9 @@ vessel proposal was not.
 that protocol cannot fix, and it is what gates the one-measurement protocol (§16.11.13). This protocol makes
 an independent preparation cost one capillary and one tube.
 
+⇒ **Two standing bench rules govern this recipe — §16.23.9. Read them before changing the strength or
+deciding whether to filter.**
+
 ### 16.23.3 The numbers — why 60 µL and 15 mL
 
 **60 µL / 15 mL = 1:250**, against today's estimated working point of **~1:243**. A 3 % difference, i.e.
@@ -9156,6 +9327,666 @@ A = \frac{1}{\ln 10} = 0.434 \qquad (T = 36.8\ \%)
 
 With R ≈ 88 that is **S ≈ 32 DN — the centre of the existing 20–40 DN band.** ⇒ **The spec's target was
 already right, for a reason nobody had written down.**
+
+---
+
+### ⭐⭐ 16.23.9 TWO STANDING BENCH RULES — filtration, and strength  *(Edwin 2026-08-05: "add this to the lab recipes together with the evidence that reasons about it")*
+
+Both rules are now settled by **theory and measurement independently**. They belong to the recipe, not to an
+analysis section, because they govern what the operator does at the bench.
+
+#### ⭐ RULE 1 — Filter for σ_fill only. Expect NOTHING for the metric.
+
+**Keep filtering** (0.22 µm PTFE) — but only for the experiment it was bought for, §16.21.1's **σ_fill via the
+aliquot step**. ⛔ **Do not expect it to improve the reading**, and do not treat a filtered fill as a better
+measurement than an unfiltered one.
+
+| | evidence |
+|---|---|
+| **predicted, 2026-08-03** | §16.21.0a: a 0.22 µm filter removes the **flat coarse** population and passes the 50–200 nm droplets that do the *curving*; and a flat component drops the band **and both anchors together**, so `B_Q` is **unchanged by construction**. ⇒ *"filtration leaves the correction equally important, or makes it MORE so"* |
+| **measured, 2026-08-04/05** | `near/A450` fell **~31 %** (coarse scatter gone — the prediction's first half) ✅ · metric CV **4.0 %** over five runs, **inside the archive's unfiltered 3.6–5.0 %** ❌ · clearing drift **−12.3 %/87 min against unfiltered −7.7…−11.1 %**, i.e. unchanged ❌ (§16.24.5c, §16.24.7) |
+| **still untested** | ⚠ **σ_fill itself** — all six runs of `20260804A` are ONE fill, so the aliquot step was never exercised. **The filter arm still needs its own experiment; nothing here substitutes for it** |
+
+⇒ **The prediction was right, including its mechanism.** The pedestal fell and the metric did not move,
+because that is precisely what a two-window baseline does to a flat component. ⚠ **A ~31 % scatter reduction
+is therefore NOT a reason to prefer filtered fills for routine measurement** — it buys a cleaner-looking curve
+and nothing the verdict can use.
+
+#### ⭐⭐ RULE 2 — Measure at standard strength. NEVER thin. *(and this is why Rule 1 matters)*
+
+**⛔ THE LINKED RISK, stated plainly: a visibly cleaner sample invites a thinner fill. That is exactly the
+wrong direction, and it is the one way filtration can actively hurt you.**
+
+Thin dilution does not merely add noise — it **doubles the leverage of every error that reaches the Q band**,
+because the metric's denominator *is* the Q band above baseline (§16.24.2's 17× asymmetry):
+
+| | `QB` | a 0.009 A shape error costs | `r_Q` as a share of `QB` |
+|---|---|---|---|
+| **`20260804A`** *(over-dilute, filtered)* | **0.036** | **~25 %** | **54 %** ⛔ outside the 23–43 % on record |
+| Steirerkraft at working strength | 0.068–0.073 | ~12 % | ~25 % |
+
+Measured consequences on the thin fill, both of which vanish at working strength:
+
+- the exposure artifact cost **−13.5 %** (§16.24.1); the same absolute error at working strength costs ~half;
+- the **pedestal metric stopped being dilution-invariant** — log–log slope **+0.334** against the shipped
+  metric's +0.049 (§16.24.7) — because `r_Q` was contributing over half its own denominator. **The correction
+  was pushed outside its usable range by the dilution alone.**
+
+⇒ **Operational rule:** prepare to §16.23's 60 µL / 15 mL and do not "stretch" a fill to get another reading
+out of it. If a tube reads thin, make a new one — at ~€0.10 a preparation that is the cheapest correction
+available anywhere in this document.
+
+#### Where the line actually is — stated in `A_Q`, not in "thin" or "strong"
+
+⚠ **§16.11.15's warning applies: *dilution* and *concentration* are inverses and the words have caused real
+confusion here before. State `A_Q`.** §16.23.6a's red constraint is **`A_Q` ≥ 0.19**. Measured against it:
+
+| set | `A_Q` | `A_Soret` | verdict |
+|---|---|---|---|
+| **`20260804A`** *(this session)* | **0.093** | 0.599 | ⛔ **49 % of the floor** |
+| Kiendler A | 0.111 | 0.826 | ⛔ 58 % of the floor |
+| Steirerkraft B | 0.197 | 1.093 | ✅ |
+| S-Budget D | 0.225 | 1.085 | ✅ |
+| Steirerkraft C | 0.230 | 1.186 | ✅ |
+
+⇒ **`20260804A` ran at half the specified `A_Q` floor** — that is the whole of Rule 2 in one number, and it is
+the quantity to check, not an impression of how the tube looks. ⭐ **And Kiendler A was below it too**, which
+is worth noting on its own: this is not a one-off operator slip but a drift the recipe has to defend against.
+*(§16.11.15 Check 1: scatter goes as 1/`A_Q`, so at half the floor the precision penalty is ~2×.)*
+
+⚠ **One genuine conflict, unresolved.** §16.23.6a's **blue** constraint pulls the opposite way — it needs
+`A_Soret` ≲ 0.64, i.e. a **more dilute** fill than any of the compliant sets above, to keep the darkest Soret
+bins clear of the 16 DN guard. ⛔ **There is no dilution satisfying both**, and §16.23.6 records that as a
+dynamic-range limit rather than a recipe problem. **Until §16.23.6f decides it, Rule 2 governs** — the Q-band
+lever is measured (§16.24.2, §16.24.7) while the blue-end cost is still a hypothesis (§16.23.6d/f).
+⚠ Note `20260804A` sat at `A_Soret` = 0.599, i.e. it *did* satisfy the blue constraint — and still produced
+the worst-behaved session in the archive. **That is evidence, if weak (n=1 session), that the blue end is the
+cheaper of the two to violate.**
+
+## 16.24 ⭐⭐ THE ERROR BUDGET IS 17× ASYMMETRIC — and the exposure does not cancel  *(session `20260804A`, 2026-08-04/05: Edwin, "001 and 003 have the same Soret level and 002 is lower … so this does not seem to be something monotonically")*
+
+Four runs of **one** filtered, deliberately over-dilute Steirerkraft fill (18 ml IPA + 6 drops, then through a
+0.22 µm syringe filter). The session was not designed as an experiment — it produced five results anyway,
+three of which are about the **algorithm**, not the rig. Diagnostic: `diagnostics/probe_20260804A.py`.
+
+⚠ **The headline is §16.24.2.** The exposure finding (§16.24.1) is the one that started it, but the reason a
+2.5 % instrument mismatch became a 14 % metric error is structural and would have bitten eventually anyway.
+
+### 16.24.0 The six runs
+
+| run | time | AE exposure | A450 | SoretB | QB | **`Verdict · baseline`** | `+ pedestal` |
+|---|---|---|---|---|---|---|---|
+| 001 | 22:04 | 104 | 0.6214 | 0.6642 | 0.0379 | **17.537** | 11.803 |
+| 002 | 22:26 | **90** | 0.6709 | 0.7081 | 0.0469 | **15.114** | 10.852 |
+| 003 | 22:35 | 104 | 0.5777 | 0.6306 | 0.0358 | **17.596** | 11.627 |
+| 004 | 23:31 | 104 | 0.5446 | 0.5906 | 0.0341 | **17.343** | 11.259 |
+| 005 | 23:57 | 104 | 0.4912 | 0.5441 | 0.0313 | **17.385** | 10.949 |
+| 006 | 00:05 | 104 | 0.5141 | 0.5489 | 0.0345 | **15.931** | 10.385 |
+
+⚠ **Runs 005/006 were added after §16.24.1–.6 were first written**; every figure below is stated on the final
+six. **TWO runs are bad, for UNRELATED reasons** — 002 is the exposure artifact (§16.24.1), 006 is a turbidity
+event (§16.24.7). The other four agree to 0.7 %.
+
+Edwin's non-monotonic pattern — 001 ≈ 003, 002 apart — is **exactly the exposure column**. The exposures were
+recovered by reproducing each capture's `CAPTURE-LOWDN` value from its stored spectrum and matching it back to
+the stdout log; ⚠ **the applied exposure is not persisted in `workflow.json`** (see the ROADMAP item), so this
+reconstruction is the only way the mapping exists at all.
+
+### 16.24.1 ⭐ Exposure does NOT cancel in `T = S/R`, and settling is excluded
+
+The pipeline assumes a changed exposure cancels because both legs share it. It does not.
+
+| | exp-104 controls (001/003/004/005) | exp-90 run |
+|---|---|---|
+| `Verdict · baseline` | 17.537 / 17.596 / 17.343 / 17.385 — **CV 0.7 %** | **15.114 = −13.5 %** |
+| leg-scale mismatch S/R (DN) | ≤ 0.5 % | **2.5 %** |
+| flat absorbance offset | +0.0033 / −0.0038 / −0.0101 | **+0.0239 A** |
+| 473 nm spike leakage (§16.24.8) | 0.014 – 0.091 | **0.445** |
+
+Four controls spanning 113 min and a 21 % concentration change agree to 0.7 %.
+⚠ **`n = 1` at exposure 90 — exposure is confounded with everything else about that run**, and §16.24.7's
+run 006 shows a *non*-exposure disturbance moving the metric −8.5 %, of the same order. What still separates
+002 is that it is anomalous on **two instrument-side measures that 006 passes cleanly** — the leg-scale
+mismatch above and the spike leakage of §16.24.8. Both are independent of the metric. ⇒ the exposure link is
+**well-evidenced but not closed**; it rests on one run.
+
+**⛔ SETTLING IS EXCLUDED** (Edwin, from the log): in the exposure-90 block the
+reference reads `minDn=96.2` and the *next* capture at the same exposure reads `minDn=96.2` — identical to
+0.1 DN, so the sensor had fully arrived. The first block's three consecutive references drift 111.1 → 111.7 →
+111.8, **+0.6 %**, against the 2.5 % to be explained.
+
+**The mechanism is NOT identified.** The sensor transfer is demonstrably not the pure `pow2.2` the decode
+assumes — the reference's own drop is DN-dependent (×0.886 in the dimmest fifth of the band, ×0.920 in the
+brightest) — but a toe cannot be confirmed as the cause, and one test must not be used:
+
+> ⚠ **`corr(excess A, sample DN)` IS CONFOUNDED.** Dark sample bins *are* the high-absorbance bins, so the
+> concentration drift of §16.24.5(b) fakes the toe signature exactly. Control run 004 shows a **larger** such
+> correlation (+0.58) than the suspect run 002 (−0.28). The test cannot separate the two and was withdrawn.
+
+#### ⛔ 16.24.1a THREE SENSOR MODELS RULED OUT — and one of them is a proof, not a fit
+
+Each was applied to the stored `S` and `R` spectra and the metric recomputed (the reconstruction reproduces the
+shipped numbers exactly at zero correction, so the pipeline is faithful):
+
+| model | what it would be | result on 002 vs the controls |
+|---|---|---|
+| **wrong gamma** | decode exponent ≠ 2.2 | ⛔ **exactly zero effect** — 15.114 at γ = 1.8, 2.2 and 2.6 |
+| **black level** | additive offset BEFORE the gamma | ⛔ −13.5 % → −12.6 % at 20 DN. No |
+| **stray light** | additive offset AFTER the gamma | ⛔ **worse** — −13.5 % → −14.5 % |
+
+⭐ **The gamma row is an algebraic result, and it generalises far past this session.** A wrong exponent scales
+`A` by a constant; the baseline is LINEAR in `A`; so both bands scale identically and **the ratio is
+invariant**. ⇒ **`M` is already immune to the entire class of pure-power transfer errors** — and under any
+pure-power sensor, exposure cancels *exactly* in `T = S/R`. There is therefore **no metric-side change left to
+make**: whatever breaks exposure invariance lies outside that class, and the two simplest departures from it
+(offsets on either side of the decode) are now excluded too. Cf. §17.5.1, which reached the same invariance
+conclusion for the verdict from the opposite direction.
+
+⇒ Remaining suspects are things that are **not a static per-pixel transfer**: camera-internal level-dependent
+processing (denoise/sharpen — not controllable), the discrete reject decisions inside our own reduction
+(⚠ `RobustReductionLogicModule`'s thresholds are *relative* by design and say so, so it is scale-invariant in
+principle — but a reject is a yes/no that can flip near the boundary at a different brightness), and whatever
+produces §16.24.8a's shift-like residual.
+
+**▶ The decisive experiment** (one evening, no consumables): one fill, one seating, no re-seats — capture
+reference+sample at a ladder of **pinned** exposures and plot both `A` and the metric against exposure.
+⭐ **The ladder MUST be INTERLEAVED (104, 90, 104, 90, …), not swept monotonically** — at §16.24.5(b)'s
+0.00085 A/min a monotone sweep aliases the drift straight onto the exposure axis. Flat ⇒ invariance holds;
+sloped ⇒ that slope *is* the correction. ⚠ Until then **runs at different exposures are not comparable**, and
+archived sets should be checked for exposure homogeneity before pooling — the archive sets vary by 3.0–7.2 %
+on the reference-level proxy.
+
+### 16.24.2 ⭐⭐ THE HEADLINE — the two bands are 17× apart in error sensitivity
+
+`M = SoretB / QB` treats its two bands as peers. They are nothing of the sort.
+
+| run | rawQ | baseline at Q | **= QB** | rawSoret | baseline at Soret | **= SoretB** |
+|---|---|---|---|---|---|---|
+| 001 | 0.0926 | 0.0547 | **0.0379** | 0.6608 | −0.0034 | **0.6642** |
+| 003 | 0.1032 | 0.0674 | **0.0358** | 0.6171 | −0.0135 | **0.6306** |
+| 004 | 0.0914 | 0.0573 | **0.0341** | 0.5846 | −0.0060 | **0.5906** |
+
+**The subtracted baseline is 62 % of the raw Q band, and −1.0 % of the raw Soret.** `QB` is a small difference
+between two comparable numbers; `SoretB ≈ rawSoret`. Hence:
+
+| a 0.001 A baseline error is worth… | on the metric |
+|---|---|
+| at **Q** (`QB` = 0.0359) | **2.78 %** |
+| at **Soret** (`SoretB` = 0.6285) | 0.16 % |
+| | ⇒ **17× asymmetry** |
+
+⇒ **The metric's precision is set almost entirely by where the baseline lands at 570 nm.** Everything at the
+blue end is a rounding error.
+
+⛔ **A natural worry that is WRONG, recorded so it is not re-raised.** 440–460 is *extrapolated* ~80 nm outside
+the nearest anchor, which looks like the dangerous end. It is not: the baseline lands near **zero** there, so
+the long lever costs ~1 %. The fragile band is the **interpolated** one. Anchor geometry is not the thing to
+reason about — **baseline-as-a-fraction-of-band** is.
+
+⇒ **Why it survives at all.** `SoretB` and `QB` both scatter ~6 % run-to-run and the ratio scatters **0.8 %**:
+they **covary**, because both scale with concentration. The metric is immune to anything that moves both bands
+together and 17× over-exposed to anything that moves Q alone. **Run 002 was exactly that kind of error** — a
+0.009 A shape residual on Q only.
+
+⇒ **This is a quantitative argument for the pedestal metric that §16.20.9 §2 did not have.** Dividing by
+`QB − r_Q` = 0.0359 + 0.0184 = **0.0543** is a 50 % bigger denominator, so it must be less sensitive — and it
+measurably is, at the cost of precision on clean runs:
+
+| | exp-104 mean | CV | exp-90 run |
+|---|---|---|---|
+| `Verdict · baseline` | 17.465 | **0.7 %** | −13.5 % |
+| `Verdict · baseline + pedestal` | 11.563 | 2.4 % | **−6.1 %** *(2.6 sd)* |
+
+**Half the sensitivity to the artifact, three times the noise on clean runs.** A real trade, not a free win.
+⚠ n=4 controls; recorded as a mechanism with supporting numbers, not as a settled comparison. §16.24.7 adds
+the other half of this trade — on THIS fill the pedestal metric is markedly the *less* dilution-invariant of
+the two.
+
+### 16.24.3 ⭐ The baseline SLOPE varies 39 % run-to-run — and it is anchor noise, not concentration
+
+*(Edwin: "there is the slope of the baseline that would change between the runs. how much did this change?")*
+
+Fitted slope: **4.839e-04 → 6.742e-04 A/nm**, a 39 % spread — and ⚠ **the full range sits inside the three
+exposure-104 runs**, with the exposure-90 run mid-range. It is a separate phenomenon from §16.24.1.
+
+Decomposed over 27 runs (the four archive sets + the three clean runs here):
+
+```
+total sd(slope)                    1.955e-04
+sd after removing the A450 trend   1.718e-04   -> concentration explains only 23 % of the variance
+residual sd PER SET (one fill, re-seats): 8 % / 18 % / 19 % / 19 % / 30 % of that set's mean slope
+```
+
+**Why concentration explains so little**, given that the anchors themselves plainly track it:
+
+| regressed on A450 | r² |
+|---|---|
+| near anchor (520–540) | **0.869** |
+| far anchor (620–630) | **0.777** |
+| **slope** = (far − near)/95 nm | **0.228** |
+
+⇒ **The slope is a DIFFERENCE of two strongly-correlated quantities**, so it cancels the common
+(concentration) part and retains the independent scatter. It inherits noise and sheds signal — by
+construction. And the noise is lopsided: the **far anchor carries 2–3× the near anchor's scatter** (e.g.
+Steirerkraft B, sd 0.0309 against 0.0096). It is half the width (10 nm vs 20), it sits where the lamp is
+dimmest, and it rides the Qy flank.
+
+### 16.24.4 ⭐⭐ Why the Qy-flank anchor works — the scatter is COMMON-MODE, measured
+
+The baseline at the Q centre is **58 % near + 42 % far**. A 0.031 A far-anchor scatter should therefore put
+~0.013 A onto a `QB` of 0.036 — a third of the denominator, which would be fatal. It does not:
+
+| set | sd(near) | sd(far) | **corr(far, Q)** | QB sd *if independent* | QB sd **actual** | saved by |
+|---|---|---|---|---|---|---|
+| Steirerkraft B | 0.0096 | 0.0309 | **0.992** | 0.0242 | 0.0019 | **12.6×** |
+| Steirerkraft C | 0.0109 | 0.0264 | 0.988 | 0.0215 | 0.0012 | **17.7×** |
+| Kiendler A | 0.0056 | 0.0086 | 0.843 | 0.0090 | 0.0023 | 3.9× |
+| S-Budget D | 0.0138 | 0.0222 | 0.973 | 0.0234 | 0.0034 | 6.8× |
+| 20260804A *(filtered)* | 0.0027 | 0.0122 | 0.955 | 0.0085 | 0.0019 | 4.4× |
+
+⇒ **Putting a "baseline" window ON the pigment's own Qy signal looks like a category error and is precisely
+why the metric is usable.** §16.12.12 and §16.20 kept 618–630 for *discrimination*; this is the second,
+independent reason to keep it — the far anchor's scatter is 84–99 % common-mode with the Q band and cancels
+in the subtraction, buying 4–18× on the denominator.
+
+#### ⚠ 16.24.4a QUALIFIED — how much of that correlation is COMMON-MODE NOISE, and how much is just concentration  *(Edwin 2026-08-05: "how did you derive the corr?")*
+
+The correlation above is taken **across the runs of one set** (6 runs, one fill, re-seated). ⚠ But
+concentration also drifts within a set (§16.24.5b: 7–11 % across six runs) and **both bands scale with it**,
+so they would correlate for a trivial reason that has nothing to do with noise rejection. Controlling for it
+(partial correlation on the residuals after regressing each band on `A450`):
+
+| set | `corr(far, Q)` | **partial, `A450` removed** | `r²` far~`A450` |
+|---|---|---|---|
+| **Steirerkraft B** | 0.992 | **0.996** | **0.034** |
+| Steirerkraft C | 0.988 | 0.981 | 0.529 |
+| **Kiendler A** | 0.843 | **0.341** | 0.704 |
+| S-Budget D | 0.973 | 0.867 | 0.823 |
+| 20260804A ctrl | 0.854 | 0.996 | 0.001 |
+
+⇒ **It is BOTH, in a mix that varies by set — the original claim was overstated as uniformly common-mode.**
+
+⭐ **Steirerkraft B is the decisive case FOR the mechanism:** concentration explains only **3 %** of the far
+anchor's variance, yet far and Q still track at **0.99**. Something that is *not* concentration moves both —
+seating, throughput — and that is genuine common-mode rejection, the thing the baseline is credited with here.
+⚠ **Kiendler A is the counter-case:** concentration explains 70–84 % there and the partial correlation falls to
+**0.34**, so in that set the "cancellation" is largely just both bands following the fill — which the RATIO
+already handles, and for which the baseline deserves no credit.
+
+⇒ **The measured consequence is unaffected** — `QB`'s scatter really is 4–18× below the independent-noise
+prediction in every set. Only the *reason* varies, and with it how far the result generalises: where
+concentration dominates, this says nothing about the baseline's ability to reject instrument noise.
+
+#### ⭐ 16.24.4b THE PHYSICS BEHIND IT — two orthogonal axes, and neither window works alone  *(Edwin 2026-08-05: "maybe the red-window change is caused by the lifted degeneration and the induced shift towards the blue, so the correlation is physically arguable")*
+
+Edwin's instinct is right that physics should be brought in — but it attaches to the **discrimination**, not to
+the correlation, and separating them makes the case stronger than either alone. The two windows sample the
+same Q manifold, which can move along **two independent axes**:
+
+| axis | mechanism | effect on the two windows |
+|---|---|---|
+| **amount in beam** | Beer–Lambert scaling of a fixed pigment population — concentration, path length, seating | moves far and Q **together** ⇒ the POSITIVE correlation of §16.24.4 |
+| **speciation** | Mg loss, `D4h → D2h`, degeneracy lifted, intensity redistributed **toward the blue** (§16.13.9, `KB_spectroscopy_physics.md` §4.1) | moves intensity **between** them ⇒ changes their RATIO |
+
+⭐ **The sign is the diagnostic.** If speciation drove the within-set scatter, far and Q would vary in
+**opposition**. Measured within-set correlation is **+0.84 … +0.99** ⇒ what varies between re-seats of one
+fill is **amount**, not speciation. That is why the degeneracy argument cannot explain §16.24.4's correlation.
+
+**And between classes the separation is stark — measured, green n=18 vs brown n=6:**
+
+| quantity | green | brown | Cohen's *d* |
+|---|---|---|---|
+| far 620–630 **alone** | 0.1566 | 0.1526 | **0.08** |
+| Q 560–580 **alone** | 0.1792 | 0.2251 | −0.95 |
+| Soret 440–460 **alone** | 1.0353 | 1.0855 | −0.35 |
+| **far ÷ Q** *(the split)* | 0.8673 | 0.6750 | **3.43** |
+
+⇒ ⭐⭐ **NO SINGLE WINDOW SEPARATES THE CLASSES** — the far anchor alone is worthless at *d* = 0.08. What
+separates them is how intensity is **divided** between the two, exactly what a redistribution mechanism
+predicts and what a change in amount cannot produce.
+
+⇒ **This is the defence of §16.10.2a's second violation.** The far anchor shares the *amount* axis with the
+band it is subtracted from, so their common fluctuations partly cancel; and it differs on the *speciation*
+axis, so the quantity the metric exists to detect survives that subtraction. **A pigment-free anchor, as
+Morton–Stubbs requires, would share neither — it would cancel less noise AND carry no signal.**
+⚠ A reading of the measurements, not an independent prediction; within-set evidence is one session.
+Written up for the PDF as `DOC_metric_algebra.md` §5.3c.
+
+⚠ **And it names the precision floor.** What sets `QB`'s scatter is the **1–16 % of far-anchor noise that is
+NOT common-mode**. It also names the failure mode: **an error that moves the far anchor without moving the Q
+band bypasses the cancellation entirely and takes the full 17× amplification of §16.24.2.** That is the
+signature to look for whenever the metric misbehaves — and it is what run 002 was.
+
+### 16.24.5 Two by-products, and one correction
+
+**(a) ⭐ Dilution invariance, demonstrated on ONE fill.** Across the three exposure-104 runs `A450` fell
+**21 %** (0.6214 → 0.4912 over 113 min) while the metric moved **0.7 %**. This is §16.10.8's claim with the
+*preparation held completely fixed* — no re-pipetting, no new fill, same seating — which the dilution pairs
+cannot offer, since each of those varies the fill as well as the dilution. ⚠ It does not close §16.10.8: it is
+one oil over a 1.14× span, and the drift is not a controlled dilution.
+
+**(b) ⚠ A FILTERED fill still drifts, and it is not §16.11.16's ageing.** −0.00085 A450/min. The unfiltered
+archive sets fall 7.7–11.1 % across their six runs — the same magnitude. ⇒ **whatever removes pigment from
+the beam over a session is not particulate matter larger than 0.22 µm**, because it was filtered out and the
+drift continued. It is also **shape-preserving** (the metric held to 0.8 % while concentration fell 12 %), so
+it is *not* the demetallation signature of §16.11.16, which moved the metric 27 %. Something removes pigment
+while leaving what remains chemically unchanged — adsorption onto the cuvette wall fits, as does
+post-filtration re-aggregation. ⇒ **"Measure within the hour" survives filtration and must not be relaxed on
+the grounds that the sample is now clean.** ⭐ One cheap decisive test: refill the *same* cuvette with a fresh
+filtered aliquot after an hour — if the drift restarts from the top it is the cuvette surface; if the aged
+aliquot reads low immediately it is in the liquid.
+
+**(c) ⛔ CORRECTION — the filter's scatter reduction was over-stated when first computed.** The filtered fill's
+`near/A450` is 0.065 against 0.096–0.110 for the same oil unfiltered, which was initially read as a 37 %
+reduction *from filtering*. That is confounded with concentration. The archived within-oil dilution pair says
+concentration alone does part of it:
+
+| | A450 | near/A450 |
+|---|---|---|
+| oilK, 2 drops, unfiltered | 0.512 | 0.1319 |
+| oilL, 3 drops, unfiltered | 0.948 | 0.1447 |
+
+Halving the concentration cuts `near/A450` by ~9 % **with no filter at all**. ⇒ of the 37 %, roughly 9 % is
+concentration and **~31 % remains attributable to filtering**. Direction holds, magnitude comes down.
+⚠ K/L is a different oil and pre-rebuild — the only within-oil dilution data available for this quantity.
+
+### 16.24.6 What this does NOT settle
+
+- **The mechanism of §16.24.1.** Established that exposure matters and that settling is not it; *why* is open
+  and needs the interleaved ladder.
+- **σ_fill, and therefore §16.21's actual target.** All four runs are ONE fill; the aliquot step was never
+  exercised. **The filter arm still needs its own experiment** — nothing here substitutes for it.
+- **Whether the archive's within-set σ is partly this.** Exposure did vary within the archive sets (3.0–7.2 %
+  on the reference-level proxy) — but it does **not** explain their σ: Kiendler A has the *tightest* exposure
+  range and the *worst* metric CV, S-Budget the reverse. Whatever dominates those sets is still unaccounted for.
+- **n = 4 controls, and they were selected *on exposure*.** That is a legitimate stratification on an
+  instrument variable rather than on the metric — but it is post-hoc. ⛔ **The 0.7 % must NOT be quoted as
+  "what filtering bought":** across ALL five exposure-104 runs, i.e. including §16.24.7's turbidity event, the
+  CV is **4.0 %** — squarely inside the archive's unfiltered 3.6–5.0 % band. **This session shows no
+  repeatability gain from filtration.**
+
+### 16.24.7 Runs 005/006 — a turbidity event, and the pedestal metric's dilution drift  *(added after .0–.6 were written)*
+
+**005 confirms the series** (17.385, on top of 001/003/004) and extends the clean concentration span to 21 %.
+**006 is bad for a reason that has nothing to do with §16.24.1:** its leg-scale mismatch is 0.3 % and its flat
+offset +0.0027 A — instrumentally indistinguishable from the good runs.
+
+**What changed is the sample.** `A006 − A005`, 8 min apart:
+
+| λ | 450 | 500 | 530 | 570 | 625 |
+|---|---|---|---|---|---|
+| **d(006−005)** | +0.0200 | +0.0135 | +0.0138 | +0.0136 | +0.0089 |
+
+Essentially **grey** — a log–log fit over 470–630 nm gives `λ^+0.20`, i.e. flat. ⇒ **not** λ⁻⁴ Rayleigh
+scattering, and **not** pigment (the Soret rose 0.9 % while the Q band rose 18 %; more oil would move them
+together). It also **reverses** the clearing trend — A450 had fallen monotonically 0.6214 → 0.5777 → 0.5446 →
+0.4912, then rose to 0.5141, the first rise in the series. A grey extinction that appears suddenly and undoes
+two hours of clearing is most economically **the settled sediment stirred back into the beam** when the cuvette
+was handled: material large enough to settle is large enough to scatter grey (Mie, not Rayleigh), and it is the
+same material whose departure caused the drift. ⚠ A bubble or a wall smear look identical; one pair cannot
+separate them. **Edwin's judgement: at 2 h into a session this is normal and acceptable.**
+
+⭐ **§16.15's proposed QC covariate would have caught it, and this is the first live demonstration:**
+
+| run | 001 | 003 | 004 | 005 | **006** |
+|---|---|---|---|---|---|
+| `near/A450` | 0.0575 | 0.0704 | 0.0671 | 0.0673 | **0.0911** |
+
+**Why 0.0031 A cost 8.5 %.** The added material sits slightly ABOVE the 530/625 chord at the Q band: it adds
++0.0138 at the near anchor and +0.0105 at the far, so the chord predicts +0.0124 at Q — the actual addition is
++0.0155. The **+0.0031 excess** lands entirely on `QB` (0.0313 → 0.0345, +10 %) and the metric falls 8.5 %.
+⇒ **§16.24.2's amplifier again, from a completely different cause.** A Q-only error, levered 17×.
+
+#### ⭐ And the pedestal metric is the one that drifts with concentration here
+
+Excluding 006, over the four clean runs while `A450` fell 21 %:
+
+| | mean | CV | log–log slope vs A450 |
+|---|---|---|---|
+| `Verdict · baseline` | 17.465 | **0.7 %** | **+0.049** |
+| `Verdict · baseline + pedestal` | 11.409 | 3.3 % | **+0.334** |
+
+The pedestal gauge falls monotonically 11.803 → 11.627 → 11.259 → 10.949 as the fill clears. The cause is
+arithmetic: at this dilution `QB` ≈ 0.034 against `r_Q` = 0.0184, so **the correction contributes 54 % of its
+own denominator** — worse than the 23–43 % range recorded in `DOC_pedestal_correction.md`, because the fill is
+over-dilute. Sensitivity goes as `r_Q/B_Q ∝ 1/c` (§16.14), so **the over-dilution pushed the correction outside
+its usable range.** ⇒ direct measured support for §16.20.9 §2's overshoot warning, on a *better* dataset than
+the dilution pairs since preparation is held fixed. ⚠ n=4, one fill, and the "dilution" is a drift rather than
+a controlled series — **§16.10.8 stays open and this must not be pooled into it.**
+
+### 16.24.8 ⭐⭐ SPIKE LEAKAGE — a per-run instrument-health check, free, from data already captured  *(Edwin 2026-08-05: "couldn't we use the spikes … as a helper for some mechanism that makes things more exposure-invariant?" — DESIGN, not implemented)*
+
+**The idea.** The lamp has two sharp features inside the analysis window — the **473 nm pump edge** (1) and the
+**580 nm phosphor valley** (2). Both are properties of the LAMP, so both appear in *both* legs. The oil absorbs
+**smoothly**. Therefore any SHARP structure surviving into `A(λ)` at those wavelengths is pure instrument
+artifact: it should have cancelled in `S/R`, and its size measures the failure to cancel **in that run, from
+that run's own data** — no second run, no ladder, no calibration constant.
+
+**The statistic.** High-pass both `A` and `log₁₀R` (Savitzky–Golay, 101 bins ≈ 14.7 nm — wide enough to keep a
+2 nm spike, narrow enough to remove the 20–30 nm oil bands), then regress:
+
+```
+k  =  d(hp A) / d(hp log10 R)      over the feature window
+```
+
+`k = 0` ⟺ perfect cancellation. Measured on this session:
+
+| run | exp | **k @473 (1)** | r | **k @580 (2)** | r |
+|---|---|---|---|---|---|
+| 001 | 104 | 0.0914 | 0.188 | −0.1621 | −0.713 |
+| **002** | **90** | **0.4454** | 0.453 | **−0.0704** | −0.433 |
+| 003 | 104 | 0.0725 | 0.170 | −0.1698 | −0.709 |
+| 004 | 104 | 0.0545 | 0.159 | −0.1523 | −0.696 |
+| 005 | 104 | 0.0139 | 0.058 | −0.1513 | −0.688 |
+| 006 | 104 | 0.0974 | 0.262 | −0.1662 | −0.759 |
+
+**Two properties make this worth building:**
+
+1. **It catches 002 from that run alone** — 0.445 against 0.014–0.097, a 4.6× separation from the worst
+   control, with the valley agreeing independently (−0.070 against a remarkably steady −0.15…−0.17).
+2. ⭐ **It correctly CLEARS 006.** Run 006's metric is badly wrong, and its leakage is normal. That is right:
+   006's fault was the *sample*, not the instrument.
+
+⇒ **Paired with §16.15's turbidity covariate, two numbers classify every bad run of this session:**
+
+| | spike leakage | `near/A450` | verdict |
+|---|---|---|---|
+| **002** | **FAIL** 0.445 | pass 0.0749 | instrument — do not pool |
+| **006** | pass 0.097 | **FAIL** 0.0911 | sample — re-seat / re-read |
+
+That is exactly the instrument-vs-sample distinction this session cost an evening of analysis to make by hand.
+
+#### ⛔ 16.24.8a It is a DETECTOR, not a corrector — the correction was tried and FAILED
+
+Recorded so nobody re-derives it. The residual is **derivative-shaped**, not proportional to the feature —
+fitting `hp A` against `−d/dλ hp log₁₀R` (a wavelength SHIFT) beats fitting against `hp log₁₀R` (a leakage
+nonlinearity) on **every** run, R² **0.43–0.56 against 0.03–0.07**. So the obvious move is to align the sample
+leg onto the reference on the 473 spike and recompute. **It makes things worse:**
+
+| | 001/003/004/005 | 002 |
+|---|---|---|
+| shipped | mean 17.465, **CV 0.7 %** | 15.114 (−13.5 %) |
+| aligned on the 473 spike | mean 15.787, **CV 5.0 %** | 10.882 (−31.1 %) |
+
+And the lag is not self-consistent between the two lamp lines — it does not even keep its sign:
+
+| run | lag @473 | lag @607 | difference |
+|---|---|---|---|
+| 001 | +0.291 nm | −0.901 nm | −1.193 nm |
+| 002 | +0.812 nm | −1.190 nm | −2.001 nm |
+| 005 | +0.044 nm | −0.942 nm | −0.986 nm |
+
+#### ⛔⛔ 16.24.8a-bis THE SHIFT INTERPRETATION IS REFUTED — corrected same day *(Edwin 2026-08-05: "is this a stupid idea or already used in the spectroscopy community?")*
+
+The paragraph above originally recommended retrying the alignment on the quiet 607 nm line. **That was wrong,
+and the recommendation is WITHDRAWN.** Three findings kill it:
+
+**1. There is nothing to align — by construction.** `ImageSpectrumAcquisitionLogicModule` takes the ROI **and**
+the pixel→nm polynomial from the **stored calibration profile**, for both legs of every run. The same pixel
+column therefore maps to the same wavelength in the reference and the sample, always. A software
+misregistration between the legs is **impossible**; only a physical sub-pixel beam displacement could shift
+one leg against the other.
+
+**2. Aligning on 607 is catastrophic**, far worse than on 473:
+
+| | controls (001/003/004/005) | 002 |
+|---|---|---|
+| shipped | mean 17.465, **CV 0.7 %** | −13.5 % |
+| aligned @473 | mean 15.787, CV 5.0 % | −31.1 % |
+| aligned @607 | mean 38.179, **CV 23.8 %** | −27.8 % |
+
+The fitted lags (−0.9 to −1.4 nm ≈ 7–10 bins) are **orders too large to be a physical displacement**, which
+is the tell that the estimator, not the rig, produced them.
+
+**3. ⚠ It reproduces a failure `SPEC_metric_research.md` §3.6a had ALREADY diagnosed.**
+`diagnostics/lamp_line_calibration.py`'s docstring records that a crude centroid estimator was inconclusive
+because *"the two lines appeared to move in OPPOSITE directions between sessions, which a rigid calibration
+offset cannot do. That smelled of the estimator, not the rig."* That is exactly the +0.29 nm @473 against
+−0.90 nm @607 above. **The cross-correlation used here IS that crude estimator**; the fix (wing-fitted
+quadratic continuum + Gaussian core) already exists in that tool.
+
+⇒ **Why the shift model still "won" on R².** The derivative of a sharp feature is simply a good basis for a
+sharp residual **of either sign**, so a better R² against it is not evidence of a shift. ⛔ **Do not read
+§16.24.8a's R² table as support for a registration mechanism.**
+
+⇒ **What survives:** the DETECTOR of §16.24.8 — it flags 002 and clears 006 empirically, and that observation
+is independent of any mechanism. Only the *explanation* was wrong. §16.13.9's registration question stays
+**open and untested**; nothing here advances it.
+
+⭐ **Where the idea IS right, and it is already ours.** Using the lamp's own lines as a free internal ruler is
+standard practice — the analogue of **lock mass** (MS), the **deuterium lamp's 486.0/656.1 nm lines** (UV-Vis),
+**Si 520.7 cm⁻¹** (Raman) and `icoshift`/COW peak alignment (NMR, chromatography). Its correct level here is
+**BETWEEN SESSIONS, not between the legs of one run** — which is exactly where `SPEC_metric_research.md`
+§3.6a/§3.8 already puts it, gating C14's peak-position metric (0.85 nm class separation against ±0.2 nm of
+scale drift). Within a run the legs are co-registered by design and alignment can only add noise.
+
+#### ⛔⛔ 16.24.8a-ter REFUTED ON THE ARCHIVE — `k` measures CONCENTRATION, not instrument health *(2026-08-05, same day; §16.24.8b's own gate fired)*
+
+§16.24.8b step 3 said: *"⛔ The threshold must NOT be invented from this session — compute `k` across the whole
+archive first."* **That was done, and the detector does not survive it.**
+
+`k` at 473 nm over **37 post-rebuild runs**, by set:
+
+| set | per-run `k` |
+|---|---|
+| Steirerkraft B | 0.727 0.696 0.715 0.719 0.749 0.743 |
+| Steirerkraft C | 0.781 0.748 0.728 0.736 0.765 0.765 |
+| Steirerkraft A *aged* | 0.222 0.252 0.273 |
+| Kiendler A | 0.467 0.475 0.445 0.443 0.417 0.387 |
+| Kiendler B / C | 0.692 0.706 / 0.691 0.704 |
+| S-Budget D *(brown)* | 0.797 0.800 0.786 0.770 0.704 0.635 |
+| **20260804A** *(filtered, over-dilute)* | 0.091 **0.445** 0.072 0.055 0.014 0.097 |
+
+**`k` varies by a factor of 50 across the archive, and it varies BY SET, not by run quality.** The whole
+20260804A session sits an order of magnitude below every other set — and the "bad" run 002, at 0.445, lands
+squarely in the archive's *normal* range. **No absolute threshold exists.**
+
+**The reason, measured:**
+
+```
+corr(k, A450) = +0.955     corr(k, A473) = +0.960
+k = 3.839 * A473 - 0.148        R2 = 0.922
+```
+
+⇒ **`k` is 92 % the sample's own absorbance at the spike.** After removing that trend, run 002 ranks **5th at
++1.1σ**, below three unremarkable Kiendler runs.
+
+⛔⛔ **And the within-session result was CIRCULAR.** 002's absorbance was inflated *by the exposure artifact
+itself* (+0.024 A flat, §16.24.1); higher absorbance raises `k`; so `k` flagged 002 **because 002 read high**,
+not because the instrument misbehaved. The 4.6× separation of §16.24.8 is an artifact of the artifact.
+
+⇒ **§16.24.8b is WITHDRAWN as specified. Do not build it.** ⚠ What is *not* refuted: the 580 nm valley statistic
+was never archive-tested (its `k` was strikingly *stable* at −0.15…−0.17 on the good runs, which the 473 spike
+never was) — but after this, nothing about it should be believed until it passes the same archive check.
+⭐ **The surviving lesson is the gate itself:** a per-run diagnostic must be validated against the archive
+*before* it is trusted, and any statistic built on absorbance will track concentration unless it is explicitly
+normalised. ⚠ The turbidity covariate `near/A450` of §16.24.7 is already normalised that way — which is why it
+is the one of the pair still standing.
+
+#### 16.24.8b What to build  ⛔ **WITHDRAWN — see §16.24.8a-ter. Retained only as the record of what was proposed.**
+
+1. Compute `k` at both features **at capture time**, alongside the existing `CAPTURE-LOWDN` guard.
+2. **Log it and PERSIST it into `workflow.json`** — same argument as the applied exposure (§16.24.0): a
+   diagnostic that exists only on stdout cannot be used on an archived run.
+3. Warn above a threshold. ⛔ **The threshold must NOT be invented from this session** — n=1 anomalous run.
+   Compute `k` across the whole 122-run archive first (`diagnostics/all_metrics_archive.py` already walks it)
+   and set the band from the observed distribution.
+4. ⚠ **Do not gate a verdict on it yet.** Warn, record, and let the archive decide what "normal" is.
+
+⇒ **It also upgrades the §16.24.1 ladder experiment**: recording `k` per rung turns it from *"does A move with
+exposure"* into *"does the leakage move with exposure, and does the metric error follow it"* — which is the
+mechanism question, not just the symptom.
+
+### 16.24.9 ⭐⭐ THE METRIC IS EXACTLY INVARIANT TO ANY CONSTANT SUBTRACTION — so "normalise the spectra first" is always a no-op  *(Edwin 2026-08-05: "normalize the spectra, shift R such that the left peak lands at say 0.9, then shift S to align to the peak, and then calculate transmission and absorbance and do the metrics on it")*
+
+**The proposal.** Scale `R` so a chosen feature sits at a fixed value, scale `S` by the same rule, then compute
+`T` and `A` from the normalised pair. **This is a single-point baseline anchor**, and it is a real, standard
+technique — dual-wavelength spectrophotometry, and turbidity correction by subtracting `A` at a non-absorbing
+wavelength. Algebraically:
+
+```
+T' = [S(λ)/S(λ0)] / [R(λ)/R(λ0)] = T(λ) / T(λ0)      ⇒      A'(λ) = A(λ) − A(λ0)
+```
+
+i.e. it forces `A(λ0) = 0`. The chosen anchor VALUE (0.9, or anything else) cancels and never matters.
+
+#### The proof — one line
+
+> Subtract a constant `c` from `A`. The weighted least-squares line fitted through the anchor windows shifts by
+> **exactly** `c` as well (least squares is equivariant under a constant shift of the ordinate). Therefore
+> `(A − c) − (line − c) = A − line`. Every band mean taken on the baseline-corrected curve is unchanged, and so
+> is their ratio. **∎**
+
+⇒ **`M` is EXACTLY invariant to any constant subtraction from `A`** — including every normalisation of the form
+above, at any anchor wavelength, with any target value.
+
+#### Measured, for the record  *(anchoring at four wavelengths, `20260804A`)*
+
+| anchor λ₀ | shipped metric — control CV | 002 vs controls | raw Soret/Q — control CV | 002 vs controls |
+|---|---|---|---|---|
+| none (as shipped) | **0.69 %** | −13.5 % | 7.95 % | −10.0 % |
+| 473 nm | **0.69 %** | −13.5 % | −252.32 % | −98.1 % |
+| 530 nm | **0.69 %** | −13.5 % | 8.72 % | −11.1 % |
+| 570 nm | **0.69 %** | −13.5 % | −27.79 % | −72.1 % |
+| 625 nm | **0.69 %** | −13.5 % | −169.78 % | −244.5 % |
+
+The shipped column is **bit-identical on every row**, as the proof requires. The raw-ratio column moves only
+because that quantity has *no* baseline — and it moves catastrophically, which is the next point.
+
+#### ⛔ Why 473 would be the WORST anchor of all
+
+It is the steepest feature in the window. A point anchor on a steep feature converts any wavelength jitter
+directly into a value error — the raw-ratio column above degrades from 7.95 % to **−252 %** when anchored
+there. **Convention anchors on a FLAT region for exactly this reason**, and the shipped anchors go further by
+using 20 nm and 10 nm *windows* rather than points, which averages the noise down as well.
+⇒ The 473 spike is an excellent **fiducial** (§16.24.8) and a terrible **normalisation point**. Those are
+opposite requirements: a fiducial wants maximum gradient, a normalisation point wants minimum.
+
+#### Where the idea already lives — in BOTH branches of the pipeline
+
+- **Metric path** — subsumed, and strictly exceeded: the two-window linear baseline removes a constant **and a
+  slope** (§16.10.2 — a re-seating tilt enters as both). A one-point anchor removes only the constant.
+- **Colour path** — `DevSpectralPlugin.__baselineCorrectedAbsorption` already applies *precisely* this
+  operation: a flat offset anchored on the deep-red mean (`BaselineOffsetOp`). It is there because an additive
+  offset **shifts the absorbed chromaticity** while being invariant for the perceived colour
+  (`SPEC_color_retrieval.md`) — i.e. colour is the one consumer that genuinely needs it.
+
+#### ⇒ What this retires, and what it does NOT fix
+
+**Retires an entire class of proposals.** Any scheme of the form *"normalise / rescale / anchor the spectra
+before computing the metric"* is a no-op on `M` by the proof above. ⛔ Do not re-derive it. (The pedestal
+correction `r_Q` is **not** in this class — it subtracts a constant from `B_Q` **after** baselining, i.e. from
+one band only, which is exactly why it can do something a pre-normalisation cannot.)
+
+**And it sharpens what the real defect is.** Run 002's flat **+0.024 A** offset was never the problem — the
+baseline ate it, exactly as this proposal would have. What broke the metric was the **+0.009 A SHAPED**
+residual at Q, sitting *above* the 530/625 chord rather than parallel to it. **No offset removal — one point or
+two windows — can touch a shape.** Same wall as §16.24.2: only errors that move Q *differently from* the
+baseline survive, and those are levered 17×.
+
+⇒ **The lever that does work stays the boring one:** a stronger fill. It grows `QB` and shrinks the leverage of
+every shape error at once (§16.24.2), and it simultaneously pulls `r_Q` back inside its usable range
+(§16.24.7's 54 %).
 
 ---
 
