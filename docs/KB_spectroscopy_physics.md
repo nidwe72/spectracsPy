@@ -160,6 +160,39 @@ fading and at the clamp boundary. What is *measured* is the 5.1 σ green/brown d
 synthesis models in §5 below, `KB_led_and_oil_spectra.md` and `SPEC_pipeline_playground.md` do carry the
 wrong band position and **should be corrected before the virtual device is used for anything quantitative**.
 
+#### ⭐⭐ 4.1a The three band centres, and why our windows are NOT on them *(Edwin 2026-08-06)*
+
+| feature | centre | our measurement window | |
+|---|---|---|---|
+| **Soret** | **~432 nm** | 448–460 nm | ⚠ **16–28 nm above the peak — we measure the flank** |
+| **Q band** | ~574 nm | 560–580 nm | ✓ contains it (§3.6 resolves the peak at ≈ 574) |
+| **Qy** | **~623–626 nm** | 620–630 nm | ⚠ contains it — but that window is used as a **baseline anchor** |
+
+⇒ **The windows were chosen by where the instrument had light and dynamic range, not by where the chemistry
+is.** That is `SPEC_metric_research.md` §7.8's wall — *"both principal bands are flanks"* — stated from the
+molecule's side rather than the metric's. ⚠ It also means "extend the red range" (§9.1 item 5) is only half
+the fix: the other half is **enough light at 432–440 to sit on the Soret peak instead of its flank**.
+
+⚠ At 432 nm the oil is nearly opaque at today's recipe — which is what made 440–447 dead bins (§7.13). But
+that cuts both ways: **those bins are as much a source-brightness problem as an absorbance one.**
+
+⭐ **A curiosity with practical value — the CFL's lines land almost exactly on all three:**
+
+| pigment feature | CFL line | gap |
+|---|---|---|
+| Soret ~432 | **Hg 435.83** | 4 nm |
+| Q ~574–580 | **Hg 576.96 / 579.07** | ~0 |
+| Qy ~623–626 | **Eu³⁺ 626.6** | ~2 nm |
+
+Not coincidence in the deep sense — mercury and europium emit where porphyrin rings absorb, both being
+consequences of similar energy scales in the visible.
+
+⛔ **But the CFL cannot be the measurement lamp.** Measured on the rig it gives **9 DN across 448–460 at
+exposure 500** (the `EXPOSURE_MAX` cap, empty beam) against the Sansi's 212 DN at exposure 32 — **~17× dimmer
+per unit exposure**. Its lines are bright relative to its own continuum, not absolutely. ⇒ It stays the
+**wavelength standard** (§7), and the three-line coincidence is useful for a different reason: it makes the CFL
+a natural check that the calibration still puts the pigment's features where they belong.
+
 ## 5. Synthesising spectra (the playground / virtual device)
 
 - **REFERENCE** `R(λ)` = Σ LED SPDs (measured Avonec curves, or skewed-Gaussian per peak+FWHM); luxpy can
@@ -231,6 +264,111 @@ is *grating-block + camera-lens + sensor* as one stack. Consequences for the res
   hand-held spectroscope: <https://star-hunter.ru/en/simple-spectroscope-review-aliexpress/> — a low-cost
   grating-based visual spectroscope in the same class as the Spectracs optical stack. Useful reference for
   the optical layout and what to expect from a cheap grating + lens build.
+
+### ⭐ 7.1 Source illumination geometry — the lamp's diffuser decides how evenly the SLIT is lit
+
+*(Edwin's observation 2026-08-06, comparing four lamps at the same exposure; numbers measured off the
+screenshots, so treat them as ratios rather than absolutes.)*
+
+**The mechanism.** The slit is a tall narrow aperture, and the camera images its whole height. A lamp
+made of **several discrete emitters at several positions** lights different parts of that height
+differently — emitter 1 favours the top of the slit, emitter 5 the bottom. The frame then shows
+**streaks running along the dispersion axis**, because each row of the slit carries its own brightness.
+A **diffuser** destroys the source's positional structure before the light reaches the slit and the
+streaks go away.
+
+⚠ **What matters is the diffuser's WORKING DISTANCE, not its presence.** A diffuser sitting directly on
+the LED die cannot mix emitters that are millimetres apart; it needs a gap to average over.
+
+| lamp | construction | **variation along the slit** |
+|---|---|---|
+| **Yuji** | ⭐ diffuser with working distance; likely one die + a phosphor blend rather than many emitters | **1.8 %** |
+| Sansi | several dies; diffuser sits on the chip with no real distance | 3.5 % |
+| DIY array | 7 × 3 W discrete LEDs, no diffuser at all | **6.5 %** |
+| Philips CFL | bare tube, no diffuser, strong structure along its own length | 36.5 % |
+
+⇒ **The reference lamp must be diffuse.** This is the physical reason the Yuji is the measurement source
+and the ordering above is monotone in exactly the way the mechanism predicts.
+
+⚠ **REFINED 2026-08-06 — most of the non-uniformity is NOT what a diffuser fixes.** Splitting the along-slit
+variation into a smooth trend and local structure (`SPEC_capture_quality.md` §16.26.6) gives **83–85 % smooth
+GRADIENT** against only ~3 % structure. A diffuser removes *structure* — the emitter-position streaking above.
+A **gradient** is geometry: lamp centring, the illumination cone, vignetting. ⇒ **Centre the lamp before buying
+a diffuser**, and expect a diffuser to attack the smaller half.
+
+⭐ **And the reason uniformity matters at all is subtler than "even light is good".** A *static* along-slit
+pattern **cancels in `T = S/R`** — both captures see it, and the spatial reduction weights the rows identically.
+What does not cancel is a pattern that **changes between the two bursts**, which is exactly what re-seating the
+jar does by re-aiming the beam (§16.26.2). ⇒ **Uniformity buys insensitivity to beam re-aiming, not "better
+light".**
+
+⛔ **Improvised paper diffusers are rejected, measured.** White paper above the lamp removes **32–38 % of the
+relative blue** and adds 28 % of the relative far red — it is a *red filter*, not a neutral scatterer — and it
+transmits only ≈ **7 %** (auto-exposure 32 → 441 against a cap of 500). It bought along-slit 8.92 % → 6.87 %.
+⇒ **PTFE** is the correct material: spectrally flat, no optical brighteners, 50–80 % transmission. ⚠ Test any
+candidate under a **365 nm torch** — if it glows blue it carries optical brighteners, which re-emit into the
+Soret window and are neither stable nor cancellable.
+
+⛔ **A second, different non-uniformity exists and this is NOT its cause.** A fine ripple *along the
+dispersion axis* measures ~8 % on the DIY array **and ~8.5 % on the Yuji** — i.e. it is the same on a
+lamp with a diffuser and a smooth continuum. It is therefore **instrumental** (grating/sensor sampling,
+Bayer interpolation, possibly the render path), not a property of the lamp. ⚠ Do not attribute it to the
+emitters; the tempting explanation was tested and failed.
+
+⚠ **CORRECTION (2026-08-06) — the de-spike filter is far narrower than first written here.** The stored
+spectra carry **1305 bins over 440–629.8 nm = 0.146 nm/bin**, so the plugin's `MedianFilterOp(kernelSize=7)`
+spans **~1.0 nm, not ~20 nm**. The 607 nm lamp line has a measured FWHM of 2.7 nm (§16.13.9) = **18 bins**,
+so **the de-spike does NOT remove it**, and it removes no other real lamp feature either. Any claim that a
+band "crossing a lamp line is protected by the median filter" is wrong.
+
+**Consequences for a slit baffle ("Gegenlichtblende").**
+
+- A baffle narrows the acceptance cone. With a **diffuse** source that costs nothing and rejects stray
+  light — worth doing on the Yuji.
+- ⛔ With a **structured** source (the DIY array, a bare CFL) it *selects* particular emitters and can make
+  the along-slit non-uniformity **worse**.
+- ⭐ **The lamp sits at the base of the lower cone, so the cone walls are themselves a stray-light path**
+  (Edwin 2026-08-06). Blackening/baffling the cone interior attacks the floor at its source; this is the
+  same floor that `SPEC_metric_research.md` §7.13 showed compresses the darkest absorbance band and
+  injects a false intercept into the pedestal fit. ▶ Quantify it first with the stray-light gate
+  (`SPEC_capture_quality.md` §16.23.6f) before machining anything.
+
+### ⭐ 7.2 The delivered spectral range is ~400–680 nm — the lens does NOT truncate the red
+
+*(2026-08-06. Long-standing assumption refuted: the red end was believed lost to the camera lens.)*
+
+A CFL frame calibrated on two mercury anchors (435.83 / 546.07 nm, dispersion **0.5057 nm/px**) predicts
+every other known emitter in the tube to within the fit's own drift:
+
+| observed | predicted | known line | species |
+|---|---|---|---|
+| — | 404.0 nm | 404.66 | Hg |
+| — | 487.4 nm | 487.7 | Tb³⁺ |
+| — | 613.3 nm | 611.6 | Eu³⁺ (strong) |
+| — | 628.0 nm | 626.6 | Eu³⁺ |
+| ⭐ **a resolved local maximum at ~653 nm** | | **650.7** | **Eu³⁺** |
+
+⭐ **The Eu³⁺ 650.7 nm line resolves as a genuine peak on top of the falling tail** (+25 % above a fitted
+exponential continuum, ~4 nm wide). That is direct evidence of both **signal and resolution at 650 nm**,
+not an extrapolation. Measurable response continues to ~680 nm.
+
+⚠ **But the roll-off is steep: the red channel falls ~40× between 631 and 657 nm** (IR-cut filter +
+sensor QE + the source's own decline — one lamp cannot separate the three). So the 640–670 nm region
+arrives at roughly **7–13 %** of the level at 630 nm.
+
+⇒ **Two conclusions that must travel together.** (1) The **440–630 nm capture clamp is our software
+choice, not a hardware limit** — which moves `SPEC_metric_research.md` §9.1 item 5 ("extend the red range
+to ~660 nm", the structural fix for both-bands-are-flanks) from *hardware, cost unknown* toward a
+calibration change. (2) ⛔ **Do not simply move the clamp.** At 7–13 % of the 630 nm level those bins sit
+in the same starved regime as 440–447 did, and §7.13 measured what that regime does — not merely noise
+but a *concentration-dependent compression* that corrupted `r_Q`. **The gate is photometric: whether a
+lamp puts enough photons through 640–670 to clear the DN guard.** On the current roster only the Sansi
+shows real deep-red output.
+
+⚠ **A lamp is also a wavelength standard we already own.** The CFL gives Hg 404.66 / 435.83 / 546.07 /
+576.96 / 579.07 plus Eu³⁺ 611.6 / 626.6 / 650.7 — an independent multi-point check of the calibration
+across the whole working range, from one capture. Note §7's existing exposure caveat: the CFL needs its
+own (much lower) calibration exposure, or the red cluster merges into one blob.
 
 ## 8. The sample: solvent chemistry, turbidity and the vessel
 

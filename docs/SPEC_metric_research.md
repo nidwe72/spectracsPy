@@ -1753,6 +1753,85 @@ Morton–Stubbs, and the alternatives need a quiet region this instrument does n
 so the red extension remains a **hardware** question that may be expensive or impossible. This section raises
 its value; it does not lower its price.
 
+#### ⭐⭐ 7.14.5 THE REOPENING CONDITION — and half the cost caveat is now REFUTED *(2026-08-06)*
+
+⛔ **"The S-mount optics roll off past ~630 nm" is WRONG.** It was an assumption and it has been measured:
+`KB_spectroscopy_physics.md` §7.2, from a CFL frame with its own wavelength solution (Hg 435.83 / 546.07,
+0.7 nm residuals) — **response to ~680 nm, and the Eu³⁺ 650.7 nm line resolves as a genuine peak** (+25 % above
+a fitted continuum, ~4 nm wide). ⇒ **The blocker was never the optics. It is the lamp**, which is a thing that
+can be specified rather than discovered.
+
+⭐ **The acceptance criterion is one number.** §7.14.2 closed the λ⁻ⁿ route because the far anchor reads MORE
+than the near one — 1.47 to 2.50 on all five sets — which no physical exponent can fit. Scattering must fall
+toward the red. So the test of whether a new far window is genuinely quiet is:
+
+> **`far/near` = mean raw `A`(660–680) ÷ mean raw `A`(520–540)** — ⚠ on RAW absorbance, since the baseline is
+> fitted *through* those anchors and a corrected spectrum is ≈ 0 in both by construction.
+
+| result | reading |
+|---|---|
+| **0.39 – 0.63** | ⭐ consistent with real scattering (Rayleigh n≈4 → Mie n≈2) — a true turbidity window |
+| **< 1 but higher** | partly quiet; some Qy tail still reaching in. Map where it becomes clean |
+| **> 1** | ⛔ something else absorbs at 660–680 and this whole thread closes |
+
+⇒ **What a quiet window buys, in order of confidence:** (1) ⭐⭐ **620–630 is freed from anchor duty to become a
+third signal band** — §16.12.12 measured it tracking oil class at **5.1 σ**, information currently spent as
+background, and this needs no new method at all; (2) Morton–Stubbs (§7.14.1: *we already use it*) stops
+violating its own "flanking points free of analyte" precondition; (3) λ⁻ⁿ becomes fittable with a physical `n`;
+(4) the pedestal is **measured** rather than inferred from an intercept whose ~72 % remains unexplained
+(§7.13.6); (5) dual-wavelength becomes possible at all.
+
+⚠ **The two requirements in §7.14.4's table are INDEPENDENT, and this matters.** Even if 660–680 is *not*
+quiet, extending the range still delivers the second one — a **resolved peak with curvature**, which the
+derivative/EMSC/band-fitting family needs. Measured 2026-08-06: a quadratic fit over 606–626 nm is **convex on
+every archive fill**, so **the Qy maximum has never been observed**; it lies beyond 630. ⚠ That test needed a
+control — the *null* runs are concave there and would have faked a peak at 623–625 nm, matching the literature
+almost exactly. Without the null control this section would have reported a false confirmation.
+
+⚠ **The blue side stays unsolved either way.** Morton–Stubbs wants clean points on *both* flanks; 520–540
+remains a trough between the Soret tail and the Q band, and below the Soret there is only more Soret.
+
+### ⛔ 7.15 · PEAK-VALUE METRICS — tested on the two peaks we can reach, and they LOSE *(Edwin 2026-08-06: "wouldn't the 3 peak values give good values to make a metric from?")*
+
+The pigment offers three features — Soret ~432, Q ~574, Qy ~625 (`KB_spectroscopy_physics.md` §4.1a). Two of
+them are inside today's range, so the idea is directly testable without any hardware change.
+
+| candidate | class *d* | within-green *d* | dilution spread |
+|---|---|---|---|
+| `A(574)/A(625)` — peak ratio | 3.32 | 1.30 | −8.8 % |
+| `A(574) − A(625)` — peak difference | 6.64 | 1.68 | ⛔ **−69.0 %** |
+| **`M` shipped** (baselined bands) | **6.96** | **2.01** | **+3.0 %** |
+
+⛔ **Worse on every axis.** Two reasons, and both generalise:
+
+**1 · The shipped metric's power is the BASELINE, not the window positions.** Both peaks sit on a large
+scattering pedestal — §16.24 measured it at **62 % of the raw Q band**. A raw ratio carries it straight into
+the answer; a *difference* of absorbances is proportional to concentration by construction, which is exactly
+the −69 % for a 2× dilution. ⇒ A peaks-only design does not escape the baseline machinery, it just loses the
+correction and still needs anchors in quiet regions.
+
+**2 · ⭐ A peak is where the sample transmits LEAST.**
+
+| | `A` | `T` | |
+|---|---|---|---|
+| 448–460 *(shipped window)* | ≈ 0.66 | 22 % | ⭐ near the classical photometric optimum (~0.4–1.0) |
+| 440–447 | ≈ 1.46 | 3 % | the dead bins of §7.13 |
+| 432 *(Soret peak)* | ≳ 2 | ≲ 1 % | relative photometric error blows up |
+
+⇒ **The flank is not only a compromise forced by the lamp — it is also the best-conditioned place to measure.**
+Moving onto the Soret peak would put the measurement where the signal is weakest, which is the regime that
+produced the dead bins in the first place.
+
+⚠ **What this does NOT refute.** It says nothing about **432 nm**, the one peak never measured, and the Soret
+is the strongest band. And it tested peak *values*, which is the weaker target: §3.6 already found that the Q
+band's peak **POSITION** carries the class. A resolved band offers position, width and asymmetry; a flank
+offers only height. ⇒ **The case for extending the range stands, but its justification changes** — not "peak
+values make a better metric", which is now tested and false, but "a whole band offers shape parameters a flank
+cannot".
+
+⚠ n = 4 fills, one brown, dilution from a single half-strength pair. Enough to reject these two candidates; not
+enough to reject peak-based metrics as a family.
+
 ## 8 · Open questions for Edwin
 
 **Q1 — the window remark. ✅ ANSWERED (Edwin, 2026-08-04): "the rightest Q-band (the 620-630)".**
@@ -1840,6 +1919,7 @@ of them on the same wall: **both principal bands are flanks** and the range is c
 |---|---|---|---|
 | ⭐⭐ **S1** | **Trim the Soret window 440–460 → 448–460** (`DevSpectralPlugin.PB_SORET_BAND`) | one line, **plus a threshold re-derivation** (`B_Soret` 1.03 → 0.69) **plus a plugin re-sign**, since the window lives in the signed artifact | ⭐ **ADOPTED (Edwin 2026-08-04)** — ship it *with* the next threshold work, not twice |
 | ⭐⭐ **S2** | **The DN guard** — two-sided, per §16.23.8: record min(S), warn out of window, propose the correction | recipe becomes an input; guard warns, never blocks | **to implement** |
+| ⭐ **S4** | ⭐ **Simulate the LED combination** — score cool-white backbone + violet ~430 + deep-red 630/660 for coverage across 430–670 nm. **Everything needed already exists**: 17 measured Avonec SPDs in `spectracs-references/leds/avonec/`, `LedReferenceSynthesisOp` and the interactive LED picker (`SPEC_pipeline_playground.md` §4, `PlaygroundViewModule.py`) | prices the whole lamp question (`SPEC_capture_quality.md` §16.25.4a) **before anything is soldered**; ⚠ weight by band, not flatness — §16.24.2's 17× asymmetry makes Q-band and far-anchor photons worth far more | ⏳ **no hardware, no bench time** |
 | ⛔ **S3** | **Resolve the DN contradiction** — 2.0–2.6 vs 18–26 DN for the same darkest bin (`DOC_pedestal_correction.md` §7 vs `SPEC_capture_quality.md` §16.7.2e) | nothing — **S2 logs it as a side effect** | ⛔ **§16.23.6's whole dilution conflict is contingent on this** |
 
 ⚠ **S1 and S2 are the only items on this page needing neither the capillaries nor an evening at the bench.**
@@ -1851,9 +1931,16 @@ of them on the same wall: **both principal bands are flanks** and the range is c
 | ⭐⭐ **1** | **The capillary protocol** — `SPEC_capture_quality.md` §16.23, gates G1/G2 first | ⭐ within-green grading (SNR 1.8 → 18); a real concentration axis ⇒ **A2 and A4 become measurable**; OD-dosing ⇒ **retires the pedestal correction and A1** | ⏳ capillaries arriving |
 | ⭐ **2** | ⭐ **R0b SIMPLIFIED — three oils, ONE evening, standard recipe, one tube each, plus one MCT blank** | the session confound (§3.4); a second brown fill (§2.2); the background *measured* rather than inferred (§7.12) | ⏸ postponed, **now 4 tubes not 9** |
 | ⛔ **3** | ⭐ **THE STRAY-LIGHT GATE — block the beam, read `S`** (§16.23.6f) | decides whether the blue floor is quantisation (fixable in software) or stray light (needs baffling). **One capture, one minute** | gated on **S3** |
+| ⚠ **0** | **A jar mount that repeats** — `SPEC_capture_quality.md` **§16.26**. ⛔ **REVISED 2026-08-06 (§16.26.10): this was over-ranked.** The null series put the **instrument floor at 0.42 %** on `M`, but the alarming re-seat numbers came from **empty-jar** runs; in the operating condition (jar filled with IPA) a re-seat costs **rms 1.36 %** — 4× less, and close to the floor | ⚠ **no longer the dominant term.** Instrument + re-seating reach ~1.4 % against a 3–5 % archive CV, leaving **~3.8 % unexplained** — and a null run is blind to the one thing left: **the preparation** | ⏸ **demoted**; still worth doing eventually, but it is not the lever |
+| ⭐⭐ **P1** | ⭐⭐ **NEW SAMPLE HOLDER with a proper aperture — a SLIDE-IN jar solution** *(Edwin's priority 1, 2026-08-06)*. `SPEC_capture_quality.md` §16.25.2: two apertures at the jar's **inner** diameter, lower (stops light entering the wall) and upper (stops wall-exit + scatter). ▶ **Measure `f` first** with the opaque-oil test — ten minutes, no machining | removes the wall-bypass path; ⭐ a slide-in also controls **tilt**, and an aperture between jar and slit fixes the **angular acceptance** the reseat error works through. ⚠ On today's recipe worth only ~2.3 % per 1 % of `f` — its real value is as an **enabler for a stronger fill** | ⏳ **PRIO 1** |
+| ⭐⭐ **P2** | ⭐⭐ **REDO green-vs-brown AND green-vs-green on the CAPILLARY protocol** *(Edwin's priority 2)*. §16.23; gates G1/G2 first | ⭐ the measured blocker: instrument 0.42 % + reseat 1.28 % against a 3–5 % CV ⇒ **~3.8 % is the preparation**, and §16.23.7 puts green-green at **SNR 1.8 → 18**. Green-vs-green is the capability gate (*d* ≈ 1.3–2.0 vs ≳ 3 needed) | ⏳ **PRIO 2** |
+| ⭐ **P3** | ⭐ **The 660–680 nm QUIET-WINDOW test** — §7.14.4 above. ⚠ Two prerequisites: the calibration must extend past 630 (free), and **the lamp must actually reach 660–680, which is NOT established** — the "Sansi 24 DN at 680" figure came from a screenshot ending at ~676 nm with a transferred wavelength scale | ⭐ decides whether the whole scatter-correction family reopens, via `far/near < 1` | ⏳ on the backlog |
+| ⭐⭐ **0a** | ⭐⭐ **THE REFILL NULL** — `SPEC_capture_quality.md` **§16.26.11** (protocol written, not run). Reference IPA → **empty, refill with fresh IPA**, capture as sample; truth is still `A = 0`. Every null so far kept the SAME liquid in both captures, so **the disturbance a real run actually performs has never been measured**. Run both lamps, n ≥ 4 | ⭐ splits the unexplained ~3.8 % into **handling** vs **dosing** — different problems, different fixes; **and it is the decisive lamp test**, because §16.26.5's "lamp-independent" was measured on gentle disturbances while a refill is not gentle | ⏳ **run this before 0b** |
+| ⭐⭐ **0b** | ⭐⭐ **MEASURE THE GAP — repeat the CV with REAL fills.** A null has no sample, so it cannot see preparation error. If run-to-run scatter on actual oil is 3–5 % while nulls sit at 1.4 %, **the difference IS the preparation** | ⭐ settles what the archive CV actually is, and it is **the entire case for the capillary in one comparison** (§16.23.7: dosing spread 1.665 units against a 0.98-unit signal, SNR 1.8) | ⏳ **cheap, and the highest-value measurement on this page** |
+| ⭐ **3b** | ⭐ **INSTRUMENT TODO — slit baffle ("Gegenlichtblende") on the Yuji + blacken the cone interior.** ⚠ The baffle is valid **only for a diffuse source** (`KB_spectroscopy_physics.md` §7.1): on the DIY array or a bare CFL it *selects* emitters and worsens along-slit uniformity. ⚠ The cone is **blued sheet metal** (black oxide) — specular, not black under illumination; matte paint is only a partial fix, **flocking is the standard answer** | attacks the stray-light floor **at source** — the same floor §7.13 showed compresses the Soret band and injects the false pedestal intercept | ⏸ **gated on 3** — measure before machining |
 | **4** | **Dual-exposure absorbance** — low exposure for R, high for S, corrected by log(E_S/E_R) (§16.23.6e) | ⭐ dissolves §16.23.6's dilution conflict outright — both constraints met at 1:250, no lamp purchase | gated on **3** |
 | **4b** | ~~analog-vs-digital gain test~~ | ✅ **DONE 2026-08-04: the gain is ANALOG** (no histogram gaps at any setting). ⚠ But the range is only **1.51×**, short of the 2.3× the guard needs — helpful, not sufficient (§16.23.6d) | done |
-| **5** | **Extend the red range to ~660 nm** | ⭐ the structural fix — turns both flanks into bands and gives the first genuinely quiet region (§7.8, §7.9b) | hardware, cost unknown |
+| **5** | **Extend the red range to ~660 nm — and get light onto 432 nm.** ⭐ **REFRAMED 2026-08-06** (`KB_spectroscopy_physics.md` §4.1a): the pigment's centres are **432 / ~574 / ~625 nm**, and our windows sit at 448–460 (16–28 nm **above** the Soret peak — pure flank), 560–580 (✓) and 620–630 (contains Qy, but used as a *baseline anchor*). ⇒ **§7.8's wall restated from the molecule's side**, and the fix is two-sided: extend the red **and** light the blue. ⚠ Also measured: the archive is **convex at 626 nm on every fill** — the Qy maximum has never been observed, and a null-run control showed the instrument's own curvature would fake one | ⭐ the structural fix — turns both flanks into bands and gives the first genuinely quiet region (§7.8, §7.9b) | ⭐ **REPRICED 2026-08-06 — no longer "hardware, cost unknown"**: the optics deliver to ~680 nm and the Eu³⁺ 650.7 nm line **resolves** (`KB_spectroscopy_physics.md` §7.2), so the 440–630 clamp is ours. The gate is now **photometric and it is a LAMP choice** — measured at 650/656 nm the **Sansi beats the Yuji 3.7×/5.5×**. ⛔ Do not move the clamp without it: at 7–13 % of the 630 nm level those bins are the 440–447 regime again |
 | **6** | **The validation study** — 12+ greens, 2–3 browns, jury **visual sub-score** recorded separately, plus **roast level** as objective ground truth | whether the instrument measures what it claims. **Never done, and not on any milestone** | open |
 | **7** | **Q3** — a primary UV-Vis of *protopheophytin a* | C7, band decomposition; not on the open web (§3.12a) | purchase/library |
 

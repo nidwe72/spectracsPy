@@ -24,9 +24,33 @@ class ImageSpectrumAcquisitionLogicModule:
     _warnedRoiMismatch = set()
 
     # SPEC §6 (M2): fraction of the ROI band height dropped at the TOP and BOTTOM before the per-column reduction.
-    # The edge rows bleed the dark border outside the slit and carry the worst smile-λ error. Tunable; finalize
-    # on the rig (M2.4). The measurement is broadband, so a generous central band helps and smile barely matters.
-    __INSET_FRACTION = 0.2
+    # The edge rows bleed the dark border outside the slit and carry the worst smile-λ error.
+    #
+    # ⭐ 0.2 -> 1/3 on 2026-08-06 (Edwin's call, "take the filet piece"), i.e. keep the MIDDLE THIRD of the band.
+    # M2's original note said "the measurement is broadband, so a generous central band helps and smile barely
+    # matters", and left the value as a placeholder to "finalize on the rig (M2.4)" — which never happened.
+    # ⚠ That rationale is now known to be incomplete. Smile barely matters for a STATIC measurement, because a
+    # fixed row-to-λ curvature cancels in T = S/R. It matters a great deal once the beam MOVES between the
+    # reference and the sample burst: re-seating the jar re-aims the beam onto different rows, and because rows
+    # disagree about wavelength by up to ~4 nm across the full band height, the reduced spectrum changes SHAPE —
+    # which does not cancel. SPEC_capture_quality.md §16.26 measured that re-seat error as the dominant one in
+    # the whole instrument (median 1.7 %, max 14.4 % on M, against a 0.42 % instrument floor), so narrowing the
+    # band is a software attack on the largest known error.
+    #
+    # Measured on the rig's own ROI frame (§16.26.9): the colour boundaries wander 3.3-4.2 nm across the full
+    # height but only 0.9-1.4 nm across the central 60 %, and per-row level variation drops from ~20 % to 6-11 %.
+    # ⚠ The degradation is NOT symmetric — the top is healthy from y/h ~0.02 while the bottom falls off from
+    # ~0.66 — so a symmetric inset is the wrong SHAPE for this rig and 1/3 is a compromise, not the optimum.
+    # ▶ The better fix is to derive the band from the reference frame's own row profile (keep rows >= 85-90 % of
+    # peak); left for §16.26.9's follow-up because it needs a live-frame measurement, not a screenshot.
+    #
+    # ⚠ Cost: fewer rows averaged => more photon noise, ~1.4x going from 60 % to 33 % of the band. Against a
+    # 0.42 % instrument floor that is ~0.6 %, i.e. negligible next to the 3-5 % it is meant to suppress.
+    # ⚠ MEASUREMENT branch only — the wavelength-calibration branch above reads a single centre row and is
+    # untouched, so line detection and the px->nm fit are unaffected.
+    # ⚠ Some diagnostics (`reduction_sum_vs_max.py`, `reference_drift_probe.py`) hardcode 0.2 ON PURPOSE, to
+    # reproduce the numbers they published; do not repoint them without re-deriving those numbers.
+    __INSET_FRACTION = 1.0 / 3.0
 
     def execute(self,moduleParameters:ImageSpectrumAcquisitionLogicModuleParameters)->ImageSpectrumAcquisitionLogicModuleResult:
 

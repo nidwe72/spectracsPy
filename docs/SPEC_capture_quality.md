@@ -9990,6 +9990,746 @@ every shape error at once (§16.24.2), and it simultaneously pulls `r_Q` back in
 
 ---
 
+## 16.25 ⭐⭐ THREE OPTICAL-PATH CHANGES — the lamp, the sample aperture, the cone flocking  *(Edwin 2026-08-06, from four lamp screenshots and a look down the jar: "all 3 things … are really essential things that will change the quality of the project to a large extent")*
+
+**DESIGN + measurement plan. Nothing built, nothing implemented.** These are the first changes in a long time
+that address the *input* to the measurement rather than its arithmetic — and `SPEC_metric_research.md` §7.12
+established that every remaining analytical route is closed, so this is where the remaining gains are.
+
+### 16.25.1 ⭐⭐ THE SEQUENCING RULE — bundle them, or pay for the recalibration four times
+
+⚠ **Each of the three changes the optical path, and therefore invalidates the verdict thresholds.** So does
+the Soret trim to 448–460 (`SPEC_metric_research.md` §7.13), which is already owed. Done one at a time that is
+**four** threshold re-derivations on four incomparable corpora.
+
+⇒ **Treat it as one "rig rebuild v2":** measure everything first (§16.25.5 — nothing below requires a
+change), then apply the trim + whichever optical changes survive the measurements, **then re-derive the
+thresholds once** against one fresh archive. ▶ The measurement phase is free and reversible; the build phase
+is not.
+
+### 16.25.2 The sample aperture — a SECOND stray-light path, and it does not cancel
+
+Edwin looked down into the jar with undiluted oil: the oil reads dark red, **and the walls visibly pass
+light**. The initial reading was that this cancels in `T = S/R` because reference and sample are measured the
+same way. ⛔ **It does not.**
+
+Wall light **bypasses the absorber**, so it is *additive* in both captures:
+`T = (T_liquid + f) / (1 + f)`, with `f` the wall's share of the beam. **A multiplicative term cancels in a
+ratio; an additive one does not** — the same algebra as §7.13's detector floor, and the reason commercial
+spectrophotometers carry a separate *stray-light* specification.
+
+| true `A` | f = 0.5 % | f = 1 % | f = 2 % | f = 5 % |
+|---|---|---|---|---|
+| 0.5 *(our Q band)* | 0.495 | 0.491 | 0.482 | 0.457 |
+| 1.0 | 0.981 | 0.963 | 0.929 | 0.845 |
+| **2.0** *(our Soret at 440–447)* | 1.826 | **1.703** | 1.531 | 1.243 |
+
+⭐ **1 % of wall light costs 0.009 A in the Q band and 0.30 A in the Soret — a 33× difference inside one
+measurement.** Invisible where we do not care, enormous where we do.
+
+⚠ **And it is not even a common additive.** Oil `n` ≈ 1.47, IPA `n` ≈ 1.38, glass `n` ≈ 1.5 — the oil
+index-matches the wall *better* than the solvent does, so the coupling differs between sample and reference:
+`f_sample ≠ f_reference`.
+
+⭐ **This is a live candidate for the ~72 % of `r_Q` that `SPEC_metric_research.md` §7.13.6 left
+unexplained.** An additive floor bends the chapter-6 straight-line test downward and puts a positive intercept
+into it — exactly the observed signature. §7.13 attributed the measurable part to the camera's dark offset;
+**the wall is a second additive of the same shape and nobody has looked for it.**
+
+**Design — two apertures, both sized to the jar's INNER diameter, not the outer:**
+
+| | position | removes | note |
+|---|---|---|---|
+| **lower** | lamp → jar | light **entering** the glass wall at all | ⚠ one exists (the ring the jar sits on) but its wall is **as thin as the jar's**, so it does not stop entry |
+| **upper** | jar → camera | wall-**exit** light at the rim, and wall scatter | ⭐ Edwin: most of the effect, and easiest to build as a separate alignable part |
+
+⚠ **The upper aperture cannot do the lower one's job.** Light guided up the wall by total internal reflection
+can leak *into the liquid* along the way (frustrated TIR — and for oil the indices nearly match, so this is
+efficient). That light then traverses a **partial** path length and arrives through the clear aperture looking
+like signal. Only stopping entry at the bottom removes it. ⇒ **Build both; expect the upper to carry the bulk
+and the lower to remove the class the upper cannot.**
+
+⚠ **Cost:** less flux ⇒ lower DN, which fights the 16 DN guard in the blue. But the removed light is the
+harmful kind, so the *usable* absorbance range improves even as counts fall.
+
+### 16.25.3 The cone — blued sheet metal is not black under illumination
+
+The lamp sits at the base of the lower cone, so **the cone walls are a stray-light path built into the
+geometry** — the instrument illuminating itself, not ambient leaking in. The cone is **blued** (black-oxide,
+*Brünieren*); a thin conversion coating that is **specular**, so its reflectance climbs steeply at the
+**grazing incidence** that a cone wall actually sees. Matte black paint returns ~2–5 % and scatters into all
+directions.
+
+⭐ **Flocking** — short fibres stood perpendicular on an adhesive backing — reaches ~0.5–1 % and traps grazing
+rays instead of glancing them onward.
+
+**What "flocking" actually is** (*Beflockung*): fibres 0.5–2 mm applied **electrostatically** onto an adhesive
+layer so they stand perpendicular, like a dense forest. Light entering between them is absorbed on each bounce,
+and at grazing incidence it meets fibre *tips* rather than a smooth surface — there is nothing to glance off.
+
+| layer | material |
+|---|---|
+| fibre | **viscose/rayon** (the classic optical flock, most matte); also nylon or polyester |
+| backing | paper or PET film |
+| ⚠ adhesive | acrylic pressure-sensitive — **this is what limits the temperature** |
+
+**Sources / search terms:** *Flockpapier*, *Samtpapier*, *selbstklebende Velourfolie*, *Beflockungsfolie*;
+telescope suppliers sell it as flocking sheet (Protostar-type), photo suppliers as *Blendschutz-Velourfolie*.
+
+**Temperature — the fibre is rarely the limit.** Rayon chars ~200 °C (does not melt); nylon/polyester melt
+~220/~250 °C; the **acrylic adhesive fails at ~70–90 °C continuous**. The rig measured ≤ 40 °C at the sample
+(§16.22.1a) but ⚠ **the wall next to the lamp has never been measured** — do that first:
+
+| measured wall temp | use |
+|---|---|
+| < 60 °C | flocking as discussed |
+| 60–100 °C | flocking **plus mechanical retention** (adhesive creeps long before it fails outright) |
+| > 100 °C | ⛔ no velour — black anodised aluminium, or high-temperature matte black |
+
+⭐ **DECISION (Edwin 2026-08-06): start with high-temperature stove paint** — *JENOLITE Directorust Grill &
+Oven, matt black, rated 650 °C*. It removes the thermal question entirely and is cheap enough to just do.
+⚠ Treat it as **iteration 1, not the endpoint**: optically it returns ~2–5 % diffuse against flocking's
+0.5–1 %. It also makes the baffle *more* valuable, not less, since geometry then has to compensate for a
+mediocre coating.
+
+▶ **And geometry beats every coating:** a knife-edge baffle that removes the wall from the slit's line of
+sight contributes nothing regardless of finish, and costs nothing thermally.
+
+### 16.25.4 ⭐ The lamp — the reason the Yuji was chosen has DISSOLVED
+
+**The history (Edwin):** the Yuji was adopted for a uniform 6500 K spectrum, a clean blue band, no stripes,
+and *"the colour metrics as good as possible"*.
+
+⭐ **That last reason no longer holds.** `SPEC_capability_proof.md` and the colour work established that
+**perceived colour — and the intrinsic-colour chips — do not drive the oil verdict.** The lamp therefore no
+longer needs to be a good *colorimetric* illuminant. It needs **photons where the bands are**, and a **diffuse
+emitting surface** so the slit is lit evenly (`KB_spectroscopy_physics.md` §7.1).
+
+Measured on the four screenshots, same exposure (⚠ the Sansi **clips** at 255 through 600–640, so its
+mid-range is uninformative and only the unsaturated columns count):
+
+| lamp | 430 | 450 | 650 | 656 | 680 nm | along-slit |
+|---|---|---|---|---|---|---|
+| Yuji | 39 | 84 | 47 | 21 | 2 | ⭐ **1.8 %** |
+| Sansi | 39 | 147 | **176** | **115** | **24** | 3.5 % |
+| DIY 7 × 3 W | ⭐ **140** | 106 | 8 | 2 | 0 | ⛔ 6.5 % |
+
+⛔ **No lamp on the bench covers both ends.** The Sansi owns the red; the **DIY array owns 430 nm by 3.6×**
+because it carries three real blue emitters that neither phosphor lamp has.
+
+⭐⭐ **Which reopens the DIY array — and the objection that killed it now has a named fix.** It was retired for
+assembly effort, hard-to-source parts, colour temperature, and *"the artefacts"*. §7.1 has since shown the
+artefacts are **two different things**: the along-slit streaking is **multi-emitter illumination with no
+diffuser** (a solved problem — a diffuser with **working distance**), while the fine dispersion ripple is
+**instrumental and identical on the Yuji**, i.e. not the array's fault at all.
+
+⛔ **BUT the array is NOT "rather uniform", and the deficit is exactly where the metric lives.** Full sweep,
+same registration:
+
+| lamp | 440 | 460 | 480 | **500** | **520** | **540** | **560** | **580** | 600 | **620** | **630** |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| DIY 7 × 3 W | 113 | 120 | 128 | ⛔ **43** | **35** | **43** | **47** | **50** | 43 | ⛔ **18** | ⛔ **12** |
+| Yuji | 81 | 72 | 147 | 136 | 115 | 98 | 83 | 90 | 91 | 63 | 52 |
+| Sansi | 108 | 122 | 161 | 196 | 182 | 168 | 153 | 180 | 185 | 159 | 149 |
+
+⚠ **A 3× cliff at 500 nm and it never recovers.** That valley contains the **near baseline anchor (520–540)**,
+the **Q band (560–580)** — the metric's whole denominator — and the **far anchor (620–630)**, where the array
+reads **12 against the Sansi's 149, a 12× deficit**. Three discrete blue emitters and no continuum backbone:
+the array is bright only where its LEDs sit.
+
+⇒ ⛔ **"Add a 630 and a 660 nm LED" is not enough** — it would patch the far anchor and leave the 500–600
+valley, i.e. the Q band, starved. Reviving the array as-is is refuted.
+
+⇒ ⭐⭐ **The configuration actually worth pricing is Edwin's ORIGINAL proposal** (2026-08-06, before the array
+came back into view): **a white phosphor lamp as the continuum backbone + added narrow emitters at the two
+ends + everything behind one common diffuser.** The phosphor lamp supplies 500–630 where the array collapses;
+the added violet (~430) and deep-red (~630/660) emitters supply what no phosphor lamp has. That is the only
+layout on the table that could feed a live Soret window *and* an extension past 630 nm — i.e. the same object
+as `SPEC_metric_research.md` §9.1 item 5.
+
+⚠ Costs and conditions: diffuser transmission (~40–80 %); every emitter **behind the same diffuser with
+working distance**, or the Yuji's 1.8 % is traded away; one common warm-up and supply discipline, since `R`
+and `S` must see the identical spectrum (§16.11.16); and re-verification against §7.1's 1.8 % bar.
+
+⭐ **Construction sketch (Edwin):** keep a white phosphor lamp as the centre and ring it with **~4 small
+heatsinked emitters** for the two ends — mechanically the simplest way to get one common diffuser over the lot.
+
+#### 16.25.4a ⭐⭐ PRICE IT IN SOFTWARE FIRST — the LED simulator already exists *(Edwin 2026-08-06: "think it would be worth a try to simulate")*
+
+**No hardware, no bench time, and it can be done today.** The infrastructure is already built and the data is
+already harvested:
+
+| piece | where |
+|---|---|
+| **17 measured Avonec 3 W SPDs** — including `10000k-20000k.jpg`, the cool-white Edwin proposed as the backbone | `spectracs-references/leds/avonec/` |
+| `LedReferenceSynthesisOp` — `R(λ) = Σ weightᵢ · SPDᵢ(λ)` on the calibration axis | `SPEC_pipeline_playground.md` §4 |
+| **interactive LED picker** in the Reference tab, explicitly *"try other Avonec LED sets/weights and score the resulting `R(λ)` for flatness/coverage"* | `PlaygroundViewModule.py` |
+| the shop, per-LED measured spectra | <https://www.avonec.de/3w-high-power-led/> (`KB_led_and_oil_spectra.md`) |
+
+⭐ **And `KB_led_and_oil_spectra.md` predicted tonight's measurement three years early:** *"cyan ~470–510, which
+no Avonec colour LED can fill."* The 3× cliff at 500 nm measured above **is that gap**, confirmed on the real
+rig. It is also why a **phosphor white is structurally required** — a continuum is the only thing that fills a
+region no discrete emitter covers.
+
+⇒ **The task:** score cool-white backbone + violet (~430) + deep-red (630/660) combinations across
+**430–670 nm**. It prices the whole lamp question before anything is soldered.
+
+#### ✅ RESULT — the search was run 2026-08-06
+
+Tool: **`diagnostics/led_combination_search.py`** (`--verify` re-derives every digitised peak and checks it
+against the part number). ⚠ The Avonec SPDs ship as *Spektralmessung JPGs*, not numbers, so the tool digitises
+the plotted curve; only the wavelength axis needs calibrating, since every plot is normalised to 1.00.
+
+⚠ **The calibration took three attempts and the first two produced plausible wrong answers** — the curve runs
+past the axis, and the plot FRAME and the IMAGE BORDERS both read as gridlines. Landmarks now match the plots
+to 1–5 nm. Four of the eleven files are **excluded rather than guessed**; `--verify` had caught guessed axis
+ranges putting their peaks 8–18 nm wrong.
+
+**Best 7-emitter allocation: ⭐ 3 × 6500 K + 2 × 430 nm + 1 × 515 nm + 1 × 660 nm.**
+
+| allocation | I@432 | I@574 | I@625 | worst %/nm | score |
+|---|---|---|---|---|---|
+| **3×6500K + 2×430 + 1×515 + 1×660** | **0.815** | 0.779 | 0.393 | 4.7 | **11.56** |
+| 3×6500K + 2×430 + 1×515 + 1×635 | 0.815 | 0.779 | 0.507 | 4.7 | 11.70 |
+| 4×6500K + 2×430 + 1×660 | 0.692 | 0.782 | 0.398 | 4.7 | 12.36 |
+| 2×6500K + 3×430 + 1×515 + 1×660 | 0.940 | 0.492 | 0.250 | 5.1 | 14.06 |
+| 7×6500K (backbone only) | 0.288 | 0.831 | 0.412 | 4.5 | 16.13 |
+| 7×10000K–20000K (backbone only) | ⛔ 0.099 | 0.384 | 0.162 | 6.9 | ⛔ 38.71 |
+
+⭐ **The composition survives a weight-sensitivity check** — it wins under three of four weightings (as
+written, smoothness-first ×4, coverage-heavy ×4) and is top-five under all four. Only the **red slot** flips:
+under photons-first the 635 nm variants win, because 635 puts more light at 625 nm.
+
+⇒ **Take 660, not 635** — a 635 emitter puts its **rising flank inside 620–630** (far-anchor slope **1.9 %/nm**
+against 660's **0.5**), which is the Sansi's failure mode applied before building instead of after. ⚠ That
+reverses only if the far anchor moves off 620–630 (§16.26.11's fallback) or the range extends past 660.
+
+⭐⭐ **Two findings that were not expected.** (1) The **cool white is the WORST backbone**, not the natural one —
+10000K–20000K scores 38.7 against 6500 K's 16.1, because its blue pump so dominates that `I@432` collapses to
+0.099. (2) **The violet does 83 % of the total gain** (backbone→+violet is −3.81 of −4.58); the deep red **alone
+does essentially nothing** (−0.22), because a 6500 K backbone already reaches 0.41 at 625 nm.
+⇒ **If only one thing is built, build the violet pair** — 2 × 430 nm on the existing lamp, behind the existing
+diffuser, gets most of it with two emitters and no new board.
+
+⚠ **This ranks CANDIDATE SPECTRA only** — no drive current, binning, thermal droop, or diffuser transmission,
+and real per-part output varies far more than normalised curves suggest. ⛔ **And nothing is buildable until the
+calibration reaches below 440 nm**: `I@432` is unmeasurable on the current instrument (both real lamps read
+0.000 there because the stored spectra start at 440), so the benefit could not be seen even if built.
+
+#### ⭐⭐ How to score it — at the PIGMENT's band centres, not for flatness
+
+*(Edwin 2026-08-06, from the observation that the CFL's lines land on the oil's absorption features.)*
+
+⛔ **Do not score for a flat spectrum.** Two separate findings say that is the wrong target:
+
+**1 · The shipped windows sit on FLANKS, not on the pigment's peaks — and that is why they are where they are.**
+
+| pigment feature | position | our window | |
+|---|---|---|---|
+| **Soret** | **~432 nm** | 448–460 | ⚠ **16–28 nm above the peak — pure flank** |
+| **Q band** | ~574 nm | 560–580 | ✓ contains it |
+| **Qy** | **~623–626 nm** | 620–630 | ⚠ contains it, but is used as a **baseline anchor** |
+
+The windows were chosen by where we had light and dynamic range, not by where the chemistry is. ⇒ **This is
+§7.8's wall — *"both principal bands are flanks"* — reached from a different direction**, and it reframes the
+lamp brief: the point of more light at 432 and 625 is to let the bands sit **on the peaks**.
+
+⚠ At 432 nm the oil is nearly opaque at today's recipe, which is what made 440–447 dead bins. But that cuts
+both ways: **the dead bins are as much a source-brightness problem as an absorbance one.** More photons at
+432–440 lifts the transmitted signal off the DN floor, and the dilution then becomes a free choice rather than
+something the lamp forces.
+
+**2 · A source's PEAK must sit where you measure, never its flank.** Measured three independent ways today:
+the Sansi's *edge* inside the anchor costs 25 %/nm; an LED *centred* on the anchor costs 0–5 %/nm; and at any
+maximum the sensitivity to wavelength drift is **second-order** (zero first derivative) instead of first-order.
+⇒ Score each candidate on **|dlnI/dλ| at the band centres**, and reject any combination that puts an emitter
+edge inside 448–460 or 620–630.
+
+⇒ **Objective function, in order:**
+
+| | criterion |
+|---|---|
+| 1 | **photons at 432 nm and 625 nm** — the pigment's own band centres, the two the instrument cannot currently reach properly |
+| 2 | **`\|dlnI/dλ\|` at 448–460, 520–540, 560–580, 620–630** — minimise; no emitter edges inside a band |
+| 3 | coverage 430–670 with **no hole** — the DIY array's 3× cliff at 500 nm is the failure mode to avoid |
+| 4 | weight the Q band and far anchor above the middle — §16.24.2's 17× asymmetry |
+
+#### ⭐ Candidate RED sources, priced by steepness across the far anchor *(2026-08-06)*
+
+The far anchor's enemy is not dimness, it is **structure**: any R→S mismatch is multiplied by the local
+`|dlnI/dλ|`. Candidates, measured or computed across 620–630 nm:
+
+| source | `\|dlnI/dλ\|` at the anchor | verdict |
+|---|---|---|
+| **halogen / incandescent** (blackbody 2800–3400 K) | ⭐ **0.3–0.5 %/nm** | flat, nothing to explain, and it keeps rising into the red |
+| **Yuji** *(measured)* | 1–3 %/nm | smooth; its one sharp feature is the 607/609 line, **outside** the anchor |
+| **red LED centred ~626** | 0–10 %/nm | workable **only if centred on the anchor** — a peak has zero slope |
+| **Sansi** *(measured)* | ⛔ **25 %/nm at 622.0** | comparable steepness to the Yuji's line, but **inside** the anchor |
+| **deep-red LED 660, alone** | ⛔ 41–55 %/nm | its whole rising flank covers the anchor |
+
+⭐⭐ **The rule this produces: it is LOCATION, not steepness.** The Yuji's cliff (−16.5 %/nm at 610.1 nm) is not
+much gentler than the Sansi's (−25 %/nm at 622.0 nm); the difference is that one lands outside the window we
+cannot afford it in and the other lands inside. ⇒ **Put a source's peak where you measure, never its flank** —
+at a maximum the sensitivity to wavelength drift is *second-order*, on a flank it is first-order.
+
+⚠ **Mixing dilutes steepness**: adding a red LED to the Yuji at ~0.5× its level *lowers* the anchor slope
+(2.0 → 1.4 %/nm) while raising photons 1.4×. Past ~2× you start paying the Sansi's problem in instalments.
+
+⛔ **Halogen as the MAIN lamp fails on the other end:** a blackbody delivers `I(450)/I(630)` of **0.18–0.37**
+against the Yuji's 2.97 — **7–16× too little blue**, in the band that is already starved. ⚠ And UV is a
+non-issue (0.26 % of a 3000 K blackbody lies below 400 nm); the real second objection is **heat under the
+sample**, where §16.11.16 measured a warmed fill reading as a browner oil and misclassifying 3 of 3 runs.
+⇒ **Halogen is right for the red half, wrong for the whole lamp** — which is why every commercial UV-Vis
+instrument runs two sources.
+
+⚠ **A CFL is not the answer, though its lines fit beautifully.** Hg 435.83 ↔ Soret ~432, Hg 576.96/579.07 ↔ Q
+~574, Eu³⁺ 626.6 ↔ Qy ~625 — three for three. But measured on the rig it delivers **9 DN across 448–460 at
+exposure 500 (the cap)** against the Sansi's 212 DN at exposure 32, i.e. **~17× dimmer per unit exposure**. Its
+lines are bright relative to its own continuum, not absolutely. ⇒ **Keep the CFL as the wavelength standard**
+(§7 of `KB_spectroscopy_physics.md`); it cannot be the measurement source.
+
+⚠ **Edwin's supply-chain objection to the Sansi is real and cuts the other way too:** "so many different Sansi
+models" makes a consumer lamp a poor production dependency — but that argument applies to the Yuji as well.
+**An own LED board is a BOM we control**, which for a productised instrument is the *more* standardised
+option, not the less.
+
+⭐ **SETTLED 2026-08-06 by §16.26.5 — choose on spectrum, because the other axis does not discriminate.** The
+worry that the Sansi's sharp structure would amplify the dominant error (jar reseating) was tested with paired
+null runs: **residual 1.44 % (Yuji) against 1.50 % (Sansi)**. Reseat sensitivity is lamp-independent. ⚠ §16.26.5
+also records the three wrong verdicts issued before that comparison existed, and the measurement error behind
+them (a linear fit across a band containing a peak) — read it before re-opening this.
+
+⛔ **And the improvised paper diffuser is REJECTED** (§16.26.6): it costs **14× the light** (AE 32 → 441, against
+a cap of 500) and **32–38 % of the relative blue**, to attack the smaller half of the non-uniformity — 83–85 % of
+which is a smooth *gradient*, which no diffuser fixes. **Centre the lamp first; use PTFE if a diffuser is wanted.**
+
+### 16.25.5 ⭐⭐ THE MEASUREMENT PHASE — all of it free, none of it requires a change
+
+| # | test | decides | cost |
+|---|---|---|---|
+| **1** | ⭐ **Stray-light gate, three captures** (extends §16.23.6f): (a) lamp **OFF** → dark offset `D`; (b) lamp **ON**, opaque blocker at the sample → `D` + stray; (c) normal reference. **Stray = (b) − (a)** | quantisation vs stray light — and separates the two floors instead of testing for one | 3 captures |
+| **2** | ⭐⭐ **The opaque-oil test.** **Undiluted** oil in the jar — essentially opaque in the blue, so a true 440–460 reading is ~0. Whatever is read there is wall path + dark offset. Repeat with the outer wall wrapped in black tape / a card collar; **the difference is the wall path, in DN** | whether §16.25.2 is worth building, and how big `f` is | one evening, no machining |
+| **3** | **Lamp shoot-out under auto-exposure**, each lamp captured **through the real rig** (cone + jar + IPA), landed exposure recorded from the CAPTURE-SETTINGS line | an uncontaminated blue/red **shape** comparison — the current one is spoiled by the Sansi's clipping | ~10 min |
+| **4** | **Cone wall temperature next to the lamp**, during a normal run | flocking vs anodised vs high-temp paint | 1 reading |
+
+⚠ **Note on test 3:** auto-exposure lands each lamp at its own exposure, which is what makes *shape* comparable.
+To compare **absolute** photon rates, divide by the landed exposure (roughly linear in integration time).
+⚠ §14.9's caveat — exposure units are per-camera — does not bite here because it is one camera throughout.
+
+⇒ **All four are measurements, not commitments.** They cost one evening between them and they decide which of
+the three builds is worth the single threshold re-derivation §16.25.1 allows.
+
+#### 16.25.6 Status after the 2026-08-06 session
+
+| # | test | status |
+|---|---|---|
+| 1 | stray-light gate ×3 | ⏳ **not run** |
+| 2 | ⭐ the opaque-oil test (gives `f`) | ⏳ **not run — still the gate on §16.25.2** |
+| 3 | lamp shoot-out under AE | ⭐ **effectively answered** — §16.26.5/.6 plus the reference-shape work; the Sansi wins on spectrum, the paper is out |
+| 4 | cone wall temperature | ⏳ not run — ⚠ **gates the flocking-vs-paint choice** (§16.25.3) |
+| 5 | ⭐ **simulate the LED combination** (§16.25.4a) | ⏳ **not run — and it needs no bench at all**; the SPDs and the synthesis op already exist |
+| — | ⭐⭐ **the NULL-RUN series** *(not in this plan)* | ✅ **DONE — §16.26**, and it reordered the whole list |
+
+⭐⭐ **The null-run series changed the priorities this section was written under.** §16.25 ranked the three
+optical changes and treated the jar as one contributor among several. §16.26 measured the instrument floor at
+**0.42 %** and the jar at **median 3.0 %, max 14.4 %** — so **the jar mount (or the capillary that replaces it)
+outranks the aperture, the flocking and the lamp together**, and it is a *mechanical* fix, not an optical one.
+
+⚠ **And §16.25.2's sample aperture is worth less than written there**, for a reason that surfaced the same
+evening: the wall-bypass term `f` costs **7.2 % of `A` at 440–447** but only **2.3 % at 448–460** and **1.2 % in
+the Q band** — so it largely cancels in the ratio once the Soret window is trimmed (§16.13 / `SPEC_metric_research.md`
+§7.13). ⇒ **The aperture's real value is as an ENABLER of a stronger fill** (at 3× concentration the same `f`
+costs 14 %), not as a standalone win on today's recipe. It stays on the list; it drops below the jar mount.
+
+---
+
+## 16.26 ⭐⭐ THE NULL-RUN SERIES — the instrument measured against itself, and the archive's CV explained *(2026-08-06, eight runs in ninety minutes: `tmp/20260806A/003–010`)*
+
+Tool: **`diagnostics/null_run_series.py`** (reproduces every number below).
+
+### 16.26.0 The method, and why it is worth more than it costs
+
+A **null run** is an ordinary measurement in which the **same empty beam is captured as both the reference and
+the sample**. Truth is `A = 0` at every wavelength, so **everything that comes back is error** — and it is error
+of exactly the kind a real run suffers: two bursts, separated in time, with whatever happened in between.
+
+⭐ **That makes it the only experiment on this bench that prices the instrument WITHOUT the sample.** By
+choosing what happens between the two bursts — nothing / reseat the jar / change the lamp — it prices one
+disturbance at a time. Each run costs about a minute.
+
+`M error` below propagates each null's band errors onto the archive's Steirerkraft values (`B_Soret` 0.6924,
+`B_Q` 0.0704, trimmed 448–460 window, `M₀` = 9.835): *"what would this much instrument error have done to a
+real measurement?"* That is the number to compare against the archive's **3–5 % run-to-run CV**.
+
+| run | lamp | what moved | shift | scale | resid | A_Soret | A_Q | tilt | **M error** |
+|---|---|---|---|---|---|---|---|---|---|
+| 003 | Sansi+paper | **nothing moved** | +0.010 | 0.9972 | **0.26 %** | +0.0010 | +0.0015 | −0.0011 | ⭐ **+0.42 %** |
+| 004 | Sansi+paper | jar reseated *(careless)* | −0.245 | 0.8678 | 10.07 % | +0.2663 | +0.0814 | +0.1670 | ⛔ **+14.38 %** |
+| 005 | Yuji | jar reseated | +0.010 | 1.0174 | 1.44 % | −0.0200 | −0.0097 | −0.0008 | −5.66 % |
+| 006 | Sansi | empty jar reseated | +0.050 | 1.0063 | 1.50 % | −0.0119 | −0.0012 | −0.0183 | +3.01 % |
+| 007 | Sansi | empty jar reseated | +0.050 | 1.0410 | 4.22 % | −0.0475 | −0.0116 | −0.0592 | +8.83 % |
+| 008 | *(unlabelled)* | *(unlabelled)* | +0.020 | 0.9956 | 0.38 % | +0.0010 | +0.0025 | −0.0020 | +0.31 % |
+| 009 | Sansi+paper | jar reseated | +0.010 | 1.0030 | 0.36 % | +0.0007 | −0.0019 | +0.0054 | −0.37 % |
+| 010 | Sansi+paper | jar reseated | −0.040 | 1.0741 | 1.98 % | −0.0368 | −0.0329 | −0.0028 | ⭐ **+0.46 %** |
+| 011 | Sansi+paper | jar reseated | +0.035 | 1.0042 | 0.81 % | −0.0038 | −0.0013 | −0.0016 | **−0.41 %** |
+
+### 16.26.1 ⭐⭐ THE HEADLINE — the instrument is not the error
+
+**Run 003, nothing moved between the two bursts: residual 0.26 %, `M` error +0.42 %.**
+
+⇒ **The camera, the grating, the reduction and the baseline together contribute under half a percent to `M`.**
+The archive's 3–5 % CV has been chased across many chapters of §16 — §16.7.1's warm-up drift, §16.12's
+"settling", §14.8's frame rejection, §16.24's error budget. **None of it is the instrument.** That question is
+closed, and it is closed by the cheapest experiment in the document.
+
+⚠ Independently corroborated: §16.7.2's untouched control measured **0.26 %** tilt on a different lamp with a
+different method nine days earlier. The same number twice.
+
+### 16.26.2 ⭐ What the disturbance actually is — reseating the jar
+
+Between 003 (nothing moved) and 004 (jar lifted and replaced) the **only** difference is the jar. `M` error goes
+**+0.42 % → +14.38 %**, a factor of **34**.
+
+The mechanism is visible in the wavelength dependence: the false absorbance is smallest where the lamp is
+flattest and largest where it is steepest. **A cylindrical jar full of liquid is a lens** — reseat it and the
+beam reaches the grating at a different angle; grating efficiency is a function of both angle and wavelength, so
+the throughput tilts across the spectrum.
+
+⭐ This is **the same mechanism §16.7.2 proposed on 2026-07-27** (*"the cuvette acts as a weak prism/window…
+grating efficiency is a function of both angle and wavelength"*), reached independently by a different route.
+⭐ And **006 used an EMPTY jar** — no liquid at all — and still cost 3 %. **The glass alone is enough.**
+
+### 16.26.3 ⭐⭐ The reseat penalty is SKEWED, not steady
+
+Careful reseats (005, 006, 007, 009, 010, 011): **−5.66 %, +3.01 %, +8.83 %, −0.37 %, +0.46 %, −0.41 %.**
+
+> **median |error| 1.73 % · rms 4.47 % · max 8.83 %** — plus the careless 004 at +14.38 %.
+
+⚠ **Three of six careful reseats land at the instrument floor** (−0.37 %, +0.46 %, −0.41 %, against 003's
++0.42 %). So the honest statement is **"reseating usually costs nothing and occasionally costs a lot"**, NOT
+"reseating always costs ~6 %". An earlier draft of this section said the latter and it was wrong.
+
+⚠ **Read the rms, not the median, when comparing against the CV.** A run-to-run CV is a spread, so **rms
+4.47 %** is the comparable figure — and it sits squarely inside the archive's 3–5 %. The median (1.73 %) says
+what a *typical* run costs, which is much less; the two are not in conflict, they answer different questions.
+
+⭐ **And §16.26.3's own prediction now has support.** It argued that empty-jar reseats should be the worst case,
+because air inside glass is a far stronger lens than IPA (n 1.38 against 1.5, nearly index-matched). Splitting
+the population on exactly that:
+
+| | n | `M` errors | rms |
+|---|---|---|---|
+| **empty jar** (006, 007) | 2 | +3.01 %, +8.83 % | **6.60 %** |
+| jar with contents / unlabelled (005, 009, 010, 011) | 4 | −5.66 %, −0.37 %, +0.46 %, −0.41 % | **2.85 %** |
+
+⚠ **n = 2 against 4, and 005 is the outlier that keeps the second group from being clean** — so this is
+directional, not established. But it points the right way, and it means **the operating-condition figure is
+probably nearer 2.9 % than 4.5 %.** ▶ The filled-jar series remains the run that settles it.
+
+⭐ **This reconciles a real disagreement.** Edwin's recollection was that earlier seating tests had not shown
+differences this large; §16.7.2 in fact measured mean 2.84 % tilt with max 6.71 % — **the same skew**. A small
+sample of reseats can easily land entirely in the benign part of the distribution. Both memories were correct.
+
+⛔ **RETRACTED 2026-08-06 by §16.26.10 — an earlier draft of this section concluded "re-seating accounts for
+essentially the whole archive CV". It does not.** That conclusion was computed over a population containing two
+**empty-jar** runs, which §16.26.10 shows are ~4× worse than the operating condition. In the real configuration
+— jar filled with IPA — a re-seat costs **rms 1.36 %**, not 4.5 %, which leaves ~3.8 % of the archive's 3–5 % CV
+still unexplained. See §16.26.10 before quoting any number from this subsection.
+
+⚠ **Upper bound, not the operating value.** 006 and 007 used an *empty* jar — air inside glass is a far stronger
+lens than IPA inside glass (n 1.38 against 1.5, nearly index-matched). Real filled-jar reseats should be gentler.
+▶ **Open: the same series with the jar filled with IPA.**
+
+### 16.26.4 ⛔ FOUR TEMPTING DIAGNOSTICS, and how each one fails
+
+This is the most transferable part of the series: the obvious things to look at are mostly wrong.
+
+| candidate | verdict | r vs \|M error\| *(004 excluded)* |
+|---|---|---|
+| **wavelength shift** | ⛔ **decoy** | +0.43 |
+| **level / scale** | ⛔ **decoy** | +0.20 |
+| shift-and-scale residual | ⚠ best available, still misses | +0.84 |
+| blue-to-red tilt | ⚠ comparable, also misses | +0.80 |
+
+⚠ Correlations are quoted **with run 004 removed**, because a single dominant outlier makes every statistic look
+predictive. With 004 included all four exceed +0.73 and the table is meaningless.
+
+**⛔ The wavelength shift is a decoy, and this was tested directly, not argued.** Run 004 shows a real −0.245 nm
+shift between `R` and `S`. Re-registering `R` onto `S` and recomputing changes `M` from **+14.38 % to +14.62 %**
+— i.e. nothing, in the wrong direction. Removing the scale as well leaves it at +14.62 %.
+⇒ **Do NOT build an automatic wavelength-registration step.** It is a plausible, tempting, and completely
+useless fix. *(An earlier hypothesis in this document blamed exactly this; the test above refutes it.)*
+
+**⛔ The level is a decoy, and §16.24.9 already proved why.** Run 010 diverges dramatically — `S/R` = 1.074, the
+two traces visibly separated in the report plot — yet costs **+0.46 %**, inside the instrument floor. Its band
+errors are −0.0368, −0.0329, −0.0340: *the same number everywhere*, i.e. a constant in absorbance, and `M` is
+**exactly invariant to any constant subtraction**.
+⇒ ⚠ **"Do the reference and sample curves coincide?" is actively misleading.** Run 010 looks alarming and is
+harmless; run 007 looks milder and is **twenty times worse**. The eye reads level; the metric reads shape.
+
+**⚠ Neither survivor is reliable either — run 005 defeats both.** Tilt −0.0008, residual 1.44 %, `M` error
+**−5.66 %**. Its null is **bowed rather than tilted** (Soret −0.0200, Q −0.0097, far −0.0192), so a two-point
+slope reads ≈ 0 while the chord through 520–540 + 620–630 still leaves a large deviation in both bands.
+⇒ **What drives the metric is each band's departure from the FITTED BASELINE**, which no simple scalar
+summarises. **Report `M error` itself**; use residual and tilt as screens for a bad run, not as predictors.
+
+### 16.26.5 The lamp is NOT the variable
+
+| | residual | interpretation |
+|---|---|---|
+| Yuji, jar reseated (005) | 1.44 % | — |
+| Sansi, jar reseated (006) | 1.50 % | — |
+
+**1.44 % against 1.50 %.** Reseat sensitivity does not depend on the lamp.
+
+⚠ **Three wrong verdicts were issued during this session before that comparison existed** — first "the Sansi's
+steepness is a minor watch-item", then "it multiplies the dominant error 10×", then the reverse. The 10× came
+from a **linear fit across 448–460**, a window that contains the Sansi's pump peak, so the two flanks cancel and
+the fit returns ≈ 0 regardless of how steep the lamp is. The correct measure is the **mean absolute local slope**
+`median |dlnR/dλ|`, which gives Soret 2.06–2.89 % (Yuji) against 5.55 % (Sansi) — **2.2×, not 10×** — while in
+the **Q band the ordering reverses**: Yuji 4.4 %, Sansi 2.3 %. Since Q-band errors carry §16.24.2's 17× leverage,
+the two lamps roughly cancel out.
+⇒ **Lesson for this document: never summarise a band that contains a peak with a linear fit.**
+⇒ **Consequence: choose the lamp on spectrum alone** (§16.25.4), because this axis does not discriminate.
+
+### 16.26.6 ⛔ The paper diffuser, priced — a red filter that costs 14× the light
+
+*(Runs 001/002 plus the AE-exposure screenshots, same session.)*
+
+A sheet of white paper above the Sansi was tried as an improvised diffuser. Measured against the bare lamp,
+same rig, shape normalised to each lamp's own 520–540 anchor:
+
+| band | 440–450 | 450–460 | 460–480 | 500–520 | 560–580 | 620–630 |
+|---|---|---|---|---|---|---|
+| **paper / bare** | **0.62** | **0.68** | 0.72 | 0.97 | 1.06 | **1.28** |
+
+⛔ **It removes 32–38 % of the relative blue and adds 28 % of the relative far red** — a strong spectral tilt, in
+the band we are already starved in. ⛔ **And auto-exposure went 32 → 441**, i.e. the paper transmits ≈ **7 %**;
+441 is against the hardcoded `EXPOSURE_MAX` = 500 (§14.9), so AE has no headroom left.
+
+**What it buys**, measured from the video frames the same way as §7.1 of `KB_spectroscopy_physics.md`:
+along-slit streak **8.92 % → 6.87 %**, peak-to-trough 35.5 % → 21.1 %.
+
+⭐⭐ **But the decisive number is the decomposition:** splitting the along-slit variation into a smooth trend and
+local structure gives **83–85 % smooth GRADIENT** and only ~3 % structure. **A diffuser exists to remove
+structure** — the emitter-position streaking — and structure is the small half. A gradient is geometry (lamp
+centring, illumination cone, vignetting) and no diffuser material fixes it efficiently.
+
+⇒ ⛔ **The paper is a bad trade** — 14× the light and a third of the blue, to attack the smaller half of the
+problem. **Use PTFE** (spectrally flat, no optical brighteners, 50–80 % transmission) if a diffuser is wanted at
+all, and **centre the lamp first**, since that is where 83 % of the non-uniformity lives.
+
+⚠ **And a static gradient largely cancels in `T = S/R`** anyway — both captures see it. What does *not* cancel is
+a gradient that CHANGES between the bursts, which is precisely what a jar reseat does by re-aiming the beam.
+⇒ **That is the real reason uniformity matters**, and it is a different reason from the one this document
+assumed: not uniformity for its own sake, but insensitivity to beam re-aiming.
+
+### 16.26.7 ⚠ PROCESS — record what was in the beam, per run
+
+Two of the eight runs were mislabelled during the session, and the analysis had to be redone twice. The
+reference **shape** can re-derive the configuration afterwards — blue(450–460)/far-red(620–630) reads ≈ 0.96
+with paper, ≈ 1.82 bare, ≈ 2.97 for the archive Yuji — and `null_run_series.classifyLamp()` does exactly that.
+⚠ **But it is not decisive**: measured values across the series (1.04, 1.23, 1.69, 1.55, 1.70, 1.40, 1.51, 1.50)
+do not separate cleanly, because the jar and its contents tilt the reference too.
+
+⇒ **Rule: one line per run recording lamp, diffuser, jar, and jar contents.** Eight runs cost ninety minutes;
+re-deriving what they were cost longer than that.
+
+⚠ **A capture-path crash was found and fixed during this session** — worth knowing because it fires on the
+*stop* path, i.e. right after a burst completes, and it could have cost a run. `VideoSignal` was a `QObject`
+emitted over a queued cross-thread connection while its only Python reference was a local that
+`DevCaptureVideoThread.__waitForRender` abandons early on stop; the freed address was then reused by the
+`CameraWarmupVideoThread` that `CameraLease` RESUME constructs at exactly that moment, so the slot received a
+*thread* and raised `AttributeError: … has no attribute 'isPreview'`. Reproduced in isolation the same defect
+**segfaults the process**. Fixed by making `VideoSignal` a plain Python class (PySide then refcounts it for the
+queued delivery); guarded by `tests/test_video_signal_queued_delivery.py`. ⇒ ⚠ If §16's two earlier unexplained
+segfaults in this area recur, this was very likely their cause.
+
+### 16.26.8 What this changes
+
+| finding | consequence |
+|---|---|
+| instrument floor **0.42 %** | ⭐ the archive CV is not the instrument — that hunt is over |
+| reseat median **3.0 %**, max 14.4 %, **skewed** | ⭐⭐ a jar mount that repeats, or the capillary that replaces it, is the highest-value change on the board — and it is a MECHANICAL fix, since care removes only the worst case |
+| shift and level are **decoys** | ⛔ no auto-registration step; no eyeballing R-vs-S coincidence |
+| lamp does not affect reseat sensitivity | choose the lamp on spectrum (§16.25.4) |
+| the paper diffuser | ⛔ rejected — 14× light for the smaller half of the problem |
+
+▶ **Open, and cheap:** a **bare-lamp nothing-moved null**, since 003 had the paper in — so the floor has never
+been measured against an undiffused, sharply structured source. Minutes.
+
+⚠ **§16.26.8's table above is superseded on its second row — read §16.26.10.**
+
+### ⭐⭐ 16.26.10 THE 2×2 — the jar's CONTENTS dominate, and the archive CV is NOT explained after all *(runs 012–015, added 2026-08-06)*
+
+The filled-jar series §16.26.3 asked for was run, and it arrived alongside the reduction-band change
+(§16.26.9), so the two were briefly confounded. Runs 012/013 (IPA, old 0.2 band) separate them:
+
+| cell | n | `M` errors | **rms** |
+|---|---|---|---|
+| **empty jar** + 0.2 band (006, 007) | 2 | +3.01 %, +8.83 % | ⛔ **6.60 %** |
+| **IPA jar** + 0.2 band (012, 013) | 2 | +2.09 %, +1.02 % | **1.65 %** |
+| **IPA jar** + 1/3 band (014–017) | **4** | −0.97 %, +1.03 %, +0.43 %, −1.50 % | ⭐ **1.05 %** |
+| unknown contents + 0.2 band (005, 009, 010, 011) | 4 | −5.66 %, −0.37 %, +0.46 %, −0.41 % | 2.85 % |
+
+> **jar contents, same band: 6.60 % → 1.65 %, a 4.0× effect.**
+> **reduction band, same IPA jar: 1.65 % → 1.05 %, a 1.6× effect.**
+
+⭐ **The operating cell is now n = 4 and it is TIGHT** (016/017 added): −0.97, +1.03, +0.43, −1.50 %, i.e.
+**rms 1.05 %, max 1.50 %**, with shift-and-scale residuals of **0.21–0.60 %** against the nothing-moved floor of
+0.26 %. ⚠ Run 016's residual is **0.21 %, below the floor run's** — so in this configuration a re-seat can leave
+no measurable trace at all. Wavelength shifts across all four are −0.000 to +0.005 nm, the most stable
+registrations in the whole series.
+
+⭐ **§16.26.3's own prediction is confirmed, and it was the larger term.** An empty jar is air inside glass —
+a far stronger lens than IPA inside glass (n 1.38 against 1.5, nearly index-matched). Re-seating an *empty*
+jar deflects the beam ~4× more than re-seating the one we actually measure with.
+
+⚠ **The 1/3 reduction band helps, but the evidence is weak** — 1.6× on n = 2 against n = 2, and both cells
+overlap. It is not refuted; it is simply not yet established. ▶ It also shifts the metric scale (§16.26.9), so
+it must be bundled into the single threshold re-derivation either way.
+
+#### ⛔⭐ What this overturns
+
+**Confirmed-IPA re-seats (012–017, n = 6): rms 1.28 %.** That is the **operating-condition** figure, and it
+changes two conclusions written earlier in this very section:
+
+| earlier claim | status |
+|---|---|
+| "re-seating accounts for essentially the whole archive CV" | ⛔ **RETRACTED.** 1.36 % against a 3–5 % CV leaves **~3.8 % unexplained** |
+| "a jar mount that repeats is the highest-value change on the board" | ⚠ **DOWNGRADED.** At 1.36 %, re-seating is close to the 0.42 % instrument floor and is no longer the dominant term |
+
+⚠ **The methodological lesson is the sharper one: the empty-jar runs were not a conservative upper bound, they
+were a different experiment.** Two runs out of eight, in a configuration that never occurs in practice,
+inflated a population rms from 1.4 % to 4.5 % and produced a confident wrong conclusion. ⇒ **A null run must be
+performed in the operating configuration**, or it measures something else.
+
+#### ⇒ So what IS the archive's 3–5 %?
+
+Not the instrument (0.42 %) and not re-seating (1.36 %) — together those reach ~1.4 %, leaving **~3.8 % in
+quadrature**. The remaining candidate is the one thing a null run *cannot* see, because a null has no sample:
+**the preparation itself.** §16.23.7 measured exactly that — dosing spread of **1.665 units against a 0.98-unit
+signal**, SNR 1.8.
+
+⭐⭐ ⇒ **The priority reverts to the capillary, for its ORIGINAL reason — dosing precision (SNR 1.8 → 18), not
+seating geometry.** ▶ And the confirming experiment is now obvious and cheap: **a null run is blind to the
+sample, so repeat the CV measurement with real fills** — if run-to-run scatter on actual oil is 3–5 % while
+nulls sit at 1.4 %, the gap is the preparation, and that is the whole case for the capillary in one comparison.
+
+⚠ **Sample sizes: n = 2 for the empty and 0.2-band cells, n = 4 for the operating cell.** The **4× jar-contents
+effect is large enough to act on**. The **1.6× band effect is still not established** — 4 against 2, and the two
+cells overlap (rank-sum on |error| gives no separation). It is not refuted either; it simply needs the 0.2-band
+arm to grow, which nobody should spend bench time on now that the operating cell is characterised.
+
+⇒ ⭐ **The operating condition is settled well enough to stop measuring it:** re-seating a filled jar costs
+**~1 % rms, worst case 1.5 %**, against a 0.42 % floor. ▶ The remaining bench time belongs to §16.26.11 and to
+§9.1 item 0b — the **real-fill CV comparison**.
+
+### ⭐⭐ 16.26.11 THE REFILL NULL — the protocol *(designed 2026-08-06; NOT yet run)*
+
+#### Why this run exists
+
+⛔ **Every null in §16.26 keeps the SAME liquid in both captures.** A real measurement does not: it takes the
+reference, then **empties the jar, refills it with a different liquid, and puts it back**. That is a far larger
+disturbance than lifting a jar and replacing it — and **no experiment in this document has ever measured it.**
+
+The ladder makes the gap obvious:
+
+| rung | what it measures | result |
+|---|---|---|
+| nothing moved (003) | the instrument alone | **0.42 %** |
+| reseat null (014–017) | lifting and replacing the jar | **1.05 % rms**, max 1.50 % |
+| ⭐ **refill null** | **the real per-measurement disturbance** | ⏳ **never run** |
+| real fills (the archive) | the above **plus dosing** | **3–5 % CV** |
+
+⇒ Between 1.0 % and 3–5 % there is one unmeasured rung, and it is the one the instrument actually performs
+every time. §16.26.10 concluded the residual ~3.8 % must be "the preparation"; **this run splits that residual
+into *handling* and *dosing***, which are different problems with different fixes.
+
+#### The second thing it settles — the red feature
+
+Runs 001/002 showed a sharp absorbance feature at 619/624 nm that **moved between runs**. It is **not noise**
+(200–600× the point-to-point sd) and **not visible in any same-liquid null** (615–622 nm reads mean +0.0011,
+sd 0.0009), so it requires something to change between `R` and `S`. The Sansi's ~**619 nm edge (−11 %/nm)**
+amplifies whatever that change is — and the archive Yuji runs show the same feature at **0.008–0.013 against
+the Sansi's 0.046–0.078**, i.e. 4–6× smaller *in absolute terms*, so it is not merely the weaker fills.
+
+⚠ **This lands on the far anchor 620–630.** ⇒ It is also the deciding evidence for the lamp: §16.26.5 found
+reseat sensitivity lamp-independent, but that was measured on *gentle* disturbances. A refill is not gentle.
+
+#### The protocol
+
+> **Reference:** IPA, as normal.
+> **Sample:** ⭐ **empty the jar, refill it with FRESH IPA, replace it**, then capture as the sample.
+> Truth is still `A = 0` at every wavelength — so everything returned is error, and it now includes the
+> emptying, refilling and replacing that a real run performs.
+
+| | |
+|---|---|
+| **arms** | **both lamps** — bare Sansi and Yuji. This is the decisive lamp test |
+| **n** | ≥ 4 per arm (the reseat cell needed 4 before it was trustworthy) |
+| **record per run** | lamp · diffuser · jar · liquid · exposure — §16.26.7's rule, which cost us two re-analyses |
+| **controls** | one **nothing-moved** null per lamp in the same session, so the floor is measured under that day's conditions rather than inherited from 003 |
+| **discipline** | same fill volume each time; do NOT top up a partially emptied jar — the point is to reproduce the real handling |
+
+#### Read-out — `diagnostics/null_run_series.py`
+
+Report **three** numbers per run. Two are already in the tool; the third was added for this protocol:
+
+| statistic | why |
+|---|---|
+| **`M error`** | the headline: what this disturbance would do to a real measurement |
+| `residual` | shift-and-scale residual, the screen for a bad run (⚠ not a predictor — §16.26.4) |
+| ⭐ **`redFeature`** | largest departure from a locally smoothed curve over **612–629.8 nm** — the far-anchor statistic that caught the moving 619/624 nm peak |
+
+For scale, `redFeature` on the existing runs: **nulls 0.001–0.027**, the two oil runs that showed the peak
+**0.046 / 0.078**. ⚠ The `M error` column is meaningless for 001/002 — those contain a real sample, so their
+absorbance is not error.
+
+#### Decision table
+
+| outcome | reading |
+|---|---|
+| refill ≈ reseat (~1 %), both lamps | ⭐ handling is a solved problem; **the whole 3–5 % CV is dosing** ⇒ the capillary is the only thing that matters, and the lamp is free to choose on spectrum |
+| refill ≫ reseat (say 3 %+), both lamps | the **refill procedure itself** is a major error source ⇒ a handling protocol (or the capillary, which removes refilling entirely) outranks everything optical |
+| refill worse on **Sansi** than Yuji, `redFeature` tracking it | ⛔ the 619 nm edge is a real cost on the far anchor ⇒ **do not adopt the Sansi**, or move the far anchor off the edge |
+| refill similar on both lamps | ⭐ §16.26.5 generalises ⇒ **adopt the Sansi on spectrum** (2.7× at the far anchor, +30 % in the Soret window) |
+
+### ⭐⭐ 16.26.12 A SECOND NULL PROTOCOL — the EXPOSURE PAIR *(designed 2026-08-06; NOT run)*
+
+§16.24.1 concluded *"exposure does NOT cancel in `T = S/R`"* from a single run at exposure 90 against four
+controls at 104 (−13.5 % on the metric). It is honest that **n = 1** and that exposure was confounded with
+everything else about that run; §16.24.1a ruled out wrong-gamma (algebraically zero), black level and stray
+light, leaving the mechanism unidentified. That claim now blocks a designed item — §16.23.6e's **dual-exposure
+absorbance** (short `R`, long `S`, corrected by `log(E_S/E_R)`), which is the only route that lifts the Soret
+band off the DN floor without more light.
+
+> **Same empty beam. Reference at exposure A, "sample" at exposure B**, corrected by `log(E_B/E_A)`.
+> Truth is still `A = 0`. **Exposure is the only variable** — which is exactly what §16.24.1 could not achieve.
+
+Run a few pairs (60/120, 90/180, 120/500):
+
+| outcome | reading |
+|---|---|
+| null stays at the 0.42 % floor | ⭐ exposure **does** cancel; §16.24.1's −13.5 % was that run's other confounds ⇒ **dual-exposure/HDR is safe to build** |
+| offset scaling with `E_B/E_A` | a real transfer nonlinearity — measure it and it becomes a correction curve, not a blocker |
+| erratic | the sensor is not reproducible across exposures ⇒ HDR is off the table |
+
+⚠ **Prerequisite:** §14.9's hardcoded `EXPOSURE_MAX` = 500 caps the bracket, and it is a placeholder never
+matched to the camera's actual range.
+⚠ **And HDR is a dynamic-range tool, not a brightness tool** — it redistributes exposure between the legs. It
+cannot rescue a source that already needs the cap on an empty beam (which is why it does not save the CFL).
+
+#### ⭐ Bundle one more check into the same evening
+
+**Does a lamp swap cost a threshold re-derivation?** In principle **no** — the lamp appears in both `R` and `S`
+and cancels in `T = S/R`, unlike the Soret trim (§7.13) and the 1/3 reduction band (§16.26.9), both of which
+move the metric scale. ▶ **Test rather than assume:** measure **one fill on both lamps** and check `M` agrees.
+If it does, the lamp becomes the only change on the board that can be made **without paying for a
+recalibration** — which materially changes its ranking.
+
+---
+
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).
