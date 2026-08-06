@@ -10560,6 +10560,98 @@ been measured against an undiffused, sharply structured source. Minutes.
 
 ⚠ **§16.26.8's table above is superseded on its second row — read §16.26.10.**
 
+### ⭐⭐ 16.26.9 THE SPATIAL REDUCTION BAND — smile, and why the inset was the wrong SHAPE *(Edwin 2026-08-06: "the algorithm should only take the filet piece of the ROI")*
+
+Edwin, from the ROI image in the Reference step: the colour boundaries **bend inwards** at the top and bottom
+of the slit, and *"if only the horizontal middle region were taken the outliers would be smaller"*. Correct,
+and measurable off that same frame.
+
+#### What the algorithm ALREADY did
+
+`ImageSpectrumAcquisitionLogicModule.__reducedLinearColumnValues` was never a naive average:
+
+1. **crop rows** — `__INSET_FRACTION = 0.2` dropped 20 % top and bottom ⇒ the central **60 %**;
+2. gamma-decode per channel (§17) — mandatory, because the averages below do not commute with the decode;
+3. **max-channel** grey (§15), not qGray (which suppresses blue);
+4. mask saturated (any channel 255) and dead (all 0) pixels to `NaN`;
+5. **Tukey biweight per column** — a robust estimator, so an outlier row is down-weighted, not averaged in;
+6. plain median fallback for an all-masked column.
+
+⇒ The "filet" idea was already implemented. ⚠ But the constant carried its own warning — *"Tunable; finalize on
+the rig (M2.4)"* — **and that tuning never happened.** 0.2 shipped as a placeholder since M2.
+
+#### The measurement — smile is real, and the degradation is ASYMMETRIC
+
+Colour-boundary position tracked row by row across the ROI:
+
+| landmark | full height | central 60 % | |
+|---|---|---|---|
+| blue→green (G=B) | **4.15 nm** | 1.35 nm | 3.1× tighter |
+| green→red (R=G) | **3.26 nm** | 0.86 nm | 3.8× tighter |
+
+Row-to-row level variation, by region: **~20 % full height → 6–11 % central 60 %** (Soret 20.9 → 8.8, green
+19.7 → 6.1, Q 21.7 → 8.0, far red 10.4 → 6.0).
+
+⛔ **But the falloff is not symmetric**, which is what makes a symmetric inset the wrong shape:
+
+```
+   y/h 0.02  82 %      y/h 0.50 105 %      y/h 0.90  69 %
+   y/h 0.06  97 %      y/h 0.70  83 %      y/h 0.94  58 %
+   y/h 0.10 103 %      y/h 0.80  78 %      y/h 0.98  22 %
+```
+
+⇒ **The shipped 0.20 inset discards y/h 0.00–0.20, which sits at 98 % of peak, and keeps y/h 0.65–0.80, which
+sits at 78 %.** It throws away good rows at the top and keeps degraded ones at the bottom.
+
+#### ⭐⭐ Why smile matters at all — and it is not the obvious reason
+
+A **static** row-to-λ curvature **cancels in `T = S/R`**: both captures see it and the reduction weights rows
+identically. On its own it costs resolution, not accuracy.
+
+⇒ **What it does is convert beam RE-AIMING into a spectral change.** Re-seat the jar, the beam lands on
+different rows, and because rows disagree about wavelength by up to ~4 nm the reduced spectrum changes **shape**
+— which does not cancel. That is the same mechanism as §16.26.2, so narrowing the band is a **software attack on
+the largest measured error**. ⚠ It also means M2's original rationale — *"the measurement is broadband, so smile
+barely matters"* — was true only for a stationary beam.
+
+#### The change, and its measured effect
+
+**`__INSET_FRACTION` 0.2 → 1/3** (implemented 2026-08-06) ⇒ the middle third. The ROI itself is untouched.
+Run through the **shipped reduction code** on the rig's own ROI frame, both settings:
+
+| band | inset 0.2 | inset 1/3 | |
+|---|---|---|---|
+| Soret 448–460 | 20.602 | 21.671 | +5.19 % |
+| near 520–540 | 17.033 | 17.770 | +4.33 % |
+| Q 560–580 | 8.800 | 9.058 | +2.92 % |
+| far 620–630 | 7.922 | 8.160 | +3.01 % |
+| **raw S/Q** | **2.3411** | **2.3925** | ⚠ **+2.2 %** |
+| **column-to-column noise** | 1.78 % | ⭐ **1.40 %** | −21 % |
+
+⭐ **The noise went DOWN, not up** — the discarded rows were contributing more disagreement than signal, so
+losing them is a net win before any reseat benefit. ⚠ **But the rise is not uniform across bands, so the raw
+S/Q moves +2.2 %** ⇒ this shifts the metric scale and joins the single threshold re-derivation with the Soret
+trim (§7.13).
+
+#### ⚠ Status — measured at one level, unproven at the other
+
+| | |
+|---|---|
+| reduction level | ⭐ **measured**: column noise 1.78 % → 1.40 % on a real frame, through the shipped code |
+| metric level | ⚠ **not established**: IPA-jar nulls give 1.65 % rms at inset 0.2 (n=2) against **1.05 % at 1/3 (n=4)** — 1.6×, but the cells overlap and a rank test separates nothing. §16.26.10's 2×2 shows the **jar contents** were the 4× effect and the band only 1.6× |
+
+⇒ Kept because it is free and directionally right, not because it is proven. It costs nothing extra: the
+threshold re-derivation is owed anyway.
+
+⚠ **1/3 is a compromise, not the optimum** — the degradation is asymmetric and a symmetric inset cannot match
+it. ▶ **The better fix is to derive the band from the reference frame's own row profile** (keep rows ≥ 85–90 %
+of peak, which measures y/h ≈ 0.02–0.66 here), so it self-tunes per rig and survives a rebuild. Left open
+because it needs a live-frame measurement rather than a screenshot.
+
+⚠ **Measurement branch only.** The wavelength-calibration branch reads a single centre row and is untouched, so
+line detection and the px→nm fit are unaffected. ⚠ `reduction_sum_vs_max.py` and `reference_drift_probe.py`
+hardcode 0.2 **on purpose**, to reproduce their published numbers.
+
 ### ⭐⭐ 16.26.10 THE 2×2 — the jar's CONTENTS dominate, and the archive CV is NOT explained after all *(runs 012–015, added 2026-08-06)*
 
 The filled-jar series §16.26.3 asked for was run, and it arrived alongside the reduction-band change
@@ -10728,6 +10820,60 @@ move the metric scale. ▶ **Test rather than assume:** measure **one fill on bo
 If it does, the lamp becomes the only change on the board that can be made **without paying for a
 recalibration** — which materially changes its ranking.
 
+### ⭐⭐ 16.26.13 THE ERROR BUDGET CLOSES — and what the queued changes are projected to buy *(2026-08-06)*
+
+Before this session the archive's 3–5 % run-to-run CV was **unattributed**. Every term is now measured or
+costed, and they add up:
+
+| term | today | source |
+|---|---|---|
+| instrument floor | **0.42 %** | §16.26.1, measured (nothing-moved null) |
+| jar reseat, filled | **1.28 %** | §16.26.10, measured (n = 6, operating configuration) |
+| dosing / fill | **3.40 %** | §16.23.7, *projected* from drop-volume variability |
+| **quadrature total** | **3.66 %** | against **3–5 %** observed |
+
+⭐ **The budget closes.** That is the first time the pieces have added up, and it makes the next steps a
+**prediction** rather than a hope.
+
+#### Projection after the queued changes
+
+Soret trim (§7.13) + sample aperture (§16.25.2) + capillary (§16.23):
+
+```
+   instrument   0.42 %
+   reseat       1.28 %   (or better, if the aperture's tilt control bites)
+   dosing       0.34 %   (10x, per 16.23.7)
+                ------
+   total       ~1.39 %   from 3.66 %  =>  2.6x
+```
+
+⇒ Within-group separation scales inversely with the scatter, so **within-green *d* ≈ 1.34 → ~3.5**, and ~5 if
+the reseat falls to ~0.8 %. **That crosses the ≳ 3 bar the capability gate needs** — the half that is
+currently failing. Green-vs-brown (*d* ≈ 7.5, non-overlapping) is already comfortable.
+
+#### ⭐⭐ The consequence that re-orders the build list
+
+**After the capillary, the jar reseat becomes the dominant term** — 1.28 % of a 1.39 % total.
+
+⚠ §16.23.7's headline *"SNR 1.8 → 18"* is a **dosing-only** figure: it improves one term in isolation and does
+not carry the ones that survive. Real SNR after the capillary is ≈ **4.3**, not 18.
+
+⇒ **This re-prices §16.25.2.** The aperture was costed mainly as stray-light removal — worth only ~2.3 % per
+1 % of `f` on the trimmed window, i.e. small. But its **tilt control** attacks what becomes the binding
+constraint the moment the capillary lands. ⭐ Edwin's **slide-in** construction is therefore the load-bearing
+half of that part, not the stray-light aperture.
+
+⚠ **Three caveats on the projection.** (1) The 3.40 % dosing term is derived from drop-volume variability, not
+measured as a metric spread — if it is smaller, a residual hides in the 3–5 % that the capillary will not
+touch, and the budget closing to within 10 % is partly luck. (2) **Ageing is a BIAS, not a variance**, so it
+appears nowhere in a CV: §16.11.16 measured a 24 h-aged fill reading as a *browner oil*, misclassifying **3 of
+3 runs**. A systematic that flips verdicts outranks a variance that widens them, and §16.11.17's decay-rate run
+is what would size it. (3) *d* ≈ 3.5–5 is the expectation to **test**, not a result — §16.23's own re-run of
+green-vs-green is what measures it.
+
+⇒ **And after all of it the bottleneck changes kind.** Precision would be solved; what would remain is
+**evidence** — one brown oil (§2.2), the session confound (§3.4), and a validation study that has never run.
+That is why the validation study is now on the roadmap as PRIO 3.
 ---
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
