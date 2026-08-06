@@ -36,6 +36,7 @@ matters when talking to a lab owner.
 | 7 | P3a — 8 oils, 24 fills | 2 | bench | out-of-sample behaviour |
 | 8 | Blind judging, 2 judges | 1 | people | agreement with expert opinion |
 | 9 | Analysis + write-up | 1 | desk | ⭐ **FIRST PRESENTABLE STATE** |
+| ‖ | ⚠ **Oil shopping — 8 oils for P3a** | *(parallel, lead time)* | logistics | ⛔ in hand **before day 9 (Wed 19 Aug)** |
 
 **Start Friday 7 August 2026 ⇒ FIRST PRESENTABLE STATE on Monday 24 August**, at 5 sessions/week.
 ⚠ **13–15 days ⇒ 26–28 August** if either tail item (§4) fights back.
@@ -71,7 +72,7 @@ them once P3a has seen an oil converts a validation into a demonstration, retroa
 | ⚠⚠ **the publish path** | `publish → assign → load` has **never been run end to end**. The Soret trim is one constant; getting a re-signed plugin onto the bench is the unknown | ▶ **no-op version bump FIRST**, inside day 1, so a failure there is not tangled with a metric change |
 | ⚠ **the print fit** | two apertures at the jar's **inner** diameter; 3D-printed fit parts iterate | budget a second print; the `f` test (step 2) tells you first whether it is worth any prints at all |
 | G1 fails (heparinised capillaries) | heparin is insoluble in IPA and would add **scatter** — to the one system whose open problem is a scattering pedestal | ⛔ **run G1 before committing to the schedule**; a failure is a re-sourcing detour, not an evening |
-| oils unavailable | eight shop-available oils | ▶ start the shopping in parallel with step 1 — it is the only item that depends on anyone else |
+| ⚠ **oils unavailable** | eight shop-available oils, and **the only item on the path that depends on anyone but Edwin** | ▶ **start in week 1** — 8 working days of lead time to day 9. ⚠ If a tier cannot be filled, say so early: **2 browns is the minimum** that lets the class claim rest on more than one bottle (§2.2) |
 
 ⚠ **Not a risk, but worth stating:** the ageing rule (§16.11.16 — a 24 h-aged fill reads as a *browner oil* and
 misclassified 3 of 3 runs) caps how many fills fit in a day, because each must be measured fresh. That is
@@ -112,6 +113,7 @@ it — if it pays — at a **future version boundary**, after PRIO 3.
 - [ ] G1 and G2 passed; capillary recipe settled and written down
 - [ ] green-vs-brown re-confirmed; **green-vs-green measured** with *d* reported
 - [ ] thresholds derived, **dated and written down**, on the held oils only
+- [ ] 8 oils bought, **with their premium/non-premium labels recorded at purchase**
 - [ ] 8 oils measured out-of-sample, 24 fills, fresh per fill
 - [ ] both judges' scores **sealed before** any instrument output was shown
 - [ ] one-page write-up stating the claim **and its limits** (§5)
