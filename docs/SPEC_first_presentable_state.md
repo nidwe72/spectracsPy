@@ -29,6 +29,7 @@ matters when talking to a lab owner.
 | 1 | ⚠ No-op version bump, **then** Soret trim 440–460 → 448–460 + re-sign | 1 | desk | the plugin publish path works |
 | 2 | Opaque-oil test — measure `f` | 1 | bench | is the aperture worth building? |
 | 3 | Slide-in sample holder — design, print, fit | 1 | build | wall-bypass light removed, tilt controlled |
+| 3b | ⭐ **DN guard** — record `min(S)`, warn out of window (§16.23.8) | *(parallel)* | desk | a bad fill is caught **at capture**, not in analysis |
 | 4 | ⛔ Gates **G1 + G2**, settle the capillary recipe | 2 | bench | is the capillary usable at all? |
 | 5 | Re-run **green-vs-brown** and **green-vs-green** | 2 | bench | ⭐ **GO / NO-GO: is green-vs-green *d* ≥ 3?** |
 | 6 | Derive and **write down** the thresholds | 1 | desk | ⭐ **THRESHOLDS FROZEN** |
@@ -38,7 +39,14 @@ matters when talking to a lab owner.
 
 **At 5 sessions/week ⇒ ~2.5 weeks.** ⚠ **13–15 days** if either tail item (§4) fights back.
 
-⚠ Everything is **sequential**, and not by preference: the aperture changes the optical path, so the capillary
+⭐ **Step 3b costs no schedule day** — it is desk work running in parallel with the aperture print, which has
+dead time. ⚠ But it must land **before** step 4: the guard is two-sided (record `min(S)` per capture, warn when
+it leaves the 16 DN floor / 20–40 DN target band, propose the correction — warns, never blocks), and its whole
+value is telling you a fill was out of range **at capture** rather than in analysis three days later. ⇒ It also
+consumes G2's finding directly: the capillary's ±10 % volume band is exactly what pushes a fill out of the DN
+window.
+
+⚠ Everything else is **sequential**, and not by preference: the aperture changes the optical path, so the capillary
 runs must follow it; the thresholds come from the capillary corpus, so they must be frozen before the
 validation sees any oil.
 
@@ -99,6 +107,7 @@ it — if it pays — at a **future version boundary**, after PRIO 3.
 
 - [ ] plugin published, assigned and loaded on the bench with the trimmed window
 - [ ] `f` measured; aperture built or explicitly declined on the evidence
+- [ ] DN guard implemented and live before the first capillary run
 - [ ] G1 and G2 passed; capillary recipe settled and written down
 - [ ] green-vs-brown re-confirmed; **green-vs-green measured** with *d* reported
 - [ ] thresholds derived, **dated and written down**, on the held oils only
