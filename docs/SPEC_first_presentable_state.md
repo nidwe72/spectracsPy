@@ -33,10 +33,10 @@ matters when talking to a lab owner.
 | 4 | ⛔ Gates **G1 + G2**, settle the capillary recipe | 2 | bench | is the capillary usable at all? |
 | 5 | Re-run **green-vs-brown** and **green-vs-green** | 2 | bench | ⭐ **GO / NO-GO: is green-vs-green *d* ≥ 3?** |
 | 6 | Derive and **write down** the thresholds | 1 | desk | ⭐ **THRESHOLDS FROZEN** |
-| 7 | P3a — 8 oils, 24 fills | 2 | bench | out-of-sample behaviour |
+| 7 | P3a — **9 oils**, 27 fills | 2 | bench | out-of-sample behaviour |
 | 8 | Blind judging, 2 judges | 1 | people | agreement with expert opinion |
 | 9 | Analysis + write-up | 1 | desk | ⭐ **FIRST PRESENTABLE STATE** |
-| ‖ | ⚠ **Oil shopping — 8 oils for P3a** | *(parallel, lead time)* | logistics | ⛔ in hand **before day 9 (Wed 19 Aug)** |
+| ‖ | ⚠ **Oil shopping — 9 oils for P3a** | *(parallel, lead time)* | logistics | ⛔ in hand **before day 9 (Wed 19 Aug)** |
 
 **Start Friday 7 August 2026 ⇒ FIRST PRESENTABLE STATE on Monday 24 August**, at 5 sessions/week.
 ⚠ **13–15 days ⇒ 26–28 August** if either tail item (§4) fights back.
@@ -94,6 +94,36 @@ and ranks within the green class."*
 
 ⇒ **You may legitimately build product in that gap. You may not make the claim in it.**
 
+## 5a · ⚠ Two statistical facts that shape P3a
+
+**1 · The panel is 3 non-premium vs 4 premium, not 2 vs 4 — and that is not padding.** A rank test's p-value
+has a floor set by the number of possible orderings, reached only on a *perfect* separation:
+
+| design | best possible p | |
+|---|---|---|
+| 2 vs 4 *(originally proposed)* | 0.067 | ⛔ **cannot reach p < 0.05 at all** |
+| 3 vs 3 | 0.050 | ⛔ on the boundary |
+| ⭐ **3 vs 4** *(adopted)* | ⭐ **0.029** | reachable |
+
+⇒ **One extra bottle buys the claim.** ⚠ Without it, the observation Edwin most wants — *a non-premium green
+showing up as non-premium* — would be suggestive but **not defensible**.
+
+⚠ **The asymmetry matters:** a **positive** result is clean; a **null** result is uninformative, because a
+failure to separate cannot distinguish "the metric failed" from "premium doesn't track roast".
+
+**2 · Green-vs-green is a PROBABILISTIC call and must be presented as one.** Error per side for a single
+sample, at the optimal cut:
+
+| case | *d* | error |
+|---|---|---|
+| **green vs brown**, measured | 7.50 | **0.01 %** — effectively deterministic |
+| green vs green, projected | 3.50–5.00 | 0.6 – 4.0 % |
+| green vs green, today | 1.34 | 25.1 % |
+
+⇒ ⭐ **The brown verdict may stay a BADGE; a within-green result must be a RANKING WITH A CONFIDENCE.**
+Presenting them identically overclaims the weaker one by three orders of magnitude. ▶ And report any
+within-green gap as *"X against a within-oil σ of Y"*, never as a bare ordering.
+
 ## 6 · The parked track — deliberately off the critical path
 
 The **calibration extension + 660–680 nm quiet-window test** (`SPEC_metric_research.md` §7.14.5) is cheap,
@@ -113,7 +143,7 @@ it — if it pays — at a **future version boundary**, after PRIO 3.
 - [ ] G1 and G2 passed; capillary recipe settled and written down
 - [ ] green-vs-brown re-confirmed; **green-vs-green measured** with *d* reported
 - [ ] thresholds derived, **dated and written down**, on the held oils only
-- [ ] 8 oils bought, **with their premium/non-premium labels recorded at purchase**
-- [ ] 8 oils measured out-of-sample, 24 fills, fresh per fill
+- [ ] **9** oils bought (2 brown / **3** non-premium / 4 premium), **with their labels recorded at purchase**
+- [ ] 9 oils measured out-of-sample, 27 fills, fresh per fill
 - [ ] both judges' scores **sealed before** any instrument output was shown
 - [ ] one-page write-up stating the claim **and its limits** (§5)
