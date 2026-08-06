@@ -37,7 +37,8 @@ matters when talking to a lab owner.
 | 8 | Blind judging, 2 judges | 1 | people | agreement with expert opinion |
 | 9 | Analysis + write-up | 1 | desk | ⭐ **FIRST PRESENTABLE STATE** |
 
-**At 5 sessions/week ⇒ ~2.5 weeks.** ⚠ **13–15 days** if either tail item (§4) fights back.
+**Start Friday 7 August 2026 ⇒ FIRST PRESENTABLE STATE on Monday 24 August**, at 5 sessions/week.
+⚠ **13–15 days ⇒ 26–28 August** if either tail item (§4) fights back.
 
 ⭐ **Step 3b costs no schedule day** — it is desk work running in parallel with the aperture print, which has
 dead time. ⚠ But it must land **before** step 4: the guard is two-sided (record `min(S)` per capture, warn when
