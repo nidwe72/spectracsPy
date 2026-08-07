@@ -10216,6 +10216,104 @@ and real per-part output varies far more than normalised curves suggest. ⛔ **A
 calibration reaches below 440 nm**: `I@432` is unmeasurable on the current instrument (both real lamps read
 0.000 there because the stored spectra start at 440), so the benefit could not be seen even if built.
 
+#### ⭐⭐ 16.25.4b SUPERSEDED IN PART — the 410–680 nm re-run *(Edwin 2026-08-07: "evaluate Avonec LED combinations … from 410 to 680 nm", plus the 3 W 660 nm STAR)*
+
+Tool: **`diagnostics/led_lamp_410_680.py`** · document: **`docs/DOC_lamp_410_680.md`** → *Spectracs —
+Choosing the Lamp for 410–680 nm* (`../spectracs-docs/internal/Spectracs_Lamp_410_680.pdf`, 5th internal
+doc, Figures 1–4). **13** digitised SPDs (the four colour parts §16.25.4a excluded rather than guess, the
+two remaining whites, **and a 480–485 nm türkis harvested 2026-08-07 that the catalogue notes had missed
+entirely**), **43 650** buildable 7-emitter integer allocations, five weightings.
+
+⭐ **680 nm is not an arbitrary top — it is exactly §7.2's last measurable response.** For once the range
+asked for and the range the instrument delivers are the same interval.
+
+⭐⭐ **THE SUPPLY ANSWER, checked against the live shop: Avonec sells the 660 nm on a Starplatine itself** —
+*3W High Power LED auf Starplatine 660nm tiefrot/hyper red*, **€2.75** (€2.15 from 10), 2–4 Werktage; bare
+emitter €2.46; also on a solderless Grionec-Platine. **410–420 (€3.55) and 430–435 (€2.86) are on
+Starplatine too.** ⇒ **no second vendor is needed** — the whole recommended board is one order, one
+mounting standard, and the **measured** `660nm.jpg` curve is the right input rather than a modelled
+stand-in. A second vendor is needed **only** for 670/680 nm, which Avonec does not sell in 3 W.
+
+⭐ **What the wider range changes against §16.25.4a:**
+
+| | |
+|---|---|
+| ⭐ **the backbone** | **4000–4500 K, not 6500 K** (50.12 vs 55.71 alone) — the only white with a usable blue pump *and* a real red tail. The 6500 K pick was a 430–670 artefact |
+| ⭐ **the violet** | **410–420 nm.** On a bare 4000 K board one part lifts 410 nm **16×** (0.007→0.112) and the sub-Soret median (415–428) **3.3×**; a 430–435 gives a better `I@432` but leaves 410 nm at 0.016 — it lights the peak without **bracketing** it, and bracketing is the point because demetallation **blue-shifts** the Soret (`KB_spectroscopy_physics.md` §4.1) |
+| ⛔ **the green** | **drops out of every top allocation** — the 4000 K phosphor already gives 0.89 at 540. Reverses §16.25.4a's `1 × 515` |
+| ⚠ **the deep red** | **670 nm, not 680**, is the right part for a 680 nm top (a 680 emitter wastes half its output past the edge). ⚠ In the earlier 689 nm draft 680 won — **9 nm moved the answer**, so the range endpoint is load-bearing |
+| ⚠ **the 480 hole** | ⛔ **§16.25.4a's "no LED chemistry fills the cyan gap" was WRONG.** Avonec's 480–485 nm türkis lifts 480 nm **0.126→0.456**, but on 7 slots it costs a violet and the sub-Soret collapses 0.874→0.544 at an unchanged score ⇒ **a trade, not an upgrade — skip at 7 slots, take at 8** |
+
+⛔⛔ **A DRAFT OF THIS ENTRY CLAIMED THE CAMERA ENDS THE RANGE PAST 640 nm — WITHDRAWN (Edwin, same day).**
+It said quiet-window parity needs 10×–48× more emitted power than any board supplies, and that the window
+is *"gated on the ELP's IR-cut filter"*. **Both are retracted.** The claim rested on §7.2's *"~40× between
+631 and 657 nm"*, which was measured **through a CFL** — whose red output is Eu³⁺ **line** emission, so
+631 nm sits on the flank of the 626.6 nm line and 657 nm sits in the gap before 662. That ratio is the
+lamp's own structure. ⚠ The rebuttal offered at the time (comparing it against phosphor-**white** LEDs,
+which fall only 1.4–1.8× there) was invalid — wrong source class.
+
+⭐ **And the measured evidence points the other way:** the Sansi clips at 255 DN through 600–640 and
+**still reads 115 DN at 656 nm**, which no 40× instrument roll-off is compatible with. ⇒ **Working
+assumption (Edwin): the optics deliver to ~700 nm and the camera captures it.** Nothing inside 410–680 nm
+is known to be detector-limited.
+
+⭐ **The 660 nm test survives, as characterisation rather than a gate — no datasheet, no absolute
+calibration, no known flux:** shine the **Avonec 660 alone**; the capture is `SPD(λ)·response(λ)` and
+`SPD` is the digitised `660nm.jpg` (verified to 0.5 nm) ⇒ **the quotient is the response across
+~640–690 nm** up to one constant, and only the *shape* is in question. Chain with 630–640 (overlap
+645–665) → one stitched curve **605–690 nm**, which also validates the digitised SPDs.
+
+⭐ **RECOMMENDED BUILD (R2), all Avonec, all on Starplatine, ~€20 in emitters:**
+**3 × 4000–4500 K + 2 × 410–420 + 1 × 430–435 + 1 × 660** — score 19.13, sub-Soret 0.874, `I@660` 0.682,
+far-anchor slope 0.3 %/nm. Its spectrum is **Figure 2** of the document. ⭐ **A 670 nm star is now
+worth having too** (the only part needing a second vendor) — §6's withdrawal removed the reason to wait.
+⚠ Benefit invisible until the 440–630 capture clamp moves.
+
+⭐⭐ **AND THE ARGUMENT THAT REPLACES THE WITHDRAWN ONE — the 619/624 nm red feature (§16.26.11).** Runs
+001/002 show a sharp absorbance feature at 619/624 nm that **moves between runs**, is **not noise**
+(200–600× the point-to-point sd) and is **invisible in every same-liquid null** (615–622 reads +0.0011 ±
+0.0009). It is present on **BOTH** lamps — archive **Yuji 0.008–0.013** against **Sansi 0.046–0.078** —
+so the Sansi's 619 nm edge (−11 %/nm; 25 %/nm at 622.0) **amplifies it 4–6×, it does not cause it**. It
+lands on the **far anchor 620–630**, the band carrying §16.24.2's 17× leverage. ⇒ ⭐ **R2 is flat exactly
+there (0.1 %/nm at 625, 0.2 %/nm across 620–630), so it removes the multiplier** — not the disturbance,
+which no lamp can. **The refill null (§16.26.11) is still the run that decides it.**
+
+⚠ **Keep two things apart:** the above, and the separate *"archive is convex at 626 nm on every fill"*
+finding (`SPEC_metric_research.md` §9.1 item 5), which a null-run control attributes to **instrument
+curvature**. Same region, different effect.
+
+⭐ **WHAT THE COMPLETE BANDS OPEN** *(Edwin 2026-08-07)*. With R2 plus the clamp move, all three pigment
+bands are **complete** rather than flanks — which is the wall §9.1 closed seven analysis routes on. It
+unlocks **band decomposition (C7)**, **derivative spectroscopy (C20** — its "weakest term at the range
+edge" objection dies when the edge moves), **moments (C19)**, a **real baseline** from the pigment-free
+660–680 window (retiring `r_Q` and A1 rather than leaving them unproven), and above all **peak-POSITION
+metrics** — a position is **dilution-invariant by construction**, which is the target property no ratio
+has. ⚠ **Gate:** position metrics inherit `SPEC_metric_research.md` **R1b** — *is λ stable to ≪ 0.9 nm
+across sessions?* — never verified. Cheap to close: the CFL gives eight known lines across the range in
+one capture.
+
+⚠ **EFFORT, honestly.** Build ≈ one or two evenings (glue 7 Starplatinen to a heatsink, **one series
+string** — which implements the 3:2:1:1 weights automatically since the weights *are* the counts — one
+constant-current driver, PTFE diffuser with working distance). ⛔ **The cost is downstream:** recalibration
++ threshold re-derivation, uniformity re-verification against §7.1's **1.8 %** bar, and thermal discipline
+as a *measurement* requirement (~21 W near a sample where §16.11.16 measured a warmed fill misclassifying
+3/3 runs). ⇒ **§16.25.1's bundling rule applies.** ⚠ And note the lamp is **not** today's bottleneck —
+§16.26.10 put the residual ~3.8 % on the preparation. This buys **new observables**, not less noise.
+
+⭐ **DE-RISK BOTH HALVES BEFORE BUILDING.** (a) **The red half is free today:** move the capture clamp
+past 630 on the **existing Sansi** (149 DN at 630, 115 at 656) and look — does 660–680 behave as a flat
+pigment-free anchor, and does `far/near < 1` appear? Software plus a calibration, no hardware. (b) **The
+blue half needs one emitter, not seven** — ⚠ but *not* simply bolted beside the Yuji: §7.1 requires a
+common diffuser with working distance, and a point source next to a panel lamp is arguably harder to mix
+than the co-planar 7-emitter board. ⭐ **Cleaner: capture with the violet ALONE.** `T = S/R` only needs
+light where you measure, and both captures share the lamp — so a violet-only source over ~405–450 nm
+gives a valid transmission curve across the Soret and answers *does the band's position move between
+green and brown*. ⛔ It cannot produce `M` (the chord needs 510–540 and 620–630), so it is a shape probe,
+not a verdict.
+
+⚠ **Process note worth keeping:** this study was wrong once about what Avonec sells (the 480–485 part).
+**Re-check the harvested SPD set against the live shop before any order goes out.**
+
 #### ⭐⭐ How to score it — at the PIGMENT's band centres, not for flatness
 
 *(Edwin 2026-08-06, from the observation that the CFL's lines land on the oil's absorption features.)*

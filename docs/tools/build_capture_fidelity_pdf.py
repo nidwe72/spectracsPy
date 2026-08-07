@@ -424,9 +424,25 @@ SHELL = """<!doctype html>
 <body><header class="doc"><div class="brand">Spectracs &middot; internal documentation</div></header>
 {body}
 <div class="foot">Spectracs &middot; internal engineering documentation. Generated from
-<code>docs/DOC_capture_fidelity.md</code> by <code>docs/tools/build_capture_fidelity_pdf.py</code> &mdash;
+<code>{source}</code> by <code>{generator}</code> &mdash;
 edit the markdown and re-run; never hand-edit this PDF.</div>
 </body></html>"""
+
+
+def _provenance(sourcePath):
+    """(source, generator) for the footer, both repo-relative.
+
+    ⚠ The footer used to name this file and `DOC_capture_fidelity.md` literally, so every sibling
+    document that borrows this renderer via --source told the reader to edit the wrong markdown.
+    The generator is derived by the naming convention the wrappers follow — `DOC_x.md` is built by
+    `build_x_pdf.py` — and falls back to this module if no such wrapper exists."""
+    source = os.path.relpath(os.path.abspath(sourcePath), REPO)
+    stem = os.path.basename(sourcePath)
+    if stem.startswith("DOC_") and stem.endswith(".md"):
+        wrapper = os.path.join(HERE, "build_%s_pdf.py" % stem[4:-3])
+        if os.path.exists(wrapper):
+            return source, os.path.relpath(wrapper, REPO)
+    return source, os.path.relpath(os.path.abspath(__file__), REPO)
 
 
 def find_chrome():
@@ -468,7 +484,9 @@ def main():
         raise SystemExit("dangling internal link(s) — no heading has these anchors:\n  "
                          + "\n  ".join(dangling))
     title = args.title or "Spectracs — %s" % next((t for lvl, t, _ in toc), "internal documentation")
-    page = SHELL.format(title=_html.escape(title), css=CSS, body=body)
+    source, generator = _provenance(args.source)
+    page = SHELL.format(title=_html.escape(title), css=CSS, body=body,
+                        source=_html.escape(source), generator=_html.escape(generator))
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     if args.html:
