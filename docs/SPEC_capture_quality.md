@@ -9031,8 +9031,9 @@ vessel proposal was not.
 1. **Fill one capillary with oil.** Hold it **horizontal** — oil's vertical capillary rise limit is ~13 mm
    against the tube's 75 mm, which is why haematocrit tubes are filled horizontally in the first place. It
    fills in tens of seconds, not instantly: oil is ~12× blood's viscosity.
-2. **Drop the filled capillary into the tube**, then add isopropanol **to the 15 mL graduation** *(see
-   §16.23.4 — it may need to be 13 mL)*.
+2. **Drop TWO filled capillaries into the tube**, then add isopropanol **to the 10 mL graduation**
+   *(⭐ MEASURED 2026-08-07 — see §16.23.2a; this supersedes the original "one capillary to 15 mL"
+   and the 13 mL alternative of §16.23.4)*.
 3. **Cap and invert to mix.** ⚠ **Invert, do not shake hard** — a 75 mm glass capillary can break against
    the tube wall. The oil dissolves out of the bore completely, so **transfer loss is zero by construction.**
 4. **Decant into the jar, holding the capillary back**, and **brim-fill** — §16.7.2c/§16.7.4: brim-filling
@@ -9043,6 +9044,38 @@ vessel proposal was not.
 ⭐ **Three tubes prepared independently = a σ_fill triplet.** σ_fill is the only term in §16.21.1's budget
 that protocol cannot fix, and it is what gates the one-measurement protocol (§16.11.13). This protocol makes
 an independent preparation cost one capillary and one tube.
+
+### 16.23.2a ⭐ THE DOSE IS MEASURED — **2 capillaries / 10 mL**  *(Edwin 2026-08-07, from the four fills of §16.27)*
+
+The first four fills prepared under this protocol ran at **2 capillaries / 12 mL** and two of them landed
+**under** §16.23.6a's `A_Q ≥ 0.19` floor. Raising the dose is bounded on the other side by the 16 DN guard,
+because a stronger fill darkens the Soret band it is meant to measure. Both constraints, measured:
+
+| fill | `A_Q` at 2/12 mL | **at 2/10 mL (×1.20)** | at 3/12 mL (×1.50) | DN 448–460 now | **×1.20** | ×1.50 |
+|---|---|---|---|---|---|---|
+| A Spar ggA | 0.189 — 99 % | **0.227 — 119 %** | 0.283 — 149 % | 29.5 | **19.5** | 10.4 ⛔ |
+| B S-Budget | 0.192 — 101 % | **0.230 — 121 %** | 0.288 — 152 % | 32.1 | **21.1** | 11.2 ⛔ |
+| C Spar Premium | 0.145 — ⛔ 76 % | **0.174 — 92 %** | 0.218 — 115 % | 41.1 | **28.0** | 15.7 ⛔ |
+| D Steirerkraft | 0.149 — ⛔ 78 % | **0.179 — 94 %** | 0.223 — 118 % | 40.5 | **27.6** | 15.5 ⛔ |
+
+⛔ **3 capillaries / 12 mL is REJECTED, and it was the first recommendation.** It clears the `A_Q` floor for
+every oil and puts **every oil's 448–460 band at or below the 16 DN guard** — the metric's own numerator into
+the noise. The `A_Q` floor and the DN guard pull against each other exactly as §16.23.6 records, and the dose
+has to satisfy the harder one.
+
+⇒ **2 capillaries / 10 mL.** It clears the floor for the ggA-class oils (119–121 %), leaves the two clearest
+oils 6–8 % short of it rather than 22–24 % short, and keeps 448–460 at **20–28 DN**, comfortably above the
+guard.
+
+⭐ **The dose and the 448 trim are ONE decision.** At ×1.20 the 440–447 bins fall to **3–5 DN**. Going stronger
+is only safe on a metric that has already discarded them — `SPEC_metric_research.md` §7.13's trim is therefore
+a *precondition* for this recipe, not an independent improvement. Adopt them together or neither.
+
+⚠ **Two open points.** (1) C and D still sit at 92–94 % of the floor — §16.27.5a argues the floor is stated on
+the wrong band (their `B_Q` was normal; the raw shortfall was missing *turbidity*, not missing pigment), so
+this may be a non-issue that only a restatement on `B_Q` will make obvious. (2) The projection uses
+Beer-Lambert on the measured band absorbance; it is arithmetic, not a measurement. **The first fill at the new
+dose should have its `A_Q` and its 448–460 DN logged and checked against this table.**
 
 ⇒ **Two standing bench rules govern this recipe — §16.23.9. Read them before changing the strength or
 deciding whether to filter.**
@@ -10972,6 +11005,369 @@ green-vs-green is what measures it.
 ⇒ **And after all of it the bottleneck changes kind.** Precision would be solved; what would remain is
 **evidence** — one brown oil (§2.2), the session confound (§3.4), and a validation study that has never run.
 That is why the validation study is now on the roadmap as PRIO 3.
+---
+
+## 16.27 ⭐⭐ THE FOUR-OIL SESSION — the exposure control §16.24.1 was missing, and two shape statistics retired  *(Edwin's rig session 2026-08-07, 21:46–01:33: `tmp/20260807A/B/C/D`, four oils × three re-seats)*
+
+Tool: **`diagnostics/spar_three_oils.py`** (reproduces every number below).
+
+### 16.27.0 The session
+
+Four oils, the §16.23 capillary preparation (**2 capillaries per 12 ml** — superseded by §16.23.2a's 2/10 mL
+*because of* this session), one fill each, three re-seats each, one evening. **Every fill was prepared fresh
+immediately before its own block**, so §16.11.16's ageing bias is excluded by construction.
+
+| folder | oil | €/l | note |
+|---|---|---|---|
+| `20260807A` | **Spar Steirisches Kürbiskernöl ggA** | 19.98 | — |
+| `20260807B` | **Spar S-Budget Kürbiskernöl** | 11.98 | brown *(the §16.15.1 roster's brown, new bottle)* |
+| `20260807C` | **Spar Premium 100 % Steirisches Kürbiskernöl ggA** | 35.96 | — |
+| `20260807D` | **Steirerkraft Steirisches Kürbiskernöl ggA** | 37.96 | added 01:22–01:33 — §16.27.6a |
+
+⭐ **The session was not designed as an instrument experiment and produced one anyway.** The auto-exposure
+landed on **two** values across the evening — 90 and 104 — and the split does not follow the oil:
+
+| runs | AE exposure | R 530 | ref 570/530 |
+|---|---|---|---|
+| A/001–003 | **90** | 126–128 | 0.487–0.492 |
+| **B/001** | **104** | 154 | 0.525 |
+| B/002–003 | **90** | 127 | 0.487 |
+| C/001–003 | **104** | 154 | 0.522–0.525 |
+
+⚠ The exposures come from the stdout `CAPTURE-SETTINGS` log Edwin kept, **not** from the PDFs —
+`exposure_applied` is still not persisted in `workflow.json` (§16.24.0's ROADMAP item, now the second session
+in a row to need a reconstruction). The tool recovers them from the reference level instead; R530 separates the
+two states with nothing in between (127 against 154) and reproduces the log exactly.
+
+| oil | run | **AE** | M base+ped | M baseline | M raw | **M448** | M448+ped | A_Soret | A_Q | B_Sor620 | B_Q620 | turbid |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **A** ggA | 001 | 90 | 10.417 | 13.261 | 4.666 | 8.909 | 6.998 | 0.9345 | 0.2003 | 0.8937 | 0.0674 | 0.1025 |
+| | 002 | 90 | 10.025 | 12.783 | 4.798 | 8.523 | 6.684 | 0.8991 | 0.1874 | 0.8548 | 0.0669 | 0.0955 |
+| | 003 | 90 | 10.273 | 13.216 | 4.891 | 8.833 | 6.866 | 0.8744 | 0.1788 | 0.8488 | 0.0642 | 0.0852 |
+| | **mean ± sd** | | **10.238 ± 0.198** | 13.087 ± 0.264 | 4.785 | **8.755 ± 0.204** | 6.849 | 0.9027 | 0.1888 | 0.8657 | 0.0662 | 0.0944 |
+| **B** S-Budget | 001 | **104** | 8.316 | 10.138 | 4.980 | 6.507 | 5.337 | 0.9117 | 0.1831 | 0.8515 | 0.0840 | 0.0865 |
+| | 002 | 90 | 8.192 | 9.948 | 4.673 | 6.497 | 5.350 | 0.9231 | 0.1976 | 0.8540 | 0.0858 | 0.0979 |
+| | 003 | 90 | 8.201 | 9.986 | 4.635 | 6.512 | 5.348 | 0.9043 | 0.1951 | 0.8442 | 0.0845 | 0.0941 |
+| | **mean ± sd** | | **8.236 ± 0.069** | 10.024 ± 0.101 | 4.763 | **6.505 ± 0.007** | 5.345 | 0.9130 | 0.1919 | 0.8499 | 0.0848 | 0.0928 |
+| **C** Premium | 001 | 104 | 9.420 | 11.995 | 5.803 | 7.827 | 6.147 | 0.8532 | 0.1470 | 0.8075 | 0.0673 | 0.0687 |
+| | 002 | 104 | 9.281 | 11.835 | 5.676 | 7.706 | 6.043 | 0.8268 | 0.1457 | 0.7912 | 0.0669 | 0.0647 |
+| | 003 | 104 | 9.146 | 11.640 | 5.793 | 7.539 | 5.924 | 0.8271 | 0.1428 | 0.7855 | 0.0675 | 0.0644 |
+| | **mean ± sd** | | **9.282 ± 0.137** | 11.823 ± 0.178 | 5.757 | **7.691 ± 0.144** | 6.038 | 0.8357 | 0.1452 | 0.7947 | 0.0672 | 0.0659 |
+
+### 16.27.1 ⭐⭐ THE HEADLINE — B/001 is the control §16.24.1 never had, and the exposure DOES cancel
+
+§16.24.1 concluded *"exposure does NOT cancel in `T = S/R`"* from **one run** — `20260804A/002` at exposure 90
+reading **−13.5 %** against four exp-104 controls — and flagged its own weakness in the same breath: *"n = 1 at
+exposure 90 — exposure is confounded with everything else about that run … the exposure link is well-evidenced
+but not closed."*
+
+**B/001 (exposure 104) against B/002+003 (exposure 90) is the missing control**: the same fill, the same
+seating, four minutes apart, at both exposures.
+
+| statistic | B/001 @ 104 | B/002–3 @ 90 | change |
+|---|---|---|---|
+| **M448** | 6.5069 | 6.5044 | ⭐ **+0.04 %** |
+| M448+ped | 5.3375 | 5.3490 | −0.22 % |
+| M baseline | 10.1385 | 9.9669 | +1.72 % |
+| M base+ped | 8.3165 | 8.1965 | +1.46 % |
+| `M raw` *(the Roast Ampel's number)* | 4.9802 | 4.6540 | ⛔ **+7.01 %** |
+
+⇒ **An exposure change of the exact size that §16.24.1 blames is not sufficient to corrupt the metric.** On the
+trimmed window it costs 0.04 %, against the −13.5 % that section attributes to it.
+
+⚠ **This BOUNDS §16.24.1, it does not overturn it.** Two things differ. (1) `20260804A` ran at `B_Q` = 0.036
+against tonight's 0.085 — §16.24.2's asymmetry means the same absolute error costs about **twice** as much
+there. (2) That run was also anomalous on the 473 nm spike leakage (0.445, §16.24.8), which run 006 passed
+cleanly. ⇒ **The honest statement is now: an exposure change alone does not corrupt `M` at working strength.**
+Whatever broke `20260804A/002` needs the thin fill, the spike leakage, or both — and §16.24.1's headline should
+be read with that qualifier.
+
+### 16.27.2 The leg-scale mismatch is not sufficient either — 2.70 % and nothing happened
+
+§16.24.1 uses the S/R leg-scale mismatch as the corrupted run's fingerprint: **≤ 0.5 % for its controls, 2.5 %
+for run 002.** The same measure across tonight's exposure change, oil held constant:
+
+| band | R ratio 104/90 | S ratio 104/90 | mismatch |
+|---|---|---|---|
+| 450 | 1.2035 | 1.2475 | 3.65 % |
+| 490 | 1.2127 | 1.2302 | 1.44 % |
+| 530 | 1.2171 | 1.2439 | 2.20 % |
+| 570 | 1.3104 | 1.3501 | 3.03 % |
+| 610 | 1.2731 | 1.3012 | 2.21 % |
+| 625 | 1.2990 | 1.3458 | 3.60 % |
+| **mean** | **1.2526** | **1.2864** | ⭐ **2.70 %** |
+
+**A mismatch LARGER than the corrupted run's, and `M448` moved 0.04 %.** ⇒ leg-scale mismatch is not a
+sufficient condition for metric corruption either, and on its own it is not a rejection criterion.
+
+⭐ **Two by-products.** (1) The reference scaled **×1.2526** for an exposure ratio of 104/90 = **×1.1556** —
+**+8.4 % more than proportional**, so `exposure_applied` is not linear in integration time, the decode is not
+the `pow2.2` it assumes, or both. This is §16.24.1a's finding reproduced in a much cleaner form, and §17's
+gamma work is where it belongs. (2) The per-band scaling is **not flat** — the dim red bands gain ~9 % more
+than the bright green one (570: ×1.3104 against 530: ×1.2171), which is precisely the "reference got redder"
+signature. **It was never the lamp.** The lamp was constant all evening; the sensor's response to the exposure
+step is what tilted.
+
+### 16.27.3 ⭐ The exposure sensitivity lives in 440–447 nm — the best argument yet for §7.13's trim
+
+The control splits the metric family cleanly: **the 440–460 variants move ~1.5 %, the 448–460 ones move
+0.04 %.** The eight nanometres that `SPEC_metric_research.md` §7.13 proposed removing are where the entire
+exposure sensitivity sits.
+
+That the trim's bins are near-floor was already known — tonight they read **4.8 / 4.8 / 7.0 DN** for A/B/C in
+the sample burst (in-band minima 1.9–2.8 DN) against the **16 DN guard**, while 448–460 reads 29–41 DN. What is
+new is that this is now measurable **in the metric**, not just in the DN column.
+
+⇒ **The case for the trim is not that it discriminates better — it does not.** Separation is a wash (green vs
+brown *d* 6.91 → 7.39; C vs B 12.45 → 11.61 the other way) and precision is marginally *worse* for **8 of the
+9 fills** — every archive fill, +0.16 to +0.54 pp of CV, with only tonight's B improving — because the
+numerator loses a third of its size and not a third of its noise. **The case is that
+440–447 is where the instrument leaks in.** That is a better reason than any effect size, and it is the reason
+to adopt it.
+
+⚠ `M raw` — the Roast Ampel's number, which has no baseline at all — is the most exposure-sensitive of the
+family at **+7.01 %**. Any threshold on it (the ampel's 4.4) is therefore hostage to where the AE lands.
+
+### 16.27.4 ⛔ TWO SHAPE STATISTICS RETIRED — the state effect exceeds the gap they were asked to carry
+
+A and C sit on opposite sides of the exposure split, so every A-vs-C comparison must clear the state effect
+before it means anything about oil. The B control prices that effect on each statistic:
+
+| statistic | A (@ 90) | C (@ 104) | A−C gap | **state effect** | verdict |
+|---|---|---|---|---|---|
+| **M448** | 8.7551 | 7.6906 | +13.8 % | **+0.0 %** | ✅ usable |
+| **480–500 / Soret** | 0.0821 | 0.0598 | +37.1 % | +3.3 % | ✅ usable, 11:1 |
+| **560–580 / Soret** | 0.1143 | 0.1301 | −12.1 % | **−0.0 %** | ✅ usable |
+| 590–610 / Soret | −0.0499 | −0.0251 | −98.9 % | **−159.9 %** | ⛔ **RETIRED** |
+| `rise/Q amp` | 0.3220 | 0.2372 | +35.8 % | **+183.6 %** | ⛔ **RETIRED** |
+
+⛔ **`rise/Q amp` is the casualty that matters**, because §16.13.9 introduced it as the *parameter-free* shape
+discriminator (*d* = 9.73, and it cancels any single concentration factor by construction). It does — but it is
+built from 620–630 minus 600–610, the red end, exactly where the exposure step tilts hardest. **One fill at two
+exposures moved it by 184 %.** ⇒ It remains valid for comparisons **within one exposure state** and must not be
+used across one. The archive's uses of it are all within-session and survive; this is a constraint on future
+use, not a retraction of §16.13.9.
+
+⚠ An earlier reading of this session cited both retired statistics as independent evidence that C is browner
+than A. That evidence is withdrawn.
+
+### 16.27.5 The three oils — what survives
+
+| fill | n | M base+ped | M448 | `A_Q` (floor 0.19) | `B_Q620` | turbidity |
+|---|---|---|---|---|---|---|
+| **A** Spar ggA | 3 | 10.238 ± 0.198 | 8.755 ± 0.204 | 0.1888 — 99 % | 0.0662 | 0.0944 |
+| **B** Spar S-Budget | 3 | 8.236 ± 0.069 | **6.505 ± 0.007** | 0.1919 — 101 % | 0.0848 | 0.0928 |
+| **C** Spar Premium ggA | 3 | 9.282 ± 0.137 | 7.691 ± 0.144 | 0.1452 — ⛔ 76 % | 0.0672 | 0.0659 |
+| Steirerkraft B / C | 6 / 6 | 12.281 / 12.380 | 10.572 / 10.548 | 104 % / 121 % | 0.0678 / 0.0731 | 0.0981 / 0.1231 |
+| Kiendler A / B / C | 6 / 2 / 2 | 12.429 / 12.288 / 12.659 | 11.575 / 10.602 / 11.061 | ⛔ 58 % / 105 % / 110 % | 0.0490 / 0.0715 / 0.0716 | 0.0378 / 0.0919 / 0.1018 |
+| S-Budget D *(July)* | 6 | 8.590 ± 0.156 | 6.615 ± 0.151 | 118 % | 0.1008 | 0.1038 |
+
+**Ordering A > C > B, on every anchor and both windows.** Cohen's *d* on `M base+ped`: A vs B **13.47**,
+C vs B **9.63**, A vs C **5.61** (on `M448`: 15.57 / 11.61 / 6.02).
+
+⭐ **What separates the oils is the Q band per unit Soret, not the pigment level.** Factoring the A-vs-Steirerkraft
+gap: the Soret numerator scaled ×1.236 against a fill-strength difference of ×1.211 — i.e. **the Soret band is
+essentially a proxy for how much oil is in the beam** — while the Q denominator moved only ×1.024. Normalising
+each fill to its own Soret makes it concentration-free:
+
+| fill | 560–580 / Soret |
+|---|---|
+| Steirerkraft B / C, Kiendler B | 0.0946 / 0.0948 / 0.0943 |
+| **A** Spar ggA | 0.1143 *(+21 %)* |
+| **C** Spar Premium | 0.1301 *(+37 %)* |
+| **B** Spar S-Budget | 0.1537 *(+62 %)* |
+
+Three premium fills of two different oils across two sessions cluster at 0.0943–0.0948. Dilution cannot
+account for the departure: at the shipped metric's log–log slope of +0.049, the ×1.21 strength difference
+predicts **+0.9 %** against the **+20.7 %** observed.
+
+⚠ **A vs C is supported but not closed.** It survives on three state-immune statistics, and the ageing and
+exposure confounds are both excluded — but C ran at 76 % of the `A_Q` floor and the two oils were never
+measured in the same exposure state. **The re-run that closes it is C on a fresh fill at 3 capillaries per
+12 ml, in the same state as A.**
+
+### 16.27.5a ⭐ The `A_Q` floor is stated in the wrong band
+
+C fails §16.23.6a's `A_Q ≥ 0.19` at 76 % — but its **`B_Q` is 0.0672 against A's 0.0662**, i.e. the metric's
+actual denominator is *normal*. The shortfall is entirely pedestal: 54 % of C's raw Q is pedestal against 65 %
+for A, and C is the least turbid fill of the three (0.0659 against 0.0944).
+
+⇒ **The raw band sums pigment and turbidity, so a CLEAN oil can fail a rule whose whole purpose is to protect
+the denominator.** C's precision is not penalised — `|r_Q|/B_Q` = 27 %, inside the 23–43 % on record, nothing
+like `20260804A`'s 54 %. ⚠ **The floor should be restated on `B_Q`** (the compliant sets sit at 0.068–0.073, so
+`B_Q ≳ 0.065` is the same rule expressed on the quantity that matters). Not adopted here — §16.23.6f owns the
+recipe constraints and this belongs in that decision.
+
+### 16.27.6 ⛔ T = 10.6 REJECTS BOTH ggA OILS — the scale is graded, the threshold is binary
+
+| | M base+ped | vs T = 10.6 | vs the archive green mean |
+|---|---|---|---|
+| archive greens *(5 fills, 2 oils)* | 12.281 – 12.659 | above | — |
+| **A** Spar ggA | **10.238** | ⛔ **BELOW** | −17.3 % |
+| **C** Spar Premium ggA | **9.282** | ⛔ **BELOW** | −25.0 % |
+| **B** Spar S-Budget | 8.236 | ⛔ BELOW | −33.5 % |
+
+Both protected-origin ggA oils fail the green threshold. **§16.27.7 rules out the preparation as the cause**,
+so the reading is that **supermarket ggA genuinely sits between S-Budget and the premium brands** — the metric
+produces a *graded* scale where T assumes a binary one. T = 10.6 was calibrated on Kiendler and Steirerkraft;
+it has now met the middle of the market and rejected it.
+
+⚠ **This is a threshold question, not a measurement question, and it is not answerable from three oils.** It is
+evidence for the validation study (ROADMAP PRIO 3) rather than a reason to move T. ⛔ **Do not retune T on this
+session.**
+
+⭐ **And it is not a fill artifact.** Across the five archive green fills, the uncorrected `M baseline` spreads
+**10.4 %** and tracks turbidity at **r = −0.91**; under the pedestal correction the spread collapses to **3.0 %**
+and the correlation vanishes (r = −0.02). Kiendler A is the extreme — the least turbid fill on record (0.0378),
+reading 17.115 uncorrected and 12.429 corrected, on top of everything else. So the greens are **one tight
+cluster** once the pedestal is removed, and A and C sit well outside it.
+⚠ Partly in-sample: `r_Q` was fitted on the Kiendler series, so Kiendler's collapse is somewhat circular.
+Steirerkraft B/C landing at 12.281/12.380 is the out-of-sample half, and it is the more convincing one.
+
+### 16.27.6a ⭐⭐ THE FOURTH FILL — Steirerkraft on the same recipe, and the protocol is cleared  *(`20260807D`, 01:22–01:33, exposure 104 throughout)*
+
+Edwin's hypothesis for §16.27.6's gap: *"their metrics differ a lot … think it is as we have used another
+dilution."* Steirerkraft was therefore re-measured on the capillary recipe, same rig, same night.
+
+| fill | €/l | **M448** | `A_Q` *(floor)* | drift /run | 560–580 / Soret |
+|---|---|---|---|---|---|
+| **D** Steirerkraft ggA | **37.96** | **9.956 ± 0.362** | 0.1489 — ⛔ 78 % | **−3.6 %** | 0.1005 |
+| **A** Spar ggA | 19.98 | 8.755 ± 0.204 | 0.1888 — 99 % | −0.4 % | 0.1143 |
+| **C** Spar Premium ggA | 35.96 | 7.691 ± 0.144 | 0.1452 — ⛔ 76 % | −1.9 % | 0.1301 |
+| **B** Spar S-Budget | 11.98 | 6.505 ± 0.007 | 0.1919 — 101 % | +0.0 % | 0.1537 |
+
+⇒ **The protocol is not the explanation.** On one recipe, one rig, one night, Steirerkraft sits **+13.7 %**
+above the Spar ggA and **+29.5 %** above the Spar Premium. All six pairs separate — *d* 4.09 to 15.57,
+*t* 5.01 to 19.07, the weakest being D vs A. **This is the first ordering of four oils with no protocol, no
+session and (for D vs C) no exposure confound.** It was already implied by three independent arguments — the
+Kiendler dilution series moves M448 by ≤ 9 % and non-monotonically across a 1.9× concentration range; a
+concentration-matched pair (A at `A_Q` 0.189, Steirerkraft B at 0.197) differs by 21 %; and §16.27.7's
+protocol check moved S-Budget by 1.7 %. The measurement now confirms all three.
+
+⚠ **A −5.7 % residual against the archive's drop-recipe Steirerkraft survives** (9.956 vs 10.560), and it is
+*not* the recipe: the fill is thin (78 % of the floor) and it drifted hardest of any set on record. Comparing
+freshest runs only, D/001 = 10.334 against Steirerkraft B/001 11.041 and C/001 11.475 — so a residual remains
+after the drift is removed. **Thin dose or a nine-day-open bottle (§16.11.16); this set cannot separate them.**
+
+⭐ **THE DRIFT IS OIL-SPECIFIC, and that is new.** All three Steirerkraft sets fall through their run order —
+**−1.5 %, −2.5 %, −3.6 % per run** — while S-Budget does not move at all (**+0.0 %/run**, and its M448 triplet
+has sd 0.007). Kiendler A is −0.3 %/run at the thinnest fill on record, so it is not simply thinness. ⇒ **This
+belongs to §16.11.17's decay-rate design**: pick S-Budget for it and there may be nothing to measure; pick
+Steirerkraft and 2–4 % per run is already running before any deliberate ageing starts.
+
+#### 16.27.6b Price, recorded at purchase
+
+| | S-Budget | Spar ggA | Spar Premium ggA | Steirerkraft ggA |
+|---|---|---|---|---|
+| €/l | 11.98 | 19.98 | 35.96 | **37.96** |
+| M448 | 6.505 | 8.755 | 7.691 | **9.956** |
+
+**Spearman ρ = +0.80** over n = 4 — ⚠ which cannot reach significance at that n and is recorded as a
+description, not a result. What it does do is **weaken the too-green-is-also-bad reading**: the most expensive
+oil on the bench is also the greenest, and the one product that breaks the monotone order is the Spar Premium,
+which reads *below* the Spar standard at nearly twice the price. ⛔ **Price is market positioning, not a
+quality measurement** — it is kept because "premium / non-premium" is a second variable in the validation
+study (ROADMAP PRIO 3a) and must be recorded at purchase rather than reconstructed. See
+`SPEC_roast_ampel.md` §9 for what would actually settle the question.
+
+### 16.27.7 ⭐ B REPRODUCED JULY'S S-BUDGET TO 0.001 — across a week, a new fill, and a new protocol
+
+| | M 600–630 legacy |
+|---|---|
+| `20260807B` *(capillary prep, 3 runs)* | **9.302** |
+| `20260731A` S-Budget D *(drop prep, 6 runs)* | **9.303** |
+
+⚠ Quoted on the legacy anchor because that is what §16.15 recorded S-Budget D on; on `M base+ped` the same
+comparison is −0.354 (*t* = 4.7), so **the pedestal-corrected variant is the less reproducible of the two** —
+consistent with `r_Q`'s standing caveats (§16.19, §16.24.7).
+
+⇒ Three things at once: **the §16.23 capillary preparation does not shift the scale** (its first cross-protocol
+check, and it passes); **the brown reference point is stable across a week and a new bottle**; and B's
+`M448` triplet at **CV 0.11 %** — spanning both exposure states — is the tightest set in the archive.
+
+### 16.27.8 ⚠ THE SELECTION EFFECT — save every capture, reject in analysis
+
+The log holds **10 captures; 9 PDFs exist.** The missing one is an exposure-90 capture between B/001 and the C
+block, and an extra camera-open with no `CAPTURE-SETTINGS` line sits immediately before C's first saved run —
+matching Edwin's account: **C's first attempt ran at exposure 90, the live sample DN looked low, it was
+discarded, and the retry landed at 104.**
+
+⛔ **So C's three retained runs are a selected subset — the bright ones — and the rejected capture no longer
+exists to check.** §16.27.1 says the selection was harmless, but the argument is circular if the discard rule is
+ever wrong: the run was rejected on the live DN, which is the same quantity that defines the state.
+
+⇒ **Rule: never discard a capture at the bench.** Save it, note why it looked wrong, and reject it in analysis
+where the decision is auditable and reversible. A rejected run costs a few MB; an unsaved one costs the ability
+to answer the question at all. *(§16.26.7's note-per-run rule, extended from labelling to retention.)*
+
+### 16.27.9 What this session did NOT establish
+
+| claim | status |
+|---|---|
+| exposure never matters | ⛔ **not shown** — shown at working strength, on one fill, `n` = 1 at exp 104 |
+| §16.24.1 is wrong | ⛔ **no** — bounded, not overturned; the thin-fill and spike-leakage routes are untouched |
+| A > C | ⚠ **supported, not closed** — C sat at 76 % of the floor and in the other exposure state |
+| Spar ggA is browner than Kiendler/Steirerkraft | ⭐ **confirmed on one protocol** by §16.27.6a — but still **one fill per oil** in this session; for what the archive does bound, see §16.27.9a |
+| the four-oil ordering is a QUALITY ordering | ⛔ **no** — it is a greenness ordering; which end is better is `SPEC_roast_ampel.md` §9's question |
+| T = 10.6 is wrong | ⛔ **not a conclusion** — evidence for the validation study, nothing more |
+| `rise/Q amp` is invalid | ⛔ **no** — invalid *across* exposure states; within-state use stands |
+
+### 16.27.9a ⚠ σ_fill IS NOT UNMEASURED — it is crudely BOUNDED, and the bound is inconsistent  *(Edwin 2026-08-08: "we have done the Steirerkraft measurement already two times I think — what were the differences?")*
+
+⛔ **§16.27.9's first draft said σ_fill had "never been exercised". That is wrong**, and the correction came
+from Edwin reading the claim rather than from re-checking the analysis. The archive holds **three**
+Steirerkraft fills, **three** Kiendler fills and **two** S-Budget fills.
+
+| oil | fills | pair | Δ M448 | *t* |
+|---|---|---|---|---|
+| **Steirerkraft** | `20270729B` · `20270729C` · `20260807D` | **B vs C** *(same day, same recipe)* | **+0.22 %** | 0.09 |
+| | | B vs D *(capillary, +9 days, thin)* | +6.18 % | **2.33** |
+| | | C vs D | +5.95 % | 1.95 |
+| **Kiendler** | `20260801A/B/C` | A vs B | +9.18 % | **3.67** |
+| | | A vs C | +4.64 % | 1.51 |
+| | | **B vs C** *(best `A_Q` match on record — 0.199 vs 0.208)* | **−4.15 %** | −1.82 |
+| **S-Budget** | `20260731A` · `20260807B` | D vs B *(capillary, +7 days)* | +1.68 % | 1.77 |
+
+⭐ **The same-session, same-recipe pairs — the nearest thing to a σ_fill test in the corpus — do not reach
+significance.** Steirerkraft B/C agree to **0.22 %** across a *deliberate 17 % concentration difference*, which
+is simultaneously the best fill-repeatability and the best dilution-invariance result on record. Kiendler B/C,
+the best `A_Q`-matched pair, differ by 4.15 % at *t* = −1.82 — suggestive, not significant, and on **n = 2 runs
+per fill**.
+
+⚠ **The two pairs that DO reach significance each carry something other than preparation**: Steirerkraft B/D is
+§16.27.6a's recipe-plus-nine-days residual, and Kiendler A is the flagged anomalous set (turbidity 0.0378, below
+the `A_Q` floor, still changing while measured — §16.15.4).
+
+⇒ **σ_fill is bounded somewhere under ~4 % and may be far smaller**, and the two most informative pairs point in
+opposite directions. **⛔ That is not a measurement, and no pair here was designed to be one** — every one of
+them also varies the concentration on purpose, and 2–6 runs per fill cannot separate preparation from seating.
+ROADMAP **PRIO 2b** is the run that settles it, and §16.27.9a sharpens its design by one point: **hold the dose
+FIXED** — three tubes at one nominal dose, not another dilution series, which is exactly what every existing
+pair fails to be.
+
+⇒ **Open items.** (1) §16.24.0's ROADMAP item — persist `exposure_applied` in `workflow.json`; two sessions have
+now needed a stdout reconstruction. (2) Pin the exposure across a comparison series, or the oil difference and
+the AE landing are confounded by default — ⚠ **and §16.11.17's decay-rate run is the next thing on the bench**,
+where a mid-series toggle would be indistinguishable from the decay being measured. (3) Restate the `A_Q` floor
+on `B_Q` (§16.27.5a) when §16.23.6f is decided. (4) The C and Steirerkraft re-runs at §16.23.2a's 2 caps / 10 mL,
+in one exposure state. (5) A **second brown oil (Hofer)** — the over-roast line still rests on one product
+(`SPEC_roast_ampel.md` §9.2).
+
+### 16.27.10 The colleague-facing one-pager
+
+⭐ This session produced the first result presentable outside the project: **`spectracs-references/business/
+internal/commmunication/Spectracs_Oil_Panel_2026-08-07.pdf`**, generated by `build_oil_panel_pdf.py` next to it
+(self-contained HTML + drawn SVG → Chrome, the `business/build_flyer_pdf.py` pattern; **not** in git, like
+everything under `business/`).
+
+⚠ **Its numbers are TRANSCRIBED from `spar_three_oils.py`, not recomputed at build time.** Three things will
+date it and each needs a regeneration, not a patch: the **448 trim landing** in the plugin (the document already
+quotes `M448` as if it ships), the **σ_fill run** (which replaces §16.27.9a's 0.22 %/4 % bound with a number),
+and the **second brown oil** (which moves the 7.17 line off one product).
+
+⭐ It quotes **`M448` only** — deliberately. Showing the metric family invites *"so which one is it?"*, which is
+the wrong question to hand a reader who is being asked to trust the result for the first time. Everything §16.27
+lists as unestablished appears in the document as a caveat, on the page rather than in a folder.
 ---
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*

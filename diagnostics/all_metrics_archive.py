@@ -59,6 +59,9 @@ OILS = {
     "20270729A_aged24h": "Steirerkraft", "20270729B": "Steirerkraft", "20270729C": "Steirerkraft",
     "20260731A": "Spar S-Budget",
     "20260801A": "Kiendler", "20260801B": "Kiendler", "20260801C": "Kiendler",
+    # The three-oil Spar session, §16.27. ⚠ A and C ran at AE exposure 90 and 104 respectively —
+    # `spar_three_oils.py` is the one that reads them with that split in view.
+    "20260807A": "Spar ggA", "20260807B": "Spar S-Budget", "20260807C": "Spar Premium ggA",
     "oilK": "green, 2 drops", "oilL": "green, 3 drops",
     "oilN": "brown, 2 drops", "oilM": "brown, 3 drops",
     "NowSteirerkraft": "Steirerkraft", "NowSteirerkraftA": "Steirerkraft",

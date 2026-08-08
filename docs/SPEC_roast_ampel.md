@@ -982,3 +982,162 @@ lining).
 **Placement (when picked up).** A plugin-level warning **view item** in the Evaluation (new) step (a styled
 `LabelView`, or a `warn`/`note` field surfaced on the gauge view-model), computed from the ratio + the Soret band
 mean the plugin already has. Design-only; no build until requested.
+
+---
+
+## 9. ⭐⭐ THE GAUGE IS NOT THE VERDICT — a three-part redesign  *(Edwin 2026-08-07/08, from the four-oil session `SPEC_capture_quality.md` §16.27; DESIGN — implement on explicit request)*
+
+> Edwin: *"the green gauge per se is okay when one interprets it purely as greenness. But the verdict is
+> misleading."*
+
+### 9.0 The assumption nobody measured
+
+§0 and §2 of this spec are explicit that the amber middle was **dropped** and that green means *"fine, nothing
+to act on"*. That encodes a **monotone quality model** — more green is never worse. It has never been tested.
+The scale is well-evidenced; the judgement attached to its upper end is an assumption wearing a traffic light.
+
+⚠ **Edwin's competing model, stated so it can be tested:** quality is **peaked**, not monotone — an oil can be
+*under*-roasted, tasting flat because the roast aroma never developed, exactly as an under-developed coffee
+roast does. On that model the gauge's top end is as wrong as its bottom end, and no one-sided threshold can
+express it.
+
+**Neither model is established.** What follows separates the parts that are evidenced from the parts that are not.
+
+### 9.1 The three parts
+
+| part | what it asserts | evidence today |
+|---|---|---|
+| **1 · the scale** | *this oil's greenness is X* | ⭐ **strong** — §16.27's four oils separate at *d* 4.1–15.6 |
+| **2 · the over-roast alarm** | *below this line, something went wrong* | ⭐ **good, one product** — see §9.2 |
+| **3 · deviation from a target** | *this is X % off where you want to be* | ⛔ **none for a universal target** — see §9.3 |
+
+⇒ **Render all three symmetrically; assert only where there is evidence.** The display is symmetric, the
+claim is not. That is the whole design.
+
+### 9.2 Part 2 — the over-roast line moves to `M448`, and the metric change is the point
+
+| metric | brown max | non-brown min | gap | **gap in within-fill σ** | midpoint |
+|---|---|---|---|---|---|
+| **`M448`** *(448–460 Soret, 620–630 anchor, NO pedestal)* | 6.796 | 7.539 | 0.743 — 9.9 % | ⭐ **2.7 σ** | **7.168** |
+| `M baseline` (440–460) | 10.408 | 11.640 | 1.232 | 3.2 σ | 11.024 |
+| `M base+ped` — **what §2b ships, T = 10.6** | 8.770 | 9.146 | 0.376 | ⛔ **1.3 σ** | 8.958 |
+| `M448+ped` | 5.748 | 5.924 | 0.176 | ⛔ 0.8 σ | 5.836 |
+
+⭐ **`M448` gives the brown line more than twice the margin the shipped metric does.** The pedestal correction
+*costs* class separation here: it adds a constant to the denominator, which compresses the greener
+(smaller-`B_Q`) oils more than the browns. It exists for dilution invariance and it should not be carried into
+a verdict that does not need it.
+
+⇒ **Proposed line: `M448` < 7.17** — the midpoint of the observed gap, no reason to favour either error
+direction. *(Edwin proposed 7.0; that sits 27 % into the gap rather than at its middle.)*
+
+⚠ **PROVISIONAL, and on one product.** The entire brown class in the post-rebuild corpus is S-Budget, measured
+twice. ⭐ **A second brown oil (Hofer) is planned for exactly this** — one product cannot fix where the line
+belongs, two begin to; it is the cheapest open item on this spec and it gates §9.5 step 2. It is well *reproduced* — July 6.615 ± 0.151, August 6.505 ± 0.007, **1.7 % apart** across a week, a new
+bottle and a changed protocol — but not broadly *calibrated*. ⛔ Ship it labelled provisional; §16.27.9 and
+`SPEC_capability_proof.md` §2.2's "one brown oil" limitation both still apply.
+
+### 9.3 Part 3 — the target is USER-DEFINED, and the universal default waits for §9.4
+
+⛔ **A fixed universal ideal is refuted by the corpus.** Edwin proposed `M448` = 8.0. Applied to everything
+measured since the rebuild:
+
+| fill | `M448` | deviation from 8.0 |
+|---|---|---|
+| Spar Premium ggA | 7.691 | −3.9 % |
+| Spar ggA | 8.755 | +9.4 % |
+| Spar S-Budget | 6.505 | −18.7 % |
+| Steirerkraft *(capillary)* | 9.956 | +24.5 % |
+| Steirerkraft B / C *(drops)* | 10.572 / 10.548 | +32 % |
+| Kiendler A / B / C | 11.575 / 10.602 / 11.061 | **+33 % … +45 %** |
+
+**The gauge would rank the S-Budget closer to ideal than any Kiendler fill** (|−1.39| against |+3.57|). Unless
+that matches the glass, 8.0 is wrong by a wide margin.
+
+⚠ **And a mid-scale target must not sit on the uncorrected metric.** Across the five archive green fills
+`M448` carries a **9.4 % fill-turbidity artifact** (r = −0.85 against turbidity; `M448+ped` is 5.8 %,
+r = +0.19). A deviation readout of ±4 % on a ±9 % preparation artifact reads the tube, not the oil. The brown
+line survives this because it is a wide gap far from the middle; a target in the middle does not. ⇒ **If part 3
+is built on `M448`, the deviation must be reported with the fill's `A_Q` beside it**, or built on `M448+ped`
+and accept the weaker brown separation for that readout only.
+
+⭐ **The design that works today: the target is the miller's own oil.** He measures a batch he knows is good,
+stores it as his reference, and the gauge shows **signed deviation from his own profile**. Default: **unset —
+no reference, no deviation shown.**
+
+Why this is the better product and not just the safer one:
+
+- It never needs the universal optimum, which nobody has.
+- Repeatability (0.1–2 % run-to-run) is far inside between-batch differences, so **drift detection is already
+  within reach** even though absolute calibration is not.
+- It matches §0's own framing — *"an alarm, not a closed-loop controller"* — and turns the alarm into
+  *"you have drifted from what you proved good"*, which is a claim the instrument can actually support.
+- Roast targets are **per-origin and per-purpose** in coffee too; no one publishes a universal Agtron number.
+
+#### 9.3a 📌 PARKED — a DEVIATION THRESHOLD on the user's own target  *(Edwin 2026-08-08: "note this idea to be discussed later")*
+
+> *"With the user-defined target greenness one could also define some threshold deviation. If the greenness
+> differs above the threshold an 'alarm' is to be rendered."*
+
+**The idea:** part 3 currently *displays* a signed deviation. This adds a **tolerance band** around the user's
+stored target and fires an alarm when a batch leaves it — turning the per-mill reference from a readout into a
+second, self-calibrated verdict, alongside §9.2's absolute over-roast line.
+
+📌 **DEFERRED BY DECISION — not designed here, to be discussed.** ⭐ Note it is the *only* alarm in this spec
+that could be **evidence-based today**: it needs no universal optimum and no jury, because the reference is the
+user's own measured oil and the question is only *"has this drifted from what you proved good?"* — which is
+exactly the comparison §16.26's 0.42 % instrument floor and §16.27's 0.1–2 % repeatability can support.
+
+Three things the later discussion will have to settle, recorded so they are not rediscovered:
+1. **In what units is the tolerance stated** — absolute `M448`, per cent of target, or multiples of the user's
+   own measured run-to-run σ? The third is the only one that adapts to a mill's actual precision.
+2. **σ_fill is the floor on any tolerance** — a band tighter than the preparation noise would alarm on the tube,
+   not the oil. ⇒ blocked on ROADMAP **PRIO 2b**.
+3. **Is the band symmetric?** The same §9.0 question returns in miniature: drifting *greener* than your own
+   proven batch may or may not warrant the same alarm as drifting browner.
+
+### 9.4 ⭐⭐ WHAT WOULD SETTLE THE DEFAULT — the jury correlation study
+
+> Edwin 2026-08-07: *"we are ready by measurement capability to compare with oils from a jury. If the jury's
+> decision correlates with greenness we can find out which greenness it was — something between too green and
+> too brown."*
+
+That is the right experiment and the capability is there (§16.27: four oils, all pairs resolved). It is the
+**scaled-up sibling of ROADMAP PRIO 3a**, and PRIO 3a's judge design applies unchanged. Five design points
+decide whether the result is usable:
+
+1. ⭐ **Do not recruit a jury — measure oils that have ALREADY been juried.** Styrian pumpkin-seed oil has
+   established competitions and certification tastings with recorded scores. Twenty already-scored bottles is a
+   procurement problem; a valid sensory panel is a months-long methodological one. **The scores already exist;
+   the oils are the only thing needed.**
+2. ⛔ **Span beats sample size.** To tell *monotone* from *peaked* the panel needs oils at **both** ends.
+   §16.27 spans 6.5–10.0 and the archive reaches 11.6; the study needs oils **above 11.6** and known-bad browns
+   **below 6.5**. Without the ends a peak in the middle is unfalsifiable.
+3. **n ≈ 10–12** to resolve a peak; ~8 suffices if the answer turns out monotone.
+4. ⭐⭐ **ASK FOR SUB-SCORES, NEVER A TOTAL.** *(Edwin flagged this as the note not to lose.)* A jury total
+   conflates roast with **rancidity, oxidation and seed quality**. If a green oil scores badly for rancidity
+   that is **not** evidence against greenness — and with only a total there is no way to tell the two apart.
+   The study's dependent variable is the **roast/aroma sub-score**; the others are controls, and an oil that
+   scores badly on rancidity should be *excluded from the roast regression*, not counted against the metric.
+   ⚠ If a source only publishes totals, that source cannot answer this question — say so rather than using it.
+5. **Pre-register two models**: monotone (Spearman ρ) and quadratic (test the curvature term; report the CI on
+   the peak location). **If that CI excludes both ends, the optimum exists and its value becomes the shipped
+   default target.** If it does not, the honest finding is *"monotone over the range we could source"* — and
+   part 3 keeps its user-defined-only form.
+
+⚠ **Two independent fills per oil.** Every set in the corpus is re-seats of one fill, so σ_fill has never been
+exercised (`SPEC_capture_quality.md` §16.21.1 F1). A study that compares oils *must* carry the term that says
+whether two bottles of the same oil land closer together than two different oils do.
+
+⚠ **Price is not a sub-score.** §16.27.6b records it because "premium / non-premium" is a second variable, and
+n = 4 gives ρ = +0.80 which cannot reach significance. It is a description of the market, and it enters the
+study as a covariate, never as ground truth.
+
+### 9.5 Build order, when this is picked up
+
+| # | change | blocked on |
+|---|---|---|
+| **1** | gauge renders symmetric, **verdict text removed from the green end** | nothing — do this first, it removes an unsupported claim |
+| **2** | verdict metric `M base+ped` → **`M448`**, over-roast line at **7.17**, labelled provisional | the §7.13 Soret trim landing (ROADMAP NEXT TASK) |
+| **3** | user-defined target + signed deviation readout, default unset | 1, 2 |
+| **4** | shipped **default** target | ⛔ §9.4's study |
