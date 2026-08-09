@@ -1010,18 +1010,12 @@ PUBLISHING badge, the one screen an end user sees. §5.4's argument for why the 
 discriminates and the raw one does not was right all along; the gauge had simply never been re-scored
 against a post-rebuild brown series.
 
-### 5a.4 ⭐⭐ The far anchor's peak, confirmed on two lamps  *(2026-08-09; full record in `SPEC_capture_quality.md` §16.28)*
+### 5a.4 ⭐ The far anchor's peak, measured on two lamps  *(2026-08-09; `SPEC_capture_quality.md` §16.28)*
 
-§5a.1 placed the window on 620–630 nm because protochlorophyll's Qy *should* be centred there. That was an
-argument; it has now been measured. Two runs on the same rig with **two different lamps** — a Sansi V2 and the
-Yuji — put the lamps' own sharp emission structure 3.4 nm apart, and the absorbance maximum stayed at
-**629–630 nm** under both. Instrument structure would have moved with the lamp. This did not: the band is real,
-and the far anchor ends on its peak.
-
-⇒ **That is the session's contribution to this document: confidence in the shipped index went up, not its
-definition.** `M448` was carried across the same lamp swap and agreed to **3 %** where the uncorrected ratio
-moved 51 % (⚠ subject to §16.28's open question of whether the two runs shared a fill). Nothing here changes a
-window, a constant or a threshold.
+§5a.1 placed the window on 620–630 nm on the argument that protochlorophyll's Qy *should* be centred there. The
+peak has since been measured: two runs on the same rig under **two different lamps** — a Sansi V2 and the Yuji,
+whose own sharp emission structure sits 3.4 nm apart — put the absorbance maximum at **629–630 nm** under both.
+Lamp structure would have moved with the lamp; this did not.
 
 <!--PAGEBREAK-->
 

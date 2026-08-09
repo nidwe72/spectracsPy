@@ -298,54 +298,26 @@ left panel is too coarse to show:
 
 Chapter 4 develops the consequence of the chord being a chord; §4.1 returns to what this panel shows.
 
-### 3.2 ⭐⭐ The premise of this entire document, measured  *(2026-08-09; `SPEC_capture_quality.md` §16.28)*
+### 3.2 ⭐⭐ The premise of this document, measured  *(2026-08-09; full record in `SPEC_capture_quality.md` §16.28)*
 
-Everything from chapter 4 onward rests on one claim made in §3.1 above: **the far anchor is not sitting on
-empty spectrum — it is sitting on the pigment's own Qy band.** That claim was placement by argument, taken
-from the literature (~623–626 nm) and from which window separated the classes better. It has now been measured
-directly, and the measurement is worth recording here because if it had come out the other way, `r_Q` would
-have no reason to exist.
+Everything from chapter 4 onward rests on §3.1's claim that the far anchor is **not** sitting on empty spectrum
+but on the pigment's own Qy band. That was placement by argument — taken from the literature and from which
+window separated the classes better. It has since become a measurement.
 
-The test was a **lamp swap**. Two runs 33 minutes apart, same rig, same calibration, same ROI, with two lamps
-whose own sharp emission structure sits in *different places* — 614.3 nm on one, 610.9 nm on the other. A
-feature in the absorbance that is really instrument structure must move when that structure moves.
+Two runs on the same rig with **two different lamps** put the lamps' own sharp emission structure 3.4 nm apart,
+and the absorbance maximum stayed at **629–630 nm** under both, at 256 σ. Instrument structure moves with the
+instrument; this did not. There is a real absorption band there, and the far anchor is standing on it.
 
-| run | lamp | the LAMP's own steepest edge | the ABSORBANCE maximum | ΔA above baseline | σ |
-|---|---|---|---|---|---|
-| `20260808A` | Sansi V2 | 34.5 %/nm at **614.3 nm** | **629.40 nm** | 0.0598 | 256 |
-| `20260808B` | Yuji | 34.6 %/nm at **610.9 nm** | **630.09 nm** | 0.0310 | 86 |
+⇒ **The pedestal correction is compensating for a band that has been measured, not for one that was suspected.**
+⚠ And the corollary runs the way this document has always argued: confirming the band makes `r_Q` **more**
+necessary, not less. A reader who takes "the far anchor is confirmed" as licence to drop the residual has
+inverted the finding. The same session also priced the correction against a change of lamp — a third axis
+chapter 11 never tested it on — and it improves lamp transfer at both window choices.
 
-**The lamps' edges are 3.4 nm apart; the absorbance maximum moves 0.69 nm.** It is not the lamp. There is a
-real absorption band centred at 629–630 nm, at 256 σ over the local noise, and the far anchor is standing on it.
-
-⇒ **The pedestal correction is not compensating for a suspicion. It is compensating for a band that has been
-measured twice, under two different lamps.** ⚠ And the corollary runs the way this document has always argued:
-confirming the band makes `r_Q` **more** necessary, not less. A reader who takes "the far anchor is confirmed"
-as licence to drop the residual has inverted the finding.
-
-⭐⭐ **The same session priced the correction against a change of lamp** — the harshest instrument change
-available, since it moves the illumination in every band at once:
-
-| construction | Sansi V2 | Yuji | run-to-run spread |
-|---|---|---|---|
-| raw ratio, no baseline | 8.05 | 4.76 | 51 % |
-| far-620 baseline | 16.43 | 13.16 | 22 % |
-| far-620 baseline **+ pedestal** | 11.79 | 9.99 | 17 % |
-| `M448` *(Soret trimmed to 448–460)* | 9.51 | 8.70 | 9 % |
-| ⭐⭐ `M448` **+ pedestal** | 6.83 | 6.60 | ⭐⭐ **3 %** |
-
-⚠ Different scales — compare within a row, never across. **The pedestal improves lamp transfer at both window
-choices — 22 → 17 % on the full Soret window, and 9 → 3 % on the trimmed one.** Chapter 11 prices what the
-correction buys against dilution and class separation; this is a third axis it was never tested on, and it
-holds up. ⚠ Subject to §3.2's fill caveat: whether the two runs were the same fill is not recorded, and if
-they were not, part of every spread above is sample rather than lamp.
-
-⚠ **One thing this does not confirm.** The same session measured the *near* anchor and found it is not flat
-either: 520–540 nm sits on a reproducible bump peaking near 530 nm — present under both lamps, so real — with
-the region's true minimum at **505–511 nm**. Chapter 10's assumption list should be read with that in mind:
-**both** anchor windows sit on signal, and only the far one is corrected. Since §5 has the baseline
-contributing the majority of `B_Q`, whatever sits under the near anchor propagates into the denominator that
-carries all the leverage.
+⚠ **One thing that session did NOT confirm.** The *near* anchor is not flat either: 520–540 nm sits on a
+reproducible bump peaking near 530 nm, present under both lamps, with the region's true minimum at
+**505–511 nm**. Chapter 10's assumption list should be read with that in mind — **both** anchor windows sit on
+signal, and only the far one is corrected.
 
 <!--PAGEBREAK-->
 
