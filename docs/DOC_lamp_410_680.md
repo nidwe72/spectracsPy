@@ -423,6 +423,38 @@ phosphor continuum does that. Either the two source tables are on different scal
 **line-emitting red phosphor** (KSF/PFS, Mn⁴⁺, narrow lines near 631/648/660 nm), which would also explain
 why it owns the deep red. Not decided here.
 
+#### ⛔⛔ 6.2a A LATER MEASUREMENT CONTRADICTS THIS PANEL — unresolved  *(2026-08-09; `SPEC_capture_quality.md` §16.28.4)*
+
+Two runs captured with the ROI opened to 690 nm — `20260808A` (**Sansi V2**) and `20260808B` (**Yuji**) —
+record the red end collapsing on **both** lamps, on the same camera, the same evening:
+
+| run | lamp | 630 | 640 | 650 | **656** | 660 |
+|---|---|---|---|---|---|---|
+| `20260808A` | Sansi V2 | 54.1 | 21.0 | 1.2 | **0.15** | 0.07 |
+| `20260808B` | Yuji | 39.7 | 11.5 | 0.7 | **0.13** | 0.01 |
+
+Against this chapter's *"still returns 115 DN at 656 nm"* that is a two-orders-of-magnitude disagreement in
+**shape**, and both records cannot be right. ⚠ The **Yuji** rows are consistent between the two datasets (52
+against 39.7 at 630 nm — the same ballpark at a different exposure). **The Sansi is where they diverge.**
+
+⚠ **This does NOT restore the withdrawn §6 argument.** Three reconciliations remain open, and the 2026-08-09
+session cannot choose between them:
+
+1. **V1 ≠ V2.** §16.25.4's Sansi is the V1; this is the V2. §6.2's own KSF/PFS hypothesis would explain a V1
+   that owns the deep red and a V2 that does not. ⚠ Though the new runs show **no line structure** at 648 or
+   660 on either lamp — a smooth monotone decay, which is what a KSF lamp would *not* produce.
+2. **The red end of Figure 4 is mis-scaled** — this chapter already flags that its 680 nm column came from *"a
+   screenshot ending at ~676 nm with a transferred wavelength scale"*. That is exactly the failure mode that
+   relabels a 630 nm value as "656 nm".
+3. **Figure 4's mid-range is clipped** at 255 DN through 600–640 nm, so its red-end *shape* is not comparable
+   with an unclipped run.
+
+⭐⭐ **What decides it, with hardware already on the bench:** `EUROPIUM_RED_FAR_680/690/700` (687.7, 693.7,
+707.0 nm) are the Eu³⁺ siblings of the 611.6 nm line the calibration already uses, and they are strong in the
+calibration lamp — never markable before because the ROI ended blue of them. **Lines visible ⇒ the camera
+passes 690 nm, §6's withdrawal stands, and the collapse belongs to the lamps. Lines absent ⇒ the IR-cut is the
+gate and §6 must be re-opened.** Queued, not concluded.
+
 ### ⭐⭐ 6.3 The argument that replaces it — the 619/624 nm red feature
 
 Withdrawing §6 does **not** leave the lamp choice unsupported at the red end. There is a real, measured
@@ -447,6 +479,18 @@ been run.
 classifies the archive runs by blue/red ratio at ≈ 2.97 — the Yuji. The Sansi appears only as a candidate
 in the 2026-08-06 null and probe runs. **No Sansi structure can have affected the measurements the metric
 and its thresholds were built on.**
+
+⚠ **And a second correction, from 2026-08-09: the 25 %/nm-at-622 disqualifier is V1-SPECIFIC.** Measured on
+the **Sansi V2** (`20260808A`), the far anchor reads **1.47 %/nm median, 3.05 %/nm max** — Yuji-class — and the
+V2's sharp feature has moved to **614.3 nm**, *outside* the anchor, structurally the same situation as the
+Yuji's 610.9 nm line. ⇒ By this document's own rule — **it is LOCATION, not steepness** — the V2 passes the
+test the V1 failed, and the recorded "do not adopt the Sansi" should be read as applying to the V1.
+
+⚠ **The V2 was nonetheless NOT adopted** (`SPEC_capture_quality.md` §16.28.7). Measured against the Yuji on the
+same rig it carries the white-LED valley between blue pump and phosphor — `I(470)/I(600)` = **0.35** against the
+Yuji's **1.46** — and reproduces the V1's Soret steepness (7.48 %/nm across 440–460 against the Yuji's 2.27).
+⭐ The decision rests mainly on **heat**: the V2 draws ~30 W against the Yuji's ~20 W, and §16.11.16 measured a
+warmed fill reading as a *browner oil*, misclassifying 3 of 3 runs, with §16.11.17's decay-rate run queued next.
 
 ⭐⭐ **And this is the practical case for R2's flatness.** The feature lands squarely on the **far anchor
 620–630**, the band carrying §16.24.2's **17× leverage**. R2 reads **0.1 %/nm at 625 and 0.2 %/nm across

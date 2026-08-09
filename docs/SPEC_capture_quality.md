@@ -11370,6 +11370,362 @@ the wrong question to hand a reader who is being asked to trust the result for t
 lists as unestablished appears in the document as a caveat, on the page rather than in a folder.
 ---
 
+## 16.28 ⭐⭐ THE TWO-LAMP CONTROL — the far anchor stands on a MEASURED band, `M448` survives a lamp swap at 3 %, and the ROI closes at 636 nm  *(Edwin's rig session 2026-08-09, 03:07 + 03:40: `tmp/20260808A` Sansi V2, `tmp/20260808B` Yuji)*
+
+Tool: **`diagnostics/red_band_two_lamps.py`** (reproduces every number below).
+
+### 16.28.0 The session
+
+Two runs, 33 minutes apart, **same rig, same calibration profile, same ROI, identical wavelength grids**, with
+exactly one thing changed between them: the lamp. Both were captured with the capture window temporarily opened
+to **440–690 nm**, which is what makes them the only two runs in the archive that can see past 630 nm at all.
+
+| folder | lamp | its OWN steepest edge, 600–636 nm | 620–630 median `\|dlnI/dλ\|` |
+|---|---|---|---|
+| `20260808A` | **Sansi V2** | 34.5 %/nm at **614.3 nm** | ⭐ 1.47 %/nm |
+| `20260808B` | **Yuji** | 34.6 %/nm at **610.9 nm** | 2.14 %/nm |
+
+⚠ The Yuji's edge at 610.9 nm reproduces §16.26.7's measured 610.1 nm cliff independently, off a run that
+section never saw — which is how the lamp in each folder was confirmed from the spectrum rather than the note.
+
+### 16.28.1 ⭐⭐ THE HEADLINE — a band at 627–630 nm that does NOT move when the lamp does
+
+On the despiked absorbance, against a linear baseline through 608–612 / 641–645 nm:
+
+| run | lamp | peak | ΔA above baseline | half-maxima | σ |
+|---|---|---|---|---|---|
+| A | Sansi V2 | **629.40 nm** | 0.0598 | 622.3–636.4 nm | **256** |
+| B | Yuji | **630.09 nm** | 0.0310 | 626.5–643.1 nm | **86** |
+
+> **The two lamps put their own sharp structure 3.4 nm apart. The band moves 0.69 nm.**
+
+⭐ **That is the whole argument.** An artefact born of emitter structure moves WITH the emitter — it is the lamp's
+own edge, multiplied by whatever small R→S mismatch exists, so relocating the edge relocates the artefact. This
+maximum stays put while the edges swap places. ⇒ **It is sample absorption**, and it sits where
+`KB_spectroscopy_physics.md` §4.1 puts protochlorophyll's Qy band (~623–626 nm, Fruhwirth & Hermetter 2007).
+
+Three supporting checks, all in the tool:
+
+1. **Not a misregistration artefact.** Normalised log-domain cross-correlation of S against R reports **0.00 nm**
+   on the clean Q window (r = 0.991). The per-window disagreement elsewhere is local *shape*, not grid —
+   consistent with §16.26.10's null runs (−0.000 to +0.005 nm) and with §16.26.4 filing re-registration as a decoy.
+2. **Not a steep-flank artefact.** The far anchor sits in a QUIET stretch of *both* lamps (1.47 and 2.14 %/nm
+   median), so by §16.26.7's own rule — *location, not steepness* — a wavelength drift there is second-order.
+   The lamps' steepest slopes are at 640–650 nm, where the measured absorbance goes to **zero**, i.e. the
+   artefact mechanism peaks exactly where the signal does not.
+3. **The 613.9 nm spike is now explained.** It sits on the Sansi V2's own 614.3 nm edge and is 1–2 samples wide.
+   Lamp structure on a steep flank, correctly removed by the despiker — not a second band.
+
+### 16.28.2 ⭐⭐ WHAT THIS DOES TO THE FAR ANCHOR — trust it MORE, and keep the pedestal
+
+⭐ **The 620–630 window is no longer resting on literature plus inference. It is resting on a band this rig
+measured, twice, under two lamps.** §16.20 chose that window because protochlorophyll's Qy *should* be centred
+there; §16.28.1 is the direct evidence that it is. The anchor is not voodoo — it is looking at pigment.
+
+⛔ **But do NOT read this as "the anchor is a good baseline". It is the opposite, and the same evidence proves it.**
+A baseline anchor is supposed to sit where nothing is happening. This one sits on ΔA = 0.06 at 256 σ. ⇒
+**`PB_R_Q` is MORE necessary after this session, not less.** §16.20 already wrote that the far window "MEASURES
+rather than corrects"; this is the measurement behind that sentence. Anyone reading "the far anchor is
+trustworthy" as licence to drop the pedestal residual has inverted the finding.
+
+⭐ **And the anchor earns its keep against the harshest instrument change available** — a whole-lamp swap:
+
+| construction | A (Sansi V2) | B (Yuji) | run-to-run spread |
+|---|---|---|---|
+| pigment ratio, no baseline | 8.05 | 4.76 | ⛔ **51 %** |
+| far-620 baseline | 16.43 | 13.16 | **22 %** |
+| far-620 baseline + pedestal | 11.79 | 9.99 | **17 %** |
+| **`M448`** *(Soret trimmed to 448–460)* | 9.51 | 8.70 | **9 %** |
+| ⭐⭐ **`M448` + pedestal** | 6.83 | 6.60 | ⭐⭐ **3 %** |
+
+⚠ Levels are NOT comparable across rows — different scales (§16.20). Compare *within* a row.
+
+### 16.28.2a ⭐⭐ THE REAL HEADLINE — `M448` SURVIVES A LAMP SWAP AT 3 %  *(Edwin 2026-08-09: "it showed a lot: namely trust in the existing M448 metrics")*
+
+> **Raw ratio 51 % → `M448 + pedestal` 3 %. A seventeen-fold reduction, across a change of lamp.**
+
+⭐⭐ **And it is the trim doing the extra work — for a reason that is NOT "the lamps differ there".** That was
+the first explanation and the data refuses it: normalising each lamp to its own 600 nm level, the two disagree
+by **0.78× in the dropped window and 1.22× in the KEPT one**. The lamps differ in both halves. The real reason
+is that **440–447 nm is where the instrument stops measuring**:
+
+| | 440 | 444 | ‖ | 448 | 452 | 456 |
+|---|---|---|---|---|---|---|
+| Sansi V2 `R` (DN) | 55.1 | 114.8 | ‖ | 171.3 | 194.2 | 165.2 |
+| **Sansi V2 `S` (DN)** | ⛔ **1.18** | ⛔ **5.67** | ‖ | 24.35 | 59.74 | 76.51 |
+| Sansi V2 `A` | **1.669** | **1.307** | ‖ | 0.847 | 0.512 | 0.334 |
+| **Yuji `S` (DN)** | ⛔ **3.77** | ⛔ **6.96** | ‖ | 15.18 | 30.36 | 40.51 |
+| Yuji `A` | **1.434** | **1.165** | ‖ | 0.858 | 0.590 | 0.385 |
+
+`A` = 1.67 means the sample transmits **2 %**: the sample beam is down to **1–7 DN**. The metric is taking the
+logarithm of a ratio whose numerator is one digital number, where any additive or non-linear residue the
+instrument carries — stray light, black level, gamma near zero (§17) — dominates outright. ⚠ **And those same
+samples carry the MOST weight in the band mean**, because `A` is largest exactly where it is least trustworthy:
+1.67 and 1.31 against 0.85 and 0.51 in the kept half.
+
+⇒ **That is why one 8 nm trim answers two unrelated instrument errors.** Exposure (§16.27.3) and lamp (here) are
+different physical changes, but both move where the 1 DN floor sits, and 440–447 is the only stretch in the
+window with no dynamic range left to absorb them. **The trim is not tuned against either error — it removes the
+region where the instrument has stopped measuring.**
+
+#### 16.28.2b ⛔ AND THE OBVIOUS GENERALISATION IS FALSE — the trim is an ILLUMINATION device, not a robustness device
+
+The tempting next step is: *if the trim deletes the floor-limited region, it should help against **any** instrument
+perturbation.* ⛔ **The archive already refutes that.** Relative scatter across re-seat repeats, per fill
+(`diagnostics/spar_three_oils.py`, §16.27.5's means ± sd expressed as CV):
+
+| fill | n | `M base+ped` | **`M448`** |
+|---|---|---|---|
+| A Spar ggA | 3 | **1.93 %** | 2.33 % |
+| B Spar S-Budget | 3 | 0.84 % | ⭐ **0.11 %** |
+| C Spar Premium | 3 | **1.48 %** | 1.87 % |
+| D Steirerkraft | 3 | **3.06 %** | 3.64 % |
+| Steirerkraft B | 6 | **3.31 %** | 3.75 % |
+| Steirerkraft C | 6 | **4.47 %** | 5.14 % |
+| Kiendler A | 6 | **3.89 %** | 5.24 % |
+| Kiendler B | 2 | 1.42 % | ⭐ **1.25 %** |
+| Kiendler C | 2 | **2.74 %** | 2.99 % |
+| S-Budget D | 6 | **1.82 %** | 2.28 % |
+
+⛔ **`M448` is WORSE in 8 of 10 fills**, by ~20 % relative. ⚠ And the one clear win — fill B at 0.11 % — is
+precisely the block containing §16.27.1's **exposure change**, i.e. it is the illumination result again, not a
+counter-example.
+
+⭐ **The split is physical, and it sharpens the mechanism rather than damaging it.** Exposure and lamp are
+**illumination** changes: they move where the DN floor sits relative to the spectrum, the floor-limited window
+responds non-linearly, and cutting it wins outright. **Re-seating is a sample-side GEOMETRY change** — jar
+position, tilt, meniscus, scatter (§16.26.10 measures it as the dominant term) — which perturbs the path
+roughly smoothly in wavelength and therefore does **not** concentrate in 440–447. The trim has no leverage on
+it, and by discarding the largest `A` values it makes the band mean marginally noisier. Hence the small penalty.
+
+⇒ **Corrected claim: `M448` is specifically an ILLUMINATION-robustness device.** Exposure +0.04 % against raw
++7.01 %; lamp 3 % against 51 %; re-seat, no help and a slight cost. ⭐ **And the cost is only in scatter, not in
+discrimination** — §16.27.5's Cohen's *d* is *better* on `M448` for all three oil pairs (15.57 vs 13.47,
+11.61 vs 9.63, 6.02 vs 5.61).
+
+⚠ **A test that will NOT work, recorded so it is not attempted:** the null-run series cannot probe this. In a
+null the same liquid is both reference and sample, so there is no Soret absorption, `S` never falls to 1 DN,
+and the floor-limited condition the trim exists for **does not occur in that data at all.**
+
+⇒ **Practically:** on the plain pigment ratio run B lands at **4.76 against the 4.4 Ampel threshold** — 8 % above
+the line, one bad re-seat from flipping. On `M448 + pedestal` the two runs agree to **0.23 units**. That is the
+difference between a metric that survives an instrument change and one that does not.
+
+⚠⚠ **A LOGICAL FORK, and it must be read before this number is used.** §16.28.6 records that whether A and B
+were the **same fill** is not written down, and the two readings of that have **opposite** implications here:
+
+* **same fill** ⇒ 3 % is a genuine lamp-transfer figure and `M448 + ped` is superbly lamp-robust — the good news;
+* **different fill** ⇒ two *different* oils read the same to 3 %, which for a discriminating index is **bad**
+  news, not good.
+
+⭐ The evidence leans to the first. §16.27's four-oil session spans `M448 + ped` from **5.35** (S-Budget, the
+brown) to **6.85** (Spar ggA); tonight's 6.83 and 6.60 both land at the **green/ggA end** of that range. Two
+runs 33 minutes apart both reading as the same green oil is consistent with one fill, and inconsistent with a
+brown/green pair. ⚠ It is not proof — two similar green oils would look the same — and §16.26.7's process item
+(record what was in the beam) remains the fix.
+
+⚠ **What still does not add up either way:** if the fill was identical, then `T = S/R` should have cancelled the
+lamp *entirely* and the raw absorbance should be unchanged. It is not — it swings 0.68–3.00× (§16.28.6). ⇒
+**Something lamp-dependent is not cancelling in the ratio**, and the baseline-plus-trim-plus-pedestal
+construction is what removes it. That is a satisfying account of *why* the corrections work, and an open
+question about what the uncancelled term is. Candidates not tested here: stray light / veiling glare, and a
+difference in effective spectral bandwidth between the two sources.
+
+### 16.28.3 ⚠ THE NEAR ANCHOR 520–540 IS NOT A FLAT STRETCH EITHER — and this session does not validate it
+
+The baseline is drawn through *two* windows and only the red one was tested above. The near one, measured:
+
+| run | 510 | 520 | **530** | 540 | 550 | minimum in 505–560 |
+|---|---|---|---|---|---|---|
+| A Sansi V2 | 0.0239 | 0.0305 | **0.0406** | 0.0314 | 0.0261 | 510.8 nm (0.0234) |
+| B Yuji | 0.0503 | 0.0616 | **0.0725** | 0.0684 | 0.0704 | 505.0 nm (0.0484) |
+
+⚠ 520–540 sits on a **local bump peaking near 530 nm, present under both lamps at the same place** — so by
+§16.28.1's own logic it is a real sample feature, not lamp structure. The region's actual minimum is at
+**505–511 nm**. Position and shape are consistent with **pheophytin** (the demetallated chlorophyll, bands near
+505 and 535 nm), which would connect to the demetallation signature §16.11.16 already found — ⚠ but that is an
+inference from two runs, not a result.
+
+⇒ **Both baseline anchors sit on signal.** For the far one that is by design and `PB_R_Q` compensates it. For
+the near one it is not obviously by design and nothing compensates it — and §16.24 has the baseline contributing
+**62 % of the raw Q**, so whatever sits under 520–540 propagates straight into the Q reading. **Not changed
+here**: moving the near anchor re-opens `PB_R_Q` *and* the Ampel thresholds. Recorded as the half of the
+baseline this session does **not** cover.
+
+### 16.28.4 ⚠ THE RED END DIES AT ~655 nm ON BOTH LAMPS — and this CONTRADICTS §16.25.4. Do not resolve it here.
+
+Reference DN at the red end, both lamps, same camera, same evening:
+
+| run | lamp | 630 | 640 | 645 | 650 | 656 | 660 |
+|---|---|---|---|---|---|---|---|
+| A | Sansi V2 | 54.1 | 21.0 | 5.7 | 1.2 | 0.15 | **0.07** |
+| B | Yuji | 39.7 | 11.5 | 2.9 | 0.7 | 0.13 | **0.01** |
+
+Both lamps collapse **together**, at ~645–655 nm, with a roll-off of 0.33 decades/10 nm at 650 steepening to
+0.79 at 660–665. Two lamps failing at the same wavelength on a shared camera reads as a shared cause, and the
+obvious candidate is the ELP's IR-cut filter.
+
+⛔⛔ **THAT IS EXACTLY THE CLAIM `DOC_lamp_410_680.md` §6 WITHDREW on 2026-08-07, on Edwin's refutation** — and
+this section does **not** re-open it. §16.25.4's Figure 4 dataset records the **Sansi holding 149 DN at 630 and
+still returning 115 DN at 656 nm**, even *rising* from 149 at 630 to 176 at 650. Against tonight's 54.1 → 0.25
+that is a shape disagreement of two orders of magnitude, and both cannot be right.
+
+⚠ **Three reconciliations are open, and this session cannot choose between them:**
+
+1. **The lamps differ.** §16.25.4's Sansi is the **V1**; tonight's is the **V2**. §6.2 already hypothesised a
+   **line-emitting red phosphor** (KSF/PFS, Mn⁴⁺, narrow lines near 631/648/660 nm) to explain the V1's rise
+   into the deep red. A V2 without that phosphor would collapse exactly as measured here. ⚠ Tonight's data
+   shows **no** line structure at 648 or 660 on either lamp — smooth monotone decay — which is what a KSF lamp
+   would *not* look like.
+2. **§16.25.4's red end is mis-scaled.** That figure carries its own caveat: the 680 nm column came from *"a
+   screenshot ending at ~676 nm with a transferred wavelength scale"* (`SPEC_metric_research.md` §9.1 P3). A
+   transferred scale is precisely the failure mode that would move a 630 nm value to "656 nm".
+3. **§16.25.4's mid-range is clipped.** That set clips at 255 DN through 600–640 nm, so its mid-range is a
+   floor rather than a value and its red-end *shape* is not comparable with tonight's unclipped run.
+
+⚠ **The Yuji rows agree and the Sansi rows do not**, which is itself a clue: §16.25.4 has the Yuji at 52 DN at
+630, tonight's reads 39.7 — same ballpark, different exposure. The Sansi is where the two records diverge.
+
+⭐⭐ **THE EXPERIMENT THAT SETTLES IT, with hardware already on the bench.** `spectral_line_master_data` carries
+`EUROPIUM_RED_FAR_680/690/700` at **687.7, 693.7 and 707.0 nm** — the Eu³⁺ siblings of the 611.6 nm line the
+calibration already uses, and strong in the calibration lamp. They have never been markable because the ROI
+ended blue of them. One calibration capture with the window opened decides it:
+
+* **lines visible** ⇒ the camera passes 690 nm, §6's withdrawal stands, and the collapse belongs to the lamps;
+* **lines absent** ⇒ the IR-cut is the gate after all, and §6 must be re-opened.
+
+⭐ Either outcome also converts **80 nm of wavelength extrapolation into interpolation** (§16.28.4a), which is
+worth doing on its own account. ⇒ **Queued, not concluded.**
+
+⚠ **What is safe to say without resolving it:** on the runs as recorded, nothing usable reaches the sensor past
+~650 nm under **either** lamp. So (1) widening the ROI to 700 nm gained a dead tail either way; (2) the 14 nm
+FWHM in §16.28.1 is a **lower bound** — on the Yuji the band is still at 83 % of peak at 640 nm and does not
+fall below half until past 644, i.e. still falling where the record ends; and (3) whether a redder *lamp* could
+close that flank is **undecided**, and rests on the test above.
+
+#### 16.28.4a ⚠ Wavelength labels past 611.6 nm are extrapolated
+
+The calibration profile's reddest anchor is
+`EUROPIUM_VIVID_GAMBOGE` at 611.6 nm (px 1995). Refitting the same six anchors as quadratic and linear bounds
+the model spread at **1.0 nm at 626, 3.3 nm at 654, 9.1 nm at the ROI edge** — so ±1 nm where the band and the
+far anchor live, which changes nothing above, but it should be retired. ⭐ **The fix is already in the master
+data**: `EUROPIUM_RED_FAR_680/690/700` (687.7, 693.7, 707.0 nm) are the 611.6 line's Eu³⁺ siblings and are
+present in the calibration lamp. They were never markable because the ROI ended blue of them. Marking them
+converts 80 nm of extrapolation into interpolation — and doubles as the decisive IR-cut test: **lines visible ⇒
+the camera passes 690 and the lamps really are red-poor; lines absent ⇒ the IR-cut is the gate.**
+
+### 16.28.5 ⭐ THE DECISION — `WAVELENGTH_MAX_NM = 636.0`, far anchor unchanged  *(Edwin 2026-08-09)*
+
+| | value | why |
+|---|---|---|
+| `WAVELENGTH_MIN_NM` | 440.0 | unchanged |
+| `WAVELENGTH_MAX_NM` | **636.0** | ⬅ was 630 → 700 → 636, settled in one evening |
+| `PB_BASELINE_WINDOWS` | **unchanged** — (520, 540), (620, 630) | so every shipped metric works as-is |
+
+**Why 636 and not 645.** The reason is **presentation, not physics** (Edwin): past ~636 nm the A(λ) curve wobbles
+as the lamp dies, and the ~630 peak stops reading as a peak on the plot. A peak that renders as a shoulder will
+mislead every time it is glanced at, so it was closed at the point where the curve still reads correctly.
+
+⭐ **The metrics are untouched by this.** The reddest `declaredEvalBand()` edge is **630.0** — the far anchor —
+which sits 6 nm inside the clamp. Nothing the plugin computes reads past it.
+
+⚠ **What 636 costs, recorded so it is not rediscovered as a result:**
+
+1. **The stored band is TRUNCATED.** 636 clamps 0.4 nm blue of run A's red half-maximum, and on the Yuji far
+   harder (still 83 % of peak at 640). ⇒ **Never derive a band width, FWHM or red-flank shape from a spectrum
+   captured under this clamp** — the fall-off at the right edge is the WINDOW, not the pigment.
+2. **The 641–645 nm characterisation anchor is now outside the window**, so §16.28.1's amplitude cannot be
+   re-measured without widening the constant again.
+3. **The headroom is 6 nm.** The peak sits at 629–630 with the clamp at 636. If a future sample's Qy sits
+   redder — and §16.11.16 saw band positions move with oil state — the peak itself approaches the edge. ⇒ **a
+   maximum observed drifting past ~632 nm is the signal to widen again, not to believe the shape.**
+
+⭐ The cleaner fix for the cosmetics, if it is ever wanted, is a **display-only x-range on `SpectrumPlotView`**
+(model field + `toJson`/`fromJson` + both renderers, so app and PDF stay identical). Then the data is kept and
+only the drawing is clipped. Not done — the class has no range field today.
+
+### 16.28.6 ⚠ WHAT THIS SESSION DID NOT ESTABLISH
+
+⛔ **The two runs are not comparable as measurements, and the reason is unrecorded.** The B/A absorbance ratio
+across the spectrum: 1.07 (Soret) · 0.68 (460–480) · 1.95 (510–540) · 2.60 (540–560) · 1.66 (Q) · 2.19 (far
+anchor) · 3.00 (630–640). **A dilution change is FLAT** by Beer–Lambert; **a lamp swap should cancel entirely**
+in `T = S/R`. Neither describes this.
+
+⇒ **Whether A and B were the same fill is not recorded**, and until it is:
+
+* the §16.28.2 spreads are **UPPER bounds** on lamp transfer — if the fills differed, part of the spread is
+  sample and the true lamp-transfer error is smaller;
+* the *ranking* in that table survives either way (the baseline construction cancels common-mode regardless);
+* ⚠ but §16.28.2a's 3 % is the one figure where the two readings point in **opposite** directions — same fill
+  makes it excellent, different fill makes it a discrimination failure. Read that fork before quoting it;
+* and neither run may be used quantitatively on its own.
+
+⇒ This is the second session in a row whose interpretation is gated by something that was never written down
+(§16.27's `exposure_applied`, now the fill). **§16.26.7's process item — record what was in the beam, per run —
+is the fix, and it is still not done.**
+
+⚠ **Lamp transfer is now BOUNDED but not calibrated**, and the Ampel thresholds are lamp-coupled: at today's
+readings of 10–13 a 22 % transfer error is harmless, but for an oil reading near the 4.4 threshold it is ±1.0 on
+a gauge band only 3.0 wide — a third of the scale from the lamp alone. ⇒ **re-check the thresholds on any lamp
+change**, and expect a DIY lamp with extended blue to move the Soret side hardest, since that is the numerator.
+
+### 16.28.7 ⭐ A CORRECTION TO §16.26 — the Sansi disqualifier is V1-specific
+
+§16.26's candidate table records ⛔ **Sansi, 25 %/nm at 622.0 nm** — a sharp edge *inside* the far anchor — and
+that is what produces the conditional *"do not adopt the Sansi"*. **Measured on the V2 that objection does not
+hold:** the far anchor reads **1.47 %/nm median, 3.05 %/nm max** — Yuji-class (§16.26.7 has the Yuji at 1–3 %/nm)
+— and the V2's sharp feature has moved to **614.3 nm**, *outside* the anchor, structurally the same situation as
+the Yuji's 610.9 nm line. ⇒ By §16.26.7's own rule — **it is LOCATION, not steepness** — the V2 passes the test
+the V1 failed. The recorded objection should be read as **V1-specific**.
+
+⚠ **This does not make the V2 the better lamp, and it was not adopted.** Measured against the Yuji on the same
+rig:
+
+| band | Sansi V2 | Yuji |
+|---|---|---|
+| PB Soret 440–460 | 7.48 %/nm | ⭐ 2.27 %/nm |
+| blue legacy 450–490 | 8.86 %/nm | ⭐ 3.91 %/nm |
+| PB Q 560–580 | ⭐ 3.17 %/nm | 4.42 %/nm |
+| far anchor 620–630 | ⭐ 1.47 %/nm | 2.14 %/nm |
+
+The V2 carries the classic white-LED valley between blue pump and phosphor — `I(470)/I(600)` = **0.35** against
+the Yuji's **1.46**, so the Yuji puts 4× more relative light into the already-starved blue — and it reproduces
+the V1's Soret steepness problem. ⚠ Note the reversal §16.26.7 already flagged: the Sansi is gentler in the **Q
+band**, which carries §16.24.2's 17× leverage. So the choice is not one-sided.
+
+⭐ **Decided: keep the Yuji** (Edwin). Three reasons, in order of weight:
+
+1. **Heat.** The Sansi V2 draws ~30 W against the Yuji's ~20 W and runs hot. §16.11.16 measured a warmed fill
+   reading as a **browner oil**, misclassifying 3 of 3 runs; §16.22.1a measured ≤40 °C in-beam and inferred
+   3–5× faster degradation. **§16.11.17's decay-rate run is the next task** — 50 % more power in the enclosure
+   attacks the very experiment queued behind it. §16.26 already rejected halogen partly on "heat under the sample".
+2. **The red buys nothing** (§16.28.4) — the IR-cut makes the V2's deep-red claim unmeasurable either way.
+3. **The blue is the starved band**, and the Yuji wins it decisively.
+
+⚠ The cost accepted with that choice is the Q-band steepness above. ⭐ And one loose end: `DevCaptureVideoThread.
+WHITE_BALANCE_KELVIN = 6500` is set to match the **Yuji SunWave's 6500 K**; it stayed at 6500 throughout the
+Sansi V2 runs, i.e. the constant was wrong for those two. It cancels in `T = S/R` so A and B are believed
+unharmed, but **the constant is lamp-specific and hardcoded** — it belongs with the per-instrument settings
+§14.9 wants in `SpectrometerSensorUtil`.
+
+### 16.28.8 ⭐⭐ THE CLAIM THIS SESSION ESTABLISHES — and deliberately nothing beyond it  *(Edwin 2026-08-09: "no more or less, just this claim")*
+
+**The existing metric is now confirmed by physics in ONE specific respect: on the RED side the window holds the
+band's rising flank UP TO ITS PEAK. On the BLUE side it does not — there the window holds a falling flank only,
+and the peak lies outside it.**
+
+| side | window | what the window actually contains | peak inside? |
+|---|---|---|---|
+| **red** — far anchor | 620–630 nm | the rising flank, ending **on** the maximum at 629–630 nm | ⭐ **YES** |
+| **blue** — Soret | 440–460 (448–460 trimmed) | a falling flank only — `A` runs 1.669 → 0.260 monotonically | ⛔ **NO** — the maximum (~432 nm) is outside |
+
+§16.26's criterion 1 named **two** pigment band centres as *"the two the instrument cannot currently reach
+properly"* — **432 nm and 625 nm**. ⇒ **This session closed one of them.** The blue one is unchanged.
+
+⚠ That is the entire claim. It says nothing about accuracy, thresholds, dilution, or which metric variant to
+prefer — those live in §16.28.2–16.28.7 and are not part of it.
+---
+
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).
