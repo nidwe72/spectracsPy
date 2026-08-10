@@ -86,8 +86,10 @@ The DEV plugin now shows the pigment index **three ways**, in decreasing order o
 
 | # | caption | metric | threshold | band |
 |---|---|---|---|---|
-| **1** | `Verdict · baseline + pedestal` | `B_Soret / (B_Q − r_Q)`, `r_Q` = **−0.0184** | **10.6** *(retained, Edwin)* | 14.0 → 7.5 |
-| **2** | `Verdict · baseline` | `B_Soret / B_Q` | **12.5** *(derived: corridor midpoint)* | 19.0 → 9.0 |
+| **1** | `Verdict · baseline + pedestal` | `B_Soret / (B_Q − r_Q)`, `r_Q` = **−0.0184** | **6.8** *(derived 2026-08-10)* | 9.6 → 4.8 |
+| **2** | `Verdict · baseline` | `B_Soret / B_Q` | **8.3** *(derived: corridor midpoint)* | 12.0 → 6.0 |
+
+> ⚠⚠ **BOTH SCALES MOVED ON 2026-08-10** — the Soret window was trimmed 440–460 → 448–460 (`SPEC_soret_448_trim.md` §25), and `B_Soret` is the numerator, so every number above is ~×0.66 of what this table said before. ⛔ A value read before that date is on the OLD scale: compare verdicts, never numbers, across the cut-over. ⭐ Gauge 1's line is now **DERIVED** for the first time (10.6 was inherited from the 600–630 scale and never refitted) and is better balanced: green +4.46 σ / brown +9.37 σ, against +3.72 / +12.90 before. Re-derive with `diagnostics/soret_448_thresholds.py`.
 | **3** | `Verdict · raw Soret/Q` | `A_Soret / A_Q`, no baseline | ⛔ **none — value only, no gauge** | — |
 
 All three sit on **different scales**. Compare verdicts, never numbers.

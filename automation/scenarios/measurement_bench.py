@@ -51,7 +51,9 @@ METRIC_FIELDS = [
     ("workflowItem.verdict", "field:verdict"),
     ("workflowItem.intrinsic_despiked", "field:intrinsicDespiked"),
     ("workflowItem.intrinsic_perceived_despiked", "field:intrinsicPerceivedDespiked"),
-    ("workflowItem.soret_440_460_nm", "field:soret"),
+    # ⚠ The slug follows the LABEL, and the label carries the window — trimmed 440-460 -> 448-460 on
+    # 2026-08-10 (SPEC_soret_448_trim.md §6). A stale slug here is a silent locate failure mid-video.
+    ("workflowItem.soret_448_460_nm", "field:soret"),
     ("workflowItem.q_560_580_nm", "field:q"),
     ("workflowItem.pigment_ratio", "field:pigmentRatio"),
 ]

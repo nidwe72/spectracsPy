@@ -33,7 +33,10 @@ plugin, feature = DevSpectralPlugin(), SpectrumFeatureUtil()
 # ⚠ The `... linear` keys below are the LEGACY 600-630 anchor, ON PURPOSE. They are the reference every
 # comparison table in SPEC_capture_quality.md §16 is built on; repointing them would silently redefine
 # every historical number. The SHIPPED 620-630 anchor is exposed separately as the `... far620` keys.
-SORET, Q = plugin.PB_SORET_BAND, plugin.PB_Q_BAND
+# ⚠ PINNED to the LEGACY 440-460 Soret window (SPEC_soret_448_trim.md §3, D-diag): the plugin now
+# ships 448-460, but every number THIS script has published was measured on 440-460. Repointing it
+# would silently redefine the archive tables it feeds.
+SORET, Q = plugin.PB_SORET_BAND_LEGACY_440, plugin.PB_Q_BAND
 WINDOWS = plugin.PB_BASELINE_WINDOWS_LEGACY_600
 PIVOT = 530.0                       # the amplitude `s` is quoted AT this wavelength (§16.12.4's table)
 

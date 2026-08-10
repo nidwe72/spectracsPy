@@ -26,7 +26,7 @@ matters when talking to a lab owner.
 
 | # | step | days | kind | gate it clears |
 |---|---|---|---|---|
-| 1 | ⚠ No-op version bump, **then** Soret trim 440–460 → 448–460 + re-sign | 1 | desk | the plugin publish path works |
+| 1 | ✅ **Soret trim 440–460 → 448–460 DONE 2026-08-10** (`SPEC_soret_448_trim.md`), thresholds re-derived (T 6.8 / 8.3). ⚠ **No re-sign was needed or possible** — `DevSpectralPlugin` fails the publish lint (four sibling imports), so the bench loads the built-in. ⛔ The **no-op version bump + publish rehearsal is still owed** and must use `PumpkinOilPlugin`, the only plugin that passes the lint | 1 | desk | the plugin publish path works |
 | 2 | Opaque-oil test — measure `f` | 1 | bench | is the aperture worth building? |
 | 3 | Slide-in sample holder — design, print, fit | 1 | build | wall-bypass light removed, tilt controlled |
 | 3b | ⭐ **DN guard** — record `min(S)`, warn out of window (§16.23.8) | *(parallel)* | desk | a bad fill is caught **at capture**, not in analysis |

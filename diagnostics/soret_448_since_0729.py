@@ -20,8 +20,11 @@ import numpy as np
 
 from settling_sweep import BASE, despikedAbsorption, asArrays, plugin, feature
 
-SHIPPED = plugin.PB_SORET_BAND               # (440, 460)
-TRIMMED = (448.0, 460.0)                     # §7.13's proposal -- 440-447 read 2.0-2.6 DN, "not measurements"
+# ⚠ THE PAIR INVERTED on 2026-08-10: 448-460 IS the shipped window now (SPEC_soret_448_trim.md §2), so the
+# comparison this script exists for is "what the trim did", read against the frozen old window. The columns
+# keep their published headings -- "M 440-460" is the legacy scale, "M 448-460" is what the app now computes.
+SHIPPED = plugin.PB_SORET_BAND_LEGACY_440    # (440, 460) -- the window this script's tables were published on
+TRIMMED = plugin.PB_SORET_BAND               # (448, 460) -- now shipped; was §7.13's proposal
 Q = plugin.PB_Q_BAND
 WINDOWS = plugin.PB_BASELINE_WINDOWS         # the SHIPPED anchors, 520-540 + 620-630 (§16.20)
 

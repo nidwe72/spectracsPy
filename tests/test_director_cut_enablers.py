@@ -27,7 +27,7 @@ class DirectorCutEnablersTest(unittest.TestCase):
 
     def test_slug_rule_matches_the_scenario_object_names(self):
         self.assertEqual(workflowItemObjectName("Verdict"), "workflowItem.verdict")
-        self.assertEqual(workflowItemObjectName("Soret · 440–460 nm"), "workflowItem.soret_440_460_nm")
+        self.assertEqual(workflowItemObjectName("Soret · 448–460 nm"), "workflowItem.soret_448_460_nm")
         self.assertEqual(workflowItemObjectName("Q · 560–580 nm"), "workflowItem.q_560_580_nm")
         self.assertEqual(workflowItemObjectName("Intrinsic · despiked"), "workflowItem.intrinsic_despiked")
         self.assertEqual(workflowItemObjectName("Intrinsic-perceived · despiked"),
@@ -37,8 +37,8 @@ class DirectorCutEnablersTest(unittest.TestCase):
     # --- E2: the renderer stamps the objectName on the pointable widget ---
 
     def test_metric_row_label_gets_the_objectname(self):
-        widget = QtWorkflowRenderer().render([MetricFieldView("Soret · 440–460 nm", value="0.5")])
-        self.assertIsNotNone(widget.findChild(QWidget, "workflowItem.soret_440_460_nm"))
+        widget = QtWorkflowRenderer().render([MetricFieldView("Soret · 448–460 nm", value="0.5")])
+        self.assertIsNotNone(widget.findChild(QWidget, "workflowItem.soret_448_460_nm"))
 
     def test_gauge_gets_the_verdict_objectname(self):
         from sciens.spectracs.plugins.dev.RoastGaugeView import RoastGaugeView

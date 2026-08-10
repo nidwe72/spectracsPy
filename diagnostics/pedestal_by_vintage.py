@@ -32,7 +32,10 @@ from far_anchor_probe import spectra
 from metric_bench import feature, plugin
 from sciens.spectracs.model.spectral.Spectrum import Spectrum
 
-SORET, Q, WINDOWS = plugin.PB_SORET_BAND, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS_LEGACY_600   # 600-630 — the anchor this script's published numbers were measured on (§16.20)
+# ⚠ PINNED to the LEGACY 440-460 Soret window (SPEC_soret_448_trim.md §3, D-diag): the plugin now
+# ships 448-460, but every number THIS script has published was measured on 440-460. Repointing it
+# would silently redefine the archive tables it feeds.
+SORET, Q, WINDOWS = plugin.PB_SORET_BAND_LEGACY_440, plugin.PB_Q_BAND, plugin.PB_BASELINE_WINDOWS_LEGACY_600   # 600-630 — the anchor this script's published numbers were measured on (§16.20)
 REPORT = "measurement_report_oil%s_%03d.pdf"
 
 # Both sessions are PRE-rebuild (the rig rebuild was 2026-07-29), so the mechanical fix cannot explain the

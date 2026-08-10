@@ -89,9 +89,26 @@ class ThreeVerdictsTest(unittest.TestCase):
     # ---------------------------------------------------------------- classification
 
     def test_each_gauge_flips_its_verdict_across_its_own_threshold(self):
-        for view, threshold in ((RoastPedestalGaugeView, 10.6), (RoastFar620GaugeView, 12.5)):
+        # Reads each gauge's OWN line rather than repeating it — the thresholds are re-derived whenever the
+        # metric's window moves (they did on 2026-08-10, SPEC_soret_448_trim.md §5), and a copy here would
+        # fail for the wrong reason every time. The values themselves are pinned in the test below.
+        for view in (RoastPedestalGaugeView, RoastFar620GaugeView):
+            threshold = view._THRESHOLDS[0]
             self.assertEqual(view(threshold + 1.0, render=0).verdictLabel, "good — green")
             self.assertEqual(view(threshold - 1.0, render=0).verdictLabel, "probably too brown")
+
+    def test_the_thresholds_are_the_ones_derived_on_the_trimmed_soret_window(self):
+        # SPEC_soret_448_trim.md §5 / `diagnostics/soret_448_thresholds.py`: corridor midpoints on §16.20.4's
+        # own corpus (Steirerkraft B+C vs S-Budget D) with the 448-460 numerator.
+        #   pedestal  green 8.369 +/- 0.352, brown 5.593 +/- 0.129, corridor 5.748 .. 7.831  -> T 6.8
+        #   far620    green 10.560 +/- 0.453, brown 6.615 +/- 0.151, corridor 6.796 .. 9.895 -> T 8.3
+        # ⛔ Changing either number without re-running that script is how a threshold loses its provenance.
+        self.assertEqual(RoastPedestalGaugeView._THRESHOLDS, [6.8])
+        self.assertEqual(RoastFar620GaugeView._THRESHOLDS, [8.3])
+        # The gradient must keep the threshold inside its band, or the marker rides off the scale.
+        for view in (RoastPedestalGaugeView, RoastFar620GaugeView):
+            self.assertGreater(view._BAND_LEFT, view._THRESHOLDS[0])
+            self.assertLess(view._BAND_RIGHT, view._THRESHOLDS[0])
 
     def test_a_taller_q_band_drives_both_gauges_down(self):
         # The Q band is the denominator: a taller Q means a smaller index. Driving the evaluation end to end

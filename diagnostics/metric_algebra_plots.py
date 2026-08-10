@@ -50,7 +50,11 @@ def meanLine(paths):
 
 def shade(axis, label=True):
     bottom, top = axis.get_ylim()
-    for (lo, hi), colour, name in ((SORET, "#4a6fd0", "Soret\n440–460"), (Q, "#c04a4a", "Q\n560–580"),
+    # ⚠ The Soret caption is DERIVED from the constant, not typed (SPEC_soret_448_trim.md §3): the window moved
+    # 440-460 -> 448-460 on 2026-08-10, and a hardcoded label would have kept saying 440-460 over a shaded band
+    # that had moved. ⚠ The figures COMMITTED under docs/figures/ (and the published Spectracs_MetricAlgebra.pdf)
+    # were generated on 440-460; regenerating them now redraws that band. Regenerate deliberately, not by habit.
+    for (lo, hi), colour, name in ((SORET, "#4a6fd0", "Soret\n%g–%g" % SORET), (Q, "#c04a4a", "Q\n560–580"),
                                    (NEAR, "#9e9e9e", "near\n%g–%g" % NEAR),
                                    (FAR, "#9e9e9e", "far\n%g–%g" % FAR)):
         axis.axvspan(lo, hi, color=colour, alpha=0.13, lw=0)

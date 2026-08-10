@@ -56,7 +56,12 @@ class CapturePanel(QWidget):
     # Below this camera DN the darkest bin of a capture is quantization-limited (one code step is
     # >15% relative there) — reported per capture by the low-DN guard, SPEC_capture_quality.md §17.6/11.
     # 16 DN is where the new dilution protocol puts the Soret floor (§17.5, side observation).
+    # ⚠ FALLBACK ONLY (SPEC_soret_448_trim.md §13, D-captureguard): the guard is a MEASUREMENT constant and
+    # now travels on CaptureView.dnGuards/dnTarget, declared by the plugin. This value is what a plugin that
+    # declares nothing still gets, so a non-declaring plugin's preview is unchanged.
     __LOW_DN_WARN = 16.0
+    __GUARD_COLOR = (200, 120, 60)
+    __TARGET_COLOR = (107, 127, 90)
     __EXPOSURE_MIN = 1
     __EXPOSURE_MAX = 500
     __EXPOSURE_FALLBACK = 150
@@ -490,23 +495,29 @@ class CapturePanel(QWidget):
 
     # --- capture (routes the burst through the headless engine seam) ---
 
-    def __logCameraSettings(self, role):
+    def __logCameraSettings(self, role, frames=None):
         # One greppable line per capture (stdout, alongside the CaptureBackend prints): the AE-landed exposure and
         # the live V4L2 controls. Compare Reference vs Sample and run-to-run to trace the reference-tilt that shifts
         # the absorbed colour (SPEC_capability_proof.md §7.0.1). Best-effort — a diagnostic must never break capture.
+        #
+        # `frames` (SPEC_soret_448_trim.md §18 S7): the burst size is now plugin-declared and CHANGED (150 -> 60),
+        # so the archive is frame-count-mixed from 2026-08-10 on and no diagnostic table has a column for it.
+        # Logging it here is what stops a future session reconstructing it from the data — which is exactly what
+        # §16.27 had to do for the exposure, because that was never persisted either.
         thread = self.__videoThread
         if thread is None:
             return
         try:
             settings = thread.readCameraSettings()
         except Exception as error:
-            print("CAPTURE-SETTINGS role=%s unavailable (%s)" % (role, error))
+            print("CAPTURE-SETTINGS role=%s frames=%s unavailable (%s)" % (role, frames, error))
             return
-        print("CAPTURE-SETTINGS role=%s exposure_applied=%s exposure_cv2=%s autoExposure=%s wb=%s autoWb=%s "
-              "gain=%s backlight=%s wbRequested=%s"
-              % (role, settings.get("appliedExposure"), settings.get("exposure"), settings.get("autoExposure"),
-                 settings.get("wbTemperature"), settings.get("autoWb"), settings.get("gain"),
-                 settings.get("backlight"), settings.get("whiteBalanceKelvinRequested")))
+        print("CAPTURE-SETTINGS role=%s frames=%s exposure_applied=%s exposure_cv2=%s autoExposure=%s wb=%s "
+              "autoWb=%s gain=%s backlight=%s wbRequested=%s"
+              % (role, frames, settings.get("appliedExposure"), settings.get("exposure"),
+                 settings.get("autoExposure"), settings.get("wbTemperature"), settings.get("autoWb"),
+                 settings.get("gain"), settings.get("backlight"),
+                 settings.get("whiteBalanceKelvinRequested")))
 
     def __logLowDnGuard(self, role, spectrum):
         # Low-DN guard (SPEC_capture_quality.md §17.6/11). The darkest bin of a capture is the one that decides
@@ -588,7 +599,7 @@ class CapturePanel(QWidget):
 
             # Diagnostic (SPEC_capability_proof.md §7.0.1): log the landed exposure / white-balance / gain for THIS
             # capture, so reference-vs-sample and run-to-run drift (the absorbed-colour reference tilt) is traceable.
-            self.__logCameraSettings(role)
+            self.__logCameraSettings(role, frames=frameCount)
             self.__logLowDnGuard(role, spectrum)
 
             if role == REFERENCE:
@@ -646,12 +657,36 @@ class CapturePanel(QWidget):
                       color=self.__MEAN_COLOR, width=2)
 
     def __drawLowDnGuard(self, plot):
-        # The line the operator judges dilution against: below it a bin is quantization-limited (§17.6/11).
+        # The lines the operator judges dilution against — SPEC_soret_448_trim.md §25.4.
+        #
+        # ⭐ PLUGIN-DECLARED, PER STEP, and drawn WITH THEIR CAPTIONS, exactly as the PROCESSING plot draws
+        # them: the CaptureView carries `levels` in the same shape as SpectrumPlotView, so a value, its
+        # caption, its colour and its style exist once and the live preview cannot drift from the report.
+        #
+        # ⛔ Reads the ACTIVE step, not `self.__steps[0]`. That was a real defect: steps[0] is always the
+        # REFERENCE step, so the reference's declaration was painted on whichever role was on screen. It also
+        # made "guards on the sample only" unexpressible — and §16.23.8 states the guard on min(S) AFTER THE
+        # SAMPLE CAPTURE. The reference is a solvent blank judged against R ~ 88; 16/60 DN never applied to it.
+        #
+        # A plugin that declares nothing still gets the legacy single 16 DN line, so non-declaring plugins and
+        # pre-2026-08-10 behaviour are unchanged.
         import pyqtgraph as pg
-        guard = pg.InfiniteLine(pos=self.__LOW_DN_WARN, angle=0,
-                                pen=pg.mkPen((200, 120, 60), style=Qt.PenStyle.DashLine))
-        guard.setZValue(-5)
-        plot.addItem(guard)
+        from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
+        view = self.__activeStep.getView() if self.__activeStep is not None else None
+        levels = getattr(view, "levels", None)
+        if levels is None:
+            levels = [] if view is not None else [(self.__LOW_DN_WARN, None, None, None, None, "dashed", None)]
+        elif not levels:
+            return
+        for level in levels:
+            value, _lowNm, _highNm, label, color, style, _number = tuple(level) + (None,) * (7 - len(level))
+            pen = SpectrumPlotWidget.pen(color or self.__GUARD_COLOR, width=1, style=style or "dashed")
+            line = pg.InfiniteLine(pos=value, angle=0, pen=pen,
+                                   label=(str(label) if label else None),
+                                   labelOpts={"position": 0.04, "color": (color or self.__GUARD_COLOR),
+                                              "movable": False})
+            line.setZValue(-5)
+            plot.addItem(line)
 
     def __meanSpectrum(self, spectrum):
         parameters = MeanSpectrumLogicModuleParameters()

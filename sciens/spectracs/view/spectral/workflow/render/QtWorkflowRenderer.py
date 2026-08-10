@@ -146,7 +146,22 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
 
     # Below this camera DN a bin is quantization-limited (SPEC_capture_quality.md §17.6/11); drawn as a line on
     # DN-axis plots so "too dilute / too dark" is visible instead of inferred.
+    # ⚠ LEGACY FALLBACK ONLY (SPEC_soret_448_trim.md §13). The guard is a MEASUREMENT constant and now belongs
+    # to the plugin, which declares it via SpectrumPlotView.addLevel(). This copy survives for one reason: a
+    # DbMeasurement blob written before 2026-08-10 carries no levels, and its saved plot must still show the
+    # guard it was read against. A view that declares ANY level owns its guards outright.
     __LOW_DN_GUARD = 16.0
+    __GUARD_COLOR = (200, 120, 60)
+    __BAND_BRUSH = (120, 120, 120, 40)
+    __LEVEL_COLOR = "#d0d0d0"
+    # SPEC_soret_448_trim.md §25.2/§25.3 — annotation styling is RENDERER-owned, never plugin-declared: this
+    # renderer draws on a DARK plot and the report renderer on WHITE paper, from the same view-model.
+    __CAPTION_COLOR = "#ffffff"          # band + marker captions (they used to inherit the band's SHADING
+    #                                      colour, so semi-transparent anchors rendered as ghosts)
+    __BADGE_TEXT = "#ffffff"
+    __LEGEND_BORDER = "#9a9a9a"
+    __LEGEND_FILL = (18, 18, 18, 190)    # semitransparent, square-cornered (Edwin: no rounded corners)
+    __LEGEND_PADDING = 34.0              # default magnitude if a view declares a position but no padding
 
     def visitSpectrumPlot(self, view):
         # P2: draw a real curve (pyqtgraph) from the view's traces + shaded band annotations. Supports the
@@ -156,35 +171,188 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
         from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
         plot = SpectrumPlotWidget()
         palette = ["y", "c", "m", "g", "r"]
-        traces = view.allTraces() if hasattr(view, "allTraces") else [(view.spectrum, None, None)]
+        traces = view.allTraces() if hasattr(view, "allTraces") else [(view.spectrum, None, None, None)]
         # axis="dn": raw capture spectra are drawn on a camera-DN axis (§16.7.2e) — display-only, the values
         # themselves stay linear everywhere else.
         asDn = getattr(view, "axis", None) == "dn"
+        levels = getattr(view, "levels", None) or []
         util = SpectralColorUtil()
         first = True
-        for index, (spectrum, _label, color) in enumerate(traces):
+        for index, (spectrum, _label, color, style) in enumerate(traces):
             plot.plotSpectrum(util.toDisplayDnSpectrum(spectrum) if asDn else spectrum,
                               title=(view.title if first else None),
-                              color=(color or palette[index % len(palette)]), clear=first)
+                              color=(color or palette[index % len(palette)]), clear=first, style=style)
             first = False
         if asDn:
             plot.getPlotItem().setLabel("left", "camera DN")
-            guard = pg.InfiniteLine(pos=self.__LOW_DN_GUARD, angle=0,
-                                    pen=pg.mkPen((200, 120, 60), style=Qt.PenStyle.DashLine))
-            guard.setZValue(-5)
-            plot.addItem(guard)
+            if not levels:   # legacy blob (no declared guards) -> draw the one the run was read against
+                guard = pg.InfiniteLine(pos=self.__LOW_DN_GUARD, angle=0,
+                                        pen=pg.mkPen(self.__GUARD_COLOR, style=Qt.PenStyle.DashLine))
+                guard.setZValue(-5)
+                plot.addItem(guard)
         for band in (getattr(view, "bands", None) or []):
-            region = pg.LinearRegionItem(values=(band[0], band[1]), movable=False,
-                                         brush=pg.mkBrush(120, 120, 120, 40))
+            color = band[3] if len(band) > 3 else None
+            brush = pg.mkBrush(color) if color else pg.mkBrush(*self.__BAND_BRUSH)
+            region = pg.LinearRegionItem(values=(band[0], band[1]), movable=False, brush=brush)
+            # ⚠ A LinearRegionItem draws its two DRAG HANDLES as bright vertical lines. On a non-movable
+            # annotation those read as data — a band edge is not a measurement. Hide them; the fill IS the band.
+            for handle in region.lines:
+                handle.setPen(pg.mkPen(None))
             region.setZValue(-10)
-            plot.addItem(region)
+            plot.addItem(region, ignoreBounds=True)   # shading is an annotation; the CURVE sets the range
+            label = band[2] if len(band) > 2 else None
+            if label:
+                # The caption rides INSIDE the span, pinned to the top edge — a band's name has to travel with
+                # the band, and it is the same string the report renderer draws (M2: the preview IS the PDF).
+                # ⚠ It does NOT inherit `color`: that is the band's SHADING colour, and for a recessive anchor
+                # shade (#5a6a7a55) the caption rendered as a ghost — §25.3, Edwin read it off the rig.
+                self.__topAnchoredText(plot, (band[0] + band[1]) / 2.0, str(label), self.__CAPTION_COLOR)
+        for level in levels:
+            self.__drawLevel(plot, level)
         for marker in (getattr(view, "markers", None) or []):
             line = pg.InfiniteLine(pos=marker[0], angle=90,
                                    pen=pg.mkPen('w', style=Qt.PenStyle.DashLine))
             plot.addItem(line)
+            if len(marker) > 1 and marker[1]:
+                # B6 (SPEC_soret_448_trim.md §8.3): matplotlib annotated the marker and the screen did not, so
+                # the "Q" label appeared on paper only — the exact drift M2 forbids.
+                # ⚠ At the BOTTOM, not the top: a marker usually sits INSIDE a band (λmax lives in the Q
+                # window), so two captions on the same row overprint each other. Bands own the top row,
+                # markers the bottom one — and the report renderer follows the same split.
+                self.__topAnchoredText(plot, marker[0], str(marker[1]), self.__CAPTION_COLOR, atTop=False)
+        self.__drawLegend(plot, view)
         plot.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.__layout.addWidget(plot)
         self.__expandingContent = True
+
+    __BADGE_SIZE = 19
+
+    class __BadgeSample:
+        """The legend's sample column paints the badge itself (D-sample, Edwin) — so a row reads `③ red-anchor
+        mean` and the number means the same thing in both places. Built lazily as a pyqtgraph ItemSample
+        subclass because pyqtgraph must not be imported at module scope in this renderer."""
+
+        def __new__(cls, number, barColor):
+            import pyqtgraph as pg
+            from PySide6.QtCore import QRectF
+            from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
+            fill = SpectralColorUtil().darkenHex(barColor)
+            textColor = QtWorkflowRenderer._QtWorkflowRenderer__BADGE_TEXT
+
+            class BadgeSample(pg.ItemSample):
+                def boundingRect(self):
+                    return QRectF(0, 0, 22, 20)
+
+                def paint(self, painter, *args):
+                    painter.setRenderHint(painter.RenderHint.Antialiasing, True)
+                    painter.setBrush(pg.mkBrush(fill))
+                    painter.setPen(pg.mkPen(barColor, width=1))
+                    painter.drawEllipse(QRectF(2, 1, 18, 18))
+                    painter.setPen(pg.mkPen(textColor))
+                    font = painter.font()
+                    font.setPointSize(8)
+                    font.setBold(True)
+                    painter.setFont(font)
+                    painter.drawText(QRectF(2, 1, 18, 18), Qt.AlignmentFlag.AlignCenter, str(number))
+
+            return BadgeSample(pg.PlotDataItem())
+
+    def __topAnchoredText(self, plot, nanometers, label, color, atTop=True):
+        # A caption that sits at the TOP of whatever the plot currently shows and stays there while the view
+        # rescales. pyqtgraph has no "axes-fraction" anchor, so place it once at today's range and follow the
+        # signal — the alternative (a fixed y) leaves the label off-screen as soon as the data changes.
+        #
+        # ⛔⛔ `ignoreBounds=True` IS LOAD-BEARING — without it the plot ANIMATES ITSELF TO DEATH. A TextItem has
+        # a fixed PIXEL size, so parked at the top edge it always protrudes ABOVE the range; auto-range then
+        # expands to enclose it, which fires sigYRangeChanged, which moves the caption to the NEW top, which
+        # protrudes again. Measured on a real run: the y-span grew ~4.7 % per event-loop tick, without bound —
+        # the curve appears to shrink because the axis keeps growing underneath it (Edwin saw it as "like an
+        # animation"). An annotation must never drive auto-range.
+        # ⚠ The InfiniteLine guides DO stay inside the bounds, deliberately — that is what makes a 60 DN guard
+        # visible when a fill peaks below it, and lines cannot feed back because they do not move.
+        # ⚠ EDGE CLAMP (§25.3): a caption centred on a band near the window edge overflows the plot and gets
+        # cut — "red anchor" at 625 nm on a window ending at 636 rendered as "ed anchor". Pin the caption's
+        # RIGHT edge (or left) instead of its centre when it would otherwise leave the view.
+        import pyqtgraph as pg
+        viewBox = plot.getPlotItem().vb
+        low, high = viewBox.viewRange()[0]
+        margin = 0.06 * (high - low)
+        anchorX = 1.0 if nanometers > high - margin else (0.0 if nanometers < low + margin else 0.5)
+        text = pg.TextItem(label, color=color, anchor=(anchorX, 0.0 if atTop else 1.0))
+        text.setZValue(-4)
+        plot.addItem(text, ignoreBounds=True)
+        edge = 1 if atTop else 0
+        text.setPos(nanometers, viewBox.viewRange()[1][edge])
+        viewBox.sigYRangeChanged.connect(
+            lambda _viewBox, valueRange, item=text, x=nanometers, e=edge: item.setPos(x, valueRange[e]))
+
+    def __drawLevel(self, plot, level):
+        # SPEC_soret_448_trim.md §12.2 — one primitive, two shapes: unranged = a full-width guide line (the DN
+        # guards), ranged = a BAR over the band at that height (a band mean, drawn where it is measured).
+        # ⚠ NOT gamma-encoded on a dn-axis plot: only the CURVE is decoded for display; a declared level is
+        # already in that space (encoding 16 DN would land it at 0.58 — the bug the DN axis exists to prevent).
+        import pyqtgraph as pg
+        from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
+        value, lowNm, highNm, label, color, style, number = tuple(level) + (None,) * (7 - len(level))
+        pen = SpectrumPlotWidget.pen(color or self.__LEVEL_COLOR, width=2, style=style)
+        if lowNm is None or highNm is None:
+            # pyqtgraph draws the caption on the line itself (InfLineLabel) — no manual follow needed.
+            line = pg.InfiniteLine(pos=value, angle=0, pen=pen, label=(str(label) if label else None),
+                                   labelOpts={"position": 0.04, "color": (color or self.__LEVEL_COLOR),
+                                              "movable": False})
+            line.setZValue(-5)
+            plot.addItem(line)
+            return
+        plot.plot([lowNm, highNm], [value, value], pen=pen)
+        if number is not None:
+            # §25.2 — a numbered bar wears a BADGE instead of a caption; the caption text moves to the legend.
+            self.__drawBadge(plot, (lowNm + highNm) / 2.0, value, number, color or self.__LEVEL_COLOR)
+        elif label:
+            text = pg.TextItem(str(label), color=(color or self.__LEVEL_COLOR), anchor=(0.5, 1.0))
+            text.setPos((lowNm + highNm) / 2.0, value)
+            plot.addItem(text, ignoreBounds=True)   # a caption is not data — see __topAnchoredText
+
+    def __drawBadge(self, plot, nanometers, value, number, barColor):
+        # A numbered disc sitting ON the annotation it names (SPEC_soret_448_trim.md §25.2). Fill = a DARKENED
+        # shade of the bar's colour so a white numeral is legible (1.84:1 -> 5.24:1 on the cyan bar); ring =
+        # the bar's own colour, so the badge still reads as belonging to that bar.
+        import pyqtgraph as pg
+        from sciens.spectracs.logic.spectral.util.SpectralColorUtil import SpectralColorUtil
+        fill = SpectralColorUtil().darkenHex(barColor)
+        disc = pg.ScatterPlotItem([nanometers], [value], symbol="o", size=self.__BADGE_SIZE,
+                                  brush=pg.mkBrush(fill), pen=pg.mkPen(barColor, width=1))
+        plot.addItem(disc, ignoreBounds=True)
+        text = pg.TextItem(str(number), color=self.__BADGE_TEXT, anchor=(0.5, 0.5))
+        text.setPos(nanometers, value)
+        plot.addItem(text, ignoreBounds=True)
+
+    def __drawLegend(self, plot, view):
+        # §25.2 — the declared legend. Rows are DERIVED from the view (numbered levels, then labelled traces),
+        # so a badge and its row are the same fact. Parented to the ViewBox rather than added to the scene, so
+        # it is corner-anchored, immune to rescaling, and structurally unable to feed the auto-range (§20.2).
+        import pyqtgraph as pg
+        from sciens.spectracs.model.spectral.plugin.view.LegendPosition import LegendPosition
+        position = LegendPosition.parse(getattr(view, "legendPosition", None))
+        rows = view.legendRows() if position is not None and hasattr(view, "legendRows") else []
+        if not rows:
+            return
+        legend = pg.LegendItem(pen=pg.mkPen(self.__LEGEND_BORDER), brush=pg.mkBrush(*self.__LEGEND_FILL),
+                               labelTextColor=self.__CAPTION_COLOR, labelTextSize="9pt", frame=True,
+                               verSpacing=1)
+        legend.setParentItem(plot.getPlotItem().vb)
+        padding = getattr(view, "legendPadding", None) or self.__LEGEND_PADDING
+        signX, signY = position.paddingSigns()
+        corner = position.corner()
+        legend.anchor(itemPos=corner, parentPos=corner, offset=(signX * padding, signY * padding))
+        for number, label, color in rows:
+            if number is None:
+                # A CURVE: no badge — named by text in its own colour (Edwin). pyqtgraph's LegendItem paints
+                # one colour for every label, so the per-row colour has to ride in as HTML.
+                sample = pg.ItemSample(pg.PlotDataItem(pen=pg.mkPen(color or self.__CAPTION_COLOR, width=3)))
+                legend.addItem(sample, '<span style="color:%s">%s</span>'
+                               % (color or self.__CAPTION_COLOR, label))
+            else:
+                legend.addItem(self.__BadgeSample(number, color or self.__LEVEL_COLOR), str(label or ""))
 
     def visitSpectrumCapture(self, view):
         # P2: the captured raster (host-filled `.image`). Passive — a scaled image + optional caption.
