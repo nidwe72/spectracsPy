@@ -193,6 +193,69 @@ per unit exposure**. Its lines are bright relative to its own continuum, not abs
 **wavelength standard** (§7), and the three-line coincidence is useful for a different reason: it makes the CFL
 a natural check that the calibration still puts the pigment's features where they belong.
 
+### ⭐⭐ 4.2 Who else lives in the blue window — and why `A_S` is a load reference, not a pigment band *(2026-08-10)*
+
+The metric's numerator reads **448–460 nm**. That window is *not* the pigment's, and treating it as such
+mis-describes what `M448` computes (`DOC_metric_algebra.md` §5.6a).
+
+**The tenants, in order of how much of the window they own:**
+
+| absorber | where it absorbs | does it care about roast? |
+|---|---|---|
+| **carotenoids** — lutein predominant | ~420–490 nm, three-finger vibronic structure (lutein ≈ 422 sh / 445 / 474; β-carotene ≈ 425 sh / 450 / 478, +5–10 nm in oil) | degraded by heat, but blind to the *pigment's* metal |
+| **Maillard / browning products** | broad, rising monotonically toward the blue | created by roasting |
+| **turbidity / scatter** | broad, rising toward the blue | no |
+| **protochlorophyll Soret flank** | the red flank of a band at ~432 nm | ⭐ yes — but a **minority** of the window |
+
+⭐ **Composition, from the source paper.** Fruhwirth & Hermetter (2007) §3.2: *"The predominant carotene found
+in Styrian pumpkin seed oil was **lutein (71 %)** followed by **β-carotene (12 %)** and **cryptoxanthin β
+(5.3 %)"*. ⚠ The paper gives **no protopheophytin concentration** and no carotenoid-to-tetrapyrrole ratio —
+the "minority tenant" statement below is *our own measurement*, not a literature value.
+
+**Why we know the pigment is the minority.** Our window sits 16–28 nm **above** the Soret peak, on the falling
+flank, and demetallation blue-shifts that peak. If the window were the pigment's band, a conversion would cost
+it **53–87 %** (Gaussian, FWHM 42–70 nm) — even a 10 nm shift costs 26–56 %. Measured across four commercial
+oils spanning 1.5× in `M448`, `A_S` moves **±5 % with no ordering**, and the brownest reads *highest*.
+
+**Three effects, two directions, hence flat:**
+
+```
+   roasting →   pigment Soret shifts out of the window   ↓
+                carotenoids degrade (heat-labile)        ↓
+                Maillard products accumulate             ↑
+                                                     ≈ flat
+```
+
+⇒ **The blue window is a *load* reference** — it tracks how much oil is in the beam, not what state its
+pigment is in — and that is precisely what makes the ratio dilution-invariant. ⚠ Empirically validated and
+mechanistically explained, **not** guaranteed: an oscillator-strength sum rule applies to the *integral* over
+a band, and a 12 nm slice on the flank does not inherit it.
+
+**What the windows would have to be for the sum rule to do real work** (fraction of the band's area captured,
+FWHM 42 nm):
+
+| window | band at 432 nm | at 411 nm | shift costs |
+|---|---|---|---|
+| 448–460 *(today)* | 12.7 % | 1.6 % | −87 % |
+| 440–490 *(full clamp)* | 32.6 % | 5.2 % | −84 % |
+| 405–495 *(with the violet emitter)* | 93.5 % | 63.2 % | −32 % |
+| 390–500 *(ideal)* | 99.1 % | 88.0 % | −11 % |
+
+⇒ ⭐ **a second argument for the 410–420 nm emitter** of `DOC_lamp_410_680.md` §3, independent of brightness:
+with 405–495 nm the numerator stops being a flank slice and becomes most of the band. Full sum-rule
+conservation would need ~390 nm, which is likely past both lamp and camera — but the **ratio of the two Soret
+peaks** (protopheophytin : protochlorophyll, the quantity the pigment literature itself tracks, §4.1) is
+reachable, and is the more valuable of the two.
+
+⚠ **What we cannot see today, and why**, in case anyone proposes reading pheophytinization off 448–460: (1)
+both Soret peaks lie outside the 440 nm capture clamp; (2) from **one flank**, a band that shifts and a band
+that weakens are indistinguishable (`DOC_lamp_410_680.md` §8.2); (3) Maillard fills the hole back in.
+
+⭐ **The literature already endorses the axis, if not the window.** Fruhwirth & Hermetter §3.5: *"When pumpkin
+seed oil deteriorates, e.g. under the influence of sunlight and oxidation, the intense green pigments are
+destroyed… **This disappearance of the green pigments is used as a criterion for rapid and simple optical
+quality control of pumpkin seed oils**."*
+
 ## 5. Synthesising spectra (the playground / virtual device)
 
 - **REFERENCE** `R(λ)` = Σ LED SPDs (measured Avonec curves, or skewed-Gaussian per peak+FWHM); luxpy can

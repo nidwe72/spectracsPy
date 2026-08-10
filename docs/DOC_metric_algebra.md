@@ -663,6 +663,62 @@ once because the physics of the two axes allows it to.
 within-set evidence behind it is one session. It is offered as the reason the arrangement is not accidental,
 not as proof that it must hold on another instrument.
 
+### 5.3d ⭐⭐ The tilt, measured — 1 % at the Soret, 45 % at Q  *(2026-08-10)*
+
+§5.3a argues from geometry that the extrapolated end is cheap and the interpolated end is fragile. This
+section measures it, on the two set means, and adds the picture that answers the question a reader of §5.3
+almost always asks first.
+
+**The question.** If the greener oil's baseline is *higher* under Q — which is how it ends up with a smaller
+denominator — then it must also be doing something to the Soret. Does the numerator not pay for the
+denominator's advantage?
+
+**The answer is: the two lines fan.** They nearly coincide at the blue end and separate steadily toward the
+red, because the two classes agree at the near anchor and disagree at the far one. The tilt is therefore
+almost free where the numerator sits and decisive where the denominator sits:
+
+| where | green's line | brown's line | difference | as a fraction of that band |
+|---|---|---|---|---|
+| Soret 448–460 | 0.0576 | 0.0639 | −0.0063 | ⭐ **1 % of `B_Soret`** |
+| near anchor 520–540 | 0.1227 | 0.1035 | +0.0192 | *(pinned by the fit)* |
+| Q 560–580 | 0.1569 | 0.1244 | +0.0325 | ⭐⭐ **45 % of `B_Q`** |
+| far anchor 620–630 | 0.2040 | 0.1531 | +0.0510 | *(pinned by the fit)* |
+
+**One tilt, two wildly different consequences** — and it is the same 1 % that §5.3a predicts from the
+geometry, now measured rather than argued.
+
+![**Figure 5** — the same two set means as Figure 2, with attention on the fitted lines rather than the curves. **Top:** across the whole window the two baselines are nearly on top of each other in the blue and fan apart toward the red. **Bottom:** magnified onto the region where that fan matters. The tilt that costs the numerator ~1 % is worth ~45 % of the denominator, and what tilts it is the green oil's larger red band at ~625 nm — the Qy band the far anchor stands on. ⚠ The wavelength at which the two lines cross is **not** a property of the metric: it is 473 nm for these two set means and 518 nm for a single-run pair. What is stable is the fanning, not where the fan closes.](metric_algebra_pivot.png)
+
+⚠ **Do not read the crossing point as a constant.** It is set by where two nearly-parallel lines happen to
+meet, so it moves with the pair and with the fill; only the *direction* of the fan is a property of the
+classes.
+
+### 5.3e The extrapolation, removed — what it was actually worth
+
+§5.3a's claim can be tested directly rather than reasoned about: build the numerator **without** the
+extrapolation — a flat offset at the near anchor, no line drawn where nothing was measured — and leave the
+denominator exactly as it is, since the Q band lies *between* the anchors and its correction is interpolation
+on any background model. `diagnostics/soret_extrapolation_test.py` does this on the derivation corpus:
+
+| numerator's background | green (n=12) | brown (n=6) | class *d* | green-green *d* | dilution |
+|---|---|---|---|---|---|
+| **the fitted line** *(shipped)* | 10.560 ± 0.453 | 6.615 ± 0.151 | **10.25** | 1.34 | +3.0 % |
+| **flat at the near anchor** | 9.671 ± 0.441 | 6.218 ± 0.093 | **9.35** | 1.31 | ⭐ **+0.1 %** |
+| flat at both bands *(no tilt at all)* | 6.676 ± 0.732 | 5.171 ± 0.143 | 2.46 | 0.42 | −10.1 % |
+| no background at all | 3.738 ± 0.340 | 3.256 ± 0.164 | 1.62 | 1.85 | ⛔ classes overlap |
+
+⇒ **Removing the extrapolation costs 8.8 % of the class separation and 2 % of the within-green one**, and the
+empty corridor keeps the same relative width (28 % of the green mean against 29 %). The discrimination does
+**not** rest on the line drawn outside the anchors. What it does rest on is the tilt under **Q** — remove that
+and *d* collapses by 76 %, which is §5.3d's 45 % arriving as a number.
+
+⭐ **The unexpected half.** The flat numerator is *better* on dilution invariance — **+0.1 % against +3.0 %**
+for the same oil at half strength. Mechanistically that is consistent with §7.13.4: `B_Soret` weights the far
+anchor at +0.94, and the blue end is where stray-light compression makes absorbance concentration-*dependent*;
+a flat offset drops that term. ⚠ It rests on **one** fill pair and is not established — the proper test is a
+real dilution series, and it belongs with the threshold-freeze work rather than in a second rescaling of a
+metric whose thresholds were re-derived the same week.
+
 ### 5.4 ⭐ Why it discriminates — the denominator inverts
 
 | | green | brown | green ÷ brown | *d* | separation |
@@ -774,6 +830,59 @@ degree-0. **This is invariance by construction, not by approximation.**
 **The proof never mentions chlorophyll.** It uses only that a component scales with $c$ — so §3.5's
 far-anchor pigment contamination is **harmless to invariance**. It changes what the metric *means*
 chemically; it does not change whether it is invariant.
+
+#### 5.6a ⭐⭐ What the numerator actually is — a load reference, not a pigment measurement  *(2026-08-10)*
+
+The proof above needs the numerator to *scale with concentration*. It does not need the numerator to be the
+pigment's Soret band — and measurement says it largely is not. This matters for how the index is described,
+so it is recorded rather than left implicit.
+
+**The measurement.** On the four-oil session — one recipe, one night, four different commercial products —
+the raw blue window is **flat while the index spans 1.5×**:
+
+| fill *(green → brown)* | `A_S` raw | `M448` |
+|---|---|---|
+| Steirerkraft g.g.A. | 0.5634 | 9.96 |
+| Spar Steirisches g.g.A. | 0.6189 | 8.76 |
+| Spar Premium g.g.A. | 0.5591 | 7.69 |
+| Spar S-Budget | 0.6162 | 6.51 |
+
+`A_S` moves ±5 % with **no ordering**, and the **brownest oil reads highest in the blue**. Correlation with
+the verdict: **r = −0.41** — if the numerator were driving the index this would be strongly positive.
+
+**Why it is flat — the arithmetic that rules out the simple reading.** Our window sits 16–28 nm *above* the
+Soret peak, on the falling flank. Demetallation blue-shifts that peak, so if the window were the pigment's
+band it would swing violently:
+
+| Soret FWHM | window reads at 432 nm | at 411 nm | a full conversion would cost |
+|---|---|---|---|
+| 42 nm *(the fitted width)* | 0.472 of peak | 0.060 | **−87 %** |
+| 55 nm | 0.641 | 0.189 | −71 % |
+| 70 nm | 0.758 | 0.354 | −53 % |
+
+Even a modest 10 nm shift costs 26–56 %. We measure the brownest oil **9 % higher** than the greenest. ⇒ the
+tetrapyrrole is a **minority tenant** of 448–460; the majority is carotenoid, browning product and scatter
+(`KB_spectroscopy_physics.md` §4.2).
+
+**Three effects, pointing two ways, is why it lands flat** — pigment leaving the window (down), carotenoids
+degrading with roast (down), Maillard products arriving (up).
+
+⭐ **And that is exactly what makes the index work.** A numerator that *did* track roast would be a second
+quality signal, and the index would be one quality signal divided by another, with the two partly cancelling.
+Because the blue window tracks *how much oil is in the beam* rather than *what state its pigment is in*, it
+acts as the load reference the ratio needs. §16.27.5 measured the same thing from the other side: the Soret
+scaled ×1.236 against a fill-strength difference of ×1.211 while the Q denominator moved ×1.024.
+
+⚠ **The standing to claim, and not more.** This is **empirically validated and mechanistically explained**,
+not guaranteed by a conservation law. An oscillator-strength sum rule would apply to the *integral over the
+band*; a 12 nm slice on the flank does not inherit it. Compensation among three terms can hold for four oils
+and fail for a fifth — an unusually carotenoid-rich variety, or a roast dark enough for Maillard to dominate.
+⇒ **widening the oil panel tests this for free**, with no hardware. Bounded meanwhile: even if the whole ±5 %
+were confound, it is a **4:1** margin against a ±21 % class signal, with the correlation pointing the wrong
+way for it.
+
+⇒ **Naming.** "Soret ÷ Q" describes the windows, not the chemistry. What the index computes is closer to
+**pigment state per unit chromophore load**, and §16.27.5's concentration-free table is literally `1/M448`.
 
 ### 5.7 What breaks invariance — pedestal curvature, and nothing else
 

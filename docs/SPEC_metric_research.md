@@ -1832,6 +1832,67 @@ cannot".
 ⚠ n = 4 fills, one brown, dilution from a single half-strength pair. Enough to reject these two candidates; not
 enough to reject peak-based metrics as a family.
 
+### ⭐⭐ 7.16 · HARDENING `M448` — what it actually measures, measured  *(Edwin's session, 2026-08-10)*
+
+Not a new candidate. A session spent asking what the shipped metric computes, prompted by Edwin being able to
+**see** the baseline for the first time (the plot now draws the fitted line, both curves and the four band
+means). Five results, all on archived data, no rig time. Full write-ups in `DOC_metric_algebra.md` §5.3d,
+§5.3e and §5.6a; this is the index.
+
+**① The tilt is worth 1 % at the Soret and 45 % at Q.** The two classes' baselines nearly coincide in the blue
+and fan apart toward the red, because the near anchors agree and the far anchors do not. So the same tilt that
+the numerator hardly notices *is* the denominator. ⇒ §5.3a's "the long lever costs about one per cent",
+argued from geometry in 2026-07, is now measured at exactly 1 %.
+⚠ The crossing wavelength is **not** a constant — 473 nm for two set means, 518 nm for a single-run pair.
+
+**② The extrapolation is not load-bearing** (`diagnostics/soret_extrapolation_test.py`). Rebuild the numerator
+with a flat offset at the near anchor — no line drawn where nothing was measured — and class *d* falls
+**10.25 → 9.35 (−8.8 %)**, within-green *d* **1.34 → 1.31**, and the empty corridor keeps its relative width
+(28 % of the green mean against 29 %). Remove the tilt under **Q** instead and *d* collapses **76 %**. ⇒ the
+questionable half contributes almost nothing; the legitimate half (interpolation between two measured
+anchors) carries everything.
+⭐ **And the flat numerator is *better* on dilution: +0.1 % against +3.0 %** on the same oil at half strength.
+⚠ One fill pair — suggestive, not established. Belongs with the threshold freeze, not with a second rescaling
+of a metric whose thresholds were re-derived the same week.
+
+**③ The numerator is a load reference, not a pigment band.** Across four commercial oils at matched dose,
+`A_S` moves **±5 % with no ordering** while `M448` spans 1.5×, and the brownest oil reads *highest* in the
+blue (r = −0.41 against the verdict). If 448–460 were the pigment's Soret, demetallation would cost it
+53–87 %. ⇒ the tetrapyrrole is a minority tenant; carotenoids, browning products and scatter own the window,
+and three effects pointing two ways is why it lands flat (`KB_spectroscopy_physics.md` §4.2).
+⭐ That is *why* the ratio is dilution-invariant — and it means **"Soret ÷ Q" names the windows, not the
+chemistry**. What the index computes is closer to *pigment state per unit chromophore load*.
+⚠ Empirically validated and mechanistically explained, **not** guaranteed; bounded at **4:1** against the class
+signal meanwhile. Widening the oil panel tests it for free.
+
+**④ Two Cohen's *d*s were being quoted as one, and they answer different questions.** This caused a real
+confusion mid-session and is worth pinning:
+
+| question | pairs | error term | *d* |
+|---|---|---|---|
+| across quality classes | Steirerkraft 9.96 vs S-Budget 6.51 *(12–53 % apart)* | within-fill | **4.1 – 15.6** |
+| within the green class | Steirerkraft 10.36 vs Kiendler 11.08 *(7 % apart)* | fill-to-fill | **1.5 – 1.7** |
+
+Both are true. The four-oil session's *d* = 4.09–15.57 is mostly *green versus brown*; "within-green *d* =
+1.34" is two premium greens seven per cent apart, measured across preparations. ⇒ **always state which pair
+and which error term**, or the same metric appears to pass and fail at once.
+
+**⑤ Green-vs-green on the capillary session separates** — the three g.g.A. oils of 2026-08-07 give *d* = 4.09,
+6.02 and 8.23 on gaps of 13.7 %, 13.8 % and 29.5 %. ⚠ The error term there is **three measurements of one
+tube**, so this is an upper bound. Sensitivity to what a fresh preparation costs:
+
+| assumed preparation CV → | 0.2 % | 1.0 % | 2.5 % | 4.5 % |
+|---|---|---|---|---|
+| *d* for a 13.7 % gap | 68.6 | 13.7 | 5.5 | **3.0** |
+| *d* for a 7 % gap | 35 | 7.0 | 2.8 | 1.6 |
+
+⇒ **even at the §16.26 reseat rms of 4.5 %, a 14 % gap still reaches *d* = 3.0.** The measurement that settles
+it is the one the oil-panel document already names: **three tubes per oil at one dose**, one evening.
+
+⇒ **Net effect on the programme.** Nothing here changes a shipped number. What changed is the account of *why*
+the number works, and three claims that were argued are now measured. The one open risk it names —
+an accidental normaliser — is bounded, testable by widening the panel, and points the right way.
+
 ## 8 · Open questions for Edwin
 
 **Q1 — the window remark. ✅ ANSWERED (Edwin, 2026-08-04): "the rightest Q-band (the 620-630)".**

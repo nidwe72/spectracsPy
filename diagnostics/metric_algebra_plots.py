@@ -129,7 +129,57 @@ def main():
     figure.tight_layout()
     figure.savefig(os.path.join(OUT, "metric_algebra_qzoom.png"), dpi=170)
 
-    for name in ("metric_algebra_bands.png", "metric_algebra_corrected.png", "metric_algebra_qzoom.png"):
+    # ---------------------------------------------------------------- 4  the TILT, measured (2026-08-10)
+    # The MEASURED counterpart to `pigment_far_window_slope.svg`, which shows this mechanism as a schematic.
+    # Question behind it (Edwin): "the Soret is shifted down for the greener oil too — how does that help?"
+    #
+    # ⭐ THE ANSWER, and it is not the symmetric one: the two classes' baselines nearly COINCIDE at the blue
+    # end and FAN APART toward the red, because the near anchors agree while the far anchors do not. So the
+    # tilt is worth ~1 % of B_Soret and ~45 % of B_Q — the numerator barely notices it and the denominator is
+    # made of it. That is §5.3a's "the long lever costs about one per cent", measured.
+    # ⚠ The crossing wavelength is NOT a property of the metric: it moves with the pair (473 nm for these
+    # two set means, 518 nm for the single-run pair the discussion started from). Do not quote it as a
+    # constant — what is stable is the FANNING, not where the fan closes.
+    figure, axes = plt.subplots(2, 1, figsize=(9.2, 6.6),
+                                gridspec_kw={"height_ratios": [1.0, 1.25]})
+    at = lambda fit, nm: fit[0] * np.asarray(nm) + fit[1]      # meanLine returns (slope, intercept)
+    crossing = (brownLine[1] - greenLine[1]) / (greenLine[0] - brownLine[0])
+    for axis, (lo, hi), (ylo, yhi) in zip(axes, ((440, 636), (505, 636)), ((-0.02, 0.9), (0.0, 0.26))):
+        for (bandLo, bandHi), tint in ((SORET, "0.86"), (NEAR, "#c8d2dc"), (Q, "0.86"), (FAR, "#c8d2dc")):
+            axis.axvspan(bandLo, bandHi, color=tint, zorder=-10)
+        for values, line, colour, label in ((green, greenLine, GREEN_COLOUR, "green oil"),
+                                            (brown, brownLine, BROWN_COLOUR, "brown oil")):
+            axis.plot(lam, values, color=colour, lw=1.4, label="%s — A(λ)" % label)
+            axis.plot(lam, at(line, lam), color=colour, lw=1.4, ls="--", alpha=0.85,
+                      label="%s — fitted baseline" % label)
+        axis.axvline(crossing, color="0.35", lw=1.0, ls=":")
+        axis.set_xlim(lo, hi)
+        axis.set_ylim(ylo, yhi)
+        axis.set_ylabel("absorbance A")
+        axis.grid(alpha=0.25, lw=0.5)
+    axes[0].annotate("the two baselines nearly coincide here\nand fan apart toward the red",
+                     xy=(crossing, 0.30), xytext=(crossing + 14, 0.62), fontsize=8, color="0.25",
+                     arrowprops=dict(arrowstyle="->", color="0.45", lw=0.8))
+    axes[0].annotate("", xy=(454, at(greenLine, 454.0)), xytext=(454, at(brownLine, 454.0)),
+                     arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.3))
+    axes[0].annotate("at the Soret the two lines barely differ:\nthe tilt is worth ~1 % of B_Soret",
+                     xy=(456, at(greenLine, 456.0)), xytext=(486, 0.34), fontsize=8, color="#c0392b",
+                     arrowprops=dict(arrowstyle="->", color="#c0392b", lw=0.8))
+    axes[1].annotate("", xy=(570, at(greenLine, 570.0)), xytext=(570, at(brownLine, 570.0)),
+                     arrowprops=dict(arrowstyle="<->", color="#c0392b", lw=1.3))
+    axes[1].annotate("at Q the SAME tilt is worth ~45 % of B_Q —\ngreen's line sits higher, so less Q survives",
+                     xy=(572, 0.140), xytext=(583, 0.043), fontsize=8, color="#c0392b",
+                     arrowprops=dict(arrowstyle="->", color="#c0392b", lw=0.8))
+    axes[1].annotate("and this is what tilts it: the green oil's\nred band stands higher (Qy, ~625 nm)",
+                     xy=(624, 0.196), xytext=(534, 0.238), fontsize=8, color="#1f618d",
+                     arrowprops=dict(arrowstyle="->", color="#1f618d", lw=0.8))
+    axes[0].legend(fontsize=8, loc="upper right")
+    axes[1].set_xlabel("wavelength (nm)")
+    figure.tight_layout()
+    figure.savefig(os.path.join(OUT, "metric_algebra_pivot.png"), dpi=170)
+
+    for name in ("metric_algebra_bands.png", "metric_algebra_corrected.png", "metric_algebra_qzoom.png",
+                 "metric_algebra_pivot.png"):
         print("wrote", os.path.join(OUT, name))
 
 
