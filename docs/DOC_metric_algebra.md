@@ -877,9 +877,43 @@ scaled ×1.236 against a fill-strength difference of ×1.211 while the Q denomin
 not guaranteed by a conservation law. An oscillator-strength sum rule would apply to the *integral over the
 band*; a 12 nm slice on the flank does not inherit it. Compensation among three terms can hold for four oils
 and fail for a fifth — an unusually carotenoid-rich variety, or a roast dark enough for Maillard to dominate.
-⇒ **widening the oil panel tests this for free**, with no hardware. Bounded meanwhile: even if the whole ±5 %
-were confound, it is a **4:1** margin against a ±21 % class signal, with the correlation pointing the wrong
-way for it.
+⇒ **widening the oil panel tests this for free**, with no hardware.
+
+**How big could the confound be? — the bound, worked through.** The worry is specific: carotenoids sit in the
+numerator's window and have nothing to do with the pigment's state, so a different oil could carry a different
+numerator for reasons unrelated to roast. Two spreads decide how much that could matter, both from the
+matched-dose session:
+
+| | across the four oils | mean | as ± about the mean |
+|---|---|---|---|
+| `A_S` — the numerator | 0.5591 … 0.6189 | 0.5894 | **± 5.1 %** |
+| `M448` — the quantity being read | 6.51 … 9.96 | 8.23 | **± 21.0 %** |
+
+Because the index is a quotient, an error in the numerator passes into `M448` **one for one**: 5 % in, 5 %
+out. So assume the most pessimistic thing available — that **none** of that ±5 % is dose variation, **none**
+of it is real pigment, and **all** of it is carotenoid noise. The confound then moves the index by ±5 % while
+the quantity being read spans ±21 %:
+
+> ⭐ **21 / 5 ≈ 4.** Not "the confound is absent", but "at its largest conceivable size it cannot manufacture
+> the ordering we observe".
+
+**And the ordering itself is the wrong shape for that story.** If carotenoids were driving the verdict, the
+oil with the largest numerator would read greenest. Sorted by verdict, it does not:
+
+| oil | `A_S` | `M448` | |
+|---|---|---|---|
+| Steirerkraft g.g.A. | 0.5634 | **9.96** | greenest — yet the *second-smallest* numerator |
+| Spar Steirisches g.g.A. | 0.6189 | 8.76 | the largest numerator, second place |
+| Spar Premium g.g.A. | 0.5591 | 7.69 | the smallest numerator, third |
+| Spar S-Budget | 0.6162 | **6.51** | brownest — yet nearly the *largest* numerator |
+
+Hence `r` = **−0.41** where the confound predicts a strongly positive number.
+
+⚠ **Two limits on that check, stated so it is not over-read.** With n = 4, `r` = −0.41 is nowhere near
+significance (|r| > 0.95 would be needed), so it is the **absence of the confound's signature**, not evidence
+that the confound is absent — the weight rests on the 4:1 bound, not on the correlation. And the bound is a
+statement about **this panel**: a variety with genuinely extreme carotenoid content could exceed ±5 %, which
+is precisely why widening the panel is the test.
 
 ⇒ **Naming.** "Soret ÷ Q" describes the windows, not the chemistry. What the index computes is closer to
 **pigment state per unit chromophore load**, and §16.27.5's concentration-free table is literally `1/M448`.
