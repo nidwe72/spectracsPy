@@ -1861,7 +1861,11 @@ blue (r = −0.41 against the verdict). If 448–460 were the pigment's Soret, d
 53–87 %. ⇒ the tetrapyrrole is a minority tenant; carotenoids, browning products and scatter own the window,
 and three effects pointing two ways is why it lands flat (`KB_spectroscopy_physics.md` §4.2).
 ⭐ That is *why* the ratio is dilution-invariant — and it means **"Soret ÷ Q" names the windows, not the
-chemistry**. What the index computes is closer to *pigment state per unit chromophore load*.
+chemistry**. What it computes is **pigment degradation per unit chromophore load, inverted** (so a bigger
+number is greener; `1/M448` is §16.27.5's concentration-free column). ⇒ `DOC_metric_algebra.md` §5.6b
+carries the phrasing for four audiences — bench, colleague, laboratory and miller — of which the
+miller's is the test of whether we understand it: **"how brown the pigment has gone, per litre of oil in
+the beam"**. ⛔ None of them may say "chlorophyll content".
 ⚠ Empirically validated and mechanistically explained, **not** guaranteed; bounded at **4:1** against the class
 signal meanwhile. Widening the oil panel tests it for free.
 

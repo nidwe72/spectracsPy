@@ -227,7 +227,10 @@ oils spanning 1.5× in `M448`, `A_S` moves **±5 % with no ordering**, and the b
 ```
 
 ⇒ **The blue window is a *load* reference** — it tracks how much oil is in the beam, not what state its
-pigment is in — and that is precisely what makes the ratio dilution-invariant. ⚠ Empirically validated and
+pigment is in — and that is precisely what makes the ratio dilution-invariant. ⇒ so the honest name for the
+index is **pigment degradation per unit chromophore load, inverted**, or for a miller *"how brown the pigment
+has gone, per litre of oil in the beam"*; `DOC_metric_algebra.md` §5.6b carries the four audience versions.
+⛔ Never "chlorophyll content" — that is what it is not. ⚠ Empirically validated and
 mechanistically explained, **not** guaranteed: an oscillator-strength sum rule applies to the *integral* over
 a band, and a 12 nm slice on the flank does not inherit it.
 

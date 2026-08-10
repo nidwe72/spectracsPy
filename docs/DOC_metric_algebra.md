@@ -915,8 +915,42 @@ that the confound is absent — the weight rests on the 4:1 bound, not on the co
 statement about **this panel**: a variety with genuinely extreme carotenoid content could exceed ±5 %, which
 is precisely why widening the panel is the test.
 
-⇒ **Naming.** "Soret ÷ Q" describes the windows, not the chemistry. What the index computes is closer to
-**pigment state per unit chromophore load**, and §16.27.5's concentration-free table is literally `1/M448`.
+#### 5.6b ⇒ Naming — how to say what this index is, to four different audiences
+
+**"Soret ÷ Q" describes the windows, not the chemistry**, and everything above is why. The blue window is not
+the pigment's band (it is mostly carotenoid, browning and scatter, §5.6a) and the denominator is not "the Q
+band" as a chemical quantity — it is that band's height *above a fitted line*, which is what rises as the
+porphyrin loses its magnesium. A name that survives those two facts is worth having, because the wrong one
+invites the wrong reasoning.
+
+**The literal reading, term by term:**
+
+| term | what it actually is |
+|---|---|
+| **chromophore load** | how much light-absorbing material sits in the beam *altogether* — pigment plus carotenoid, browning product and haze. Operationally: how much oil, times the path |
+| **pigment state** | how far the green pigment has gone down the degradation road (magnesium lost, intensity redistributed out of the red band) |
+| **per unit** | divided by, so the dose cancels — §5.6's invariance proof |
+
+⚠ **One inversion to keep straight.** `M448` is `B_Soret / B_Q`, i.e. **load ÷ state**, so a *bigger* number is
+*greener*. The quantity that reads naturally as "state per load" is **`1/M448`** — which is exactly
+§16.27.5's concentration-free column (Steirerkraft 0.1005 = 1/9.96).
+
+**The same claim, at four registers.** All four say one thing; they differ only in what the listener already
+knows. ⛔ None of them may say "chlorophyll content", which is what the index is *not*.
+
+| audience | formulation |
+|---|---|
+| **bench / physics** | the Q band's height above the fitted 520–540 / 620–630 baseline, divided by the blue window's — pigment degradation per unit chromophore load, inverted so that greener reads higher |
+| **a colleague, operationally** | the blue window says *how much stuff is in the beam*; the Q band above the baseline says *how far the pigment has degraded*; dividing makes the dilution cancel, so what is left is a property of the oil rather than of the tube |
+| **the laboratory** *(LIMS, channel partner)* | a **ratiometric absorbance index**: two band means of the same sample, background-corrected against a common two-window baseline; dimensionless and concentration-independent by construction |
+| **the miller** | ⭐ **how brown the pigment has gone, per litre of oil in the beam** — a sloppy dilution moves both numbers together, so it cannot move the verdict |
+
+⭐ The analogy that carries the miller's version: you do not judge water by *how much* dirt came out of it,
+you judge it by dirt **per litre**. The same dirt in a bigger sample is not dirtier water.
+
+⚠ **Where even the careful name is generous: "state".** It sounds like we know *which* state. We do not — we
+read one number that rises as degradation proceeds, not a protopheophytin : protochlorophyll ratio. That
+specific reading is what a 410–420 nm emitter would buy (`KB_spectroscopy_physics.md` §4.2).
 
 ### 5.7 What breaks invariance — pedestal curvature, and nothing else
 
