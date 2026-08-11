@@ -5,6 +5,22 @@ deep-red star.**
 
 *Internal working document · Spectracs · 7 August 2026*
 
+> ## ⛔ SUPERSEDED 2026-08-12 by `DOC_lamp_rebuild.md` — do not order from this chapter
+>
+> The 2026-08-11 runs at ROI 400 nm (`20260811A/001,002`) measure 400–440 nm for the first time and
+> overturn three inputs of this study: the oil's blue absorption is a **doublet at 421.4 / 436.5 nm**, not
+> a single band near 439 (§8.2 and the Figure 5 caption); the camera's blue response is about **ten times**
+> better than `instrumentResponse` assumes (13 DN predicted at 410 nm, **128 DN measured**); and §8.2's
+> preferred explanation for the model/rig mismatch is refuted by the 440–447 : 448–460 ratio agreeing
+> between starved and real-light measurements.
+>
+> ⭐ **§7.1's R2 board ranks 206 of 31 425** when the choice is re-scored on measured noise. The successor
+> document lists every correction in its §8 and none of them have been applied here.
+>
+> ✔ **What still stands:** §3.1's digitised Avonec SPDs — `led_lamp_410_680.py` remains the digitiser and
+> is imported by `lamp_rebuild_search.py`; §5's deep-red analysis; §6.2a's open IR-cut question; and §2.2's
+> account of why the quiet window matters.
+
 ---
 
 <!--TOC-->
