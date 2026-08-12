@@ -12321,7 +12321,100 @@ reading of the wander as "wavelength-scale instability" is **NOT established**, 
 it drew about §16.28.5's "apex past 632 nm" trigger. That trigger is **unresolved in either direction**, not
 refuted.
 
-#### 16.30.7d WHAT WOULD UNBLOCK IT
+#### ⛔ 16.30.7e THE CLASS LABELS MOVED AGAIN — second reassignment in two days
+
+⭐ **Edwin 2026-08-13: `Spar Steirisches g.g.A.` → BROWN, `Spar Premium g.g.A.` → GREEN.**
+
+⛔ This **reverses** §16.30.1, which recorded `Spar Premium` → BROWN on 2026-08-12. The two products have now
+swapped classes between one session and the next, and neither assignment rests on a measurement — both are
+judgment calls on products whose true state is unknown.
+
+⚠ **Every separation result in §16.30.4 and §16.30.7 is conditional on a labelling that has changed twice.**
+⇒ Until the validation study (ROADMAP PRIO 3) fixes the ground truth, no number in this section may be quoted
+as a discrimination result. They are orderings under an assumption.
+
+#### ⭐ 16.30.7f THE ESTIMATOR LADDER — three tries, each fixing the last, all hitting one wall
+
+| estimator | what it fixed | what remained |
+|---|---|---|
+| **argmax** on the smoothed curve | — | ⛔ located λ2 on only **8 of 11** fills; the other three pinned at the search-window edge, and their slope SIGN was set by that failure, not by the oil |
+| **2nd-derivative minimum** (Savitzky-Golay, 5 nm, poly 4) | ⭐ locates all **11 of 11** — a shoulder yields a position where a maximum does not | ⛔ `c1/c2` divides by a depth of 0.002–0.006 — the **small-denominator problem** for the third time in this search (after `QB` §16.29, and the SNV ratio §16.30.2). Within-fill sd reaches **48 %** of the mean |
+| **two-component fit** (2 Gaussians + linear background, 560–590 nm) | ⭐ true intensity ratio, no small denominator, rms **8 %** of band amplitude | ⛔ σ_fill (below) |
+
+⭐⭐ **THE STRUCTURAL RESULT, which is the durable part of this work:**
+
+> A **narrow** band at **μ1 = 580.4 ± 0.4 nm, σ1 ≈ 2.2 nm (FWHM ≈ 5.2)**, sitting on a **broad** band at
+> **μ2 = 572.7 ± 1.1 nm, σ2 ≈ 7.2 nm (FWHM ≈ 17)**.
+
+⭐ **μ1 is stable to 1.3 nm across all eleven fills — the most reproducibly located feature in this spectrum**,
+and it sits 1.3 nm from the `Hg 579.07` calibration anchor (`KB_spectroscopy_physics.md` §3.7), i.e. in the
+best-calibrated region we have. ⇒ Whatever else is uncertain, **peak 1 is real and well-located.**
+
+⚠ The 3.3× **width asymmetry** mildly favours §16.30.7a's framework **B**: two vibronic members of one
+electronic progression are normally broadened alike, so a threefold width difference is more consistent with
+two different electronic origins. ⛔ Hold it loosely — with only two Gaussians and a line across 30 nm, the
+broad component is a catch-all for everything else in the window, so its width is not a clean measurement.
+
+#### ⛔ 16.30.7g THE A-vs-B TEST — RUN, AND UNRESOLVED
+
+§16.30.7a's two readings make opposite predictions: under **A** (both vibronic on one origin) the two
+amplitudes co-vary and their ratio is a molecular constant; under **B** (symmetry splitting) the ratio tracks
+the **protopheophytin : protochlorophyll** fraction. Testing whether the ratio varies between oils beyond
+within-fill noise, across 11 fills:
+
+| estimator | within-fill sd | between-fill sd | **F** | r with greenness |
+|---|---|---|---|---|
+| `c1/c2` — 2nd-derivative depths | 2.208 | 2.601 | 1.39 | −0.571 |
+| `h1/h2` — heights above a 565–590 chord | 0.298 | 0.343 | 1.33 | −0.681 |
+| **area1/area2 — two-component fit** | 0.041 | 0.057 | **1.87** | −0.498 |
+
+⛔ **F ≈ 1.3–1.9 on all three. The between-oil variation is not resolved above within-fill noise**, so the test
+cannot separate A from B. ⚠ The **direction** is consistently the one B predicts — the ratio falls as oils get
+browner — but a correlation between means that are not themselves resolved is not evidence.
+
+⚠ **A second-derivative depth is ∝ amplitude / width²**, so `c1/c2` confounds intensity with sharpness and is
+the *worst* of the three estimators for this question. `c1` runs 3–9× `c2` throughout, which most likely says
+the 580 band is **narrower** — confirmed independently by the fit (σ1 2.2 vs σ2 7.2) — not stronger. That is
+also why `KB` §3.6 names 574 as *the* Q band: it dominates the raw curve while 580 dominates the derivative.
+
+#### ⛔ 16.30.7h THE PANEL-ONLY RESULT — perfect, and it establishes nothing
+
+Restricted to the six oils of `all_oils_panel.png` (one fill each, four of them one evening), with the
+§16.30.7e labels:
+
+| oil | class | area1/2 | sd |
+|---|---|---|---|
+| Steirerkraft g.g.A. | GREEN | 0.1221 | 0.0062 |
+| Ja! Natürlich | GREEN | 0.1203 | 0.0134 |
+| Spar Premium g.g.A. | GREEN | 0.0958 | 0.0027 |
+| Spar Steirisches g.g.A. | brown | 0.0948 | 0.0186 |
+| Spar S-Budget | brown | 0.0796 | 0.0114 |
+| Billa Clever | brown | 0.0574 | 0.0039 |
+
+⭐ **Perfect separation, and F = 5.08** — the only time in this search that between-oil variance clearly beats
+within-fill variance. ⛔ **And it establishes nothing**, for three independent reasons:
+
+1. ⛔ **The boundary margin is 0.08 σ.** Spar Premium 0.0958 against Spar Steirisches 0.0948 — a gap of 0.0011
+   against a pooled sd of 0.0133. Correctly ordered, not distinguishable.
+2. ⛔ **A perfect 3/3 split arises by chance 5 % of the time** — six points, twenty arrangements. This is the
+   weakest result that can be called suggestive.
+3. ⛔⛔ **The excluded sessions contradict it directly:**
+
+| product | panel value | same product, other sessions |
+|---|---|---|
+| **Steirerkraft** | 0.1221 *(highest green)* | **0.0760** (0729) · **0.2581** (HALF) |
+| S-Budget | 0.0796 | 0.0644 (0731) |
+| Billa Clever | 0.0574 | 0.0701 (10 mL) |
+
+⇒ Steirerkraft at **0.0760** would sit *below two browns*; at **0.2581** it would be twice the highest panel
+value. **One product, three preparations, spanning 3.4× — while the whole six-oil panel spans 2.1×.**
+
+⚠⚠ **The panel separates because each product appears exactly once.** The excluded fills are not noise to be
+set aside — they are the *only* measurements that test whether a second preparation lands in the same place,
+and they say it does not. ⛔ **Restricting to one-fill-per-product removes the evidence about reproducibility
+without improving reproducibility.** Any statistic with adequate spread will order six single points somehow.
+
+#### ⭐ 16.30.7i WHAT WOULD UNBLOCK IT — and it is now ONE experiment, not two
 
 ⭐ **§16.28.4's already-queued Eu³⁺ experiment**, which needs no oil and no fill: one calibration capture with
 the ROI opened, looking for the 687.7 / 693.7 / 707.0 nm lines. It was queued to decide whether the red-end
@@ -12329,8 +12422,20 @@ collapse is the lamp or the IR-cut; it would **also** pin the wavelength scale, 
 subsection and §16.30.6b now depend on.
 
 ⇒ **Revisit the doublet after the scale is pinned, not before.** ⚠ And if it is revisited: the sub-band
-positions must be located per-run rather than assumed at 573/580, since that is precisely the quantity
-currently in doubt.
+positions must be located per-run rather than assumed at 573/580 — §16.30.7f's two-component fit is the
+instrument for that, and it already does it.
+
+⭐⭐ **BUT THE BINDING CONSTRAINT IS NO LONGER THE WAVELENGTH SCALE — IT IS σ_fill.** Three successively better
+estimators (§16.30.7f) each repaired the previous one's defect and each hit the same wall: one product,
+re-prepared, moves further than the classes are apart. ⇒ The single experiment that unblocks everything is
+§16.21.1's, still never run:
+
+> **Three INDEPENDENT fills of one oil (Steirerkraft), three runs each, one evening.**
+
+⭐ One evening decides, simultaneously: whether `area1/area2` is a metric or an artefact (§16.30.7h); whether
+`Q_snv`'s +0.045 threshold survives a second preparation (§16.30.4); the A-vs-B question (§16.30.7g), whose
+test failed only for lack of resolving power; and the `Steirerkraft 0729` anomaly that has been the outlier in
+every statistic tried. ⛔ **Nothing else on this list is worth doing first.**
 
 ### ⛔ 16.30.8 WHAT THIS DOES NOT ESTABLISH
 
