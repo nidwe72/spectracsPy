@@ -57,8 +57,12 @@ class CapturePanel(QWidget):
     # >15% relative there) — reported per capture by the low-DN guard, SPEC_capture_quality.md §17.6/11.
     # 16 DN is where the new dilution protocol puts the Soret floor (§17.5, side observation).
     # ⚠ FALLBACK ONLY (SPEC_soret_448_trim.md §13, D-captureguard): the guard is a MEASUREMENT constant and
-    # now travels on CaptureView.dnGuards/dnTarget, declared by the plugin. This value is what a plugin that
-    # declares nothing still gets, so a non-declaring plugin's preview is unchanged.
+    # travels on CaptureView.levels / guardBandNm / guardTargetDn, declared by the plugin. This value is what a
+    # plugin that declares nothing still gets, so a non-declaring plugin's preview is unchanged.
+    # ⭐ It is ALSO the floor check that survives in the CAPTURE-LOWDN log line after the 16 DN line came OFF
+    # the plot (SPEC_capture_quality.md §16.23.10f): across 34 archive runs the minimum ever observed inside
+    # the metric window was 37.6 DN, so as a drawn line it only added ink — but it is still the one thing that
+    # would catch a genuinely broken capture (dead lamp, mis-clamped ROI) rather than a dosing error.
     __LOW_DN_WARN = 16.0
     __GUARD_COLOR = (200, 120, 60)
     __TARGET_COLOR = (107, 127, 90)
@@ -519,22 +523,78 @@ class CapturePanel(QWidget):
                  settings.get("gain"), settings.get("backlight"),
                  settings.get("whiteBalanceKelvinRequested")))
 
-    def __logLowDnGuard(self, role, spectrum):
-        # Low-DN guard (SPEC_capture_quality.md §17.6/11). The darkest bin of a capture is the one that decides
-        # whether absorbance is real or quantization: at DN 5 a single code step is ~20% relative BEFORE the
-        # gamma decode and ~44% after it, and once a bin reaches 0 absorbance saturates silently. The spectrum
-        # is LINEAR here, so map the minimum back through the decode's inverse to report it in the camera's own
-        # units — the number the operator can act on (dilute less / expose longer). Best-effort, never breaks a
-        # capture.
+    def __guardReading(self, view, spectrum):
+        """`min(S)` over the plugin's declared guard window, in ENCODED DN — SPEC_capture_quality.md §16.23.10f.
+
+        ⭐ ONE computation, consumed by BOTH the log line and the drawn crosshair. That is the entire point of
+        §16.23.10: the shipped code had `__logLowDnGuard` compute its own (unwindowed) minimum while
+        `__drawLowDnGuard` painted unrelated static lines, so the number the operator read and the number the
+        log recorded were never the same statistic.
+
+        ⚠ `view.guardBandNm is None` ⇒ the legacy global minimum over every bin, so a plugin that declares
+        nothing behaves exactly as before. That legacy path is what §16.23.10a shows to be useless on this
+        lamp — it lands at 417 nm, the blue cutoff, on every capture — but it is not this change's job to
+        alter a non-declaring plugin.
+
+        Returns `(digitalNumber, nanometer)` or None. Never raises: a guard must not break a capture.
+        """
         try:
             values = (spectrum.valuesByNanometers or {}) if spectrum is not None else {}
             if not values:
-                return
+                return None
+            band = getattr(view, "guardBandNm", None) if view is not None else None
+            if band is not None:
+                low, high = float(band[0]), float(band[1])
+                values = {nm: value for nm, value in values.items() if low <= float(nm) <= high}
+                if not values:
+                    return None
             nanometer, minimum = min(values.items(), key=lambda item: item[1])
+            # The spectrum is LINEAR here; the thresholds live in ENCODED (camera) DN — §16.23.10b, settled on
+            # `20260804A`. Encode ONCE, here, so no caller can double-encode or compare across spaces.
             digitalNumber = SpectralColorUtil().encodeGammaFraction(max(0.0, float(minimum)) / 255.0)
-            print("CAPTURE-LOWDN role=%s minDn=%.1f at=%.1fnm%s"
-                  % (role, digitalNumber, float(nanometer),
-                     "  <-- LOW (quantization-limited; dilute less or expose longer)"
+            return digitalNumber, float(nanometer)
+        except Exception:
+            return None
+
+    def __guardVerdict(self, view, digitalNumber):
+        # (verdict, isInside) against the plugin's DECLARED target pair. No pair declared => no verdict, which
+        # is the honest answer rather than inventing one from whatever levels happen to be drawn.
+        target = getattr(view, "guardTargetDn", None) if view is not None else None
+        if target is None or digitalNumber is None:
+            return None, True
+        low, high = float(target[0]), float(target[1])
+        if digitalNumber < low:
+            return "too-concentrated", False
+        if digitalNumber > high:
+            return "too-dilute", False
+        return "in-window", True
+
+    def __logLowDnGuard(self, role, step, spectrum):
+        # Low-DN guard (SPEC_capture_quality.md §16.23.10f, §17.6/11). The darkest bin INSIDE THE DECLARED
+        # WINDOW decides whether absorbance is real or quantization: at DN 5 a single code step is ~20%
+        # relative before the gamma decode and ~44% after it, and once a bin reaches 0 absorbance saturates
+        # silently. Best-effort, never breaks a capture.
+        #
+        # ⭐ The 16 DN floor line is no longer DRAWN (§16.23.10f) — across 34 archive runs the minimum observed
+        # was 37.6 DN, so it only ever added ink. The CHECK stays here because it is the one thing that would
+        # catch a genuinely broken capture (a dead lamp, a mis-clamped ROI) as opposed to a dosing error.
+        try:
+            view = step.getView() if step is not None else None
+            reading = self.__guardReading(view, spectrum)
+            if reading is None:
+                return
+            digitalNumber, nanometer = reading
+            band = getattr(view, "guardBandNm", None) if view is not None else None
+            target = getattr(view, "guardTargetDn", None) if view is not None else None
+            verdict, _inside = self.__guardVerdict(view, digitalNumber)
+            print("CAPTURE-LOWDN role=%s minDn=%.1f at=%.1fnm window=%s target=%s verdict=%s%s"
+                  % (role, digitalNumber, nanometer,
+                     ("%g-%gnm" % (band[0], band[1])) if band else "full",
+                     ("%g-%g" % (target[0], target[1])) if target else "none",
+                     verdict or "none",
+                     # ⚠ The old text said "dilute less or expose longer" for a DARK bin, which is backwards —
+                     # a dark bin needs MORE solvent, not less (§16.23.10f).
+                     "  <-- FLOOR (quantization-limited; add solvent or expose longer)"
                      if digitalNumber < self.__LOW_DN_WARN else ""))
         except Exception as error:
             print("CAPTURE-LOWDN role=%s unavailable (%s)" % (role, error))
@@ -600,7 +660,7 @@ class CapturePanel(QWidget):
             # Diagnostic (SPEC_capability_proof.md §7.0.1): log the landed exposure / white-balance / gain for THIS
             # capture, so reference-vs-sample and run-to-run drift (the absorbed-colour reference tilt) is traceable.
             self.__logCameraSettings(role, frames=frameCount)
-            self.__logLowDnGuard(role, spectrum)
+            self.__logLowDnGuard(role, step, spectrum)
 
             if role == REFERENCE:
                 self.__lockedExposure = self.__exposureSlider.value()
@@ -648,7 +708,9 @@ class CapturePanel(QWidget):
         frames = spectrum.getCapturedValuesByNanometers()
         plot.plotSpectrum(None, title=title)  # clear + set title
         plot.getPlotItem().setLabel("left", "camera DN")
-        self.__drawLowDnGuard(plot)
+        # ⚠ Pass the spectrum: the MEASURED crosshair is derived from it here, by the same `__guardReading`
+        # the log used, so the plot and the log cannot show different numbers (§16.23.10f).
+        self.__drawLowDnGuard(plot, spectrum)
         for values in frames:
             frameSpectrum = Spectrum()
             frameSpectrum.setValuesByNanometers(dict(values))
@@ -656,7 +718,41 @@ class CapturePanel(QWidget):
         plot.addTrace(util.toDisplayDnSpectrum(self.__meanSpectrum(spectrum)),
                       color=self.__MEAN_COLOR, width=2)
 
-    def __drawLowDnGuard(self, plot):
+    def __drawMeasuredGuard(self, plot, spectrum):
+        """The two-line crosshair at the MEASURED reading — SPEC_capture_quality.md §16.23.10f.
+
+        Horizontal at the DN, vertical at the wavelength it landed on, green inside the plugin's declared
+        target pair and red outside it. ⭐ The vertical line is what makes the number readable: the anchor is
+        `min` over a window, so WHERE it landed is data, not a constant — and on `20260812_BillaClever` it
+        landed at 448.0–448.2 nm, the window start, every time.
+
+        ⚠ Both lines carry `setZValue(-5)` and are added AFTER the guard levels but BEFORE the traces, so an
+        annotation can never drive autorange (`test_plot_annotations_do_not_rescale`).
+        """
+        import pyqtgraph as pg
+        from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
+        view = self.__activeStep.getView() if self.__activeStep is not None else None
+        if view is None or getattr(view, "guardBandNm", None) is None:
+            return
+        reading = self.__guardReading(view, spectrum)
+        if reading is None:
+            return
+        digitalNumber, nanometer = reading
+        _verdict, inside = self.__guardVerdict(view, digitalNumber)
+        colors = getattr(view, "guardColors", None) or {}
+        color = colors.get("inside" if inside else "outside") or (self.__TARGET_COLOR if inside
+                                                                  else self.__GUARD_COLOR)
+        pen = SpectrumPlotWidget.pen(color, width=2, style="solid")
+        horizontal = pg.InfiniteLine(pos=digitalNumber, angle=0, pen=pen,
+                                     label="%.0f DN @ %.1f nm" % (digitalNumber, nanometer),
+                                     labelOpts={"position": 0.82, "color": color, "movable": False})
+        horizontal.setZValue(-5)
+        plot.addItem(horizontal)
+        vertical = pg.InfiniteLine(pos=nanometer, angle=90, pen=pen)
+        vertical.setZValue(-5)
+        plot.addItem(vertical)
+
+    def __drawLowDnGuard(self, plot, spectrum=None):
         # The lines the operator judges dilution against — SPEC_soret_448_trim.md §25.4.
         #
         # ⭐ PLUGIN-DECLARED, PER STEP, and drawn WITH THEIR CAPTIONS, exactly as the PROCESSING plot draws
@@ -673,6 +769,10 @@ class CapturePanel(QWidget):
         import pyqtgraph as pg
         from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
         view = self.__activeStep.getView() if self.__activeStep is not None else None
+        # ⭐ Drawn FIRST and independently of `levels` (§16.23.10f): the measured crosshair is a reading, not a
+        # declaration, so a plugin that declares a guard window but no drawn levels still gets it — and the
+        # `elif not levels: return` below must not swallow it.
+        self.__drawMeasuredGuard(plot, spectrum)
         levels = getattr(view, "levels", None)
         if levels is None:
             levels = [] if view is not None else [(self.__LOW_DN_WARN, None, None, None, None, "dashed", None)]

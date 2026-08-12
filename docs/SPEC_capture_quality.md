@@ -9436,6 +9436,186 @@ lever is measured (§16.24.2, §16.24.7) while the blue-end cost is still a hypo
 the worst-behaved session in the archive. **That is evidence, if weak (n=1 session), that the blue end is the
 cheaper of the two to violate.**
 
+---
+
+### ⛔ 16.23.10 THE `CAPTURE-LOWDN` GUARD IS UNSCOPED — and the guard band was never derived in its own units  *(AS-BUILT 2026-08-12; Edwin, from `20260812_BillaClever`)*
+
+Two defects, found together because each masked the other:
+
+1. `CapturePanel.__logLowDnGuard` takes `min(S)` over **every bin of the capture**. §16.23.8 specifies
+   *"min(S) over the analysis range"* — which was never implemented, and would not have been enough anyway.
+2. §16.23.6b and §16.23.8 quote **linear** values while calling them DN. The guard thresholds are
+   **encoded**. So the 20–40 band's headline justification was computed in the wrong space.
+
+#### 16.23.10a The evidence — three runs where the guard pointed the wrong way
+
+`20260812_BillaClever`, a supermarket oil at 2 capillaries / 10 mL IPA, from the embedded `workflow.json`
+of `001–003.pdf`.
+
+| | run 001 | run 002 | run 003 |
+|---|---|---|---|
+| **what the guard logged** — global `min(S)` | **0.0 DN @ 417.0 nm** | **1.5 DN @ 417.0 nm** | **2.0 DN @ 417.0 nm** |
+| its verdict | ⛔ LOW | ⛔ LOW | ⛔ LOW |
+| darkest bin **inside 448–460** | 43.7 DN | 51.8 DN | 54.3 DN |
+| every sub-16 DN bin lies in | 417.0–438.0 nm | 417.0–437.7 nm | 417.0–437.1 nm |
+| any sub-16 DN bin **above 448 nm**? | **no** | **no** | **no** |
+
+⇒ The logged minimum landed at **417.0 nm every time — the lamp's blue cutoff.** A property of the *lamp*,
+not the fill; no recipe changes it. Every starved bin sits below 448 nm, inside the dead region the 448 trim
+exists to exclude. **None reaches the metric.** ⚠ A guard whose number is a lamp constant is not a guard.
+
+#### ⭐⭐ 16.23.10b The units are ENCODED — settled on `20260804A`
+
+Both readings had exact arithmetic backing, which is why this took three attempts:
+
+| source | claim | holds in |
+|---|---|---|
+| `SpectralColorUtil` | "the 16 DN guard line lands at **0.58** of 255" → decode(16) = 0.577 | **ENCODED** |
+| `SpectralColorUtil` | "16..60 DN occupies the bottom **4 %**" → 3.92 % | **ENCODED** |
+| §16.23.8 | A = 1/ln10 = 0.434 ⇒ R ≈ 88, S ≈ 32 → log₁₀(88/32) = 0.439 | linear |
+| §16.23.6a | `A_Soret` ≲ 0.64 → log₁₀(132/30) = 0.645 | linear |
+
+⭐ **The discriminator is `20260804A`** — the session §16.24.7 calls over-dilute (`QB` 0.036, `r_Q` = 54 % of
+its own denominator):
+
+| reading | `min(448–460)` on those 6 runs | verdict |
+|---|---|---|
+| **ENCODED** | 74.0 – 97.7 | **all 6 past the 60 line ⇒ "too dilute"** ✅ correct |
+| linear | 16.8 – 30.9 | lands **inside** the 20–40 target ⛔ calls the worst session in the archive correctly diluted |
+
+⇒ **ENCODED. The code was right; §16.23.6b and §16.23.8 are in the wrong space.**
+
+⛔ **§16.23.8's ⭐ claim does not survive.** *"With R ≈ 88 that is S ≈ 32 DN — the centre of the existing
+20–40 DN band ⇒ the spec's target was already right"* is linear arithmetic applied to encoded thresholds.
+Converted properly, the A = 0.434 optimum lands at **≈ 120 DN** — past even the "too dilute" line. The
+20–40 band was never in the space its derivation assumed.
+
+⚠ §16.23.6b's "440–447 read 2.0–2.6 DN against a reference near 88" are **linear** values (BillaClever
+measures 1.94–3.01 there). Its empirical finding — that those bins cost 47 % of `k` — stands; only the unit
+label is wrong. Same for §16.23.6a's 0.64.
+
+#### ⛔ 16.23.10c §16.23.6a's "no dilution satisfies both" needs re-deriving
+
+Its blue constraint (`A_Soret` ≲ 0.64) came from the linear misreading. Under the encoded guard the floor is
+not reached until `A_Soret` ≈ 1.4, i.e. **more than twice as permissive**. A Beer-Lambert sweep on
+BillaClever 003 finds a real window — `k` = 1.25 … 1.42 satisfies the guard target **and** `A_Q` ∈ 0.19–0.23
+simultaneously.
+
+⚠ But it does **not** generalise: of the archive oils only the two with a high band ratio have any window at
+all (BillaClever 4.36, `20260804A` 4.65). At ratio 3.0–3.8 — the Steirerkraft cluster — **no `k` exists.**
+⇒ The dynamic-range conflict is real but **differently located** than §16.23.6a states: it sits between the
+Soret's own optimum (A = 0.434 ⇒ 120 DN) and the Q band's (`A_Q` ∈ 0.19–0.23 ⇒ ≈ 54 DN), and §16.24's 17×
+asymmetry already decides it — **protect Q**. ⛔ §16.23.6a is not repaired here; it is marked as resting on
+a unit error.
+
+#### ⭐ 16.23.10d A fixed DN band cannot carry a dilution verdict
+
+Rescaling all 34 archive runs to put `A_Q` at 0.21 and reading the guard there:
+
+> ratio `A_Soret`/`A_Q` spans 2.23–4.65 · guard spans 31.0–77.7 · **r = −0.985**, slope −19.2 DN / unit ratio
+
+The guard-at-correct-dilution is ~98 % explained by an **oil property**, not by the fill. Over the observed
+ratio span that is ~46 DN of drift — wider than any band one could draw.
+
+⇒ **The dilution verdict belongs on `A_Q`** (scatter ∝ 1/`A_Q`, §16.10.8), which lives in EVALUATION. The DN
+guard is demoted to a **capture-time envelope**: it catches gross dosing failure and says nothing about fine
+tuning. ⚠ It is **specific, not sensitive** — when it fires it is right; silence is not a clearance.
+
+Measured envelope performance (34 runs, measured values only, no rescaling):
+
+| envelope | keeps fills with `A_Q` already correct | flags | of those genuinely mis-diluted |
+|---|---|---|---|
+| 45–70 DN | 8 / 8 | 12 | **12 (100 %)** |
+| 40–70 DN | 8 / 8 | 8 | 8 (100 %) |
+
+#### ⚠ 16.23.10e THE SHIPPED WINDOW IS 20–50 — Edwin's call, and it is PROVISIONAL
+
+⭐ **Edwin 2026-08-12: target window = 20–50 DN.** Recorded honestly against the evidence above:
+
+| | |
+|---|---|
+| **fits** | BillaClever at the planned 2 cap / 8 mL — predicted **39.9 DN**, comfortably inside |
+| **catches** | all 6 `20260804A` runs (74–98 DN) |
+| ⛔ **cost** | the 8 archive runs whose `A_Q` is already correct span **48.6–66.6 DN** — **7 of 8 fall above 50** and would read "too dilute" |
+| **why** | §16.23.10d's ratio dependence. 20–50 suits a high-ratio oil (BillaClever 4.36); the Steirerkraft cluster at 3.0–3.8 sits higher in DN at the same correct `A_Q` |
+
+⇒ **Not a derived band.** It is a working window for the oil currently under test, to be re-decided once
+2 cap / 8 mL is measured. ⛔ Do not promote it, and do not read a "too dilute" flag on an archive-class oil
+as a dosing error until it is.
+
+⛔ **A GREEN GUARD IS NOT A CLEARANCE — measured twice on 2026-08-12.** The window was drawn on the DN of the
+darkest Soret bin, and an unsettled fill *darkens* that bin, pushing the reading **down into the window**. So
+a turbid, badly-dosed fill looks better dosed than it is:
+
+| run | guard DN | guard says | `A_Q` | `A_Q` says |
+|---|---|---|---|---|
+| `BillaCleverB/001` | 26.0 | ✅ in window | 0.486 | ⛔ far too concentrated |
+| `BillJaNatuerlich/003` | 41.7 | ✅ in window | 0.174 | ⛔ too dilute |
+
+⭐ In both cases **`A_Q` caught what the DN guard waved through** — the sharpest available vindication of
+§16.23.10d's split. ⇒ The guard is a gross-error envelope on the *capture*; the dosing verdict is `A_Q`'s,
+and (per §16.29.5) the metric's own validity is `QB`'s. Three different questions, three different statistics.
+
+⚠ **Rig-specific either way.** Like `r_Q` (§16.19), this envelope does not survive a mechanical change.
+Re-derive after the lamp rebuild.
+
+#### 16.23.10f The design, as built
+
+| | |
+|---|---|
+| **carrier** | `CaptureView.guardBandNm` — one `(lowNm, highNm)` window, plugin-declared, default `None` |
+| **statistic** | `min(S)` over `guardBandNm`, computed on the **linear** spectrum, encoded **once** for reporting |
+| **anchor** | `min(448..460)` — Edwin's call. ⚠ **Coupled to the metric window**: retrimming it silently moves the guard. Accepted, recorded here so it is not rediscovered |
+| **shared** | ⭐ one computation feeds both the log line and the drawn crosshair. They cannot drift — which was this section's original complaint |
+| **drawn** | the plugin-declared target pair (20 / 50) **plus** a two-line crosshair at the measured value: horizontal at the DN, vertical at the wavelength it landed on |
+| **colour** | green inside the declared pair, red outside — `CaptureView.guardColors` |
+| **role** | ⚠ SAMPLE only. The reference is a solvent blank; the window never applied to it |
+| **removed** | the 16 DN line is **off the plot** — it is never approached (minimum observed across 34 runs: 37.6 DN). ⭐ The *check* stays in the log as the only thing that would catch a genuinely broken capture |
+| **fallback** | `guardBandNm is None` ⇒ global-min behaviour, byte-identical, so non-declaring plugins are unchanged |
+| **log line** | `CAPTURE-LOWDN role=SAMPLE minDn=39.9 at=448.2nm window=448-460nm target=20-50 verdict=in-window` |
+| **⚠ behaviour** | **warn, never block** — §16.23.8's rule stands |
+
+⚠ The old warning text said *"dilute less or expose longer"* for a **dark** bin. That is backwards — a dark
+bin needs *more* solvent. Corrected while implementing.
+
+#### 16.23.10g What this does NOT do
+
+- ⛔ no recipe **input** (capillary count / IPA volume before capture)
+- ⛔ no corrective **prompt** (`V_new = V_old × A_measured/A_target`)
+- ⛔ no **recording** of `A_Soret` / `A_Q` / min DN into the report
+- ⛔ no live `A_Q` readout at capture time — the dilution verdict stays in EVALUATION
+- ⛔ §16.23.6a is **not** re-derived, only marked
+
+#### 16.23.10h Verification
+
+| | |
+|---|---|
+| **unit** | synthetic sample starved only below 448 ⇒ the in-band minimum is reported and no warning fires |
+| **unit** | `guardBandNm = None` ⇒ output identical to today's |
+| **unit** | BillaClever fixtures: 43.7 / 51.8 / 54.3 DN at 448.0–448.2 nm |
+| **unit** | colour flips exactly at 20 and at 50 |
+| **regression** | `test_plot_annotations_do_not_rescale.py`, `test_spectrum_plot_view_levels.py` pass untouched; the vertical marker must not drive autorange |
+| **rig** | ⚠ live-camera only, cannot run offscreen (§9.5). **2 capillaries / 8 mL IPA, settled ~15 min. PREDICT guard ≈ 40 DN (green), `A_Q` ≈ 0.20.** That single run also tests §16.23.10c's `k` = 1.25 prediction and decides whether 20–50 survives |
+
+#### ⭐ 16.23.10i AS-MEASURED — `20260812_BillaCleverB`, the same evening
+
+| | predicted | measured | |
+|---|---|---|---|
+| concentration `k` | 1.25 | **1.250** (converged, run 003) | ✅ |
+| `A_Q` pedestal-free | ~0.20 | **0.2011** | ✅ |
+| guard DN, settled | ~40 | **40.5 – 44** (extrapolated) | ✅ |
+| guard DN, as captured | — | 26.0 / 30.0 / **35.6** | ⚠ inside 20–50, but still climbing |
+
+⭐ **The recipe arithmetic held.** ⚠ But the three runs were captured ~5 min after mixing on a warming lamp
+(reference 108.6 → 111.6 → 133.2, only run 003 matching series A's 132.4), so the settled guard figure is an
+**extrapolation, not a measurement** — the residual pedestal at run 003 was still 0.125 A. §16.29.6 makes the
+15-minute wait a standing rule for exactly this reason.
+
+⇒ 20–50 **survives this run** (all three inside), but on evidence weaker than intended, and §16.23.10e's
+7-of-8 archive cost is unchanged. It remains provisional.
+
+---
+
 ## 16.24 ⭐⭐ THE ERROR BUDGET IS 17× ASYMMETRIC — and the exposure does not cancel  *(session `20260804A`, 2026-08-04/05: Edwin, "001 and 003 have the same Soret level and 002 is lower … so this does not seem to be something monotonically")*
 
 Four runs of **one** filtered, deliberately over-dilute Steirerkraft fill (18 ml IPA + 6 drops, then through a
@@ -11729,6 +11909,169 @@ properly"* — **432 nm and 625 nm**. ⇒ **This session closed one of them.** T
 
 ⚠ That is the entire claim. It says nothing about accuracy, thresholds, dilution, or which metric variant to
 prefer — those live in §16.28.2–16.28.7 and are not part of it.
+---
+
+## ⭐⭐ 16.29 WHAT THE METRIC ACTUALLY MEASURES — it is a `QB` measurement wearing a ratio's clothes  *(2026-08-12, three series; Edwin: "now i have the feeling that our metric is crap … are we lost?")*
+
+Three series were captured on 2026-08-12 — the first **controlled dilution change** in the archive, and the
+first oil whose Q band is too weak to quantify. Together they answer a question the project had never posed
+directly: *which half of `SB/QB` carries the verdict?*
+
+⇒ **The denominator does, almost entirely.** The metric is not a Soret/Q ratio in any meaningful sense; it is
+a measurement of `QB` — the Q band above baseline — normalised by a numerator that barely moves. Everything
+below follows from that, including the failure Edwin saw.
+
+### 16.29.0 The evidence base
+
+| series | fill | runs | `A_Soret` | `A_Q` | `QB` | verdict (ped+base) |
+|---|---|---|---|---|---|---|
+| `20260812_BillaClever` | 2 cap / 10 mL | 3 | 0.70–0.82 | 0.16–0.23 | ~0.11 | 5.83 / 5.99 / 5.90 |
+| `20260812_BillaCleverB` | **2 cap / 8 mL** | 3 | 1.00–1.21 | 0.33–0.49 | 0.152 / 0.130 / 0.138 | 5.88 / 6.28 / 5.82 |
+| `20260812BillJaNatuerlich` | 2 cap / 8 mL | 3 | 0.88–1.13 | 0.17–0.41 | **0.060 / 0.042 / 0.034** | 13.25 / 15.73 / **17.45** |
+
+⚠ All three series were captured **~5 min after mixing** on a lamp that was still warming. Only run 003 of
+each is clean. The settling constant measured on series A is **τ ≈ 3.3 min** across three independent bands,
+so ~15 min is needed to be within 5 % — see §16.29.5.
+
+### ⭐⭐ 16.29.1 THE DILUTION TEST PASSED — and it is the first controlled one on record
+
+`BillaClever` A → B is a pure concentration change: same oil, same jar, 10 mL → 8 mL of IPA.
+
+Decomposing series B against series A's settled run with a flat pedestal term
+(`A_band = k·A_band(A) + P`, solved from the Soret/Q pair):
+
+| run | `k` solved | `P` solved |
+|---|---|---|
+| 001 | 1.337 | 0.271 |
+| 002 | 1.322 | 0.130 |
+| **003** | **1.250** | 0.125 |
+
+⭐ `k` converges on **1.250** — exactly the intended 10/8. The recipe arithmetic is confirmed, and the
+pedestal-free `A_Q` at that `k` is **0.2011**, against a prediction of 0.20.
+
+| metric | series A | series B | shift across `k` = 1.25 |
+|---|---|---|---|
+| **Verdict · baseline + pedestal** | 5.906 | 5.991 | **+1.4 %** |
+| Verdict · baseline (far-620) | 6.971 | 6.783 | −2.7 % (settled runs only: −6.2 %) |
+
+⇒ **`M448 + pedestal` is dilution-invariant to 1.4 % across a 25 % concentration change.** The far-620
+variant is 4× worse — another point for the pedestal correction as the headline.
+
+⛔ **Do not confuse this with the `Ja! Natürlich` drift.** That series moved **+32 %**, but its concentration
+never changed — it was ONE fill settling. Pedestal sensitivity and dilution variance are different failures
+with different causes, and only the second would indict the metric. See §16.29.3.
+
+### ⭐⭐ 16.29.2 THE DIAGNOSIS — `r` = 0.933 against `1/QB`
+
+Across **34 runs / 7 sessions** (`20260727B/C/D/E` + the three 2026-08-12 series):
+
+| correlation | |
+|---|---|
+| verdict vs **`1/QB`** (the denominator) | **r = +0.933** |
+| verdict vs `SB` (the numerator) | r = +0.136 |
+| `SB` spread over the whole set | 0.675 – 1.183 (**75 %**) |
+| `QB` spread over the whole set | 0.034 – 0.152 (**347 %**) |
+
+⇒ **The numerator is not a discriminator. It is a dilution normaliser.** `SB` is near-constant across oils at
+a given dilution, which is precisely why it cancels concentration so well (§16.29.1) — and precisely why it
+contributes almost nothing to the class separation. All the signal lives in `QB`.
+
+⭐ **And that is coherent physics, not an accident.** §16.11.16 measured the ageing signature as
+*Qy −17 % / 572 nm +14 % per unit Soret* — demetallation raises 560–580 relative to the Soret. So `QB` is
+the **degraded-pigment fraction**, normalised by total pigment. Brown = high `QB`. Green = low `QB`.
+
+⇒ The metric is **not** ill-conceived. It measures a physically meaningful quantity by a construction that
+does what it was built to do. But it should be **described** as what it is, because its limits follow from
+the denominator and nothing else.
+
+### ⛔ 16.29.3 THE GREEN END IS UNMEASURABLE ON THIS RIG — and §16.23.6a was right for the wrong reason
+
+Sweeping concentration on each oil's measured run-003 spectrum, asking whether `QB` can reach the
+Steirerkraft working range (0.068–0.073, §16.24.7) while the darkest Soret bin stays above the 16 DN floor:
+
+| oil | `k` needed for `QB` ≥ 0.068 | guard DN there | both satisfiable? |
+|---|---|---|---|
+| `BillaClever` (brown) | **1.0** | 35.6 | ✅ at the current recipe |
+| `Ja! Natürlich` (green) | 2.1 | **8.1** | ⛔ **below the sensor floor** |
+
+⛔ **For a sufficiently green oil there is no dilution that satisfies both.** §16.23.6a's conclusion stands —
+but §16.23.10c showed its *derivation* rested on a linear/encoded unit error, and the constraint is not where
+it said: it binds at the **green** end, through the vanishing `QB`, not at the blue end through the Soret.
+
+⚠ **Neither path length nor dilution can fix this.** `A_Soret`/`A_Q` is a property of the oil; no optical
+path or concentration change alters the ratio. Only two routes exist:
+
+1. ⭐⭐ **more reference light in the blue** — quantified here for the first time: **~7× more `R` at 448 nm**
+   would let `Ja! Natürlich` reach `QB` = 0.07 while clearing the floor. `SPEC_lamp_rebuild.md`'s
+   "raise R in the blue" now has a **specification** instead of an argument.
+2. a denominator that does not vanish for green oils — ⛔ **not available today.** The `dev` alternatives
+   were checked on this pair: `G'` is stable (−4 % where the headline drifted +32 %) but the classes
+   **overlap** (0.356–0.372 green vs 0.368–0.435 brown), and `Greenness G` / `D_Q` drift as badly as the
+   headline. None is a replacement.
+
+⇒ `Ja! Natürlich`'s **15.5 is not quotable.** Its `QB` = 0.034 is below `20260804A`'s 0.036 — the session
+§16.24.7 calls the worst-behaved in the archive. The verdict tracks the collapsing denominator run by run
+(`QB` 0.060 → 0.042 → 0.034 against verdict 13.25 → 15.73 → 17.45), and 17.45 exceeds every green ever
+measured (archive range 7.3–13.8). **The class is green; the number is an artefact.**
+
+### ⭐ 16.29.4 IT FAILS SAFE — and this is why the method is still fit for its purpose
+
+The business question is *"is this oil brown?"*, and brown is the robust regime:
+
+| | `QB` | regime |
+|---|---|---|
+| brown (`BillaClever`) | 0.138 | ⭐ well-conditioned |
+| green (Steirerkraft working) | 0.070 | usable |
+| very green (`Ja! Natürlich`) | 0.034 | ⛔ unquantifiable |
+
+⇒ Precision degrades toward the **good** end. A very green oil becomes unquantifiable and reads "very green"
+— wrong in magnitude, right in class.
+
+⭐ **The dangerous direction is structurally protected.** For a brown oil to read green, `QB` would have to
+collapse — which at a fixed recipe requires severe over-dilution, and that is exactly what the `A_Q` floor
+(0.19, §16.23.10d) catches. ⇒ **A false GREEN requires a dosing error the guard is built to detect; a false
+BROWN cannot arise from this mechanism at all.** §16.10.17d's policy (a false GREEN ships bad oil) survives.
+
+### ⛔ 16.29.5 THE MISSING GUARD IS A `QB` GATE, NOT A METRIC CHANGE  *(DESIGN — not implemented)*
+
+Today **any sufficiently dilute fill can manufacture an arbitrarily green verdict**, and nothing stops it.
+That is the real gap this session exposed — not the metric.
+
+| | |
+|---|---|
+| **rule** | if `QB` < ~0.05, the verdict is **not quantitative**. Report the class, suppress the number |
+| **why `QB` and not `A_Q`** | `A_Q` is what the operator can act on at capture time; `QB` is what the metric actually divides by. §16.24.7's own reference points are stated in `QB` |
+| **⚠ threshold** | 0.05 sits between `20260804A`/`Ja! Natürlich` (0.034–0.042, known broken) and the Steirerkraft working range (0.068–0.073). ⛔ **Provisional** — it is a gap-splitting choice on n = 2 failures, not a derived line |
+| **where** | the PLUGIN, alongside the gauges — it is a statement about the metric, not about the capture |
+| **⚠ behaviour** | suppress the NUMBER, never the run. An ungated run is still a valid diagnostic |
+
+⭐ **And a gated result is still informative.** At a fixed recipe `QB` falls with greenness, so
+"`QB` below the quantifiable range" *is* the statement "not brown" — which is the answer the customer needs.
+⇒ This does **not** require the operator to iterate capillaries: **one standard recipe** (2 cap / 8 mL,
+demonstrated adequate for brown) plus a software validity state, not a dosing loop at the bench.
+
+### ⭐ 16.29.6 THE SETTLING RULE — twice in one day, so it is a process defect
+
+Both 2026-08-12 series were captured ~5 min after mixing. Series A's decay, fitted on three independent
+bands, gives **τ ≈ 3.3 min** (clarity 3.3 / far-red 3.6 / Q 3.1), so within 5 % of settled needs **~15 min**.
+⚠ Three points and three parameters — an interpolation, not a fit with error bars; what lends it weight is
+that three bands agree.
+
+⇒ **Standing rule: mix, wait ~15 min, then capture.** ⚠ *Visually* clear is not optically clear — at series
+A's first capture the clarity window still carried 0.090 A against a 0.037 floor. This complements
+§16.11's "measure within the hour": that rule guards the **aged** end, this one guards the **fresh** end.
+
+### ⚠ 16.29.7 WHAT THIS DOES NOT ESTABLISH
+
+- ⛔ **n = 1 dilution test.** One oil, one pair of fills, one day. The 1.4 % is encouraging and is not a
+  characterisation. ⇒ Next test: `BillaClever` at `k` = 2, inside the well-conditioned regime where the
+  claim is cleanly checkable
+- ⛔ the `Ja! Natürlich` **class** assignment rests on a number its own `QB` disqualifies. Re-run at
+  `k` ≈ 2.1 is impossible on this rig (§16.29.3) ⇒ **this oil cannot be quantified until the lamp changes**
+- ⛔ r = 0.933 is measured on 34 runs of **three oils**. That `SB` is near-constant *across oils* is the load
+  bearing claim, and three oils is thin support for it
+- ⛔ nothing here re-derives §16.23.6a, re-fits any threshold, or changes a gauge
+
 ---
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
