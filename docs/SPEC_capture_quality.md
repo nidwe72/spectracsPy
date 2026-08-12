@@ -12074,6 +12074,188 @@ A's first capture the clarity window still carried 0.090 A against a 0.037 floor
 
 ---
 
+## ⭐⭐ 16.30 THE METRIC SEARCH — eleven candidates, one survivor: `Q_snv`  *(2026-08-12, Edwin: "let us discuss the metric and find a better one")*
+
+§16.29 diagnosed the shipped metric as a `QB` measurement whose denominator collapses for green oils. This
+section is the search that followed. Eleven candidates were tested on the archive; ten failed, and the one
+that survived is **`Q_snv` — the Q band's SNV value, used alone.**
+
+⚠ **Everything here is analysis on archived spectra. Nothing was changed.** No constant, window or gauge
+moved. `diagnostics/anchor_refit.py` is the one new file.
+
+### ⛔ 16.30.0 TWO METHOD ERRORS MADE DURING THIS SEARCH — recorded because both are easy to repeat
+
+| error | what it corrupts |
+|---|---|
+| ⛔ **Comparing printed `Verdict` values across the 2026-08-10 trim.** Reports from 0727/0729/0731/0801/0804/0807 print the PRE-trim scale; only 0812 prints the current one | any table that extracts the verdict column across that boundary — several were built and discarded during this session. ⭐ **Statistics recomputed from the stored spectra on one code path are unaffected**, and every number below is of that kind |
+| ⛔ **Proposing a window without looking at the spectrum in it.** A 600–630 slope was proposed and briefly believed; it straddles the **607 nm lamp line**, whose artefact §16.20.6 already documents | its apparent separation was partly artefact, and its dilution test returned −2177 % because the statistic crosses zero |
+
+⇒ **Rule for this file: look at the curve in the proposed window before computing anything on it.**
+
+### ⚠ 16.30.1 THE CLASS LABELS ARE EDWIN'S, AND THE RESULT DEPENDS ON THEM
+
+Two fills were relabelled during the session, on Edwin's judgment rather than on a measurement:
+
+- ⭐ **`Spar Premium g.g.A.` → BROWN.** *"i would not rely upon that the Spar Premium is really a green oil.
+  it might really be a brown oil"* — its price (35,96 €/l) is not evidence of greenness, and §16.27's panel
+  already notes the order does not follow price.
+- ⭐ **`Ja! Natürlich` → GREEN**, confirmed by Edwin.
+
+⛔ **Before the relabelling, `Q_snv` and the SNV difference both showed a class inversion; after it, neither
+does.** That is a large dependency on an unmeasured call, and it must be stated wherever the result is used.
+⇒ The validation study (ROADMAP PRIO 3) owns settling it.
+
+### 16.30.2 WHAT WAS TRIED AND WHY EACH FAILED
+
+All on the archive, all recomputed on one code path. `d` is green/brown Cohen's *d* on the three-oil refit
+corpus; dilution is the settled BillaClever pair (k = 1.25) unless noted.
+
+| candidate | why it failed |
+|---|---|
+| far-anchor **slope** 615–629.5 | ranks the over-roasted oil **3rd of 4**; dilution +26 % on `slope/SB`; −22 % on settling |
+| slope **600–630** | straddles the 607 nm line (§16.30.0); crosses zero |
+| **`A(629)/A(600)`** | ranks correctly, r = +0.962 with M448 — but **+19.2 % on dilution**: `A(600)` is small, so the pedestal dominates the denominator |
+| **valley anchor** 592–604, `r_Q` refitted | d **3.75** vs 11.27; dilution **−13.7 %**; `t(k)` rises 2.90 → **11.23** |
+| 585–605 wide valley | d 3.68; dilution −14.0 % |
+| **flat anchor** (no red anchor) | d 4.16; dilution −11.8 % |
+| flat **510–540 median** *(Edwin's proposal)* | d 4.30; dilution −10.9 %. ⭐ The median DOES fit better — `t(k)` 4.36 → 3.32, and 1.55 on a wider window, beating the shipped anchor's 2.90 — but d is pinned at 4.2–4.7 across the **entire** flat family |
+| **SNV ratio** `Soret_snv/Q_snv` | `Q_snv` **changes sign** between oils (min −0.092), so the ratio passes through infinity: CV 32–55 % |
+| band **480–515** (from the z-plot) | separates at z ≈ +5 but its baselined level is near zero ⇒ CV 20–40 %, dilution +1891 % |
+| Q-band **centroid** | d = **0.15**. No discrimination at all — it is width, not position |
+| **SNV difference** `Soret_snv − Q_snv` | see §16.30.4 — beaten by its own second term |
+
+⭐ **One near-miss worth keeping: the Q-band WIDTH (FWHM).** −2.6 % across a **2× dilution** where `B_Q` moves
+−47.8 %, CV 2.4 %, and **no denominator at all** so it cannot diverge. Its cost is separation (d 3.98) and it
+degrades into *noise* rather than into a confident wrong answer when the band is weak. ⚠ A fitted Gaussian
+profile is **worse**, not better — the band is not Gaussian, and the fit returns 32.5 ± 4.1 nm on
+`Ja! Natürlich`. The crude threshold estimator wins.
+
+### ⭐⭐ 16.30.3 THE ANCHOR-ON-THE-Qy-BAND IS LOAD-BEARING — the obvious fix is refuted
+
+§16.29.3 traced `QB`'s collapse to the far anchor sitting on the Qy band. The obvious response — move it off
+— was tested properly, with `r_Q` **refitted for each geometry** (`diagnostics/anchor_refit.py`, 28 runs):
+
+| anchor | `t(k)` | min `B_Q` | d(g/b) | dilution |
+|---|---|---|---|---|
+| **620–630 SHIPPED** | **2.90** | 0.0445 | **11.27** | **−2.7 %** |
+| 615–630 | 3.95 | 0.0503 | 10.55 | −2.8 % |
+| 600–630 legacy | 4.55 | 0.0536 | 8.79 | −3.3 % |
+| 592–604 valley | 11.23 | 0.0585 | 3.75 | −13.7 % |
+| flat | 4.36 | **0.0699** | 4.16 | −11.8 % |
+
+⇒ The shipped anchor wins on everything except denominator size, and degradation is **monotone in how far
+the anchor moves off the band**. ⭐ **The contamination is doing useful work:** because the anchor value is
+itself proportional to pigment, subtracting it makes the baseline TRACK pigment content, which is what
+delivers dilution invariance. A pigment-free anchor throws that self-normalisation away.
+
+⇒ **`QB`'s collapse cannot be engineered away by moving the anchor. It is the price of the invariance**, which
+is why §16.29.5's `QB` gate — not a new geometry — remains the right response.
+
+⚠ **`t(k)` is not a proxy for metric quality.** For the two-window family it tracks `d`; for the flat family
+`t(k)` improves to 1.55 while `d` stays at 4.6. It measures how well the correction model fits, nothing more.
+
+### ⭐⭐ 16.30.4 THE SURVIVOR — `Q_snv`, used ALONE
+
+**Construction** (four steps, no new constants):
+
+1. despiked `A(λ)`
+2. subtract the **520–540 / 620–630** linear baseline — unchanged from shipped
+3. **SNV** over 448–629 nm: `z = (A − mean) / sd`, both taken over that whole range
+4. **`Q_snv` = mean of `z` over 560–580 nm.** That is the metric. Nothing is divided.
+
+| statistic | class gap | span | **gap/span** | worst same-oil spread | **scatter / gap** |
+|---|---|---|---|---|---|
+| ⭐ **`Q_snv` alone** | **0.0545** | 0.3261 | **16.7 %** | 0.0212 | **0.39×** |
+| M448* (recomputed) | 0.8702 | 11.29 | 7.7 % | 0.9219 | 1.06× |
+| SNV difference | 0.0121 | 0.3399 | 3.5 % | 0.0399 | 3.31× |
+| `Soret_snv` alone | — | 0.0883 | no separation | 0.0418 | — |
+
+⭐⭐ **`Q_snv` is the first statistic on record whose class gap EXCEEDS its preparation noise** (0.39×). M448
+sits at 1.06× — its gap and its σ_fill are the same size.
+
+| fill | `Q_snv` | class |
+|---|---|---|
+| Ja! Natürlich | **−0.1829** | green |
+| Kiendler | −0.0639 | green |
+| Steirerkraft 0729 | −0.0319 | green |
+| Steirerkraft HALF-strength | −0.0262 | green |
+| Steirerkraft 0807D | −0.0107 | green |
+| Spar Steirisches | **+0.0188** | green ← highest green |
+| Spar Premium | **+0.0734** | brown ← lowest brown |
+| BillaClever 8 mL | +0.1173 | brown |
+| BillaClever 10 mL | +0.1192 | brown |
+| S-Budget 0731 | +0.1403 | brown |
+| Spar S-Budget | +0.1433 | brown |
+
+**Dilution response:**
+
+| | shift | as % of the class gap |
+|---|---|---|
+| BillaClever k = 1.25 | 0.0020 | 3.7 % |
+| Steirerkraft **2× dilution** | 0.0056 | 10 % |
+| Steirerkraft **fill-to-fill**, both full strength | 0.0212 | 39 % |
+
+⇒ A deliberate halving of the concentration moves it a **tenth** of the class gap. ⚠ Preparation moves it
+**four times more than dilution does** — §16.30.5's finding, but now inside the margin rather than swamping it.
+
+#### ⛔ 16.30.4a WHY THE DIFFERENCE FORM IS WORSE — `Soret_snv` is noise
+
+`Soret_snv` spans **0.0883** across all eleven fills, does not separate the classes at all (greens and browns
+interleave), and its own between-fill scatter is **0.0418** — half its entire span. It is pinned near 3.2 by
+construction, because the Soret dominates the SNV denominator and therefore normalises to itself.
+
+⇒ **`Soret_snv − Q_snv` takes a clean signal and adds a noisy constant to it.** gap/span falls 16.7 % → 3.5 %.
+⛔ The instinct to combine two bands — correct for a ratio metric, where the second band supplies the dilution
+reference — is **wrong here, because SNV has already supplied it**, from ~1300 bins instead of ~80.
+
+⭐ That is also the physical reading: `Q_snv` is §16.29.2's degraded-pigment fraction, normalised by the whole
+spectrum's spread instead of by `B_Soret`.
+
+### ⭐ 16.30.5 σ_fill IS THE CEILING — measured, on two metrics independently
+
+For Steirerkraft the two **full-strength** fills (0729 vs 0807D) differ by **0.0347** on the SNV scale and
+**0.906** on M448. The **deliberate 2× dilution** (0807D vs the half-strength fill) differs by **0.0032** and
+**0.016** — an order of magnitude less.
+
+⇒ ⭐⭐ **Session-to-session preparation variation is ~10× larger than halving the concentration**, on both
+metrics independently. That is why nothing in §16.30.2 beat M448 on robustness, and why it would not have
+mattered much if something had.
+
+⛔ **And σ_fill has still never been measured.** §16.21.1 specifies the aliquot experiment; `20260804A`'s six
+runs are ONE fill, so the step was never exercised. ⇒ **The next experiment is three independent fills of one
+oil in one evening**, not another statistic.
+
+### ⚠ 16.30.6 TWO DEFECTS FOUND ON THE WAY
+
+**a) `PB_R_Q = −0.0184` is STALE.** It reproduces exactly on the **440–460** legacy Soret window; the plugin
+has shipped **448–460** since 2026-08-10, where the refit gives **−0.0132**. The trim moved the numerator and
+the constant was never refitted. ⚠ **Correcting it is not clearly an improvement** — d 11.06 → 11.27 and the
+green/brown gap 2.777 → 3.042, but dilution −1.4 % → −2.6 % on n = 1. Record it; do not re-derive a threshold
+for it on this evidence.
+
+**b) The 607 nm artefact MOVES.** §16.20.6 places the line at 607.8 nm and states *"the line is finished by
+610"*. Measured across ten sessions, the artefact's peak in `A` sits at **607.6–610.7 nm** (the 2026-08-08
+two-lamp session is separate at 614.0), and on 2026-08-12 the excess is still **+0.09 A at 612**, clearing
+only by 613. ⇒ A window that must avoid it robustly starts at **~614**, not 610. ✅ Nothing shipped is
+affected — the baseline windows and `PB_Q_BAND` are all clear of it. ⚠ Since this is a fixed lamp line, the
+±1.5 nm wander is **wavelength-scale instability**, which also means §16.28.5's "apex drifted past 632 nm"
+trigger is **not** established: 631.8 / 632.0 / 633.5 sit inside that band.
+
+### ⛔ 16.30.7 WHAT THIS DOES NOT ESTABLISH
+
+- ⛔ **`Q_snv` is a lead, not a metric.** Six oils, eleven fills, one rig state, and a threshold near **+0.045**
+  that is a *placement on 11 points*, not a derivation
+- ⛔ **The class labels are a judgment call** (§16.30.1). The result inverts without them
+- ⛔ `Ja! Natürlich` is both the most extreme value AND the weakest band (§16.29.3) — exactly the direction a
+  weak-band artefact would push it. Its position is not independent evidence
+- ⛔ **SNV has not been tested across a lamp change**, which is where §16.28.2a's 3 % transfer made `M448`
+  worth shipping. An SNV normaliser spanning 448–629 could behave very differently under a spectral shift
+- ⛔ nothing here re-derives a threshold, moves a window, or changes a gauge
+- ⚠ the 510–540 near anchor (mean, not median) halved the dilution error, −2.6 % → −1.3 %, on n = 1. ⇒ Worth a
+  second dilution point before `PB_BASELINE_WINDOWS` is touched
+
+---
+
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
 
 Prompted by an AI thread on "camera linearization for spectral imaging" (`Downloads/pumpkin/Google Gemini.html`).
