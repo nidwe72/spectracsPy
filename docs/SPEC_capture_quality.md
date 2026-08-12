@@ -12151,6 +12151,11 @@ delivers dilution invariance. A pigment-free anchor throws that self-normalisati
 ⇒ **`QB`'s collapse cannot be engineered away by moving the anchor. It is the price of the invariance**, which
 is why §16.29.5's `QB` gate — not a new geometry — remains the right response.
 
+⚠ **REFINED by §16.32.3.** The pigment-tracking above is the SECOND reason the far anchor is load-bearing.
+The first is geometric: at 620–630 it is the only anchor in the ROI that makes the baseline an
+**interpolation** (95 nm lever, both measuring bands inside) instead of an extrapolation. §16.32.2 measures
+the cost of losing that — every quiet-but-near anchor pair triples the lever and loses 4–6× on F.
+
 ⚠ **`t(k)` is not a proxy for metric quality.** For the two-window family it tracks `d`; for the flat family
 `t(k)` improves to 1.55 while `d` stays at 4.6. It measures how well the correction model fits, nothing more.
 
@@ -12647,6 +12652,104 @@ internal wavelength ruler"*. Easy: both landmarks already come out of §16.30.7f
 
 ⚠ None of this escapes §16.31.3: the one statistic that separates still does so under only one of the two
 labellings, and §16.31.4's ground-truth experiment remains the prerequisite for scoring any of them.
+
+## ⭐⭐ 16.32 THE QUIET-REGION MAP — where the oils are indistinguishable, and what the far anchor is really for  *(2026-08-13, Edwin: "if we would do an SNV on the raw spectra and find two regions where the curves coincide, would those regions be helpful?")*
+
+⭐ **A LABEL-FREE map of where oil identity lives.** SNV each raw despiked spectrum over 452–628 nm, then at
+every wavelength compare the spread **across products** with the run-to-run noise **within** them:
+
+```
+   ratio(lambda) = between-product sd / within-fill sd
+   ratio ~ 1  =>  the oils are INDISTINGUISHABLE here  =>  a genuinely quiet window
+   ratio >> 1 =>  oil identity is carried here          =>  a measuring band, NOT an anchor
+```
+
+⭐⭐ **Nothing about green or brown enters this** — only which fills share a product. §16.31.3 showed the class
+labels are carrying results elsewhere; this map is immune to them.
+
+| region | between-oil sd | min ratio | verdict |
+|---|---|---|---|
+| ⭐ **499–554 nm** | **0.0178** | 0.81 | genuinely quiet, **55 nm wide** — the quietest ground in the spectrum |
+| ⭐ 557–562 nm | 0.0203 | 0.78 | quiet, narrow |
+| 452–465 nm | 0.0470 | 0.87 | Soret flank — quiet but noisy |
+| ⛔ 472–474 nm | 0.0794 | 0.54 | **the 473 nm spike** — see the trap below |
+| ⛔ 605–612 nm | 0.0743 | 1.03 | **the 607 nm lamp line** (§16.20.6) |
+| ⛔ **620–630 nm** *(the shipped far anchor)* | — | **2.4 – 2.7** | **NOT quiet** |
+
+### ⭐ 16.32.1 THREE RESULTS, TWO OF THEM CONFIRMING EARLIER WORK FROM A NEW DIRECTION
+
+1. ⭐ **The near anchor is VALIDATED.** `520–540` sits inside the quietest region in the spectrum. The
+   original choice was right, and this is the first label-free confirmation of it.
+2. ⛔ **The far anchor is confirmed contaminated.** `620–630` reads 2.4–2.7 — the oils differ there by 2½×
+   the measurement noise. That is §16.29.3's finding re-derived **without class labels**, from a completely
+   different construction.
+3. ⛔⛔ **THERE IS NO QUIET REGION RED OF 562 nm.** From 565 to 628 every wavelength is oil signal
+   (ratio 2–3), the 607 artefact, or a mid-band SNV crossing. ⇒ **The only quiet ground in the whole ROI is
+   BLUE of the Q band.**
+
+⚠ **The trap in this method**, and it is the fifth appearance of the same failure mode today: `472–474` and
+`605–612` reach ratio ≈ 1 **only because the artefact inflates the within-fill noise as much as the
+between-oil spread**. A ratio near 1 produced by a large *denominator* is not a quiet region. ⇒ Always read
+the between-oil sd column alongside the ratio.
+
+### ⛔ 16.32.2 THE TWO QUIET REGIONS CANNOT BE USED AS A PAIR — the geometry forbids it
+
+They are **adjacent** (499–554 and 557–562, separated by 3 nm), and `557–562` **overlaps `PB_Q_BAND`**
+(560–580) outright. So any anchor pair drawn from them sits entirely on **one side** of everything measured,
+and the baseline becomes an **extrapolation**:
+
+| baseline | anchor separation | extrapolation to reach 625 | **lever** | min `B_Q` | **F(S/Q)** | dilution 2× |
+|---|---|---|---|---|---|---|
+| ⭐ **shipped 520–540 / 620–630** | **95 nm** | **0 nm** | **×1.0 — interpolation** | 0.0312 | **95.10** | **+2.8 %** |
+| quiet-split 505–520 / 540–554 | 34 nm | 78 nm | ×3.3 | 0.0488 | 14.85 | −18.7 % |
+| quiet-wide 500–515 / 545–560 | 45 nm | 72 nm | ×2.6 | 0.0486 | 21.14 | −18.4 % |
+| quiet-far 505–535 / 545–560 | 32 nm | 72 nm | ×3.2 | 0.0508 | 21.69 | −21.7 % |
+
+⇒ Every quiet-split variant does exactly what it should to `B_Q` — **1.6× larger, the collapse relieved** —
+and then loses **4–6× on F** and **7× on dilution**. Anchor noise is tripled at the far band and roughly
+doubled at the Soret. ⚠ Same trade as §16.30.3's valley anchors, now with the mechanism measured rather than
+inferred.
+
+### ⭐⭐ 16.32.3 WHAT THE 620–630 ANCHOR IS ACTUALLY FOR — and it is not what §16.30.3 said
+
+§16.30.3 concluded the far anchor is load-bearing because sitting **on** the Qy band makes the baseline track
+pigment content. That is true and it is the *second* reason. §16.32.2 exposes the first, which is simpler:
+
+> ⭐⭐ **The 620–630 anchor's value is NOT that it is quiet — it demonstrably is not (ratio 2.4–2.7). Its
+> value is that it is FAR. It is the only thing in the ROI that makes the baseline an INTERPOLATION rather
+> than an extrapolation** — a 95 nm lever with both measuring bands inside it.
+
+⇒ **The shipped baseline is a compromise nobody had written down:** it accepts a **contaminated** anchor in
+exchange for a **long** one, and the contamination partly cancels because it scales with pigment. That is why
+every "cleaner" anchor tried — valley (§16.30.3), flat (§16.30.2), quiet-split (here) — has lost. They each
+fixed the contamination and paid for it in lever.
+
+### ⭐ 16.32.4 WHAT WOULD ACTUALLY HELP — quiet AND far, which needs the ROI opened
+
+The requirement is now precise: a window that is **both quiet and red of the Q band**. Not one or the other.
+⛔ **Inside the current clamp that window does not exist.**
+
+⇒ ⭐ `ROADMAP.md`'s **660–680 nm quiet-window test** would deliver exactly it: quiet *and* far, giving a
+~140 nm lever with **both** measuring bands interpolated and **neither** anchor carrying pigment. ⭐⭐ That
+item now has **two independent motivations arriving from opposite directions** — §16.29.3's pigment
+contamination, and this section's lever argument.
+
+⚠ Conditional on the lamp reaching there, which §16.28.4 records as unresolved and §16.30.6's red-end
+contradiction makes doubtful.
+
+### ⚠ 16.32.5 ISOSBESTIC POINTS — the original hypothesis, NOT supported
+
+Edwin's question was framed on **isosbestic points**: in a two-species system (protochlorophyll ⇌
+protopheophytin, `KB` §4.1) the absorbance at an isosbestic wavelength depends only on TOTAL pigment, which
+would have given a physically correct normaliser and a test of §16.30.7a's framework B.
+
+⛔ **The data does not show one.** A true isosbestic point is **narrow** — two species crossing at one
+wavelength. What is measured is a **55 nm broad, shallow** quiet region, which is the signature of *"nothing
+absorbs here"*, not *"two species cross here"*. ⇒ No free normaliser, and no support for the two-species
+model from this direction.
+
+⚠ Note also that SNV forces every curve to mean zero, so the curves **must** cross somewhere; a crossing is
+only evidence if it is tight. Neither quiet region is.
 
 ---
 
