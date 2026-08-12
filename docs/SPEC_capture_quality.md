@@ -12577,6 +12577,62 @@ not the **roast** axis (roasting happens to the seed before pressing), so it tes
 the product; and it yields an **ordering, not an absolute class**, so it can rank statistics and cannot place
 a threshold.
 
+### ⛔ 16.31.5 DERIVATIVES DO NOT HELP — and the reason generalises to every refinement tried  *(Edwin: "would the derivatives of the segments give infos?")*
+
+The first derivative has one genuinely attractive property here: **it annihilates an additive baseline.** After
+a week of fighting the pedestal that is not a small thing, and it is why the idea was worth testing rather
+than dismissing.
+
+Tested on all 11 fills, Savitzky-Golay (25 pt, poly 3, deriv 1) over 548–600 nm:
+
+| statistic | F | §16.30.1 labels | §16.30.7e labels |
+|---|---|---|---|
+| ⭐ **plain rise slope, fixed 560–570 window** (§16.31.1) | **10.82** | overlap | **SEP 1.7 σ** |
+| `d1` max — steepest rise, adaptively located | 5.56 | overlap | SEP 0.8 σ |
+| `Δλ` — separation of the two `d1` extrema (a width proxy) | 2.76 | overlap | overlap |
+| `d1max / |d1min|` | 2.12 | overlap | overlap |
+
+⛔ **Every derivative form is worse than the crude windowed slope.** The cause is in the table: **`λ rise`
+wanders 560.5 → 567.7 nm, a 7.2 nm spread.** The "steepest point" is not a stable place, so its amplitude is
+not a stable quantity. A fixed-window fit averages ~40 points; a derivative extremum effectively uses one.
+⇒ The baseline immunity is real (F still reaches 5.6) and does not compensate for discarding the averaging.
+
+#### ⭐⭐ 16.31.5a THE PATTERN — four for four, crude beats sophisticated
+
+| cruder estimator | refinement | winner |
+|---|---|---|
+| threshold FWHM (§16.30.2) | fitted Gaussian profile | **crude** — the fit returns 32.5 ± 4.1 nm on `Ja! Natürlich` |
+| band mean | 2nd-derivative depth ratio `c1/c2` (§16.30.7g) | **crude** |
+| rise alone (§16.31.1) | rise ÷ \|fall\| (§16.31.2) | **crude** |
+| fixed-window slope | derivative extremum (here) | **crude** |
+
+⇒ ⭐⭐ **THIS DATA IS NOISE-LIMITED, NOT MODEL-LIMITED.** Every refinement that trades *averaging* for
+*adaptivity* — an extremum, a ratio, a fitted parameter — loses, because each uses fewer effective points.
+⚠ **On this instrument, more points beat better math.** That is the rule to apply to the next proposed
+estimator, before writing it: ask how many independent samples it actually averages over.
+
+⚠ It is a statement about the current SNR, not about the mathematics. If σ_fill and the frame count improve,
+the ranking can invert — the refinements are not wrong, they are unaffordable.
+
+#### ⭐ 16.31.5b ONE POSITIVE — a second stable landmark, and it is on the RED side
+
+| landmark | position across all 11 fills | spread |
+|---|---|---|
+| `λ fall` — red-flank inflection (`d1` minimum) | **582.1 ± 0.36 nm** | **1.2 nm** |
+| `μ1` — narrow sub-band centre, two-component fit (§16.30.7f) | **580.4 ± 0.4 nm** | 1.3 nm |
+| `λ rise` — blue-flank inflection | 563.6 | **7.2 nm** |
+
+⭐ Two independent methods place a landmark on the **red** side to a few tenths of a nanometre, while the blue
+flank has no crisp inflection at all. That is structurally consistent with §16.30.7f's fit: a **narrow** band
+(σ ≈ 2.2) sitting on a **broad** one (σ ≈ 7.2) gives a sharp red edge and a gradual composite blue flank.
+
+⇒ **Anything built on the Q band's geometry should be anchored on the RED side**, where features locate to
+±0.4 nm — even though the largest *amplitude* difference between oils is on the blue flank. Position from the
+red, amplitude from the blue.
+
+⚠ None of this escapes §16.31.3: the one statistic that separates still does so under only one of the two
+labellings, and §16.31.4's ground-truth experiment remains the prerequisite for scoring any of them.
+
 ---
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
