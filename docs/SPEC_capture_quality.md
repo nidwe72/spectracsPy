@@ -12630,6 +12630,21 @@ flank has no crisp inflection at all. That is structurally consistent with §16.
 ±0.4 nm — even though the largest *amplitude* difference between oils is on the blue flank. Position from the
 red, amplitude from the blue.
 
+⭐⭐ **AND THE RED SIDE'S REAL USE IS A RULER, NOT A METRIC.** §16.31.6 shows nothing on the red flank
+discriminates — the positions are stable, and *stable means they do not vary with class either*. But a landmark
+that does not move with oil state converts into an instrument reference: **whatever movement it DOES show is
+wavelength-scale error**, measured from ordinary oil spectra with no calibration capture.
+
+⇒ Total spread **≤ 1.3 nm** across eleven fills, two lamps and five weeks — *including* any genuine oil-to-oil
+variation. ⭐ §16.30.7b assumed **±1.5 nm** when it judged the doublet unusable; that was an over-estimate, so
+the objection is **partly retired**. ⚠ Band-alone this is an **upper bound**, not a measurement: it cannot
+separate "the scale moved" from "the band moved". That still needs a non-pigment reference — the 607 nm lamp
+line, or §16.28.4's queued Eu³⁺ capture.
+
+⇒ **Queued as an instrument test** in `spectracs-docs/ROADMAP.md` — *"the Q-band red-side landmarks as an
+internal wavelength ruler"*. Easy: both landmarks already come out of §16.30.7f's two-component fit and
+§16.31.5's Savitzky-Golay derivative, and it runs on every archived spectrum.
+
 ⚠ None of this escapes §16.31.3: the one statistic that separates still does so under only one of the two
 labellings, and §16.31.4's ground-truth experiment remains the prerequisite for scoring any of them.
 
