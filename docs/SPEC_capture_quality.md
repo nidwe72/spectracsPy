@@ -12237,11 +12237,102 @@ for it on this evidence.
 610"*. Measured across ten sessions, the artefact's peak in `A` sits at **607.6–610.7 nm** (the 2026-08-08
 two-lamp session is separate at 614.0), and on 2026-08-12 the excess is still **+0.09 A at 612**, clearing
 only by 613. ⇒ A window that must avoid it robustly starts at **~614**, not 610. ✅ Nothing shipped is
-affected — the baseline windows and `PB_Q_BAND` are all clear of it. ⚠ Since this is a fixed lamp line, the
-±1.5 nm wander is **wavelength-scale instability**, which also means §16.28.5's "apex drifted past 632 nm"
-trigger is **not** established: 631.8 / 632.0 / 633.5 sit inside that band.
+affected — the baseline windows and `PB_Q_BAND` are all clear of it.
 
-### ⛔ 16.30.7 WHAT THIS DOES NOT ESTABLISH
+⛔ **CORRECTED by §16.30.7c.** This first read the wander as *wavelength-scale instability*, reasoning that a
+fixed lamp line cannot move. §16.30.7c tests that against `Q_snv` and finds the artefact position explains
+**4.5× less** variation than a genuine scale shift would produce ⇒ the artefact most likely moves partly
+because the **lamp's own spectrum** changes. "The scale wanders ±1.5 nm" is **NOT established**, and neither
+is what was concluded from it about §16.28.5's "apex past 632 nm" trigger — that is **unresolved in either
+direction**, not refuted.
+
+### ⭐ 16.30.7 THE Q-BAND DOUBLET — mechanistically the best candidate, blocked on wavelength stability  *(Edwin 2026-08-13, from the all-oils zoom: "there is peak (1) and something like a peak (2) … also the slopes between them differ")*
+
+⭐ **The Q region is not one band.** Reading the SNV zoom at 1 nm steps, every one of the six oils shows the
+same structure: a maximum near **573 nm**, a shallow dip, a second maximum or shoulder near **580 nm**, then a
+steep fall after 581.
+
+| oil | 573 nm | 580 nm |
+|---|---|---|
+| Ja! Natürlich | −0.118 | −0.051 |
+| Steirerkraft 0807D | +0.109 | +0.131 |
+| Spar Steirisches | +0.179 | +0.071 |
+| Spar Premium | +0.224 | +0.227 |
+| Spar S-Budget | +0.331 | +0.230 |
+| BillaClever 8 mL | +0.298 | +0.266 |
+
+⚠ The second feature is only *sometimes* resolved into a true turning point (clearly on BillaClever, flat on
+Steirerkraft, a shoulder on S-Budget) — i.e. it is a real sub-band, partially resolved at this instrument's
+resolution.
+
+#### ⭐⭐ 16.30.7a WHY THIS IS A BETTER CLASS OF CANDIDATE THAN ANYTHING ELSE TRIED
+
+Every other candidate in §16.30.2 was an **empirical band hunt** — pick two windows, see what separates. This
+one has a mechanism attached before any fitting:
+
+> Porphyrin **Q sub-band intensities are the textbook readout of metalation state.** A magnesium-bearing
+> chlorophyll and its demetalated free base differ in the Q-region pattern, not merely in overall intensity.
+> And demetallation is exactly the ageing mechanism §16.11.16 measured directly (*Qy −17 % / 572 nm +14 % per
+> unit Soret*).
+
+⇒ A Q-sub-band ratio would be measuring the **chemical state of the pigment**, and by construction it is
+dilution-invariant — a ratio of two points inside one band cancels concentration exactly, with no baseline,
+no normaliser and no denominator that can collapse. That is the shape of metric this project has been looking
+for since §16.29.
+
+#### ⛔ 16.30.7b BUT IT FAILS TODAY, AND THE REASON IS MEASURABLE
+
+`B/A` with A = 571–575 and B = 578–581, on baselined spectra, all eleven fills:
+
+| class | range of `B/A` |
+|---|---|
+| green | **0.795 – 1.192** |
+| brown | **0.803 – 0.995** |
+
+⛔ **Completely interleaved.** Within-fill scatter reaches **sd 0.174** (Steirerkraft HALF), and the two
+Steirerkraft fills alone run 0.813 → 1.148.
+
+⭐ **The cause is wavelength sensitivity, and it is quantified.** Re-interpolating each spectrum onto a shifted
+scale:
+
+| statistic | swing under a ±1.5 nm scale shift | its class gap |
+|---|---|---|
+| **`B/A` doublet ratio** | **0.21 – 0.25** | overlapping |
+| `Q_snv` | 0.042 – 0.082 | 0.0545 |
+
+⇒ The two features sit **~7 nm apart**, so a 1.5 nm error is 20 % of their separation and swings the ratio by
+more than the entire between-oil spread. **The idea is not wrong; the instrument cannot currently support it.**
+
+#### ⭐ 16.30.7c THE SAME TEST CLEARS `Q_snv` — and CORRECTS §16.30.6
+
+The synthetic shift above says `Q_snv` *should* also be vulnerable. It is not, empirically. Using each
+session's 607 nm artefact position as a per-session proxy for the wavelength scale, and regressing each oil's
+`Q_snv` residual against it (11 session-fills, 4 oils measured in more than one session):
+
+> **r = +0.337, slope +0.0036 per nm.** Over the observed 2.3 nm artefact range that predicts a `Q_snv` swing
+> of **0.0083 — 15 % of the class gap.** Not significant at n = 11.
+
+⇒ ✅ **`Q_snv` survives the check that kills the doublet.**
+
+⛔ **And that forces a correction to §16.30.6b.** A genuine 2.3 nm scale shift would move `Q_snv` by ~0.038;
+only **0.0083** is observed — a factor of **4.5**. So the artefact position is **not a clean proxy for the
+wavelength scale**: it most likely moves partly because the *lamp's own spectrum* changes. ⇒ §16.30.6b's
+reading of the wander as "wavelength-scale instability" is **NOT established**, and neither is the conclusion
+it drew about §16.28.5's "apex past 632 nm" trigger. That trigger is **unresolved in either direction**, not
+refuted.
+
+#### 16.30.7d WHAT WOULD UNBLOCK IT
+
+⭐ **§16.28.4's already-queued Eu³⁺ experiment**, which needs no oil and no fill: one calibration capture with
+the ROI opened, looking for the 687.7 / 693.7 / 707.0 nm lines. It was queued to decide whether the red-end
+collapse is the lamp or the IR-cut; it would **also** pin the wavelength scale, which is what both this
+subsection and §16.30.6b now depend on.
+
+⇒ **Revisit the doublet after the scale is pinned, not before.** ⚠ And if it is revisited: the sub-band
+positions must be located per-run rather than assumed at 573/580, since that is precisely the quantity
+currently in doubt.
+
+### ⛔ 16.30.8 WHAT THIS DOES NOT ESTABLISH
 
 - ⛔ **`Q_snv` is a lead, not a metric.** Six oils, eleven fills, one rig state, and a threshold near **+0.045**
   that is a *placement on 11 points*, not a derivation
