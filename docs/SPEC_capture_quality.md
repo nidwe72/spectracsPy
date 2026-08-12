@@ -12435,7 +12435,12 @@ re-prepared, moves further than the classes are apart. ⇒ The single experiment
 ⭐ One evening decides, simultaneously: whether `area1/area2` is a metric or an artefact (§16.30.7h); whether
 `Q_snv`'s +0.045 threshold survives a second preparation (§16.30.4); the A-vs-B question (§16.30.7g), whose
 test failed only for lack of resolving power; and the `Steirerkraft 0729` anomaly that has been the outlier in
-every statistic tried. ⛔ **Nothing else on this list is worth doing first.**
+every statistic tried.
+
+⛔ **SUPERSEDED by §16.31.4 (2026-08-13).** σ_fill is no longer the binding constraint. §16.31.3 shows two
+statistics separating under OPPOSITE class labellings, which means the labels — not the measurements — are
+carrying the results. Reproducibility of a number is worth nothing until it is known what the number tracks.
+⇒ **Ground truth first**, and §16.31.4's heat-aged ladder is the cheap route to it.
 
 ### ⛔ 16.30.8 WHAT THIS DOES NOT ESTABLISH
 
@@ -12449,6 +12454,128 @@ every statistic tried. ⛔ **Nothing else on this list is worth doing first.**
 - ⛔ nothing here re-derives a threshold, moves a window, or changes a gauge
 - ⚠ the 510–540 near anchor (mean, not median) halved the dilution error, −2.6 % → −1.3 %, on n = 1. ⇒ Worth a
   second dilution point before `PB_BASELINE_WINDOWS` is touched
+
+---
+
+## ⭐⭐ 16.31 THE Q-BAND FLANK — the strongest statistic in the search, and the finding that disqualifies every one of them  *(2026-08-13, from Edwin's marked-up report plots: "the shape of the segments differ by the two oils … I do not say which was which oil")*
+
+⭐ Edwin marked two `A(λ) — PB bands` plots at **520 / 540 / 558 / 572 / 580 / 588 nm** and observed that the
+segments between the marks differ between the oils. Read against the fitted baseline:
+
+| segment | oil A | oil B |
+|---|---|---|
+| 520–540 | flat | flat |
+| 540–558 | rising | barely rising |
+| ⭐ **558–572** | **steep rise** | **gentle rise** |
+| 572–580 | crest, slight dip | still rising |
+| ⭐ **580–588** | **clear fall** | flattens |
+
+⇒ One oil carries a pronounced Q hump (~0.18 above baseline), the other an almost monotone drift (~0.03).
+
+⭐⭐ **The eye picked the same two segments the statistics did, and skipped the one they reject.** 558–572 is
+where §16.31.1's slope separates every fill; 580–588 is where the SNV curves fan furthest; and **572–580 is
+the doublet interval, where all three estimators of §16.30.7f returned overlap.** ⇒ The discriminating
+information lives in the band's **FLANKS — its width and position — not in its sub-band fine structure.**
+That also explains why FWHM was the one near-miss of §16.30.2 and why the two-component fit's most
+reproducible output was `μ1`, a *position*.
+
+### ⭐⭐ 16.31.1 THE RISE SLOPE — the first statistic to separate ALL ELEVEN FILLS
+
+Linear slope of the baselined+SNV curve over **560–570 nm**, all 11 fills including every repeat:
+
+| fill | class | slope | sd |
+|---|---|---|---|
+| Ja! Natürlich | G | +0.02090 | 0.0036 |
+| Steirerkraft 0807D | G | +0.03152 | 0.0004 |
+| Steirerkraft HALF | G | +0.03575 | 0.0064 |
+| Spar Premium | G | +0.04218 | 0.0008 |
+| Kiendler | G | +0.04320 | 0.0032 |
+| **Steirerkraft 0729** | G | **+0.04718** | 0.0022 |
+| **Spar Steirisches** | b | **+0.05458** | 0.0009 |
+| BillaClever 10 mL | b | +0.05826 | 0.0063 |
+| BillaClever 8 mL | b | +0.05900 | 0.0021 |
+| Spar S-Budget | b | +0.06364 | 0.0092 |
+| S-Budget 0731 | b | +0.06614 | 0.0031 |
+
+**gap 0.0074 = 1.7 σ, F = 10.82.** On the panel six: **3.0 σ, F = 16.2**; over 562–572, **F = 40.2**.
+
+⭐ **`Steirerkraft`'s three fills all stay green** (+0.0315 / +0.0358 / +0.0472) — the fill that broke every
+other statistic today does not cross the line here.
+
+**Preprocessing matters, and in the opposite direction to §16.30.7:**
+
+| preprocessing | all 11 | panel 6 |
+|---|---|---|
+| baseline + SNV | **SEPARATED 1.7 σ**, F = 10.8 | SEPARATED 3.0 σ |
+| baselined only | ⛔ overlap, F = 10.3 | SEPARATED 3.3 σ |
+| SNV only, no baseline | ⛔ overlap | ⛔ overlap |
+
+⇒ ⭐ **Here SNV earns its place** — a flank slope scales with concentration and the SNV denominator removes it.
+⚠ ⛔ **For the DOUBLET slope it did not** (§16.30.7f ran on baseline+SNV; baselined-only gives a higher F,
+2.04 vs 1.68, and a better panel margin). Method note: choose the normalisation per statistic, not once.
+And the baseline subtraction is load-bearing in both cases — drop it and nothing separates at all.
+
+### ⛔ 16.31.2 THE ASYMMETRY RATIO FAILS — and it is the FOURTH small-denominator death
+
+The obvious combination of the two informative segments — rise ÷ |fall| — was tested on both labellings:
+
+| statistic | §16.30.1 labels | §16.30.7e labels |
+|---|---|---|
+| rise/\|fall\|, baselined | ⛔ overlap | ⛔ overlap |
+| rise/\|fall\|, SNV | ⛔ overlap | ⛔ overlap |
+| **rise alone** | ⛔ overlap | **SEPARATED 1.9 σ** |
+
+`Kiendler` (green) lands at **+0.7014**, above two browns. ⛔ **Because `|fall|` over 580–588 is small, the
+ratio divides by a small number** — within-fill sd reaches **0.107**.
+
+⚠⚠ **That is the fourth construction today killed by the same mechanism**, after `QB` (§16.29.2), the SNV
+ratio (§16.30.2) and `c1/c2` (§16.30.7g). ⇒ **Standing rule for this instrument: do not build a metric whose
+denominator is a small difference of absorbances.** The rise alone beats rise/|fall|; adding the second
+segment adds noise without adding signal.
+
+### ⛔⛔ 16.31.3 THE DISQUALIFIER — two statistics, two labellings, and each separates under the OTHER's
+
+| labelling | `Q_snv` (§16.30.4) | rise slope (§16.31.1) |
+|---|---|---|
+| **§16.30.1** — Spar Premium = brown | **SEPARATED, 3.3 σ** | ⛔ overlap |
+| **§16.30.7e** — Spar Steirisches = brown | ⛔ overlap | **SEPARATED, 1.7 σ** |
+
+⛔⛔ **Whichever labelling is assumed, exactly one of the two statistics separates — and never the same one.**
+
+The two disagree on that adjacent pair: `Q_snv` ranks Spar Steirisches (+0.019) greener than Spar Premium
+(+0.073); the rise slope ranks Spar Premium (+0.042) greener than Spar Steirisches (+0.055). They disagree
+elsewhere too — `Q_snv` puts Kiendler 2nd greenest, the rise slope puts it 5th.
+
+⇒ ⭐⭐ **THE LABELS ARE DOING THE WORK, NOT THE STATISTICS.** With eleven fills, two classes, and the
+ambiguity concentrated in one adjacent pair, a separating statistic can always be found by choosing the
+labelling to match it. Each of this week's two "successes" reduces to: *this statistic produces an ordering,
+and labels consistent with that ordering were adopted.*
+
+⚠ **This applies to §16.30.4 as much as to §16.31.1.** `Q_snv`'s 0.39× scatter-to-gap ratio — written up as
+the best result on record — holds only under a labelling that has since been revised.
+
+### ⭐⭐ 16.31.4 THE BLOCKER IS GROUND TRUTH, NOT σ_fill — this supersedes §16.30.7i
+
+§16.30.7i named three independent fills of Steirerkraft as the experiment that unblocks everything. ⛔ **That
+is now wrong.** It would measure how reproducible a *number* is; it would not say whether the number measures
+greenness, because we do not independently know which of these six products is greener.
+
+⇒ Ground truth cannot come from the spectra. Three sources, cheapest last:
+
+| route | gives | cost |
+|---|---|---|
+| taste panel on the six products | class, per product | external people |
+| reference lab method — HPLC pigment speciation (**protopheophytin : protochlorophyll**, the quantity `KB` §4.1 says the literature tracks) | the true chemical axis | external lab |
+| ⭐ **constructed ladder**: one bottle, four aliquots, three heat-aged for increasing times | **ORDERING known a priori** | one afternoon, no external party |
+
+⭐ The ladder scores every statistic in §16.30–§16.31 against a known ordering in one session, and answers
+something none of this week's work could: **do `Q_snv` and the rise slope even agree on the DIRECTION of a
+known change?**
+
+⚠ Two limits, stated so it is not oversold: heat-ageing a pressed oil in a jar exercises the **pigment** axis,
+not the **roast** axis (roasting happens to the seed before pressing), so it tests the mechanism rather than
+the product; and it yields an **ordering, not an absolute class**, so it can rank statistics and cannot place
+a threshold.
 
 ---
 
