@@ -11957,6 +11957,11 @@ pedestal-free `A_Q` at that `k` is **0.2011**, against a prediction of 0.20.
 ⇒ **`M448 + pedestal` is dilution-invariant to 1.4 % across a 25 % concentration change.** The far-620
 variant is 4× worse — another point for the pedestal correction as the headline.
 
+⛔ **DOWNGRADED by §16.33.3a (2026-08-13).** Both series are `BillaClever`, which §16.33 shows **does not
+dissolve** — so this compared two differently-settled SUSPENSIONS, not two dilutions of one solution. The
+trustworthy figure is the **Steirerkraft 2× dilution at −10.4 %**, measured on an oil that dissolves.
+⇒ M448's dilution invariance is **weaker than this subsection reports**; treat +1.4 % as unreliable.
+
 ⛔ **Do not confuse this with the `Ja! Natürlich` drift.** That series moved **+32 %**, but its concentration
 never changed — it was ONE fill settling. Pedestal sensitivity and dilution variance are different failures
 with different causes, and only the second would indict the metric. See §16.29.3.
@@ -12060,6 +12065,11 @@ that three bands agree.
 ⇒ **Standing rule: mix, wait ~15 min, then capture.** ⚠ *Visually* clear is not optically clear — at series
 A's first capture the clarity window still carried 0.090 A against a 0.037 floor. This complements
 §16.11's "measure within the hour": that rule guards the **aged** end, this one guards the **fresh** end.
+
+⚠ **SCOPED by §16.33.3b (2026-08-13).** This rule was derived on `20260812_BillaClever` and generalised to
+every oil. §16.33 shows that fill **did not dissolve**: Billa oils drift −27 %/run where every other oil
+drifts −3 to −8 %. ⇒ Keep the 15-minute wait as good practice, but **pre-existing 5-minute data on
+non-Billa oils is NOT suspect** — the archive and the 0807 panel stand as measured.
 
 ### ⚠ 16.29.7 WHAT THIS DOES NOT ESTABLISH
 
@@ -12750,6 +12760,142 @@ model from this direction.
 
 ⚠ Note also that SNV forces every curve to mean zero, so the curves **must** cross somewhere; a crossing is
 only evidence if it is tight. Neither quiet region is.
+
+## ⛔⛔ 16.33 THE OIL THAT WILL NOT DISSOLVE — a failure class nothing previously recorded  *(Edwin 2026-08-13, at the bench: "i could not resolve all oil and it looks again muddy … something i had not observed on any oil yet")*
+
+⭐ **An operator observation, confirmed in the spectra.** Preparing `Billa Ja! Natürlich` by the standard
+capillary recipe (§16.23) — and again at 6 drops in 4 mL IPA, stirred by hand — the oil **does not fully
+dissolve**. The fill stays visibly **muddy**. Edwin reports the same for `BillaClever`, and for **no other oil
+in the panel**.
+
+### 16.33.1 IT IS MEASURABLE, AND IT IS NOT WHAT IT LOOKS LIKE
+
+| | Billa oils (3 fills) | all others (8 fills) | ratio |
+|---|---|---|---|
+| `A(520–540)` — raw turbidity | 0.1434 | 0.0862 | 1.66× |
+| turbidity **per unit pigment** | 0.1562 | 0.1394 | **1.12×** |
+| ⭐ **turbidity drift per run** | **−27.1 %** | **−3.6 %** | ⭐ **7.5×** |
+| `sd(B_Q)` within a fill | 0.0132 / 0.0110 | 0.0003 – 0.0034 | 4–40× |
+
+⇒ ⭐ **They are not more turbid — per unit pigment only 1.12×. Their turbidity COLLAPSES 7.5× faster.** The
+suspended material is coarse and settling out during the measurement, which is exactly what an undissolved
+phase does and what a dissolved one does not.
+
+**⛔ It is the OIL, not the tier and not the protocol:**
+
+- ⛔ **not the price tier** — `Spar S-Budget` at 11.98 €/l is the cheapest oil in the set and sits at
+  `sd(B_Q)` = 0.0034, drift −5.2 %/run. Perfectly clean.
+- ⛔ **not the recipe** — `Spar Steirisches`, `Spar Premium` and `Spar S-Budget` were prepared by the same
+  capillary method five days earlier and drift −3 to −8 %/run.
+- ⭐ The common factor is the **brand**: both affected oils are Billa house lines.
+
+### ⭐⭐ 16.33.2 THE OPERATOR RULE  *(Edwin's, and it should reach the user)*
+
+> ⭐⭐ **If the fill still looks MUDDY after the standard capillary recipe, a measurement does not make sense.
+> Do not measure it. The number will be wrong and it will look confident.**
+
+⚠ **Why it looks confident is the dangerous part.** A scattering pedestal lifts `A(λ)` everywhere; because
+`B_Q` is small it inflates the denominator proportionally more, so **M448 falls — toward BROWN**. ⇒ An
+undissolved fill produces a *brown-shifted verdict with normal-looking scatter within a single burst*. Nothing
+in the current pipeline flags it.
+
+⚠ **Open: whether this is a property of the oil or of the oil-plus-IPA pair.** A different solvent, gentle
+warming or longer agitation might dissolve it. Untested. ⇒ **"cannot be measured" is a statement about THIS
+protocol**, not about the product.
+
+### ⛔ 16.33.3 WHAT THIS INVALIDATES — two earlier results must be re-weighted
+
+**a) ⛔ §16.29.1's dilution figure is downgraded.** *"M448 dilution-invariant to +1.4 % across k = 1.25"* was
+measured on **two differently-settled BillaClever suspensions**. The trustworthy number is now the
+**Steirerkraft 2× dilution at −10.4 %**, on an oil that dissolves. Per unit dilution: 5.6 %/unit (BillaClever)
+against 10.4 %/unit (Steirerkraft) — same order, but the better-conditioned experiment is the worse result.
+⇒ **M448's dilution invariance is weaker than §16.29.1 reported.**
+
+**b) ⚠ §16.29.6's 15-minute settling rule is a BILLA-OIL rule, not a general one.** At 5 minutes the
+non-Billa fills drift only 3–8 % per run. The rule was derived on `20260812_BillaClever` — an undissolved
+fill — and generalised to every oil. ⇒ **The archive and the 0807 panel are sound as measured.** Keep the
+15-minute wait as good practice; do not treat pre-existing 5-minute data as suspect.
+
+**c) ⚠ And `BillaClever` may not be as brown as it reads** (§16.33.2's mechanism). The product claim's
+"0 of 15 budget runs missed" was 6 BillaClever + 9 S-Budget. ⇒ ⭐ **`Spar S-Budget` becomes the reference
+brown**: 5.77 ± 0.15 across 9 runs, 2 fills, two sessions five weeks apart, on an oil that dissolves cleanly.
+The claim survives on thinner but sounder evidence.
+
+### 16.33.4 DETECTION — queued, low priority
+
+The condition is measurable without new hardware: **turbidity drift between two consecutive captures**
+(−27 %/run against a −3 to −8 % baseline, a 7.5× separation). ⇒ Queued in `ROADMAP.md` as a low-priority
+item; the operator's eye currently does the job and does it well.
+
+⚠ Edwin is checking the three remaining untested oils for clarity. Until then the class has **n = 2 products,
+one brand**, and the brand association may be coincidence.
+
+---
+
+## ⭐⭐ 16.34 WHAT THE METRIC CAN ACTUALLY BE SOLD AS — a history tracker, not a quality meter  *(2026-08-13, Edwin: "if i would at least have a metric that is invariant for one oil? then i could sell this as a QM/history thing")*
+
+§16.30–§16.32 established that no statistic separates the oils in a way that survives the class labels, and
+§16.31.4 named ground truth as the blocker. ⭐ **That blocker applies only to the ABSOLUTE claim.** A
+history/QM product — *"has your oil changed?"* — needs none of it.
+
+| requirement | absolute verdict | history tracker |
+|---|---|---|
+| class labels (§16.31.3) | ✅ | ❌ |
+| ground truth (§16.31.4) | ✅ | ❌ |
+| an absolute threshold | ✅ | ❌ |
+| cross-instrument calibration — `r_Q` does not survive a rebuild (§16.19) | ✅ | ❌ **irrelevant**: the mill compares against its own history on its own instrument |
+| reproducibility | ✅ | ✅ **the only requirement** |
+
+### ⭐ 16.34.1 THE MEASURED RESOLUTION
+
+Per oil, 3σ detectable change from a 3-run average, as a % of that oil's own level:
+
+| oil | `B_Q` | **3σ** | gated at `B_Q` ≥ 0.05 |
+|---|---|---|---|
+| Spar Premium | 0.067 | **3.2 %** | 0 % |
+| Spar Steirisches | 0.066 | **4.0 %** | 0 % |
+| S-Budget | 0.095 | **4.6 %** | 0 % |
+| BillaClever | 0.121 | 5.1 % | 0 % |
+| Kiendler | 0.058 | 6.5 % | 40 % |
+| Steirerkraft | 0.058 | 11.9 % | 29 % |
+| ⛔ Ja! Natürlich | 0.045 | 26.6 % | 67 % |
+
+⭐ **A clean break at `B_Q` ≈ 0.065**: above it, 3–5 % resolution and zero rejections.
+
+**Against changes actually measured:**
+
+| change | as % of the green→brown span |
+|---|---|
+| Steirerkraft, 5 days apart | **14 %** ✅ detectable |
+| budget vs premium tier | 48 % ✅ |
+| ⭐ **BillaClever, 25 % dilution change** | **0 %** ✅ correctly invisible |
+
+⇒ **It resolves a real change in one oil and is deaf to a 25 % dosing error.** Sensitive to the oil, blind to
+the handling — the right profile.
+
+### ⭐ 16.34.2 THE FAILURE DIRECTION IS THE USEFUL ONE
+
+`B_Q` **is** the degraded-pigment signal, so as an oil ages or a batch comes out over-roasted `B_Q` **rises**
+and the tracker gets **more** precise — exactly as the problem develops.
+
+> ⭐⭐ **The claim that survives: *"We cannot tell you precisely how good your very good oil is. We can tell
+> you when it stops being that."***
+
+⚠ **The limit:** at the very green end you catch **gross** degradation, not early warning. A 10 % drift in
+`Ja! Natürlich` is 0.96 M448 units against a 4.5-unit threshold — invisible. Early warning needs
+`B_Q` ≳ 0.065, which on this rig means a mid-range or already-degrading oil (§16.29.3's dynamic-range wall).
+
+### ⚠ 16.34.3 WHAT IT DOES NOT CHANGE
+
+- ⛔ **M448 still only tells brown from green** (Edwin, and §16.30–§16.32 support it). Ranking greens is dead
+  and was descoped in `SPEC_capability_proof.md` §1a in July.
+- ⛔ **Muddy oils are excluded** (§16.33). `Ja! Natürlich`'s 15.3 % run-to-run CV is **93 % settling drift** —
+  detrended it is ~1.5–2 %, better than any other oil. ⇒ It is not a hard oil to measure; it is an
+  undissolved one.
+- ⛔ **σ_fill is still unmeasured** (§16.21.1). The 0.293 across-fill sd that the whole resolution figure
+  rests on comes from four products with repeat fills.
+- ⛔ **The `QB` gate buys safety, not precision** (§16.29.5): gating improves within-fill scatter 3.2× and
+  leaves the across-fill scatter — which sets the detection limit — unchanged.
 
 ---
 
