@@ -12885,7 +12885,59 @@ and the tracker gets **more** precise — exactly as the problem develops.
 `Ja! Natürlich` is 0.96 M448 units against a 4.5-unit threshold — invisible. Early warning needs
 `B_Q` ≳ 0.065, which on this rig means a mid-range or already-degrading oil (§16.29.3's dynamic-range wall).
 
-### ⚠ 16.34.3 WHAT IT DOES NOT CHANGE
+### ⭐⭐ 16.34.3 THE GATE — what σ_fill must return, decided BEFORE the run  *(Edwin 2026-08-13: "if i can repeat 7 oils with each 3 refills and the metrics look the same, i have the go?")*
+
+⛔ **"Look the same" is not a criterion.** Fix the number before the data exists, or the threshold gets fitted
+to whatever comes out.
+
+⭐ **The experiment does not pass or fail the product — it CALIBRATES the datasheet claim.** With `n` runs
+averaged, `detection = 3 × CV / sqrt(n)`; at n = 3 that is `1.73 × CV`:
+
+| across-fill CV measured | detection claim | verdict |
+|---|---|---|
+| ≤ 3 % | **"detects a 5 % change"** | strong |
+| **~4 %** | **"detects a 7 % change"** | ⬅ **the prior from today's data** |
+| ~6 % | "detects a 10 % change" | usable |
+| ⛔ ≳ 12 % | "detects a 20 % change" | **no product** — the eye already does that |
+
+**The prior to beat or confirm:** across-fill sd **0.293** on a mean M448 of ~7.4 ⇒ **CV ≈ 4 %**, a ~7 %
+detection claim. ⚠ It rests on four products that were never *prepared* as a reproducibility test, which is
+the whole reason to run this.
+
+⇒ **The go/no-go sits only at the bottom: above ~10 % across-fill CV there is no history product.** Below
+that there is one, and the claim scales with the number.
+
+#### ⛔ 16.34.3a THREE THINGS TO CONTROL, or the answer will be wrong
+
+1. ⛔ **Standardise the settling time** — one protocol, 15 min, held. Fills sitting for different durations put
+   settling drift into σ_fill, and the result is a pessimistic number that is not preparation variance at all.
+2. ⛔ **Exclude the muddy oils from the pooled figure** (§16.33). `BillaClever` and `Ja! Natürlich` drift
+   −27 %/run; pooling them corrupts the estimate for every other oil. Measure them, label them, keep them out.
+3. ⛔ **Record `B_Q` per fill.** It decides which oils are trackable at all (the break is at ≈ 0.065), and it
+   is free.
+
+⛔ **HOLD THE DOSE FIXED** — §16.21.1's standing design point. Three fills at ONE nominal dose, not another
+dilution series. Every existing multi-fill pair in the archive also varies concentration on purpose, which is
+exactly why none of them prices preparation alone.
+
+#### ⭐ 16.34.3b WHAT THE SAME SESSION RETURNS FREE
+
+- ⭐ the **muddy check on the three untested oils** — turning §16.33 from n = 2 into a real class, or killing
+  the brand association
+- ⭐ **whether `B_Q` ≥ 0.065 is reachable at the standard recipe, per oil** — the trackable / not-trackable list
+- ⭐ a **σ_fill per oil**, not just pooled. If it correlates with `B_Q` that is a predictive rule rather than a
+  lookup table
+
+⚠ **Scope.** 7 oils × 3 fills × 3 runs = **63 captures**, two evenings with the 15-minute settle. **3 oils ×
+3 fills answers the σ_fill question on its own**; the other four add per-oil variation, which is valuable and
+second-order.
+
+⚠⚠ **And what the "go" does NOT mean.** This establishes the instrument is **REPRODUCIBLE**. It does not
+establish that a change it detects is a change a customer cares about — that is still §16.31.4's gap, and it
+is why the framing must be **deviation alarm**, never *quality meter*. Reproducibility is necessary and it is
+not sufficient.
+
+### ⚠ 16.34.4 WHAT IT DOES NOT CHANGE
 
 - ⛔ **M448 still only tells brown from green** (Edwin, and §16.30–§16.32 support it). Ranking greens is dead
   and was descoped in `SPEC_capability_proof.md` §1a in July.
