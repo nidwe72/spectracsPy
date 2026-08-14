@@ -1076,7 +1076,16 @@ Why this is the better product and not just the safer one:
   *"you have drifted from what you proved good"*, which is a claim the instrument can actually support.
 - Roast targets are **per-origin and per-purpose** in coffee too; no one publishes a universal Agtron number.
 
-#### 9.3a 📌 PARKED — a DEVIATION THRESHOLD on the user's own target  *(Edwin 2026-08-08: "note this idea to be discussed later")*
+#### 9.3a ⭐ UN-PARKED — a DEVIATION THRESHOLD on the user's own target  *(Edwin 2026-08-08: "note this idea to be discussed later")*
+
+> ⭐⭐ **DISCUSSED AND DESIGNED 2026-08-14 — but as a SHAPE alarm, not a scalar one:
+> [`SPEC_history_tracker.md`](SPEC_history_tracker.md).** Instead of a tolerance band on `M448`, it
+> quotients out the `a → k·a + b` nuisance with SNV and measures the angle to the stored reference,
+> `D = √(1−r²)` over 550–600 nm — which needs no metric choice, no denominator and no labels, and
+> which answers questions 1 and 2 below (units = % of the reference's own variation; σ_fill is the
+> floor, priced free by the σ_fill run). ⚠ Question 3 — **is the band symmetric?** — is still open
+> there. ⚠ The *scalar* form described below remains undesigned, and §4 of that document argues the
+> two are complementary rather than alternatives.
 
 > *"With the user-defined target greenness one could also define some threshold deviation. If the greenness
 > differs above the threshold an 'alarm' is to be rendered."*

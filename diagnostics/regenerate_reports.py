@@ -3,9 +3,18 @@
 Edwin 2026-08-03: the three-verdict EVALUATION (§16.20.7) changed what the app computes, and the archived
 reports should show it. This rebuilds each report from its own embedded record and writes it back.
 
-⚠⚠ THIS REPLACES FILES IN PLACE, AND `spectracs-references/` IS NOT A GIT REPO. The verified backup made
-before any of this is `tmp_backup_pre620_20260803/` (141 files, checksum-identical). `--dry-run` is the
-default; `--write` is required to touch anything.
+⚠⚠ THIS REPLACES FILES IN PLACE, AND `spectracs-references/` IS NOT A GIT REPO. `--dry-run` is the default;
+`--write` is required to touch anything. Verified backups, each made immediately before its run:
+    tmp_backup_pre620_20260803/       124 files — before the §16.20 three-verdict pass
+    tmp_backup_pre_v_20260814/        172 files — before the `V`/`Q%` pass, `diff -rq` clean
+
+⭐ 2026-08-14, THE `V` PASS (`SPEC_v_metric_integration.md` §9, V10). It carried THREE generations of change
+at once, because the archive had not been regenerated since 2026-08-03: the 448–460 Soret trim with its
+re-derived thresholds 6.8/8.3 (every M448 number in every report moved), the numbered band plot + legend,
+and Q%/`V` with its new tab and the `Absorption (bands)` -> `(bands, baseline)` rename.
+⭐ The spectra are provably untouched: ABSORPTION/REFERENCE/SAMPLE/TRANSMISSION round-trip BIT-IDENTICAL
+(1305 keys, worst delta 0.0) — which matters because `settling_sweep.BASE` is this same folder, so every
+number in SPEC_metric_research §10 is computed from the files this tool rewrites.
 
 WHAT A REGENERATED REPORT IS, EXACTLY. It is a RE-EVALUATION, not a patch. The spectra are the originals —
 nothing is re-measured — but every rendered row is recomputed by TODAY's plugin, so anything else that
@@ -99,7 +108,15 @@ def verifyAttachments(path, expected):
 
 
 def verdictsOf(workflow):
-    """The three verdict values, for the console summary."""
+    """Every gauge value on the EVALUATION tab, for the console summary.
+
+    ⚠ The COUNT is information, not noise. Since 2026-08-14 there are up to three — Q%, pedestal, far620 —
+    and a row printing fewer means a guard withheld one (SPEC_v_metric_integration.md §3.1/§3.1a):
+       2 values  ->  no Q% at all: either A_Soret below the floor (the 20260806A null series, 27 runs) or
+                     the sample outside the metric's domain (34 of the loose pre-rebuild one-offs).
+    ⛔ It used to be documented as "the three verdicts" of §16.20 — that is no longer what this prints, and
+    reading it that way would make a WITHHELD verdict look like a missing rung of the correction ladder.
+    """
     out = []
     evaluation = workflow.getPhase(SpectralWorkflowPhaseType.EVALUATION)
     for step in (evaluation.getSteps().values() if evaluation is not None else []):
@@ -125,7 +142,8 @@ def main():
     print("%s %d report(s)%s\n"
           % ("REGENERATING" if args.write else "DRY RUN over", len(paths),
              "" if args.write else " — nothing will be written"))
-    print("   %-44s %5s %5s %9s %s" % ("report", "pages", "capt", "size kB", "the three verdicts"))
+    print("   %-44s %5s %5s %9s %s"
+          % ("report", "pages", "capt", "size kB", "gauge values (Q% · pedestal · far620; fewer = withheld)"))
     print("   " + "-" * 96)
 
     failures = 0

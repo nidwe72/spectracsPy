@@ -2,11 +2,17 @@
 
 The plugin shows the pigment index three ways, in decreasing order of correction:
 
-    1  620-630 baseline + pedestal   RoastPedestalGaugeView   T = 10.6
-    2  620-630 baseline              RoastFar620GaugeView     T = 12.5
+    1  620-630 baseline + pedestal   RoastPedestalGaugeView   T = 6.8
+    2  620-630 baseline              RoastFar620GaugeView     T = 8.3
     3  raw Soret/Q                   a VALUE ROW, no gauge    (no threshold exists)
 
-Each adjacent pair isolates exactly one change. What is asserted here is the STRUCTURE (which items appear,
+Each adjacent pair isolates exactly one change.
+
+⚠ 2026-08-14: a FOURTH gauge, `RoastQPercentGaugeView`, now heads the tab — and it is NOT a rung of this
+ladder (SPEC_v_metric_integration.md §5). The rungs differ from each other by how much CORRECTION was
+applied, which is what makes the isolate-one-change property true; `Q%` is a different metric on a
+different construction (raw curve, no chord, and a different Q window). The tests below therefore assert
+against `__ladder()` — the two rungs — and separately assert that nothing has slotted between them. What is asserted here is the STRUCTURE (which items appear,
 in what order, and which of them carries a verdict) plus the two regression guards that the implementation
 rubber-duck identified as the ways this change could go wrong silently.
 
@@ -47,23 +53,37 @@ class ThreeVerdictsTest(unittest.TestCase):
         return [item for item in result.getItems() if type(item).__name__.startswith("Roast")]
 
     @staticmethod
+    def __ladder(result):
+        # §16.20's two rungs only. `Q%` is excluded deliberately: it is a different metric on a different
+        # construction, it runs on its own scale, and its Q band is a DIFFERENT WINDOW (565-580, not
+        # 560-580) — so "a taller Q drives it the same way" is not a claim that transfers.
+        return [item for item in result.getItems()
+                if type(item).__name__ in ("RoastPedestalGaugeView", "RoastFar620GaugeView")]
+
+    @staticmethod
     def __rowLabels(result):
         return [item.label for item in result.getItems()
                 if type(item).__name__ == "MetricFieldView" and item.label]
 
     # ---------------------------------------------------------------- structure
 
-    def test_exactly_two_gauges_and_the_pedestal_one_comes_first(self):
+    def test_the_ladder_pair_stays_adjacent_below_the_q_percent_gauge(self):
+        # ⚠ CHANGED 2026-08-14 (SPEC_v_metric_integration.md §5). A THIRD gauge now heads this tab — but
+        # `Q%` is NOT a new rung of §16.20's ladder. The rungs differ by HOW MUCH CORRECTION was applied,
+        # which is what makes "each adjacent pair isolates exactly one change" true; `Q%` is a different
+        # metric on a different construction (raw curve, no chord at all).
+        # ⇒ what must be asserted is that the LADDER'S OWN PAIR is still adjacent and still in order. If
+        # something ever slots between them, that property dies quietly and this is what notices.
         gauges = self.__gauges(self.__evaluate(_spectrum(0.30, 0.08)))
         self.assertEqual([type(g).__name__ for g in gauges],
-                         ["RoastPedestalGaugeView", "RoastFar620GaugeView"])
+                         ["RoastQPercentGaugeView", "RoastPedestalGaugeView", "RoastFar620GaugeView"])
 
-    def test_the_two_gauges_are_captioned_plainly(self):
+    def test_the_ladder_gauges_are_captioned_plainly(self):
         # Edwin 2026-08-03: the wavelengths are dropped from the visible label — the tooltips still name the
         # window, and the screen should read as a verdict, not as a specification. The earlier hedge (window
         # in the caption, so a historical "Verdict · linear baseline" could never be confused with the new
         # one) is moot now that every archived report has been regenerated and no longer carries that string.
-        gauges = self.__gauges(self.__evaluate(_spectrum(0.30, 0.08)))
+        gauges = self.__ladder(self.__evaluate(_spectrum(0.30, 0.08)))
         self.assertEqual(gauges[0].caption, "Verdict · baseline + pedestal")
         self.assertEqual(gauges[1].caption, "Verdict · baseline")
 
@@ -118,15 +138,15 @@ class ThreeVerdictsTest(unittest.TestCase):
         # calibrated to the instrument's scale (it tops out around 7 where a real green oil reads 12-16), so
         # asserting "good — green" off it would be asserting an artefact of the stand-in. The thresholds are
         # exercised directly against the gauge classes in the test above, where the numbers are real.
-        weak = self.__gauges(self.__evaluate(_spectrum(0.30, 0.055)))
-        strong = self.__gauges(self.__evaluate(_spectrum(0.30, 0.130)))
+        weak = self.__ladder(self.__evaluate(_spectrum(0.30, 0.055)))
+        strong = self.__ladder(self.__evaluate(_spectrum(0.30, 0.130)))
         for weaker, stronger in zip(weak, strong):
             self.assertGreater(weaker.value, stronger.value)
 
     def test_the_pedestal_gauge_reads_lower_than_the_uncorrected_one(self):
         # r_Q is negative, so putting it back ENLARGES the denominator and the corrected index must come out
         # below the plain one. If this ever inverts, the sign of PB_R_Q has been flipped.
-        pedestal, far620 = self.__gauges(self.__evaluate(_spectrum(0.30, 0.08)))
+        pedestal, far620 = self.__ladder(self.__evaluate(_spectrum(0.30, 0.08)))
         self.assertLess(pedestal.value, far620.value)
 
     # ---------------------------------------------------------------- regression guards (the rubber duck)

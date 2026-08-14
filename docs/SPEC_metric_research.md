@@ -2044,10 +2044,222 @@ means the dosing discipline has slipped. That turns a retired correction into a 
 
 ---
 
-## 10 · Related documents
+## ⭐⭐ 10 · `V` — THE BEST METRIC ON RECORD, and the one to implement  *(2026-08-14)*
+
+> **Status: PRE-REGISTERED. Definition FROZEN below.** Found on 2026-08-14 from Edwin's reading of the
+> pivoted spectral panels; scored on 13 fills / 7 products / 53 runs. ⛔ **Not yet tested on data it was
+> not tuned on** — ROADMAP **PRIO 2c / σ_fill** is that test. Reproduce everything with
+> `diagnostics/box_metrics.py`.
+>
+> ⭐ **Two 2026-08-14 amendments, both below:** §10.1a pins the **sampling convention** (native samples,
+> not a resampling grid) and reprints §10.3/§10.4 on it; the shipped threshold is **`T_V` = −18.6**.
+> ⇒ The UI half — gauge, rows, the new band plot — lives in **`SPEC_v_metric_integration.md`**, which
+> may not change anything frozen here.
+
+### 10.1 The definition
+
+On the **de-spiked raw absorbance — no baseline correction of any kind**:
+
+```math
+V = \frac{A_{valley} - A_{Q}}{A_{Soret}}   \qquad\text{reported as } V \times 100
+```
+
+| symbol | window | what it is |
+|---|---|---|
+| `A_valley` | **500–560 nm** | the flat window between the bands — the pigment's own transparent region |
+| `A_Q` | **565–580 nm** | the Q band |
+| `A_Soret` | **448–460 nm** | the Soret flank |
+
+Each is the plain arithmetic mean of the absorbance inside the window, computed **per run**, then
+averaged over a fill. `V` is always negative (the valley lies below the Q band); **less negative =
+greener**. Worked example, Steirerkraft `20260807D/001`: `(0.07069 − 0.16703) / 0.57713 = −0.16693`.
+
+#### ⭐ 10.1a THE SAMPLING CONVENTION — settled 2026-08-14, and it was a real hole
+
+⛔ **"The plain arithmetic mean of the absorbance inside the window" does not define a number** until
+you say *which samples*. It is now pinned, and the rule is the shipped code's rule:
+
+> **A band mean is the plain arithmetic mean of the spectrum's OWN NATIVE SAMPLES inside `[lo, hi]`,
+> both edges inclusive** — bit-identical to `SpectrumFeatureLogicModule.bandMean`, which is what the
+> plugin calls and what the app can actually compute.
+
+**Why it had to be settled before anything is built on §10.** `box_metrics.py` used to resample onto a
+0.5 nm grid first (31 nodes in the Q window against **103 native samples**), and that read `V × 100`
+**0.082 ± 0.023 systematically low** — the spec's own script and the app would have printed two
+different numbers for the same jar. ⭐ Every number in §10.3/§10.4 below is reprinted on the native
+convention; ⭐ **§10.5 is unaffected** (0.214 → 0.214, 0.703 → 0.701) and so is every gap/ratio
+statistic in §10.2 and §10.4, because a common additive bias cancels in a difference and in a Cohen's
+`d` alike. Only absolute levels moved.
+
+⚠ **The limitation this exposes, recorded and NOT fixed.** A plain window mean over `N` samples
+carries an `((f(a)+f(b))/2 − mean) / N` term — the endpoints get full weight where they deserve half —
+so **it is not portable across sampling grids**, and its size depends on where the window edges sit
+relative to the interior. Measured on the Q window: predicted `+0.00043`, observed `+0.00051`. A
+**trapezoid (integral) mean** is portable and cuts the two conventions' disagreement 3.6× (0.082 →
+−0.023). ⛔ Not adopted: it would move `bandMean` and therefore M448 and every shipped metric at once.
+⚠ §9's *"MEAN, not integral"* decision was about a raw `A·nm` integral, which an integral **mean** is
+not — so that door is closed by blast radius, not by principle.
+
+⚠ **The common grid is still load-bearing elsewhere.** Ten distinct native wavelength axes live in
+this archive (different calibrations, 413–424 nm starts, 1460–1538 points). Anything that compares two
+curves **point by point** — `SPEC_history_tracker.md`'s `D = √(1−r²)` above all — must still resample
+first. The grid was dropped for band **means** only, in `box_metrics.py` and `box_terms.py`.
+
+⛔ **The windows are FROZEN.** They were chosen by eye from the physics, not optimised — but ~9
+candidates were scored on these 13 fills, so re-tuning them would destroy the only thing that can
+retire that selection risk. Edge sensitivity was checked: **15 of 17 single-edge variants still
+separate under both labellings**; the Q window is the sensitive one (`572–578` fails).
+
+⭐ **Why this construction.** The numerator is a **difference**, so any additive offset — stray light,
+scattering, seating — cancels, both bands carrying it equally. The denominator is a **level**, so
+multiplicative scale — concentration, exposure — cancels. That is the same immunity the linear
+baseline provides, obtained arithmetically instead of by fitting, **and because nothing is fitted, no
+anchor can contaminate it.** ⇒ That is not academic: `SPEC_capture_quality.md` §16.31.3a measures the
+shipped chord's far foot sitting *on* the Qy band, giving every fill its own baseline slope.
+
+### 10.2 What it measures — and `W`, the mechanistically pure form
+
+```math
+W = \frac{A_{Q} - A_{valley}}{A_{Soret} - A_{valley}}
+```
+
+— the **Q : Soret band-intensity ratio**, with the valley as the pigment's own zero. **Gouterman's
+four-orbital model** makes that ratio *the* diagnostic for loss of the central Mg²⁺: in a metallated
+porphyrin (D₄ₕ) the Q transition dipoles nearly cancel and Q stays weak; remove the metal
+(**pheophytinization**, D₂ₕ) and the cancellation degrades, so **Q gains intensity relative to the
+Soret**. Measured: `W` = **0.163–0.189 green, 0.198–0.238 brown**, browns 1.2–1.4× higher — the
+predicted direction. ⭐ It is the same chemistry that turns cooked green vegetables olive.
+
+⭐ **`W = −V/(1−u)` with `u = A_valley/A_Soret` is an exact identity** (verified to 3 × 10⁻¹⁷ on all
+49 runs). `u` spans **22 %** across the archive, and that factor is the entire reason `W` is noisier:
+gap 3.77 sd vs `V`'s 5.05, dose 20.9 % vs 3.4 %, refill 16.1 % vs 7.4 %. ⇒ **`W` is the physics, `V`
+is the better-conditioned estimator of it.** Ship `V`; quote `W` when explaining what it means.
+
+⚠ **Three caveats on the physical claim.** (1) We measure the Soret **flank** — the peak is at 432 nm
+(`KB_spectroscopy_physics.md` §4.1a) — so `W` is a proxy, and pheophytinization *moves* the Soret as
+well as changing its strength, which amplifies the response but muddies its interpretation. (2) The
+565–580 window is not Qy (~625 nm) but very plausibly its **Q(1,0) vibronic satellite**: §16.30.7f's
+narrow 580.4 nm band sits **1229 cm⁻¹** above the 625 nm Qy, squarely in the 1200–1400 cm⁻¹ interval.
+(3) ⛔ The algebra says `W` should be dose-invariant and `V` should drift; **the measurement says the
+reverse, six times over** — so `V`'s conditioning advantage is empirical, not explained.
+
+### 10.3 The threshold — `T_V = −18.6`
+
+Derived by `soret_448_thresholds.py`'s own **corridor-midpoint** method on **its own 18-run corpus**
+(Steirerkraft B + C green, S-Budget series D brown — the same runs both shipped M448 lines came from),
+on the §10.1a native-sampling convention:
+
+| | mean ± sd | |
+|---|---|---|
+| green (12 runs) | −15.94 ± 1.17 | highest green run −17.14 |
+| brown (6 runs) | −20.44 ± 0.26 | lowest brown run −20.19 |
+| empty corridor | **3.05 units wide** | Cohen's **d = 5.33** |
+| corridor midpoint | −18.67 | |
+| ⇒ ⭐ **shipped** | **`T_V` = −18.6** | |
+
+⭐ **Why −18.6 and not the midpoint.** It sits just *inside* the corridor on the **strict** side of
+−18.67, which is the side `SPEC_capture_quality.md` §16.10.17d's policy wants: a false GREEN is the
+harder error to make. It costs nothing — **no archived run lies between −18.60 and −18.67** — and it
+matches the one decimal the gauge displays, so the line on screen and the number beside it agree.
+⚠ Both are inside the empty corridor, so **either separates the corpus perfectly**; this is a policy
+choice, not a measurement.
+
+⚠ **Where the rest of the archive lands** — and two things must be said out loud. **Both Spar g.g.A.
+oils come out GREEN** under `T_V`, contradicting §16.30.1a's relabel; and **three fills straddle the
+line at run level** — confirmed run by run on the native convention:
+
+| fill | its runs (`V × 100`) |
+|---|---|
+| Steirerkraft half-strength | −16.49 · −17.63 · −18.38 · **−19.35 · −19.44 · −19.79** |
+| Steirerkraft aged 24 h | −15.97 · −18.10 · **−19.34** |
+| Spar Steirisches g.g.A. | −18.06 · −18.34 · **−18.81** |
+
+⛔⛔ **This is a REQUIREMENT on any gauge built from `V`, not a footnote.** A two-class gauge shows a
+different verdict for two consecutive captures of the same jar — one fill spans 3.3 units across six
+runs. `SPEC_v_metric_integration.md` §4 discharges it with a third *borderline — re-measure* class
+whose edges are the measured within-fill sd (±0.70), and which fits entirely inside the empty corridor
+so that no corpus run changes class. ⛔ Neither is a
+`V` defect — the corpus deliberately excludes the boundary products, exactly as it does for M448 — but
+it means **`T_V` may not be quoted as classifying the Spar oils**. A fill whose runs straddle the line
+has no verdict and the gauge must say so rather than average its way to one.
+
+### 10.4 The scorecard, and two real weaknesses
+
+| | `V` | M448 |
+|---|---|---|
+| class gap | ⭐ **5.05 sd** | 3.80 sd |
+| separates under **both** labellings | ⭐ yes | ⛔ no |
+| archive fills ordered correctly | ⭐ **17 / 18** | — |
+| dose, ±40 % | ⭐ 3.4 % of class gap | 10 % |
+| denominator distance from zero | ⭐ 10 sd | ⛔ **6 sd** |
+| refill reproducibility | 7.4 % of class gap | ⭐ **3.7 %** |
+| baseline dependence | ⭐ **none** | ⛔ chord foot on Qy |
+| ⛔ **lamp swap, same oil** | ⛔ **4.84 units** | ⭐ 8 % |
+| ⛔ **half concentration** | ⛔ **2.19 units** | ⭐ holds |
+| evidence base | one session, 9 candidates scanned | months, rig-verified, shipped |
+
+⛔ **The denominator point is the one Edwin raised and it is decisive against M448**: `B_Q` reaches
+within **6 sd of zero** (0.0344 on `Ja! Natürlich`), which is why that oil's M448 inflates to 22.24
+and why `20260811A` returns **M448 = −9.72**. `V` divides by a raw Soret level that no dilution can
+drive small.
+
+⛔ **The lamp weakness is `V`'s worst property.** §16.28's two-lamp control moves it 4.84 units on one
+oil — larger than the entire green/brown span — where M448 moves 8 %. ⇒ **A chart cannot cross a lamp
+change**, and `SPEC_lamp_rebuild.md`'s rebuild will reset it.
+
+### 10.5 The history-tracker band — ±1.0
+
+Measured refill floor: **pooled 0.21 units** (Kiendler 0.09, Billa Clever 0.18, Steirerkraft 0.23,
+S-Budget 0.37); within-fill sd 0.70; class span 4.50. ⭐ **§10.1a changed none of this** — the pooled
+floor moved 0.214 → 0.214 and the within-fill sd 0.703 → 0.701, because a common bias cancels in every
+difference. The band derivation below therefore stands exactly as first written.
+
+| band | multiple of refill sd | detects |
+|---|---|---|
+| ±0.64 | 3σ | 14 % of the class span |
+| ⭐ **±1.0** | **4.7σ** | **22 %** — the recommended band |
+| ±2.0 | 9.5σ | 45 % — post-mortem, not warning |
+
+**Nothing benign on record reaches 1.0**: a refill costs 0.37, nine days costs 0.40, a ±40 % dose
+change costs 0.12. **Everything that should fire does**: an undissolved fill drifts 2.28 in eight
+minutes, half-strength 2.19, a class change 4.50, a lamp swap 4.84.
+⚠ *nine days* and *undissolved* are not recomputed on the native convention — they are differences, so
+§10.1a moves them by ≲0.05, well inside their own scatter.
+
+⇒ ⭐ **The claim this supports:** *"Measured on your own instrument against your own reference press,
+we tell you when a batch has drifted by a fifth of the distance between a good green oil and a brown
+one — before you can see it."* ⚠ Provisional: the 0.21 floor comes from the **drop-based** recipe, and
+**no refill pair exists on the capillary recipe with a non-Billa oil**. PRIO 2c settles it.
+
+### 10.6 What `V` does NOT change
+
+1. ⛔ **Ground truth is still the blocker, exactly as before.** `V`'s class separation is measured
+   against labels that are judgment calls — and M448 is in the identical position: its shipped
+   threshold rests on **18 runs from two products**, with the boundary oils held out as *"context,
+   never an input to the line"*. ⇒ The gap is project-wide, not metric-specific; it neither favours
+   nor blocks the switch, and **PRIO 3a still owns it**.
+2. ⛔ **It is not independent evidence about any label.** `V` correlates 0.66–0.84 with the red slope,
+   `S2` and M448 — §16.30.1a's point stands: one pigment system, many projections.
+3. ⚠ **The 448–460 flank caveat applies to M448 too**, so ROADMAP item 5's "get light onto 432 nm"
+   would upgrade both at once.
+
+### 10.7 Two by-products worth keeping
+
+- **`S2`** = mean SNV (over 448–629) of the raw spectrum across **617–629 nm**. ⭐ The most
+  dilution-invariant quantity ever measured here — **0.01 within-fill sd** for a dose change, against
+  M448's 0.36. ⛔ Overlaps the classes on Spar Premium, so it is parked on PRIO 3a, not dead.
+- **`S1`** = the same over **490–578 nm**. Not a metric — 1.61 sd gap with 1.84 sd overlap — but
+  **−0.372 ± 0.012 across all twelve fills, six products, four sessions**, a 3 % spread. ⭐ Nearly an
+  invariant of pumpkin oil on this instrument, and therefore usable as a **run-validity check**: if
+  `S1` departs from −0.372, that measurement is wrong, whatever the oil and whatever its strength.
+
+---
+
+## 11 · Related documents
 
 | topic | where |
 |---|---|
+| ⭐ **`V` / `Q%` in the DEV plugin — gauge, rows, the new band plot** | **`SPEC_v_metric_integration.md`** |
 | the metric being replaced, and its algebra | `DOC_metric_algebra.md` |
 | the correction this document steps back from | `DOC_pedestal_correction.md` — esp. App. D.6, ch. 13 T4 |
 | pigment identity, band positions, Gouterman | `KB_spectroscopy_physics.md` §4, §4.1 |

@@ -11546,6 +11546,30 @@ date it and each needs a regeneration, not a patch: ✅ the **448 trim** — LAN
 (which replaces §16.27.9a's 0.22 %/4 % bound with a number), and the **second brown oil** (which moves the
 7.17 line off one product).
 
+#### ✅ 16.27.10a The transcription still holds — checked against the regenerated archive *(2026-08-14)*
+
+The `V`/`Q%` pass rebuilt all twelve source reports (`tmp/20260807A`–`D`, three re-seats each) on today's
+plugin, and **every `M448` value in the one-pager came back unchanged** — Steirerkraft `10.334 / 9.922 /
+9.613`, Spar Steirisches `8.909 / 8.523 / 8.833`, Spar Premium `7.827 / 7.706 / 7.539`, S-Budget `6.507 /
+6.497 / 6.512`. ⇒ **No reissue is owed on that count.**
+
+⭐ **And the four oils order IDENTICALLY under `Q%`** — Steirerkraft greenest (15.82–16.69), then Spar
+Premium (17.14–18.31), Spar Steirisches (18.06–18.81), S-Budget brownest (19.67–20.37). That is a real
+cross-check, not a restatement: the two metrics **share no construction** — `M448` divides a
+baseline-corrected Soret by a baseline-corrected Q band, `Q%` divides a raw-curve band *difference* by a
+raw Soret level, and §10.1a's windows differ too.
+
+⛔ **But `Q%` must NOT be added to this one-pager**, and the panel's own one-metric-only policy is why:
+
+- **Spar Steirisches lands entirely in the borderline zone** (all three re-seats, 18.06–18.81). That is
+  `SPEC_v_metric_integration.md` §3.1a working correctly — it is one of §10.3's three straddling fills —
+  but on a colleague-facing page it turns a clean four-way ordering into three verdicts and a shrug.
+- **Spar Premium reads GREEN under `T_V`**, contradicting §16.30.1a's relabel. §10.3 says outright that
+  `T_V` may not be quoted as classifying the Spar oils: the threshold corpus deliberately excludes them.
+
+⇒ The panel's *"the other metric variants are an internal matter and would only invite the question 'so
+which one is it?'"* stands. Putting `Q%` on it is a deliberate decision, never a transcription update.
+
 > ⚠ **And the two Roast-Ampel thresholds moved with it**: `M448 + pedestal` T = **6.8** and `M448` T = **8.3**,
 > re-derived on §16.20.4's own corpus (`diagnostics/soret_448_thresholds.py`). §16.20.4's 10.6 / 12.5 belong to
 > the 440–460 numerator and stay valid *for that window* — which is what `PB_SORET_BAND_LEGACY_440` freezes.
@@ -12115,6 +12139,48 @@ Two fills were relabelled during the session, on Edwin's judgment rather than on
 does.** That is a large dependency on an unmeasured call, and it must be stated wherever the result is used.
 ⇒ The validation study (ROADMAP PRIO 3) owns settling it.
 
+#### ⚠ 16.30.1a THE THIRD RELABEL — `Spar Premium` → BROWN again  *(Edwin 2026-08-14)*
+
+> *"i think we should relabel Spar Premium as brown. think that the red far slope alone justifies this."*
+
+**The label history of one product, in three days:**
+
+| date | section | `Spar Premium g.g.A.` | basis |
+|---|---|---|---|
+| 2026-08-12 | §16.30.1 | **BROWN** | judgment — *"it might really be a brown oil"* |
+| 2026-08-13 | §16.30.7e | **GREEN** | judgment |
+| **2026-08-14** | **here** | **BROWN** | judgment, prompted by the red far slope |
+
+⭐ **What prompted it is real.** The concentration-normalised **615–629 nm slope** ranks `Spar Premium` at
+**0.00745, eleventh of twelve fills** — *below three of the four browns*, with the nearest green above it
+(`Kiendler` 6-drop, 0.00915) a full **23 %** away. It is not a boundary case on that quantity; it sits
+inside the brown group.
+
+⛔⛔ **BUT THE INFERENCE IS CIRCULAR AND MUST NOT BE MADE — see §16.31.3a.** The red far slope and the
+`S2` box statistic correlate at **r = +0.937** (Spearman +0.84): they are one measurement, not two. So
+*"the red slope says brown"* and *"labelling it brown makes `S2` separate"* are the same sentence.
+
+⛔ **And no independent basis exists in the spectrum.** Checked and rejected on 2026-08-14:
+
+| candidate basis | result |
+|---|---|
+| absorbed-light **colour** (`EvaluationColorUtil`, the K1–K4 machinery) | ⛔ hue spans **9° across all twelve fills** (257.6–266.8°); green mean 260.4° vs brown 259.6°. `Spar Premium` ranks **7th of 12** — dead centre. Saturation pegged at 100 for every fill |
+| price (35,96 €/l) | ⛔ already rejected in §16.30.1 |
+
+⇒ ⭐⭐ **The structural reason, and it generalises: there is ONE pigment system in this oil, so every
+spectral statistic is a different projection of the same one-dimensional chemistry.** Red slope, `S2`,
+`Q_snv`, `M448` (whose chord foot sits on the Qy band) and colour all correlate, ρ = 0.84–0.94 on the pairs
+measured. **No spectral quantity can be independent evidence about this label.** Ground truth must come
+from OUTSIDE the spectrum — taste, the mill's roast record, provenance. That is §16.31.4's blocker,
+restated from the labelling side.
+
+⚠ **Consequence of accepting the relabel**: with §16.30.7e's `Spar Steirisches` → BROWN standing, the green
+class is now **`Steirerkraft`, `Kiendler`, `Ja! Natürlich`** and both Spar g.g.A. products are brown.
+
+⛔ **`Spar Premium` has exactly ONE fill in the archive** (`20260807C`, one evening, three runs). One tube is
+the load-bearing member under `Q_snv`, `S2` and `M448`'s margin simultaneously. ⇒ ROADMAP carries the
+two-to-three-more-fills run; it cannot settle the class, but it settles whether that tube is representative.
+
 ### 16.30.2 WHAT WAS TRIED AND WHY EACH FAILED
 
 All on the archive, all recomputed on one code path. `d` is green/brown Cohen's *d* on the three-oil refit
@@ -12569,6 +12635,41 @@ and labels consistent with that ordering were adopted.*
 ⚠ **This applies to §16.30.4 as much as to §16.31.1.** `Q_snv`'s 0.39× scatter-to-gap ratio — written up as
 the best result on record — holds only under a labelling that has since been revised.
 
+#### ⛔⛔ 16.31.3a THE BAR THIS SETS — no statistic may be quoted under a labelling derived from it  *(2026-08-14)*
+
+§16.30.1a relabels `Spar Premium` → BROWN on the strength of the **red far slope**. That makes the rule above
+operational, because the relabel and the statistics it rescues are **not independent measurements**:
+
+| pair | correlation |
+|---|---|
+| red far slope (615–629, concentration-normalised) ~ **`S2`** (SNV'd raw, 617–629) | **r = +0.937**, Spearman +0.84 |
+| `S2` ~ **`M448`** | Spearman **+0.85** |
+
+⇒ ⛔ **`S2` MAY NOT BE QUOTED as separating the classes.** Its numbers, for the record and as an example of
+what the bar excludes:
+
+| labelling of `Spar Premium` | `S2` | `M448` |
+|---|---|---|
+| GREEN (§16.30.7e) | ⛔ overlap −1.42 sd | separates +0.51 sd |
+| **BROWN (§16.30.1a)** | separates **+1.72 sd** | separates **+1.61 sd** |
+| excluded entirely | separates +1.72 sd | separates +2.12 sd |
+
+`S2` moves from *overlap* to *separates* on exactly the relabel its own twin statistic motivated. ⛔ Same bar
+for **`Q_snv`** (§16.30.4), which separates only under `Spar Premium` = brown.
+
+⚠ **`M448` is the least contaminated of the three but is NOT clean either.** It separates under all three
+treatments, so its verdict does not hinge on the label — but its chord's far foot sits at 620–630, **on the
+Qy band**, so part of what it reads arrives through the baseline rather than through a declared measurement.
+Measured 2026-08-14: moving that foot to 596–604 collapses `M448` from **SEPARATED +0.51 sd to OVERLAP
+−0.82 sd**, doubles its dose sensitivity (−4.4 % → −10.2 % per drop) and takes `Billa Clever`'s refill
+reproducibility from 1.9 % to 16.9 %. ⇒ **Do not move the anchor** — but note that ≈ 0.24 σ of `M448`'s
+separation is currently delivered by a region the correction is treating as baseline. The fix is ROADMAP
+item 5's red extension: measure Qy as a *band*, and anchor the baseline somewhere genuinely dead.
+
+⇒ ⭐ **The test any future candidate must pass**: it separates under a labelling that was fixed *before*
+the candidate was computed, or it separates with the ambiguous fill excluded and enough other fills left to
+mean something. Neither is available today with one `Spar Premium` fill.
+
 ### ⭐⭐ 16.31.4 THE BLOCKER IS GROUND TRUTH, NOT σ_fill — this supersedes §16.30.7i
 
 §16.30.7i named three independent fills of Steirerkraft as the experiment that unblocks everything. ⛔ **That
@@ -12937,6 +13038,28 @@ establish that a change it detects is a change a customer cares about — that i
 is why the framing must be **deviation alarm**, never *quality meter*. Reproducibility is necessary and it is
 not sufficient.
 
+### ⭐ 16.34.3c THE MULTIVARIATE SIBLING — `SPEC_history_tracker.md`  *(2026-08-14)*
+
+Everything above tracks a **scalar** (`M448` / `B_Q`). ⭐ A second form of the same product tracks the
+**whole curve's shape**: SNV quotients out the `a → k·a + b` error model of §16.7.2h exactly, and the
+angle to a stored reference, `D = √(1−r²)` over 550–600 nm, alarms on *any* change of shape — with no
+metric choice, no denominator (§16.29/§16.30.2/§16.30.7f/§16.31.2's repeated killer) and no labels
+(§16.31.3's). ⭐ **Its control limit is σ_fill too, so the run designed above prices BOTH trackers** —
+compute `D` between fills alongside `M448`, from the same captures, at no extra bench cost.
+
+Two results from that work belong here because they bear on §16.31.5 and §16.33:
+
+- ⭐⭐ **Derivatives lose even when every point is kept.** §16.31.5a blamed the loss on *adaptivity*
+  (an extremum uses one point). Comparing the WHOLE derivative curve — ~100 points, full averaging —
+  still loses: curve 13/18 → slope 11/18 → curvature 9/18. ⇒ The rule is stronger than stated: **any
+  operation that boosts high-frequency content is unaffordable at this SNR, however many points it
+  averages** (`SPEC_history_tracker.md` §6.3).
+- ⭐⭐ **§16.33's settling drift is visible in SHAPE, and it is time-ordered.** Six of seven fills give
+  `D(1,3) > D(1,2), D(2,3)` with straightness up to 0.96 — a straight march, not a random walk. ⇒ The
+  within-fill scatter is **not** the instrument floor; the undrifted fill (Spar Premium) puts that at
+  **1–2 %**, which independently corroborates §16.26's 1.36 % rms re-seat cost
+  (`SPEC_history_tracker.md` §6.4).
+
 ### ⚠ 16.34.4 WHAT IT DOES NOT CHANGE
 
 - ⛔ **M448 still only tells brown from green** (Edwin, and §16.30–§16.32 support it). Ranking greens is dead
@@ -12948,6 +13071,80 @@ not sufficient.
   rests on comes from four products with repeat fills.
 - ⛔ **The `QB` gate buys safety, not precision** (§16.29.5): gating improves within-fill scatter 3.2× and
   leaves the across-fill scatter — which sets the detection limit — unchanged.
+
+---
+
+## ⭐⭐ 16.35 THE FAR ANCHOR IS ON A BAND — the chord's slope is fill-dependent, and it propagates  *(2026-08-14)*
+
+Tool: **`diagnostics/box_metrics.py`** (the metric), **`shape_similarity.py`** with
+`SPECTRACS_FAR_ANCHOR=596-604` (the anchor experiment).
+
+### 16.35.1 The mechanism, in arithmetic
+
+`linearBaselineCorrected` fits a weighted least-squares line through every point in the two anchor
+windows and subtracts `slope·λ + intercept` from **every** wavelength. The far window is **620–630 nm**
+— which `KB_spectroscopy_physics.md` §4.1a places **on the protochlorophyll Qy band (~625 nm)**.
+
+⇒ Two consequences, both measured:
+
+1. ⛔ **Whatever absorbance sits at 620–630 is DEFINED as baseline and removed.** The corrected curve
+   is zero there by construction. `Ja! Natürlich` carries **0.459 A** at 625 nm; all of it is
+   discarded.
+2. ⛔⛔ **The far foot sets the SLOPE, so a greener oil gets a steeper line subtracted everywhere.**
+   Chord slope: `Ja! Natürlich` **0.00212 A/nm** against `Billa Clever` **0.00050** — a 4.2× spread,
+   and the far/near anchor ratio runs 1.35–1.71 for the sound fills against **1.78–2.72** for
+   `Ja! Natürlich`. Across 500→573 nm that is **0.155 A subtracted from the green oil against 0.033
+   from the brown one.** The Q band is measured at 560–580, inside that span.
+
+⇒ ⭐ **≈ 0.24 σ of M448's 1.63 σ separation is delivered through the anchor rather than through a
+declared measurement**, and `Ja! Natürlich`'s S/Q falls from **17–27 to 5.9–8.5** when recomputed on a
+baseline that never touches the red end.
+
+### ⛔ 16.35.2 AND YET: DO NOT MOVE THE ANCHOR — the experiment says so
+
+596–604 nm validates as a window (6× flatter than 620–630, straight to 0.0026 A, lamp lines at
+607.5–609 safely outside). Every analysis was re-run on it:
+
+| | 620–630 (shipped) | 596–604 |
+|---|---|---|
+| M448 green / brown | 11.78 / 6.72 | 7.17 / 6.17 |
+| M448 class boundary | ⭐ **SEPARATED +0.72** | ⛔ **OVERLAP −0.82** |
+| M448 dose sensitivity | −4.4 %/drop | ⛔ −10.2 % |
+| M448 `Billa Clever` refill | ⭐ 1.9 % | ⛔ 16.9 % |
+| shape-distance floor / refill / acceptance | 4.28 % / 14.61 % / 13-of-18 | 4.03 % / 14.56 % / 13-of-18 |
+
+⇒ ⭐⭐ **The Qy contamination was carrying real signal.** Qy strength *is* greenness, so the chord was
+converting a red-end pigment measurement into an amplification of Soret/Q. Removing it removes
+information, not just bias. **The mechanism is a liability; the consequence of "fixing" it naively is
+worse.** ⇒ Leave the anchor at 620–630. The correct fix is ROADMAP **item 5's red extension** —
+measure Qy as a *band* and anchor the baseline somewhere genuinely dead.
+
+⭐ **One thing the anchor move did settle**: §8.3's three-tier alarm in `SPEC_history_tracker.md` went
+from 17/17 to **4/17**, which is the out-of-sample refutation it was pinned for.
+
+### ⛔ 16.35.3 A RETRACTION — the "undissolved-fill detector" that was the chord's tilt
+
+⛔ **Claimed and withdrawn on the same night.** Over 500–555 nm on the *baselined* curve,
+`Ja! Natürlich` slopes down by **−0.063 to −0.083** while every sound fill sits between −0.021 and
++0.011 — a clean 3× gap that looked like a scattering signature and would have given ROADMAP's parked
+*"automatic detection of an undissolved fill"* item its estimator.
+
+⛔ **On RAW absorbance the separation vanishes entirely**: `Ja! Natürlich` 0.020–0.040, the seven sound
+fills 0.010–0.045, complete overlap, with `Billa Clever` the steepest of all ten. **Chord slope vs the
+baselined 500→555 change: r = −0.952.** The "scattering slope" was §16.35.1's tilt, nothing else.
+
+⇒ ⭐⭐ **The rule this earns, and it generalises past this instance:** *any statistic computed on the
+baselined curve inherits a fill-dependent slope from the far anchor.* Before believing a new feature,
+**recompute it on the raw absorbance.** If it survives, it is in the oil; if it does not, it is in the
+correction. The undissolved-fill detector remains **without an estimator**.
+
+### ⭐ 16.35.4 What replaced it — `SPEC_metric_research.md` §10
+
+The same session's positive result: **`V = (A_valley − A_Q) / A_Soret`** on raw absorbance, no
+baseline anywhere. It reaches a **5.05 sd class gap** against M448's 3.80, orders **17 of 18** archive
+fills correctly, separates under **both** contested labellings where M448 separates under only one,
+and keeps its denominator **10 sd from zero** where M448's `B_Q` comes within **6**. ⇒ Marked there as
+the metric to implement; ROADMAP carries it as the DEV-plugin task.
 
 ---
 
