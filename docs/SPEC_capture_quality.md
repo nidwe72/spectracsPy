@@ -13321,7 +13321,11 @@ refill floor.
 study and every "leave it in and watch" experiment alters the sample it observes — including the run
 that discovered this.
 
-⇒ **The fix is a mechanical SHUTTER between lamp and sample**, open only during capture. Not power
+⇒ **The fix is a mechanical SHUTTER between lamp and sample**, open only during capture. ⛔ **But see
+§16.36.7: shuttering removes the heat that holds the sample above its cloud point, so a shutter REQUIRES
+a heated holder** — the two are one decision. The build Edwin settled on (silicone mat + bought
+thermostat, conducting into an aluminium ring, never heating the air column) is specified in
+`SPEC_settled_measurement.md` §7. Not power
 switching: §16.7's warm-up drift means the lamp must stay thermally stable, i.e. always on. A shutter
 drops the dose ~50–100× on a long run and lets the warming device clear the sample *outside* the beam,
 so the lamp stops doing two jobs at once.

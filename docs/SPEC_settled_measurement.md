@@ -156,7 +156,83 @@ that never happens, or every good oil pays the muddy oils' 15-minute tax.
 
 ---
 
-## 7 · Related
+## ⭐ 7 · THE HEATED HOLDER — deferred, costed, and the shape it should take  *(Edwin's choice, 2026-08-15)*
+
+> ⚠ **NOT ON THE CRITICAL PATH.** §1–§6 need **no hardware at all**: the lamp already clears the fill in
+> ~17 min and that wait is accepted. This section exists so the option is specified when it is wanted,
+> and so nothing is bought before the software that makes the buying decision possible.
+
+### 7.1 What it would buy
+
+| | |
+|---|---|
+| clearing time | ~17 min (lamp, ~40 °C) → **~2 min** (measured at 50 °C in a bath, §16.36.7) |
+| pre-clearing damage | **0.36 units = 1.7 refill floors** (§2.3) → ~0 |
+| the σ_fill clearing-time term | ±0.05–0.27 units (§2.4) → collapses with the clearing time |
+
+⭐⭐ **And it is what would make a SHUTTER possible at all.** §16.36.7 found the conflict: the lamp's heat
+is what holds the sample above its cloud point (35–40 °C), so shuttering the lamp re-clouds the sample.
+⇒ **a shutter REQUIRES a heated holder**; the two are one decision, not two.
+
+### 7.2 The build — Edwin's choice: silicone mat + a bought thermostat
+
+```
+    230 V ──▶ [12 V adapter]  ──▶ [thermostat module] ──▶ [silicone heating mat]
+              isolated, ~€6         NTC probe ON THE RING     adhesive, 12 V, ~€10
+                                                              ⇓ conducts into
+    ⭐ everything past the adapter is SELV — touchable        [ALUMINIUM jar ring]
+```
+
+⭐ **The aluminium ring is required anyway**, independently of heating: PLA is already in its creep
+regime at 40 °C (§16.36 cautions), and the ring doubles as the heat spreader.
+
+⚠ **A self-regulating PTC element is the simpler alternative** — regulation is intrinsic to the part, so
+there is no controller, no probe and no relay. It is fixed-temperature; the mat + thermostat is chosen
+here because the set-point is still unknown and wants to be adjustable while the cloud point is being
+characterised.
+
+### ⛔ 7.3 PLACEMENT — conduct into the ring, never heat the air column
+
+```
+        │             │
+        │  ███████    │  ← jar        ⭐ HEAT THE RING: conduction into the
+      ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄   ← mat here      jar, almost no air warmed
+        │             │
+     ▄▄▄│             │▄▄▄  ⛔ NOT the cone wall: warm air rises THROUGH THE
+        │             │        BEAM -> refractive streaming the camera sees
+        ├═════════════┤
+        │  ● ● ● ● ●  │     ⛔ NOT the lamp base: 11 cm away, and the same
+        └─────────────┘        convection problem
+```
+
+⛔ §12.5 of `SPEC_lamp_rebuild.md` is explicit that what happens inside those tubes is either signal or
+stray light. A thermal gradient in the optical path is neither, and the camera sees it directly.
+⚠ The cone joint is also the *most* repeatable interface in the stack (0.39 % against the jar's 2.81 %,
+§16.9.3h) — heating it puts thermal expansion into the one part that already behaves.
+
+### ⚠ 7.4 SAFETY — SELV only, and no contacts near the solvent
+
+⛔ **Never mains at the holder.** The jar is handled on every measurement, and **IPA's flash point is
+12 °C** — its vapour sits exactly where a heater would go. Everything past the adapter must be 12 V.
+⚠ **Prefer a solid-state (MOSFET/PWM) thermostat over a relay** for the same reason: a relay arcs, and
+an arc next to solvent vapour is an ignition source.
+
+### ⭐ 7.5 THE ACCEPTANCE TEST — it is free, and it is the noise floor
+
+Run the null series (§16.26) with the heater ON and OFF.
+
+```
+   Q% no-re-seat sd stays near 0.063   ->  the heater does not disturb the beam  ⭐ accept
+   it rises                            ->  convection in the optical path; move the heat
+                                           further from the beam or reduce the power
+```
+
+⇒ ⭐ **The instrument's own floor is the acceptance criterion**, which is the cheapest possible test and
+needs no new apparatus.
+
+---
+
+## 8 · Related
 
 | topic | where |
 |---|---|
@@ -165,3 +241,5 @@ that never happens, or every good oil pays the muddy oils' 15-minute tax.
 | the σ_fill design change it forces | §16.34.3d |
 | `Q%`, the guards, the frozen windows | `SPEC_v_metric_integration.md`, `SPEC_metric_research.md` §10 |
 | the working prototype | `diagnostics/clearing_time_course.py` |
+| the shutter this would unblock, and the cloud point that forces it | `SPEC_capture_quality.md` §16.36.7 |
+| the optical path a heater must not disturb | `SPEC_lamp_rebuild.md` §12.5 |
