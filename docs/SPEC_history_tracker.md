@@ -474,6 +474,49 @@ the fill rather than the oil.
 
 ## 9 · What must be measured before this ships
 
+### ⭐⭐ 9.0 THE 2026-08-15 PROTOCOL CHANGE MOVES THIS PRODUCT FORWARD, NOT BACK
+
+⚠ **At first reading it looks like a loss.** `SPEC_capture_quality.md` §16.36 established that the lamp
+degrades the sample while measuring it, so §16.34.3d retires 3-runs-per-fill: **one measurement per
+fill** is all that is now possible. The tracker loses its within-fill averaging.
+
+⭐⭐ **It is a gain, and the arithmetic says so:**
+
+```
+old protocol   3 runs averaged, within-fill sd 0.70   ->  sd of the mean = 0.70/sqrt(3) = 0.40
+new protocol   ONE measurement at the algorithm's chosen point
+               bounded below by the no-re-seat floor   0.063   (§16.36.6, 10 repeats untouched)
+               bounded above by the best archived fills 0.38
+               => somewhere in 0.06 .. 0.38, against the old 0.40
+```
+
+⇒ **A single clean measurement plausibly MATCHES OR BEATS the old three-run average** — because roughly
+two thirds of that average's noise WAS the drift the new protocol removes. This is not precision traded
+for simplicity; it is very likely both.
+
+⭐ **And that lands directly on this document's central number.** The alarm band (§10.5's ±1.0 in `Q%`)
+is set by σ_fill. A smaller per-measurement noise means either a **tighter, more defensible band** — the
+detection claim in §4 scales straight off it — or the same band with real margin underneath it.
+
+⚠ **One NEW term enters σ_fill, and it must be measured rather than assumed.** Damage accumulates while
+the fill clears, and clearing time varies between fills:
+
+| clearing time varies by | the damage term varies by |
+|---|---|
+| ±3 min | 0.05-0.08 units |
+| ±5 min | 0.08-0.13 units |
+| ±10 min | 0.17-0.27 units |
+
+Against the 0.21 refill floor that is **material but not dominant** — and ⭐ the **zero-dose
+extrapolation** of `SPEC_settled_measurement.md` §2.3 is exactly its correction, which promotes that
+number from a curiosity to a σ_fill component. ⇒ **the run must log clearing time per fill**, so the
+correlation can be checked directly.
+
+⛔ **The condition is unchanged and still open:** all of this says the measurement should be cleaner. It
+does not say what σ_fill is. Edwin's own framing — *"under the assumption that the refill tests give
+approximately the same metric values"* — names the assumption exactly, and §16.34.3's criterion was
+fixed before the data on purpose.
+
 ### 9.1 σ_fill — the same run, and it is already HIGHEST PRIORITY
 
 ROADMAP **σ_fill** / **PRIO 2b** (`SPEC_capture_quality.md` §16.34.3) measures across-fill

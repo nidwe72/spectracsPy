@@ -12864,6 +12864,13 @@ only evidence if it is tight. Neither quiet region is.
 
 ## ⛔⛔ 16.33 THE OIL THAT WILL NOT DISSOLVE — a failure class nothing previously recorded  *(Edwin 2026-08-13, at the bench: "i could not resolve all oil and it looks again muddy … something i had not observed on any oil yet")*
 
+> ⚠⚠ **SUPERSEDED IN PART BY §16.36 (2026-08-15).** This section treats the movement of a muddy fill as
+> ONE phenomenon — "settling drift". It is **two**, and they are opposite in every property: the lamp's
+> **heat CLEARS** the fill (reversible — the jar re-clouds on cooling) while the lamp's **light BROWNS**
+> it (irreversible — survives cooling and re-clouding). Every "settling" number below therefore mixes a
+> physical state change with a chemical one. ⭐ The third muddy oil, **Lugitsch**, is where they were
+> finally separated, and §16.36 carries the controls.
+
 ⭐ **An operator observation, confirmed in the spectra.** Preparing `Billa Ja! Natürlich` by the standard
 capillary recipe (§16.23) — and again at 6 drops in 4 mL IPA, stirred by hand — the oil **does not fully
 dissolve**. The fill stays visibly **muddy**. Edwin reports the same for `BillaClever`, and for **no other oil
@@ -13031,12 +13038,67 @@ exactly why none of them prices preparation alone.
 
 ⚠ **Scope.** 7 oils × 3 fills × 3 runs = **63 captures**, two evenings with the 15-minute settle. **3 oils ×
 3 fills answers the σ_fill question on its own**; the other four add per-oil variation, which is valuable and
-second-order.
+second-order. ⛔ **THE RUNS-PER-FILL PART OF THIS IS SUPERSEDED — see §16.34.3d.**
 
 ⚠⚠ **And what the "go" does NOT mean.** This establishes the instrument is **REPRODUCIBLE**. It does not
 establish that a change it detects is a change a customer cares about — that is still §16.31.4's gap, and it
 is why the framing must be **deviation alarm**, never *quality meter*. Reproducibility is necessary and it is
 not sufficient.
+
+#### ⛔⭐ 16.34.3d THE DESIGN CHANGED — one measurement per fill, and therefore MORE FILLS  *(Edwin, 2026-08-15)*
+
+⛔ **Three runs per fill is no longer possible.** §16.36 established that the lamp **degrades the sample
+while measuring it** — 13.7 % of the pigment in 72 min, `Q%` drifting +1.0 to +1.6 per hour. A second and
+third run on the same fill therefore measure a **progressively damaged sample**, not a replicate. Edwin,
+at the bench: *"only the one measurement in fact is possible."*
+
+⚠ **The consequence is not obvious and it is the whole point of this subsection: WITH ONE MEASUREMENT PER
+FILL, THE FILL IS THE ONLY REPLICATE.** All the degrees of freedom now come from the number of fills.
+
+| fills | df | 95 % CI on σ_fill | |
+|---|--:|---|---|
+| **3** | 2 | **0.52 σ .. 6.28 σ** | ⛔ the sd could be 6× wrong — this learns nothing |
+| 5 | 4 | 0.60 σ .. 2.87 σ | |
+| ⭐ **6** | 5 | **0.62 σ .. 2.45 σ** | the practical minimum |
+| ⭐ **9** | 8 | **0.68 σ .. 1.92 σ** | same capture count as the old 3 × 3 |
+
+⇒ ⭐⭐ **Spend the freed captures on FILLS, not runs.** `9 fills × 1 run` costs exactly the same nine
+captures as the retired `3 fills × 3 runs` and delivers **4× the precision on the one number the run
+exists to produce**. Six is where it becomes usable; three is not worth the evening.
+⚠ It does cost more wall-clock — one preparation and one 15-minute clearing per fill, so ~2 h for six.
+
+⭐ **AND THE LOSS IS SMALLER THAN IT LOOKS, because the runs-within-a-fill never estimated preparation
+variance in the first place — they estimated the SESSION.** The archive's 0.70 "within-fill sd" is
+largely settling drift plus photodamage accumulating across a session: §16.33 measured Ja! Natürlich's
+scatter as **93 % drift**, and §16.36.6's no-re-seat floor is **sd 0.063**, eleven times smaller. ⇒ the
+old design spent two thirds of its captures measuring an artefact the new protocol removes. **One
+measurement per fill, read at the algorithm's chosen point, is CLEANER data — there just has to be more
+of it.**
+
+⭐ **Two replicates that still come free:**
+
+1. **the time course itself** — the three or four samples nearest the `Q%` minimum are close in time and
+   minimally damaged, so their scatter is a within-session noise estimate at no extra cost, recorded in
+   every `clearing_time_course.py` CSV;
+2. **the whole curve stays auditable** — with one measurement per fill the algorithm's best-value choice
+   becomes load-bearing, so the CSV is what lets a suspect fill be re-examined instead of trusted.
+
+⚠ **§16.34.3a's item 1 is now understood, not just mandated.** "Standardise the settling time" was written
+as a precaution; §16.36.7 gives the mechanism — there is a **cloud point between 35 and 40 °C** and the
+holder sits just above it, so clearing time varies with room temperature, dose and lamp state. Holding the
+protocol fixed matters more than that item knew, because the clearing time IS the light dose.
+
+⚠ **§16.34.3a's item 2 may be revisitable.** It excludes the muddy oils from the pooled figure. §16.36.7's
+2-minute bath clears them before the capture rather than waiting the drift out — so `Billa Clever`,
+`Ja! Natürlich` and `Lugitsch` may re-enter the pooled estimate. ⛔ Not assumed: it needs the check that a
+bath-cleared fill reaches the same state as a beam-cleared one.
+
+⚠ **The 15-minute measurement is ACCEPTED, deliberately** (Edwin 2026-08-15). Equilibration time is
+ordinary analytical practice, it is explainable to a miller, and refusing the heated-holder complication
+keeps the instrument simple. ⇒ the heated holder is not dead but deferred: it is what would make a
+*shutter* possible (§16.36.7 — shuttering the lamp removes the heat that keeps the sample clear), and at
+one measurement per fill the production dose is ~1-2 % of what this evening applied, so it very likely
+does not matter yet.
 
 ### ⭐ 16.34.3c THE MULTIVARIATE SIBLING — `SPEC_history_tracker.md`  *(2026-08-14)*
 
@@ -13145,6 +13207,282 @@ baseline anywhere. It reaches a **5.05 sd class gap** against M448's 3.80, order
 fills correctly, separates under **both** contested labellings where M448 separates under only one,
 and keeps its denominator **10 sd from zero** where M448's `B_Q` comes within **6**. ⇒ Marked there as
 the metric to implement; ROADMAP carries it as the DEV-plugin task.
+
+---
+
+## ⭐⭐ 16.36 THE LAMP CHANGES THE SAMPLE — heat clears it, light browns it  *(Edwin's session, 2026-08-14/15, Lugitsch)*
+
+> **Two processes, opposite in every property, separated by controls.** §16.33 called this "the oil that
+> will not dissolve" and treated the movement as one phenomenon. It is two, and confusing them is why
+> the settling story never closed. Everything below is measured on `20260814_Lugitsch_A` / `_B` with
+> `diagnostics/clearing_time_course.py`; the CSVs are in `spectracs-references/tmp/Lugitsch_B/`.
+
+| | **CLEARING** | **BROWNING** |
+|---|---|---|
+| driver | **heat** | **light** (by elimination — the direct test is still owed) |
+| timescale | ~17 min in the beam; **90 min at room temperature did nothing** | continuous, 72 min and counting |
+| reversible? | ⭐ **YES** — the jar re-clouded on cooling | ⛔ **NO** — survived cooling *and* re-clouding |
+| seen in | `A_valley` 0.9455 → 0.0257 (−97 %) | `A_Soret` −16.4 %, `W` +11 % |
+| effect on `Q%` | −12.8 units | +1.46 units = **7 refill floors** |
+
+### ⭐⭐ 16.36.1 THE DISCRIMINATOR — the band-fall ratio, and it is cheap
+
+⛔ **`Q%` cannot tell "less pigment in the beam" from "changed pigment"**, and neither can `DN`. Both
+rise as the sample absorbs less, whatever the cause (Edwin raised exactly this objection). ⚠ And the
+obvious rebuttal — *"`W` is dilution-invariant"* — is **algebraically true and empirically false on this
+instrument**: see §16.36.5.
+
+⭐ **What does discriminate:** a dilution multiplies EVERY pigment band by the same `c`, so the two
+bands must fall by the **same fraction** — whatever `c` is, because `c` cancels in the ratio.
+
+```
+    band-fall ratio  =  (Δ pigment Soret / pigment Soret) ÷ (Δ pigment Q / pigment Q)
+    pigment band = A_band − A_valley          a pure dilution gives EXACTLY 1.00
+```
+
+| interval | pigment Soret | pigment Q | ratio |
+|---|--:|--:|--:|
+| Kiendler 6→7 drops *(a dose pair)* | +39.6 % | +47.1 % | 0.84 |
+| Steirerkraft → half *(a dose pair)* | −27.3 % | −20.9 % | 1.31 |
+| ⭐ session 1, t=16.7 → 88.7 (72 min of light) | **−16.4 %** | **−7.0 %** | **2.34** |
+| ⭐ session 1 → re-run, both just cleared | −23.2 % | −12.6 % | **1.84** |
+| ⭐ within the re-run | −3.8 % | −2.4 % | **1.56** |
+
+⇒ **The Soret is destroyed roughly twice as fast as the Q band.** Preparation differences scatter
+around 1.0 by ±0.3; light exposure pushes it to 1.6–2.3 consistently and in one direction. ⚠ The
+"outside the range" claim rests on **two** dose pairs — thin, and the heater run adds the third.
+⭐ The ratio needs no assumption about backgrounds, no invariance claim and no knowledge of the actual
+concentration. **It is the tool to reach for whenever "did it change or is there just less of it?"
+comes up again.**
+
+### ⭐ 16.36.2 THE REVERSIBILITY TEST — the one that settled it
+
+Jar B ran 90 min in the beam, was left to cool, **re-clouded**, and was run again against its own
+first-session curve at a MATCHED CLEARING STATE (`diagnostics/clearing_time_course.py --compare`):
+
+```
+session 1, fresh & just cleared    W 0.1366
+session 1, after 90 min of light   W 0.1520   +11.3 %
+RE-RUN, just cleared               W 0.1556   +13.9 %      corrected for lamp drift: +10.5 %
+RE-RUN, end                        W 0.1578   +15.5 %
+```
+
+**Monotone through a cooling that re-clouded the jar. It never relaxed.** The turbidity came back; the
+browning did not go away. ⇒ the clearing is a reversible physical state, the browning is not.
+
+### ⛔ 16.36.3 WHY LIGHT, AND WHAT IS NOT YET PROVEN
+
+⛔ **No experiment has separated light from heat** — the lamp delivers both. Light is where the evidence
+points, by elimination as much as directly:
+
+- ⭐ **the dark gap.** Between the two runs: 17 min dark (jar still warm) + 16 min in the beam. Predicted
+  from session 1's rate: **+2.5 %** if only light-minutes count, **+5.1 %** if warm-dark minutes count
+  too. Observed **+2.4 %**. The warm, dark minutes contributed nothing — the wrong result for heat.
+- ⭐ **40 °C is not hot enough.** Measured on the PLA holder. Arrhenius (Ea 60–120 kJ/mol) puts a thermal
+  path only **3–10×** above room temperature, and jar B sat **90 min at room temperature** before its
+  first measurement and came out *less* browned than jar A, which went straight into the beam.
+- ⭐ **the photon budget is ample.** At `A_Soret ≈ 0.85` (86 % absorbed), every chlorophyll sees
+  **100–10 000 absorbed photons** in 43 min for 0.1–10 mW through the sample. A photobleaching quantum
+  yield of 10⁻⁵ then degrades 0.1–10 %; the measured pigment loss is **13.7 %**.
+- chlorophyll is a **photosensitizer** (it makes the singlet oxygen that attacks it), and pumpkin oil is
+  sold in **brown glass** — protection against light, not heat.
+- ⭐ **dilution makes it worse, not better.** In neat oil the Soret extinguishes the beam in a fraction of
+  a millimetre and the bulk is self-shielded; dilute, the light reaches all of it and the tocopherol
+  antioxidants are diluted with it.
+
+⛔ **The open experiment: a heater at 40 °C, in the dark.** One preparation split into two jars, one
+warmed dark, one at room temperature, `W` read at intervals. ⭐ The purchase pays twice — it is also the
+warming device the protocol needs, and **if heat DOES brown the oil the warming device is not a fix at
+all**, so the test de-risks its own purchase. ⭐ Set it so the sample clears in ~17 min: matching the
+clearing time IS matching the thermal condition, measured rather than assumed.
+
+⚠ **Excluded, not merely argued:** instrumental creep. If the holder crept within a session every fill
+would march; **4 of 13 archived fills show a monotone `W` trend and one of those goes the wrong way**
+(a session-clock artefact would give 13 of 13). Concentration is excluded by §16.36.1. A reversible
+physical state is excluded by §16.36.2.
+
+⚠ **Unexplained:** jar A reached `W` 0.1515 in ~19 min where jar B needed ~89 min for 0.1520 — the same
+endpoint, **4.7× different rate**. Self-shielding (A was the more dilute fill) points the right way but
+does not obviously carry a factor of five, and the two jars may not have been the same preparation.
+
+### ⚠ 16.36.4 WHAT IT COSTS, AND WHAT IT DOES NOT
+
+```
+pigment lost   13.7 % in 72 min under the lamp, with A_valley FLAT throughout
+Q% drift       +1.03 to +1.61 per hour  =  a 90-min session moves 1.5 units
+               against a refill floor of 0.21 and a green/brown corridor of 3.05
+```
+
+⭐ **This is NOT a product problem.** A real measurement is ~60 frames — a couple of seconds, one or two
+minutes of lamp exposure, **1–2 % of the dose applied here.** At that dose the effect is far below the
+refill floor.
+
+⛔ **It IS a diagnostic-protocol problem**, and a sharp one: every long time-course, every settling
+study and every "leave it in and watch" experiment alters the sample it observes — including the run
+that discovered this.
+
+⇒ **The fix is a mechanical SHUTTER between lamp and sample**, open only during capture. Not power
+switching: §16.7's warm-up drift means the lamp must stay thermally stable, i.e. always on. A shutter
+drops the dose ~50–100× on a long run and lets the warming device clear the sample *outside* the beam,
+so the lamp stops doing two jobs at once.
+
+### ⛔ 16.36.5 TWO CORRECTIONS THIS FORCED
+
+**(a) `W` is NOT dose-invariant on this instrument, and I claimed it was.** Algebraically `W` cancels
+`a → k·a + b` exactly. But the archive's two dose pairs move `W` by **+5.4 %** and **+8.9 %** — and they
+move it the SAME direction while their concentrations move OPPOSITE ways:
+
+```
+Kiendler 6→7 drops   A_Soret +48.2 %   A_valley +178.5 %   A_Q +83.7 %   W +5.4 %
+Steirerkraft → half  A_Soret −29.8 %   A_valley  −48.1 %   A_Q −32.4 %   W +8.9 %
+```
+
+⭐ **Look at `A_valley`: it moves far more than proportionally in both.** The valley is not a constant
+background — it carries a load-dependent component (the same `u`-rises-with-concentration finding of
+`SPEC_metric_research.md` §10.2). `W`'s "zero" moves with the dose, which is exactly why §10.2 measured
+its dose sensitivity at **20.9 %** against `V`'s 3.4 %. ⇒ arguments must rest on §16.36.1's band-fall
+ratio, never on `W`'s invariance.
+
+**(b) NEITHER ARCHIVE "DOSE PAIR" IS A CLEAN DILUTION** — band-fall ratios 0.84 and 1.31 against 1.00.
+⛔ So §10.4's *"half concentration costs 2.19 units"* is a **preparation** difference, not a dilution
+coefficient, and the archive cannot calibrate a dilution correction for anything.
+
+### ⭐ 16.36.6 SIX THINGS THE RUN ESTABLISHED IN PASSING
+
+1. ⭐⭐ **The no-re-seat floor of `Q%` is sd 0.063** (10 repeats, jar untouched) against **0.70** with
+   re-seating. ⇒ **~99 % of the within-fill variance is RE-SEATING** — not the instrument, not the
+   metric, not the chemistry. The lever on repeatability is the holder (ROADMAP PRIO 1), not the solvent.
+2. ⛔ **"Wait until DN stops changing" is refuted.** Decoded, the guard's DN ran the whole evening at
+   **1.07–2.30 LINEAR counts** out of 255, and sat at exactly 30.0 encoded for six consecutive readings
+   while `A_Soret` fell 3.9 % and `Q%` rose 0.56. **DN stops changing when it runs out of bits.**
+   §7.13 already called bins at 2.0–2.6 DN "not measurements".
+3. ⭐ **The readiness rule is a gate on `A_valley`, not on `Q%`.** `Q%`'s minimum is where turbidity
+   (decaying) hands over to photodamage (growing), so both contaminations are smallest — but detecting
+   that turn costs ~10 further minutes of light. `A_valley` falls 97 % and then flattens: gate on
+   `|ΔA_valley| < 0.005` and it lands on the same sample with no extra dose. Read the value as a
+   **parabola vertex**, not the raw minimum, which is biased low by ~0.9 sd.
+4. ⚠ **Even the minimum is already damaged** — ~17 min of light accumulated before clearing finished,
+   worth **0.36 units = 1.7 refill floors**. Extrapolating the damage line back to insertion estimates
+   it out, and that estimate is reported SEPARATELY, never folded in.
+5. ⚠ **Reference drift is not negligible and must be measured.** Over 45 min the lamp dimmed **2.7 %**
+   (`D_Soret +0.0239 A`), which accounted for **91 % of that run's post-clearing `Q%` slope.** ⛔ It must
+   be compared against the POST-clearing drift; comparing against the total ΔQ% (dominated by the
+   clearing) made a 91 % artefact look like 4 %.
+6. ⭐ **The §3.1a domain guard earned its keep on its first live sample**: the opening capture of a
+   turbid jar read `Q% = 26.06` with `A_valley = 0.9455`, and the guard withheld the verdict.
+
+### ⭐⭐ 16.36.7 THE WATER BATH — measured, and it retires the 15-minute rule  *(Edwin, 2026-08-15)*
+
+```
+   ~2 min in 50 C water        -> a muddy fill goes CLEAR
+   ~8 min after removal        -> it is visibly muddy again
+   (for comparison: ~17 min to clear IN THE BEAM, at the holder's ~40 C)
+```
+
+⭐⭐ **THERE IS A CLOUD POINT, AND THE BEAM SITS ALMOST ON IT.** Edwin, cooling the bath: at **35 C the
+sample went muddy again**. So the dissolve/precipitate threshold lies between **35 and 50 C** — and the
+PLA holder in the beam measures **~40 C**, i.e. the instrument operates just barely on the soluble side.
+
+| temperature | behaviour |
+|---|---|
+| 50 C (bath) | clears in **~2 min** — comfortably above the threshold |
+| ~40 C (in the beam) | clears in **~17 min** — marginal, so the driving force is small |
+| 35 C | ⛔ **clouds again** |
+
+⇒ **This replaces the first reading of the 10x.** ⚠ It was initially written up here as "the beam is a
+bad heater, so most of its 17 minutes was warm-up rather than dissolution" — Arrhenius from 40 to 50 C
+buys only 1.6-3.3x, so temperature alone could not explain a 10x. **That inference was wrong, or at
+best half of it.** Near a solubility limit the dissolution rate collapses because the supersaturation
+driving it goes to zero, and a 10x between "just above the threshold" and "well above it" needs no
+unusual activation energy at all. Slow thermal contact through air still contributes; it is no longer
+the main term.
+
+⛔⛔ **AND IT PUTS THE SHUTTER OF §16.36.4 IN CONFLICT WITH ITSELF.** The lamp's heat is what holds the
+sample above its cloud point — which is why jar B stayed clear for 90 minutes IN the beam and re-clouded
+~8 min after leaving a 50 C bath. **Shutter the lamp and you remove the heat that keeps the sample
+measurable.** ⇒ a shutter alone is NOT a fix; it requires a **heated sample holder** (or a warmed
+enclosure) to take over the thermal job the lamp is currently doing by accident.
+
+⭐ **The cloud point is worth measuring properly** — cool a cleared fill slowly and note where it turns.
+It is a one-off, it sets the protocol's minimum working temperature, and it may well differ between
+oils, which would make it a characterisation number in its own right.
+
+⭐⭐ **THE PROTOCOL THIS REPLACES.**
+
+| | before | after |
+|---|---|---|
+| clearing | 17 min **in the beam** | **2 min in a water glass** |
+| light before the first usable read | ~1000 s | **~2 s** |
+| damage already banked at that point | 0.36 units = **1.7 refill floors** (§16.36.6) | **zero** |
+
+⇒ **The 15-minute settling rule is retired for muddy fills**, and the pre-clearing damage term goes to
+zero — a better outcome than the shutter, because it removes the dose instead of reducing it.
+
+⚠ **The working window is a TEMPERATURE, not a time.** The ~8 minutes is how long the jar takes to cool
+from 50 C through its cloud point (~1.5 C/min in a room-temperature lab) — so it shortens in a cold room
+and lengthens if the jar is warmer or larger. Re-clouding also begins before it *looks* muddy, so allow
+3-5 min for transfer. Once in the beam the lamp maintains the clear state (jar B held 90 min), so
+the window governs the transfer only.
+
+⭐⭐ **AND IT MAY RETURN THE MUDDY OILS TO §16.34.3's σ_fill RUN.** §16.34.3a rules them out of the
+pooled figure ("measure them, label them, keep them out") because their settling drift corrupts the
+estimate. With a 2-minute warm-up the drift is not waited out, it is **abolished before the capture** —
+so `Billa Clever`, `Ja! Natürlich` and `Lugitsch` may be measurable on the same footing as the rest.
+⚠ To be verified, not assumed: the open question is whether a bath-cleared fill reaches the SAME state
+as a beam-cleared one (jar B reached `A_valley` 0.0089-0.0257 in the beam), and one capture straight
+after warming answers it.
+
+⚠ **Handling:** dry the jar completely before every capture — a water film lands in `A_valley`, exactly
+where the clearing signal lives.
+
+### ⭐⭐ 16.36.8 WHAT THIS RE-WEIGHTS — "the same oil" was not the same oil  *(Edwin, 2026-08-15)*
+
+⭐⭐ **The most valuable thing this session produced is not a number, it is the retirement of a false
+premise.** Every multi-run session in this archive assumed the fill was a fixed object being measured
+repeatedly. It was not: it was **clearing** (down) and **browning** (up) while being measured, and both
+processes live in the same numbers. Edwin's framing, and it is the right one:
+
+> *"we are no longer misled by measurements on the 'same oil' as the oil IS IN FACT NOT THE SAME OIL —
+> otherwise we would have hunted things and searched for explanations for weeks."*
+
+⇒ **A whole class of unexplained scatter now has a mechanism**, and the reason it resisted explanation
+for so long is that the two processes have OPPOSITE signs on `Q%` and overlap in time.
+
+#### The archive test — suggestive, and honestly not more than that
+
+`Q%` slope against run order within each fill (runs are minutes apart in the beam, so damage predicts a
+positive slope):
+
+| | |
+|---|---|
+| fills drifting **upward** (browner) across their own session | **9 of 13** |
+| sign test against a coin flip | **p = 0.27** — ⛔ not significant |
+| median session drift | **+0.72 units = 3.4 refill floors** |
+| the four that drift DOWNWARD | `Ja! Natürlich` −2.26, `Steirerkraft capillary` −0.88, `Billa Clever A`, `S-Budget D` |
+
+⭐ **Those four are the fills that were still CLEARING**, which drives `Q%` down. So the archive shows a
+**superposition**, not a clean signal — which is exactly why it read as noise for weeks. ⛔ **The archive
+cannot cleanly quantify the damage retrospectively**, and this section does not claim it does. What it
+establishes is that the premise was wrong, not the size of the error.
+
+#### What that means for numbers already published
+
+- ⚠ **The 0.70 "within-fill sd"** is not measurement noise. It is clearing + browning + re-seating,
+  measured over a session. §16.36.6's no-re-seat floor of **0.063** is the instrument's actual
+  contribution — **11× smaller**.
+- ⚠ **§10.5's 0.21 refill floor** comes from fill MEANS, each averaged over a session of 3-6 runs. If
+  sessions differed in length or in how far the fill had cleared, those means sit at different points of
+  two drift curves. The number is not wrong so much as **not the quantity it is labelled with**.
+- ⚠ **The 18-run threshold corpus** (§16.20.4) spans two 6-run sessions per class. A common-mode browning
+  drift largely cancels between classes; an unequal one does not. ⛔ `T_V` and the M448 lines are not
+  invalidated — but they carry an unquantified session term, and **the fix is the new protocol, not a
+  recomputation of the old data.**
+- ⭐ **§16.26's null-run series is UNAFFECTED** — no oil in the beam, nothing to degrade. It remains the
+  clean instrument floor.
+
+⇒ ⭐ **Nothing is being thrown away. The point is that every future number comes from a protocol where
+the sample is measured ONCE, at a defined point, instead of repeatedly while it changes.** That is
+`SPEC_settled_measurement.md`, and it is why that work now precedes everything else.
 
 ---
 

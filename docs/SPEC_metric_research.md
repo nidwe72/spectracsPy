@@ -2130,6 +2130,23 @@ porphyrin (D₄ₕ) the Q transition dipoles nearly cancel and Q stays weak; rem
 Soret**. Measured: `W` = **0.163–0.189 green, 0.198–0.238 brown**, browns 1.2–1.4× higher — the
 predicted direction. ⭐ It is the same chemistry that turns cooked green vegetables olive.
 
+⛔⛔ **`W` IS NOT DILUTION-INVARIANT ON THIS INSTRUMENT, AND IT IS TEMPTING TO CLAIM THAT IT IS.**
+Algebraically `W` cancels `a → k·a + b` exactly — numerator and denominator are both differences — so
+it is easy to argue that concentration cannot move it. **The archive says otherwise**, and the two dose
+pairs move `W` the SAME way while their concentrations move OPPOSITE ways (`SPEC_capture_quality.md`
+§16.36.5):
+
+| | `A_Soret` | `A_valley` | `A_Q` | `W` |
+|---|--:|--:|--:|--:|
+| Kiendler 6 → 7 drops | +48.2 % | ⛔ **+178.5 %** | +83.7 % | **+5.4 %** |
+| Steirerkraft → half | −29.8 % | ⛔ **−48.1 %** | −32.4 % | **+8.9 %** |
+
+⭐ **The valley moves far more than proportionally in both** — it is not a constant background, so
+`W`'s own zero moves with the dose. That is the mechanism behind the 20.9 % measured below.
+⇒ **Never rest an argument on `W`'s invariance.** Use the *band-fall ratio* (§16.36.1): a dilution
+multiplies every pigment band by the same `c`, so the two must fall by the same fraction — 1.00
+exactly, whatever `c` is. It needs no assumption about backgrounds at all.
+
 ⭐ **`W = −V/(1−u)` with `u = A_valley/A_Soret` is an exact identity** (verified to 3 × 10⁻¹⁷ on all
 49 runs). `u` spans **22 %** across the archive, and that factor is the entire reason `W` is noisier:
 gap 3.77 sd vs `V`'s 5.05, dose 20.9 % vs 3.4 %, refill 16.1 % vs 7.4 %. ⇒ **`W` is the physics, `V`
@@ -2203,6 +2220,13 @@ within **6 sd of zero** (0.0344 on `Ja! Natürlich`), which is why that oil's M4
 and why `20260811A` returns **M448 = −9.72**. `V` divides by a raw Soret level that no dilution can
 drive small.
 
+⛔⛔ **NEITHER "DOSE" PAIR IS A CLEAN DILUTION** *(2026-08-15)*. Tested with the band-fall ratio, which
+is 1.00 for a pure dilution whatever the concentration change: **Kiendler 0.84, Steirerkraft 1.31.**
+⇒ the **2.19** above is a **preparation** difference, not a dilution coefficient, and the archive
+cannot calibrate a dilution correction for anything. ⚠ The number still describes what happens when you
+halve a fill by hand — which is the operationally relevant case — but it may not be read as "`V`'s
+sensitivity to concentration".
+
 ⛔ **The lamp weakness is `V`'s worst property.** §16.28's two-lamp control moves it 4.84 units on one
 oil — larger than the entire green/brown span — where M448 moves 8 %. ⇒ **A chart cannot cross a lamp
 change**, and `SPEC_lamp_rebuild.md`'s rebuild will reset it.
@@ -2253,6 +2277,34 @@ one — before you can see it."* ⚠ Provisional: the 0.21 floor comes from the 
   invariant of pumpkin oil on this instrument, and therefore usable as a **run-validity check**: if
   `S1` departs from −0.372, that measurement is wrong, whatever the oil and whatever its strength.
 
+### ⭐⭐ 10.8 WHAT `V` EARNED ON ITS FIRST LIVE EVENING — a feature nothing else could resolve  *(2026-08-15)*
+
+⛔ **First, what it did NOT do.** `Q%` cannot tell *"less pigment in the beam"* from *"changed pigment"* —
+both make the sample absorb less and both raise it. Edwin raised exactly that objection and it was
+correct; the discriminator is the **band-fall ratio** (`SPEC_capture_quality.md` §16.36.1), not this
+metric. Nothing below claims otherwise.
+
+⭐⭐ **What it DID do is more fundamental: it was quiet enough for the feature to exist.** The Lugitsch
+time-course turns over — clearing (which pushes `Q%` down) handing off to photodamage (which pushes it
+up) — and the turn itself is tiny:
+
+```
+the feature      Q% 13.34 -> 13.27 -> 13.38      excursions of ~0.07-0.11 units
+on Q%            no-re-seat floor sd 0.063   ->  1.1-1.7 sigma   ⭐ RESOLVABLE
+on M448          within-fill floor sd 0.37   ->  0.27 sigma      ⛔ INVISIBLE
+```
+
+⇒ **On the incumbent the same feature is a quarter of one standard deviation.** The entire two-process
+picture — and with it the discovery that the lamp changes the sample — would have stayed buried in what
+everyone would have called re-seating noise. ⭐ **A metric earns its place by making a real thing
+visible, and this one did that on its first evening in front of a live sample**, on an oil that was
+never in any corpus.
+
+⚠ Keep the claim the right size: this is about **resolving power**, not about `V` being right where
+M448 is wrong. M448's noise here is dominated by its `B_Q` denominator (§10.4), which is a known and
+already-documented weakness — this is that weakness costing a discovery, which is a sharper illustration
+than any table of Cohen's `d`.
+
 ---
 
 ## 11 · Related documents
@@ -2260,6 +2312,7 @@ one — before you can see it."* ⚠ Provisional: the 0.21 floor comes from the 
 | topic | where |
 |---|---|
 | ⭐ **`V` / `Q%` in the DEV plugin — gauge, rows, the new band plot** | **`SPEC_v_metric_integration.md`** |
+| ⭐ **the lamp changes the sample; the band-fall ratio; the no-re-seat floor** | **`SPEC_capture_quality.md` §16.36** |
 | the metric being replaced, and its algebra | `DOC_metric_algebra.md` |
 | the correction this document steps back from | `DOC_pedestal_correction.md` — esp. App. D.6, ch. 13 T4 |
 | pigment identity, band positions, Gouterman | `KB_spectroscopy_physics.md` §4, §4.1 |
