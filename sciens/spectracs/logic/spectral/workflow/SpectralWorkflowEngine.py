@@ -191,7 +191,12 @@ class SpectralWorkflowEngine:
         # returning None (a wedged camera) fails cleanly instead of looping forever.
         target = frames
         maxFrames = target + max(5, target // 5)     # +20% (or +5) headroom to replace rejected frames
-        maxAttempts = maxFrames + target             # also bound provider None-returns (dropped/dead frames)
+        # ⭐ TERMINATION IS A SAFETY PROPERTY, NOT A FEATURE (SPEC_settled_measurement.md §12.2): an
+        # acquisition that can fail to terminate is an instrument that can hang with the lamp on the
+        # sample. `maxAttempts` already bounds a provider that keeps returning None — which is also the
+        # path a CANCEL takes (§12.1a: the panel's provider returns None once the flag is set), so a
+        # cancelled burst unwinds through machinery that was always here.
+        maxAttempts = maxFrames + target             # also bound provider None-returns (dropped/dead/CANCELLED)
         spectrum = None
         captured = 0
         attempts = 0
@@ -212,6 +217,54 @@ class SpectralWorkflowEngine:
             if captured >= target and self.__survivingFrameCount(spectrum) >= target:
                 break
         return spectrum
+
+    def captureMonitoredStep(self, step, frameProvider, monitor, onRow=None, clock=None):
+        """The MONITORED sibling of captureAcquisitionStep (SPEC_settled_measurement.md §10.4).
+
+        ⭐ THIN BY DESIGN: it pumps the provider, hands each frame to the monitor the PLUGIN built, and
+        returns that monitor's result. ⛔ The algorithm is NOT here — this module imports Qt (`qGray`),
+        and the monitor must stay Qt-free per SPEC_project_structure.md. Nothing in this method knows what
+        settling, turbidity or `Q%` are.
+
+        ⚠ `clock` is injected and defaults to `time.monotonic` (§25/X3): wall-clock can step backwards
+        during a 20-minute run, which would make a rate negative and a re-clouding reset fire on nothing.
+        ⚠ The host owns the no-frame watchdog (§12.2/L3) — the engine only learns that time passed when
+        someone offers a frame, so a wedged camera cannot wake an engine-side timer.
+        """
+        import time
+        self.__ensureCalibration()
+        clock = clock or time.monotonic
+        attempts = 0
+        maxAttempts = monitor.policy.maxFrames * 2
+        while not monitor.isFinished() and attempts < maxAttempts:
+            attempts += 1
+            image = frameProvider()
+            if image is None:
+                continue
+            frame = self.__frameSpectrum(image)
+            if frame is None:
+                continue
+            row = monitor.offer(frame, clock())
+            if row is not None and onRow is not None:
+                onRow(row, monitor)
+        result = monitor.result()
+        if result.spectrum is not None:
+            container = SpectraContainer()
+            container.addToSpectra(result.spectrum, step.getRole())
+            step.setContainer(container)
+        return result
+
+    def __frameSpectrum(self, image):
+        # ONE frame -> {nm: value}, through the app's OWN per-frame extraction — the same module the burst
+        # path uses, so a monitored row and a bench capture are reduced identically (§10.7b).
+        signal = SpectralVideoThreadSignal()
+        signal.image = image
+        parameters = ImageSpectrumAcquisitionLogicModuleParameters()
+        parameters.setVideoSignal(signal)
+        parameters.spectrum = None
+        spectrum = ImageSpectrumAcquisitionLogicModule().execute(parameters).spectrum
+        frames = spectrum.getCapturedValuesByNanometers() if spectrum is not None else None
+        return frames[-1] if frames else None
 
     def __survivingFrameCount(self, spectrum):
         # How many captured frames would survive C1's per-frame brightness rejection (the SAME test the final

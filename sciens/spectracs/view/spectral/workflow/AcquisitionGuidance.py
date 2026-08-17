@@ -34,6 +34,14 @@ class AcquisitionGuidance:
         return self.__amberArrow
 
     def setButtonDot(self, button, on):
+        # ⛔ NEVER while that button says "Cancel" (SPEC_settled_measurement.md §12.1a). During a capture
+        # the measure button IS the cancel button, and painting the amber "do this next" dot on it urges
+        # the operator to press the one control that ABANDONS the measurement.
+        # ⚠ Enforced HERE rather than at each call site: the bench and the wizard both paint dots, and the
+        # rig showed a "● Cancel" button because only one of the two paths had been guarded.
+        if button is not None and on and str(button.text()).startswith(("Cancel", "Cancelling")):
+            button.setIcon(QIcon())
+            return
         if button is not None:
             button.setIcon(self.amberDotIcon() if on else QIcon())
 
@@ -68,6 +76,10 @@ class AcquisitionGuidance:
         self.setButtonDot(panel.getCaptureButton(), False)
         nextStep = action["nextStep"]
         if nextStep is None:
+            return
+        # ⛔ §12.1a: while a capture is running that button says "Cancel". Painting the amber ▶ NEXT cue on
+        # it would urge the operator to press the one control that ABANDONS the measurement.
+        if getattr(panel, "isCapturing", None) is not None and panel.isCapturing():
             return
         nextIndex = steps.index(nextStep)
         if nextStep is panel.getActiveStep():

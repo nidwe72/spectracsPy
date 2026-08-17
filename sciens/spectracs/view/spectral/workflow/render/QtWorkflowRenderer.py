@@ -383,10 +383,131 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
         from PySide6.QtWidgets import QTabWidget, QSizePolicy
         tabs = QTabWidget()
         for label, child in view.tabs:
-            tabs.addTab(QtWorkflowRenderer().render([child]), label or "")
+            # ⭐ a tab may carry ONE view-model or a LIST of them (a summary column of metric rows).
+            items = child if isinstance(child, list) else [child]
+            tabs.addTab(QtWorkflowRenderer().render(items), label or "")
         tabs.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.__layout.addWidget(tabs, 1)
         self.__expandingContent = True
+
+    def visitSeriesPlot(self, view):
+        """The stacked time-series plot (SPEC_settled_measurement.md §18.3/§18.7) — header, panels, footer.
+
+        ⭐ Two rendering rules, both found by mocking it before building it (§18.7):
+          ⛔ each panel AUTOSCALES to its own data. Drawing the 12-22 `Q%` domain as axis levels would force
+             a 10-unit axis around a 0.5-unit trajectory and flatten the trace into a line — which is why
+             the domain arrives as a HEADER field instead.
+          ⭐ per-panel `scale`: `A_valley` falls by a factor of 40, so on a linear axis the settling tail —
+             the very thing the gate judges — sits in the bottom 3 % of the panel. It renders as log.
+        ⭐ The renderer draws numbers under labels it was handed; it never learns that "A_valley" is a
+        wavelength window (§18.3).
+        """
+        import pyqtgraph
+        from PySide6.QtWidgets import QSizePolicy
+
+        panel = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(Metrics.S)
+        panel.setLayout(layout)
+
+        if view.title:
+            title = QLabel(view.title)
+            title.setStyleSheet("font-weight: bold;")
+            layout.addWidget(title)
+        if view.header:
+            layout.addWidget(self.__fieldStrip(view.header, bold=True))
+
+        for panelSpec in view.panels:
+            plot = pyqtgraph.PlotWidget()
+            plot.setBackground(None)
+            plot.showGrid(x=True, y=True, alpha=0.2)
+            plot.setLabel("bottom", view.xLabel or "")
+            plot.setLabel("left", panelSpec.get("label") or panelSpec.get("key") or "")
+            if panelSpec.get("scale") == "log":
+                plot.setLogMode(False, True)
+            for series in panelSpec.get("series", []):
+                pen = pyqtgraph.mkPen(series.get("color") or "#e08000", width=2)
+                plot.plot(series["xs"], series["ys"], pen=pen, symbol="o", symbolSize=5,
+                          symbolBrush=series.get("color") or "#e08000")
+            for level in panelSpec.get("levels", []):
+                line = pyqtgraph.InfiniteLine(pos=level["value"], angle=0, label=level.get("label") or "",
+                                              pen=pyqtgraph.mkPen("#888888", style=Qt.PenStyle.DashLine))
+                plot.addItem(line)
+            for marker in panelSpec.get("markers", []):
+                line = pyqtgraph.InfiniteLine(pos=marker["x"], angle=90, label=marker.get("label") or "",
+                                              pen=pyqtgraph.mkPen(marker.get("color") or "#4aa3df",
+                                                                  style=Qt.PenStyle.DotLine))
+                plot.addItem(line)
+            for point in panelSpec.get("points", []):
+                # ⭐ THE LATCHED ANSWER. Without it a reader cannot see WHICH row became the number.
+                plot.plot([point["x"]], [point["y"]], pen=None, symbol="star", symbolSize=18,
+                          symbolBrush=point.get("color") or "#2ECC71")
+            plot.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            layout.addWidget(plot, 1)
+
+        if view.footer:
+            # ⭐ §18.7: without the audit line a saved graph is a picture, not a record.
+            layout.addWidget(self.__fieldStrip(view.footer, muted=True))
+
+        panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.__layout.addWidget(panel, 1)
+        self.__expandingContent = True
+
+    def __fieldStrip(self, fields, bold=False, muted=False):
+        # A one-line key/value strip — the §13.2 "legend box" content, reused for the header and footer.
+        # ⚠ §17/U6: it WRAPS, so at 412 dp it reflows to further lines instead of forcing a wide panel.
+        strip = QWidget()
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(Metrics.M)
+        strip.setLayout(layout)
+        for label, value in fields:
+            item = QLabel("%s  %s" % (label, value))
+            item.setWordWrap(True)
+            style = []
+            if bold:
+                style.append("font-weight: bold;")
+            if muted:
+                style.append("color: #888888; font-size: 11px;")
+            if style:
+                item.setStyleSheet(" ".join(style))
+            layout.addWidget(item)
+        layout.addStretch(1)
+        return strip
+
+    def visitTable(self, view):
+        # §18.8 — the generic table. ⭐ It renders any plugin's MonitorRecord (columns + rows) with no
+        # plugin-specific knowledge; formatting is per column, declared by the plugin, because the host
+        # cannot know that a rate wants four decimals and a frame count wants none.
+        from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QSizePolicy
+        if view.title:
+            title = QLabel(view.title)
+            title.setStyleSheet("font-weight: bold;")
+            self.__layout.addWidget(title)
+        labels = view.headerLabels()
+        rows = view.textRows()
+        table = QTableWidget(len(rows), len(labels))
+        table.setHorizontalHeaderLabels(labels)
+        table.verticalHeader().setVisible(False)
+        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        for rowIndex, cells in enumerate(rows):
+            for columnIndex, text in enumerate(cells):
+                item = QTableWidgetItem(text)
+                alignment = view.columns[columnIndex].get("align", "right")
+                item.setTextAlignment((Qt.AlignmentFlag.AlignRight if alignment == "right"
+                                       else Qt.AlignmentFlag.AlignLeft) | Qt.AlignmentFlag.AlignVCenter)
+                table.setItem(rowIndex, columnIndex, item)
+        table.resizeColumnsToContents()
+        table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.__layout.addWidget(table, 1)
+        self.__expandingContent = True
+        if view.caption:
+            caption = QLabel(view.caption)
+            caption.setWordWrap(True)
+            caption.setStyleSheet("color: #888888; font-size: 11px;")
+            self.__layout.addWidget(caption)
 
     # --- accumulation helpers ---
 

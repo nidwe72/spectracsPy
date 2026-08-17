@@ -97,6 +97,8 @@ class CapturePanel(QWidget):
         self.__latestImage = None
         self.__autoExposing = False
         self.__capturing = False
+        self.__cancelRequested = False
+        self.__coachLabel = None
         self.__lockedExposure = None
         self.__savedRoiX = None
         self.__captureTotal = 1
@@ -114,6 +116,11 @@ class CapturePanel(QWidget):
 
     def getCaptureButton(self):
         return self.__captureButton
+
+    def isCapturing(self):
+        # ⭐ §12.1a: while this is true the capture button reads "Cancel", so the acquisition-guidance cue
+        # must not paint its amber "next action" dot on it.
+        return self.__capturing
 
     def getRoleTabs(self):
         return self.__roleTabs
@@ -211,6 +218,7 @@ class CapturePanel(QWidget):
         self.__captureButton.setObjectName("CapturePanel.captureButton")
         self.__captureButton.clicked.connect(self.__onClickedCapture)
         controlsLayout.addWidget(self.__captureButton, 2, 0, 1, 2)
+
 
         self.__stepContent = QWidget()
         stepContentLayout = QVBoxLayout()
@@ -350,7 +358,15 @@ class CapturePanel(QWidget):
         role = self.__activeStep.getRole() if self.__activeStep is not None else None
         sampleLocked = role == SAMPLE and self.__lockedExposure is not None
         autoOn = self.__autoExposureCheckBox is not None and self.__autoExposureCheckBox.isChecked()
-        self.__captureButton.setEnabled(connected and streaming and not busy)
+        # ⭐⭐ INVERTED FOR §12.1a: the capture button is ALSO the cancel button, so during a capture it is
+        # the one control that must stay live — every OTHER control below stays disabled exactly as before.
+        # ⚠ Cancel works during the ~15 s auto-exposure sweep too (§23/V4): that is the longest single
+        # blocking stretch of a capture, and a Cancel that is dead for 15 s teaches the operator it does
+        # not work. ⛔ Except while already cancelling, when the button is deliberately dead.
+        if busy and not self.__cancelRequested:
+            self.__setCaptureButtonCancel()
+        else:
+            self.__captureButton.setEnabled(connected and streaming and not busy)
         if self.__autoExposureCheckBox is not None:
             self.__autoExposureCheckBox.setEnabled(not busy and not sampleLocked)
         if self.__exposureSlider is not None:
@@ -600,11 +616,22 @@ class CapturePanel(QWidget):
             print("CAPTURE-LOWDN role=%s unavailable (%s)" % (role, error))
 
     def __onClickedCapture(self):
+        # ⭐ THE CANCEL BUTTON IS THIS BUTTON (SPEC_settled_measurement.md §12.1a) — one control, nothing
+        # extra to lay out at phone width, and the control that started the run is the one that stops it.
+        #
+        # ⛔ RE-ENTRANCY IS THE WHOLE HAZARD: this click arrives from INSIDE the nested QEventLoop that
+        # __pumpFrames spins during the capture below, i.e. on the capture's own stack. So it may set the
+        # flag and NOTHING else — never touch capture state, never navigate, never start a capture.
+        if self.__capturing:
+            self.__cancelRequested = True
+            self.__setCaptureButtonCancelling()   # relabel + disable NOW, so a double-click cannot land
+            return
         if self.__resolvedIndex is None or self.__videoThread is None or self.__autoExposing:
             return
         step = self.__activeStep
         if step is None:
             return
+        self.__cancelRequested = False
         # SPEC_doc_automation §18.3 (C3a): mark the WHOLE capture busy — auto-exposure AND the multi-frame
         # burst — so the capture button (and role tabs / frames combo, via __updateControls) stay disabled
         # for its entire duration. Previously only auto-exposure set busy, so the button re-enabled mid-burst
@@ -614,7 +641,18 @@ class CapturePanel(QWidget):
         self.__updateControls()
         try:
             role = step.getRole()
+            # ⭐ THE BAR STARTS AT THE CLICK, NOT AT THE FIRST ROW (Edwin, at the rig 2026-08-17). Between
+            # pressing Measure and the first row there is the ~15 s auto-exposure sweep and then a whole
+            # window of frames (~43 s at W = 60) — a minute in which the app showed nothing at all and
+            # looked like it had ignored the click.
+            # ⚠ Indeterminate from the outset because at this moment NOTHING about the duration is known:
+            # not whether the plugin will monitor, not how long the fill will take. The burst path swaps
+            # in its real fraction on the first frame; the monitored path keeps animating and swaps in the
+            # coach text (§13.2).
+            self.__emitIndeterminate("Measuring %s …"
+                                     % ("reference" if role == REFERENCE else "sample"))
             if role == REFERENCE and self.__autoExposureCheckBox.isChecked():
+                self.__emitIndeterminate("Auto-exposure sweep …")   # ~15 s of otherwise silent waiting
                 self.__runAutoExposure()      # async: hands the sweep to the capture thread
                 self.__waitForAutoExposure()  # ...block until it finishes before grabbing the reference burst
                 # The fixed 1-frame drop that used to sit here is RETIRED (SPEC_capture_quality.md §14.8): the
@@ -634,28 +672,62 @@ class CapturePanel(QWidget):
 
             def provider():
                 self.__pumpFrames(120)  # let the stream advance a frame
+                # ⭐ §12.1a: the cancel flag is seen here, at most one frame (~0.7 s) after the click. The
+                # engine's provider contract has no "stop" value, so a cancelled run simply stops being
+                # fed and unwinds through the same path a camera failure takes.
+                if self.__cancelRequested:
+                    return None
                 if self.__latestImage is None:
                     return None
                 image = self.__latestImage.copy()  # detach from the live numpy buffer
                 if not state["roiApplied"]:
                     self.__applyExtendedRoi(image.width())  # widen to the analysis window before the FIRST extraction
                     state["roiApplied"] = True
-                images.append(image)
+                # ⛔ ONE representative frame, never a list (SPEC_settled_measurement.md §19/I1). Keeping
+                # every frame to pick the middle one costs ~1 GB of QImages on a 20-minute monitored run —
+                # harmless at 60 frames, fatal the moment a burst gets long.
+                state["frameCount"] = state.get("frameCount", 0) + 1
+                if state.get("representative") is None or state["frameCount"] % 2 == 0:
+                    state["representative"] = image
                 return image
 
             def onFrame(spectrum, index, total):
                 self.__plotRoleSpectrum(role, spectrum)     # live: frame traces so far + running mean
                 self.__stepCaptureProgress(index + 1)
 
-            spectrum = self.__engine.captureAcquisitionStep(
-                step, frameProvider=provider, frames=frameCount, onFrame=onFrame)
-            self.__endCaptureProgress()
+            # ⭐ MONITORED ACQUISITION (SPEC_settled_measurement.md §10.4). The PLUGIN decides whether this
+            # role gets one: it is handed the already-captured reference and returns an assembled monitor,
+            # or None. ⛔ Nothing here knows what settling is — the host only pumps frames into an object
+            # it was given, and a plugin that returns None gets exactly today's burst (§10.6).
+            monitor = self.__monitorFor(step, role, frameCount)
+            if monitor is not None:
+                result = self.__engine.captureMonitoredStep(
+                    step, frameProvider=provider, monitor=monitor, onRow=self.__onMonitorRow)
+                self.__endCaptureProgress()
+                self.__clearCoach()
+                if not self.__cancelRequested and not self.__onMonitorFinished(step, role, result):
+                    return
+                spectrum = result.spectrum
+            else:
+                spectrum = self.__engine.captureAcquisitionStep(
+                    step, frameProvider=provider, frames=frameCount, onFrame=onFrame)
+                self.__endCaptureProgress()
 
-            if spectrum is None or not images:
+            if self.__cancelRequested:
+                # ⛔ A CANCELLED CAPTURE IS NOT A CAPTURE (§12.1): the step keeps no container, so the
+                # workflow cannot advance on a partial one. ⚠ And the fill has already banked light dose —
+                # re-measuring THIS jar is not the same experiment as measuring a fresh one (§17/U2).
+                step.setContainer(None)
+                self.__representativeFrames.pop(role, None)
+                self.__showStatusText("Capture cancelled — nothing recorded. This fill has been in the "
+                                      "beam and has changed; a fresh fill reads truer than a re-measure.")
+                return
+
+            if spectrum is None or state.get("representative") is None:
                 self.__onCaptureFailed()
                 return
 
-            self.__representativeFrames[role] = images[len(images) // 2]
+            self.__representativeFrames[role] = state["representative"]
 
             # Diagnostic (SPEC_capability_proof.md §7.0.1): log the landed exposure / white-balance / gain for THIS
             # capture, so reference-vs-sample and run-to-run drift (the absorbed-colour reference tilt) is traceable.
@@ -675,7 +747,196 @@ class CapturePanel(QWidget):
             self.__onCaptured(step)
         finally:
             self.__capturing = False
+            self.__cancelRequested = False
+            self.__restoreCaptureButtonLabel()
             self.__updateControls()
+
+    # --- monitored acquisition (SPEC_settled_measurement.md §13) ---
+
+    def __monitorFor(self, step, role, frameCount):
+        """Ask the PLUGIN for a monitor. None -> today's plain burst, unchanged (§10.6).
+
+        ⚠ Only the SAMPLE gets one, and only once a REFERENCE exists: every row is `S_window` against one
+        fixed blank, so without a reference there is nothing to compute absorbance against.
+        ⚠ PRODUCT mode here (§17/D3): the diagnostic arc is the SCRIPT's, and a mode chosen by the plugin
+        would put a 20-minute run inside an end user's wizard."""
+        plugin = getattr(self.__engine, "plugin", None)
+        if plugin is None or role == REFERENCE or not hasattr(plugin, "createMonitor"):
+            return None
+        referenceStep = self.__stepForRole(REFERENCE)
+        container = referenceStep.getContainer() if referenceStep is not None else None
+        reference = container.getSpectra().get(REFERENCE) if container is not None else None
+        if reference is None:
+            return None
+        try:
+            from sciens.spectracs.plugin_sdk import MonitorMode
+            return plugin.createMonitor(reference, mode=MonitorMode.PRODUCT, frames=frameCount)
+        except Exception as error:            # a plugin that cannot build one must not break capture
+            print("MONITOR unavailable (%s) — falling back to the plain burst" % error)
+            return None
+
+    def __onMonitorRow(self, row, monitor):
+        """Per-row UI. ⚠ Cheap on purpose (§23/V3): `handleVideoThreadSignal` ends with `event.set()`, so
+        the camera thread WAITS for the GUI — every millisecond spent here is a millisecond not grabbing.
+
+        ⛔ NO PERCENTAGE (§13.1): a monitored run has no known end, and a bar creeping to 90 % and sitting
+        there is worse than none. The status bar goes INDETERMINATE and the legend box carries the state.
+        ⚠ Numbers refresh no faster than ~2 s — a value flickering at 1.4 Hz reads as instability."""
+        import time as _time
+        now = _time.monotonic()
+        evaluator = getattr(monitor, "evaluator", None)
+        coach = evaluator.coach(monitor.rows) if hasattr(evaluator, "coach") else None
+        stateChanged = coach is not None and coach.get("state") != getattr(self, "_lastCoachState", None)
+        if now - getattr(self, "_lastCoachPaint", 0.0) < 2.0 and not stateChanged:
+            return
+        self._lastCoachPaint = now
+        if coach is not None:
+            self._lastCoachState = coach.get("state")
+
+        # ⭐⭐ PAINT THE SPECTRUM (Edwin, at the rig 2026-08-17). A monitored run can last twenty minutes,
+        # and the first version showed only text for all of it — the plot sat empty and the instrument
+        # looked dead. The BURST path always painted per frame (`onFrame`), and losing that on the longer
+        # path was exactly the wrong way round.
+        # ⚠ It is painted on the ~2 s throttle, NOT per row (§23/V3): `handleVideoThreadSignal` ends with
+        # `event.set()`, so the camera thread waits for the GUI and a per-row redraw would throttle the
+        # very stream being measured.
+        # ⚠ This is the WINDOW MEAN, not a raw frame — the same spectrum the row's numbers came from, so
+        # what the operator watches and what the gate reads are the same object.
+        spectrum = getattr(row, "spectrum", None)
+        if spectrum is not None:
+            role = self.__activeStep.getRole() if self.__activeStep is not None else None
+            self.__plotRoleSpectrum(role, spectrum)
+        if coach is None:
+            return
+        self.__paintCoach(coach, row)
+        # ⭐ §13.2: the falling gate number IS the progress indicator — it says both where it is and how
+        # fast it is getting there, which a percentage never could.
+        self.__emitIndeterminate("%s   %s" % (coach.get("state", "measuring …"),
+                                              "  ".join("%s %s" % pair for pair in coach.get("fields", []))))
+
+    def __paintCoach(self, coach, row):
+        # ⛔ THE LEGEND BOX IS GONE (Edwin, at the rig 2026-08-17), and this REVERSES §13.2's placement.
+        # During a run the state belongs in ONE place — the app's status bar, which is already animating
+        # for exactly this reason. A second copy under the spectrum plot competed with the curve for the
+        # operator's eye and stole height from the one thing that shows progress.
+        # ⚠ The withholding rule is unchanged and now lives entirely in the evaluator's `coach()`: ⛔ NEVER
+        # a provisional Q% (§17/U1) — a number displayed while it is still moving is a number somebody
+        # writes down.
+        return
+
+    def __clearCoach(self):
+        return
+
+    def __onMonitorFinished(self, step, role, result):
+        """Return True when the run produced a usable measurement.
+
+        ⛔ §2.5/§12.3: an outcome without a value must always SAY WHY, or the operator learns to read a
+        missing number as a bug. ⚠ And §17/U2: a fill that has been in the beam has banked light dose, so
+        re-measuring THIS jar is not the same experiment as measuring a fresh one."""
+        # ⛔⛔ THE RECORD IS WRITTEN FOR **EVERY** OUTCOME, NOT ONLY THE GOOD ONES (§12.1/§15.2).
+        # ⚠ The first version wrote it only on success, which lost the trajectory of exactly the runs
+        # worth looking at — a fill that never cleared, a cancelled one, a failed one. §12.1 is explicit:
+        # "the trajectory so far is KEPT, marked, and never reported as a measurement". Keeping it is what
+        # makes the Settling step (§18) a diagnostic rather than a trophy cabinet.
+        workflow = self.__engine.getWorkflow() if hasattr(self.__engine, "getWorkflow") else None
+        if workflow is not None and hasattr(workflow, "setMonitorRecord"):
+            workflow.setMonitorRecord(result.toRecord())         # ⭐ §15.2 — the choice is auditable
+        # One greppable line per monitored run, alongside the CAPTURE-SETTINGS / CAPTURE-LOWDN lines: an
+        # outcome that only ever appears in a status bar is an outcome nobody can reconstruct afterwards.
+        print("MONITOR outcome=%s rows=%d decisionRows=%d clearing=%s capsHit=%s cancelled=%s distinct=%s"
+              % (result.outcome.value, len(result.rows), len(result.decisionRows()),
+                 result.clearingSeconds, result.capsHit, result.cancelled, result.distinctFraction))
+
+        # ⭐ THE SETTLING TAB BELONGS TO THE SAMPLE STEP (Edwin, at the rig 2026-08-17). It first landed in
+        # PROCESSING, beside the other provenance views — but the operator reads it WHILE AND JUST AFTER
+        # measuring this jar, and that is the Sample step. So it appears here as a third inner tab, next
+        # to Spectrum and Image. ⚠ The PROCESSING/report declaration stays: it is the persisted, re-openable
+        # artefact and the page that reaches the PDF (§18.4). Same view-model, two surfaces — which is the
+        # "built once, used three times" claim of §18.1 doing its job.
+        self.__showSettlingTab(result)
+
+        if result.hasValue():
+            answer = result.answer
+            self.__showStatusText("✅ settled after %s — %s %.2f (%s)"
+                                  % (self.__minutesText(result.clearingSeconds), answer["valueKey"],
+                                     answer["value"], answer["readAs"]))
+            return True
+        step.setContainer(None)
+        self.__showStatusText({
+            "NEVER_SETTLED": "⛔ the fill never cleared within the time limit — no value. Warm it and "
+                             "use a FRESH fill: this one has been in the beam and has changed.",
+            "MEASUREMENT_BROKEN": "⛔ no signal in the Soret band — check the fill and the lamp.",
+            "STALLED": "⛔ the camera stopped delivering frames — nothing recorded.",
+            "FAILED": "⛔ the plugin's evaluation raised; the trajectory was kept but there is no value.",
+        }.get(result.outcome.value, "⛔ no value — %s" % result.outcome.value))
+        return False
+
+    @staticmethod
+    def __minutesText(seconds):
+        return "—" if seconds is None else "%d:%02d" % (int(seconds) // 60, int(seconds) % 60)
+
+    def __showSettlingTab(self, result):
+        """Add / replace the "Settling" inner tab from the run that just finished.
+
+        ⭐ The plugin builds the view (it owns what the curve MEANS); this panel only finds a home for the
+        widget — the §10.1a-bis boundary held in the UI as well.
+        ⚠ Shown for EVERY outcome, including the ones with no value: a run that never cleared is exactly
+        the run whose curve explains itself (§12.1)."""
+        plugin = getattr(self.__engine, "plugin", None)
+        if plugin is None or not hasattr(plugin, "settlingStep"):
+            return
+        try:
+            step = plugin.settlingStep(result.toRecord())
+            if step is None:
+                return
+            from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
+            content = QtWorkflowRenderer().render([step.getView()])
+        except Exception as error:              # a diagnostic must never break the capture it documents
+            print("SETTLING tab unavailable (%s)" % error)
+            return
+        for index in range(self.__innerTabs.count()):
+            if self.__innerTabs.tabText(index) == "Settling":
+                self.__innerTabs.removeTab(index)
+                break
+        self.__innerTabs.addTab(content, "Settling")
+        self.__innerTabs.setCurrentIndex(self.__innerTabs.count() - 1)
+
+    # --- the capture button, which is also the CANCEL button (§12.1a) ---
+
+    def __setCaptureButtonCancelling(self):
+        if self.__captureButton is not None:
+            self.__captureButton.setText("Cancelling …")
+            self.__captureButton.setEnabled(False)   # ⭐ blocks the double-click while the run unwinds
+
+    def __setCaptureButtonCancel(self):
+        if self.__captureButton is not None:
+            self.__captureButton.setText("Cancel")
+            self.__captureButton.setProperty("danger", True)
+            self.__captureButton.setEnabled(True)    # ⭐ the ONLY live control during a capture
+
+    def __restoreCaptureButtonLabel(self):
+        if self.__captureButton is None:
+            return
+        self.__captureButton.setProperty("danger", False)
+        role = self.__activeStep.getRole() if self.__activeStep is not None else None
+        self.__captureButton.setText("Capture reference" if role == REFERENCE else "Capture sample")
+
+    def __emitIndeterminate(self, text):
+        # ⭐ `stepsCount = 0` is the app-wide "no knowable end" convention (§13.2): MainStatusBarViewModule
+        # answers it with the moving-stripes animation and keeps the text. ⛔ Not `guidance = True` — that
+        # is the amber coach LINE with no bar at all, and during a capture there IS something running.
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = 0
+        signal.currentStepIndex = 0
+        signal.text = text
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+
+    def __showStatusText(self, text):
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.text = text
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     # --- plotting ---
 

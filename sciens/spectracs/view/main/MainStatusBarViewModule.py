@@ -336,9 +336,56 @@ class MainStatusBarViewModule(QWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
 
     def resetProgressBar(self):
+        self.__stopStripes()                # ⚠ or the animation outlives the thing it was animating
         self.progressBar.setStyleSheet("")  # back to the app-global progress-bar style
+        self.progressBar.setRange(0, 100)
         self.progressBar.setValue(0)
         self.progressBar.setFormat('ready for action...')
+
+    # --- the indeterminate ("moving stripes") bar (SPEC_settled_measurement.md §13.2) ---
+
+    __STRIPE_SEGMENTS = 28        # stripes across the full width — fine enough to read as texture
+    __STRIPE_INTERVAL_MS = 70     # ~14 fps: visibly moving, and cheap next to a 1.4 fps camera
+    __STRIPE_PHASE_STEPS = 6      # sub-steps per stripe, so the motion is smooth rather than snapping
+
+    def __startStripes(self):
+        if getattr(self, "_stripeTimer", None) is None:
+            self._stripePhase = 0
+            self._stripeTimer = QtCore.QTimer(self)
+            self._stripeTimer.timeout.connect(self.__advanceStripes)
+            self._stripeTimer.start(self.__STRIPE_INTERVAL_MS)
+        self.__applyStripes()
+
+    def __stopStripes(self):
+        # ⚠ Always paired with leaving the indeterminate state: a timer left running would repaint the bar
+        # forever, and an animation that never stops reads as "still working" long after it finished.
+        if getattr(self, "_stripeTimer", None) is not None:
+            self._stripeTimer.stop()
+            self._stripeTimer = None
+
+    def __advanceStripes(self):
+        self._stripePhase = (self._stripePhase + 1) % (self.__STRIPE_SEGMENTS * self.__STRIPE_PHASE_STEPS)
+        self.__applyStripes()
+
+    def __applyStripes(self):
+        # Two shades of the brand green, alternating, shifted a fraction of a stripe per tick. The stops
+        # are enumerated across [0,1] because Qt stylesheet gradients cannot repeat.
+        light, dark = "#3D7848", "#2C5A35"
+        segments = self.__STRIPE_SEGMENTS
+        offset = (self._stripePhase / float(self.__STRIPE_PHASE_STEPS)) / segments
+        stops = []
+        for index in range(segments + 2):
+            start = (index / float(segments)) - offset
+            end = ((index + 1) / float(segments)) - offset
+            if end <= 0.0 or start >= 1.0:
+                continue
+            colour = light if index % 2 == 0 else dark
+            stops.append("stop:%.4f %s" % (max(0.0, start), colour))
+            stops.append("stop:%.4f %s" % (min(1.0, max(0.0, end - 0.0001)), colour))
+        gradient = "qlineargradient(x1:0, y1:0, x2:1, y2:0, %s)" % ", ".join(stops)
+        self.progressBar.setStyleSheet(
+            "QProgressBar { color: #DDDDDD; text-align: center; }"
+            "QProgressBar::chunk { background: %s; }" % gradient)
 
     def __guidanceStyleSheet(self):
         # SPEC_acquisition_guidance: plugin/guidance text = plain muted-amber label — no fill, no groove.
@@ -352,11 +399,33 @@ class MainStatusBarViewModule(QWidget):
             self.resetProgressBar()
         elif getattr(applicationStatusSignal, "guidance", False):
             # Plugin/guidance text: muted-amber font, no progress bar.
+            self.__stopStripes()
             self.progressBar.setStyleSheet(self.__guidanceStyleSheet())
+            self.progressBar.setRange(0, 100)
             self.progressBar.setValue(0)
             self.progressBar.setFormat(applicationStatusSignal.text)
+        elif not applicationStatusSignal.stepsCount and not getattr(applicationStatusSignal, "guidance", False):
+            # ⭐ INDETERMINATE (SPEC_settled_measurement.md §13.1/§13.2). A monitored acquisition has NO
+            # KNOWN END — it stops when the sample settles — so there is no fraction to show, and a bar
+            # creeping to 90 % and sitting there is worse than none: it makes the operator distrust a
+            # wait that is working correctly.
+            # ⭐ MOVING STRIPES, not Qt's sweeping block (Edwin, at the rig: "would like 'moving stripes'
+            # for the indeterminate bar as known by other apps"). Qt's own busy mode (range 0,0) slides a
+            # single chunk and — worse — swallows the format TEXT, which is the half of §13.2 that carries
+            # the state and the turbidity.
+            # ⇒ the bar is kept FULL (value = maximum) and its chunk painted with a striped gradient whose
+            # phase a timer advances. ⚠ Qt stylesheets have no animation, so the movement HAS to come from
+            # re-applying the sheet; that is the standard barber-pole trick, not a workaround.
+            # ⛔ AND IT FIXES A CRASH: `stepsCount = 0` used to reach the division below and raise
+            # ZeroDivisionError inside the signal handler — so the convention silently did nothing at all.
+            self.progressBar.setRange(0, 100)
+            self.progressBar.setValue(100)
+            self.progressBar.setFormat(applicationStatusSignal.text)
+            self.__startStripes()
         else:
+            self.__stopStripes()
             self.progressBar.setStyleSheet("")  # operational progress: app-global style + real fill
+            self.progressBar.setRange(0, 100)   # back from any indeterminate run
             self.progressBar.setFormat(applicationStatusSignal.text)
             percents = applicationStatusSignal.currentStepIndex / float(applicationStatusSignal.stepsCount) * 100.0
             self.progressBar.setValue(percents)

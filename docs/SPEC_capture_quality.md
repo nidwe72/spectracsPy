@@ -13488,6 +13488,29 @@ establishes is that the premise was wrong, not the size of the error.
 the sample is measured ONCE, at a defined point, instead of repeatedly while it changes.** That is
 `SPEC_settled_measurement.md`, and it is why that work now precedes everything else.
 
+### ⭐ 16.36.9 THE CLEARING RECIPE, AS OPERATED — and the experiment it makes possible  *(Edwin, 2026-08-16)*
+
+```
+   hotplate set to ~90 C   ->  a water glass on it reaches ~52 C   (⭐ the bath temperature is the
+   jar of muddy dilution into the water                                variable, NOT the plate setting)
+   ->  CLEAR in ~30 s
+   ->  out, dried on a paper handkerchief   ->  ready to measure
+```
+
+⚠ **Faster than §16.36.7's ~2 min at 50 °C**, because the plate keeps driving the bath while the jar sits
+in it — the earlier figure was a bath cooling from its set point. Both are consistent with a cloud point
+between 35 and 50 °C: a little further above the threshold collapses the time.
+⇒ **the recipe is now repeatable**, which is what makes heat dose a *controllable variable* for the first
+time.
+
+⛔⛔ **AND IT OPENS THE QUESTION §16.36 COULD NOT ASK.** This section established that light browns and
+heat clears. It never established that **heat is innocent** — it had no way to vary heat while holding
+light fixed. The bath does. ⇒ ⭐ the pre-registered protocol (arms 30 s / 5 min / thermal cycling / a
+dark-elapsed-time control, with the decision rule fixed beforehand) lives in
+**`SPEC_settled_measurement.md` §11**, and it is the **go/no-go gate on the heated holder of §7** — a
+heated holder does not warm the sample for 30 seconds, it holds it at 50 °C for every measurement, and
+§16.36.7 already showed the shutter cannot exist without it.
+
 ---
 
 ## 17. Gamma linearization — the one instrument nonlinearity the reference does NOT cancel  *(DE-RISKED DESIGN — Edwin 2026-07-24, verified 2026-07-26 (§17.5); impl on explicit request)*
