@@ -2936,9 +2936,12 @@ means seeing **where the gate fired relative to the `Q%` trace**; a per-graph ta
 ⛔ it must never become the only place a curve can be seen. The single-graph tabs are for looking
 *closer*, which is a genuinely different question from the one Overview answers.
 
-⛔ **`shownInReport` is FALSE on them**, and that is not an oversight: tabs FLATTEN to sections on paper
-(§18.8), so marking all four would print the same three curves twice — once combined, once one per page.
+⛔ ~~**`shownInReport` is FALSE on them**, and that is not an oversight: tabs FLATTEN to sections on paper
+(§18.8), so marking all four would print the same three curves twice — once combined, once one per page.~~
 ⭐ This is the first real use of the per-tab report flag that §18.8 asked for.
+⛔⛔ **REVERSED IN §27.21 — AND THE REASON ABOVE HAD ALREADY EXPIRED WHEN IT WAS WRITTEN DOWN.** "Twice"
+was only possible while Overview was the COMBINED chart. §27.9 (three paragraphs below) turned Overview
+into a TEXT summary with no chart, which deleted the duplication — but nobody came back for the flags.
 ⚠ Each per-graph tab holds **the same panel dict** the Overview holds — one construction, two homes. A
 copy would be two things to keep in step, and they would drift.
 
@@ -3043,6 +3046,648 @@ the embedded machine payload — describe how the value was chosen. §18.6's cla
 role CONSTANTS are used now. ⛔ A test that cannot fail is worse than no test: it reports safety it never
 checked.
 
+### ⭐⭐ 27.13 THE REPORT PATH, WALKED END TO END — three defects, measured not guessed  *(Edwin's review of §27.12, 2026-08-17)*
+
+⚠ **WHY THIS SECTION EXISTS.** Edwin, on reading §27.12: *"have a bad feeling about it and still don't
+understand it."* ⛔ That is a legitimate objection to a design, not a request for reassurance — §27.12 was
+written from the code that was changed, never from the artefact it produces. ⇒ the chain was walked
+object by object, and the report renderer was **run** on a synthetic 12-row `MonitorRecord`. Two of the
+three findings below were invisible from the diff and only appeared on the rendered page.
+
+#### ⭐ 27.13a THE CHAIN, AS BUILT — five hops, one object
+
+| # | where | what happens |
+|---|---|---|
+| 1 | `DevSpectralPlugin.settlingView(record)` | builds **one `TabGroupView`**, `setShownInReport(True)`: `Overview` (a LIST — `LabelView` + ~11 `MetricFieldView`), `Q%`, `Turbidity`, `Rate` (a `SeriesPlotView` each), `Health`, `Decisions` (a `TableView` each, conditional) |
+| 2 | `SpectralWorkflowEngine.__attachMonitorViews` | appends it to the **monitored step's** `EvaluationResult`, tags `isMonitorView = True`, and returns the SAME object on `result.views` |
+| 3 | `CapturePanel.__showSettlingTab` | renders `result.views` through `QtWorkflowRenderer` into the "Settling" inner tab |
+| 4 | `WorkflowReportBuilder.__collectGroups` | harvests each step's `EvaluationResult` items, keeps `isShownInReport` ⇒ the group files under **Acquisition** (its step's PHASE — no role, label or step-kind is consulted anywhere) |
+| 5 | `MatplotlibWorkflowRenderer.visitTabGroup` | "paper has no tabs" — stacks the children under their tab labels as bold headings |
+
+⭐ **HOW THE ENGINE CALLS THE PLUGIN — duck-typing, not an SDK method.**
+`plugin = getattr(self, "plugin", None)`, then `hasattr(plugin, "settlingView")`, then
+`plugin.settlingView(result.toRecord())` inside a `try`. ⚠ `settlingView` is **not** declared on
+`SpectralPlugin`: a plugin without it simply gets no views, and a plugin whose implementation raises gets
+a printed line and a capture that still succeeds — *a diagnostic must never break the capture it
+documents*. ⛔ The cost of that freedom is that a typo in the method name is silent, which is exactly the
+failure mode of the vacuous-test paragraph above. ⇒ **when the seam is next touched, declare it on the
+SDK base class with a `return None` default** and keep the try.
+
+⭐ **"SAMPLE" IS NEVER MATCHED BY NAME.** Nothing in the engine or the report keys on a role. The only
+role gate is in the UI: `CapturePanel.__monitorFor` refuses `REFERENCE` and refuses to build a monitor
+before a reference exists. ⇒ the phrase "hard-coded by its label" belongs to two *removed* things — the
+report-only step of §27.11, and the `== "sample"` literal in the test.
+
+#### ⛔⛔ 27.13b DEFECT 1 — `isShownInReport` IS IGNORED INSIDE A TAB GROUP, so the PDF prints EVERYTHING
+
+`visitTabGroup` dispatches every child unconditionally; the flag is consulted **only on top-level items**
+in `__collectGroups`. ⇒ the plugin's own contract (`DevSpectralPlugin` §18.8: *"shownInReport stays FALSE
+on them … the report takes the summary, not three separate pages"*) is **not what the code does**.
+
+⭐ **MEASURED, on a 12-row record: three pages.** Page 0 = the Overview metric grid + the Q% plot + the
+top of Turbidity; page 1 = Turbidity, Rate and the Health table; page 2 = the whole Decisions table.
+
+⚠ **WHY IT SURVIVED.** `test_one_tab_per_graph_each_holding_exactly_one_panel` asserts the flag's
+**value**, never its **effect** — the third time in this spec that a test has checked a declaration
+instead of a consequence (§27.5b, the vacuous role literal, now this). ⛔ And the one existing
+`visitTabGroup` report test (`test_tab_group_render.py`) only asserts *"figures is truthy"*, which a page
+carrying nothing but a header also satisfies.
+
+⚠ **WHY NOTHING ELSE BROKE.** The only other `TabGroupView` is the PROCESSING raster group (Full frame |
+Cropped ROI) — and it is **not** `shownInReport` at all, so it never reaches the report. ⇒ the settling
+group is the FIRST and ONLY tab group that has ever been printed, and the first with deliberately mixed
+children. The renderer's comment (*"e.g. full-frame + cropped-ROI raster"*) documents a case that does
+not happen.
+
+⭐⭐ **DECISION D1 (Edwin): `isShownInReport` IS THE CANONICAL WAY TO SAY WHAT IS ON PAPER, AND A TAB GROUP
+MUST HONOUR IT.** `visitTabGroup` prints a child only when that child is flagged; a tab whose children
+are all unflagged prints no heading either (⛔ never an empty bold label). ⚠ Consequences, both of which
+are the work of this change and neither of which is optional:
+- **the `Overview` tab's items must be flagged by the plugin** — they are a `LabelView` + `MetricFieldView`
+  list, all defaulting to `False`, so under D1 the summary would silently vanish. ⛔ That failure is
+  invisible in every current test.
+- **`test_tab_group_render.py`'s report assertion must be strengthened** from "figures is truthy" to a
+  count of what was actually drawn (axes / texts), or D1 lands unverified.
+⛔ **Rejected: inheritance** ("an unset child inherits the group's flag"). A class-attribute default
+cannot distinguish *unset* from *explicitly False*, so it would have to peek into `__dict__` — clever,
+and it would make the plugin's explicit `False` on the graph tabs mean nothing.
+
+#### ⛔ 27.13c DEFECT 2 — `isMonitorView` DOES NOT SURVIVE A SAVE
+
+The de-duplication tag is a bare Python attribute assigned by the engine; `TabGroupView.toJson()` does
+not carry it. **Measured**: after a JSON round-trip the reloaded group has `isShownInReport = True` and
+`isMonitorView` **absent**. ⇒ re-measuring inside a reloaded run appends a SECOND settling group instead
+of replacing the first, and the PDF then carries two contradictory provenances for one number — precisely
+the failure the tag was introduced to prevent (§27.12).
+
+⭐ **DECISION D2:** the tag round-trips. It is written and read in `TabGroupView.toJson()/fromJson()`
+alongside `isShownInReport`, and the *contract* is stated on the SDK seam: **whatever `settlingView()`
+returns must round-trip `isMonitorView`.** ⚠ Today that is only `TabGroupView`; a plugin returning another
+type gets the dedup silently downgraded, so the engine logs one line when the returned view cannot carry
+the tag.
+
+#### ✅ 27.13d REOPENING A SAVED RUN — it already works, by accident, and untested
+
+*Edwin: "at opening a workflow the GUI should show/render the settlement values of course."* ⭐ It does —
+**measured** end to end (JSON round-trip → `renderStep`): all six tabs come back with their child types
+intact (`SeriesPlotView`, `TableView`, the `MetricFieldView` list) and `renderStep` yields a `QTabWidget`
+reading `Overview · Q% · Turbidity · Rate · Health · Decisions`.
+
+⚠ **BUT IT WORKS FOR A REASON NOBODY CHOSE.** `SpectralWorkflowStep._view` is `@reconstructor`-transient,
+so a step loaded from the DB has **no `CaptureView`** — `renderStep` therefore falls past the capture
+branch into the passive visitor, which reads the `EvaluationResult`. ⇒ the very mechanism that makes the
+settling views *invisible* during a live run (§27.12's "invisible by construction") is what makes them
+*visible* in a saved one. That symmetry is elegant, and it is currently written down nowhere and asserted
+by no test.
+
+⭐ **DECISION D3:** promote it from accident to contract. One test opens a persisted monitored run and
+asserts the settling tabs are present; the `_view`-transience argument is written into
+`WorkflowPhaseRenderer.renderStep`'s comment, because a future "persist the view descriptor" change would
+silently take the saved-run settling tabs away.
+
+⚠ **AND A SCOPE FACT WORTH KNOWING:** saved runs open **only in the wizard** (`WizardViewModule.__startRun`
+→ `_startViewRun`; the bench has no VIEW mode and its `_renderStop` builds a live `CapturePanel`
+unconditionally). ⛔ So a monitored run made at the bench is re-read in the *wizard*. That is not wrong,
+but it means the bench — the host that MAKES these runs — cannot re-open one. Recorded here; a bench VIEW
+mode is out of scope for §27.
+
+#### ⚠ 27.13e A COSMETIC ONE — the paper section is headed "Overview"
+
+The tab label becomes the bold heading, so the PDF reads **Overview** with no "Settling" above it; the
+word appears only inside the `LabelView` beneath. ⭐ Fix with the group: a `TabGroupView` that is
+`shownInReport` prints its own **title** as the section heading, above the per-tab labels.
+
+#### ⭐ 27.13f "SAMPLE LOOKS LIKE A PHASE" — that is the CHEVRON, not the tab groups
+
+*Edwin: "mechanism that shows Sample as if it were a phase though it in fact belongs to the ACQUISITION
+phase."* ⛔ Nothing to do with `TabGroupView`. It is `NavigationModel.stops()`: when the plugin's
+`NavigationPolicy` lists a phase in `stepChevronPhases`, that phase contributes **one `NavStop` per step**
+instead of one per phase, labelled with the STEP's label. `DevSpectralPlugin.policy()` sets
+`stepChevronPhases={ACQUISITION}` (with `AUTO_ADVANCE`) ⇒ the chevron reads
+`Reference › Sample › Processing › Evaluation › …` and "Sample" sits at the same visual altitude as a
+phase. ⭐ That is the §4.6 **role-lift**, and it is deliberate: the chevron IS the role selector.
+⚠ The report does NOT inherit that lift — `WorkflowReportBuilder` groups strictly by
+`SpectralWorkflowPhaseType`, so on paper Reference and Sample both appear under one **Acquisition**
+heading. ⇒ **the chevron and the PDF disagree on what a "section" is.** ⛔ Not by design, as first written
+here: they are two decisions taken years apart and never reconciled — see **§27.14a**, which asks whether
+the report should carry step sub-headings and answers *yes, but never by importing the nav policy*.
+
+#### 📐 27.13g THE DIAGRAMS  *(spectracs-docs)*
+
+⭐ Two diagrams are the deliverable of this review, because the confusion was structural, not local:
+- **`monitored_capture_sequence.puml`** — the sequence from the Measure click to the embedded
+  `workflow.json`: who calls whom, where the one view object is built, and the two surfaces it reaches.
+- **`monitor_record_model.puml`** — the object model: `MonitorRecord` and its rows, `MonitorResult`,
+  the `TabGroupView` tree, and where each lives (transient / persisted / on paper).
+
+⛔ Both must show the DEFECTS of §27.13b–c as marked notes until they are fixed, or the diagram will
+document an intent the code does not have — the same mistake as the plugin comment.
+
+### ⭐⭐ 27.14 RUBBER-DUCK PASS ON D1–D3 — walked against the code before writing any of it  *(2026-08-17)*
+
+⭐ Same discipline as §19 / §21 / §23 / §25: read the call sites first. **W6 is the one that matters** —
+it is a hole that already exists and that D1 makes reachable.
+
+- ⛔ **W1 THE HEADING MUST BE COMPUTED AFTER THE FILTER.** `visitTabGroup` prints the tab label and *then*
+  dispatches. Filter first, print the label only if at least one child survived — otherwise D1 replaces
+  three curve pages with three bold orphan headings.
+- ⛔⛔ **W2 `isMonitorView` HAS NO CLASS-LEVEL DEFAULT.** It is only ever assigned by the engine, and every
+  reader uses `getattr(item, "isMonitorView", False)`. A `toJson()` written as `self.isMonitorView` would
+  therefore raise `AttributeError` on the PROCESSING raster group — a view that has never been tagged.
+  ⇒ declare `isMonitorView = False` on **`ReportableView`** (beside `isShownInReport`, one line, and it
+  documents the concept once), then serialize it in `TabGroupView`.
+- ⭐ **W3 NO ALEMBIC MIGRATION — and this time that is checked, not assumed.** `EvaluationResult.resultJson`
+  is a `Text` **blob**; `isMonitorView` rides inside it. ⚠ §19/I7 made exactly this prediction about
+  `monitorRecord` and was WRONG, because `SpectralWorkflow` is Option A (real columns) — the difference is
+  real and it is the reason to state it: a workflow FIELD needs a column, a view-model field does not.
+  ⇒ old rows simply read `False`, which is today's behaviour.
+- ⛔ **W4 D1 AND THE PLUGIN'S OVERVIEW FLAGGING ARE ONE COMMIT.** Land the renderer alone and the settling
+  section becomes **empty**; land the plugin alone and nothing changes. A tree that is briefly wrong in a
+  way the tests can see is fine; one that prints a blank section is not.
+- ⚠ **W5 ⛔ DO NOT TOUCH THE Qt RENDERER.** `ReportableView`'s contract is *"the host's report renderer
+  includes only items whose `isShownInReport` is True; the GUI ignores the flag"* — and
+  `QtWorkflowRenderer.visitTabGroup` correctly ignores it today. Two visitors, one flag, exactly one
+  honours it. ⇒ say so in BOTH methods, or the next reader "fixes" the symmetry and deletes the Settling
+  tab's curves from the screen.
+- ⛔⛔ **W6 A CAPTURE NESTED IN A PRINTED GROUP IS DRAWN BUT NEVER ATTACHED.** `__collectGroups` calls
+  `__prepareCapture` (assign `attachmentName`, take the PNG for `/EmbeddedFiles`) only for **top-level**
+  `SpectrumCaptureView` items; `visitTabGroup` happily draws nested ones. ⇒ the page would show an image
+  the machine payload does not carry, and its caption would silently lose the `[attachment: …]` marker.
+  ⚠ It has never bitten because no tab group has ever been printed (§27.13b) — D1 is what makes the path
+  live. ⇒ **decide before building**: either `__collectGroups` traverses groups (the bench already has
+  `__flattenItems` doing exactly this traversal for the pixel fill — reuse the shape), or a capture inside
+  a printed group is refused with one logged line. ⛔ Silently drawing it is not an option.
+- ⚠ **W7 THE NEW SILENT FAILURE IS "FLAGGED BUT EMPTY".** After D1 a group whose children are all unflagged
+  prints nothing, and that is indistinguishable from "the plugin declared nothing at all". ⇒ one greppable
+  line, in the style of the CAPTURE-SETTINGS / MONITOR lines: `REPORT tab group '<title>' is flagged for
+  the report but no child is`.
+- ⚠ **W8 THE TESTS THAT MUST CHANGE, not just be added.** `test_tab_group_render.py`'s report assertion is
+  `assertTrue(figures)` — a page carrying only a header satisfies it, so it cannot fail either before or
+  after D1. ⇒ assert what was DRAWN (axes count / texts). ⭐ The D1 acceptance test is the measurement that
+  found the defect: build the settling view from a canned record, render, assert **one page**, **zero
+  `SeriesPlotView` axes**, and the metric grid present.
+- ⚠ **W9 THE `_view`-TRANSIENCE COMMENT IS LOAD-BEARING** (D3). "Persist the view descriptor" is a
+  plausible future change, and it would silently remove the settling tabs from every re-opened run. The
+  test pins the behaviour; the comment explains why the test exists.
+
+#### ⚠ 27.14a AN OPEN QUESTION EDWIN RAISED — should the report inherit the chevron's role-lift?
+
+⛔ **A CORRECTION FIRST: §27.13f's "on purpose" was too strong.** Grouping the report by phase is
+SPEC_bench_pdf_export.md's own decision (§1: *"grouped by phase, workflow order"*), written **before** the
+role-lift existed (SPEC_simplified_plugin_navigation §4.6). They were two separate decisions that were
+never reconciled — not one deliberate asymmetry.
+
+⚠ **AND THE ASYMMETRY HAS A REAL COST**, which the settling section is what exposed: the Acquisition
+section is now *reference full frame · reference ROI · reference spectrum · sample full frame · sample ROI
+· sample spectrum · settling* — **seven items under one heading with no sub-structure at all**.
+
+⛔ **FIRST ANSWER (SUPERSEDED, kept because the correction is the point):** *"give the report step
+sub-headings and never let it see the navigation policy — `NavigationPolicy` is interaction chrome, and a
+LIMS addon has no plugin loaded."* The coupling half of that is right. ⛔ The premise is not.
+
+⭐⭐ **EDWIN'S COUNTER, AND IT IS THE BETTER ARCHITECTURE** *(2026-08-17)*: *"what I am not sure about is
+that the NavigationModel should not be part of the Workflow itself — the plugin provides the info how
+content is organized, and that structure would make sense independent of the plugin."*
+
+⛔⛔ **THE FACT THAT SETTLES IT — the declaration does not survive its own run.** `NavigationPolicy` is
+built by `plugin.policy()` and lives **only in the live host**: it is persisted nowhere, and
+`AbstractPluginExecutionView._policy()` returns `WorkflowPolicy.default()` for any VIEW-mode run. ⇒ a
+re-opened measurement shows **one `Acquisition` chevron instead of `Reference › Sample`** — it navigates
+differently from how it was measured. ⚠ That is the SAME defect as everything else in §27.13: something
+the plugin declared never reached the record.
+
+⭐ **AND THE POLICY CONFLATES TWO DIFFERENT KINDS OF THING:**
+
+| field | what it is | who may read it |
+|---|---|---|
+| `mode` (STEP / AUTO_ADVANCE) | pure **interaction** — "what happens when this capture finishes" | the live host only. ⛔ Meaningless on paper and to a LIMS addon |
+| `stepChevronPhases` | **structure** — "in this workflow a step of ACQUISITION is a section in its own right" | ⭐ everyone: chevron, re-opened run, report, LIMS addon |
+
+⇒ my "it is chrome" was true of `mode` and false of `stepChevronPhases`, and I generalised from the
+wrong half.
+
+⭐⭐ **REVISED D4 — PERSIST THE STRUCTURE ON THE WORKFLOW; READ IT EVERYWHERE.** The plugin still declares
+it (nothing about ownership changes), the workflow CARRIES it, and every consumer reads it from the record
+with no plugin present. ⭐ **This is not a new pattern — it is exactly `EvaluationResult`**: the plugin
+declares view-models, the record carries them, hosts render them years later without the plugin. The
+navigation structure is the one plugin declaration that was left out of that arrangement.
+- ⭐ the chevron reads it ⇒ **a re-opened run navigates the way it was measured** (a real bug fixed, not
+  just tidiness);
+- ⭐ `WorkflowReportBuilder` reads it ⇒ *Reference* / *Sample* become sections under **Acquisition**, with
+  the settling group under *Sample* where it was measured — and ⛔ still no plugin import, no policy
+  object, no coupling. The report asks the RECORD, which is what it should always have done;
+- ⭐ a LIMS addon gets the same structure for free.
+
+⚠ **WHAT IT COSTS, stated plainly:**
+- an **Alembic migration** — a column (or a field in an existing blob) on `SpectralWorkflow`. ⛔ Contrast
+  W3: a workflow-level fact needs a column, a view-model field does not. This one is a workflow fact.
+- ⭐ **RENAME IT.** Once the report reads it, "navigation" is the wrong word — and that word is precisely
+  what misled the first answer into calling it chrome. It is a **section structure**: persist something
+  like `sectionedPhases`, and let `NavigationPolicy` keep only `mode`.
+- ⚠ the persisted declaration WINS on re-read even if the plugin has changed since. ⭐ Correct for a
+  record — it says how THIS run was organised — but say it out loud.
+- ⚠ ⛔ do NOT persist `mode`. Re-opening a saved run is browsing, not measuring; AUTO_ADVANCE is not a
+  fact about the measurement. (It could ride along as pure audit; nothing would read it.)
+
+✅⭐ **D4 IS ACCEPTED FOR IMPLEMENTATION** *(Edwin, 2026-08-17)*. ⛔ Still bigger than §27 — it belongs to
+SPEC_simplified_plugin_navigation (owner of the concept), SPEC_bench_pdf_export (the consumer) and
+persistence (the migration) — so it runs as its own phase set **G1–G5** (§27.17), separate from F1–F5, and
+those specs must be updated with it. ⚠ It subsumes the "always sub-headings?" question the first answer
+left open: the plugin's declaration answers it per workflow, so the report needs no convention of its own.
+
+### ⭐⭐ 27.16 RUBBER-DUCK PASS ON D4 — and TWO findings change the shape of the work  *(2026-08-17)*
+
+- ⛔⛔ **N1 `NavigationModel.stops()` IS DEAD CODE IN PRODUCTION — only the tests call it.** The chevron is
+  actually built by `AbstractPluginExecutionView._rebuildPlan()`, which re-implements the same
+  policy → stops derivation inline. ⇒ ⛔ **persisting the structure and teaching `NavigationModel` to read
+  it would change NOTHING on screen.** ⚠ This is §27.11's lesson in another costume (*"guarding at the
+  call sites is how the amber-cue bug survived a round"*): there are two implementations of one rule, and
+  the tested one is not the live one. ⇒ **converge `_rebuildPlan` onto `NavigationModel.stops()` FIRST,
+  as its own step, with the existing tests as the gate.**
+- ⚠ **N2 THE DUPLICATION EXISTS FOR A REASON — the PREDICTIVE plan.** `_plannedPhases()` in NEW mode lists
+  PROCESSING and EVALUATION *before they have any steps*, so the operator sees the whole road ahead;
+  `stops()` can only see phases that already exist and skips empty ones. ⇒ convergence means **passing the
+  planned phase list INTO `stops()`**, not deleting the prediction. ⛔ A naive merge silently shortens the
+  chevron of every new run.
+- ⛔⛔ **N3 THE STRUCTURE MUST RIDE IN `toReportJson()` TOO, not only in a DB column.**
+  `diagnostics/report_reconstruct.py` rebuilds a workflow from the PDF's embedded JSON **with no DB and no
+  plugin** — it is the exact plugin-free consumer D4 exists for, and a LIMS addon is the same shape. A
+  column alone makes the claim only half true. ⚠ And the 124 archived reports carry no such field ⇒ the
+  reconstructor must default to "no sub-sections", which means **a regenerated old report will not match a
+  new one**. ⭐ Say that in the reconstructor's docstring beside the pixels/`attachmentName` caveat, where
+  a reader already looks for exactly this kind of asymmetry.
+- ⚠ **N4 SERIALISE IT AS A SORTED LIST OF ENUM VALUES.** `stepChevronPhases` is a `frozenset` of
+  `SpectralWorkflowPhaseType`. JSON has no sets, and ⛔ iteration order of a frozenset must never reach the
+  blob — two identical runs would otherwise produce different bytes and "same input, same record" dies.
+- ⚠ **N5 A REAL ALEMBIC MIGRATION, on the APP db** (`./authorMigration.sh app "…"`), ⛔ in deliberate
+  contrast to W3: a workflow-level FACT needs a column; a view-model field rides the blob. ⭐ Old rows read
+  NULL → no lift → **exactly today's VIEW-mode behaviour**, so archived runs cannot regress.
+- ⛔⛔ **N6 STAMP IT AT RUN START, NOT AT SAVE.** The other provenance fields (username, pluginCodeRef) are
+  "stamped at Save" — copying that habit here would be a bug: **the bench renders the PDF preview in
+  EVALUATION before anything is saved** (`__buildReportTab`), so the same run would print one way before
+  Save and another way after. ⇒ stamp when the plugin is resolved (`_startNewRun`), so the in-memory
+  workflow carries the structure from its first breath.
+- ⚠ **N7 THE REPORT'S `groups` CONTRACT IS A FLAT LIST OF 2-TUPLES**, and tests call
+  `render(reportView, [("PROCESSING", [view])])` directly. A heading LEVEL must be added tolerantly
+  (accept 2- **or** 3-tuples) or those call sites break. ⛔ And `__drawPhaseHeading` **uppercases** — a step
+  sub-heading must not, or "REFERENCE" shouts at the same volume as "ACQUISITION".
+- ⚠ **N8 CHECK, DON'T ASSUME, THE VIEW-MODE ACQUISITION BRANCH.** With the lift restored in VIEW mode the
+  wizard's `_renderStop` receives STEP stops for ACQUISITION; its branch
+  (`isAcquisitionStep and not self._isView()`) sends them to `__computedPanel`, which is the very path that
+  renders the settling tabs (§27.13d). ⇒ D4 should *improve* that path — one step per stop instead of all
+  steps as tabs — but it changes what a re-opened acquisition looks like, so it is a click-through item.
+- ⭐ **N9 THE PLUGIN SDK SURFACE DOES NOT CHANGE — no `SDK_VERSION` bump.** The host reads
+  `policy().getNavigation().stepChevronPhases` once and stamps it; plugins declare exactly what they
+  declare today. ⚠ That matters: §19/I2 established the gate is STRICT EQUALITY, so a bump would break
+  every sealed M3 plugin for an API they do not use.
+
+### ⭐ 27.17 D4, PHASED  *(G1–G5 — accepted, not built)*
+
+```
+ G1  MODEL     sectionedPhases on SpectralWorkflow (Text, sorted enum values)      [N4/N5]
+               + toReportJson carries it + report_reconstruct reads it back        [N3]
+               + Alembic revision on the APP db (./authorMigration.sh app)
+               gate  persistence round-trip · report-JSON round-trip · NULL = today's behaviour
+               risk  low, but it is the migration — review the generated file
+ G2  CORE+APP  converge _rebuildPlan onto NavigationModel.stops(), predictive plan  [N1/N2]
+               passed IN as the planned phase list
+               gate  ⛔ ZERO behaviour change — the existing nav tests ARE the gate
+               risk  THE structural step; do it alone, revert = one commit
+ G3  APP       stamp the structure at _startNewRun (⛔ not at Save)                 [N6]
+               chevron reads it from the WORKFLOW in both NEW and VIEW mode
+               gate  a re-opened saved run reads `Reference › Sample`, not `Acquisition`
+               risk  changes the re-opened acquisition layout — click-through item  [N8]
+ G4  CORE      __collectGroups emits step sub-sections where the structure says so  [N7]
+               render() accepts a heading level; ⛔ sub-heading not uppercased
+               gate  Acquisition shows Reference/Sample; settling sits under Sample
+               risk  the visible half — pairs with F2's PDF click-through
+ G5  DOCS+RIG  update SPEC_simplified_plugin_navigation (owner) + SPEC_bench_pdf_export
+               (consumer); click-through a re-opened run, then one PDF
+```
+
+⚠ **ORDER IS NOT NEGOTIABLE**: G2 before G3 (else the persisted structure changes nothing on screen — N1),
+G1 before G3 and G4 (they read what G1 stores). ⭐ G2 is the only step with no visible effect, and it is
+the one that makes the other three small.
+
+### ⭐ 27.15 THE FIX, PHASED  *(D1–D4; none of it built)*
+
+```
+ F1  MODEL      isMonitorView default on ReportableView + TabGroupView (de)serialises it   [D2]
+                gate: round-trip test asserts the tag survives · no migration (W3)
+                risk: none — nothing reads it differently yet
+ F2  CORE+PLUGIN  visitTabGroup honours CHILD isShownInReport; heading after the filter     [D1]
+     (ONE commit) group prints its own title (27.13e); the flagged-but-empty log line (W7)
+                  + plugin flags the Overview items shownInReport(True)                (W4)
+                gate: one page · zero SeriesPlot axes · metric grid present (W8)
+                risk: THE visible change — this is what the first PDF export will show
+ F3  CORE       nested captures in a printed group: traverse in __collectGroups, or refuse  [W6]
+                gate: a nested capture either gets an /EmbeddedFiles entry or is logged
+                risk: decide the policy BEFORE writing it; F2 makes the path live
+ F4  APP        D3 test through the real-DB persistence harness + the _view comment    [D3/W9]
+                gate: save → reload → renderStep yields the six tabs
+                risk: none (test + comment only)
+ F5  RIG        the click-through §27.3 owes, THEN the first PDF export from a monitored run
+                ⛔ must follow F2 — before it, the export documents a defect
+ F?  OPEN       D4 step sub-headings in the report — Edwin's call, not scheduled
+```
+
+⚠ **F1 and F4 are independent of everything.** F2 is the only one that changes what a reader sees, and
+F3 must be *decided* before F2 lands even if it is *built* after. ⭐ Four repos touched
+(`-model`, `-core`, `spectracs-plugins`, `spectracsPy`) — the ordinary shape for this codebase.
+
+### ⭐⭐ 27.18 COMBINED RUBBER-DUCK — F AND G TOGETHER  *(2026-08-17)*
+
+⚠ **WHAT A THIRD PASS IS FOR.** §25.1 warned that a further pass over the same text mostly re-reads it.
+⇒ this one deliberately looks only at what the per-track passes COULD NOT see: **F × G interactions**, and
+the consumers neither track lists. It found four things worth the read; the rest of F and G survived
+unchanged, which is itself a result.
+
+- ⛔⛔ **Z1 THE REPORT MUST NEVER PRUNE THE VIEW OBJECT — and that decides HOW D1 is built.** It is
+  tempting to filter in `__collectGroups` (a pure model pass, where both heading levels could then be
+  computed exactly). ⛔ **It would break the screen**: §27.12's whole point is that the panel renders the
+  SAME `TabGroupView` the report collects, so removing tabs for the report would remove them from the
+  Settling tab bar. ⇒ **filtering stays at RENDER time** (D1 as written), and the emptiness question at
+  both heading levels is answered by a shared pure predicate — `willDraw(item)` beside `dispatchItem` in
+  `WorkflowItemVisitor`, defined as *"a flagged item, or a group with at least one flagged child"*.
+  ⭐ One predicate, used by W1's tab label and G4's step sub-heading; ⛔ never two emptiness rules.
+- ⛔ **Z2 FOUR HEADING LEVELS ON ONE PAGE, once both tracks land.** F2 gives the group its own title
+  (§27.13e) and G4 gives the step a sub-heading, so the settling page would read
+  **ACQUISITION › Sample › Settling › Overview** before a single number. ⚠ Neither track can see this
+  alone. ⇒ budget **three**: phase (upper) · step (title case) · tab label (muted small), and ⛔ **drop the
+  group's own title when the group is the only flagged item of its step** — which is exactly the settling
+  case. §27.13e's cosmetic fix therefore becomes conditional, not unconditional.
+- ⭐⭐ **Z3 THE ARCHIVE IS SAFE — BY CONSTRUCTION, AND IT IS WORTH KNOWING WHY.**
+  `diagnostics/regenerate_reports.py` rewrites all 124 archived reports **in place** from their embedded
+  JSON, and `settling_sweep.BASE` is that same folder — so SPEC_metric_research §10's numbers are computed
+  from files this tool rewrites. ⇒ a layout change is not a small blast radius. ✅ But: **F2 cannot touch
+  the archive** (no archived report contains a printed tab group — the settling group did not exist and
+  the raster group is not flagged), and **G4 cannot either** (archived JSON carries no `sectionedPhases`,
+  and its absence means "no sub-sections" — N3/N5). ⛔ And neither track changes a single computed number:
+  they change what is PRINTED, never what is measured. ⇒ no regeneration is required by either track, and
+  if one is run for other reasons the archive's numbers are unaffected.
+- ⚠ **Z4 THE LAB GETS THE SAME ARTEFACT.** `pdfBytes()` is the LIMS publish path
+  (`DevMeasurementBenchViewModule:465` → `SenaiteGateway`), so F2 and G4 change what SENAITE receives, not
+  just what is saved locally. ⇒ the rig gate must include **one publish**, not only one local export.
+- ⚠ **Z5 WRITE F4's TEST AGAINST THE RENDERER, NOT THE HOST.** G3 changes how a re-opened acquisition is
+  laid out (N8). If F4's saved-run test drives the wizard it will need rewriting three phases later; if it
+  asserts `renderStep(step)` — which is what actually carries the guarantee — G3 cannot invalidate it.
+- ✅ **Z6 F1 AND G1 DO NOT COLLIDE.** F1 adds no column (blob field, W3) and G1 adds one (N5), so the
+  autogenerated revision cannot sweep F1 up. ⚠ Standing hazard, not a new one: `--autogenerate` diffs the
+  WHOLE metadata, so review the generated file (already G1's gate).
+- ✅ **Z7 NOTHING IN EITHER TRACK TOUCHES THE MEASUREMENT.** No evaluator, no gate, no threshold, no
+  spectrum. ⇒ ⛔ neither track can invalidate §11, the settling algorithm, or any archived number — the
+  one property worth confirming out loud before a nine-step plan.
+
+### ✅⭐⭐ 27.20 BUILT — F1–F4 AND G1–G4, 2026-08-17  *(416 tests green; only the rig session is left)*
+
+| step | what landed | gate, measured |
+|---|---|---|
+| **F1** | `isMonitorView` defaults on `ReportableView`, (de)serialised by `TabGroupView` | the tag survives a real save/reload |
+| **F4** | `tests/test_saved_run_shows_the_settling_tabs.py` + the `_view`-transience comment in `renderStep` | live → capture panel · reloaded → the six tabs |
+| **G1** | `sectionedPhasesJson` + `toReportJson` + `report_reconstruct`, migration **`cb8c2942a6bc`** | DB + report-JSON round-trips; NULL = pre-D4 |
+| **G2** | `_rebuildPlan` delegates to `NavigationModel.stops(plannedPhases=…)`; the view's private label copies deleted | ⛔ zero behaviour change; the nav tests were the gate |
+| **F3** | `__collectGroups` descends into printed groups; ⭐ **and attachment names are unique** | a nested capture reaches `/EmbeddedFiles` |
+| **F2** | `willDrawInReport` + `visitTabGroup` honours it; heading after the filter; flagged-but-empty logged | ⭐ **3 pages → 1 page, 0 curve axes, the summary intact** |
+| **G3** | stamped in `_startNewRun`; the chevron reads `workflow.getSectionedPhases()` | a re-opened run still reads `Reference › Sample` |
+| **G4** | step sub-sections; `render()` takes a heading level; ⛔ not uppercased | *Reference* / *Sample* under **ACQUISITION**, settling under *Sample* |
+| **G5** | §4.6a in SPEC_simplified_plugin_navigation, §3a/§3b + the naming warning in SPEC_bench_pdf_export | — |
+
+⛔⛔ **ONE MORE DEFECT, FOUND WHILE BUILDING F3 AND OLDER THAN ALL OF THEM.** `__prepareCapture` named the
+`/EmbeddedFiles` entry from the step's ROLE alone, but an acquisition step declares **two** reportable
+captures (full frame + cropped ROI) — both were `capture_sample.png`, and `pypdf` keeps one entry per name.
+⇒ **MEASURED: three captures on one step produced a single attachment.** Every report the app has ever
+written has been dropping its cropped frame from the machine payload while printing it on the page. The
+first capture of a role keeps its historic name; the rest are suffixed. ⚠ A reconstructed archived report
+arrives with `attachmentName` already set from its own JSON, so the archive's names are untouched — Z3
+holds.
+
+✅ **W4's HAZARD DID NOT EXIST.** `__settlingSummary` already ends with `item.setShownInReport(True)` on
+every Overview row, so F2 was renderer-only and the summary was never at risk of vanishing. ⭐ Checked by
+running it, not by reading it — which is how the three-page measurement was made in the first place.
+
+✅ **PARTLY CONFIRMED IN THE APP** *(Edwin, 2026-08-17)*. A PDF from a monitored run **has now been read on
+paper** — that is what produced §27.21 (the curves were missing) and §27.22 (the gate panel was cut off,
+the double heading, the orphaned title), and both were fixed against the rendered pages. The status bar was
+driven again after §27.24 and reported **"works so far"**.
+
+⚠ **STILL OWED — the rest of the rig session (step 10):** a **re-opened saved run** (does the chevron read
+`Reference › Sample`, and do the Settling tabs come back?), **one LIMS publish** (Z4 — `pdfBytes()` is the
+SENAITE path, so the lab receives the reshaped document too), and ⚠ **one more PDF read after §27.22**,
+since the pages that were looked at still had the layout faults in them.
+
+### ⭐⭐ 27.21 ALL THREE CURVES GO ON PAPER — a flag that outlived its reason  *(Edwin, 2026-08-17, from the first report)*
+
+⭐ **Edwin, reading the first PDF written under D1: *"the overview tab is rendered in the pdf but not the
+tabs with the graphs"* → *"I want all 3 graphs to be rendered in the report."*** ✅ IMPLEMENTED.
+
+⛔⛔ **THIS IS NOT A REGRESSION FROM D1 — IT IS A STALE FLAG, AND THE SEQUENCE IS WORTH KEEPING.**
+
+| when | state | why |
+|---|---|---|
+| §18.8 / §27.8 | graph tabs `shownInReport = False` | Overview was the **combined chart**, so flagging them would print the same three curves **twice** |
+| §27.9 | Overview becomes a **TEXT summary, no chart** | Edwin at the rig — three stacked panels left every one of them too short |
+| ⛔ *(nobody came back)* | the flags stayed | the duplication that justified them no longer existed |
+| §27.13b | the renderer ignored the flags anyway | so the defect and the stale flag **cancelled out** — the curves printed, for the wrong reason |
+| D1 | the renderer honours the flags | ⇒ the report suddenly carried **no curve at all** |
+| **§27.21** | the graph tabs are flagged **True** | the curves are back, now for the right reason |
+
+⭐⭐ **§18.6 IS WHY IT MATTERS**, and it had quietly become false twice over: *"a `Q%` in a report that
+carries its own settling curve is a different object from a bare number — it shows the reader that the
+value was CHOSEN, when, and on what evidence."* A summary that only STATES `readAs: VERTEX` asks the reader
+to take that on trust; the curve shows it.
+
+⚠ **WHAT DID NOT CHANGE — and this is D1 still doing its job.** `Health` and `Decisions` remain
+`shownInReport = False` and stay off paper: §18.8's *"a miller's report never carries a page of empty
+diagnostics"* is about the 34-row decision arithmetic, not about the curves. ⇒ the flag is now carrying a
+real distinction rather than a stale one, which is the difference between a working mechanism and a
+coincidence. **Measured: 2 pages — summary + Q% on the first, Turbidity + Rate on the second, no tables.**
+
+⭐ **THE LESSON, because it is the third time in §27**: a rule whose *justification* is deleted by a later
+decision does not delete itself. §27.9 reversed the thing §27.8's flag depended on, and the flag survived
+its own argument for nine days. ⇒ when a reversal lands, grep for what cited the old behaviour.
+
+### ⭐ 27.22 THREE LAYOUT FAULTS THE CURVES EXPOSED  *(Edwin, from the first report that carried them, 2026-08-17)*
+
+⭐ *"works fine, but some graphs is cut-off at the left"* — and looking at the rendered pages to fix it
+turned up two more that the same screenshot contained. ✅ All three fixed; 419 tests green.
+
+- ⛔⛔ **THE AXES RECT IS NOT WHERE THE LABELS ARE.** A plot's rect starts AT the content margin, but
+  matplotlib draws the tick labels and the rotated y-label **outside** it. MEASURED on the gate panel
+  (`|Δ A_valley / Δt| (the gate)` over ticks like 0.00175): leftmost label at figure **x = −0.000** —
+  printed past the paper's edge.
+  ⇒ series panels keep a fixed left **gutter**, and every plot gets a measured guard behind it.
+  ⚠ **A CONSTANT FOR THE GUTTER, MEASUREMENT FOR THE GUARD, and the split is the point.** A per-plot fit
+  would give each panel its own left edge — and the three settling curves are SEPARATE view-models
+  rendered in separate calls, so the stack would step down the page. Alignment needs one shared number;
+  the measured guard then only has to catch what that number does not cover.
+  ⚠ The guard **triggers on the page edge but corrects to the content margin**: triggering on the margin
+  would nudge every spectrum plot in the app (they measure 0.034 — inside the paper, outside the margin,
+  and that is how all 124 archived reports were drawn), so a regenerated archive would shift for cosmetics.
+- ⚠ **THE SAME HEADING TWICE.** Each per-graph tab is a `SeriesPlotView` that carries its own title, so
+  paper printed the tab label AND the title: literally **"Q%" over "Q%"**, and for the others a short name
+  above the real one (*Turbidity* / *A_valley 500–560 nm*). ⭐ On SCREEN this reads fine — a tab bar and a
+  plot are different furniture — which is why it survived: ⛔ the flattening is what makes them adjacent.
+  ⇒ **a tab whose single child titles itself lets the child name it**, and the child's title wins because
+  it carries the units. Tabs of untitled children (the raster captures, the Overview column) keep theirs.
+- ⚠ **AN ORPHANED TITLE.** Block-by-block flow left *A_valley 500–560 nm* alone at the foot of one page
+  with its curve on the next. ⇒ a titled series plot reserves **title + header lines + first panel as one
+  lump**, so the page breaks BEFORE the title rather than after it.
+
+⭐ **THE COMMON THREAD, worth naming: all three are the flattening tax.** Tabs are furniture on screen and
+they become bare stacked blocks on paper — the label that read as a tab becomes a heading, the plot that
+sat inside a frame becomes a block that can be split, and the margin that framed a widget becomes the edge
+of a sheet. ⇒ ⚠ **whenever a screen container is flattened for print, re-read the RENDERED PAGE, not the
+diff.** Every one of these was invisible in the code and obvious in the image.
+
+### ⭐⭐ 27.23 THE INDETERMINATE BAR — WHY IT HAS NO STRIPES AND WHY IT STOPS  *(Edwin, 2026-08-17; DESIGN, not built)*
+
+⭐ Two complaints, two unrelated causes, and the rubber-duck pass found that **the fix Edwin chose would
+have reproduced one of them**. Decisions: ✅ the **emitter fix**, ✅ a **fade** bar
+(`pyqt-loading-progressbar`'s technique) in the brand green.
+
+#### ⛔⛔ P1 THE STRIPES ARE NOT MISSING FOR LACK OF CONTRAST — the app's OWN stylesheet destroys the gradient
+
+`ApplicationStyleLogicModule`'s global sheet carries `QProgressBar::chunk { width: 1px; … }`. That makes Qt
+tile the chunk in **1-pixel segments and map the gradient into each segment**, so every segment paints the
+gradient's first colour and the bar is one flat green that merely shifts shade as the phase moves — which
+is exactly what Edwin described.
+
+⭐ **MEASURED** (render to a pixmap, count colours across the middle row of a 400 px bar):
+
+| | distinct colours | colour runs |
+|---|---|---|
+| widget sheet alone | 3 | **11** — ten clean stripes |
+| with the app-global QSS | **1** | **1** — flat |
+
+⛔ My first guess — "low contrast at a fine pitch" — **was wrong**, and tuning the greens would have
+produced a slightly different flat green.
+
+#### ⭐⭐ P2 THE FADE WOULD HAVE BROKEN THE SAME WAY — this is what the pass is for
+
+The fade is *also* a `::chunk` gradient (transparent → colour → transparent). **MEASURED** with the global
+sheet applied: **3** distinct colours, flat; with it off: **170**. ⇒ swapping the widget without P3 would
+have reproduced the complaint against a brand-new implementation, and the obvious conclusion would have
+been "the new widget doesn't work either".
+
+#### ⭐ P3 THE FIX IS ONE LINE, AND IT IS PROVABLY INVISIBLE EVERYWHERE ELSE
+
+Deleting `width: 1px` from the global chunk rule renders an ordinary determinate bar **pixel-identical** —
+verified by comparing the full colour-run sequence of a 60 %-filled bar, with and without: `IDENTICAL`.
+It is the classic segmented-bar trick with no spacing to make segments visible, i.e. dead styling that
+does nothing but break gradients.
+⛔ **Rejected: a local override.** `width` would then have to track the bar's pixel width on every resize —
+MEASURED: `width: 400px` on a 700 px bar tiles the fade **twice**. A global deletion has no such state.
+
+#### ⚠ P4 THE STALL IS THREE EMITTERS — and one of them is not a bug
+
+| emitter | what it does | verdict |
+|---|---|---|
+| `__onAutoExposeProgress` | determinate `stepsCount = totalProbes` | ⭐ **correct** — the sweep HAS a real fraction (n/N probes), and showing it beats animating |
+| `__onAutoExposeFinished` → `__clearStatus()` | `isStatusReset` → "ready for action…" | ⛔ **the bug** — resets the bar to idle in the middle of a capture |
+| *(nothing)* after AE | silence until the first frame or row | ⛔ ~43 s on the monitored path at W = 60 |
+
+⇒ **THE RULE: a capture OWNS the status bar from the click to its end, and nothing inside it may RESET
+it.** A sub-step may refine the bar (AE's real fraction) and must then hand ownership back, not drop it.
+
+#### ⚠ P5 AE ALSO RUNS OUTSIDE A CAPTURE
+
+The auto-exposure checkbox path runs the sweep on its own, and there `__clearStatus()` is exactly right.
+⇒ the fix is conditional on `self.__capturing`, ⛔ not a deletion.
+
+#### ⚠ P6 THE FADE ANIMATES `value`, WHICH COLLIDES WITH THE DETERMINATE PATH
+
+The animation drives the bar's own `value`, so it must be STOPPED before any real `setValue` — the same
+pairing `__stopStripes()` has today, and for the same reason. ⛔ And no `%p` / `%v` in the format while it
+runs: the percentage would jitter with the animation. Today's formats are literal; keep them so.
+
+#### ⚠ P7 THE EXISTING TESTS PIN THE MECHANISM, NOT ONLY THE BEHAVIOUR
+
+`tests/test_status_bar_indeterminate.py` asserts `_stripeTimer`, `__advanceStripes`, `"qlineargradient" in
+styleSheet()` and `value() == maximum()`. ⭐ The BEHAVIOURAL half survives untouched (the text is kept, the
+range stays 0..100, the animation stops on determinate / reset / guidance). ⚠ `test_the_stripes_actually_move`
+**inverts**: with the fade the stylesheet is set ONCE and the VALUE moves.
+
+#### ⭐ P8 THE TEST THAT WOULD HAVE CAUGHT THIS DOES NOT EXIST YET
+
+Every current test asserts on the stylesheet STRING — which was correct all along. ⇒ add the one that can
+see a collapsed gradient: **render the bar to a QPixmap with the real application stylesheet applied and
+count distinct colours across a row.** ⚠ That is also the only test that can fail if someone re-adds
+`width: 1px`.
+
+#### ⚠ P9 THE PACKAGE ITSELF IS NOT TAKEN
+
+`pyqt-loading-progressbar` is **PyQt5** (a different binding — two Qt libraries in one process) and a
+non-starter for the buildozer/p4a Android build. ⭐ It is **MIT and 29 lines**, so the TECHNIQUE is ported
+with attribution in a comment and no dependency is added: a static gradient plus a `QPropertyAnimation` on
+`value`, ping-ponged Forward/Backward. ⭐ That also deletes the 70 ms timer and the per-tick
+`setStyleSheet` — a full style re-polish 14×/s, only ever to shift a gradient.
+
+### ✅⭐ 27.24a BUILT — B1–B4, 2026-08-17  *(423 tests green; only the rig pass is left)*
+
+| step | what landed | gate, measured |
+|---|---|---|
+| **B1** | `width: 1px` deleted from the app-global `QProgressBar::chunk` | gradients survive the global sheet (1 run → 11); an ordinary bar unchanged |
+| **B2** | `__onAutoExposeFinished` hands the bar back while `__capturing`; a re-emit after the bounded AE wait; the monitored path announces "filling the first window …" | no reset signal between click and end; a standalone sweep still resets |
+| **B3** | fade: one static gradient + `QPropertyAnimation` on `value`, ping-ponged; greens from `ApplicationStyleLogicModule` | sheet written ONCE · animation stops on determinate/reset/guidance · text kept |
+| **B4** | `test_status_bar_indeterminate.py` rewritten + `test_capture_owns_the_status_bar.py` | see below |
+
+⛔⛔ **THE PIXEL TEST WAS VACUOUS ON ITS FIRST ATTEMPT — and it is the whole point of B4.** Written as
+"render the bar and count distinct colours", it PASSED with `width: 1px` deliberately put back. The cause:
+the format text is drawn across the middle of the bar and its **antialiased glyph pixels** contribute ~20
+colours by themselves — measured **26** with the defect in place, sailing past any threshold while the
+chunk behind them was provably flat. ⇒ the text is hidden for the measurement, and the test was then
+re-run against the restored defect and **failed at "collapsed to 2 colour(s)"** before the fix went back.
+⭐ A test that cannot fail is worse than no test (§27.12) — this file has now produced that lesson twice,
+so the verification step is not optional: **re-introduce the defect and watch the new test go red.**
+
+### ⭐ 27.24 THE BAR, PHASED  *(B1–B5 — B1–B4 BUILT, B5 owed)*
+
+```
+ B1  STYLE    delete `width: 1px` from the app-global QProgressBar::chunk rule      [P1/P3]
+              gate  an ordinary bar renders PIXEL-IDENTICAL (measured) · stripes appear
+              risk  touches every progress bar in the app — the pixel test IS the control
+ B2  CAPTURE  a capture owns the bar: ⛔ no __clearStatus() while self.__capturing,  [P4/P5]
+              and an indeterminate re-emit after the sweep ("waiting for the first window …")
+              gate  no reset signal between the click and the capture's end
+              risk  ⚠ AE outside a capture must still reset — condition, do not delete
+ B3  WIDGET   fade: ONE static gradient + QPropertyAnimation on `value`, ping-pong   [P9/P6]
+              greens from ApplicationStyleLogicModule; ⛔ stop it before any real setValue
+              gate  the sheet is set once · the animation stops on determinate/reset/guidance
+              risk  the visible change; ⛔ MUST land after B1 or it looks broken      [P2]
+ B4  TESTS    rewrite the mechanism assertions; ⭐ add the RENDERED-PIXEL test        [P7/P8]
+              gate  the pixel test fails if `width: 1px` ever comes back
+ B5  RIG      one reference capture (with AE) + one monitored sample
+              gate  the animation never stops between click and end; the fade is visible
+              ✅ Edwin 2026-08-17: "works so far"
+```
+
+⛔ **B1 BEFORE B3** — the whole point of P2. ⭐ B2 is independent of both and is the actual complaint;
+it could ship alone.
+
+### ⭐ 27.19 THE COMBINED LANDING ORDER  *(F + G, ten steps)*
+
+```
+  #   track  step                                              depends on   visible?
+  1   F1     isMonitorView survives a save                     —            no
+  2   F4     saved-run render pinned by a test  (Z5)           —            no
+  3   G1     sectionedPhases + toReportJson + migration        —            no
+  4   G2     converge _rebuildPlan onto NavigationModel.stops  —            ⛔ must be no
+  5   F3     nested-capture policy DECIDED (built here or not) —            no
+  6   F2     tab groups honour child isShownInReport           F3 decided   ⭐ YES — the PDF
+             + plugin flags the Overview items  (one commit)
+  7   G3     stamp at run start; chevron reads the workflow    G1, G2       ⭐ yes — the chevron
+  8   G4     report step sub-sections; 3 heading levels (Z2)   G1, F2       ⭐ yes — the PDF
+  9   G5     SPEC_simplified_plugin_navigation + _bench_pdf_export updated  docs
+ 10   RIG    ONE session: the §27.12 click-through · a re-opened run ·
+             a PDF export · ⭐ one LIMS publish (Z4)           F2, G3, G4   the gate
+```
+
+⭐ **1–5 change nothing a user can see** — five of ten steps are invisible, which is the same shape as
+§21/M4's "large in VOLUME, not in RISK". ⛔ **The two orderings that are not negotiable**: G2 before G3
+(N1 — otherwise the persisted structure moves nothing on screen), and F2 before G4 (they edit the same
+collector/renderer pair, and G4's heading budget assumes F2's filter exists).
+⚠ **The rig session is ONE session, not two** (Z4): F5 and G5's click-throughs are the same drive.
+
 ### ⭐ 27.3 WHAT IS DONE, AND WHAT IS STILL OWED  *(updated after the click-throughs of 2026-08-17)*
 
 ✅ **CLICK-THROUGH PASSED** *(Edwin: "now works as expected")* — the bench drives a real fill end to end:
@@ -3069,6 +3714,14 @@ exactly one thing: does the Settling tab still appear under Sample, with the sam
 ⛔ they cannot see a tab bar, which is precisely where the last three faults lived.
 ⚠ **A first PDF export from a monitored run** — the report path is asserted in tests but has never been
 looked at on paper. ⭐ Expect the settling section under **Acquisition**, after the Reference/Sample images.
+⛔ **AND EXPECT IT TO BE WRONG UNTIL §27.13b IS FIXED**: the renderer ignores child `isShownInReport`, so
+today a monitored run prints Overview **plus all three curves plus both diagnostic tables** — measured at
+**three pages** on a 12-row record, where §18.8 promised the summary alone.
+
+⛔ **§27.13 D1–D3 — THREE FIXES, SPEC'D AND NOT YET BUILT**: honour child `isShownInReport` inside a tab
+group (and flag the Overview items, or the summary vanishes); round-trip `isMonitorView`; pin the
+saved-run render with a test. ⚠ D1 changes what the first PDF export will show, so it belongs **before**
+that click-through, not after it.
 
 ⚠ **A rig run of `diagnostics/settling_run.py`** — the script has still never met a camera. It is the
 P3 deliverable and the vehicle for §11.

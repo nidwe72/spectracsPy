@@ -124,3 +124,32 @@ def test_plugin_sdk_facade_exports_policy_and_metadata_form_view():
     for name in ("NavigationMode", "NavigationPolicy", "WorkflowPolicy", "MetadataFormView"):
         assert hasattr(sdk, name), name
         assert name in sdk.__all__, name
+
+
+# --- the PREDICTIVE plan (SPEC_settled_measurement.md §27.16/N1-N2) ------------------------------------
+# The live chevron used to be built by a second, inline copy of stops() inside AbstractPluginExecutionView.
+# The one thing that copy did differently is these three tests: it walks a PREDICTED phase list, so a new
+# run shows the road ahead before the computed phases have any steps. ⛔ Merging the two by dropping the
+# prediction would have silently shortened every new run's chevron.
+
+def test_a_planned_phase_with_no_steps_still_earns_a_stop():
+    wf = _workflow({P.ACQUISITION: ["Reference", "Sample"]})     # PROCESSING/EVALUATION not populated yet
+    planned = [P.ACQUISITION, P.PROCESSING, P.EVALUATION]
+    stops = NavigationModel.stops(wf, NavigationPolicy.default(), plannedPhases=planned)
+    assert _phaseTypes(stops) == planned
+    assert _labels(stops) == ["Acquisition", "Processing", "Evaluation"]
+
+
+def test_without_a_planned_list_an_empty_phase_is_still_skipped():
+    # ⛔ The old behaviour must be untouched: `plannedPhases=None` is exactly today's model.
+    wf = _workflow({P.ACQUISITION: ["Reference"]})
+    assert _phaseTypes(NavigationModel.stops(wf, NavigationPolicy.default())) == [P.ACQUISITION]
+
+
+def test_the_plan_expands_steps_where_the_policy_says_so_and_predicts_the_rest():
+    wf = _workflow({P.ACQUISITION: ["Reference", "Sample"]})
+    policy = NavigationPolicy(NavigationMode.AUTO_ADVANCE, stepChevronPhases={P.ACQUISITION})
+    stops = NavigationModel.stops(wf, policy, plannedPhases=[P.ACQUISITION, P.PROCESSING])
+    assert _labels(stops) == ["Reference", "Sample", "Processing"]
+    assert [s.kind for s in stops] == [NavStopKind.STEP, NavStopKind.STEP, NavStopKind.PHASE]
+    assert stops[0].step is not None and stops[2].step is None

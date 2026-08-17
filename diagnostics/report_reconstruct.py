@@ -57,6 +57,14 @@ def workflowFromReportJson(report):
     workflow.pluginCodeRef = header.get("pluginCodeRef")
     workflow.pluginVersion = header.get("pluginVersion")
     workflow.timestampIso = header.get("timestampIso")
+    # D4 (SPEC_settled_measurement.md §27.14a): the section structure the run was measured under, so a
+    # report regenerated from its own artifact is laid out the way the original was.
+    # ⚠ ABSENT IN EVERY REPORT WRITTEN BEFORE D4 (all 124 in the archive) -> empty -> no sub-sections, which
+    # is what those reports have always shown. A regenerated OLD report therefore differs in structure from
+    # a new one; that is a property of the archive, not a bug (§27.16/N3).
+    workflow.setSectionedPhases([phaseType for phaseType in
+                                 (phaseTypeOf(name) for name in report.get("sectionedPhases") or [])
+                                 if phaseType is not None])
 
     for phaseEntry in report.get("phases") or []:
         phaseType = phaseTypeOf(phaseEntry.get("type"))

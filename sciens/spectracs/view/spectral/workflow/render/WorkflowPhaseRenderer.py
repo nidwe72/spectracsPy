@@ -32,6 +32,16 @@ class WorkflowPhaseRenderer:
     def renderStep(self, step):
         # A capture step (CaptureView on _view) → the interactive host capture path; anything else → the passive
         # visitor over the step's view-models. Returns None for a headless step (no content → no tab).
+        #
+        # ⭐⭐ THIS BRANCH CARRIES A GUARANTEE IN BOTH DIRECTIONS (SPEC_settled_measurement.md §27.13d).
+        # `SpectralWorkflowStep._view` is @reconstructor-TRANSIENT, so:
+        #   live run    -> _view IS a CaptureView -> the capture path, which never reads the EvaluationResult
+        #                  ⇒ the settling views attached there are invisible BY CONSTRUCTION (§27.12), no flag;
+        #   reloaded run -> _view is None          -> the passive visitor reads the EvaluationResult
+        #                  ⇒ the very same settling views come back as sub-tabs.
+        # ⛔ PERSISTING THE VIEW DESCRIPTOR WOULD SILENTLY DELETE THE SETTLING TABS FROM EVERY RE-OPENED
+        # MEASUREMENT. tests/test_saved_run_shows_the_settling_tabs.py asserts both halves; this comment is
+        # why it exists.
         view = step.getView() if hasattr(step, "getView") else None
         if isinstance(view, CaptureView):
             return self.__renderCapture(step, view)

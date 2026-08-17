@@ -106,7 +106,8 @@ class SettlingViewsOnTheSampleStepTest(unittest.TestCase):
         engine, _step, _result = self.__engineWithSettling()
         builder = WorkflowReportBuilder(engine.getWorkflow(), ReportView(title="Test report"))
         groups = builder._WorkflowReportBuilder__collectGroups()
-        acquisition = dict(groups).get("Acquisition") or []
+        # ⚠ a group is (label, items, headingLevel) since D4 (§27.14a) — the level is not this test's subject
+        acquisition = [item for label, items, *_ in groups if label == "Acquisition" for item in items]
         self.assertTrue(any(isinstance(item, TabGroupView) for item in acquisition),
                         "the settling views did not reach the report's Acquisition section")
 

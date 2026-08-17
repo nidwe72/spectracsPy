@@ -356,6 +356,39 @@ exposure-lock-on-Sample and the live camera key off the active role, it is **rig
 gating** applies when leaving the *last* ACQUISITION stop (both captured), not each step — a step-stop's own Next is
 allowed once that step is captured (more intuitive; matches Edwin's intent).
 
+#### ⭐⭐ 4.6a THE LIFT IS PART OF THE RECORD — **IMPLEMENTED 2026-08-17** *(D4; SPEC_settled_measurement.md §27.14a)*
+
+⛔⛔ **THE DECLARATION USED TO DIE WITH THE RUN.** `NavigationPolicy` was built by `plugin.policy()` and
+lived only in the live host — persisted nowhere — while `AbstractPluginExecutionView._policy()` returns
+`WorkflowPolicy.default()` for any VIEW-mode run. ⇒ **a re-opened measurement showed one `Acquisition`
+chevron where the run itself had shown `Reference › Sample`.** It navigated differently from the way it was
+measured, and nothing said so.
+
+⭐ **THE STRUCTURAL HALF NOW LIVES ON THE WORKFLOW**, as `SpectralWorkflow.sectionedPhasesJson`
+(migration `cb8c2942a6bc`), stamped in `_startNewRun` from the plugin's `stepChevronPhases`. The plugin
+declares exactly what it declared before — ⭐ **no SDK surface change, no `SDK_VERSION` bump** — but from
+that line on the RECORD carries it, and every consumer reads it there:
+
+| reads it | for |
+|---|---|
+| `NavigationModel.stops(..., sectionedPhases=…)` | the chevron, in NEW **and** VIEW mode |
+| `WorkflowReportBuilder.__collectGroups` | the PDF's section headings (*Reference* / *Sample*) |
+| `report_reconstruct` / a LIMS addon | the same layout with no DB and no plugin loaded |
+
+⚠ **THE SPLIT THAT MADE IT POSSIBLE.** `NavigationPolicy` conflated two kinds of thing: `mode`
+(STEP / AUTO_ADVANCE) is **interaction** — what happens when a capture finishes — and is meaningless on
+paper; `stepChevronPhases` is **structure**. ⛔ Only the structure is persisted. Re-opening a run is
+browsing, not measuring, so `mode` correctly reverts to the default there.
+
+⛔ **WHAT WAS REJECTED:** letting `WorkflowReportBuilder` import `NavigationPolicy`. A document's shape must
+not depend on whether a plugin happens to be loaded, and interaction chrome in the record is the same
+category error as the report-only step of SPEC_settled_measurement §27.11.
+
+⚠ **ONE DERIVATION ONLY.** `AbstractPluginExecutionView._rebuildPlan` used to re-implement
+`NavigationModel.stops()` inline, so the tested model was not the live one and this change would have moved
+nothing on screen. It now delegates, passing in the **predictive** phase list (the one real difference: a
+new run's chevron shows PROCESSING/EVALUATION before those phases have steps).
+
 ### 4.7 Uniformity fixes (Edwin 2026-07-24) — "no special-cases, no black magic"
 Three corrections that make the model uniform and fully plugin-driven:
 - **(E) METADATA becomes a normal phase with step(s).** Today `metadata()` returns a bare `list[MetadataField]` and

@@ -336,56 +336,69 @@ class MainStatusBarViewModule(QWidget):
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(signal)
 
     def resetProgressBar(self):
-        self.__stopStripes()                # ⚠ or the animation outlives the thing it was animating
+        self.__stopFade()                # ⚠ or the animation outlives the thing it was animating
         self.progressBar.setStyleSheet("")  # back to the app-global progress-bar style
         self.progressBar.setRange(0, 100)
         self.progressBar.setValue(0)
         self.progressBar.setFormat('ready for action...')
 
-    # --- the indeterminate ("moving stripes") bar (SPEC_settled_measurement.md §13.2) ---
+    # --- the indeterminate ("fade") bar (SPEC_settled_measurement.md §13.2, rebuilt §27.23/B3) ---
+    #
+    # ⭐⭐ A SOFT-EDGED SWEEP, NOT MOVING STRIPES (Edwin, 2026-08-17, after seeing the stripes on the rig).
+    # The technique is `pyqt-loading-progressbar`'s "fade" (MIT, yjg30737) — ⛔ the PACKAGE is not taken: it
+    # is PyQt5, a different binding, and a non-starter for the buildozer/p4a Android build. It is 29 lines,
+    # so the idea is ported and credited instead of depended upon (§27.23/P9).
+    #
+    # ⭐ THE POINT OF THE TECHNIQUE: the stylesheet is written ONCE and the motion comes from a
+    # QPropertyAnimation on the bar's own `value`. ⛔ What it replaces re-applied a 30-stop gradient sheet
+    # 14 times a second — a full style re-polish per tick, only ever to shift a gradient — because Qt
+    # stylesheets have no animation of their own.
+    # ⚠ The range stays 0..100 (NOT Qt's busy mode, range 0,0): busy mode makes `text()` return "" —
+    # measured — and the format text is the half of §13.2 that carries the state and the turbidity.
+    # ⛔ A gradient here only works because the app-global `QProgressBar::chunk { width: 1px }` is GONE
+    # (§27.23/P1): with it, Qt tiled the chunk in 1-px segments and mapped the gradient into each one, so
+    # the whole bar painted the gradient's first colour.
 
-    __STRIPE_SEGMENTS = 28        # stripes across the full width — fine enough to read as texture
-    __STRIPE_INTERVAL_MS = 70     # ~14 fps: visibly moving, and cheap next to a 1.4 fps camera
-    __STRIPE_PHASE_STEPS = 6      # sub-steps per stripe, so the motion is smooth rather than snapping
+    __FADE_PERIOD_MS = 1400       # one sweep; slow enough to read as "working", not as a fault
 
-    def __startStripes(self):
-        if getattr(self, "_stripeTimer", None) is None:
-            self._stripePhase = 0
-            self._stripeTimer = QtCore.QTimer(self)
-            self._stripeTimer.timeout.connect(self.__advanceStripes)
-            self._stripeTimer.start(self.__STRIPE_INTERVAL_MS)
-        self.__applyStripes()
+    def __startFade(self):
+        if getattr(self, "_fadeAnimation", None) is None:
+            self.progressBar.setStyleSheet(self.__fadeStyleSheet())      # ⭐ written ONCE, not per tick
+            animation = QtCore.QPropertyAnimation(self.progressBar, b"value", self)
+            animation.setStartValue(0)
+            animation.setEndValue(self.progressBar.maximum())
+            animation.setDuration(self.__FADE_PERIOD_MS)
+            animation.setEasingCurve(QtCore.QEasingCurve.Type.InOutSine)
+            animation.finished.connect(self.__reverseFade)
+            self._fadeAnimation = animation
+            animation.start()
 
-    def __stopStripes(self):
-        # ⚠ Always paired with leaving the indeterminate state: a timer left running would repaint the bar
-        # forever, and an animation that never stops reads as "still working" long after it finished.
-        if getattr(self, "_stripeTimer", None) is not None:
-            self._stripeTimer.stop()
-            self._stripeTimer = None
+    def __reverseFade(self):
+        # Ping-pong: the sweep runs out and back rather than snapping to the left edge each cycle.
+        animation = getattr(self, "_fadeAnimation", None)
+        if animation is None:
+            return
+        forward = QtCore.QAbstractAnimation.Direction.Forward
+        backward = QtCore.QAbstractAnimation.Direction.Backward
+        animation.setDirection(backward if animation.direction() == forward else forward)
+        animation.start()
 
-    def __advanceStripes(self):
-        self._stripePhase = (self._stripePhase + 1) % (self.__STRIPE_SEGMENTS * self.__STRIPE_PHASE_STEPS)
-        self.__applyStripes()
+    def __stopFade(self):
+        # ⚠ ALWAYS paired with leaving the indeterminate state, for two reasons: an animation that outlives
+        # its cause reads as "still working" long after it finished, and ⛔ it drives `value` itself — left
+        # running it would fight every real setValue on the determinate path (§27.23/P6).
+        animation = getattr(self, "_fadeAnimation", None)
+        if animation is not None:
+            animation.stop()
+            self._fadeAnimation = None
 
-    def __applyStripes(self):
-        # Two shades of the brand green, alternating, shifted a fraction of a stripe per tick. The stops
-        # are enumerated across [0,1] because Qt stylesheet gradients cannot repeat.
-        light, dark = "#3D7848", "#2C5A35"
-        segments = self.__STRIPE_SEGMENTS
-        offset = (self._stripePhase / float(self.__STRIPE_PHASE_STEPS)) / segments
-        stops = []
-        for index in range(segments + 2):
-            start = (index / float(segments)) - offset
-            end = ((index + 1) / float(segments)) - offset
-            if end <= 0.0 or start >= 1.0:
-                continue
-            colour = light if index % 2 == 0 else dark
-            stops.append("stop:%.4f %s" % (max(0.0, start), colour))
-            stops.append("stop:%.4f %s" % (min(1.0, max(0.0, end - 0.0001)), colour))
-        gradient = "qlineargradient(x1:0, y1:0, x2:1, y2:0, %s)" % ", ".join(stops)
-        self.progressBar.setStyleSheet(
-            "QProgressBar { color: #DDDDDD; text-align: center; }"
-            "QProgressBar::chunk { background: %s; }" % gradient)
+    def __fadeStyleSheet(self):
+        # The brand green, opaque in the middle and transparent at both ends, so the chunk's leading and
+        # trailing edges dissolve into the groove instead of ending in a hard line.
+        green = ApplicationStyleLogicModule().getPrimaryColor().name()
+        return ("QProgressBar { color: #DDDDDD; text-align: center; }"
+                "QProgressBar::chunk { background: qlineargradient(x1:0, y1:0, x2:1, y2:0,"
+                " stop:0 transparent, stop:0.5 %s, stop:0.6 %s, stop:1 transparent); }" % (green, green))
 
     def __guidanceStyleSheet(self):
         # SPEC_acquisition_guidance: plugin/guidance text = plain muted-amber label — no fill, no groove.
@@ -399,7 +412,7 @@ class MainStatusBarViewModule(QWidget):
             self.resetProgressBar()
         elif getattr(applicationStatusSignal, "guidance", False):
             # Plugin/guidance text: muted-amber font, no progress bar.
-            self.__stopStripes()
+            self.__stopFade()
             self.progressBar.setStyleSheet(self.__guidanceStyleSheet())
             self.progressBar.setRange(0, 100)
             self.progressBar.setValue(0)
@@ -421,9 +434,9 @@ class MainStatusBarViewModule(QWidget):
             self.progressBar.setRange(0, 100)
             self.progressBar.setValue(100)
             self.progressBar.setFormat(applicationStatusSignal.text)
-            self.__startStripes()
+            self.__startFade()
         else:
-            self.__stopStripes()
+            self.__stopFade()
             self.progressBar.setStyleSheet("")  # operational progress: app-global style + real fill
             self.progressBar.setRange(0, 100)   # back from any indeterminate run
             self.progressBar.setFormat(applicationStatusSignal.text)

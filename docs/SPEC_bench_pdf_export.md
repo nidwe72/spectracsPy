@@ -143,9 +143,56 @@ by phase. Each is drawn by the **matplotlib** implementation of the visitor:
 - `LabelView` → a paragraph.
 - `SpectrumPlotView` → an **actual plotted curve** (all traces + bands + markers, mirroring `QtWorkflowRenderer`).
 - `SpectrumCaptureView` → the host-filled image, drawn on the page **and** embedded as a named attachment (§5b).
+  ⛔⛔ **Attachment names were NOT unique until 2026-08-17.** The name came from the step's ROLE alone, but an
+  acquisition step declares **two** reportable captures (full frame + cropped ROI, §7b) — so both were
+  `capture_sample.png`, and `pypdf.add_attachment` keeps one entry per name. ⇒ MEASURED: three captures on one
+  step produced a single `/EmbeddedFiles` entry, i.e. **every report written so far quietly dropped its cropped
+  frame from the machine payload while printing it on the page.** The first capture of a role keeps its historic
+  name; the rest are suffixed (`capture_sample_2.png`). A reconstructed archived report arrives with its
+  `attachmentName` already set from its own JSON, so historical names are untouched.
 
 The **same `dispatchItem` seam** as M1's Qt renderer guarantees the matplotlib output stays in lock-step with the
 vocabulary.
+
+### ⭐⭐ 3a. The flag is honoured at EVERY DEPTH — **FIXED 2026-08-17** *(SPEC_settled_measurement.md §27.13b / D1)*
+
+⛔⛔ **`isShownInReport` USED TO BE CHECKED ONLY ON TOP-LEVEL ITEMS.** `MatplotlibWorkflowRenderer.visitTabGroup`
+stacked *every* child of a printed group, whatever each child declared. A tab group was therefore a hole in the
+one rule that decides what reaches the PDF. ⇒ measured on a settled run: **three pages** — the text summary
+**plus** all three curve tabs **plus** both diagnostic tables — where §18.8 of the settling spec promised the
+summary alone.
+
+⭐ **Edwin, 2026-08-17: "`isShownInReport` should be taken into account, as this is the canonical way to say
+whether something is rendered in the PDF."** It now is, at every depth, via one shared predicate
+`willDrawInReport(item)` in `WorkflowItemVisitor`: *a flagged item, or a group with at least one flagged child*.
+Three callers share it — the group renderer, the capture collector and the D4 step sub-heading — because two
+emptiness rules would eventually disagree and show up as an orphan heading or a missing attachment.
+
+⚠ **THREE RULES THAT CAME WITH IT:**
+- **Filter first, head second.** The tab label used to be written *before* the children were dispatched, so
+  filtering in place would have produced bold headings over nothing.
+- ⛔ **NEVER PRUNE THE VIEW OBJECT.** The capture panel renders the *same* `TabGroupView` the report collects
+  (settling spec §27.12), so removing a tab for the report would remove it from the screen. The filter is a
+  read-only pass at render time.
+- ⛔ **THE GUI STILL IGNORES THE FLAG**, exactly as §3 says. `QtWorkflowRenderer.visitTabGroup` must never call
+  the predicate; the bench's Settling tab shows every curve.
+
+⚠ A group flagged for the report whose children are all unflagged now prints nothing **and says so** on stdout —
+otherwise it is indistinguishable from "the plugin declared nothing".
+
+### ⭐ 3b. Sections follow the record's structure — **IMPLEMENTED 2026-08-17** *(D4)*
+
+A phase the workflow marks in `sectionedPhases` contributes **one group per step**, headed by the step's label,
+instead of one flat group under the phase name — so *Reference* and *Sample* become sections under
+**ACQUISITION** and a settling summary sits under the capture it describes. ⛔ The declaration is read from the
+**workflow**, never from a plugin or a navigation policy: `WorkflowReportBuilder` stays Qt-free and
+plugin-agnostic, and a LIMS addon rebuilding a report has neither. Absent (every pre-D4 run and all 124 archived
+reports) it means "no sub-sections", which is what those reports have always shown.
+
+⚠ `render(reportView, groups)` accepts `(label, items)` **or** `(label, items, headingLevel)` — the 2-tuple form
+still means level 0, because several tests and callers use it. ⛔ A step sub-heading is **not** uppercased: the
+phase heading shouts because it is the top level, and matching it would make a step look like a phase.
+⚠ The heading budget is **three** — phase · step · tab label — so a tab group prints no title of its own.
 
 ---
 

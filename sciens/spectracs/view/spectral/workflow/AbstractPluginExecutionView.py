@@ -10,7 +10,6 @@ from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.spectral.workflow.SpectralWorkflowEngine import SpectralWorkflowEngine
 from sciens.spectracs.logic.spectral.navigation.NavigationModel import NavigationModel
 from sciens.spectracs.logic.spectral.navigation.NavigationFlow import NavigationFlow
-from sciens.spectracs.logic.spectral.navigation.NavStop import NavStop, NavStopKind
 from sciens.spectracs.model.spectral.SpectralWorkflowMetadata import SpectralWorkflowMetadata
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.plugin_sdk.policy.WorkflowPolicy import WorkflowPolicy
@@ -111,6 +110,12 @@ class AbstractPluginExecutionView(PageWidget):
             return False
         self._plugin = plugin
         self._engine = SpectralWorkflowEngine(plugin)
+        # ⭐⭐ STAMP THE SECTION STRUCTURE ONTO THE RECORD, HERE (D4 / §27.16-N6). The plugin declares which
+        # phases are sectioned by step; from this line on the WORKFLOW carries it, and the chevron, the PDF
+        # and a LIMS addon all read it from there instead of from a live plugin.
+        # ⛔ NOT AT SAVE, where the other provenance fields are stamped: the bench renders its PDF preview in
+        # EVALUATION before anything is saved, so a save-time stamp would print the same run two ways.
+        self._engine.getWorkflow().setSectionedPhases(plugin.policy().getNavigation().stepChevronPhases)
         self._runHookOnce(SpectralWorkflowPhaseType.ACQUISITION)
         self._runHookOnce(SpectralWorkflowPhaseType.PUBLISHING)   # static -> detect if declared
         self._rebuildPlan()
@@ -176,25 +181,21 @@ class AbstractPluginExecutionView(PageWidget):
         return planned
 
     def _rebuildPlan(self):
-        policy = self._policy().getNavigation()
+        # ⭐⭐ ONE DERIVATION OF "steps -> chevron" (SPEC_settled_measurement.md §27.16/N1). This method used
+        # to re-implement NavigationModel.stops() inline, which meant the tested model was NOT the live one —
+        # §27.11's lesson in another costume, and it would have made D4's persisted structure change nothing
+        # on screen. The only real difference was the PREDICTIVE phase list, so that is passed IN.
+        # ⭐⭐ THE STRUCTURE COMES FROM THE WORKFLOW, NOT FROM A LIVE PLUGIN (D4, §27.14a) — which is what
+        # makes a re-opened run navigate the way it was measured. `_policy()` still answers the INTERACTION
+        # question (auto-advance), and that one is correctly reset to the default when browsing a saved run.
         workflow = self._workflow()
-        plan = []
-        for phaseType in self._plannedPhases():
-            phase = workflow.getPhase(phaseType)
-            steps = list(phase.getSteps().values()) if phase is not None else []
-            if steps and policy.expandsSteps(phaseType):
-                for step in steps:
-                    plan.append(NavStop(NavStopKind.STEP, phaseType, self._stepLabel(step, phaseType), step=step))
-            else:
-                plan.append(NavStop(NavStopKind.PHASE, phaseType, self._phaseLabel(phaseType)))
-        self._plan = plan
-        self._stepBar.setSteps([stop.label for stop in plan])
+        self._plan = NavigationModel.stops(workflow, plannedPhases=self._plannedPhases(),
+                                           sectionedPhases=workflow.getSectionedPhases())
+        self._stepBar.setSteps([stop.label for stop in self._plan])
 
-    def _phaseLabel(self, phaseType):
-        return NavigationModel.PHASE_LABELS.get(phaseType, str(phaseType))
-
-    def _stepLabel(self, step, phaseType):
-        return step.getLabel() or self._phaseLabel(phaseType)
+    # ⛔ `_phaseLabel` / `_stepLabel` are GONE with the inline plan builder (§27.16/N1): they were this
+    # class's private copies of NavigationModel.__phaseLabel / __stepLabel, and a second copy of a label rule
+    # is how the chevron and the model drift apart. NavigationModel owns the labels now, alone.
 
     # --- rendering ---
 

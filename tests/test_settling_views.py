@@ -132,9 +132,14 @@ def test_one_tab_per_graph_each_holding_exactly_one_panel():
     tabs = DevSpectralPlugin().settlingView(RECORD).tabs
     byLabel = dict(tabs)
     assert all(len(byLabel[label].panels) == 1 for label in ("Q%", "Turbidity", "Rate"))
-    # ⛔ tabs FLATTEN to sections on paper (§18.8): the graph tabs stay out of the report so the same
-    # curves are not printed once per page.
-    assert all(byLabel[label].isShownInReport is False for label in ("Q%", "Turbidity", "Rate"))
+    # ⭐⭐ ALL THREE GO ON PAPER (Edwin, 2026-08-17, after reading the first report). ⛔ This REVERSES the
+    # earlier `is False`, and that flag had outlived its reason: it existed because Overview was then the
+    # COMBINED chart, so flagging these would have printed the same curves twice. §27.9 made Overview a TEXT
+    # summary, which removed the duplication — and left the report with no curve at all, against §18.6.
+    assert all(byLabel[label].isShownInReport is True for label in ("Q%", "Turbidity", "Rate"))
+    # ⚠ the TABLES stay off paper — §18.8's "no page of empty diagnostics" is about the decision arithmetic
+    assert all(byLabel[label].isShownInReport is False for label in ("Health", "Decisions")
+               if label in byLabel)
 
 
 def test_sub_tabs_appear_only_when_they_have_something_to_say():

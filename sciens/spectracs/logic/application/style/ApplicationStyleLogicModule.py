@@ -530,8 +530,16 @@ QProgressBar {{
 	text-align: center;
 }}
 
+/* ⛔⛔ NO `width: 1px` HERE (SPEC_settled_measurement.md §27.23/P1, removed 2026-08-17). It is the classic
+   segmented-progress-bar trick — and with no spacing beside it, it segmented nothing: an ordinary bar
+   renders PIXEL-IDENTICAL without it (measured, full colour-run sequence compared).
+   ⛔ What it DID do is destroy every gradient: Qt tiles the chunk in `width`-sized segments and maps a
+   gradient into EACH one, so a 1-px segment paints only the gradient's first colour. The indeterminate
+   bar's moving stripes were therefore drawn as one flat green that merely changed shade — measured at
+   ONE distinct colour across the whole bar, against ten stripes with this rule gone.
+   ⚠ Re-adding it would silently flatten the indeterminate bar again; tests/test_status_bar_indeterminate.py
+   renders the widget and counts colours precisely so that cannot happen unnoticed. */
 QProgressBar::chunk {{
-	width: 1px;
 	background-color: {primary};
 }}
 

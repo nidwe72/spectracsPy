@@ -489,7 +489,17 @@ class CapturePanel(QWidget):
     def __onAutoExposeFinished(self, exposure):
         self.__exposureSlider.setValue(exposure)  # thread already applied it; this updates the UI + label
         self.__autoExposing = False
-        self.__clearStatus()
+        # ⭐⭐ A CAPTURE OWNS THE STATUS BAR FROM THE CLICK TO ITS END (SPEC_settled_measurement.md §27.23/P4).
+        # ⛔ This used to reset the bar unconditionally — mid-capture that put "ready for action…" on screen
+        # while the instrument was still measuring, and it stopped the animation for the rest of the sweep's
+        # aftermath. The sweep is a SUB-STEP of the capture: it may refine the bar to its own real fraction
+        # (n/N probes, which beats an animation), and it must then hand ownership BACK, not drop it.
+        # ⚠ AE also runs on its own from the checkbox, and THERE the reset is exactly right (P5) — so this is
+        # a condition, not a deletion.
+        if self.__capturing:
+            self.__emitIndeterminate("Exposure locked — waiting for the first frames …")
+        else:
+            self.__clearStatus()
         self.__updateControls()
 
     def __waitForAutoExposure(self):
@@ -655,6 +665,10 @@ class CapturePanel(QWidget):
                 self.__emitIndeterminate("Auto-exposure sweep …")   # ~15 s of otherwise silent waiting
                 self.__runAutoExposure()      # async: hands the sweep to the capture thread
                 self.__waitForAutoExposure()  # ...block until it finishes before grabbing the reference burst
+                # ⚠ Idempotent with the handler's own re-emit (§27.23/P4): `__waitForAutoExposure` is BOUNDED,
+                # so a sweep that never reports finished returns here with its determinate fill still on the
+                # bar. Re-asserting ownership costs one signal and closes that hole.
+                self.__emitIndeterminate("Exposure locked — waiting for the first frames …")
                 # The fixed 1-frame drop that used to sit here is RETIRED (SPEC_capture_quality.md §14.8): the
                 # sweep now settles ADAPTIVELY at `best` (VideoThread.__settleUntilStable, C2) so the stream is
                 # genuinely stable before the burst, and any residual dim frame is rejected per-frame in the
@@ -701,6 +715,12 @@ class CapturePanel(QWidget):
             # it was given, and a plugin that returns None gets exactly today's burst (§10.6).
             monitor = self.__monitorFor(step, role, frameCount)
             if monitor is not None:
+                # ⚠ THE SECOND SILENCE (§27.23/P4). The burst path swaps in a real fraction on its first
+                # frame, but a monitored run says nothing until its first DECISION ROW — a whole window,
+                # ~43 s at W = 60 — and an empty bar in that gap reads as "the click was ignored", which is
+                # the very complaint §27.10 set out to fix.
+                self.__emitIndeterminate("Measuring %s — filling the first window …"
+                                         % ("reference" if role == REFERENCE else "sample"))
                 result = self.__engine.captureMonitoredStep(
                     step, frameProvider=provider, monitor=monitor, onRow=self.__onMonitorRow)
                 self.__endCaptureProgress()
