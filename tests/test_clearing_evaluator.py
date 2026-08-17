@@ -66,22 +66,81 @@ def evaluatorFor(mode=MonitorMode.PRODUCT):
     return ClearingEvaluator(plugin=None, reference=None, mode=mode)
 
 
+def atTheta(theta):
+    """Run the evaluator at a given θ. ⚠ θ is a CHOICE (§27.26/M2); the equivalences below are properties
+    of the rate FORM, and each has to be asserted at the θ it is about."""
+    import contextlib
+
+    @contextlib.contextmanager
+    def scoped():
+        original = ClearingEvaluator.THETA_PER_MINUTE
+        ClearingEvaluator.THETA_PER_MINUTE = theta
+        try:
+            yield
+        finally:
+            ClearingEvaluator.THETA_PER_MINUTE = original
+    return scoped()
+
+
+def gateMinutesOf(rows, decisions):
+    return next((rows[position].t / 60.0
+                 for position, item in enumerate(decisions) if item.note and "gate fired" in item.note), None)
+
+
 def test_the_rate_form_reproduces_the_2026_08_14_criterion():
     # ⭐⭐ §14.3's acceptance test. The criterion this replaces (|ΔA_valley| < 0.005 between consecutive
     # 3-minute samples, twice running) has its two flat steps at 16.655 and 19.931 on this curve, so it
     # is CONFIRMED at 19.931. The rate form must land on the same sample — not earlier (it would settle a
     # fill that is still clearing) and not later (every extra sample is dose).
-    evaluator = evaluatorFor()
-    rows, decisions = drive(evaluator, JAR_B)
-    index, decision = firstPromote(decisions)
+    #
+    # ⚠ ASSERTED AT θ = 0.0017, WHICH IS THE θ THIS EQUIVALENCE IS ABOUT: 0.0017 IS §2.1's "0.005 per
+    # 3-minute sample" re-expressed as a rate, so the two criteria are the same statement and must agree.
+    # The SHIPPED θ is 0.005 (§27.26/M2) and deliberately fires earlier — pinned in the test below.
+    # ⛔ Do not "fix" this test by moving it to the shipped θ: it would then assert nothing at all.
+    with atTheta(0.0017):
+        evaluator = evaluatorFor()
+        rows, decisions = drive(evaluator, JAR_B)
+        index, decision = firstPromote(decisions)
 
     assert index is not None, "the gate never fired on a curve that demonstrably settles"
-    gateMinutes = next(rows[position].t / 60.0
-                       for position, item in enumerate(decisions) if item.note and "gate fired" in item.note)
+    gateMinutes = gateMinutesOf(rows, decisions)
     assert gateMinutes == pytest.approx(19.931, abs=0.1), \
         "the gate fired at %.2f min, not at the 19.93 the old criterion confirms" % gateMinutes
     assert decision.branch == "was-clearing"       # A_valley fell 0.92 — far beyond the 0.010 materiality
     assert decision.readAs == "VERTEX"
+
+
+def test_the_shipped_theta_saves_dose_and_reads_the_SAME_value():
+    """θ = 0.005 (§27.26/M2) — what Edwin bought, and what it cost, both pinned.
+
+    ⭐ BOUGHT: the answer arrives at 19.93 min instead of 23.21 — **3.3 minutes less lamp on the sample** —
+    and the value is bit-identical, because θ decides only when to stop looking while the VERTEX read
+    decides what is read.
+    ⛔ COST, and it is real: the GATE now fires at ~13.4 min, while this fill demonstrably keeps clearing
+    until 16.66. ⇒ `clearingSeconds` is no longer "when the fill stopped clearing" but "when the gate said
+    so", and it is logged as a σ_fill component (§2.4). The ANSWER is unharmed — `__afterGate` refuses to
+    read a minimum with no row on its far side — but a number that travels in the record now means
+    something slightly different from its name.
+    """
+    with atTheta(0.0017):
+        slowRows, slowDecisions = drive(evaluatorFor(), JAR_B)
+        slowIndex, slowDecision = firstPromote(slowDecisions)
+    with atTheta(0.005):
+        fastRows, fastDecisions = drive(evaluatorFor(), JAR_B)
+        fastIndex, fastDecision = firstPromote(fastDecisions)
+
+    # ⭐ the same number, read 3.3 minutes earlier
+    assert fastDecision.answer == pytest.approx(slowDecision.answer, abs=1e-9)
+    assert JAR_B[slowIndex][0] == pytest.approx(23.207, abs=0.1)
+    assert JAR_B[fastIndex][0] == pytest.approx(19.931, abs=0.1)
+    assert fastDecision.readAs == "VERTEX" and fastDecision.branch == "was-clearing"
+
+    # ⛔ the cost: the gate's own claim moves ahead of the physics
+    assert gateMinutesOf(fastRows, fastDecisions) == pytest.approx(13.379, abs=0.1), \
+        "θ = 0.005 is expected to fire the gate early on this curve — if it no longer does, re-read §27.26"
+    trueMinimum = min(JAR_B, key=lambda sample: sample[2])[0]
+    assert gateMinutesOf(fastRows, fastDecisions) < trueMinimum, \
+        "the documented cost of θ = 0.005 has vanished; the spec's warning needs revisiting"
 
 
 def test_the_vertex_read_lands_on_the_measured_Q_MINIMUM_not_on_the_gate_row():

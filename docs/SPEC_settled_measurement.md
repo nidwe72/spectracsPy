@@ -3664,6 +3664,169 @@ so the verification step is not optional: **re-introduce the defect and watch th
 ⛔ **B1 BEFORE B3** — the whole point of P2. ⭐ B2 is independent of both and is the actual complaint;
 it could ship alone.
 
+### ⛔⛔ 27.25 THE DISCARDED MEASUREMENT — the vertex winner outlives its own spectrum  *(2026-08-18)*
+
+⭐ Edwin, after the first two real measurements: *"after capturing the sample i get always or sometimes
+[a dialog] saying 'could not capture'… first measurement was in fact 14.38 and i had to repeat the capture
+due to the 'could not capture' thing and it raised to 14.8."*
+
+⛔⛔ **A SUCCESSFUL RUN IS BEING THROWN AWAY, AND THE REPEAT IS BIASED UPWARD.** Every frame arrived, the
+gate fired, the answer was computed — and the app reported *"Capture failed — no frames were delivered by
+the camera"*, which is not merely unhelpful but false.
+
+#### The mechanism, measured
+
+`MonitorEngine.__pruneSpectra` keeps the reduced mean spectrum of the last
+`SPECTRUM_RETAIN_DECISION_ROWS = 5` decision rows and protects the promoted row via `__promotedRow()` —
+which returns `None` until `__answer` is latched, i.e. **the winner is unprotected during exactly the
+window in which it can still be pruned.** On the vertex branch the winner is not the current row
+(`promoteRow = usable[minimumIndex]`).
+
+⭐ Driven against the REAL engine with a stub evaluator that promotes N decision rows back:
+
+| promoted row | answer | spectrum |
+|---|---|---|
+| 0 – 4 rows back | set | PRESENT |
+| **5 rows back** | set | **⛔ None** |
+| 6, 9 rows back | set | ⛔ None |
+
+⇒ `result.spectrum is None` ⇒ `captureMonitoredStep` sets no container ⇒ `CapturePanel`'s
+`spectrum is None` guard fires the failure dialog.
+
+⭐⭐ **TO THE QUESTION EDWIN ASKED — IS A FALSE SPECTRUM TAKEN? NO.** The engine reads `winner.spectrum`
+and there is no substitution path anywhere: it is a MISSING spectrum and a DISCARDED measurement, never a
+wrong number. ⚠ And the history genuinely is not kept — only 5 decision rows hold a spectrum, and the
+record itself stores rows as numbers, never spectra.
+
+#### ⛔ WHY IT IS A CADENCE BUG, and why every test passed
+
+| | |
+|---|---|
+| Edwin's rig | ~3.5 fps ⇒ a decision row every **17.1 s** ⇒ 5 retained rows = **85 s of history** |
+| jar B's curve | the `Q%` minimum sits **3.27 min** before the gate confirms it |
+| at the diagnostic's 3.28-min sampling | that is **1.0** decision rows back — safe, and it is what the tests replay |
+| at the live 17.1-s cadence | that is **11.5** decision rows back — far outside the window |
+
+⇒ **a window sized in ROWS, validated at one cadence, used at an 11× finer one.** The retention comment
+even states the assumption it broke: *"the vertex reaches ~2 decision rows back"*.
+⚠ **And each half is tested, the seam is not**: `test_clearing_evaluator.py` drives the evaluator alone and
+correctly asserts `promoteRow.t ≈ 16.655`; `test_monitor_engine.py` drives the engine with a fake evaluator
+that always promotes the CURRENT row. Nobody tested *evaluator nominates an old row × engine has pruned it*.
+⇒ it fires **always on a fill that clears** (vertex branch) and **never on one that arrives clear**.
+
+#### ⛔ WHAT IT COST — the first two measurements are not what they appeared to be
+
+Both archived runs read `arrived-clear`, i.e. **both are repeats**: the first attempt failed, the lamp
+cleared the jar in the process, and the second attempt measured a fill that had already banked dose.
+⇒ ⛔ **the σ_fill of 0.696 computed from them is void** — it is fill scatter plus two unknown doses, and
+the earlier conclusions drawn from it (3.3× the refill floor, the tracker-band arithmetic) are withdrawn.
+⚠ The record could not reveal this: a `MonitorRecord` has no field saying *this fill had already been in
+the beam*, so a repeat is indistinguishable from a fresh fill after the fact.
+
+#### ⭐ DECISIONS
+
+- ⭐⭐ **A RUN THAT PRODUCED AN ANSWER IS NEVER REPORTED AS A FAILED CAPTURE.** Whatever the cause, the
+  answer plus its trajectory must reach the operator; a missing spectrum is a degraded result, not a
+  non-result.
+- ⭐ **RETENTION IS SIZED IN TIME, NOT IN ROWS** — enough to cover `maxSeconds`, derived rather than
+  chosen. ⛔ Edwin proposed "200 or so"; at the new 5-s cadence 200 rows is **1000 s = 16.7 min**, still
+  short of the 25-minute cap ⇒ a fixed row count would leave exactly this class of bug alive.
+  ⚠ Cost at the cap: ~300 rows × ~30 KB ≈ **9 MB**, which Edwin has explicitly accepted.
+- ⚠ **THE RECORD GAINS A RE-MEASURE FLAG** — a fill that has been in the beam is a different sample
+  (§17/U2), and the number must carry that.
+
+### ⭐ 27.26 THREE PARAMETER CHANGES  *(Edwin, 2026-08-18 — DESIGN, not built)*
+
+#### ⭐ θ = 0.005 /min *(was 0.0017)*
+
+Replayed through the real `ClearingEvaluator` on jar B, the one curve that actually cleared:
+
+| θ | promoted at | `Q%` read | vs the true minimum |
+|---|---|---|---|
+| 0.0017 | 23.21 min | 13.2733 | −0.0011 |
+| **0.0025 … 0.010** | **19.93 min** | **13.2733** | −0.0011 |
+
+⇒ **3.3 minutes of lamp exposure saved and the answer is bit-identical**, because the value is protected by
+the VERTEX read while θ only decides when to stop looking. The gain saturates at 0.0025, so **0.005 sits
+mid-plateau rather than at its edge**. ⚠ One curve, sampled at 3.28 min — record it as *"≥0.0025 saturates
+on jar B; 0.005 chosen with margin"*, ⛔ not as a derived optimum. ⚠ On Edwin's own two runs θ changes
+nothing at all (0.0017 → 0.006 all promote at 107.9 s): those arrived clear, and their delay is §14.2a's
+structural three-window minimum.
+
+#### ⭐ A DECISION ROW EVERY 5 s *(was every W frames ≈ 17 s)*
+
+⭐ **IT IS FREE IN CPU.** `evaluateEveryNFrames` is already **1** — every frame is already reduced and
+evaluated — so the decision cadence is a LABELLING rule, not a work rule. Denser rows add no computation;
+they add persisted rows (~300 vs ~88 over the cap, ≈ 45 KB in the blob).
+
+⚠ **IT IS FREE FOR THE GATE**, too: §14.3's comparison is span-based (`GATE_SPAN_SECONDS = 70`, walking
+back until the span is met), which is exactly the property that stopped adjacent rolling rows from firing
+the gate. Row spacing cannot break it.
+
+⛔ **WHERE IT DOES COST — the minimum is SELECTED over more candidates.** Simulated 200× with real
+overlapping windows and per-frame noise calibrated to the measured 0.063 window floor:
+
+| cadence | decision rows | vertex bias | vertex sd |
+|---|---|---|---|
+| 17.1 s | 87 | −0.115 | 0.029 |
+| **5.0 s** | 289 | **−0.136** | 0.031 |
+
+⇒ **+0.021 `Q%` of extra downward bias** — 10 % of the refill floor, an order of magnitude below fill
+scatter. **Affordable.**
+⛔ **AND THE FIX I EXPECTED TO NEED IS NOT NEEDED.** The worry was that three ADJACENT rows 5 s apart share
+~70 % of their frames and would make the parabola ill-conditioned. Measured: choosing the vertex's
+neighbours by TIME instead (17 s or 35 s apart) changes the bias by **0.0007** — nothing. The fit is not
+the problem; the selection is. ⇒ ⛔ do not "fix" the vertex neighbours.
+⚠ **A side finding, recorded not acted on:** in this simulation the vertex is **not** measurably better
+than the raw minimum (−0.115 vs −0.111), and BOTH carry a ~0.12 downward bias that no budget mentions.
+§2.2 claims the vertex averages away the raw minimum's selection bias; on a curve this flat it does not,
+because the three points are themselves selected around the excursion. Worth its own measurement.
+
+#### ⭐ RETENTION derived from the cap *(Edwin: "200 or so … no problem concerning memory")*
+
+Accepted in spirit, ⛔ not as a row count — see §27.25's decision. Sized in seconds, it cannot be
+invalidated by the very cadence change made in the same breath.
+
+```
+ ✅ M1  SDK     retention sized in TIME (cover maxSeconds)                       BUILT 2026-08-18
+ ✅ M2  SDK     θ 0.0017 -> 0.005                                                BUILT 2026-08-18
+ ✅ M3  HOST    never report "capture failed" for a run that produced an answer  BUILT 2026-08-18
+ ✅ SEAM TEST   evaluator nominates an old row × engine has pruned it            BUILT 2026-08-18
+ ⚠ M4  RECORD  a re-measure flag on MonitorRecord; the fill's exposure history travels with the number
+ ⚠ M5  RIG     one MUDDY fill (the vertex branch — the case that has never once completed) + two fresh
+               fills measured ONCE each, for the first honest σ_fill
+ ⚠ 5s  SDK     the 5-second decision cadence — DELIBERATELY HELD until M5 confirms a muddy fill completes
+```
+
+#### ✅ 27.26a AS BUILT — 428 tests green  *(2026-08-18)*
+
+| | |
+|---|---|
+| **M1** | `SPECTRUM_RETAIN_DECISION_ROWS = 5` → a horizon of `policy.maxSeconds`. The stub-evaluator probe now keeps the winner's spectrum at **0, 1, 4, 5, 6, 9, 40 and 120** decision rows back (it died at exactly 5 before) |
+| **M2** | `THETA_PER_MINUTE = 0.0017 → 0.005` |
+| **M3** | the engine falls back to the newest decision row that still has a spectrum and records a note; the host ⛔ never claims "no frames were delivered" about a run that answered |
+| seam | `tests/test_the_winner_keeps_its_spectrum.py` — verified by re-introducing the 5-row prune: **3 of its 4 tests go red**, with the message naming the consequence |
+
+⛔⛔ **AND θ = 0.005 HAS A COST THE REPLAY DID NOT SHOW — found by a test that failed.** §14.3's acceptance
+test asserts the rate form reproduces the 2026-08-14 criterion, whose gate confirms at **19.93 min**. At
+θ = 0.005 the gate fires at **13.38 min** — *before* the fill's own `Q%` minimum at 16.66, i.e. **the gate
+now declares "stopped clearing" while the fill is demonstrably still clearing.**
+⭐ The ANSWER is unharmed: `__afterGate` refuses to read a minimum with no row on its far side, so
+promotion still lands at 19.93 with the identical 13.2733 — which is why the earlier replay saw only the
+benefit. ⛔ But `clearingSeconds` is logged as a σ_fill component (§2.4) and now means *"when the gate said
+so"* rather than *"when the fill stopped clearing"*. ⚠ A number that travels in the record has quietly
+changed meaning; that is recorded here rather than smoothed over.
+⇒ the original test keeps its guarantee, pinned at **θ = 0.0017 — the θ that equivalence is about** — and
+`test_the_shipped_theta_saves_dose_and_reads_the_SAME_value` pins both halves of the trade Edwin accepted,
+including the early gate. ⛔ Neither test may be "fixed" by moving it to the other θ.
+
+⚠ **One more hard-coded constant found and bound**: `test_settling_views.py` asserted the literal `0.0017`
+where it meant *"the criterion is drawn on the rate axis"* — it now asserts
+`ClearingEvaluator.THETA_PER_MINUTE`, so the next θ change cannot break a test that is not about θ.
+
+⛔ **M3 before M5**, or the rig session cannot produce a clean fill: today every clearing fill is
+discarded and re-measured, which is what contaminated the first two.
+
 ### ⭐ 27.19 THE COMBINED LANDING ORDER  *(F + G, ten steps)*
 
 ```

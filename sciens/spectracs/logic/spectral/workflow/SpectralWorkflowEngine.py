@@ -249,9 +249,28 @@ class SpectralWorkflowEngine:
             if row is not None and onRow is not None:
                 onRow(row, monitor)
         result = monitor.result()
-        if result.spectrum is not None:
+        spectrum = result.spectrum
+        if spectrum is None and result.hasValue():
+            # ⛔⛔ A RUN THAT PRODUCED AN ANSWER IS NEVER THROWN AWAY (SPEC_settled_measurement.md §27.25/M3).
+            # This is the last line of defence, not the fix: §27.25/M1 makes the winning row's spectrum
+            # survive for the whole run, so this branch should now be unreachable. It exists because the
+            # failure it guards was SILENT and expensive — the operator was told "no frames were delivered
+            # by the camera" about a run in which every frame arrived and the gate fired, and the natural
+            # response (re-measure the same jar) banked light dose and biased the repeat upward.
+            # ⇒ fall back to the newest decision row that still HAS a spectrum, and say so out loud.
+            fallback = next((row for row in reversed(result.decisionRows())
+                             if getattr(row, "spectrum", None) is not None), None)
+            spectrum = getattr(fallback, "spectrum", None)
+            print("MONITOR ⚠ the answer's own spectrum was missing (answer t=%.1fs); %s"
+                  % (result.answer.get("t", float("nan")),
+                     "fell back to the row at t=%.1fs" % fallback.t if fallback is not None
+                     else "NO row retained one — the measurement cannot be completed"))
+            result.notes.append("the answer's spectrum was missing; %s"
+                                % ("read from the nearest retained row" if fallback is not None
+                                   else "no spectrum could be recovered"))
+        if spectrum is not None:
             container = SpectraContainer()
-            container.addToSpectra(result.spectrum, step.getRole())
+            container.addToSpectra(spectrum, step.getRole())
             step.setContainer(container)
         self.__attachMonitorViews(step, result)
         return result

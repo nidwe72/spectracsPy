@@ -15,7 +15,7 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from sciens.spectracs.plugin_sdk import SeriesPlotView, TableView
-from sciens.spectracs.plugins.dev.DevSpectralPlugin import DevSpectralPlugin
+from sciens.spectracs.plugins.dev.DevSpectralPlugin import ClearingEvaluator, DevSpectralPlugin
 
 RECORD = {
     "outcome": "SETTLED_AFTER_CLEARING", "clearingSeconds": 1195.9,
@@ -52,7 +52,10 @@ def test_each_curve_gets_its_own_panel_in_its_own_units():
     assert [label for label, _ in step.tabs][1:4] == ["Q%", "Turbidity", "Rate"]
     assert graphTab(step, "Turbidity").panels[0]["levels"] == [], \
         "the rate threshold was drawn on the absorbance axis again"
-    assert 0.0017 in [level["value"] for level in graphTab(step, "Rate").panels[0]["levels"]]
+    # ⚠ the CONSTANT, not the number: θ is a choice (0.0017 -> 0.005, §27.26/M2) and this test is about
+    # the criterion being drawn on the rate axis at all, not about its current value.
+    assert ClearingEvaluator.THETA_PER_MINUTE in \
+        [level["value"] for level in graphTab(step, "Rate").panels[0]["levels"]]
     # ⭐ log ONLY where the data spans a decade: A_valley falls 0.945 -> 0.026 here (36x), Q% does not.
     assert graphTab(step, "Turbidity").panels[0]["scale"] == "log"
     assert graphTab(step, "Q%").panels[0]["scale"] == "linear"

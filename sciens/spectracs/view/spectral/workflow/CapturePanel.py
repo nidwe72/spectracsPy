@@ -714,6 +714,7 @@ class CapturePanel(QWidget):
             # or None. ⛔ Nothing here knows what settling is — the host only pumps frames into an object
             # it was given, and a plugin that returns None gets exactly today's burst (§10.6).
             monitor = self.__monitorFor(step, role, frameCount)
+            monitoredResult = None
             if monitor is not None:
                 # ⚠ THE SECOND SILENCE (§27.23/P4). The burst path swaps in a real fraction on its first
                 # frame, but a monitored run says nothing until its first DECISION ROW — a whole window,
@@ -723,6 +724,7 @@ class CapturePanel(QWidget):
                                          % ("reference" if role == REFERENCE else "sample"))
                 result = self.__engine.captureMonitoredStep(
                     step, frameProvider=provider, monitor=monitor, onRow=self.__onMonitorRow)
+                monitoredResult = result
                 self.__endCaptureProgress()
                 self.__clearCoach()
                 if not self.__cancelRequested and not self.__onMonitorFinished(step, role, result):
@@ -744,6 +746,19 @@ class CapturePanel(QWidget):
                 return
 
             if spectrum is None or state.get("representative") is None:
+                # ⛔⛔ NEVER SAY "no frames were delivered" ABOUT A RUN THAT ANSWERED (§27.25/M3). That
+                # dialog cost two measurements on 2026-08-17: a monitored run whose gate had fired and
+                # whose value was computed was reported as a camera failure, and re-measuring the same jar
+                # banked light dose that pushed the repeat upward. ⚠ The engine's fallback (M3) plus the
+                # time-sized retention (M1) should make this unreachable for a monitored run — if it is
+                # reached, the operator is told what is actually true.
+                if monitoredResult is not None and monitoredResult.hasValue():
+                    self.__showStatusText(
+                        "⛔ The measurement was made (%s %.2f) but its spectrum could not be recovered, so "
+                        "nothing was recorded. ⚠ This fill has been in the beam — a FRESH fill reads truer "
+                        "than re-measuring it." % (monitoredResult.answer.get("valueKey", "value"),
+                                                   monitoredResult.answer.get("value", float("nan"))))
+                    return
                 self.__onCaptureFailed()
                 return
 
