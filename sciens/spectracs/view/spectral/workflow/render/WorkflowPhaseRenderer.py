@@ -32,6 +32,14 @@ class WorkflowPhaseRenderer:
     def renderStep(self, step):
         # A capture step (CaptureView on _view) → the interactive host capture path; anything else → the passive
         # visitor over the step's view-models. Returns None for a headless step (no content → no tab).
+        #
+        # ⭐ REPORT-ONLY STEPS DRAW NOTHING (SPEC_settled_measurement.md §27.11). They exist in the workflow so
+        # the report collector finds their flagged views, but no host gives them a tab — the settling summary
+        # belongs in the PDF as provenance while the operator reads it under Sample, where it was measured.
+        # ⚠ Guarded HERE because BOTH hosts funnel through this method: the bench's phase tabs and the wizard's
+        # step pages. Skipping at the call sites is how the amber-cue bug survived a round (§27.7a).
+        if hasattr(step, "isReportOnly") and step.isReportOnly():
+            return None
         view = step.getView() if hasattr(step, "getView") else None
         if isinstance(view, CaptureView):
             return self.__renderCapture(step, view)

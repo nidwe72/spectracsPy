@@ -2981,6 +2981,42 @@ yet know whether the plugin will even return a monitor, let alone how long the f
 path swaps in its real fraction on its first frame; the monitored path keeps animating and swaps in the
 coach text.
 
+### ⭐⭐ 27.11 THE REPORT-ONLY STEP — because the bench and the PDF read the SAME tree  *(Edwin, 2026-08-17)*
+
+⛔ §27.9 took the settling step out of PROCESSING and noted, as a consequence, that the summary stopped
+reaching the PDF. ⭐ Reading `WorkflowReportBuilder` shows exactly why, and the mechanism turns out to be
+the whole problem:
+
+```python
+   for phaseType in SpectralWorkflowPhaseType:
+       for step in workflow.getPhase(phaseType).getSteps().values():   # ⭐ ONLY workflow STEPS
+           for item in stepItems(step):
+               if item.isShownInReport: collect(item)
+```
+
+⇒ **anything that must reach the paper has to be a step — and every step used to become a tab.** The two
+surfaces were forced to agree, so satisfying one broke the other.
+
+⭐ **THE RESOLUTION: `SpectralWorkflowStep.reportOnly`.** The step exists (the report collects it), and
+`WorkflowPhaseRenderer.renderStep()` returns None for it (no host draws it).
+⚠ Guarded in `renderStep()` and nowhere else, because **both** hosts funnel through that one method — the
+bench's phase tabs and the wizard's step pages. ⛔ Guarding at the call sites is precisely how the
+amber-cue-on-Cancel bug survived a round (§27.7a).
+⚠ **PERSISTED, not transient** (migration `ed08faaf1864`, one nullable Boolean): a saved run reloads its
+steps from the DB *without* re-running the plugin hook, so a transient flag would come back False and the
+step would sprout a tab the moment an old run was reopened.
+
+⭐ **And the second half of the PDF was missing it too.** `toReportJson()` — the machine-readable payload
+embedded in the document — carried the header and every phase, ⛔ but not the record. A reader parsing it
+got the answer and no way to see how it was chosen, against §5's "complete provenance, raw acquisition
+through verdict". It now carries `monitorRecord` (None for a plain-burst capture).
+
+⇒ ⭐⭐ **A `Q%` in a report now travels with the curve it was chosen from, in both halves of the document,
+while the operator still reads it where the measurement happened.** That was §18.6's claim; this is the
+first point at which it is actually true.
+⚠ `reportOnly` is deliberately GENERIC — it is not about settling. It is the answer to "this belongs in
+the record but not on that screen", and that will not be the last time it is asked.
+
 ### ⭐ 27.3 WHAT IS DONE, AND WHAT IS STILL OWED  *(updated after the click-throughs of 2026-08-17)*
 
 ✅ **CLICK-THROUGH PASSED** *(Edwin: "now works as expected")* — the bench drives a real fill end to end:
@@ -2997,6 +3033,6 @@ frames). ⭐ And it is now recorded per run, so a drifting duplicate rate shows 
 ⚠ **A rig run of `diagnostics/settling_run.py`** — the script has still never met a camera. It is the
 P3 deliverable and the vehicle for §11.
 ⛔ **§11 itself — THE HEAT-DOSE EXPERIMENT (P4).** Everything built so far exists to make it measurable.
-⛔ **The settling summary no longer reaches the PDF** (§27.9) — a consequence of taking the step out of
-PROCESSING, recorded rather than fixed. Restoring it means declaring a step somewhere; **Details** is the
-natural home, not PROCESSING.
+✅ ~~The settling summary no longer reaches the PDF~~ — **FIXED by §27.11's report-only step**: the
+summary is collected for the report while no host draws a tab for it, and `toReportJson()` now carries
+the record as well.

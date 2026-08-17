@@ -38,18 +38,21 @@ class SettlingStepEndToEndTest(unittest.TestCase):
         engine.runPhase(SpectralWorkflowPhaseType.ACQUISITION)     # virtual provider fills both roles
         return engine
 
-    def test_the_settling_step_is_NOT_declared_in_PROCESSING(self):
-        """⛔ Edwin, at the rig 2026-08-17: it lives as an inner tab of the SAMPLE capture step, where the
-        operator reads it. Declaring it in PROCESSING as well put the same curves in two places.
+    def test_the_settling_step_is_declared_REPORT_ONLY_in_PROCESSING(self):
+        """⭐ §27.11 — the resolution of a genuine conflict: the bench and the PDF read the SAME tree.
 
-        ⚠ CONSEQUENCE, asserted here so it cannot be forgotten: the report is assembled from the
-        WORKFLOW's flagged views, so the settling summary does NOT currently reach the PDF."""
+        The operator reads the settling curve under Sample, where the measurement happened, so PROCESSING
+        must not grow a tab for it (Edwin, at the rig). But the report collector only ever sees WORKFLOW
+        STEPS, and a `Q%` that was CHOSEN should carry the curve it was chosen from onto the paper.
+        ⇒ the step is there, flagged report-only, and `WorkflowPhaseRenderer.renderStep()` draws nothing
+        for it. See tests/test_report_only_step.py for both halves."""
         engine = self.__capturedEngine()
         engine.getWorkflow().setMonitorRecord(self.__record())
         engine.runPhase(SpectralWorkflowPhaseType.PROCESSING)
-        labels = [step.getLabel() for step
-                  in engine.getWorkflow().getPhase(SpectralWorkflowPhaseType.PROCESSING).getSteps().values()]
-        self.assertNotIn("Settling", labels)
+        steps = engine.getWorkflow().getPhase(SpectralWorkflowPhaseType.PROCESSING).getSteps().values()
+        settling = next((step for step in steps if step.getLabel() == "Settling"), None)
+        self.assertIsNotNone(settling)
+        self.assertTrue(settling.isReportOnly(), "it would grow a PROCESSING tab again")
 
     def __record(self):
         return {
