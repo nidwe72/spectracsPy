@@ -32,25 +32,24 @@ RECORD = {
 }
 
 
-def graphTab(step, label):
-    """A single-graph tab's SeriesPlotView. ⭐ Every curve now lives in its own full-height tab; the
-    Overview is TEXT (Edwin, at the rig 2026-08-17 — this reverses §18.8's combined-first rule)."""
-    return dict(step.getView().tabs)[label]
+def graphTab(group, label):
+    """A single-graph tab's SeriesPlotView. ⭐ Every curve lives in its own full-height tab; the Overview
+    is TEXT (Edwin, at the rig 2026-08-17 — this reverses §18.8's combined-first rule)."""
+    return dict(group.tabs)[label]
 
 
-def summaryOf(step):
+def summaryOf(group):
     """The Overview tab: a LIST of view-models (a heading + aligned metric rows), not a chart."""
-    group = step.getView()
     assert group.tabs[0][0] == "Overview"
     return group.tabs[0][1]
 
 
 def test_each_curve_gets_its_own_panel_in_its_own_units():
-    step = DevSpectralPlugin().settlingStep(RECORD)
+    step = DevSpectralPlugin().settlingView(RECORD)
 
     # ⛔ THE CRITERION NEEDS ITS OWN PANEL: theta is a RATE (A/min) and A_valley is an ABSORBANCE, so
     # drawing theta on the A_valley axis asserts an equivalence that does not exist (rig, 2026-08-17).
-    assert [label for label, _ in step.getView().tabs][1:4] == ["Q%", "Turbidity", "Rate"]
+    assert [label for label, _ in step.tabs][1:4] == ["Q%", "Turbidity", "Rate"]
     assert graphTab(step, "Turbidity").panels[0]["levels"] == [], \
         "the rate threshold was drawn on the absorbance axis again"
     assert 0.0017 in [level["value"] for level in graphTab(step, "Rate").panels[0]["levels"]]
@@ -65,7 +64,7 @@ def test_each_curve_gets_its_own_panel_in_its_own_units():
 def test_the_overview_is_a_TEXT_summary_with_no_chart_in_it():
     # ⭐ Edwin, at the rig: three stacked panels left each of them short, and the numbers that answer
     # "what did I measure and why can I trust it" are TEXT. ⚠ This REVERSES §18.8's combined-first rule.
-    items = summaryOf(DevSpectralPlugin().settlingStep(RECORD))
+    items = summaryOf(DevSpectralPlugin().settlingView(RECORD))
     assert isinstance(items, list)
     assert not any(hasattr(item, "panels") for item in items), "a chart crept back into the Overview"
 
@@ -82,20 +81,20 @@ def test_the_overview_is_a_TEXT_summary_with_no_chart_in_it():
 def test_a_run_with_no_value_says_so_instead_of_showing_a_number():
     record = dict(RECORD, outcome="NEVER_SETTLED", answer=None, clearingSeconds=None)
     fields = {item.label: item.value
-              for item in summaryOf(DevSpectralPlugin().settlingStep(record)) if hasattr(item, "value")}
+              for item in summaryOf(DevSpectralPlugin().settlingView(record)) if hasattr(item, "value")}
     assert fields["Outcome"] == "NEVER_SETTLED"
     assert "none" in fields["Value"]
     assert "Q%" not in fields, "a value was shown for a run that produced none"
 
 
-def test_no_record_means_NO_settling_step_at_all():
+def test_no_record_means_NO_settling_view_at_all():
     # ⛔ §18.4: a plain-burst capture has no trajectory, and an empty graph is worse than a missing tab.
-    assert DevSpectralPlugin().settlingStep(None) is None
-    assert DevSpectralPlugin().settlingStep({"rows": []}) is None
+    assert DevSpectralPlugin().settlingView(None) is None
+    assert DevSpectralPlugin().settlingView({"rows": []}) is None
 
 
 def test_both_render_targets_draw_the_series_plot():
-    view = graphTab(DevSpectralPlugin().settlingStep(RECORD), "Turbidity")
+    view = graphTab(DevSpectralPlugin().settlingView(RECORD), "Turbidity")
 
     from PySide6.QtWidgets import QApplication
     from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
@@ -130,7 +129,7 @@ def test_both_render_targets_draw_the_generic_table():
 
 
 def test_one_tab_per_graph_each_holding_exactly_one_panel():
-    tabs = DevSpectralPlugin().settlingStep(RECORD).getView().tabs
+    tabs = DevSpectralPlugin().settlingView(RECORD).tabs
     byLabel = dict(tabs)
     assert all(len(byLabel[label].panels) == 1 for label in ("Q%", "Turbidity", "Rate"))
     # ⛔ tabs FLATTEN to sections on paper (§18.8): the graph tabs stay out of the report so the same
@@ -142,7 +141,7 @@ def test_sub_tabs_appear_only_when_they_have_something_to_say():
     # ⭐ §18.8: conditional inclusion is entirely plugin-side — the plugin simply does not add a tab when
     # there is nothing in it, so a miller's report never carries a page of empty diagnostics.
     quiet = dict(RECORD, rows=[dict(row, nAccepted=50, soret=0.9) for row in RECORD["rows"]])
-    labels = [label for label, _ in DevSpectralPlugin().settlingStep(quiet).getView().tabs]
+    labels = [label for label, _ in DevSpectralPlugin().settlingView(quiet).tabs]
     # ⭐ Health is the conditional one: nothing dipped, so it is absent. Decisions rides along because a
     # trajectory exists, and on the master bench that table is wanted (relaxed after the rig).
     assert "Health" not in labels, "Health appeared with nothing to say: %s" % labels
@@ -150,14 +149,14 @@ def test_sub_tabs_appear_only_when_they_have_something_to_say():
 
     # nAccepted dipping (which is EXPECTED while clearing, §23/V2) is exactly what Health exists to show
     noisy = dict(RECORD, rows=[dict(row, nAccepted=41) for row in RECORD["rows"]])
-    labels = [label for label, _ in DevSpectralPlugin().settlingStep(noisy).getView().tabs]
+    labels = [label for label, _ in DevSpectralPlugin().settlingView(noisy).tabs]
     assert "Health" in labels
 
     # ⚠ Decisions needs a TRAJECTORY, not a single row — on the master bench even three rows of "what the
     # gate compared" is what the operator wants (relaxed from 8 after the rig, 2026-08-17).
     assert "Decisions" in labels
     single = dict(RECORD, rows=RECORD["rows"][:1])
-    assert "Decisions" not in [label for label, _ in DevSpectralPlugin().settlingStep(single).getView().tabs]
+    assert "Decisions" not in [label for label, _ in DevSpectralPlugin().settlingView(single).tabs]
 
 
 def test_a_table_renders_a_record_it_knows_nothing_about():

@@ -878,19 +878,18 @@ class CapturePanel(QWidget):
     def __showSettlingTab(self, result):
         """Add / replace the "Settling" inner tab from the run that just finished.
 
-        ⭐ The plugin builds the view (it owns what the curve MEANS); this panel only finds a home for the
-        widget — the §10.1a-bis boundary held in the UI as well.
+        ⭐⭐ IT RENDERS THE VIEWS THE ENGINE ALREADY ATTACHED TO THE STEP (§27.12) — `result.views` holds
+        the very objects now hanging off this step's EvaluationResult, which is also what the report will
+        collect. ⛔ The panel no longer builds its own copy from the record: that was the same thing
+        constructed twice, and it is what made a report-only step look necessary.
         ⚠ Shown for EVERY outcome, including the ones with no value: a run that never cleared is exactly
         the run whose curve explains itself (§12.1)."""
-        plugin = getattr(self.__engine, "plugin", None)
-        if plugin is None or not hasattr(plugin, "settlingStep"):
+        views = getattr(result, "views", None)
+        if not views:
             return
         try:
-            step = plugin.settlingStep(result.toRecord())
-            if step is None:
-                return
             from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
-            content = QtWorkflowRenderer().render([step.getView()])
+            content = QtWorkflowRenderer().render(list(views))
         except Exception as error:              # a diagnostic must never break the capture it documents
             print("SETTLING tab unavailable (%s)" % error)
             return

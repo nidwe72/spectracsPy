@@ -9,6 +9,7 @@ from sciens.spectracs.logic.spectral.acquisition.CaptureDiagnosticsLogger import
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
+from sciens.spectracs.model.spectral.plugin.view.EvaluationResult import EvaluationResult
 from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 from sciens.spectracs.model.spectral.SpectralWorkflow import SpectralWorkflow
 from sciens.spectracs.model.spectral.SpectralWorkflowPhase import SpectralWorkflowPhase
@@ -252,7 +253,45 @@ class SpectralWorkflowEngine:
             container = SpectraContainer()
             container.addToSpectra(result.spectrum, step.getRole())
             step.setContainer(container)
+        self.__attachMonitorViews(step, result)
         return result
+
+    def __attachMonitorViews(self, step, result):
+        """Hang the plugin's views for this run on the step they DESCRIBE (SPEC_settled_measurement.md §27.12).
+
+        ⭐⭐ ONE CONSTRUCTION, ONE HOME. The settling curves are provenance of THIS capture, so they live on
+        this acquisition step's EvaluationResult — where the report already harvests (it pulls the raster
+        and spectrum views off exactly the same place) and where persistence already round-trips them.
+        ⇒ the capture panel renders these very objects, the PDF collects these very objects, and the
+        report files them under **Acquisition**, which is where they happened.
+
+        ⛔ What this replaced: the plugin declared a second, report-only step in PROCESSING while the panel
+        separately built the same views again from the same record — the same thing constructed twice into
+        two homes, with a persisted flag invented to stop one of them showing up.
+        ⚠ Invisible in the UI by construction: `WorkflowPhaseRenderer.renderStep()` sends a CaptureView
+        step to the capture path, which never looks at its EvaluationResult.
+        """
+        plugin = getattr(self, "plugin", None)
+        if plugin is None or not hasattr(plugin, "settlingView"):
+            return
+        try:
+            view = plugin.settlingView(result.toRecord())
+        except Exception as error:            # a diagnostic must never break the capture it documents
+            print("SETTLING views unavailable (%s)" % error)
+            return
+        if view is None:
+            return
+        evaluationResult = step.getEvaluationResult()
+        if evaluationResult is None:
+            evaluationResult = EvaluationResult()
+            step.setEvaluationResult(evaluationResult)
+        # ⚠ Re-measuring the same role must REPLACE, not accumulate: a second run's curve beside the
+        # first's would put two contradictory provenances on one capture.
+        for existing in [item for item in evaluationResult.getItems() if getattr(item, "isMonitorView", False)]:
+            evaluationResult.getItems().remove(existing)
+        view.isMonitorView = True
+        evaluationResult.addItem(view)
+        result.views = [view]
 
     def __frameSpectrum(self, image):
         # ONE frame -> {nm: value}, through the app's OWN per-frame extraction — the same module the burst
