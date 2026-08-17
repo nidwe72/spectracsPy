@@ -2741,7 +2741,8 @@ has to survive contact with an interpreter.
 │ P6   │ host wiring: monitored capture · striped bar │ ✅ DONE │ ⭐ CLICK-THROUGH PASSED — a real fill   │
 │      │ from the click · Settling tab under Sample   │         │ measured end to end                    │
 │ P7   │ MonitorRecord on the workflow + migration    │ ✅ DONE │ `84fe759ba6d7`, one nullable column    │
-│ P8   │ SeriesPlotView, BOTH renderers, the summary  │ ✅ DONE │ text Overview + one tab per curve      │
+│ P8   │ SeriesPlotView, BOTH renderers, the summary  │ ✅ DONE │ text Overview + one tab per curve;     │
+│      │ ⭐ attached to the SAMPLE step (§27.12)       │         │ ⚠ that move awaits a click-through     │
 │ P9   │ TableView + the [Decisions] sub-tab          │ ✅ DONE │ renders any plugin's record blind      │
 ├──────┼──────────────────────────────────────────────┼─────────┼────────────────────────────────────────┤
 │ P4   │ ⭐⭐ THE HEAT-DOSE EXPERIMENT                  │ ⛔ RIG   │ Edwin's to run — no code involved      │
@@ -3054,10 +3055,21 @@ frameCount 60**. ⇒ duplicates are real, mild, and slightly *rarer* at the ship
 §14.2b's budget holds with a little more margin than assumed (`W = 60` behaves like ~53 independent
 frames). ⭐ And it is now recorded per run, so a drifting duplicate rate shows up by itself.
 
-⚠ **STILL OWED**
-⚠ **A rig run of `diagnostics/settling_run.py`** — the script has still never met a camera. It is the
-P3 deliverable and the vehicle for §11.
-⛔ **§11 itself — THE HEAT-DOSE EXPERIMENT (P4).** Everything built so far exists to make it measurable.
 ✅ ~~The settling summary no longer reaches the PDF~~ — **FIXED properly by §27.12**: the views hang off
 the SAMPLE step they describe, so the report collects them under Acquisition with no new mechanism, and
 `toReportJson()` carries the record too.
+
+⚠ **STILL OWED**
+
+⚠ **CLICK-THROUGH OF §27.12 — the click-through above predates it.** ⛔ The pass Edwin reported was on the
+build where the panel constructed its own widget; the views now come from the SAMPLE step's
+`EvaluationResult`, and the Settling tab is rendered from `result.views`. ⇒ **what needs re-checking is
+exactly one thing: does the Settling tab still appear under Sample, with the same tabs and content?**
+⭐ The offscreen tests cover attachment, non-duplication, the report section and the report payload — but
+⛔ they cannot see a tab bar, which is precisely where the last three faults lived.
+⚠ **A first PDF export from a monitored run** — the report path is asserted in tests but has never been
+looked at on paper. ⭐ Expect the settling section under **Acquisition**, after the Reference/Sample images.
+
+⚠ **A rig run of `diagnostics/settling_run.py`** — the script has still never met a camera. It is the
+P3 deliverable and the vehicle for §11.
+⛔ **§11 itself — THE HEAT-DOSE EXPERIMENT (P4).** Everything built so far exists to make it measurable.
