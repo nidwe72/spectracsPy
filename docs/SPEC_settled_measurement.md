@@ -3889,3 +3889,146 @@ that click-through, not after it.
 ⚠ **A rig run of `diagnostics/settling_run.py`** — the script has still never met a camera. It is the
 P3 deliverable and the vehicle for §11.
 ⛔ **§11 itself — THE HEAT-DOSE EXPERIMENT (P4).** Everything built so far exists to make it measurable.
+
+---
+
+## ⭐⭐ 28 · SERIES F — THE FIRST MEASUREMENTS THE PROTOCOL EVER PRODUCED  *(Lugitsch A, 2026-08-17/18)*
+
+> Artifacts: `spectracs-references/tmp/2026ß817LigitschA/001…007.pdf`, each carrying its complete
+> `workflow.json` — outcome, branch, policy, evaluator version and every decision row. Every number below
+> was read back out of those artifacts, not transcribed by hand.
+> ⚠ The folder name is a typo for `20260817_Lugitsch_A`; renaming it would break this reference, so it is
+> quoted as it stands.
+
+⭐ **WHY "SERIES F" AND NOT SERIES E.** §16.11.11 defines series E as *brown, 6 separate fills of one
+stock, ~15 min each*. This is not that, and it does not replace it. It is the first σ_fill data taken under
+a protocol where **the instrument decides when the sample is worth measuring** — which is the thing
+§16.36 said had to exist before any reproducibility number meant anything. E's design still stands; F is
+what the protocol produced the first night it ran.
+
+### ⛔ 28.1 Runs 001 and 002 are VOID — and why that is worth a section
+
+Both are **repeats of an already-exposed fill**. The first attempt at each hit §27.25's discard bug: a
+successful run whose winner had lost its spectrum was reported as *"Capture failed — no frames were
+delivered by the camera"*, so the jar was re-measured after banking light dose.
+
+⇒ ⛔ **the σ_fill of 0.696 first computed from them is withdrawn**: it is fill scatter plus two unknown
+doses. ⚠ And nothing in the record said so — a `MonitorRecord` has no field for *this fill had already
+been in the beam* (§27.25's M4, still owed). The lesson is not the arithmetic, it is that **an artifact
+that cannot say how it was obtained will eventually be believed.**
+
+### ⭐ 28.2 The five that count
+
+| run | material | treatment | branch | Q% | clearing | rows |
+|---|---|---|---|---|---|---|
+| **003** | dilution of 003, first 4 ml | used, warmed | arrived-clear | **14.246** | 105 s | 7 |
+| **004** | *same dilution*, other 4 ml | kept DARK, unwarmed, 3 min bath | vertex | **14.156** | 208 s | 13 |
+| **005** | dilution X, first 4 ml (**R**) | bath | arrived-clear | **14.173** | 105 s | 7 |
+| **006** | **R again**, 60 s in the frog to re-muddy | bath | vertex | **13.972** | 314 s | 20 |
+| **007** | dilution X, other 4 ml (**S**) | shaken again, bath | vertex | **13.499** | 207 s | 13 |
+
+⚠ "Other 4 ml" was in fact ~3.5 ml (Edwin) — the second half of an 8 ml / 2-capillary dilution.
+
+### ⭐⭐ 28.3 THE RESULT THAT JUSTIFIES THE WHOLE SPEC — reading early is the dominant error
+
+| run | Q% had it been read at ~105 s | Q% the gate returned | difference |
+|---|---|---|---|
+| **006** | **15.005** | **13.990** | **−1.015** |
+| 007 | 13.583 | 13.502 | −0.081 |
+| 004 | 14.230 | 14.185 | −0.046 |
+
+⭐⭐ **§1's claim, measured on the bench for the first time.** A muddy fill read at a fixed time is a full
+unit high — and 006's `A_valley` fell **92 %** (1.067 → 0.084) over 314 s while that happened. ⇒ the
+gate is not a refinement of the 15-minute rule; on this fill it is the difference between 15.0 and 14.0.
+
+⭐ **AND θ = 0.005 DID NOT STOP TOO EARLY** (§27.26's open worry). In all three vertex runs the answer
+**equals the minimum over every row**, and the rows after it are flat or already rising:
+
+```
+004   14.157  14.170  14.159  14.185      answer 14.156
+006   13.986  13.987  13.972  13.990      answer 13.972
+007   13.511  13.500  13.501  13.502      answer 13.499
+```
+
+⇒ the curves had bottomed out and the photodamage ramp is just beginning. The vertex guard absorbed the
+early gate exactly as the jar-B replay predicted.
+
+### ⚠ 28.4 σ_fill — two split-half pairs, and they disagree by 7×
+
+| pair | same dilution, two halves | Δ | σ = \|Δ\|/√2 |
+|---|---|---|---|
+| 003 / 004 | used+warmed vs dark+unwarmed | 0.091 | ⭐ **0.064** |
+| 005 / 007 | first 4 ml (R) vs other 4 ml (S) | 0.674 | **0.477** |
+
+Pooled over the two pairs: **σ ≈ 0.34**. ⚠ Two differences, ~2 df — a magnitude, not a value.
+
+⭐⭐ **003/004 LANDS ON THE INSTRUMENT FLOOR.** 0.064 against §16.36.6's no-re-seat floor of **0.063** —
+two different halves, two different thermal histories, one measured warm and used and the other kept in
+the dark and unwarmed, and they agree to within the instrument's own noise. ⇒ **when the two halves match,
+the instrument is not the limit.** That is the most encouraging number this project has produced.
+
+### ⛔ 28.5 The R/S gap — what it is NOT, and the confound that stops it being named
+
+The 005/007 pair differs by 0.674, and R measured properly (006) against S (007) still differs by **0.473**.
+Two candidate explanations were offered and **both are ruled out by the data**:
+
+- ⛔ **NOT the 3.5 ml.** `Q%` is scale-invariant by construction, so a smaller aliquot of the same liquid
+  must read the same. Measured: scaling S to match R's Soret reproduces `A_Q` to +1.6 % but leaves the
+  **valley off by +9.7 %** — a SHAPE difference, which no path length or fill volume can produce.
+- ⛔ **NOT residual turbidity from the extra shake.** See §28.6: the sign is wrong.
+
+⚠ **AND THERE IS NO CLEAN R-vs-S COMPARISON IN THIS SET**, which is the honest reason the gap cannot be
+attributed: **005** is R but read early; **006** is R but *after a cold shock in the frog*; **007** is S
+after a shake. "R vs S" is really "R-after-freezing vs S-after-shaking".
+⚠ Counter-evidence against treatment being the driver: 003 and 004 had *very* different histories and
+agreed to 0.091.
+
+⇒ **THE NEXT EXPERIMENT IS NARROW: R and S again under IDENTICAL treatment** — same shake, same bath, both
+run to the gate, neither frozen. Gap persists ⇒ the halves differ materially. Gap collapses toward 0.06 ⇒
+handling, and the 003/004 floor is the truth.
+
+### ⭐ 28.6 THE TURBIDITY LINE — a standing check, free from every record
+
+Within one clearing fill, `Q%` and the turbidity proxy `valley/Soret` fall **together**, at a roughly
+constant rate:
+
+| run | valley/Soret | Q% | slope d`Q%`/d(v/S) |
+|---|---|---|---|
+| 006 | 0.529 → 0.090 | 21.21 → 13.99 | **+16.4** |
+| 007 | 0.111 → 0.097 | 13.78 → 13.50 | **+18.8** |
+| 004 | 0.095 → 0.079 | 14.31 → 14.19 | +7.5 |
+
+⇒ **when two readings disagree, ask first whether their difference lies on this line.** Multiply the
+difference in `valley/Soret` by ~16 and compare with the observed `Q%` gap.
+
+Applied to R vs S: Δ(v/S) = **+0.0085** predicts **+0.14** — S should read *higher*. It reads **0.473
+lower**, an effective slope of **−56**: wrong sign, and three times too steep. ⇒ clearing state is
+eliminated in one line of arithmetic, and the search moves on.
+
+⚠ **IT IS NOT A CORRECTION FACTOR.** The slope spans 7.5–18.8 across three runs, so it judges whether a
+difference is *plausibly* a clearing difference — sign and order of magnitude — and must never be used to
+adjust a reading. ⚠ Three runs, one oil. ⭐ Everything it needs (`valley`, `soret`, `qPercent` per decision
+row) is already in every embedded record, so it costs nothing to apply to any future pair.
+
+### ⭐ 28.7 Two further findings, recorded
+
+- ⭐ **No net photodamage at these durations.** R was in the beam ~2 min for 005, was re-muddied, and spent
+  5+ min more in 006 — and read **0.20 LOWER**, not higher. Over minutes the clearing term dominates the
+  browning term; §16.36's browning was measured over 72-minute arcs. ⛔ This does not retire the dose
+  concern, it bounds it.
+- ⚠ **005 sits ON the branch boundary.** At 110 s its `A_valley` had fallen **0.0083** against the 0.010
+  materiality line — a hair below, so it was called *arrived-clear* and stopped. 004 and 007 had already
+  crossed it at the same moment (0.0113, 0.0105) and were correctly routed to the vertex; 003 genuinely
+  was clear (total fall 0.0023). ⇒ the classifier is working, and 005 is the case that shows where its
+  edge is.
+
+### ⚠ 28.8 What series F does NOT establish
+
+- ⛔ **It does not exercise §27.25's M1 fix.** All three vertex winners sat 1–3 decision rows back
+  (17–51 s) — inside the OLD five-row window — so these runs would have completed before the fix as well.
+  M1 is right (the boundary was measured directly, §27.25) but is **still unexercised**. ⇒ the test is an
+  **unwarmed muddy fill**: the longest clearing phase puts the `Q%` minimum furthest from the gate.
+  ⚠ Watch `capsHit` — §16.36 saw ~17 min unwarmed against a 25-minute cap — and note it doubles as
+  §17/C1's field datapoint, the case with no water bath where the two-minute claim does not hold.
+- ⛔ **It is not σ_fill for the decision table.** Two pairs on one oil; §16.11.11's series E design (6
+  separate fills of one stock) is what feeds §16.13's 0.307 boundary, and that is still owed.

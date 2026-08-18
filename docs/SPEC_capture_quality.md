@@ -4034,6 +4034,16 @@ fully out-of-sample prediction; rows 1 and 3 are.)
      **σ_fill** — the quantity §16.10.17b's decision table is built on, still unmeasured because everything in
      §16.11.3 is re-seat-only.
 
+     ⭐⭐ **FIRST σ_fill DATA EXISTS — `SPEC_settled_measurement.md` §28 (series F, Lugitsch A, 2026-08-18).**
+     ⛔ It is NOT series E and does not replace it: two split-half pairs on one green oil, not 6 fills of one
+     brown stock. ⚠ But it is the first taken under a protocol where the instrument chooses the moment, which
+     §16.36 said had to exist before any reproducibility number meant anything.
+     ⭐ **One pair landed on 0.064 — the no-re-seat floor of §16.36.6 (0.063) — so when two halves match, the
+     instrument is not the limit.** ⛔ The other pair gave 0.477 and the gap is unattributed (a confounded
+     treatment; §28.5). Pooled ≈ 0.34 on ~2 df: a magnitude, not a value, and ⛔ **not a substitute for E**.
+     ⭐ §28.3 also measures the cost of reading early on a muddy fill: **1.015 units** — larger than any σ in
+     this section, which is why the protocol preceded the measurement.
+
    σ_fill cannot be reasoned out: drop-count error (±10–20 %) changes concentration, which a *dilution-invariant*
    ratio should cancel entirely — §16.11.6 suggests it largely does, but §16.10.8 is not resolved. Outcomes for
    E: **~3 %** → invariance holds in practice, apply the projection below; **~5–6 %** → prep adds a modest term,
