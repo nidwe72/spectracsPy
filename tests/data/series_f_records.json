@@ -1,0 +1,1448 @@
+{
+ "source": {
+  "series": "F \u2014 Lugitsch A, 2026-08-17/18",
+  "extractedFrom": "spectracs-references/tmp/2026\u00df817LigitschA/00N.pdf (embedded workflow.json)",
+  "extractedOn": "2026-08-18",
+  "why": "SPEC_settled_measurement.md \u00a730.14/R3.1 \u2014 the masters live in a rotated tmp/ under a hand-typed path; the records are transcribed here so the tests never depend on them.",
+  "limitation": "\u26d4 Only the WINNER's spectrum was ever persisted. Under the \u00a729 read the four clear runs report their FIRST look, whose window mean was never kept \u2014 so these fixtures can verify VALUES and never spectra for 001/002/003/005. That gap is permanent."
+ },
+ "runs": {
+  "001": {
+   "capturedAt": "2026-08-17T23:04:54",
+   "header": {
+    "username": null,
+    "userId": null,
+    "pluginCodeRef": null,
+    "pluginVersion": null,
+    "timestampIso": null,
+    "captureDecode": "pow2.2"
+   },
+   "void": true,
+   "voidReason": "\u00a728.1 \u2014 the two runs the protocol itself invalidated",
+   "monitorRecord": {
+    "outcome": "SETTLED_IMMEDIATE",
+    "cancelled": false,
+    "capsHit": false,
+    "evaluatorId": "dev-clearing",
+    "evaluatorVersion": "clearing-1.0",
+    "policy": {
+     "windowFrames": 60,
+     "retentionFrames": 60,
+     "minWindowFrames": 60,
+     "evaluateEveryNFrames": 1,
+     "maxSeconds": 1500.0,
+     "maxFrames": 4000
+    },
+    "clearingSeconds": 107.85111694900115,
+    "distinctFraction": 0.8833333333333333,
+    "columns": [
+     {
+      "key": "qPercent",
+      "label": "Q%",
+      "unit": ""
+     },
+     {
+      "key": "soret",
+      "label": "A_Soret 448-460",
+      "unit": "A"
+     },
+     {
+      "key": "valley",
+      "label": "A_valley 500-560",
+      "unit": "A"
+     },
+     {
+      "key": "qBand",
+      "label": "A_Q 565-580",
+      "unit": "A"
+     }
+    ],
+    "answer": {
+     "valueKey": "qPercent",
+     "value": 14.459458939245973,
+     "t": 107.85111694900115,
+     "frameIndex": 419,
+     "readAs": "FIRST_SETTLED_WINDOW",
+     "branch": "arrived-clear"
+    },
+    "rows": [
+     {
+      "t": 5.595950737999374,
+      "frameIndex": 59,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.37511736108823,
+      "soret": 0.9593177001221281,
+      "valley": 0.10577587578571068,
+      "qBand": 0.24367892104395905
+     },
+     {
+      "t": 20.29087092500049,
+      "frameIndex": 119,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.40233286841392,
+      "soret": 0.9577427670851265,
+      "valley": 0.10557200649454841,
+      "qBand": 0.24350930783330654
+     },
+     {
+      "t": 37.89356490600039,
+      "frameIndex": 179,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.41394724969782,
+      "soret": 0.9566243321388928,
+      "valley": 0.10538168055980623,
+      "qBand": 0.2432690071720803
+     },
+     {
+      "t": 55.66369917750126,
+      "frameIndex": 239,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.422401168063107,
+      "soret": 0.9552484927301023,
+      "valley": 0.1051572726447972,
+      "qBand": 0.24292704241820867
+     },
+     {
+      "t": 73.33352843850116,
+      "frameIndex": 299,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.438007333919343,
+      "soret": 0.9543261735572524,
+      "valley": 0.10488668006641257,
+      "qBand": 0.2426723629941205
+     },
+     {
+      "t": 90.59749378500055,
+      "frameIndex": 359,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.429918968254604,
+      "soret": 0.9526916706577554,
+      "valley": 0.10452469100086095,
+      "qBand": 0.24199732709408608
+     },
+     {
+      "t": 107.85111694900115,
+      "frameIndex": 419,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.459458939245973,
+      "soret": 0.9517684791464501,
+      "valley": 0.10447324786581491,
+      "qBand": 0.24209382030468174
+     }
+    ],
+    "notes": [
+     "107.9s settled \u2014 the fill arrived clear"
+    ]
+   },
+   "expected": {
+    "windowFrames": 60,
+    "reportedUnderClearing1_0": 14.459458939245973,
+    "firstLook": 14.37511736108823,
+    "argminIndex": 0,
+    "argminT": 5.595950737999374,
+    "minimum": 14.37511736108823,
+    "depthBelowFirstLook": 0.0,
+    "readIndexUnderClearing2_0": 0,
+    "branchUnderClearing2_0": "arrived-clear",
+    "browningPerMinuteTwoPoint": 0.0495,
+    "rowsAfterRead": 7
+   }
+  },
+  "002": {
+   "capturedAt": "2026-08-17T23:40:48",
+   "header": {
+    "username": null,
+    "userId": null,
+    "pluginCodeRef": null,
+    "pluginVersion": null,
+    "timestampIso": null,
+    "captureDecode": "pow2.2"
+   },
+   "void": true,
+   "voidReason": "\u00a728.1 \u2014 the two runs the protocol itself invalidated",
+   "monitorRecord": {
+    "outcome": "SETTLED_IMMEDIATE",
+    "cancelled": false,
+    "capsHit": false,
+    "evaluatorId": "dev-clearing",
+    "evaluatorVersion": "clearing-1.0",
+    "policy": {
+     "windowFrames": 60,
+     "retentionFrames": 60,
+     "minWindowFrames": 60,
+     "evaluateEveryNFrames": 1,
+     "maxSeconds": 1500.0,
+     "maxFrames": 4000
+    },
+    "clearingSeconds": 107.15688772249632,
+    "distinctFraction": 0.8833333333333333,
+    "columns": [
+     {
+      "key": "qPercent",
+      "label": "Q%",
+      "unit": ""
+     },
+     {
+      "key": "soret",
+      "label": "A_Soret 448-460",
+      "unit": "A"
+     },
+     {
+      "key": "valley",
+      "label": "A_valley 500-560",
+      "unit": "A"
+     },
+     {
+      "key": "qBand",
+      "label": "A_Q 565-580",
+      "unit": "A"
+     }
+    ],
+    "answer": {
+     "valueKey": "qPercent",
+     "value": 13.475734143156224,
+     "t": 107.15688772249632,
+     "frameIndex": 419,
+     "readAs": "FIRST_SETTLED_WINDOW",
+     "branch": "arrived-clear"
+    },
+    "rows": [
+     {
+      "t": 5.721888670497719,
+      "frameIndex": 59,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.46275511959197,
+      "soret": 0.8802597253714377,
+      "valley": 0.07985017427085012,
+      "qBand": 0.19835738551399956
+     },
+     {
+      "t": 20.395861006498308,
+      "frameIndex": 119,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.472069790055167,
+      "soret": 0.8798201129727545,
+      "valley": 0.0797627776912256,
+      "qBand": 0.1982927573378573
+     },
+     {
+      "t": 37.59949304249676,
+      "frameIndex": 179,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.47186430994872,
+      "soret": 0.8776384424969048,
+      "valley": 0.07924406519890319,
+      "qBand": 0.19747832530403353
+     },
+     {
+      "t": 54.584434605498245,
+      "frameIndex": 239,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.472753072810125,
+      "soret": 0.8770277276110245,
+      "valley": 0.07894078943150074,
+      "qBand": 0.19710056955261185
+     },
+     {
+      "t": 72.02176788099678,
+      "frameIndex": 299,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.46748300816652,
+      "soret": 0.8755614782357952,
+      "valley": 0.07854398362752217,
+      "qBand": 0.1964600769349795
+     },
+     {
+      "t": 89.49806983300005,
+      "frameIndex": 359,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.485726240900783,
+      "soret": 0.8736778856449184,
+      "valley": 0.07814232893770817,
+      "qBand": 0.19596413682307207
+     },
+     {
+      "t": 107.15688772249632,
+      "frameIndex": 419,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.475734143156224,
+      "soret": 0.8727465206946646,
+      "valley": 0.07796583515739182,
+      "qBand": 0.19557483602985073
+     }
+    ],
+    "notes": [
+     "107.2s settled \u2014 the fill arrived clear"
+    ]
+   },
+   "expected": {
+    "windowFrames": 60,
+    "reportedUnderClearing1_0": 13.475734143156224,
+    "firstLook": 13.46275511959197,
+    "argminIndex": 0,
+    "argminT": 5.721888670497719,
+    "minimum": 13.46275511959197,
+    "depthBelowFirstLook": 0.0,
+    "readIndexUnderClearing2_0": 0,
+    "branchUnderClearing2_0": "arrived-clear",
+    "browningPerMinuteTwoPoint": 0.0077,
+    "rowsAfterRead": 7
+   }
+  },
+  "003": {
+   "capturedAt": "2026-08-18T00:51:39",
+   "header": {
+    "username": null,
+    "userId": null,
+    "pluginCodeRef": null,
+    "pluginVersion": null,
+    "timestampIso": null,
+    "captureDecode": "pow2.2"
+   },
+   "void": false,
+   "voidReason": null,
+   "monitorRecord": {
+    "outcome": "SETTLED_IMMEDIATE",
+    "cancelled": false,
+    "capsHit": false,
+    "evaluatorId": "dev-clearing",
+    "evaluatorVersion": "clearing-1.0",
+    "policy": {
+     "windowFrames": 60,
+     "retentionFrames": 60,
+     "minWindowFrames": 60,
+     "evaluateEveryNFrames": 1,
+     "maxSeconds": 1500.0,
+     "maxFrames": 4000
+    },
+    "clearingSeconds": 105.08689020550082,
+    "distinctFraction": 0.861904761904762,
+    "columns": [
+     {
+      "key": "qPercent",
+      "label": "Q%",
+      "unit": ""
+     },
+     {
+      "key": "soret",
+      "label": "A_Soret 448-460",
+      "unit": "A"
+     },
+     {
+      "key": "valley",
+      "label": "A_valley 500-560",
+      "unit": "A"
+     },
+     {
+      "key": "qBand",
+      "label": "A_Q 565-580",
+      "unit": "A"
+     }
+    ],
+    "answer": {
+     "valueKey": "qPercent",
+     "value": 14.246384086186003,
+     "t": 105.08689020550082,
+     "frameIndex": 419,
+     "readAs": "FIRST_SETTLED_WINDOW",
+     "branch": "arrived-clear"
+    },
+    "rows": [
+     {
+      "t": 5.618668451999838,
+      "frameIndex": 59,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.764058627709128,
+      "soret": 0.8559472650310499,
+      "valley": 0.08948019441275654,
+      "qBand": 0.20729327779390308
+     },
+     {
+      "t": 19.93567944700044,
+      "frameIndex": 119,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.795353326058382,
+      "soret": 0.8527044756808213,
+      "valley": 0.08869221203598723,
+      "qBand": 0.2063258072832701
+     },
+     {
+      "t": 36.935460052500275,
+      "frameIndex": 179,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.814929255709684,
+      "soret": 0.8486224837824257,
+      "valley": 0.08771175859986231,
+      "qBand": 0.2049483543824508
+     },
+     {
+      "t": 54.13396109600217,
+      "frameIndex": 239,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.887278646487742,
+      "soret": 0.8446684249172881,
+      "valley": 0.08718662973233098,
+      "qBand": 0.20448808753949388
+     },
+     {
+      "t": 71.07756758500182,
+      "frameIndex": 299,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.961522945382356,
+      "soret": 0.841282093163674,
+      "valley": 0.08722506597349755,
+      "qBand": 0.20468085844593686
+     },
+     {
+      "t": 88.10734337900067,
+      "frameIndex": 359,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.082429282498225,
+      "soret": 0.8381308411253394,
+      "valley": 0.08739974808721922,
+      "qBand": 0.20542893108350269
+     },
+     {
+      "t": 105.08689020550082,
+      "frameIndex": 419,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.246384086186003,
+      "soret": 0.8349235416672353,
+      "valley": 0.08791484335630138,
+      "qBand": 0.20686125792820295
+     }
+    ],
+    "notes": [
+     "105.1s settled \u2014 the fill arrived clear"
+    ]
+   },
+   "expected": {
+    "windowFrames": 60,
+    "reportedUnderClearing1_0": 14.246384086186003,
+    "firstLook": 13.764058627709128,
+    "argminIndex": 0,
+    "argminT": 5.618668451999838,
+    "minimum": 13.764058627709128,
+    "depthBelowFirstLook": 0.0,
+    "readIndexUnderClearing2_0": 0,
+    "branchUnderClearing2_0": "arrived-clear",
+    "browningPerMinuteTwoPoint": 0.2909,
+    "rowsAfterRead": 7
+   }
+  },
+  "004": {
+   "capturedAt": "2026-08-18T01:06:00",
+   "header": {
+    "username": null,
+    "userId": null,
+    "pluginCodeRef": null,
+    "pluginVersion": null,
+    "timestampIso": null,
+    "captureDecode": "pow2.2"
+   },
+   "void": false,
+   "voidReason": null,
+   "monitorRecord": {
+    "outcome": "SETTLED_AFTER_CLEARING",
+    "cancelled": false,
+    "capsHit": false,
+    "evaluatorId": "dev-clearing",
+    "evaluatorVersion": "clearing-1.0",
+    "policy": {
+     "windowFrames": 60,
+     "retentionFrames": 60,
+     "minWindowFrames": 60,
+     "evaluateEveryNFrames": 1,
+     "maxSeconds": 1500.0,
+     "maxFrames": 4000
+    },
+    "clearingSeconds": 207.93098663350247,
+    "distinctFraction": 0.8166666666666667,
+    "columns": [
+     {
+      "key": "qPercent",
+      "label": "Q%",
+      "unit": ""
+     },
+     {
+      "key": "soret",
+      "label": "A_Soret 448-460",
+      "unit": "A"
+     },
+     {
+      "key": "valley",
+      "label": "A_valley 500-560",
+      "unit": "A"
+     },
+     {
+      "key": "qBand",
+      "label": "A_Q 565-580",
+      "unit": "A"
+     }
+    ],
+    "answer": {
+     "valueKey": "qPercent",
+     "value": 14.155825468373607,
+     "t": 156.43181269599881,
+     "frameIndex": 599,
+     "readAs": "VERTEX",
+     "branch": "was-clearing"
+    },
+    "rows": [
+     {
+      "t": 5.775867326497973,
+      "frameIndex": 59,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.306132934999429,
+      "soret": 0.9163010960018031,
+      "valley": 0.08722600905479234,
+      "qBand": 0.218313261933667
+     },
+     {
+      "t": 20.04436805950172,
+      "frameIndex": 119,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.364248733933836,
+      "soret": 0.9118395948845185,
+      "valley": 0.08624332688985671,
+      "qBand": 0.21722223435356358
+     },
+     {
+      "t": 36.69584472849965,
+      "frameIndex": 179,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.355952841868339,
+      "soret": 0.9071940314054268,
+      "valley": 0.08410139669494232,
+      "qBand": 0.21433774402774963
+     },
+     {
+      "t": 53.762979112500034,
+      "frameIndex": 239,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.33266151772609,
+      "soret": 0.9021439501485947,
+      "valley": 0.08165801325290745,
+      "qBand": 0.21095925203034913
+     },
+     {
+      "t": 70.85835567200047,
+      "frameIndex": 299,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.296489821215232,
+      "soret": 0.8985848411266538,
+      "valley": 0.07965412852856503,
+      "qBand": 0.20812021887522017
+     },
+     {
+      "t": 87.73335633150418,
+      "frameIndex": 359,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.260203092106153,
+      "soret": 0.8948057689096677,
+      "valley": 0.07776580087675529,
+      "qBand": 0.20536692080315594
+     },
+     {
+      "t": 104.80390716750117,
+      "frameIndex": 419,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.230467613395414,
+      "soret": 0.8909629286282218,
+      "valley": 0.07595160924850093,
+      "qBand": 0.20273980025429933
+     },
+     {
+      "t": 122.13171085750218,
+      "frameIndex": 479,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.18300633430985,
+      "soret": 0.887607191066323,
+      "valley": 0.07414124647489388,
+      "qBand": 0.2000306306076202
+     },
+     {
+      "t": 139.2756213395005,
+      "frameIndex": 539,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.190409190582972,
+      "soret": 0.8846881830105519,
+      "valley": 0.07281428458323648,
+      "qBand": 0.19835515781316732
+     },
+     {
+      "t": 156.43181269599881,
+      "frameIndex": 599,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.156894410667986,
+      "soret": 0.8824616999789385,
+      "valley": 0.07167903247535394,
+      "qBand": 0.19660820355595798
+     },
+     {
+      "t": 173.50202605649974,
+      "frameIndex": 659,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.17017978572757,
+      "soret": 0.8798589136006654,
+      "valley": 0.07077821681332129,
+      "qBand": 0.19545580673128496
+     },
+     {
+      "t": 190.6061082035012,
+      "frameIndex": 719,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.159203345762839,
+      "soret": 0.8769499355619311,
+      "valley": 0.06951493869746822,
+      "qBand": 0.19368406331421822
+     },
+     {
+      "t": 207.93098663350247,
+      "frameIndex": 779,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.184699259068587,
+      "soret": 0.8748101837342546,
+      "valley": 0.06902796793008384,
+      "qBand": 0.1931171615804932
+     }
+    ],
+    "notes": [
+     "190.6s gate fired (was clearing) \u2014 waiting one row for the vertex",
+     "207.9s settled \u2014 read as a parabola vertex"
+    ]
+   },
+   "expected": {
+    "windowFrames": 60,
+    "reportedUnderClearing1_0": 14.155825468373607,
+    "firstLook": 14.306132934999429,
+    "argminIndex": 9,
+    "argminT": 156.43181269599881,
+    "minimum": 14.156894410667986,
+    "depthBelowFirstLook": 0.1492,
+    "readIndexUnderClearing2_0": 9,
+    "branchUnderClearing2_0": "was-clearing",
+    "browningPerMinuteTwoPoint": 0.0324,
+    "rowsAfterRead": 4
+   }
+  },
+  "005": {
+   "capturedAt": "2026-08-18T01:26:11",
+   "header": {
+    "username": null,
+    "userId": null,
+    "pluginCodeRef": null,
+    "pluginVersion": null,
+    "timestampIso": null,
+    "captureDecode": "pow2.2"
+   },
+   "void": false,
+   "voidReason": null,
+   "monitorRecord": {
+    "outcome": "SETTLED_IMMEDIATE",
+    "cancelled": false,
+    "capsHit": false,
+    "evaluatorId": "dev-clearing",
+    "evaluatorVersion": "clearing-1.0",
+    "policy": {
+     "windowFrames": 60,
+     "retentionFrames": 60,
+     "minWindowFrames": 60,
+     "evaluateEveryNFrames": 1,
+     "maxSeconds": 1500.0,
+     "maxFrames": 4000
+    },
+    "clearingSeconds": 104.99147435399937,
+    "distinctFraction": 0.8738095238095238,
+    "columns": [
+     {
+      "key": "qPercent",
+      "label": "Q%",
+      "unit": ""
+     },
+     {
+      "key": "soret",
+      "label": "A_Soret 448-460",
+      "unit": "A"
+     },
+     {
+      "key": "valley",
+      "label": "A_valley 500-560",
+      "unit": "A"
+     },
+     {
+      "key": "qBand",
+      "label": "A_Q 565-580",
+      "unit": "A"
+     }
+    ],
+    "answer": {
+     "valueKey": "qPercent",
+     "value": 14.173128088949747,
+     "t": 104.99147435399937,
+     "frameIndex": 419,
+     "readAs": "FIRST_SETTLED_WINDOW",
+     "branch": "arrived-clear"
+    },
+    "rows": [
+     {
+      "t": 5.501047524998285,
+      "frameIndex": 59,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.136285844096337,
+      "soret": 0.9916891322846596,
+      "valley": 0.11136080308189758,
+      "qBand": 0.2515488135064957
+     },
+     {
+      "t": 19.58741578399713,
+      "frameIndex": 119,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.152942908466276,
+      "soret": 0.9859480828821608,
+      "valley": 0.10969467297659569,
+      "qBand": 0.24923534225402566
+     },
+     {
+      "t": 36.403141751001385,
+      "frameIndex": 179,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.126316587787455,
+      "soret": 0.979899450215073,
+      "valley": 0.10720985403236279,
+      "qBand": 0.24563355261173273
+     },
+     {
+      "t": 53.4766760484963,
+      "frameIndex": 239,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.153402631173059,
+      "soret": 0.9769659140844746,
+      "valley": 0.10648922073671929,
+      "qBand": 0.24476314012641526
+     },
+     {
+      "t": 70.76734378049878,
+      "frameIndex": 299,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.155407365504328,
+      "soret": 0.9721912166412213,
+      "valley": 0.10486236503151691,
+      "qBand": 0.2424799921187345
+     },
+     {
+      "t": 88.00263352899856,
+      "frameIndex": 359,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.18280916167606,
+      "soret": 0.9704840017770303,
+      "valley": 0.10452192981018933,
+      "qBand": 0.24216382372682246
+     },
+     {
+      "t": 104.99147435399937,
+      "frameIndex": 419,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.173128088949747,
+      "soret": 0.9665738916842801,
+      "valley": 0.10302694833098507,
+      "qBand": 0.24002070407374448
+     }
+    ],
+    "notes": [
+     "105.0s settled \u2014 the fill arrived clear"
+    ]
+   },
+   "expected": {
+    "windowFrames": 60,
+    "reportedUnderClearing1_0": 14.173128088949747,
+    "firstLook": 14.136285844096337,
+    "argminIndex": 2,
+    "argminT": 36.403141751001385,
+    "minimum": 14.126316587787455,
+    "depthBelowFirstLook": 0.01,
+    "readIndexUnderClearing2_0": 0,
+    "branchUnderClearing2_0": "arrived-clear",
+    "browningPerMinuteTwoPoint": 0.0222,
+    "rowsAfterRead": 7
+   }
+  },
+  "006": {
+   "capturedAt": "2026-08-18T01:37:11",
+   "header": {
+    "username": null,
+    "userId": null,
+    "pluginCodeRef": null,
+    "pluginVersion": null,
+    "timestampIso": null,
+    "captureDecode": "pow2.2"
+   },
+   "void": false,
+   "voidReason": null,
+   "monitorRecord": {
+    "outcome": "SETTLED_AFTER_CLEARING",
+    "cancelled": false,
+    "capsHit": false,
+    "evaluatorId": "dev-clearing",
+    "evaluatorVersion": "clearing-1.0",
+    "policy": {
+     "windowFrames": 60,
+     "retentionFrames": 60,
+     "minWindowFrames": 60,
+     "evaluateEveryNFrames": 1,
+     "maxSeconds": 1500.0,
+     "maxFrames": 4000
+    },
+    "clearingSeconds": 313.93735245149946,
+    "distinctFraction": 0.855,
+    "columns": [
+     {
+      "key": "qPercent",
+      "label": "Q%",
+      "unit": ""
+     },
+     {
+      "key": "soret",
+      "label": "A_Soret 448-460",
+      "unit": "A"
+     },
+     {
+      "key": "valley",
+      "label": "A_valley 500-560",
+      "unit": "A"
+     },
+     {
+      "key": "qBand",
+      "label": "A_Q 565-580",
+      "unit": "A"
+     }
+    ],
+    "answer": {
+     "valueKey": "qPercent",
+     "value": 13.9722616235748,
+     "t": 296.75974282600146,
+     "frameIndex": 1139,
+     "readAs": "VERTEX",
+     "branch": "was-clearing"
+    },
+    "rows": [
+     {
+      "t": 5.334186948497518,
+      "frameIndex": 59,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 21.205338863756296,
+      "soret": 2.0187105810899224,
+      "valley": 1.0670610555962694,
+      "qBand": 1.4951354749948913
+     },
+     {
+      "t": 18.80673216950163,
+      "frameIndex": 119,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 20.71580980974502,
+      "soret": 1.9655841787927177,
+      "valley": 1.0022800062449315,
+      "qBand": 1.4094666863740695
+     },
+     {
+      "t": 34.39817025499724,
+      "frameIndex": 179,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 19.634375954140864,
+      "soret": 1.8325499239736416,
+      "valley": 0.8489346418081289,
+      "qBand": 1.2087443834284364
+     },
+     {
+      "t": 50.00621517450054,
+      "frameIndex": 239,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 17.7290736317567,
+      "soret": 1.6879256329425814,
+      "valley": 0.6997669966965561,
+      "qBand": 0.9990205750102417
+     },
+     {
+      "t": 65.61827557749712,
+      "frameIndex": 299,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 16.33197077021353,
+      "soret": 1.5256960989956763,
+      "valley": 0.5575320765731081,
+      "qBand": 0.80670831750337
+     },
+     {
+      "t": 81.05849704450156,
+      "frameIndex": 359,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 15.747439817694929,
+      "soret": 1.372225306487025,
+      "valley": 0.417089444947901,
+      "qBand": 0.633179799250125
+     },
+     {
+      "t": 96.80255188199953,
+      "frameIndex": 419,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 15.157935128822357,
+      "soret": 1.2395824470507544,
+      "valley": 0.3013259439834571,
+      "qBand": 0.48922104717567916
+     },
+     {
+      "t": 112.62216403650018,
+      "frameIndex": 479,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 15.004831899504461,
+      "soret": 1.1214336309131712,
+      "valley": 0.2059964059667497,
+      "qBand": 0.37426563714978034
+     },
+     {
+      "t": 128.73154516149953,
+      "frameIndex": 539,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.978613436460247,
+      "soret": 1.0338161709403713,
+      "valley": 0.1424333954866794,
+      "qBand": 0.2972847233754527
+     },
+     {
+      "t": 144.75708993900116,
+      "frameIndex": 599,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.562652095893462,
+      "soret": 0.9839460752370829,
+      "valley": 0.10935739905340203,
+      "qBand": 0.25264604280137654
+     },
+     {
+      "t": 160.80977316850112,
+      "frameIndex": 659,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.277943057453959,
+      "soret": 0.9630881035504464,
+      "valley": 0.09625935606422867,
+      "qBand": 0.2337685270822746
+     },
+     {
+      "t": 177.1717034409994,
+      "frameIndex": 719,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.142795180496195,
+      "soret": 0.9542062968283996,
+      "valley": 0.09089907655973369,
+      "qBand": 0.2258505187195718
+     },
+     {
+      "t": 194.2110696560012,
+      "frameIndex": 779,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.056339471335987,
+      "soret": 0.9485587572977547,
+      "valley": 0.0879778286925581,
+      "qBand": 0.22131046770341653
+     },
+     {
+      "t": 211.62720301599984,
+      "frameIndex": 839,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.03496251204844,
+      "soret": 0.9457120311823493,
+      "valley": 0.08664486524207894,
+      "qBand": 0.2193751942904535
+     },
+     {
+      "t": 228.84422178550085,
+      "frameIndex": 899,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.002039715175389,
+      "soret": 0.9431265536837108,
+      "valley": 0.08584754147961998,
+      "qBand": 0.2179044960907781
+     },
+     {
+      "t": 245.55118436950215,
+      "frameIndex": 959,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 14.002430128546104,
+      "soret": 0.9407084937749778,
+      "valley": 0.08519254369818059,
+      "qBand": 0.21691459325232032
+     },
+     {
+      "t": 262.5700943364973,
+      "frameIndex": 1019,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.985779425684644,
+      "soret": 0.9389507283521602,
+      "valley": 0.08476657872573153,
+      "qBand": 0.21608615650892407
+     },
+     {
+      "t": 279.5322466944999,
+      "frameIndex": 1079,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.987290613376397,
+      "soret": 0.9373367710168113,
+      "valley": 0.08436804658841919,
+      "qBand": 0.21547606477657905
+     },
+     {
+      "t": 296.75974282600146,
+      "frameIndex": 1139,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.972288751475404,
+      "soret": 0.9350636667634161,
+      "valley": 0.08382190827123417,
+      "qBand": 0.21447170380155242
+     },
+     {
+      "t": 313.93735245149946,
+      "frameIndex": 1199,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.989854884503108,
+      "soret": 0.9333255504439522,
+      "valley": 0.0835013565259524,
+      "qBand": 0.21407224663305116
+     }
+    ],
+    "notes": [
+     "279.5s gate fired (was clearing) \u2014 waiting one row for the vertex",
+     "313.9s settled \u2014 read as a parabola vertex"
+    ]
+   },
+   "expected": {
+    "windowFrames": 60,
+    "reportedUnderClearing1_0": 13.9722616235748,
+    "firstLook": 21.205338863756296,
+    "argminIndex": 18,
+    "argminT": 296.75974282600146,
+    "minimum": 13.972288751475404,
+    "depthBelowFirstLook": 7.2331,
+    "readIndexUnderClearing2_0": 18,
+    "branchUnderClearing2_0": "was-clearing",
+    "browningPerMinuteTwoPoint": 0.0614,
+    "rowsAfterRead": 2
+   }
+  },
+  "007": {
+   "capturedAt": "2026-08-18T01:49:24",
+   "header": {
+    "username": null,
+    "userId": null,
+    "pluginCodeRef": null,
+    "pluginVersion": null,
+    "timestampIso": null,
+    "captureDecode": "pow2.2"
+   },
+   "void": false,
+   "voidReason": null,
+   "monitorRecord": {
+    "outcome": "SETTLED_AFTER_CLEARING",
+    "cancelled": false,
+    "capsHit": false,
+    "evaluatorId": "dev-clearing",
+    "evaluatorVersion": "clearing-1.0",
+    "policy": {
+     "windowFrames": 60,
+     "retentionFrames": 60,
+     "minWindowFrames": 60,
+     "evaluateEveryNFrames": 1,
+     "maxSeconds": 1500.0,
+     "maxFrames": 4000
+    },
+    "clearingSeconds": 207.21991595849977,
+    "distinctFraction": 0.8576923076923076,
+    "columns": [
+     {
+      "key": "qPercent",
+      "label": "Q%",
+      "unit": ""
+     },
+     {
+      "key": "soret",
+      "label": "A_Soret 448-460",
+      "unit": "A"
+     },
+     {
+      "key": "valley",
+      "label": "A_valley 500-560",
+      "unit": "A"
+     },
+     {
+      "key": "qBand",
+      "label": "A_Q 565-580",
+      "unit": "A"
+     }
+    ],
+    "answer": {
+     "valueKey": "qPercent",
+     "value": 13.498647869512183,
+     "t": 172.53621535399725,
+     "frameIndex": 659,
+     "readAs": "VERTEX",
+     "branch": "was-clearing"
+    },
+    "rows": [
+     {
+      "t": 5.496279954499187,
+      "frameIndex": 59,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.778610155559635,
+      "soret": 0.9367715201538223,
+      "valley": 0.10417991580587908,
+      "qBand": 0.233254011616184
+     },
+     {
+      "t": 19.93734569499793,
+      "frameIndex": 119,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.727905729214763,
+      "soret": 0.9329528807312844,
+      "valley": 0.10206864665496648,
+      "qBand": 0.23014353861975065
+     },
+     {
+      "t": 36.763601537000795,
+      "frameIndex": 179,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.694007922732625,
+      "soret": 0.9286981286650468,
+      "valley": 0.10002027082764275,
+      "qBand": 0.2271962661453039
+     },
+     {
+      "t": 53.35539513849653,
+      "frameIndex": 239,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.668874559231549,
+      "soret": 0.9261887468737433,
+      "valley": 0.09875141331576448,
+      "qBand": 0.22535099130765507
+     },
+     {
+      "t": 70.47378144899994,
+      "frameIndex": 299,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.632554984294622,
+      "soret": 0.9224931070257906,
+      "valley": 0.09709286111065478,
+      "qBand": 0.22285224115227353
+     },
+     {
+      "t": 87.55170659649593,
+      "frameIndex": 359,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.5985732401222,
+      "soret": 0.918518208883775,
+      "valley": 0.09519994180468451,
+      "qBand": 0.22010531316360327
+     },
+     {
+      "t": 104.44631810549618,
+      "frameIndex": 419,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.583224704057322,
+      "soret": 0.915340159672162,
+      "valley": 0.09367050415320857,
+      "qBand": 0.21800321484795543
+     },
+     {
+      "t": 121.34107228349603,
+      "frameIndex": 479,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.57175317409227,
+      "soret": 0.9119660638206828,
+      "valley": 0.09244162521090392,
+      "qBand": 0.21621140842413178
+     },
+     {
+      "t": 138.25461043149699,
+      "frameIndex": 539,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.532266712001954,
+      "soret": 0.909171078737122,
+      "valley": 0.09101684586186175,
+      "qBand": 0.21404830110495437
+     },
+     {
+      "t": 155.479403339501,
+      "frameIndex": 599,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.511191473157046,
+      "soret": 0.9061492876821455,
+      "valley": 0.08988896607681232,
+      "qBand": 0.21232053136819568
+     },
+     {
+      "t": 172.53621535399725,
+      "frameIndex": 659,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.499551467936712,
+      "soret": 0.9029531594765131,
+      "valley": 0.08855493220240121,
+      "qBand": 0.21044955869729376
+     },
+     {
+      "t": 189.75840765449902,
+      "frameIndex": 719,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.501422300147821,
+      "soret": 0.9007337200094049,
+      "valley": 0.08771008093666915,
+      "qBand": 0.20932194427496997
+     },
+     {
+      "t": 207.21991595849977,
+      "frameIndex": 779,
+      "n": 60,
+      "nAccepted": 60,
+      "provisional": false,
+      "isDecisionRow": true,
+      "qPercent": 13.501963456496739,
+      "soret": 0.8979946497324311,
+      "valley": 0.0866821140864474,
+      "qBand": 0.20792902353461615
+     }
+    ],
+    "notes": [
+     "189.8s gate fired (was clearing) \u2014 waiting one row for the vertex",
+     "207.2s settled \u2014 read as a parabola vertex"
+    ]
+   },
+   "expected": {
+    "windowFrames": 60,
+    "reportedUnderClearing1_0": 13.498647869512183,
+    "firstLook": 13.778610155559635,
+    "argminIndex": 10,
+    "argminT": 172.53621535399725,
+    "minimum": 13.499551467936712,
+    "depthBelowFirstLook": 0.2791,
+    "readIndexUnderClearing2_0": 10,
+    "branchUnderClearing2_0": "was-clearing",
+    "browningPerMinuteTwoPoint": 0.0042,
+    "rowsAfterRead": 3
+   }
+  }
+ }
+}

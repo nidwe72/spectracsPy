@@ -4147,7 +4147,7 @@ deep: noise, correctly rejected, where the turbidity rule had it at 83 % of its 
 | `A_valley` (turbidity) | has the fill stopped changing? | the GATE — *when to stop looking* |
 | `Q%` depth | was there a turning point? | the READ — *what to report* |
 
-### ⭐ 29.3 The rule
+### ⭐ 29.3 The rule  *(⚠ the ORDER of the three tests is corrected in §30.3, and "the settled looks" in §30.2)*
 
 ```
 gate on A_valley (unchanged)                    -> when to stop looking
@@ -4204,7 +4204,7 @@ least-damaged look, while the rate says how fast this particular fill was degrad
   must say which rule produced them; ⇒ stamp the read rule's version into the record beside
   `evaluatorVersion`, exactly as §17.6 stamps the capture-decode era.
 
-### ⭐ 29.7 Phased
+### ⭐ 29.7 Phased  *(⚠ superseded by §30.14 — R1 grew four items and R1b/R5 were added)*
 
 ```
  R1  PLUGIN   the depth discriminator + the first-look read; threshold derived from W, not pasted
@@ -4221,3 +4221,322 @@ least-damaged look, while the rate says how fast this particular fill was degrad
 ⚠ **R1 before the brown series (§16.11.11).** A +0.48 bias is **37 % of brown's margin to `T`**, and brown
 is the binding class — running the load-bearing measurement through a known one-directional bias would
 spend the session and produce a number nobody can use.
+
+---
+
+## ⭐⭐ 30 · RUBBER-DUCK PASS ON §29 — walked against the code AND against the seven records  *(2026-08-18)*
+
+⭐ Nothing here is estimated. Every number was recomputed from the series F reports themselves — the
+`monitorRecord` embedded in each PDF's `workflow.json`, the same source `diagnostics/plot_settling_branches.py`
+draws from — and every code claim names the line it is about. **Thirteen findings; four change the shape of
+§29, one is a latent defect §29 merely walked past.**
+
+### ⭐⭐ 30.1 THE FORK COLLAPSES — and `MATERIAL_FALL` must die with it
+
+`__fireGate()` (`DevSpectralPlugin.py:184-197`) does two jobs today: it stops the gate *and* it picks the
+read, promoting immediately on the clear side. §29's rule leaves it only the first job.
+
+```
+__fireGate(decisions)      -> record gateIndex, then defer to the read            (no branch decision)
+__read(decisions)          -> the THREE-WAY test, called from the gate row AND from every row after it
+```
+
+⇒ `__afterGate()` and the gate's own promote become **one method with one exit table**, which is what makes
+§29.2's *"one algorithm rather than two"* true in the code and not only in the prose.
+
+⛔ **`MATERIAL_FALL = 0.010` then has no reader left** (`:67`, `:189` are its only two sites — checked across
+all five repos). It must be **deleted, not retired in place**: this very file opens with a comment about two
+gauge classes whose thresholds were left importable and stopped being current, and a turbidity constant
+sitting in a class whose read no longer consults turbidity is the same trap.
+⚠ `__hasFallenSinceMaximum()` is untouched — it is a *gate* guard (never settle at the top of a dip) and
+carries no threshold.
+
+### ⛔⛔ 30.2 "OVER THE SETTLED LOOKS" IS THE WRONG HUNT WINDOW — measured
+
+§29.3 says the minimum is hunted *"over the settled looks"*. Taken literally that is the post-gate rows, and
+it loses the vertex on every fill that has ever taken that branch:
+
+| run | argmin at | gate fired at | the minimum is |
+|---|---|---|---|
+| 004 | 156.4 s | 190.6 s | **34 s BEFORE the gate** |
+| 007 | 172.5 s | 189.8 s | **17 s BEFORE the gate** |
+| jar B *(fixture)* | 16.66 min | 13.38 min at θ=0.005 | after — but §27.26a's early gate is why |
+| 006 | 296.8 s | 279.5 s | after |
+
+⇒ the wording must read **over every usable decision row of the run** — `row.values` truthy, `isDecisionRow`,
+not `provisional` — and *"the FIRST look"* means **the run's first usable decision row**, which is what
+§29.1's table already measured (t = 5.3–5.8 s on all seven runs). ⚠ This is a spec-text defect, not a code
+one: `__afterGate` already hunts over all of `decisions`.
+
+### ⭐⭐ 30.3 THE ORDER OF THE THREE TESTS MUST BE DEPTH-FIRST — or a run can end with no answer at all
+
+§29.3 lists *interior-and-deep → vertex*, *min-at-last-look → wait*, *otherwise → first look*. Read in that
+order, a **shallow** minimum that happens to sit on the newest row also waits — and if noise keeps putting it
+there, the run waits to the 25-minute cap and finishes `NEVER_SETTLED` with **no value**. Today the clear
+branch always answers. ⇒ the depth test must be the *first* question, so the wait is reachable only for a
+curve that has already earned it:
+
+```
+depth = Q%(first usable look) − Q%(argmin)          over every usable decision row since the last reset
+
+    depth <  2σ(W)                       ->  FIRST look        ⭐ promote now, no extra dose
+    depth >= 2σ(W)  and argmin interior  ->  VERTEX            (unchanged)
+    depth >= 2σ(W)  and argmin == last   ->  wait one more row (unchanged)
+```
+
+⭐ It terminates for the same reason today's clear branch does, and it saves a decision row of lamp on every
+flat fill. ✅ Jar B is unharmed: its depth is **12.783** (26.0574 → 13.2744), so it enters the wait at the
+early gate and still promotes 13.2733 at 19.93 min.
+
+### ⛔⛔ 30.4 `W` IS NOT A CONSTANT — IT IS A DROPDOWN, AND THE EVALUATOR CANNOT SEE IT
+
+§29.6 was right to forbid pasting 0.13, and the reason is stronger than it assumed. `W` is **whatever the
+operator picked in the Frames combo**: `CapturePanel.__monitorFor()` passes `frames=frameCount` (`:808`) into
+`createMonitor()`, which makes it `policy.windowFrames` (`DevSpectralPlugin.py:352`). The choices are
+`["10", "20", "50"]` plus the plugin's declared `FRAMES = 60` (`CapturePanel.py:73,190`).
+
+| W | 2σ = 2 · 0.063 · √(60/W) | what it does to the series F record |
+|---|---|---|
+| 60 *(all seven runs)* | **0.126** | the rule as measured |
+| 50 *(the fallback, see below)* | 0.138 | 004 survives by 8 % |
+| 20 | 0.218 | ⛔ **004 (0.149) flips to "clear"** |
+| 10 | 0.309 | ⛔ **004 and 007 (0.279) both flip** |
+
+⇒ 004 mis-branches at any **W ≤ 42**. ⛔ And the evaluator is handed `(plugin, reference, mode)` — **it is
+never told the window it is judging**. So R1 is not "compute a constant differently", it is *"give
+`ClearingEvaluator` the window, then derive from it"*: `createMonitor()` already builds both objects and holds
+the number.
+⚠ **A second window lives in the same file**: `MONITOR_WINDOW_FRAMES = 50` (`:335`) is the fallback when
+`frames` is None, while the plugin declares `FRAMES = 60` (`:305`). Nothing states why they differ, and under
+§29 the difference is a 10 % looser threshold on any path that forgets to pass the combo. ⇒ derive the
+fallback from `FRAMES`.
+
+### ⚠ 30.5 1/√W IS AN UPPER BOUND ON THE SHRINK — so the threshold must be CLAMPED, not scaled freely
+
+The 0.063 of §16.36.6 is the sd of **ten whole repeats with the jar untouched** at W = 60 — it contains lamp
+and AE drift that does *not* average down with more frames. Scaling it *up* for a smaller window therefore
+**over-states** the noise, which raises the threshold, which pushes runs toward the clear branch — and §30.6
+shows that is the expensive direction. ⇒ derive `2σ(W) = 2 · 0.063 · √(60/W)` but **clamp it at its W = 60
+value of 0.126**, and record `windowFrames` and the threshold actually used on the `MonitorRecord`, so any run
+can be re-judged later without guessing which number it was measured against.
+
+### ⭐⭐ 30.6 THE ERROR IS ASYMMETRIC BY A FACTOR OF ~100 — which is what licenses a loose 2σ
+
+| the mistake | what it costs, measured |
+|---|---|
+| a clearing fill read as **clear** *(false FIRST look)* | 006: **+7.233** · jar B: **+12.783** |
+| a flat fill read as **a vertex** *(false VERTEX)* | 005: the vertex of its own noise sits **0.010** from its first look |
+
+⛔ A monotone rise can never take the false-vertex path — its argmin is index 0, which is not interior (003,
+002, 001 all have argmin = 0). The only candidates are genuinely flat-and-noisy curves, and there the two reads
+differ by hundredths.
+⭐ ⇒ **the depth threshold's job is dose, not correctness.** Getting it slightly too low costs one extra
+decision row and ~0.01 units; getting it too high costs up to 12.8. That is the argument §29.6 was missing,
+and it is also why §29.6's *"nobody lower it to 1σ"* should be read as *"and nobody RAISE it either"*.
+
+### ⚠ 30.7 THE 5-SECOND CADENCE WILL MOVE THIS THRESHOLD — and it is already queued
+
+§27.26 holds the 5 s decision row until M5. When it lands, W = 60 frames at ~3.5 fps is **~17 s of frames
+stepping every 5 s ⇒ ~70 % overlap**, and a 105 s run yields ~21 looks instead of 7. Two things move at once:
+more looks deepen the chance minimum (§29.6's 0.9σ → 1.5σ), while overlap makes them correlated, so the
+effective count is far below 21. ⛔ Neither effect is derivable from the numbers here. ⇒ add to the held item:
+*the depth threshold is re-measured on real overlapping rows before the 5 s cadence ships* — it must not be
+carried across a cadence change, which is precisely the §27.25 mistake in its third costume.
+
+### ⛔ 30.8 RE-CLOUDING MUST RESET THE HUNT WINDOW
+
+TEST B (`__isReclouding`) resets the gate and sets `__reclouded`, which today only colours the coach line. Under
+§29 the argmin is hunted over the whole run — so a fill that clouded, was warmed and cleared again can have its
+**first look taken from before the cloud event**. ⇒ the evaluator keeps a `huntFrom` index, set to the current
+row whenever TEST B fires, and both the depth and the "first look" are measured from there.
+
+⭐⭐ **AND THE FAILURE IS NOT THE ONE THIS SECTION FIRST NAMED — measured 2026-08-18, after the build.** The
+draft said the read would take *"the most turbid moment of the run"*. It does not: a jar leaves the 52 °C bath
+CLEAR and clouds on the way in, so the pre-cloud look is the **lowest** point of the curve, not the highest.
+Replaying the re-clouding fixture with the reset disabled reports **13.40 at t = 0.6 min, depth 0.000, branch
+"arrived clear"** — a look taken *before the jar clouded at all*, labelled as a curve that never turned. With
+the reset it reads the vertex: **13.42 at 6.6 min, depth 2.180**.
+⛔ On this curve the two VALUES differ by 0.02; the CLAIM differs completely, and so does the spectrum that
+travels with it — a window six minutes and one phase change away from the one reported. A fill that settles
+below its pre-cloud value would separate the numbers too.
+⚠ Still untested on real glass — none of the seven series F runs re-clouded.
+
+### ⭐ 30.9 THE FIRST-LOOK READ DEPENDS ON §27.25's RETENTION FIX — say so where it can be broken
+
+The promoted row's spectrum is the answer's spectrum (`MonitorEngine.py:251`). On the clear branch that row is
+now the **oldest** decision row of the run, i.e. the single most prunable object in the engine. It survives only
+because §27.25/M1 sized retention as `maxSeconds` (`__retentionSeconds`, `:216`). ⇒ a comment at the read, and a
+line in §27.25: **shortening retention no longer costs the vertex branch its spectrum — it costs the CLEAR
+branch its spectrum, on every run.** That failure mode already has a measured price: the "Capture failed — no
+frames were delivered" dialog that cost two measurements on 2026-08-17.
+
+### ⭐ 30.10 `clearingSeconds` AND THE ANSWER'S `t` NOW DIVERGE BY DESIGN
+
+`__clearingSeconds` is stamped at the **gate** row (`:255`), the answer carries its own `t`. On the clear branch
+those are now ~100 s apart and mean different things:
+
+| run | answer `t` *(the read)* | `clearingSeconds` *(the gate)* |
+|---|---|---|
+| 001 | 5.6 s | 107.9 s |
+| 003 | 5.6 s | 105.1 s |
+| 005 | 5.5 s | 105.0 s |
+
+⇒ the Settling summary prints **both**, labelled *"read at"* and *"gate confirmed at"*. ⛔ §2.4 logs
+`clearingSeconds` as a σ_fill component; one of these silently standing in for the other is how a σ_fill number
+gets built on the wrong quantity.
+
+### ⭐ 30.11 `browningPerMinute` — the definition, pinned to the form that reproduces §29.1
+
+Two candidates, both computed over *the read row → the last usable row*:
+
+| run | two-point Δ/Δt | least-squares slope | §29.1's table |
+|---|---|---|---|
+| 001 | **0.049** | 0.041 | 0.049 |
+| 002 | **0.008** | 0.008 | 0.008 |
+| 003 | **0.291** | 0.278 | 0.291 |
+| 005 | **0.022** | 0.026 | 0.022 |
+
+⇒ **the two-point form is the shipped one**, and not merely because it matches: it is the damage *actually*
+banked between the read and the end of the run, whereas a fit is a model of it. ⭐ It is defined on **both**
+branches (004: +0.032, 006: +0.061, 007: +0.004 after their vertex) — so it also says what the muddy branch's
+waiting cost. ⚠ But only **2–4 rows** follow the read there (004: 4, 006: 2, 007: 3) ⇒ **record it, never gate
+on it**, and the summary should show the row count beside it.
+
+### ⚠ 30.12 THE STAMPS AND THE TESTS THAT PIN THE OLD RULE
+
+- ⭐ `ClearingEvaluator.version = "clearing-1.0"` → **`"clearing-2.0"`**. It already travels as
+  `evaluatorVersion` (`createMonitor`, `:357`), and all seven series F records carry `1.0` — so §29.6's
+  "say which rule produced them" needs no new field, only the bump.
+- ⚠ `MonitorOutcome.SETTLED_IMMEDIATE`'s own comment says *"the fill arrived clear"* (`MonitorOutcome.py:11`),
+  and the plugin's glossary repeats it (`DevSpectralPlugin.py:489,509`). Under the new rule it means *"no
+  turning point deeper than noise"* — and it can now fire minutes in. ⛔ Do **not** rename the enum: it is
+  persisted in every saved record. Re-word both texts instead.
+- ⚠ `tests/test_clearing_evaluator.py:109` justifies its branch assertion as *"A_valley fell 0.92 — far
+  beyond the 0.010 materiality"*. That sentence stops being true; the same assertion must be re-justified on
+  **depth 12.783**. `:174-177` pins the arrived-clear path and needs the depth case beside it.
+  `test_monitor_engine.py` drives a stub evaluator and is untouched; `test_settling_views.py:77` asserts a
+  fixture string, also untouched.
+
+### ⛔ 30.13 A LATENT DEFECT FOUND ON THE WAY — retention smaller than the window kills every row
+
+`MONITOR_RETENTION_FRAMES = 60` is a **constant** while `windowFrames` comes from the dropdown
+(`DevSpectralPlugin.py:336,352-353`). If a plugin ever declares `FRAMES > 60` — and the combo's own comment
+cites *"the dev bench's 150"* — then `FrameRing.window()` can only ever return 60 frames, the engine's
+`len(window) >= minWindowFrames` never holds, **no row is ever emitted**, and the run burns the full 25-minute
+cap to finish `NEVER_SETTLED` with an empty trajectory. ⇒ retention must be derived from the window in force
+(`frames + max(5, frames // 5)`, the FrameRing default), not pinned to 60. ⚠ Harmless today (60 is the largest
+selectable), which is exactly why it would be found the hard way.
+
+### ⭐ 30.14 THE PHASING, REVISED  *(✅ R0–R3 BUILT — see §30.16; ⚠ only R4 rig + R5 held remain)*
+
+```
+ R1  PLUGIN   the fork collapses into one read (30.1) · MATERIAL_FALL deleted
+              hunt window = every usable row since the last re-clouding reset (30.2, 30.8)
+              depth-first ordering (30.3)
+              the evaluator is HANDED W; 2sigma(W) derived and clamped at 0.126 (30.4, 30.5)
+              gate  005 -> first look (depth 0.010) · 004/007/006 -> vertex, unchanged
+                    jar B still promotes 13.2733 at 19.93 min (depth 12.783)
+ R1b PLUGIN   retention derived from the window in force (30.13) — independent, ship it with R1
+ R2  SDK      browningPerMinute (two-point, 30.11) + windowFrames + the threshold used, on the record
+              a "read at" / "gate confirmed at" pair in the Settling summary (30.10)
+              version -> clearing-2.0; SETTLED_IMMEDIATE re-worded, NOT renamed (30.12)
+ R3  TESTS    the five series F runs become a replay fixture, extracted from the PDFs to a JSON in tests/
+              (they live under `spectracs-references/tmp/2026ß817LigitschA/` — a hand-typed path with a
+               typo in it, so the fixture must be extracted, not read from there at test time)
+              gate  each run's read reproduces §29.1/§29.2 · the four clear runs move by
+                    -0.084 / -0.013 / -0.482 / -0.037 and the three vertex runs do not move at all
+ R4  RIG      one clear fill and one muddy fill under the new read
+              gate  the clear fill's answer no longer moves with how long the gate took
+ R5  HELD     re-measure the depth threshold on overlapping rows BEFORE the 5 s cadence ships (30.7)
+```
+
+### ✅ 30.15 THE ONE OPEN QUESTION — DECIDED: (a) CLAMP AND RECORD  *(Edwin, 2026-08-18)*
+
+At **W = 10 or 20** the depth rule runs outside the range anything was measured in, and §30.5's clamp keeps it
+*safe* but not *honest* — a 0.126 threshold at W = 10 will branch pure noise to the vertex. Two ways to end it:
+
+- **(a) clamp and record** — always monitor, note "W below the validated range" on the record and in the coach
+  line. Nothing is ever refused; the number carries its own caveat.
+- **(b) decline below a validated W** — `createMonitor()` returns None under ~40 frames, the host falls back to
+  today's plain burst, and the operator is told the settling read needs more frames.
+
+⭐⭐ **(a) IS THE DECISION.** It never removes a capability, and — the load-bearing half — it never lets the
+threshold drift in the **catastrophic** direction: over-stating the noise is what puts a still-clearing fill on
+the clear branch, and that error costs +7.233 (006) or +12.783 (jar B) against the ~0.01 a false vertex costs.
+⇒ derive `2σ(W)`, **clamp at 0.126**, stamp `windowFrames` and the threshold used on the record, and say in the
+coach line when `W` is below the only window anything was ever measured at.
+⚠ The residual is stated rather than hidden: at W = 10 the clamp is *safe* but not *honest* — the threshold is
+then tighter than the true window noise, so a flat noisy curve will sometimes take the vertex branch. That
+costs one decision row and hundredths of a unit, i.e. the cheap error by ~100x.
+⭐ (b) remains a three-line guard in `createMonitor()` if a validated-W floor is ever wanted; the clamp does not
+have to be undone first.
+
+### ✅⭐⭐ 30.16 AS BUILT — R1b · R1 · R2 · R3, 2026-08-18  *(445 tests green; only R4/R5 remain)*
+
+| | |
+|---|---|
+| **R1b** | `MONITOR_RETENTION_FRAMES` deleted; `MONITOR_WINDOW_FRAMES = FRAMES` (the two windows in one file now agree, §30.4); `createMonitor()` passes `retentionFrames=None` so `FrameRing` sizes itself. ⭐ **MEASURED, not reasoned**: at `FRAMES=150` the old shape emits **0** decision rows in 305 frames, the new one **2** |
+| **R1.1** | `ClearingEvaluator(…, windowFrames=)` + `depthThresholdFor(W)` = `2 × 0.063 × √(60/W)`, **clamped at 0.126**. W 150 → 0.080 · 60 → 0.126 · 20 → 0.126 (clamped, not 0.218) · 10 → 0.126 |
+| **R1.2** | `MATERIAL_FALL` **deleted**; `__fireGate()` gates only; one `__read()`; one `__depthOf()` both callers share |
+| **R1.3** | TEST B sets `__huntFrom` — the re-clouding test now asserts the read cannot reach back across the cloud |
+| **R1.4** | depth-first ordering, exactly as §30.3 |
+| **R1.5** | the K4c wait says why; the coach line names a `W` below the validated 60 |
+| **R2.1** | `MonitorDecision(diagnostics=…)` merged into `answer` by the engine — ⭐ the only core change, ~10 lines, and `grep qPercent` in `plugin_sdk/acquisition` still returns **comments only** |
+| **R2.2** | `browningPerMinute` (two-point) · `rowsAfterRead` · `depth` · `depthThreshold` · `windowFrames` · `readRule` |
+| **R2.3** | header `read at` / `gate at`; "Clearing time" → **"Gate confirmed at"**; new **Browning** and **Curve depth** rows; the gate marker now also on the **Q%** panel |
+| **R2.4** | `version = "clearing-2.0"`; `SETTLED_IMMEDIATE` re-worded in all three places, ⛔ not renamed |
+| **R2.5** | a **second** representative frame (the first), chosen by proximity to `answer.frameIndex` |
+| **R3.1/3.3** | `tests/data/series_f_records.json` + `tests/test_series_f_replay.py` — 15 tests, all seven runs |
+| **R3.2** | `test_clearing_evaluator` re-justified on **depth 12.783**; three new tests (clamp · shallow-interior · the wait) |
+
+#### ⛔⛔ THE ARCHIVE REFUTED THE FIRST CUT — and this is what R3 was for
+
+The first implementation read **at** the gate row on *both* branches. It looked like free dose: jar B then
+answered at 19.93 min at either θ, and `test_the_shipped_theta_saves_dose_and_reads_the_SAME_value` went red
+saying so. ⭐ Replaying **run 006** showed the price: its gate fires at 279.5 s, and at that instant the
+deepest look so far (262.6 s) already had a row on its far side — a legitimate-looking interior minimum. The
+**true** minimum arrives at 296.8 s, **0.012 lower**. ⇒ reading at the gate settles on a local dip while the
+fill is still descending.
+
+⇒ **the vertex branch still waits one decision row (§14.4), unchanged**, exactly as §29.3 and §30.14 promised
+and as the first cut quietly was not. ⭐ The clear branch is different in kind and reads immediately: its
+answer is the *first* look, and no further waiting can improve a row already captured.
+⚠ **Neither θ test was "fixed" by moving it** — one was restored to its original assertions because it had
+been right, and both still pin the θ they are about.
+
+#### ⭐ What the seven runs now report *(replayed through the shipped evaluator)*
+
+| run | branch | reads | moves by | browning |
+|---|---|---|---|---|
+| 001 · 002 · 003 · 005 | arrived-clear | the **first look** | −0.084 · −0.013 · **−0.482** · −0.037 | 0.0495 · 0.0077 · **0.2909** · 0.0222 /min |
+| 004 · 006 · 007 | was-clearing | the vertex, **bit-identical** | 0.000 | 0.0324 · 0.0614 · 0.0042 /min |
+
+#### ⭐ 30.17 THE RE-CLOUDING BRANCH, MEASURED BOTH WAYS  *(2026-08-18)*
+
+Replaying the re-clouding fixture with `huntFrom` pinned at 0 — i.e. the algorithm without §30.8 — is what
+established which failure the reset actually prevents, and it is not the one §30.8 first named:
+
+| | huntFrom | branch | reads | depth |
+|---|---|---|---|---|
+| **shipped** | 5 | was-clearing | **13.42** at 6.6 min | 2.180 |
+| **reset disabled** | 0 | ⛔ arrived-clear | **13.40** at **0.6 min** | 0.000 |
+
+⛔ Without it the run reports a look taken *before the jar clouded at all* and declares that the curve never
+turned. ⭐ The jar leaves a 52 °C bath CLEAR and clouds on the way in, so the pre-cloud look is the **lowest**
+point of the curve — which is exactly why it slips through as a plausible answer rather than an obvious one.
+⚠ Three limits, stated so nobody assumes more coverage than exists: TEST B needs **5 decision rows** (~85 s at
+W = 60), so a faster cloud event is invisible to it; an event inside the first window is invisible entirely;
+and after a reset the depth is inflated by the cloud recovery itself (the span's first look sits on the
+falling side of the dip), so it must not be read as "how much the sample settled".
+⚠ `__hasFallenSinceMaximum` remains scoped to ALL rows rather than to the hunt window. It passes trivially
+after a reset, so nothing is wrong today — but it is the one place where the two scopes disagree.
+
+#### ⚠ TWO THINGS FOUND AND NOT FIXED
+
+- ⛔ **The dev plugin does not pass `lintSelfContained`** — it imports three sibling gauge views
+  (`RoastPedestalGaugeView`, `RoastFar620GaugeView`, `RoastQPercentGaugeView`). **Pre-existing and
+  unchanged by this work** (verified against `HEAD`); it is injected transiently rather than published, so
+  nothing is broken today — but it could not be published as-is.
+- ⚠ **R2.5 cannot make the photo the winning window's own.** The engine promotes a REDUCED spectrum and the
+  raw frames behind it are gone (§9.1a). Keeping two frames only stops the picture coming from the opposite
+  end of the run from the spectrum beside it.

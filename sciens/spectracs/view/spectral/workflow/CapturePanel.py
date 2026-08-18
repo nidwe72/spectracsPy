@@ -703,6 +703,14 @@ class CapturePanel(QWidget):
                 state["frameCount"] = state.get("frameCount", 0) + 1
                 if state.get("representative") is None or state["frameCount"] % 2 == 0:
                     state["representative"] = image
+                # ⭐⭐ AND THE FIRST ONE IS KEPT AS WELL (SPEC_settled_measurement.md §30/P4, R2.5). The
+                # rolling frame above ends up near the END of the run; under the §29 read a fill that
+                # never turned reports its FIRST look, ~6 s in. The report would then print a photo of the
+                # sample a minute and a half AFTER the spectrum it is captioning — the same jar, but
+                # visibly browner. ⛔ Two QImages, not a list: §19/I1 keeps ONE frame precisely because
+                # retaining all of them costs ~1 GB on a 20-minute run, and two is still two.
+                if state.get("firstRepresentative") is None:
+                    state["firstRepresentative"] = image
                 return image
 
             def onFrame(spectrum, index, total):
@@ -762,7 +770,9 @@ class CapturePanel(QWidget):
                 self.__onCaptureFailed()
                 return
 
-            self.__representativeFrames[role] = state["representative"]
+            # ⭐ §30/R2.5: whichever kept frame is nearer the window that was actually READ. On the clear
+            # branch that is the first frame; on the vertex branch the rolling one, as before.
+            self.__representativeFrames[role] = self.__representativeFor(state, monitoredResult)
 
             # Diagnostic (SPEC_capability_proof.md §7.0.1): log the landed exposure / white-balance / gain for THIS
             # capture, so reference-vs-sample and run-to-run drift (the absorbed-colour reference tilt) is traceable.
@@ -787,6 +797,21 @@ class CapturePanel(QWidget):
             self.__updateControls()
 
     # --- monitored acquisition (SPEC_settled_measurement.md §13) ---
+
+    @staticmethod
+    def __representativeFor(state, monitoredResult):
+        """Pick the kept frame that belongs to the window the run reported (§30/P4).
+
+        ⚠ Neither frame is the winning window's own — the engine promotes a REDUCED spectrum and the raw
+        frames behind it are long gone (§9.1a). This only stops the photo being from the opposite END of
+        the run from the spectrum beside it."""
+        rolling = state.get("representative")
+        first = state.get("firstRepresentative") or rolling
+        answer = getattr(monitoredResult, "answer", None) if monitoredResult is not None else None
+        if not answer or answer.get("frameIndex") is None:
+            return rolling
+        # The first kept frame is frame 0; the rolling one is the newest. Closer in index wins.
+        return first if answer["frameIndex"] <= (state.get("frameCount", 0) / 2.0) else rolling
 
     def __monitorFor(self, step, role, frameCount):
         """Ask the PLUGIN for a monitor. None -> today's plain burst, unchanged (§10.6).

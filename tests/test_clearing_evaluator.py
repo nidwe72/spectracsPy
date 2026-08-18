@@ -61,9 +61,12 @@ def firstPromote(decisions):
     return None, None
 
 
-def evaluatorFor(mode=MonitorMode.PRODUCT):
+def evaluatorFor(mode=MonitorMode.PRODUCT, windowFrames=60):
     # The evaluator needs no plugin instance for decide() — only evaluate() touches the plugin.
-    return ClearingEvaluator(plugin=None, reference=None, mode=mode)
+    # ⚠ W IS PASSED EXPLICITLY (§30.4): the depth threshold is 2σ of ONE window, and W is the operator's
+    # Frames combo, not a constant. A test whose threshold follows a default is a test that has quietly
+    # stopped being about the threshold.
+    return ClearingEvaluator(plugin=None, reference=None, mode=mode, windowFrames=windowFrames)
 
 
 def atTheta(theta):
@@ -106,21 +109,31 @@ def test_the_rate_form_reproduces_the_2026_08_14_criterion():
     gateMinutes = gateMinutesOf(rows, decisions)
     assert gateMinutes == pytest.approx(19.931, abs=0.1), \
         "the gate fired at %.2f min, not at the 19.93 the old criterion confirms" % gateMinutes
-    assert decision.branch == "was-clearing"       # A_valley fell 0.92 — far beyond the 0.010 materiality
+    # ⭐ §30.1/§30.6: the branch is chosen by the DEPTH OF THE Q% CURVE, no longer by how far A_valley
+    # fell. Jar B's minimum sits 12.783 below its first look — a hundred times the 0.126 threshold — so
+    # this is the vertex branch by an enormous margin, and the old justification ("A_valley fell 0.92, far
+    # beyond the 0.010 materiality") named a constant that no longer exists.
+    assert decision.diagnostics["depth"] == pytest.approx(12.783, abs=0.001)
+    assert decision.diagnostics["depthThreshold"] == pytest.approx(0.126, abs=0.001)
+    assert decision.branch == "was-clearing"
     assert decision.readAs == "VERTEX"
 
 
 def test_the_shipped_theta_saves_dose_and_reads_the_SAME_value():
-    """θ = 0.005 (§27.26/M2) — what Edwin bought, and what it cost, both pinned.
+    """θ = 0.005 (§27.26/M2) — what Edwin bought, what it cost, and ⭐⭐ WHO NOW OWNS THE SAVING.
 
-    ⭐ BOUGHT: the answer arrives at 19.93 min instead of 23.21 — **3.3 minutes less lamp on the sample** —
-    and the value is bit-identical, because θ decides only when to stop looking while the VERTEX read
-    decides what is read.
-    ⛔ COST, and it is real: the GATE now fires at ~13.4 min, while this fill demonstrably keeps clearing
-    until 16.66. ⇒ `clearingSeconds` is no longer "when the fill stopped clearing" but "when the gate said
-    so", and it is logged as a σ_fill component (§2.4). The ANSWER is unharmed — `__afterGate` refuses to
-    read a minimum with no row on its far side — but a number that travels in the record now means
-    something slightly different from its name.
+    ⭐ The value is bit-identical at both θ, because θ decides only WHEN TO STOP LOOKING while the read
+    decides what is reported.
+    ⭐ BOUGHT: the answer arrives at 19.93 min instead of 23.21 — **3.3 minutes less lamp on the sample**.
+    ⚠ AND THE §29 READ DID NOT TAKE THIS OVER, though the first cut of it tried to. Reading at the gate row
+    on the vertex branch would have saved the same 3.3 minutes here — but replaying run 006 showed what it
+    costs elsewhere: at ITS gate the deepest look so far already had a row on its far side, while the true
+    minimum was two rows and 0.012 further on. ⇒ the vertex branch still waits one row (§14.4), exactly as
+    §29.3 and §30.14 say it must, and the dose saving on this curve remains θ's.
+    ⛔ THE COST OF θ = 0.005 IS UNCHANGED AND STILL REAL: the gate fires at ~13.4 min while this fill
+    demonstrably keeps clearing until 16.66, so `clearingSeconds` means "when the gate said so", not "when
+    the fill stopped clearing" — and it travels in the record as a σ_fill component (§2.4).
+    ⛔ Do not "fix" either half by moving it to the other θ; each is asserted at the θ it is about.
     """
     with atTheta(0.0017):
         slowRows, slowDecisions = drive(evaluatorFor(), JAR_B)
@@ -129,11 +142,16 @@ def test_the_shipped_theta_saves_dose_and_reads_the_SAME_value():
         fastRows, fastDecisions = drive(evaluatorFor(), JAR_B)
         fastIndex, fastDecision = firstPromote(fastDecisions)
 
-    # ⭐ the same number, read 3.3 minutes earlier
+    # ⭐ the same number...
     assert fastDecision.answer == pytest.approx(slowDecision.answer, abs=1e-9)
+    assert fastDecision.answer == pytest.approx(13.2733, abs=0.0001)
+    # ...read 3.3 minutes earlier
     assert JAR_B[slowIndex][0] == pytest.approx(23.207, abs=0.1)
     assert JAR_B[fastIndex][0] == pytest.approx(19.931, abs=0.1)
     assert fastDecision.readAs == "VERTEX" and fastDecision.branch == "was-clearing"
+
+    # ⭐ the gate itself is untouched by the new read — it still fires where each θ says it does
+    assert gateMinutesOf(slowRows, slowDecisions) == pytest.approx(19.931, abs=0.1)
 
     # ⛔ the cost: the gate's own claim moves ahead of the physics
     assert gateMinutesOf(fastRows, fastDecisions) == pytest.approx(13.379, abs=0.1), \
@@ -176,6 +194,16 @@ def test_an_ALREADY_CLEAR_fill_settles_immediately_and_is_not_a_lottery():
     assert decision.readAs == "FIRST_SETTLED_WINDOW"
     assert decision.outcome == MonitorOutcome.SETTLED_IMMEDIATE
 
+    # ⭐⭐ AND IT READS THE FIRST LOOK, NOT THE ROW THE GATE FINISHED ON (§29.1 — the defect this whole
+    # section exists for). ⚠ This curve HAS an interior minimum, at row 1 (13.27) — it is simply 0.04
+    # deep, well inside the 0.126 noise threshold, so it is correctly rejected as noise rather than
+    # promoted to a vertex. The answer is the first look, 13.31.
+    assert decision.answer is None, "the clear branch reports a REAL look, never a fitted value (§9.1a)"
+    assert decision.promoteRow is rows[0]
+    assert decision.promoteRow.get("qPercent") == pytest.approx(13.31, abs=0.001)
+    assert decision.diagnostics["depth"] == pytest.approx(0.04, abs=0.001)
+    assert decision.diagnostics["depth"] < decision.diagnostics["depthThreshold"]
+
 
 def test_a_RE_CLOUDING_dip_resets_the_gate_instead_of_settling_at_its_peak():
     # ⛔ §14.5 (Edwin's catch): the holder (~40 C) is cooler than the bath (52 C) and the cloud point is
@@ -198,6 +226,14 @@ def test_a_RE_CLOUDING_dip_resets_the_gate_instead_of_settling_at_its_peak():
     assert rows[index].t / 60.0 > peakMinutes + 1.0, \
         "settled at %.1f min — at or near the top of the dip" % (rows[index].t / 60.0)
     assert rows[index].get("valley") < 0.05, "settled while the fill was still cloudy"
+
+    # ⭐⭐ §30.8: TEST B RESETS THE HUNT WINDOW, not merely the gate. Everything before the cloud belongs
+    # to a cloudier fill, so the read must not be able to reach back into it — otherwise "the first look"
+    # would be 13.40 at t = 0.6, taken before the jar clouded at all, which is the one value on this
+    # curve that is neither settled nor comparable.
+    _, decision = firstPromote(decisions)
+    assert decision.promoteRow.t / 60.0 > peakMinutes, \
+        "the read reached back to %.1f min — across the re-clouding event" % (decision.promoteRow.t / 60.0)
 
 
 def test_DIAGNOSTIC_mode_reads_the_answer_but_does_NOT_stop():
@@ -229,3 +265,43 @@ def test_no_provisional_Q_percent_is_offered_to_the_operator():
     coach = evaluator.coach(rows)
     assert "Q%" not in dict(coach["fields"]), "a provisional Q% reached the coach line"
     assert coach["state"] == "clearing …"
+
+
+def test_the_depth_threshold_is_DERIVED_from_W_and_CLAMPED_below_the_measured_window():
+    """§30.4 / §30.5 / §30.15 — the threshold is a function of the Frames combo, and it never grows.
+
+    ⛔ 0.063 is the sd of WHOLE CAPTURES at W = 60 (SPEC_capture_quality §16.36.6), so it already carries
+    lamp and auto-exposure drift that does NOT average down with more frames. Scaling it up for a smaller
+    window over-states the noise, raises the threshold, and pushes runs onto the "arrived clear" branch —
+    which is the ~100x expensive error (+12.783 on jar B against ~0.01 for a false vertex).
+    ⇒ it may fall below the measured window, never rise above it.
+    """
+    assert ClearingEvaluator.depthThresholdFor(60) == pytest.approx(0.126, abs=0.0005)
+    assert ClearingEvaluator.depthThresholdFor(80) == pytest.approx(0.1091, abs=0.0005)   # bigger W, finer
+    assert ClearingEvaluator.depthThresholdFor(20) == pytest.approx(0.126, abs=0.0005)    # ⛔ clamped
+    assert ClearingEvaluator.depthThresholdFor(10) == pytest.approx(0.126, abs=0.0005)    # ⛔ clamped
+    # ⚠ Unclamped, W = 20 would ask for 0.218 — and run 004's real 0.149 dip would be called noise.
+    assert 2 * ClearingEvaluator.SINGLE_WINDOW_SIGMA * (60.0 / 20) ** 0.5 == pytest.approx(0.218, abs=0.001)
+    # ...and the evaluator carries the one it was built with, so the record can state it.
+    assert evaluatorFor(windowFrames=20).depthThreshold == pytest.approx(0.126, abs=0.0005)
+
+
+def test_the_read_WAITS_when_the_minimum_is_still_the_newest_look():
+    """§30.3's third exit — the only branch that costs another decision row, and it must be reachable.
+
+    ⭐ The gate can fire before the Q% minimum (§27.26a: at θ = 0.005 jar B's gate fires at 13.38 while the
+    fill keeps clearing until 16.66). A minimum with no row on its far side is not a minimum yet, and a run
+    that read one would report a value the curve was still moving away from.
+    """
+    stillFalling = [(1.2, 0.0300, 14.00), (2.4, 0.0298, 13.60), (3.6, 0.0297, 13.20),
+                    (4.8, 0.0296, 13.10)]
+    rows, decisions = drive(evaluatorFor(), stillFalling)
+    assert firstPromote(decisions) == (None, None), "read a minimum that has no far side"
+    assert any(item.note and "still the newest look" in item.note for item in decisions), \
+        "the run waited, but the record never says why"
+
+    # ...and the moment the far side arrives, it reads the VERTEX around that minimum — not the first look
+    _, decisions = drive(evaluatorFor(), stillFalling + [(6.0, 0.0295, 13.30)])
+    index, decision = firstPromote(decisions)
+    assert decision is not None and decision.readAs == "VERTEX"
+    assert decision.promoteRow.t / 60.0 == pytest.approx(4.8, abs=0.01)
