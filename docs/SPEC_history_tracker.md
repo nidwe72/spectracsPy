@@ -341,8 +341,8 @@ settling drift… it is not a hard oil to measure, it is an undissolved one."*
 | **7.3** | **SNV over that window**, then `D = √(1−r²)` ⛔ **no derivative** | §3.1, §6.3 |
 | **7.4** | **Protocol**: fixed dose (capillary), standardised settle, discard run 001 or settle until consecutive-run `D` < floor | §6.2, §6.4 item 3, §16.34.3a |
 | **7.5** | ⛔ **A control sample every session** (null jar, or a fixed optical standard) charted alongside | the only way to split instrument drift from oil change — §6.1. ⛔ **A chart cannot cross a rig change**; the 2026-07-29 rebuild already broke comparability once (§16.11) |
-| **7.6** | **Reference = `k ≥ 5` presses**, not one | §3.4, §6.2 — with `k = 1` the reference may itself be the outlier and there is no way to know |
-| **7.7** | **Control limit** = pooled within-reference `D` + 3σ, floored at σ_fill | §9. ⚠ A band tighter than σ_fill alarms on the tube, not the oil (`SPEC_roast_ampel.md` §9.3a item 2) |
+| **7.6** | **Reference = `k ≥ 5` presses**, not one — ⭐ **PRICED IN §11**: a 1-fill reference inflates the comparison noise by √2 and the false-alarm rate 15× (0.2 % → 3.0 %); **3 is the minimum, 5 comfortable**, and the reference is the MEAN, never the first measurement | §3.4, §6.2 — with `k = 1` the reference may itself be the outlier and there is no way to know |
+| **7.7** | **Control limit** = pooled within-reference `D` + 3σ, floored at σ_fill — ⚠ and the σ in it is the COMPARISON σ, `σ·√(1+1/n)`, not the run-to-run σ (§11.2) | §9. ⚠ A band tighter than σ_fill alarms on the tube, not the oil (`SPEC_roast_ampel.md` §9.3a item 2) |
 | **7.8** | **Alarm shows one number; clicking it shows the residual curve** | §3.3 — the diagnosis costs nothing |
 
 ⚠ **Open**: is the band symmetric? Drifting *less* like the reference in the greener direction may not
@@ -609,3 +609,95 @@ PYTHONPATH="./diagnostics:.:../spectracsPy-core:../spectracsPy-model:../spectrac
    document puts forward.
 6. ⚠ **§16.34's scalar tracker is not superseded** — see §4. If only one ships, the scalar has the
    longer evidence base; this one has the wider aperture.
+
+---
+
+## ⭐⭐ 11 · THE REFERENCE IS A MEASUREMENT TOO — and it costs more than the band does  *(Edwin, 2026-08-18)*
+
+> ⚠ **Scope: the SCALAR tracker of §4** (`Q%`, the shipped `V` form), not `D`. Every number below is in
+> `Q%` units and comes from series F — `SPEC_settled_measurement.md` §28, five separate preparations of one
+> oil in one evening. ⭐ The *arithmetic* of §11.2 is metric-agnostic and applies to `D` unchanged; only the
+> σ differs. ⛔ Do not read a `Q%` band as a `D` band.
+
+⭐ §7.6 already says *"reference = `k ≥ 5` presses, not one — with `k = 1` the reference may itself be the
+outlier and there is no way to know."* This section prices that sentence.
+
+### ⭐ 11.1 The first measured scatter for the scalar band
+
+Series F gives five separate preparations of one oil, read under the corrected rule
+(`SPEC_settled_measurement.md` §29): **13.764 · 14.156 · 14.136 · 13.972 · 13.499**.
+
+**mean 13.905, sd 0.277, range 0.657.** ⇒ the first honest run-to-run scatter this tracker has ever had to
+size a band against. ⚠ Five fills, one oil, one evening — a working number, not a datasheet one.
+
+| band | σ | fires on noise | smallest real change it sees |
+|---|---|---|---|
+| ±0.70 | 2.5 | 1 in 90 | 16 % of the 4.50 green→brown span |
+| ⭐ **±0.85** | **3.1** | **1 in 500** | **19 %** |
+| ±1.0 | 3.6 | 1 in 3000 | 22 % |
+
+⇒ **±0.85 on this evidence** — and ⛔ *not* fixed yet: let the brown series' own scatter set it (§9.1).
+
+### ⛔⛔ 11.2 THE TABLE ABOVE ASSUMES A REFERENCE KNOWN EXACTLY. IT NEVER IS.
+
+The reference is itself measured, so it carries its own error. A reference built from `n` fills has
+standard error σ/√n, and the quantity the alarm actually tests — **new minus reference** — therefore
+scatters by **σ·√(1 + 1/n)**:
+
+| reference built from | scatter of the comparison | false alarms at ±0.85 |
+|---|---|---|
+| ⛔ **1 fill** | 0.391 | **3.0 % — 1 alarm in 33** |
+| 2 fills | 0.339 | 1.2 % |
+| ⭐ **3 fills** | 0.319 | 0.8 % |
+| 5 fills | 0.303 | 0.5 % |
+| the true batch mean | 0.276 | 0.2 % |
+
+⇒ ⛔ **a single-fill reference inflates the comparison noise by √2 and the false-alarm rate FIFTEENFOLD**
+(0.2 % → 3.0 %). The band width is the visible parameter; **how the reference was built matters just as
+much, and was left implicit.**
+
+### ⛔ 11.3 The worked example — anchoring on one measurement, and on the wrong one
+
+Edwin asked what happens if **13.5** were taken as the batch reference. It is run 007 — the **lowest** of
+the five:
+
+| run | reads against a 13.5 reference |
+|---|---|
+| 003 | +0.265 |
+| 006 | +0.473 |
+| 005 | +0.637 |
+| 004 | +0.657 |
+
+Nothing crosses ±0.85, so **no false alarm** — but the worst *ordinary* measurement already consumes
+**77 % of the band**, and the batch sits permanently **0.41 off-centre**. The chart would show an oil
+apparently drifting upward for ever, when all that happened is that the anchor was an outlier.
+⚠ At ±0.70 it is worse: 004 and 005 land at 94 % and 91 % of the band — one ordinary fill from firing.
+
+⭐ Anchored on the **mean** of the same five (13.905), the worst deviation is **0.406 = 48 % of the band**:
+centred, with half the band still in hand for something real.
+⚠ And note how the outlier was chosen — by being *first to hand*. The first fill of a new batch is exactly
+as likely to be the extreme one as any other, so "the first measurement becomes the reference" is not a
+neutral default; it is a coin flip that costs half the band when it loses.
+
+### ⭐ 11.4 What this settles
+
+- ⭐⭐ **A batch reference is the MEAN of at least three fills. ⛔ Never one measurement, and never "the
+  first one we measured".** Three reaches 0.8 %, five 0.5 %; the curve flattens after that, so **three is
+  the minimum and five is comfortable** — which is §7.6's `k ≥ 5` arrived at from a second direction.
+- ⭐ **Until a batch has three fills, the tracker says "reference still forming" and draws no band.** A band
+  it cannot honour is worse than no band: it teaches the operator to ignore alarms.
+- ⚠ **Report the reference's own n beside the chart.** The same deviation means different things at n = 1
+  and n = 5, and only one of those is on the chart today.
+
+### ⛔ 11.5 What still gates the scalar tracker
+
+1. ⛔⛔ **`SPEC_settled_measurement.md` §29 — the read fix — is a PREREQUISITE, not an improvement.**
+   Unfixed, the clear branch reports the most lamp-damaged look it saw: measured biases of 0.013 · 0.037 ·
+   0.084 · **0.482** across four fills. ⇒ a fast-browning fill injects **up to half the band** as pure
+   artifact, it is ONE-DIRECTIONAL so no amount of history averages it away, and it is indistinguishable
+   from a real batch change. ⭐ It is the one error this tracker cannot survive.
+2. ⚠ **Lamp epochs.** A lamp change moves the scale **4.84 units** (§16.28) — five bands wide. ⛔ The chart
+   must refuse to cross one rather than draw a cliff, and the rebuild (`SPEC_lamp_rebuild.md`) is pending.
+   ⭐ This is §7.5's "a chart cannot cross a rig change", with the number attached.
+3. ⚠ **σ = 0.277 still contains the unexplained R/S gap** (§28.5): if that turns out to be preparation, the
+   floor drops and every row of §11.1 improves; if it is real aliquot variation, 0.277 is the floor.
