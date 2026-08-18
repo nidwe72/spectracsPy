@@ -340,8 +340,8 @@ settling drift… it is not a hard oil to measure, it is an undissolved one."*
 | **7.2** | **Window: 550–600 nm**, ⛔ *not* 560–580 | 13/18 vs 11/18 passes, median margin +4.41 % vs +1.35 % (§8.1). ⚠ Against intuition: 560–580 is where every oil looks *alike*; the discriminating information is in the wings |
 | **7.3** | **SNV over that window**, then `D = √(1−r²)` ⛔ **no derivative** | §3.1, §6.3 |
 | **7.4** | **Protocol**: fixed dose (capillary), standardised settle, discard run 001 or settle until consecutive-run `D` < floor | §6.2, §6.4 item 3, §16.34.3a |
-| **7.5** | ⛔ **A control sample every session** (null jar, or a fixed optical standard) charted alongside | the only way to split instrument drift from oil change — §6.1. ⛔ **A chart cannot cross a rig change**; the 2026-07-29 rebuild already broke comparability once (§16.11) |
-| **7.6** | **Reference = `k ≥ 5` presses**, not one — ⭐ **PRICED IN §11**: a 1-fill reference inflates the comparison noise by √2 and the false-alarm rate 15× (0.2 % → 3.0 %); **3 is the minimum, 5 comfortable**, and the reference is the MEAN, never the first measurement | §3.4, §6.2 — with `k = 1` the reference may itself be the outlier and there is no way to know |
+| **7.5** | ⛔ **A control sample every session** (null jar, or a fixed optical standard) charted alongside — ⭐ **and the scope is now a PRODUCT-LINE EPOCH (§11.3)**, which records the lamp, the protocol and the read rule, so "cannot cross" is enforced rather than remembered | the only way to split instrument drift from oil change — §6.1. ⛔ **A chart cannot cross a rig change**; the 2026-07-29 rebuild already broke comparability once (§16.11) |
+| **7.6** | **Reference = the epoch's running MEAN, `k ≥ 3` (5 comfortable)**, not one — ⭐ **PRICED IN §11.4**: a 1-fill reference inflates the comparison noise by √2 and the false-alarm rate 15× (0.2 % → 3.0 %); **3 is the minimum, 5 comfortable**, and the reference is the MEAN, never the first measurement | §3.4, §6.2 — with `k = 1` the reference may itself be the outlier and there is no way to know |
 | **7.7** | **Control limit** = pooled within-reference `D` + 3σ, floored at σ_fill — ⚠ and the σ in it is the COMPARISON σ, `σ·√(1+1/n)`, not the run-to-run σ (§11.2) | §9. ⚠ A band tighter than σ_fill alarms on the tube, not the oil (`SPEC_roast_ampel.md` §9.3a item 2) |
 | **7.8** | **Alarm shows one number; clicking it shows the residual curve** | §3.3 — the diagnosis costs nothing |
 
@@ -612,92 +612,144 @@ PYTHONPATH="./diagnostics:.:../spectracsPy-core:../spectracsPy-model:../spectrac
 
 ---
 
-## ⭐⭐ 11 · THE REFERENCE IS A MEASUREMENT TOO — and it costs more than the band does  *(Edwin, 2026-08-18)*
+---
 
-> ⚠ **Scope: the SCALAR tracker of §4** (`Q%`, the shipped `V` form), not `D`. Every number below is in
-> `Q%` units and comes from series F — `SPEC_settled_measurement.md` §28, five separate preparations of one
-> oil in one evening. ⭐ The *arithmetic* of §11.2 is metric-agnostic and applies to `D` unchanged; only the
-> σ differs. ⛔ Do not read a `Q%` band as a `D` band.
+## ⭐⭐ 11 · THE UNIT IS A PRODUCT-LINE EPOCH — not a batch, and not one measurement  *(Edwin, 2026-08-18)*
 
-⭐ §7.6 already says *"reference = `k ≥ 5` presses, not one — with `k = 1` the reference may itself be the
-outlier and there is no way to know."* This section prices that sentence.
+> ⚠ **Scope: the SCALAR tracker of §4** (`Q%`, the shipped `V` form) — not `D`. Every figure is in `Q%`
+> units, from series F (`SPEC_settled_measurement.md` §28: five separate preparations of one oil in one
+> evening, read under §29's corrected rule). ⭐ The arithmetic of §11.4 is metric-agnostic and carries over
+> to `D` unchanged; ⛔ the σ does not. Do not read a `Q%` band as a `D` band.
 
-### ⭐ 11.1 The first measured scatter for the scalar band
+### ⛔⛔ 11.1 THE BATCH IS THE WRONG UNIT — Edwin's objection, in numbers
 
-Series F gives five separate preparations of one oil, read under the corrected rule
-(`SPEC_settled_measurement.md` §29): **13.764 · 14.156 · 14.136 · 13.972 · 13.499**.
+*"I think that one batch should not differ by that band"* — and *"if a batch would only involve, say, 10
+presses, the history tracker only gives insight in hindsight."* **Both are correct, and together they
+retire the per-batch reference.**
 
-**mean 13.905, sd 0.277, range 0.657.** ⇒ the first honest run-to-run scatter this tracker has ever had to
-size a band against. ⚠ Five fills, one oil, one evening — a working number, not a datasheet one.
+| | |
+|---|---|
+| within-batch scatter (fill to fill) | **σ = 0.277** |
+| a ±0.85 band against that | 3.1 σ ⇒ fires **0.2 %** of the time |
 
-| band | σ | fires on noise | smallest real change it sees |
+⇒ on a homogeneous batch the alarm **never speaks**. A 10-press batch would spend 3–5 presses building a
+reference **in order to buy silence**, and by the time anything could be said the batch is pressed, bottled
+and gone. ⛔ **That is not a tracker, it is a ritual** — and the "hindsight" charge lands exactly.
+
+### ⭐⭐ 11.2 THE UNIT THAT WORKS — a PRODUCT-LINE EPOCH
+
+Edwin's design: the miller opens an epoch — say **`SparSBudget_Autumn2026`** — and every pressing of that
+product line is measured into it. **The reference accumulates across the epoch; each new pressing is an
+observation against it.**
+
+| a new pressing judged on | comparison σ | at ±0.85 | band for 3 σ |
 |---|---|---|---|
-| ±0.70 | 2.5 | 1 in 90 | 16 % of the 4.50 green→brown span |
-| ⭐ **±0.85** | **3.1** | **1 in 500** | **19 %** |
-| ±1.0 | 3.6 | 1 in 3000 | 22 % |
+| **1 fill** vs a 20-fill epoch | 0.284 | 3.0 σ | 0.85 |
+| 2 fills | 0.205 | 4.1 σ | 0.62 |
+| **3 fills** | 0.172 | 5.0 σ | 0.51 |
 
-⇒ **±0.85 on this evidence** — and ⛔ *not* fixed yet: let the brown series' own scatter set it (§9.1).
+⭐ **And there is plenty to see at that level.** Different green oils scatter by **1.167**
+(`SPEC_v_metric_integration.md` V0) — **4.2× the within-batch noise** — so a genuine step between pressings
+is **4.1 σ on a single fill** and 6.8 σ on three.
 
-### ⛔⛔ 11.2 THE TABLE ABOVE ASSUMES A REFERENCE KNOWN EXACTLY. IT NEVER IS.
+⇒ three things fall out, and they are the whole argument:
+1. ⭐ **A new pressing is judged on its FIRST fill — before it ships.** Prospective, not hindsight.
+2. ⭐ **Nothing is spent on ritual.** The fills that would have established a *batch* reference instead
+   deepen the *epoch's* reference; every measurement makes the next one sharper.
+3. ⭐ **It no longer matters how many presses a batch contains** — the question Edwin could not answer, and
+   with the reference at product level the design does not need it answered.
 
-The reference is itself measured, so it carries its own error. A reference built from `n` fills has
-standard error σ/√n, and the quantity the alarm actually tests — **new minus reference** — therefore
-scatters by **σ·√(1 + 1/n)**:
+### ⭐⭐ 11.3 THE EPOCH IS THE COMPARABILITY SCOPE — which is why it is more than a label
 
-| reference built from | scatter of the comparison | false alarms at ±0.85 |
+An epoch is not a name for a time span; it is **the set of conditions under which two numbers may be
+compared at all**. It therefore records what it was measured under:
+
+```
+ProductLineEpoch  SparSBudget_Autumn2026
+   ├─ seed lot / harvest            a new harvest is a NEW NORMAL, not a drift
+   ├─ instrument + lamp identity    a lamp swap moves the scale 4.84 units (§16.28)
+   ├─ protocol version              capillary recipe, bath time
+   └─ read-rule + metric version    §29's read, §17.6's capture-decode era
+```
+
+⭐ Then **§7.5's "a chart cannot cross a rig change" stops being a sentence someone has to remember and
+becomes a thing the software cannot do**: the chart refuses to plot across an epoch instead of drawing a
+cliff. ⛔ The 2026-07-29 rebuild already broke comparability once (§6.1/§16.11) — with epochs it would have
+broken *visibly*.
+
+⛔⛔ **AND THE INTEGRITY RULE THAT MAKES IT WORTH SHOWING TO ANYONE:** if a miller can open an epoch freely,
+a miller can also reset one to bury a drift. ⇒ **every epoch change is logged with a reason and is visible
+on the chart.** A QC record that can be silently re-based is worth nothing to the third party it exists to
+convince, and that third party is the point (§11.5).
+
+### ⚠ 11.4 THE REFERENCE IS A MEASUREMENT TOO — the arithmetic, which survives the change of unit
+
+The reference carries its own error. Built from `n` fills it has standard error σ/√n, so the quantity the
+alarm actually tests — **new minus reference** — scatters by **σ·√(1 + 1/n)**:
+
+| reference built from | comparison σ | false alarms at ±0.85 |
 |---|---|---|
 | ⛔ **1 fill** | 0.391 | **3.0 % — 1 alarm in 33** |
-| 2 fills | 0.339 | 1.2 % |
-| ⭐ **3 fills** | 0.319 | 0.8 % |
+| ⭐ 3 fills | 0.319 | 0.8 % |
 | 5 fills | 0.303 | 0.5 % |
-| the true batch mean | 0.276 | 0.2 % |
+| 20 fills (a mature epoch) | 0.284 | 0.3 % |
+| the true mean | 0.276 | 0.2 % |
 
-⇒ ⛔ **a single-fill reference inflates the comparison noise by √2 and the false-alarm rate FIFTEENFOLD**
-(0.2 % → 3.0 %). The band width is the visible parameter; **how the reference was built matters just as
-much, and was left implicit.**
+⇒ **a single-fill reference inflates the noise by √2 and the false-alarm rate FIFTEENFOLD.** The band width
+is the visible parameter; **how the reference was built matters as much, and was left implicit** until this
+section.
 
-### ⛔ 11.3 The worked example — anchoring on one measurement, and on the wrong one
+⛔ **THE WORKED EXAMPLE — and note how the outlier gets chosen.** Edwin asked what happens if **13.5** were
+the reference. It is series F's *lowest* of five. Nothing crosses ±0.85, so no alarm fires — but the worst
+ORDINARY measurement already consumes **77 % of the band** and the line sits permanently **0.41
+off-centre**: a chart showing an oil that drifts upward for ever, because the anchor was an outlier. On the
+**mean** of the same five, the worst deviation is **0.406 = 48 %**.
+⚠ That outlier was picked by being *first to hand* — so **"the first measurement becomes the reference" is
+not a neutral default; it is a coin flip that costs half the band when it loses.**
 
-Edwin asked what happens if **13.5** were taken as the batch reference. It is run 007 — the **lowest** of
-the five:
+⇒ ⭐ **the reference is the MEAN of ≥ 3 fills** (5 comfortable, the curve flattens after that — §7.6's
+`k ≥ 5` reached from a second direction); ⛔ **never one measurement, never "the first one"**; below three
+the tracker says **"reference still forming"** and draws **no band** — a band it cannot honour teaches the
+operator to ignore alarms; and the reference's own `n` is shown beside the chart, because the same
+deviation means different things at n = 1 and n = 20.
 
-| run | reads against a 13.5 reference |
-|---|---|
-| 003 | +0.265 |
-| 006 | +0.473 |
-| 005 | +0.637 |
-| 004 | +0.657 |
+### ⭐⭐ 11.5 WHAT IT IS FOR — it speaks while the gauge still says PASS
 
-Nothing crosses ±0.85, so **no false alarm** — but the worst *ordinary* measurement already consumes
-**77 % of the band**, and the batch sits permanently **0.41 off-centre**. The chart would show an oil
-apparently drifting upward for ever, when all that happened is that the anchor was an outlier.
-⚠ At ±0.70 it is worse: 004 and 005 land at 94 % and 91 % of the band — one ordinary fill from firing.
+⛔ Not quality detection: `SPEC_roast_ampel.md`'s gauge already answers that. The value is **when** it
+speaks. A typical green oil sits at **15.94** with **2.66 units of headroom** before the verdict line at
+18.6:
 
-⭐ Anchored on the **mean** of the same five (13.905), the worst deviation is **0.406 = 48 % of the band**:
-centred, with half the band still in hand for something real.
-⚠ And note how the outlier was chosen — by being *first to hand*. The first fill of a new batch is exactly
-as likely to be the extreme one as any other, so "the first measurement becomes the reference" is not a
-neutral default; it is a coin flip that costs half the band when it loses.
+| | speaks at | |
+|---|---|---|
+| the gauge | **18.60** | "this pressing failed" |
+| the tracker, 1 fill (±0.85) | **16.79** | 32 % of the way to failure |
+| the tracker, 3 fills (±0.51) | **16.45** | 19 % of the way |
 
-### ⭐ 11.4 What this settles
+⇒ ⭐⭐ **the gauge tells the miller a batch is lost; the tracker tells him the roast is creeping while every
+batch still passes.** That is the difference between discarding product and adjusting the oven, and it is
+the ordinary reason food producers buy control charts.
 
-- ⭐⭐ **A batch reference is the MEAN of at least three fills. ⛔ Never one measurement, and never "the
-  first one we measured".** Three reaches 0.8 %, five 0.5 %; the curve flattens after that, so **three is
-  the minimum and five is comfortable** — which is §7.6's `k ≥ 5` arrived at from a second direction.
-- ⭐ **Until a batch has three fills, the tracker says "reference still forming" and draws no band.** A band
-  it cannot honour is worse than no band: it teaches the operator to ignore alarms.
-- ⚠ **Report the reference's own n beside the chart.** The same deviation means different things at n = 1
-  and n = 5, and only one of those is on the chart today.
+⭐ **The second reason is commercial, and it is the stronger one: the epoch chart is a document to hand to
+the retailer.** A chain contract is a promise of *consistency*, not merely of quality — "the same as last
+delivery". This turns that promise from *trust me* into evidence, continuously, at a fraction of a
+per-batch lab certificate. ⇒ it is the first feature that sells to the customer's customer, and the natural
+thing for the lab channel partner (`SPEC_wirtschaftliches.md`) to resell as a service layer.
 
-### ⛔ 11.5 What still gates the scalar tracker
+### ⚠ 11.6 Who it is NOT for — stated so the claim stays honest
+
+- ⛔ a farm-gate miller selling to neighbours: the gauge suffices, and the discipline will not be kept;
+- ⛔ anyone who will not measure every pressing the same way — **an irregular chart is worse than none**,
+  because it trains people to ignore alarms;
+- ⚠ it cannot see small drift from one fill. It sees "a third of the way to failure", not "5 % more
+  roasted". A real instrument, not a fine one.
+
+### ⛔ 11.7 What still gates it
 
 1. ⛔⛔ **`SPEC_settled_measurement.md` §29 — the read fix — is a PREREQUISITE, not an improvement.**
-   Unfixed, the clear branch reports the most lamp-damaged look it saw: measured biases of 0.013 · 0.037 ·
-   0.084 · **0.482** across four fills. ⇒ a fast-browning fill injects **up to half the band** as pure
-   artifact, it is ONE-DIRECTIONAL so no amount of history averages it away, and it is indistinguishable
-   from a real batch change. ⭐ It is the one error this tracker cannot survive.
-2. ⚠ **Lamp epochs.** A lamp change moves the scale **4.84 units** (§16.28) — five bands wide. ⛔ The chart
-   must refuse to cross one rather than draw a cliff, and the rebuild (`SPEC_lamp_rebuild.md`) is pending.
-   ⭐ This is §7.5's "a chart cannot cross a rig change", with the number attached.
-3. ⚠ **σ = 0.277 still contains the unexplained R/S gap** (§28.5): if that turns out to be preparation, the
-   floor drops and every row of §11.1 improves; if it is real aliquot variation, 0.277 is the floor.
+   Unfixed, the clear branch reports the most lamp-damaged look it saw: 0.013 · 0.037 · 0.084 · **0.482**
+   across four fills. ⇒ up to **half a band** of pure artifact, ONE-DIRECTIONAL so no history averages it
+   away, and indistinguishable from a real change. It is the one error this tracker cannot survive.
+2. ⚠ **Epoch scoping must exist before the first chart is drawn**, or the first lamp change silently
+   invalidates a season of data.
+3. ⚠ **σ = 0.277 rests on five fills of one oil in one evening** and still contains the unexplained R/S gap
+   (§28.5). ⭐ The brown series (§9.1) sets the real number, and every row above moves with it.
