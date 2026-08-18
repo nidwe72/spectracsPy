@@ -146,10 +146,10 @@ to make the wait legible, not to hide it.
 
 | queued work | why it must wait |
 |---|---|
-| **σ_fill / the refill test** | it measures the reproducibility OF A MEASUREMENT. Until the measurement is defined, it measures the protocol's own drift — §16.34.3d |
+| **σ_fill / the refill test** | it measures the reproducibility OF A MEASUREMENT. Until the measurement is defined, it measures the protocol's own drift — §16.34.3d. ✅ **UNBLOCKED: series F (§28) is the first σ_fill taken under a defined measurement** |
 | **the DIY lamp rebuild** | a new lamp changes the scale by 4.84 units (§10.4). Re-deriving thresholds on a drifting measurement bakes the drift into the new scale |
 | **the internal PDFs** | they would document numbers the next protocol supersedes |
-| **PRIO 3a ground truth** | labels compared against a measurement that moves are labels compared against nothing |
+| **PRIO 3a ground truth** | labels compared against a measurement that moves are labels compared against nothing. ✅ **UNBLOCKED, and MEASURED: §28.9 — the instrument now costs 3 % of a correlation, where the old protocol cost 32 %** |
 
 ⇒ ⭐ **Everything downstream assumes a measurement that can be trusted. This is that measurement.**
 
@@ -4032,6 +4032,63 @@ row) is already in every embedded record, so it costs nothing to apply to any fu
   §17/C1's field datapoint, the case with no water bath where the two-minute claim does not hold.
 - ⛔ **It is not σ_fill for the decision table.** Two pairs on one oil; §16.11.11's series E design (6
   separate fills of one stock) is what feeds §16.13's 0.307 boundary, and that is still owed.
+
+### ⭐⭐ 28.9 WHAT THE PROTOCOL BOUGHT — measured against the archive, and what it unblocks
+
+⭐ Edwin, 2026-08-18: *"we at least have shown that there is not such flicker in the metric values as in
+previous runs of our archive … so the chance lives that even a correlation could be found with a jury
+panel's judgment."* ⇒ measured, and the comparison is lopsided in the protocol's favour.
+
+| | n | range | sd |
+|---|---|---|---|
+| Steirerkraft half-strength — 6 runs of **one fill** (§4.1) | 6 | 3.30 | 1.271 |
+| Steirerkraft aged 24 h — 3 runs of one fill | 3 | 3.37 | 1.704 |
+| Spar Steirisches g.g.A. — 3 runs of one fill | 3 | 0.75 | 0.379 |
+| **pooled archive WITHIN-FILL** | | | **1.255** |
+| ⭐ **series F — five SEPARATE preparations** | 5 | 0.66 | **0.276** |
+
+⭐⭐ **4.5× tighter — and not like for like in the archive's favour.** Those archive numbers are repeats of
+the *same jar*, which is the easiest thing an instrument is ever asked to do; series F's includes fresh
+dilutions, fresh capillaries and fresh fills. ⇒ **the archive wobbled more re-measuring one jar than the
+new protocol wobbles across five separate preparations.**
+⭐ And it is not luck: §16.36 diagnosed that spread as a fill clearing and browning *while being
+re-measured*. Reading each fill once, at a defined moment, is precisely what removes it — this is the first
+direct measurement of what §1 promised.
+
+#### ⭐ Why that opens the ground-truth question (§5's last row)
+
+Measurement noise attenuates any correlation before it can be observed: `r_observed = r_true · √reliability`
+with `reliability = σ²_between / (σ²_between + σ²_error)`. Against the between-oil signal of **1.167**
+(`SPEC_v_metric_integration.md` V0):
+
+| measurement noise | reliability | attenuation | a true `r = 0.90` would show as |
+|---|---|---|---|
+| archive, 1.255 | 0.464 | 0.681 | **0.61** |
+| ⭐ **series F, 0.276** | **0.947** | **0.973** | **0.88** |
+
+⛔ **Under the old protocol the instrument discarded a third of any correlation before the panel sat down** —
+a genuinely strong relationship would have read as mediocre and a moderate one as noise, and nobody could
+have told that from the result. ⭐ At today's scatter the instrument is **essentially transparent: it costs
+3 %.**
+⇒ ⭐⭐ **the instrument is no longer the reason a panel correlation would fail.** That is what §5's
+"labels compared against a measurement that moves" row was waiting for.
+
+#### ⚠ Three caveats, so the claim is not overspent
+
+1. ⚠ **0.276 is five fills of one oil in one evening.** It becomes a general claim when the brown series
+   (§16.11.11) reproduces it, not before.
+2. ⚠ **Today's 13.4–14.5 spread is NOISE, not signal** — all seven runs are Lugitsch A. A panel study needs
+   oils *spanning* the class, and the 1.167 between-oil figure above still comes from the OLD protocol; it
+   may itself look different measured properly.
+3. ⛔ **The panel attenuates too, and usually more.** Sensory panels typically reach a reliability of
+   0.6–0.8 without replication, which would cap an observed `r` near 0.8 even with a perfect instrument.
+   ⇒ the next effort belongs on **panel design** — several assessors, replicated tastings, blind and
+   randomised — not on more instrument work.
+
+⛔ **And §29 first.** An uncorrected, one-directional bias of 0.0–0.48 that scales with how fast each oil
+browns is exactly the error that could **manufacture or destroy** a correlation without anyone seeing it —
+faster-browning oils would carry a larger upward bias, and "browns quickly" is plausibly related to the
+very property a panel would be scoring.
 
 ---
 
