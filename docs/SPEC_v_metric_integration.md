@@ -199,6 +199,17 @@ rather than average its way to one."* A two-class gauge **cannot** say so. Measu
 units across six runs. That is the §16.20 defect class: *a gauge reporting a confident verdict it
 cannot support.*
 
+⚠⚠ **THE SCATTER THAT SIZED THIS ZONE HAS SINCE BEEN MEASURED AGAIN, AND IT IS 2.5× SMALLER**
+*(2026-08-18, `SPEC_settled_measurement.md` §28)*. The 0.70 below is the within-fill sd of the OLD
+protocol — a fill being re-measured while it cleared and browned (§16.36). Under the settled measurement,
+five SEPARATE preparations of one oil scatter by **0.276**, and the archive's pooled within-fill figure was
+**1.255**. ⇒ **the borderline zone is roughly 2.5× wider than today's measurement needs**, and every
+straddler in §4.1a was measured under the drifting protocol.
+⛔ **NOT re-derived here, deliberately.** The corpus that fixes the zone must be re-measured too — a
+narrower zone hands out confident verdicts, so it may only be narrowed on data taken under the protocol it
+will run under. ⇒ **re-derive after the brown series** (ROADMAP item 2); until then the zone stays wide,
+which is the safe direction.
+
 **The edges are measured, not chosen.** `18.6 ± 0.70` is the **within-fill sd** — the run-to-run
 scatter of the very quantity on the axis. And it is free: the corpus's empty corridor runs
 **17.14 … 20.19**, so `[17.9, 19.3]` sits entirely inside dead space and ⭐ **no corpus run changes

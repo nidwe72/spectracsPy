@@ -735,6 +735,44 @@ delivery". This turns that promise from *trust me* into evidence, continuously, 
 per-batch lab certificate. ⇒ it is the first feature that sells to the customer's customer, and the natural
 thing for the lab channel partner (`SPEC_wirtschaftliches.md`) to resell as a service layer.
 
+### ⭐ 11.5a WHEN IT STARTS WORKING — the answer is days, not seasons  *(Edwin's cadence, 2026-08-18)*
+
+Edwin's own timing: preparing the dilution ~3 min, warming ~3 min, measuring 5–6 min ⇒ **10–15 minutes**,
+which he judges doable **once a day, or once per 1000 litres**. ⭐ At 15 min per 1000 L that is **0.9
+seconds per litre** — and the comparison that matters is not per-litre but per-decision: one bad batch
+reaching a retail chain costs more than a decade of such measurements.
+
+⇒ at one measurement a day the epoch's reference matures fast, which answers *when the feature starts
+paying*:
+
+| after | reference | false alarms at ±0.85 |
+|---|---|---|
+| **3 days** | 3 fills — the minimum | 0.8 % |
+| ~1 week | 5 fills | 0.5 % |
+| ⭐ **~1 month** | 20 fills | **0.3 %** |
+
+⇒ **usable in three days, mature in a month, and sharper every week without extra effort.**
+⚠ **What that cadence costs**: the quality claim then has 1000-litre granularity, and a mid-batch excursion
+is invisible. Edwin's own judgement is that a batch does not vary that much, and §11.1's 0.277 agrees — but
+it is the first question a serious buyer asks, so it belongs in the datasheet rather than in a footnote.
+
+### ⭐⭐ 11.5b IT CAN BE VALIDATED WITHOUT THE RIG — which is why it is the low-risk item on the board
+
+⭐ Edwin, 2026-08-18: *"the epoch tracker is only software, and software changes have less surprises than
+the physical stuff."* ⚠ The direction is right; the reason is sharper than that. This project's software has
+surprised plenty — in one session: a successful measurement silently discarded (§27.25), the clear branch
+reporting its most damaged look (§29), `width: 1px` making a gradient invisible (§27.23), and two tests that
+could not fail. **The difference is the FEEDBACK LOOP, not the medium**: a physics surprise costs a rig
+session and sometimes weeks (§16.36.8's scatter "resisted explanation"); a software surprise costs minutes,
+is findable by inspection, and can be *proved* fixed by a test that goes red when the bug is put back.
+
+⭐⭐ **And this feature has a luxury the physics never had: it can be validated entirely OFFLINE against data
+that already exists.** Replay series F and the 124 archived reports through the tracker and you can see
+exactly what it would have said about every measurement ever made — before it ships, with zero rig time.
+⇒ **make that replay the acceptance gate** (§8), not a rig session.
+⚠ The one dependency that is not software: the band rests on σ and on epoch discipline. The code will be
+right; whether the band is 0.85 or 0.5 is decided by the brown series.
+
 ### ⚠ 11.6 Who it is NOT for — stated so the claim stays honest
 
 - ⛔ a farm-gate miller selling to neighbours: the gauge suffices, and the discipline will not be kept;

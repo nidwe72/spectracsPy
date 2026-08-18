@@ -2233,6 +2233,14 @@ change**, and `SPEC_lamp_rebuild.md`'s rebuild will reset it.
 
 ### 10.5 The history-tracker band — ±1.0
 
+⭐⭐ **MEASURED AGAIN UNDER THE SETTLED PROTOCOL, 2026-08-18** (`SPEC_settled_measurement.md` §28,
+series F): five SEPARATE preparations of one oil scatter by **σ = 0.276**, against the archive's pooled
+WITHIN-FILL figure of **1.255** — 4.5× tighter, and across fresh fills rather than repeats of one jar.
+⇒ the band arithmetic below stands, but its input has changed: on 0.276 a **±0.85** band is 3.1 σ
+(1 alarm in 500) and ±1.0 is 3.6 σ. ⚠ And `SPEC_history_tracker.md` §11.4 adds the term this section
+omits — the REFERENCE is measured too, so the comparison scatters by σ·√(1+1/n): a single-fill reference
+inflates the false-alarm rate fifteenfold.
+
 Measured refill floor: **pooled 0.21 units** (Kiendler 0.09, Billa Clever 0.18, Steirerkraft 0.23,
 S-Budget 0.37); within-fill sd 0.70; class span 4.50. ⭐ **§10.1a changed none of this** — the pooled
 floor moved 0.214 → 0.214 and the within-fill sd 0.703 → 0.701, because a common bias cancels in every

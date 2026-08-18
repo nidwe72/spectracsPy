@@ -1086,6 +1086,17 @@ Why this is the better product and not just the safer one:
 > floor, priced free by the σ_fill run). ⚠ Question 3 — **is the band symmetric?** — is still open
 > there. ⚠ The *scalar* form described below remains undesigned, and §4 of that document argues the
 > two are complementary rather than alternatives.
+>
+> ⭐⭐ **2026-08-18 — question 2 now has a MEASURED floor, and the unit changed.** σ_fill under the settled
+> protocol is **0.276** (`SPEC_settled_measurement.md` §28, five separate preparations), so the scalar band
+> is **±0.85** — 3.1 σ, one false alarm in 500, and it speaks at **32 % of the way from a typical green oil
+> to the verdict line** rather than at the line itself.
+> ⛔ **And the UNIT of the alarm changed, which is bigger than the number**: the reference is neither a
+> single stored batch nor a single measurement but a **PRODUCT-LINE EPOCH** (Edwin's design — e.g.
+> `SparSBudget_Autumn2026`), accumulated across pressings, because within ONE batch the scatter is smaller
+> than any usable band and the alarm would never fire. `SPEC_history_tracker.md` §11.
+> ⚠ Question 3 (symmetry) is still open, and §11.4 adds a term nobody had priced: the reference is measured
+> too, so a single-fill reference inflates the false-alarm rate **fifteenfold**.
 
 > *"With the user-defined target greenness one could also define some threshold deviation. If the greenness
 > differs above the threshold an 'alarm' is to be rendered."*

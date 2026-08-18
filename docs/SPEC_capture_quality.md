@@ -13494,6 +13494,18 @@ establishes is that the premise was wrong, not the size of the error.
 - ⭐ **§16.26's null-run series is UNAFFECTED** — no oil in the beam, nothing to degrade. It remains the
   clean instrument floor.
 
+✅⭐⭐ **AND IT LANDED — 2026-08-17/18.** The protocol is built and rig-proven
+(`SPEC_settled_measurement.md` §27 as-built, §28 series F). ⭐ **What it bought, measured against this
+section's own diagnosis:** the archive's pooled WITHIN-FILL scatter — repeats of ONE jar — was **1.255**;
+five SEPARATE preparations under the settled read scatter by **0.276**, i.e. **4.5× tighter across fresh
+fills than the old protocol managed re-measuring the same jar**. ⇒ §16.36.8's "the scatter resisted
+explanation for weeks" is now explained AND removed, not merely explained.
+⭐ And the consequence for everything this section put in doubt: a measurement noise of 0.276 against a
+between-oil signal of 1.167 attenuates a correlation by only **3 %** (the old protocol cost **32 %**), so
+PRIO 3a's ground truth is no longer blocked by the instrument (§28.9).
+⚠ One defect of the new protocol is already known and specified: the CLEAR branch reports the most
+lamp-damaged look it saw (up to **+0.482**) — `SPEC_settled_measurement.md` §29, and it is ROADMAP item 1.
+
 ⇒ ⭐ **Nothing is being thrown away. The point is that every future number comes from a protocol where
 the sample is measured ONCE, at a defined point, instead of repeatedly while it changes.** That is
 `SPEC_settled_measurement.md`, and it is why that work now precedes everything else.

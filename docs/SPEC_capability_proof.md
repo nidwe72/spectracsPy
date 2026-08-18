@@ -29,6 +29,23 @@ can't break it. Everything downstream (LIMS, field, Android) is justified only i
 | 1 | **Dilution-invariance** | same oil at 2 vs 3 drops → same number | ✅ proven |
 | 2 | **Discrimination** | good-green vs over-roasted-brown → clearly different numbers | ✅ proven |
 
+⭐⭐ **2026-08-18 — THE MEASUREMENT THE GATE WAS ARGUED ON HAS BEEN REPLACED, AND IT MOVES THE VERDICT FROM
+"proven on averages" TO "one fill decides".** Under the settled protocol
+(`SPEC_settled_measurement.md` §27/§28) five separate preparations of one oil scatter by **σ = 0.276**,
+against the archive's pooled within-fill **1.255**. On the shipped `Q%` scale, brown's margin to `T` is
+1.843:
+
+| protocol | that margin | a SINGLE measurement classifies correctly |
+|---|---|---|
+| the archive's scatter (1.255) | 1.5 σ | 92.9 % brown · 98.3 % green · **91.3 % both** |
+| ⭐ series F (0.276), **if brown matches green** | **6.7 σ** | **~100 % both** |
+
+⇒ the gate's claim stops being *"the class means differ"* and becomes *"one fill decides the class"*, which
+is the form a product needs. ⛔ **Conditional, and the condition is scheduled**: those class means come from
+the OLD protocol and brown's σ has never been measured under the new one — ROADMAP item 2 (series E: six
+fills of one brown stock) is exactly that measurement, and ROADMAP item 1 (§29's read fix) must land first
+because a +0.48 one-directional bias is 37 % of brown's margin.
+
 **Scope narrowed (§1a):** the old "too-green" third class and the "which green is better" ranking are **dropped**
 — that is a matter of taste, not the miller's need. Brown is *not* a matter of taste (tastes worse, sells
 cheaper). Goal = a **binary over-roast warning**, not a three-way roast scale.
