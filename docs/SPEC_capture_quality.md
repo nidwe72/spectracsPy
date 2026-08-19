@@ -4941,6 +4941,31 @@ recompute.
   observed directly, from data already on disk.
 - **n ≈ 0** → it is a flat offset, not scatter, and §16.12.2 is wrong.
 
+> ⛔⛔ **RUN 2026-08-19 ON THE SEVEN SERIES F RECORDS — AND THE MODEL IS REFUTED, NOT THE EXPONENT.**
+> Full working in `SPEC_settled_measurement.md` **§31.9b**; reproduce with `diagnostics/pedestal_exponent_fit.py`.
+> Three things, and the pre-registered pair of readings above covers none of them:
+>
+> 1. ⛔ **This fit cannot be run on `PB_BASELINE_WINDOWS`.** The far window **620–630 contains
+>    protochlorophyll Qy at ~623–626**, so absorbance there is **2.3–2.6× the 520–540 window** and the power
+>    law fits **n ≈ −5.2 … −6.0 on all seven runs** — a pedestal *rising* toward the red. Those windows are a
+>    straight-line ANCHOR pair; they were never pigment-free, and this section inherited them unchecked.
+>    ⚠ The pigment-light stretches actually are **505–515** and **595–605**. ⚠ Also: the windows hold **207
+>    points**, not "~50" — the grid is finer than this section assumed.
+> 2. ⛔ **The archive cannot support the fit anyway** — only the WINNER spectrum per run is persisted, so there
+>    is no within-run pair of full spectra at two turbidities. The only spectrally-resolved time series is
+>    **three band means per decision row**.
+> 3. ⛔⛔ **On those bands the power law itself fails.** `d(band)/d(A_valley)` within a run is **non-monotone in
+>    wavelength** — Soret 1.06 / valley 1.00 / Q band **1.30** on run 006's 13× sweep, reproduced in 004
+>    (2.13/1.41), 007 (2.22/1.45) and 006's tail (1.90/1.49). **No λ⁻ⁿ has an interior minimum.** Solving band
+>    by band gives **n = +0.40 from the Soret and −3.42 from the Q band**; Rayleigh predicts +4.0 at both.
+>
+> ⇒ ⭐ **the underlying question is answered in the negative**: whatever the residual is, it is **not a
+> single-exponent scattering term**, so neither *"n in 2–4 ⇒ ripening observed"* nor *"n ≈ 0 ⇒ flat offset"*
+> is concludable from this archive. ⚠ Candidate readings for the interior minimum — pathlength amplification
+> by multiple scattering, or pigment leaving the beam inside the droplets (§16.12.7d) — are **hypotheses**.
+> ⚠ Re-running this needs (a) genuinely pigment-free windows and (b) **row spectra the engine does not save**;
+> (b) is the real blocker. ⭐ The 3-parameter degeneracy the caveat below predicts was confirmed exactly.
+
 Caveats: fit `n` per run rather than pinning it at 4 (if the droplets grow, n changes); `k` and `n` trade off
 against a genuine flat offset; **6 points is an indication, not a verdict** — detrending leaves 4 df, so **pool B
 and C** (12 points, shared decay, separate offsets). The physics predicts an exponential relaxation
@@ -5202,6 +5227,200 @@ worth having computed rather than assumed.
 **Constants used.** Acetone: MW 58.08, flash −20 °C, AIT 465 °C, LEL/UEL 2.5–12.8 vol %, Antoine (mmHg, °C)
 7.02447 − 1161.0/(224 + T). Isopropanol: MW 60.10, flash +12 °C (closed cup), AIT 399 °C, LEL/UEL
 2.0–12.7 vol %, Antoine 8.11778 − 1580.92/(219.61 + T). Air MW 28.96, ambient 101.3 kPa.
+
+### 16.12.7d ⭐⭐ THE HYDROCARBON ROUTE, REOPENED — and three corrections to our own record  *(Edwin 2026-08-19, from a researched thread on de-aromatised white spirit; DESIGN, nothing measured)*
+
+Edwin proposed replacing **IPA + polystyrene** with **de-aromatised white spirit (entaromatisierter
+Terpentinersatz / isoparaffin) + glass**, on the ground that the oil dissolves in it completely, clear, at room
+temperature — no emulsion, no wait, no heating. Working the objections through moved almost all of them, and
+⭐ **three of the things that stopped the hydrocarbon route before turn out to be wrong or stale.**
+
+#### ⛔⛔ CORRECTION 1 — §16.18.0's red-side wall is measured against a window we no longer have
+
+§16.18.0 rejected the MCT route on 2026-08-02 with:
+
+```
+detector upper limit          629.8 nm      <- ⛔ NO LONGER TRUE
+protochlorophyll Qy           ~623-626 nm
+headroom on the red side      ~4-7 nm
+```
+
+⭐ **The window was extended about a week later.** Measured from run 006's own reference spectrum (series F,
+2026-08-17): the grid is **400.06 … 635.87 nm, 1634 points**. This file already says so at
+`PB_BASELINE_WINDOWS`' comment — *"before 2026-08-09 this anchor was really 620–629.8, sitting hard against
+the capture edge. The window now reaches 636 nm"* — but §16.18.0 was never revisited, and it has been quoted
+since as though 629.8 were current. ⇒ **it is stale, and any argument resting on it must be re-derived.**
+
+#### ⛔ CORRECTION 2 — the SHIPPED metric does not use the red end at all  *(Edwin's catch)*
+
+`Q%` is `100 × (A_Q − A_valley) / A_Soret` over **448–460 · 500–560 · 565–580**. Its reddest wavelength is
+**580 nm**. The 623–626 Qy, the 620–630 far anchor and `S2` belong to the *baselined and diagnostic*
+quantities, not to the verdict.
+
+| | window | blue headroom *(to 400.06)* | red headroom *(to 635.87)* |
+|---|---|---|---|
+| `V_SORET_BAND` | 448–460 | **48 nm** | — |
+| `V_Q_BAND` | 565–580 | — | **56 nm** |
+| *620–630 far anchor* | *pedestal / far620 gauge* | — | *6 nm* |
+| *protochlorophyll Qy ~623–626* | *not used by `Q%`* | — | *10 nm* |
+
+⇒ a solvatochromic shift of 15–20 nm — the largest §16.18.0 contemplated — is **comfortably survivable for
+`Q%`**. ⚠ It is not survivable for the far anchor, so the pedestal-corrected and far-620 gauges would be the
+casualties, not the shipped verdict. ⚠ And the risk that remains is not *running out of detector*: it is that
+**448–460 sits on a FLANK** (§16.10.17), so a few nm of shift changes `A_Soret` materially. The re-derivation
+risk concentrates there, on the blue side, not on the red.
+
+#### ⚠ CORRECTION 3 — §16.12.7's hydrocarbon row was written for n-heptane, and over-generalises
+
+The table's `n-heptane` row reads *"❌ H225/H304/H411"*. **De-aromatised white spirit is a much higher-boiling
+cut and is not n-heptane on the fire axis** — flash ≈ 40–60 °C against heptane's −4 °C. Done properly against
+what we actually ship:
+
+| | **IPA** *(today)* | **de-arom. white spirit** | worse |
+|---|---|---|---|
+| flammability | **H225** — Cat 2, flash **12 °C** | H226/H227 — flash **≈ 40–60 °C** | ⛔ **IPA, clearly** |
+| eyes | **H319** Cat 2 | usually unclassified | ⛔ IPA |
+| aspiration | none | **H304** Cat 1 | ⛔ white spirit |
+| CNS / narcosis | H336 | H336 | — |
+| aquatic | none | H411/H412 | ⛔ white spirit |
+| skin | none | EUH066 defatting | ⛔ white spirit |
+
+⭐ **On the axis that actually bites in a workshop, white spirit is the SAFER of the two.** §16.12.7c found
+IPA *"safe by margin, not by kind"*, with its saturated headspace sitting **inside** its flammable range at
+bench temperature. A 12 °C flash point beside a warm lamp is an everyday hazard; 40–60 °C is not.
+
+⛔ **And the H318 analogy that was first reached for is invalid.** 1-butanol was rejected for **irreversible
+eye damage from a splash** — the routine accident, one careless pour away. **H304 is an *ingestion* hazard**:
+low-viscosity hydrocarbons spread on lung tissue, so the danger is swallowing and then aspirating. The
+incident literature is children drinking from unlabelled bottles and siphoning fuel by mouth. For 4 mL
+pipetted into a closed glass vessel that route is effectively shut. ⇒ **hazard drops from ⛔ to ⚠**, mitigated
+by *keep it in its labelled bottle*. ⚠ The odour objection raised against a butanol also fails here —
+"geruchloser Terpentinersatz" is the better neighbour in food premises.
+
+#### ⚠ The mixture objection is weaker than it looks — for a reason that settles it
+
+A petroleum distillate is not a defined substance, which normally disqualifies it from a method that must
+compare across years and mills. ⭐ **But aliphatics carry no chromophore above ~280 nm, so lot-to-lot
+variation is OPTICALLY INVISIBLE across our entire 400–636 nm window.** What can genuinely vary is refractive
+index (≈ 1.42–1.44, which recalculates §16.7's focal-plane shift) and residual aromatic content (irrelevant
+here). ⇒ one protocol line — **blank and sample from the same bottle** — and it cancels in `T = S/R` anyway.
+⚠ For a shipped product a defined substance (**isooctane**, cyclohexane) is still the better answer; for a
+bench experiment the distillate is fine.
+
+#### ⚠ Mg COORDINATION AND AGGREGATION — the one mechanism that could break `V`, and the arithmetic that de-risks it
+
+**The mechanism is established.** Mg²⁺ in a porphyrin prefers a fifth axial ligand. In a coordinating solvent
+(alcohols, acetone, ether) the solvent supplies it and the pigment stays **monomeric**; in a *rigorously dry*
+non-coordinating solvent it coordinates instead to the ring-V keto carbonyl of a neighbour, giving **dimers
+and oligomers** (Katz et al., late 1960s). The signature is a **red-shifted, broadened** red band — chlorophyll
+*a* monomer Qy ≈ 660–662 nm in ether against ≈ 678 nm for the dry-hydrocarbon dimer. ⛔ Because the equilibrium
+is concentration-driven, **the band shape becomes concentration-dependent** — the exact Beer–Lambert violation
+that would destroy `V`'s dilution invariance (today: 3.4 % dose sensitivity, §10.2 of `SPEC_metric_research`).
+
+⭐ **Four reasons it is unlikely to bite at OUR concentrations.** *(Arithmetic, from our own recipe — not
+measurement.)*
+
+1. **The pigment is micromolar.** From `A_Soret ≈ 0.83` at the jar's 1.3 cm and a porphyrin Soret ε of order
+   2 × 10⁵ M⁻¹cm⁻¹, the pigment sits at **≈ 3 µM**. Katz's dimers were characterised at **millimolar**. Even
+   with an association constant of 10⁴ M⁻¹, `K·c ≈ 0.03` ⇒ **~3 % dimer**. ⚠ ε assumed, not measured.
+2. **The oil brings its own ligands in ~10⁴-fold excess.** §16.23's recipe is 2 × 60 µL capillaries into
+   10 mL = **1.2 % v/v oil** ≈ 110 mg triglyceride ≈ 0.125 mmol, and every triglyceride carries **three ester
+   carbonyls** ⇒ **≈ 37 mM of coordinating C=O against ≈ 3 µM of pigment**. Ester C=O is a weaker ligand than
+   an alcohol, but Katz's own result is that any nucleophile in excess breaks the aggregates.
+3. **The pigment's native matrix is already non-alcoholic** — in the bottle it lives in pure triglyceride at
+   far higher concentration, and neat-oil spectra are sensible. Diluting into an alkane moves it *away* from
+   pigment–pigment contact.
+4. **Up to a third of the pool has no magnesium at all.** `KB_spectroscopy_physics.md` §4.1: protopheophytins
+   are **1.1–35.5 %** of the protochlorophylls. No Mg, no axial site, no self-coordination.
+
+⚠ **And hardware-store solvent is not dry** — Katz had to dry his solvents rigorously *precisely because*
+ambient water coordinates Mg and breaks the dimers.
+
+⭐⭐ **The mechanism that could still differ is subtler, and it is INFERENCE, not fact.** In the IPA system the
+pigment is almost certainly **not in the IPA at all** — it is lipophilic and sits inside the oil droplets, so
+its microenvironment is ~100 % triglyceride, and **diluting makes MORE droplets, not different ones.** The
+per-pigment environment is dilution-*independent* by construction. In a true hydrocarbon solution the
+triglyceride is molecularly dispersed, so the pigment's ester-to-alkane neighbour ratio **does** change with
+dilution. ⇒ **the emulsion we have been fighting may be part of why `V` is dilution-invariant.** Unproven, and
+the reason the dilution arm of the experiment is not optional.
+
+#### ⛔⛔ THE BIGGEST FINDING — §16.36.6's "the lever is the holder, not the solvent" rests on an untested assumption  *(Edwin's challenge, 2026-08-19)*
+
+§16.36.6 concluded: *"no-re-seat floor sd 0.063 (10 repeats, jar untouched) against 0.70 with re-seating ⇒
+~99 % of the within-fill variance is RE-SEATING — the lever on repeatability is the holder (ROADMAP PRIO 1),
+not the solvent."*
+
+⛔ **That 0.70 was measured on an IPA DISPERSION, and it was then treated as a solvent-independent constant.**
+A "settled" dispersion is not a solution — the residual pedestal *is* the surviving sub-micron droplets.
+Re-seating a jar of turbid liquid changes the optical path **through a scattering medium**, and scattering is
+the most geometry-sensitive term in the whole chain: path, tilt, position and droplet distribution all at
+once. Re-seating a jar of *clear* liquid changes only Fresnel and geometry.
+
+⇒ **an unknown share of that 0.70 may be turbidity rather than the holder.** If it is a large share, then
+dissolving the oil does not merely simplify the instrument — **it attacks the dominant error term as well**,
+and the holder work would be attacking what is left rather than what is biggest. ⚠ This does not overturn
+§16.36.6; it identifies the assumption inside it and makes it measurable.
+
+#### ⭐ WHAT WOULD CHANGE IN PRACTICE — the honest ledger
+
+| | today (IPA) | expected (hydrocarbon) |
+|---|---|---|
+| jar on insertion | milky | **clear** |
+| `A_valley`, first look | 0.09 … 0.95 | **~0.08, flat from row 1** |
+| clearing time | 1.7 – 20 min | **none** |
+| branch taken | mixed | **always "arrived clear"** |
+| lamp dose per measurement | 105 – 314 s | **~17 s** (one window) |
+| holder heating / 52 °C bath | required | **not required** |
+| re-seat scatter | 0.70 | ⚠ **unknown — the point above** |
+| `Q%` value | ~14 | shifted; direction most likely **up**, magnitude unknown |
+
+⭐ **An entire subsystem becomes vestigial**: the settling monitor, the gate, the vertex read, TEST B,
+`huntFrom`, the browning diagnostic and the heated holder all exist because the oil does not dissolve.
+⚠ **BUT NOT THE PEDESTAL CORRECTION, AND THAT IS `DOC_pedestal_correction.md`'S OWN FINDING.** Appendix D
+measures scattering as supplying **≤ 17 % of `r_Q`**, and ch. 10 finds `r_Q` **does not scale with
+turbidity** — *"an instrument artifact does not care how cloudy the sample is."* ⇒ dissolving the oil removes
+the raw turbidity pedestal but only a sixth of the *residual* the correction targets. ⭐ The correction becomes
+moot for the **shipped** metric anyway, because `V`/`Q%` is baseline-free and never uses `r_Q`; it stays live
+for the baselined and far-620 quantities. ⛔ Do not claim the solvent retires it. ⭐ **Photodamage per measurement falls by roughly an order of magnitude** —
+not because the lamp is gentler, but because the run is 17 seconds instead of minutes; §29's +0.482 on run 003
+was an artefact of *waiting*.
+⛔ **The costs are equally concrete**: `T = 18.6`, the 12–22 domain and the Ampel re-derive; the 143-report
+archive becomes a previous epoch; polystyrene is out, so the jar — which **is** the cuvette — changes, and with
+it the refractive index (1.377 → ≈ 1.43) and the focal-plane characterisation of §16.7.
+
+#### ⭐⭐ THE EXPERIMENT — one evening, three arms, and the third is the cheapest and most decisive
+
+```
+one oil · both solvents · one rig · one evening
+
+ A  CLARITY      does the jar go OPTICALLY clear, or merely less cloudy?
+                 ⚠ a pure alkane is a POOR solvent for phospholipids (polar head groups) and press
+                   fines — §16.12.7 records that IPA "will not dissolve them at all", and a
+                   hydrocarbon fixes the WAXES, which is not the same thing
+                 gate  A_valley at the first look, and the eye
+
+ B  DILUTION     three dilutions (1x, 0.5x, 0.25x) in BOTH solvents
+                 look for  Qy red-shift with c · band broadening · a shoulder growing
+                           super-linearly · A vs c curving away from the origin
+                 ⭐ gate  does Q% stay flat across dilutions?  (IPA today: 3.4 %)
+
+ C  RE-SEAT      ⭐⭐ 10 measurements jar untouched, then 10 with re-seating, in the hydrocarbon
+                 gate  against the numbers we ALREADY have: 0.063 untouched / 0.70 re-seated
+                       collapses toward 0.063  -> turbidity was a large part of the "holder" term,
+                                                  and the roadmap's ranking changes
+                       stays near 0.70         -> the holder really is the lever, on evidence
+```
+
+⚠ **Arm A is the most likely failure mode** — more likely than the magnesium. Arm C is the one that could
+re-rank the roadmap. ⛔ Neither is a reason to change the shipping solvent before all three have run.
+
+#### ⏸ STATUS
+
+**No decision. The shipping solvent remains isopropanol** and nothing above is scheduled. What has changed is
+the *reasoning*: §16.18.0's headroom argument is stale, the shipped metric does not touch the red end, the
+hazard case is roughly a wash and favours the hydrocarbon on fire, and §16.36.6's dominant-error attribution
+contains an assumption nobody had tested. ⇒ the hydrocarbon route is **reopened as a measurement**, not as a
+proposal.
 
 ### 16.12.8 The container problem is DOWNSTREAM of the solvent — do not buy anything yet
 
@@ -5822,6 +6041,114 @@ characterised. That is §16.10.16's trap in its purest form.
 **⇒ Keep B002 in every headline number. Keep this section as the sensitivity statement**, because "one of six
 runs moves the gain from 2.79× to 1.32×" is exactly the fragility a reader of §16.12.14 needs to know about.
 **The real fix is n, not exclusion** — series D/E's twelve brown runs.
+
+### 16.12.17 ⛔⛔ THE `MAD == 0` COLLAPSE — a robust estimator that silently threw away 291 rows  *(found 2026-08-19 while answering "would a signal-weighted row mean help?"; ✅ FIXED, 452 tests green)*
+
+Edwin's DIY-LED run `20260818A/001` showed **visible steps** in the sample spectrum through 500–630 nm. The
+cause turned out not to be the lamp, not the ROI and not flicker.
+
+#### ⭐ THE EVIDENCE — the plateau VALUES are the giveaway
+
+Every plateau in that report sits on an exact 8-bit lattice, `255·(e/255)^2.2` for integer `e`:
+
+```
+0.2052 = code 10     0.4302 = code 14     1.0496 = code 21     1.6792 = code 26
+0.2531 = code 11     0.5771 = code 16     1.1627 = code 22     1.9765 = code 28
+0.3064 = code 12     0.7477 = code 18     1.4080 = code 24     2.3005 = code 30
+```
+
+⛔ A **291-row × 60-frame** average cannot land on an integer by chance. Something in the chain was returning
+one raw code.
+
+#### ⛔⛔ THE DEFECT — a wrong premise in a guard, not a wrong formula
+
+`RobustReductionLogicModule.tukeyBiweightPerColumn`:
+
+```python
+mad = _nanmedian(np.abs(band - median), axis=0)
+location = median.copy()
+moving = mad > 0          # comment: "constant / all-NaN columns keep their median"
+```
+
+**`MAD == 0` does not mean the column is constant. It means MORE THAN HALF THE ROWS SHARE THE MEDIAN** — and
+below DN ~60 that is the ordinary case, not a degenerate one. Such a column never entered the iteration and
+returned its median: one exact integer code, with everything the minority rows knew discarded.
+
+⭐ **MEASURED ON A LIVE FRAME** (2026-08-19, ELP at 2592×1944, 291 rows per column, 1581 columns):
+
+| DN level | columns | **MAD == 0** | mean − median discarded |
+|---|---|---|---|
+| 8–16 | 238 | **46.6 %** | 0.26 DN |
+| 16–30 | 612 | **44.4 %** | 0.36 DN |
+| 30–60 | 533 | 32.5 % | 0.56 DN |
+| 60–120 | 149 | **0 %** | — |
+| 120–255 | 49 | **0 %** | — |
+
+**35.2 % of all columns**, and **zero above DN 60** — exactly the boundary between a smooth blue end and a
+staircase in 500–630. ⚠ The discarded information is real: a median of **0.45 DN** of sub-quantum signal per
+collapsed column, present in the rows and thrown away.
+
+#### ⭐ THE FIX — a tie window, and why it is NOT a plain mean
+
+⛔ **A plain mean would cost more than it buys.** With 291 rows, ONE hot pixel at 255 against a median of 12
+moves a plain mean by **0.84 DN** — larger than the ~0.45 DN being recovered. Verified: the naive fallback
+lands on code **19.0** where the truth is 12.40.
+
+⇒ when `MAD == 0`, the location becomes the **mean of the rows within ±1.5 code-widths of the median**. Robust
+like the biweight — a hot pixel is far outside the window and cannot reach it — but it *uses* the dither.
+
+⭐⭐ **THE QUANTUM IS SUPPLIED BY THE CALLER, and that separation is the point.** One code is **~14 % of the
+level at DN 16 and ~1 % at DN 200**, so a single constant would be wrong nearly everywhere; and
+`RobustReductionLogicModule` must not learn what gamma or DN are. `ImageSpectrumAcquisitionLogicModule` owns
+the decode, so it computes `tieWindow` per column from that column's own median and passes it in.
+⚠ `tieWindow=None` reproduces the old behaviour exactly, so every existing caller and test is untouched.
+
+#### ✅ WHAT IT BOUGHT — measured, on a synthetic column and on a live frame
+
+```
+synthetic column: 175 rows at code 12 + 115 at code 13 + one hot pixel at 255
+   today  (median)            code 12.000
+   fixed  (tie window)        code 12.408          truth 12.397
+   naive plain mean           code 19.000          <- the hot pixel
+
+live frame, 1581 columns
+   on the exact integer lattice   35.9 %  ->  17.6 %
+   plateaus of >=6 identical         30   ->      7
+   columns changed  35.6 %,  median shift 0.011 DN,  max 0.494 DN
+```
+
+⚠ The residual 17.6 % are columns that are *genuinely* constant — every row on one code, nothing to recover.
+That is correct behaviour, not a partial fix.
+
+#### ⚠ SCOPE — it has been doing this all along, and it bites where the lamp is weakest
+
+The collapse is a function of signal level, so it hit **the 617–629 far anchor and the 565–580 Q band hardest**
+— precisely the quantities `S2`, the far-620 gauge and the pedestal anchor are built on. ⛔ Before anything is
+re-derived from those, it is worth asking whether the number was quantisation-limited.
+⚠ It is primarily a RESOLUTION loss — band means average over hundreds of points, so most of it washes out —
+and **whether a systematic component survives that averaging has NOT been measured.** Do not claim it does not.
+
+#### ⛔ WHAT THIS IS NOT — two ideas ruled out on the way
+
+- ⛔ **Row selection by stability** *(Edwin's first hypothesis: take the calm middle rows)*. It is already
+  shipped — `__INSET_FRACTION = 1/3` keeps only the middle third — and **narrowing further cannot help**:
+  averaging identical integers returns that integer, so removing rows removes the very dither that beats
+  quantisation.
+- ⛔ **Signal-weighted row averaging.** Measured row-profile CV inside the inset band is **0.034**, so the best
+  possible gain from ANY weighting is `√(1+CV²)` = **+0.06 %**. And the measured temporal noise goes as `√L`
+  (sd 0.73 → 0.94 → 1.49 → 1.65 DN as the level goes 18 → 35 → 65 → 115), which makes the **equal-weighted mean
+  already optimal** — signal-weighting is optimal only against constant additive noise. ⚠ An earlier claim in
+  conversation that it was "worth a few percent" was wrong and is withdrawn.
+
+#### ⭐ TWO SIDE FINDINGS FROM THE SAME PROBE
+
+1. ⭐ **The rig is extraordinarily stable.** Frame-to-frame CV of the ROI mean over 14 frames = **0.00019
+   (0.019 %)**. Whatever the diffuser was added for, **flicker is not measurable here** — which is also why
+   the "calm middle rows" premise has nothing to act on.
+2. ⚠ **The first frame after an exposure change is STALE even with `BUFFERSIZE = 1`** — measured ROI mean
+   **157.6** followed by thirteen frames at **36.0**. It wrecked the first noise measurement of this
+   investigation before it was caught. ⛔ Anything that changes exposure must discard several reads, not one;
+   whether the app's own capture path does so has **not** been traced and is worth checking.
 
 ### 16.12.15 Claims made and WITHDRAWN in this thread *(per §16.7.0's practice)*
 
@@ -13366,6 +13693,12 @@ coefficient, and the archive cannot calibrate a dilution correction for anything
 1. ⭐⭐ **The no-re-seat floor of `Q%` is sd 0.063** (10 repeats, jar untouched) against **0.70** with
    re-seating. ⇒ **~99 % of the within-fill variance is RE-SEATING** — not the instrument, not the
    metric, not the chemistry. The lever on repeatability is the holder (ROADMAP PRIO 1), not the solvent.
+   > ⛔ **THE LAST CLAUSE CONTAINS AN UNTESTED ASSUMPTION (§16.12.7d, Edwin 2026-08-19).** The 0.70 was
+   > measured on an **IPA dispersion**, and a settled dispersion is not a solution — the residual pedestal
+   > *is* the surviving sub-micron droplets. Re-seating a turbid jar moves the path through a **scattering**
+   > medium, which is far more geometry-sensitive than a clear one. ⇒ an unknown share of that 0.70 may be
+   > **turbidity rather than the holder**, and *"not the solvent"* is a conclusion this measurement cannot
+   > support on its own. ⭐ Arm C of §16.12.7d's experiment settles it against these very numbers.
 2. ⛔ **"Wait until DN stops changing" is refuted.** Decoded, the guard's DN ran the whole evening at
    **1.07–2.30 LINEAR counts** out of 255, and sat at exactly 30.0 encoded for six consecutive readings
    while `A_Soret` fell 3.9 % and `Q%` rose 0.56. **DN stops changing when it runs out of bits.**

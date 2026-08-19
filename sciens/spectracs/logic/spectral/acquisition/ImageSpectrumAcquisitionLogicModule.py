@@ -1,3 +1,4 @@
+import warnings
 from typing import Dict
 
 import numpy as np
@@ -141,6 +142,26 @@ class ImageSpectrumAcquisitionLogicModule:
 
         return result
 
+    # ⭐ How many code-widths wide the MAD==0 fallback window is. 1.5 admits the two ADJACENT codes (which is
+    # where the dither lives) and excludes anything two codes out — a hot pixel cannot reach it.
+    __TIE_WINDOW_CODES = 1.5
+
+    def __quantisationWindow(self, gray):
+        """One 8-bit code, expressed in LINEAR units, at each column's own level (§16.12.17).
+
+        The capture chain quantises BEFORE the decode, so one code is a fixed step in ENCODED DN and a
+        level-dependent step in linear light: `L = 255·(e/255)^γ` ⇒ the gap to the next code grows with `L`.
+        ⚠ Computed from the column MEDIAN, not from a global constant: at DN 16 one code is ~14 % of the level
+        and at DN 200 it is ~1 %, so a single number would be wrong nearly everywhere."""
+        gamma = SpectralColorUtil().captureGamma()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            level = np.nanmedian(gray, axis=0)
+        level = np.where(np.isnan(level), 0.0, np.clip(level, 0.0, 255.0))
+        code = 255.0 * (level / 255.0) ** (1.0 / gamma)
+        nextLevel = 255.0 * (np.minimum(code + 1.0, 255.0) / 255.0) ** gamma
+        return self.__TIE_WINDOW_CODES * np.maximum(nextLevel - level, 1e-9)
+
     def __reducedLinearColumnValues(self, image, x1, x2, y1, y2):
         """One robust max-channel value per column x1..x2, in LINEAR light, reduced over an INSET band of rows
         (SPEC §6, §15, §17). Saturated (any channel==255) and dead (all channels==0) pixels are masked to NaN
@@ -171,7 +192,15 @@ class ImageSpectrumAcquisitionLogicModule:
         gray = SpectralColorUtil().toGrayMaximumArray(r, g, b)  # §15: max-channel reduction (== the saturation mask)
         valid = (gray < 255.0) & (gray > 0.0)
 
-        reduced = RobustReductionLogicModule().tukeyBiweightPerColumn(np.where(valid, gray, np.nan))
+        # ⭐⭐ THE QUANTUM IS PASSED IN, because only THIS module knows the decode (§16.12.17). Below DN ~60 more
+        # than half the rows of a column routinely share one 8-bit code; MAD then collapses to zero and the
+        # biweight would return that single integer, discarding the sub-quantum information the other rows carry
+        # (measured: 35 % of all columns, 44-47 % below DN 30, 0 % above DN 60, ~0.45 DN discarded each).
+        # `tieWindow` says how wide one code is AT EACH COLUMN'S OWN LEVEL, in the linear units of `gray`, so the
+        # fallback mean admits the neighbouring codes and nothing else.
+        masked = np.where(valid, gray, np.nan)
+        reduced = RobustReductionLogicModule().tukeyBiweightPerColumn(
+            masked, tieWindow=self.__quantisationWindow(masked))
         fallback = np.median(gray, axis=0)                     # all-clipped/dead column -> plain median (keeps 255/0)
         return np.where(np.isnan(reduced), fallback, reduced)
 

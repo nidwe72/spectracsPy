@@ -574,13 +574,43 @@ Two details matter as much as the estimator:
 
 - **Saturated and dead pixels are masked *before* the reduction**, and masked **per channel** —
   saturation is a per-channel fact, so it has to be detected before the channels are combined.
-- **The outer 20 % of rows are dropped** (top and bottom). Edge rows bleed the dark border outside
-  the slit and carry the worst optical "smile" distortion. The measurement is broadband, so a
-  generous central band costs nothing.
+- **Only the middle third of the rows is kept** — the outer third at each end is dropped. Edge rows
+  bleed the dark border outside the slit and carry the worst optical "smile" distortion. The
+  measurement is broadband, so a generous central band costs nothing. *(On a typical 875-row band that
+  leaves 291 rows per wavelength.)*
 
 **Why a biweight and not a median.** The number of rows is modest, and a median throws away most of
 the averaging benefit. The biweight keeps the noise reduction of a mean while still discarding a
 genuine outlier — the right trade at small sample counts.
+
+**And one place where it quietly became a median anyway — a real defect, found in August 2026.** The
+biweight needs a scale to weight against, and it takes that scale from the median absolute deviation.
+When the MAD is zero there is nothing to scale by, so the code fell back to returning the median. The
+guard was written as *"a constant column keeps its median"* — and that description is wrong. **A MAD of
+zero does not mean the column is constant; it means more than half the rows happen to share the same
+value.** At low signal levels, where the whole column sits within a code or two, that is not a rare
+degenerate case — it is the normal one.
+
+Measured on a live frame, 291 rows per column: **35 % of all columns** returned a bare integer code
+this way — 44–47 % of the columns below DN 30, and **none at all above DN 60**. That number is exactly
+the boundary between a spectrum that looks smooth at the blue end and one that visibly climbs in
+*steps* through the green and red. The information being discarded was real: in those columns the plain
+average of the rows sat, on average, **0.45 DN away** from the single value that was returned instead.
+
+**The fix is not a plain average**, tempting as that sounds. With 291 rows, one stuck pixel at 255
+against a median of 12 moves a plain mean by 0.84 DN — more than the 0.45 DN of genuine signal being
+recovered. Instead, when the MAD collapses, the column is averaged over only those rows lying within
+about one-and-a-half code-widths of the median: robust, because a stuck pixel is nowhere near that
+window, but able to use the small spread that carries the sub-code information.
+
+One subtlety makes this work at all: **how wide a code is depends on where you are.** Because the
+camera quantises before the gamma decode, one code is about 14 % of the level at DN 16 and about 1 % at
+DN 200. So the window cannot be a constant — it is computed for each column from that column's own
+level, by the part of the code that knows about the decode. The estimator itself still knows nothing
+about cameras.
+
+On a real frame the change removed three-quarters of the visible plateaus and halved the number of
+columns pinned to an exact code.
 
 → Background: [KB 3 — breakdown point, why MAD is scaled by 1.4826, and when each estimator wins](#kb-3-robust-statistics-median-mad-sigma-clipping-tukey-biweight)
 
