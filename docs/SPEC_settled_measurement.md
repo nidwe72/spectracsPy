@@ -3900,6 +3900,12 @@ that click-through, not after it.
 P3 deliverable and the vehicle for §11.
 ⛔ **§11 itself — THE HEAT-DOSE EXPERIMENT (P4).** Everything built so far exists to make it measurable.
 
+⏸ **§31.11b / C6 — THE TEST C RIG SESSION** *(added 2026-08-19)*. The whole of §31 is built and green, and
+⛔ **all of it is derived from ONE archived run and has never met a camera.** Four arms, in order: a fresh
+fill must NOT trip it *(⛔ a false positive stops the session)*, an aged fill should, the record must carry
+the four new diagnostics, and the cold-holder arm probes the false-positive mode §31.9 leaves unmeasured.
+⚠ Needs a dilution left standing overnight, undisturbed — that is the lead time.
+
 ---
 
 ## ⭐⭐ 28 · SERIES F — THE FIRST MEASUREMENTS THE PROTOCOL EVER PRODUCED  *(Lugitsch A, 2026-08-17/18)*
@@ -5062,7 +5068,7 @@ document's chapter 10, and it removes the λ⁻ⁿ fit from the list of things t
    must be shown to be conditional, not a blanket refusal.
 5. ⚠ **A flat noisy fill of 43 rows does not fire C** at the shipped constants.
 
-### ✅⭐⭐ 31.11a AS BUILT — C1 · C2 · C3 · C4 · C5, 2026-08-19  *(460 tests green, was 452)*
+### ✅⭐⭐ 31.11a AS BUILT — C1 · C2 · C3 · C4 · C5, 2026-08-19  *(460 tests green, was 452; ⏸ **only C6, the rig session, remains** — §31.11b)*
 
 ⭐ **Everything §31 specifies is implemented and green.** `MonitorOutcome.DEGRADING_FILL` (core, added to
 `hasValue`); `DEGRADE_TREND_ROWS/SIGMA/RISE_FRACTION/CONSECUTIVE`, `__degradingTrend`, `__isDegrading`,
@@ -5078,6 +5084,34 @@ document's chapter 10, and it removes the λ⁻ⁿ fit from the list of things t
 | 3 · re-clouding fixture still TEST B | ✅ `test_clearing_evaluator` — 25 tests with the replay, all green |
 | 4 · "cleared then ripened" keeps the vertex | ✅ — ⚠ **but not by the route §31.5 imagined; see below** |
 | 5 · a flat noisy fill does not fire C | ✅ 43 rows, deterministic wobble, `SETTLED_IMMEDIATE` |
+
+#### ⛔⛔ ONE DEFECT THE BUILD SHIPPED AND THE RIG PLAN CAUGHT — the status line called it settled
+
+⭐ **`hasValue()` returns True for `DEGRADING_FILL`, and that is deliberate** — the first look *is* the answer,
+and every consumer that asks "did this run produce a number?" must say yes. ⛔ **But `CapturePanel` branches on
+exactly that predicate**, so the one line the operator reads while measuring would have greeted a fill that was
+coarsening throughout with:
+
+```
+   ✅ settled after 3:03 — qPercent 13.59 (FIRST_SETTLED_WINDOW)
+```
+
+⛔⛔ **That is precisely the lie §31.7 rejected `SETTLED_IMMEDIATE` for, reintroduced one layer up.** The
+outcome was honest, the glossary was honest, the coach line was honest — and the status bar, the only one of
+the four the operator cannot miss, was not. ⭐ It was found by walking the paths a `DEGRADING_FILL` run travels
+*before* the rig session rather than during it, which is the whole argument for doing that walk.
+
+⇒ the status line now names the degradation, keeps the value, and says what to do:
+
+```
+   ⚠ the fill was DEGRADING, not settling — qPercent 13.59 read from the first look after 3:03.
+     The value stands (the earliest look is the least contaminated), but PREPARE A FRESH DILUTION
+     before measuring again.
+```
+
+⚠ **The general lesson, worth carrying**: `hasValue()` answers *"is there a number?"* and nothing else. Any
+caller that treats it as *"did this go well?"* is wrong the moment an outcome carries a value **and** bad news.
+`DEGRADING_FILL` is the first such outcome; it will not be the last.
 
 #### ⭐⭐ THE DIVISION OF LABOUR FALLS OUT OF THE GUARD, RATHER THAN BEING DESIGNED IN — a finding from the build
 
@@ -5102,10 +5136,82 @@ nothing, it is the safe direction, and a future cadence or θ change could move 
 | **C3** | `DEGRADING_FILL` outcome, `hasValue`, glossary, coach line, report header | the operator hears it |
 | **C4** | the §31.8 note on the stalled guard | cheap, independent |
 | **C5** | ⚠ regression replay of all seven series F records + the re-clouding fixture (§31.10.2–3) | ⛔ the gate on shipping any of it |
+| ⏸ **C6** | ⚠ **THE RIG SESSION — §31.11b. NOT RUN.** Four arms on real glass | ⛔ the constants are calibrated on **one** run and have never met a camera |
 
 ⚠ **C1–C4 are ~60 lines in `DevSpectralPlugin.py` plus one enum member.** ⛔ **C5 is the expensive half and
 the one that decides whether the constants are right** — it is not optional, and the constants above are
 calibrated on **one run**.
+
+### ⏸⭐⭐ 31.11b C6 · THE RIG SESSION — SPECIFIED, NOT RUN  *(owed, 2026-08-19)*
+
+⛔ **Everything in §31 was derived from ONE run and has never met a camera.** ⚠ `pytest` proves the arithmetic
+reproduces an archived trace; it cannot prove that a real aged fill on real glass produces that trace, and it
+cannot prove that a *good* fill is left alone. ⇒ this is the gate, and it is Edwin's to run.
+
+⚠ **Restart the app first** — the plugin is injected from disk, so a running bench holds the old evaluator.
+All arms: the DEV bench, `Frames = 60`.
+
+#### ⚠ PREP — the one thing with lead time
+
+TEST C only ever receives fills whose turbidity **never falls** (§31.11a's partition), and a fresh fill clears
+and goes to the gate. ⇒ **a dilution must stand overnight, undisturbed.** ⛔ Do NOT shake or re-stir it before
+measuring (§11.4a): agitating an aged fill re-suspends coarse sediment and turns it into a different
+experiment. A second, older jar is free extra data.
+
+#### ⭐⭐ ARM A — a FRESH fill must NOT trip it  *(run this first)*
+
+Normal protocol: bath, pre-warmed holder.
+
+| gate | |
+|---|---|
+| outcome | `SETTLED_IMMEDIATE` or `SETTLED_AFTER_CLEARING` |
+| status line | begins `✅ settled after` |
+| the word "degrading" | ⛔ appears nowhere |
+| `gate at` | the familiar 1.7–5 min |
+
+⛔⛔ **If TEST C fires on a good fill, STOP the session.** A false positive costs a real measurement, and the
+constants would have to be re-derived before anything else in §31 is trusted.
+
+#### ⭐⭐ ARM B — the AGED fill: does it fire on real glass?
+
+⭐ **Watch the status bar during the run**: the coach line should turn amber and read
+*"⚠ the fill is getting cloudier, not clearer — reading now"*.
+
+| gate | expected |
+|---|---|
+| run length | ⭐ **~3 min** (ten decision rows at ~18 s), not 12+ |
+| status line | `⚠ the fill was DEGRADING, not settling — … PREPARE A FRESH DILUTION` |
+| Settling tab → Outcome | `DEGRADING_FILL`, with the tooltip explaining it |
+| the answer's `t` | **~6 s** — the FIRST look, not a later one |
+| `Q%` | inside the 12–22 domain, verdict still rendered |
+
+⚠⚠ **A NULL HERE IS NOT A FAILURE, and must not be recorded as one.** If the aged jar's `A_valley` *falls*, it
+sedimented rather than ripened: the arm is **void**, TEST C is untested, and what we learn instead is **how old
+"old" has to be** — which §31 currently does not know and has no way to guess.
+
+#### ⭐ ARM C — the record
+
+The four new diagnostics must be present and healthy: `degradingPerMinute`, `degradingSignificance` (⭐ should
+be *comfortably* above `DEGRADE_SIGMA = 4`, not scraping past it — 001 replayed at 21), `degradingRisePercent`,
+`degradingRows = 10`, and `valleyFell = false`.
+⚠ **Look at the settling curve tabs at this length.** Ten rows is a third of what those plots have ever been
+drawn with; if they read badly that short, it is a finding and it belongs to §27.22's family.
+
+#### ⚠ ARM D — optional, and it targets the one risk §31.9 leaves unmeasured
+
+§31.9 records, unmeasured, the possibility of **a slow re-cloud that would have recovered, ended early by
+TEST C**. It can be provoked deliberately: a bath-warm jar into a **cold** holder (lamp just on, or a cool
+room) is §14.5's re-clouding case.
+
+- fires **TEST B** (*"re-clouded — warming again …"*) ⇒ ⭐ the two tests separate cleanly on real glass
+- fires **TEST C** ⇒ ⭐ we have found the false-positive mode deliberately and cheaply, which is worth more
+  than a clean pass
+
+#### ⭐ WHAT MUST BE WRITTEN DOWN
+
+**Fill age in hours**, room temperature, holder state (pre-warmed or not), and whether the jar was moved
+before insertion. ⇒ §31's constants come from a single run; **the first real evidence on how aged a fill must
+be before it ripens comes from this session and from nowhere else.**
 
 ### ⛔ 31.12 WHAT THIS SECTION DOES NOT DO
 
