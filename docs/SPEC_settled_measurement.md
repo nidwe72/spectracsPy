@@ -5062,7 +5062,38 @@ document's chapter 10, and it removes the λ⁻ⁿ fit from the list of things t
    must be shown to be conditional, not a blanket refusal.
 5. ⚠ **A flat noisy fill of 43 rows does not fire C** at the shipped constants.
 
-### ⭐ 31.11 PHASED  *(C1–C5 — DESIGN, none of it built)*
+### ✅⭐⭐ 31.11a AS BUILT — C1 · C2 · C3 · C4 · C5, 2026-08-19  *(460 tests green, was 452)*
+
+⭐ **Everything §31 specifies is implemented and green.** `MonitorOutcome.DEGRADING_FILL` (core, added to
+`hasValue`); `DEGRADE_TREND_ROWS/SIGMA/RISE_FRACTION/CONSECUTIVE`, `__degradingTrend`, `__isDegrading`,
+`__degradingDiagnostics` and `__fireDegraded` in `ClearingEvaluator`; the §31.5 refusal inside `__read`; the
+§31.8 note on the held gate; the coach line and the outcome glossary. `tests/test_degrading_fill.py` — 8 tests.
+
+⭐ **The acceptance gate of §31.10 was met on the first run**, and the constants were NOT retuned:
+
+| §31.10 | result |
+|---|---|
+| 1 · replay `20260819/001` | ⭐ TEST C fires on **row 10, t = 183.3 s (3.06 min)**, outcome `DEGRADING_FILL`, answer **13.585 at 6.3 s** — bit-identical, at **24 % of the lamp dose** |
+| 2 · seven series F runs unchanged | ✅ `test_series_f_replay` — 7 runs × 3 assertions, untouched |
+| 3 · re-clouding fixture still TEST B | ✅ `test_clearing_evaluator` — 25 tests with the replay, all green |
+| 4 · "cleared then ripened" keeps the vertex | ✅ — ⚠ **but not by the route §31.5 imagined; see below** |
+| 5 · a flat noisy fill does not fire C | ✅ 43 rows, deterministic wobble, `SETTLED_IMMEDIATE` |
+
+#### ⭐⭐ THE DIVISION OF LABOUR FALLS OUT OF THE GUARD, RATHER THAN BEING DESIGNED IN — a finding from the build
+
+§31.5 reasons about a fill that clears, turns, and *then* ripens, and specifies that it keeps its vertex.
+⭐ **Measured: the gate reaches that shape first, and TEST C never fires on it.** Once the valley has a
+maximum *behind* it, `__hasFallenSinceMaximum` passes trivially, TEST A finds the post-turn rows flat, and
+the vertex is read within two rows — long before TEST C's ten-row baseline has cleared the falling tail.
+And once `__gateIndex` is set, `decide()` short-circuits to `__read` and the tests are never consulted again.
+
+⇒ ⭐⭐ **the two tests partition the space exactly, and the guard is the partitioner**: a fill whose turbidity
+ever fell goes to the gate; a fill whose turbidity never fell is precisely the one the guard would have
+stalled forever, and that is what TEST C receives. ⚠ **The §31.5 refusal is therefore a SAFETY property, not
+a branch this shape reaches** — it is exercised by run 001, where `valleyFell` is `False`. ⛔ Keep it: it costs
+nothing, it is the safe direction, and a future cadence or θ change could move the race.
+
+### ⭐ 31.11 PHASED  *(C1–C5 — ✅ ALL BUILT, see §31.11a)*
 
 | | | |
 |---|---|---|
