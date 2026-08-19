@@ -1460,6 +1460,21 @@ was calibrated on inflated numbers. If the sample is ever made physically cleane
 better solvent — `r_Q` shrinks toward zero, every reading falls by up to 29 %, and **`T` = 10.6 stops
 being valid with no error message and no visible symptom.** That risk exists today.
 
+> ⭐ **That hypothetical stopped being hypothetical on 2026-08-19.** A hydrocarbon solvent — one that
+> dissolves the oil into a true solution rather than dispersing it — is under active reconsideration
+> (*Light, Pigment and Solvent* §4.8; `SPEC_capture_quality.md` §16.12.7d). If it is adopted, the sample
+> becomes physically clear and the paragraph above applies in full.
+>
+> ⚠ **But it would not retire this correction, and this document is the reason why.** Appendix D measures
+> scattering as supplying **at most ~17 %** of `r_Q`, and chapter 10 finds that `r_Q` does not scale with
+> turbidity at all — an instrument artifact does not care how cloudy the sample is. ⇒ making the sample clear
+> removes the raw pedestal but only about a sixth of the residual this correction exists to remove. The
+> remaining five sixths would still be there, in a perfectly clear jar.
+>
+> ⇒ two separate consequences, worth keeping apart: a clear sample **invalidates the calibration** (every
+> reading falls, and any threshold calibrated on inflated numbers moves), while it **does not remove the
+> defect** the correction addresses.
+
 <!--PAGEBREAK-->
 
 ## 12 · ⚠ The chapter that argues against the proposal

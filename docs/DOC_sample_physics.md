@@ -523,12 +523,13 @@ These can be varied nearly independently, and that is a lever.
 | acetone | ≈ 20.7 | 56.1 | **−20** | good | ⛔ **dissolves it** | ⛔ not pursued |
 | n-heptane | 1.9 | 98.4 | **−4** | ideal | ⛔ swells + crazes | ⛔ hazardous |
 | cyclohexane, isooctane | ≈ 2 | — | — | ideal | ⛔ cyclohexane **dissolves** it | ⛔ |
+| **de-arom. white spirit** | ≈ 2 | 145–200 | **≈ 40–60** | **ideal** | ⛔ dissolves it | ⚠ **§4.8 — reopened** |
 
 **In principle a longer-chain alcohol is the interesting direction.** Its dielectric constant is close
 to isopropanol's, so absorption bands should barely move, while its longer chain makes it a better
 triglyceride solvent — dissolution without solvatochromism.
 
-### 4.6 ✅ The decision: isopropanol stays
+### 4.6 ✅ The decision: isopropanol stays  *(⚠ still the shipping answer — but see §4.8, which reopens the hydrocarbon half of it)*
 
 **The instrument keeps 2-propanol and its existing polystyrene vessel.** Not because the alternatives
 were untested in principle, but because each fails on a specific, checkable ground — and because the
@@ -552,6 +553,11 @@ position and therefore the threshold itself would have to be re-derived.
 > ⚠ **One condition attaches.** All of that rests on the *sample-preparation* scatter being modest, and
 > that quantity has not yet been measured (§5.5's aliquot trap). If it turns out to be large, turbidity
 > becomes the limiting term again and the solvent question genuinely reopens.
+>
+> ⭐ **And a second condition surfaced later, from a different direction — §4.8.** The argument above rests
+> on turbidity not being the limiting term. That rests in turn on a measurement whose interpretation has
+> since been questioned: the re-seating scatter that we attribute to the *holder* was measured on a
+> **turbid** sample, and nobody has checked what it would be in a clear one.
 
 ### 4.7 What the analytical literature actually uses
 
@@ -569,6 +575,76 @@ chapter 5 is the bill for it.
 > thermal equilibration and colour development in wet-chemistry assays. Where particles are the
 > **interferent**, as here, the standard practice is neither — it is **to clarify: filter or
 > centrifuge before measuring**, then fit a baseline for whatever residual remains.
+
+### 4.8 The hydrocarbon route, reconsidered  *(2026-08-19)*
+
+§4.7 ends by admitting that the analytical field converged on hydrocarbons because they give a true
+solution, and that our alcohol is a deliberate trade whose bill is chapter 5. It is worth asking, once,
+what happens if we stop paying that bill.
+
+The candidate is **de-aromatised white spirit** — the odourless isoparaffin sold in every hardware
+shop — or, for a shipped method, a defined substance such as **isooctane**. Either dissolves the oil
+completely and clear at room temperature.
+
+**What that would remove is not a detail.** The emulsion, the scattering pedestal of chapter 5, the
+waiting for a fill to clear, the warm bath, the cloud point, and the whole apparatus by which the
+instrument decides *when* a sample has settled and *which* of its own looks to report — all of it exists
+because the oil does not dissolve in isopropanol. A solvent that dissolves it retires the lot. The lamp
+dose per measurement would fall from minutes to about seventeen seconds, and with it the photodamage
+that the settling read was built to work around.
+
+**Three objections that used to close this question have since weakened.**
+
+*The red end.* The strongest argument against a non-polar solvent was that the pigment's red band sits
+at 623–626 nm against a detector that stopped at 629.8 — no room for a solvatochromic shift, and the
+shift direction is not predictable for a magnesium pigment. Both halves have moved. The capture window
+now reaches **635.9 nm**, and the shipped metric never looks past **580 nm** — it reads 448–460,
+500–560 and 565–580. The red-end argument still bites the *baseline anchor* at 620–630, but not the
+number the instrument actually reports.
+
+*The hazard.* De-aromatised white spirit carries an aspiration classification that isopropanol does not.
+But it is an **ingestion** hazard — the danger is swallowing and then aspirating, which is why the case
+literature is unlabelled bottles and siphoned fuel, not workshop use. Against that, isopropanol flashes
+at **12 °C** and white spirit at **40–60 °C**, and it is the alcohol whose vapour sits inside its
+flammable range on a warm bench. On the risk that a workshop actually meets, the hydrocarbon is the
+safer of the two.
+
+*The mixture.* A petroleum distillate is not a defined substance, which ought to disqualify it from a
+method that must compare across years. Except that saturated hydrocarbons have no chromophore above
+about 280 nm, so batch-to-batch variation is **optically invisible** across our whole 400–636 nm window.
+One protocol line — blank and sample from the same bottle — closes it.
+
+**What is genuinely uncertain is smaller than any of those, and more interesting.**
+
+The first question is whether the jar goes *optically clear* or merely *less cloudy*. A hydrocarbon
+dissolves the waxes beautifully; it is a poor solvent for the **phospholipids**, whose head groups are
+polar, and for the press fines. Fixing the waxes is not the same as fixing the turbidity.
+
+The second is a coordination question. The magnesium at the centre of the pigment wants a fifth ligand.
+In an alcohol the solvent provides one and the pigment stays as single molecules; in a rigorously dry
+hydrocarbon it can take that ligand from a *neighbouring pigment molecule* instead, forming dimers whose
+bands are shifted and broadened. Because that is an equilibrium, the spectrum would then depend on
+concentration — and a metric built on dilution-invariance cannot survive that. Four things argue it will
+not happen here: our pigment is present at a few **micromolar** where the effect is a millimolar
+phenomenon; the dissolved oil supplies roughly ten thousand ester carbonyls per pigment molecule, and
+any ligand in excess breaks the aggregates; up to a third of the pigment pool is protopheophytin, which
+has no magnesium at all; and hardware-shop solvent is not dry — the water it carries is itself a ligand.
+
+**And one possibility that runs the other way.** In the present system the pigment is almost certainly
+not dissolved in the isopropanol at all: it is lipophilic, and it sits inside the oil droplets. Diluting
+such a sample makes *more droplets*, not different ones, so each pigment molecule's surroundings never
+change — which may be part of why the metric is so indifferent to dilution. In a true solution that is
+no longer automatic. It is a reason to measure rather than to assume.
+
+**The measurement that would settle all of it** is one evening: the same oil in both solvents, at three
+dilutions, plus ten repeats with the jar left alone and ten with it re-seated. The first arm answers
+whether it goes clear. The second answers whether dilution-invariance survives. The third compares
+against two numbers we already have — and it is the one that could change what we work on next, because
+the re-seating scatter we currently blame on the sample holder was itself measured through a turbid
+liquid, and nobody has yet checked what it becomes in a clear one.
+
+**Nothing changes today.** The instrument keeps isopropanol, and the case above is a case for a
+measurement, not for a substitution.
 
 <!--PAGEBREAK-->
 
