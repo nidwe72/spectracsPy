@@ -646,6 +646,17 @@ liquid, and nobody has yet checked what it becomes in a clear one.
 **Nothing changes today.** The instrument keeps isopropanol, and the case above is a case for a
 measurement, not for a substitution.
 
+> ⭐ **The measurement is now scheduled.** The solvent and its vessels arrive on 20 August 2026, and
+> `SPEC_capture_quality.md` §16.12.7e sets out the evening: a blank first, then clarity, then dilution, then
+> the re-seat comparison, with what each result would mean written down before the data.
+>
+> ⛔ **One thing in §6.6 below governs it, and it is not an optical argument.** The lamp is a 220-volt unit
+> directly beneath the sample, so any vessel change is argued on leak risk first: a one-piece vial with a
+> lined cap qualifies, a cup closed by a workshop-milled lid does not. And **polypropylene cannot be the
+> cuvette at all** — §6.6 rejects it as hazy, which is to say it would manufacture the very scattering
+> pedestal chapter 5 is about, and feed it back through the beam. The PP cups are for mixing and storage;
+> the light must not pass through them.
+
 <!--PAGEBREAK-->
 
 ## 5. Turbidity: the pedestal

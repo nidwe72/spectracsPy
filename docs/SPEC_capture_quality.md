@@ -5422,7 +5422,151 @@ hazard case is roughly a wash and favours the hydrocarbon on fire, and §16.36.6
 contains an assumption nobody had tested. ⇒ the hydrocarbon route is **reopened as a measurement**, not as a
 proposal.
 
+> ⭐⭐ **AND THE HARDWARE WAS ORDERED THE SAME DAY.** De-aromatised white spirit, PP cups and a glass cup
+> solution arrive **Thursday 2026-08-20**. ⇒ the three arms above now have a run order, a vessel gate and a
+> pre-registration: **§16.12.7e**. ⛔ Read its GATE 0 before filling anything — PP cannot be the cuvette, and
+> the glass vessel is argued on **leaks before optics** (`DOC_sample_physics` §6.6: a 220 V lamp sits directly
+> beneath the sample).
+
+### ⭐⭐ 16.12.7e THE THURSDAY SESSION — the hardware is bought, so the experiment needs a run order  *(Edwin 2026-08-19; DESIGN + 📌 PRE-REGISTRATION, nothing run)*
+
+⭐ **Arriving Thursday 2026-08-20**: de-aromatised white spirit (*entaromatisierter Terpentinersatz*),
+**PP cups**, and a **glass cup solution** on order. §16.12.7d reopened the hydrocarbon route as a measurement;
+this section is that measurement with a run order, a vessel gate and the results written down in advance.
+
+⚠ **§16.12.8 says "do not buy anything yet" and has been overtaken by events.** That is fine and not a
+contradiction: it was written about *heptane*, whose hazard case is different, and it says the container
+problem is DOWNSTREAM of the solvent. The container question is now upstream, because the container arrived
+first — so it is answered first, below.
+
+#### ⛔⛔ GATE 0 · THE VESSEL — argued on LEAKS, then on haze, and only then on optics
+
+⛔ **`DOC_sample_physics` §6.6 is the binding constraint and it is a SAFETY one:**
+
+> *"the vessel sits above mains electricity. The lamp is a **220 V** unit housed in the **lower cone**,
+> directly beneath the sample, because the beam runs top-down. **Any leak runs down into it.** … a milled
+> glass lid, a clamped polymer window, or any workshop adaptation is a **fabricated seal of unknown
+> reliability sitting over mains voltage**."*
+
+⇒ **the first question about the glass cup is not optical.** A screw-cap vial or a one-piece vessel with a
+lined cap passes; a cup closed by a workshop-milled lid does not, however good its glass. ⛔ The jar in use
+today is sealed, single-piece and known-good, and that is worth more than it looks.
+
+⛔⛔ **AND PP CANNOT BE THE CUVETTE — this is our own finding, not a caution.** §6.6 again: polypropylene is
+*"semi-crystalline and **hazy**. Haze is wide-angle scatter: precisely the pedestal chapter 5 is about, fed
+straight back into the beam."* ⇒ a PP cuvette would **manufacture the very pedestal the solvent switch exists
+to remove** — and because it would do so identically on reference and sample, `T = S/R` would partly hide it
+while `A_valley` sat on a floor belonging to the vessel rather than the sample. ⛔ **The light must never pass
+through PP.**
+
+⭐ **What the PP cups ARE for, and it is a real job**: mixing, decanting, rinsing and storage — §16.23's role
+for the 15 mL screw-cap tube, in a wider vessel. ⚠ And one cheap experiment: our own table rates PP against
+aliphatics as *"fair, **swells slowly**"* ⇒ **leave one cup half-filled with white spirit overnight and look
+at it**. Minutes of contact is fine; a storage bottle is not, and the failure is gradual rather than dramatic.
+
+#### ⚠ GATE 1 · THREE MEASUREMENTS TO TAKE WITH A RULER, BEFORE ANY CHEMISTRY
+
+| | why it must be known first |
+|---|---|
+| ⭐ **internal path length** | the jar is **1.3 cm**, which is the `l` behind every absorbance we own — `A_Soret ≈ 0.83` at that path. A different width **rescales the whole archive's comparison**, and finding out afterwards means re-deriving twice |
+| ⚠ **does it seat, and does it fit the holder** | a tapered or rimmed cup has no flat reference surface. ⛔ Discovering a mechanical misfit on Thursday evening wastes the delivery |
+| ⚠ **wall thickness + flatness** | it enters the Fresnel term and the §16.7 focal plane |
+
+⚠ **AND §16.7's FOCAL-PLANE CHARACTERISATION IS REOPENED WHATEVER THE ANSWERS ARE.** The solvent's refractive
+index moves **1.377 → ≈ 1.43** and the wall changes with it, so the beam's focus inside the sample is not the
+one §16.7 measured. ⛔ Do not read a small `A` shift on Thursday as chemistry until this is excluded.
+
+#### ⭐ GATE 2 · THE REFERENCE IS A MEASUREMENT TOO
+
+⛔ **Blank first, in the SAME vessel, from the SAME bottle, before any oil touches anything.** A hydrocarbon
+blank in a new cup is a different reference from every reference in the archive, and every `T = S/R` on
+Thursday is relative to it. ⚠ Draw the sample dilution from the same bottle as the blank — §16.12.7d's one
+protocol line that makes the distillate's lot-to-lot variation irrelevant.
+
+⚠ **Keep the CONCENTRATION, not the volume.** §16.23's recipe is **2 × 60 µL capillaries into 10 mL**
+= **1.2 % v/v**. If the new vessel takes a different fill, scale the capillaries to hold 1.2 % — changing dose
+and solvent in one step would make Thursday uninterpretable.
+
+#### ⭐⭐ THE INSTRUMENT FOR THIS EXPERIMENT IS THE SETTLING MONITOR — and that is not a coincidence
+
+⭐ Arm A asks *"does it go **optically clear**, or merely less cloudy?"*, and that question's answer is
+**`A_valley` at the first look** — exactly what the monitor reports, on a trace, with a settling curve beside
+it. ⇒ **run every arm through the bench at `Frames = 60`, as an ordinary measurement.** The machinery §31 and
+§29 built to work *around* a dispersion is the machinery that will measure whether we still need it.
+⭐ Corollary worth stating plainly: **if the hydrocarbon works, the settling subsystem's last job is to prove
+itself unnecessary.** That is a good end for it, and it is not wasted work.
+
+#### 📌 PRE-REGISTRATION — the run order, and what each result MEANS, written before the data
+
+```
+   Thursday, one evening, one oil, one rig.  Arms in THIS order.
+
+ 0  BLANK        white spirit in the new vessel, no oil.  Reference + one sample capture.
+                 gate  A_valley of solvent-against-itself sits at the instrument floor (§16.26, 0.42 %)
+                 ⛔ if it does not, the VESSEL is scattering and nothing after this is interpretable
+
+ A  CLARITY      1.2 % v/v oil, one fill, measured immediately
+                 gate  A_valley at the FIRST look, and the eye
+                 ⭐ CLEAR      A_valley ~ 0.08 flat from row 1, branch "arrived-clear", ~17 s
+                 ⚠ PARTIAL    lower than IPA but still falling  -> the pedestal shrank, it did not go
+                 ⛔ CLOUDY     the alkane fixed the WAXES and not the phospholipids or the press fines
+                               — §16.12.7d names this the MOST LIKELY failure mode, not the magnesium
+
+ B  DILUTION     1x, 0.5x, 0.25x in BOTH solvents (six fills)
+                 look for  Qy red-shift with c · band broadening · a shoulder growing super-linearly
+                 ⭐ gate  does Q% stay flat across dilutions?   IPA today: 3.4 % (SPEC_metric_research §10.2)
+                 ⛔ if Q% moves MORE in the hydrocarbon, Mg self-coordination is real at our concentration
+                    and dilution-invariance — the metric's whole basis — does not survive the solvent
+
+ C  RE-SEAT      ⭐⭐ 10 measurements jar untouched, then 10 with re-seating, in the hydrocarbon
+                 gate  against numbers we ALREADY have:  0.063 untouched / 0.70 re-seated (§16.36.6)
+                 collapses toward 0.063  -> turbidity was a large part of the "holder" term, and
+                                            ROADMAP PRIO 1 is attacking the smaller half
+                 stays near 0.70         -> the holder really is the lever, now on evidence
+```
+
+⭐ **Arm C is the cheapest and the most decisive** — it needs no new analysis, only twenty measurements, and it
+is the one that can **re-rank the roadmap**. ⛔ It is also the only arm that answers §16.12.7d's biggest
+finding: the 0.70 was measured on an IPA dispersion and then treated as a solvent-independent constant.
+
+⚠ **Order is not arbitrary.** A fails ⇒ B and C measure a dispersion in a new solvent, which is a much smaller
+result — run them anyway, but read them as that. B fails ⇒ the hydrocarbon cannot ship at all, and C becomes a
+diagnostic about turbidity rather than a solvent decision.
+
+#### ⚠ HANDLING — three lines, and they are not boilerplate
+
+⭐ White spirit flashes at **40–60 °C** against isopropanol's **12 °C**, so on the axis that bites beside a warm
+lamp it is the safer of the two (§16.12.7d). ⛔ Its H304 is an **ingestion** hazard: **keep it in its original
+labelled bottle and never decant into anything that resembles food packaging** — the incident literature is
+unlabelled bottles, and an Ölmühle is food premises. ⚠ Ventilate; it is a higher-boiling cut, so the vapour
+lingers longer than IPA's even though there is less of it.
+
+#### ⛔⛔ WHAT MUST NOT HAPPEN ON THURSDAY
+
+- ⛔ **The shipping solvent does not change.** Isopropanol ships until all three arms have run and been read.
+- ⛔ **Nothing is dismantled.** Not the settling gate, not TEST B or C, not the heated holder work. §16.12.7d
+  lists what *would* become vestigial; a list of casualties is not a discharge order.
+- ⛔ **`T = 18.6`, the 12–22 domain and the Ampel are not re-derived from one evening.** Thursday produces
+  *relative* numbers — is it clear, is it flat under dilution, is it repeatable — and none of those need the
+  verdict scale. Re-deriving a threshold from a single fill in a new vessel would repeat §16.17's mistake.
+- ⛔ **The 143-report archive is not reprocessed.** If the solvent changes, the archive becomes a previous
+  epoch, deliberately and with a line in the record — not silently, by re-running old files under new constants.
+- ⚠ **And the pedestal correction is not retired by a clear jar** — `DOC_pedestal_correction` Appendix D puts
+  scattering at ≤ 17 % of `r_Q`, and §31.9b has now removed the λ⁻ⁿ fit from the things that could overturn it.
+
+#### ⏸ STATUS
+
+⭐ **Hardware bought, experiment specified, nothing run.** The decision this session can reach is *"the
+hydrocarbon is worth adopting / is not"* — ⛔ **not** *"the hydrocarbon is adopted"*, which needs the threshold
+work, the vessel qualified on leaks, and a re-derived §16.7 behind it.
+
 ### 16.12.8 The container problem is DOWNSTREAM of the solvent — do not buy anything yet
+
+> ⚠ **OVERTAKEN BY EVENTS, 2026-08-19 — and not contradicted.** This section was written about *heptane*, and
+> the vessels for a **de-aromatised white spirit** trial are bought and land Thursday. The container question
+> is now UPSTREAM simply because the container arrived first; it is answered in **§16.12.7e** GATE 0, on the
+> safety grounds `DOC_sample_physics` §6.6 makes binding. ⛔ The advice below still stands for anything beyond
+> that trial: buy nothing further until the arms have run.
 
 Only relevant **if heptane becomes necessary**. Every good triglyceride solvent attacks polystyrene; alcohols are
 essentially the only PS-safe organic family, so there is no drop-in. The binding constraint is that **light passes
