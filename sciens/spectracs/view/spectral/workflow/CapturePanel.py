@@ -917,6 +917,19 @@ class CapturePanel(QWidget):
 
         if result.hasValue():
             answer = result.answer
+            # ⛔⛔ A DEGRADING FILL HAS A VALUE BUT DID NOT SETTLE (§31.7). `hasValue()` is true for it —
+            # deliberately, the first look IS the answer — so this line would otherwise greet a fill that
+            # was coarsening throughout with "✅ settled", which is precisely the lie the new outcome exists
+            # to prevent, at the one place the operator actually looks while measuring.
+            from sciens.spectracs.plugin_sdk import MonitorOutcome
+            if result.outcome == MonitorOutcome.DEGRADING_FILL:
+                self.__showStatusText(
+                    "⚠ the fill was DEGRADING, not settling — %s %.2f read from the first look after %s. "
+                    "The value stands (the earliest look is the least contaminated), but PREPARE A FRESH "
+                    "DILUTION before measuring again."
+                    % (answer["valueKey"], answer["value"],
+                       self.__minutesText(result.clearingSeconds)))
+                return True
             self.__showStatusText("✅ settled after %s — %s %.2f (%s)"
                                   % (self.__minutesText(result.clearingSeconds), answer["valueKey"],
                                      answer["value"], answer["readAs"]))
