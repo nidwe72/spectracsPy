@@ -1327,6 +1327,8 @@ the big signal, read the small one.**
 | ⭐ `j` | **2 windows** | ⭐ the comparison spans `k` vs `k−2` (~70 s) — §14.2b's noise budget, **not** adjacent |
 | `k_gate` | 2 | consecutive decision comparisons (⭐ TEST A, §14.5) |
 | ⭐ `m_trend` | **5 decision rows** | the re-clouding trend baseline (⭐ TEST B, §14.5) |
+| ⭐ `m_degrade` | **10 decision rows** | the degrading-fill trend baseline (⭐ TEST C, **§31**) — ⚠ DESIGN, not built |
+| ⭐ `k_sig` | **4 × stdErr** | TEST C's significance term — ⭐ **no magnitude term at all**, which is the whole point (§31.3) |
 | ⭐ `W_gate` | **= `W`** | ⛔ NOT an open value — §14.2b's algebra refutes a shorter gate window |
 | `mat` | 0.010 | how far `A_valley` must have fallen to call the fill "was clearing" |
 | `σ_Q` | 0.063 | the no-re-seat floor, used only for the rise sanity check |
@@ -1341,6 +1343,7 @@ the big signal, read the small one.**
                                             ⛔ MEASUREMENT_BROKEN if A_Soret < 0.15 on the first full rows
        │        ⭐ TEST A (flatness, |rate(k,k-2)| < θ, x k_gate)  — may FIRE the gate
        │        ⭐ TEST B (re-clouding trend over m rows)          — may RESET it   (§14.5)
+       │        ⭐ TEST C (degrading trend, slope > 4*stdErr, NO θ)   — may END it    (§31)
        │
        ├─ gate fires ── A_valley fell >= mat below its MAXIMUM ──▶ CLEARING branch
        │                otherwise ─────────────────────────────▶ ARRIVED_CLEAR branch
@@ -1568,6 +1571,13 @@ decision row has shown a **fall** since the maximum. A fill that is flat from th
 trivially (max = first row, no fall required), so the arrived-clear branch is unaffected.
 ⚠ Test B costs nothing before its 5 rows exist; until then only A runs, which is correct — a re-cloud
 cannot be *established* from fewer points than that anyway.
+
+> ⭐⭐ **AND THERE IS A THIRD CASE THAT NEITHER TEST CAN SEE — §31, added 2026-08-19.** A fill that is not
+> re-clouding but *ripening* rises **monotonically at a rate far below θ** (0.0012 /min measured), so TEST A
+> calls it flat and TEST B stays silent — while `__hasFallenSinceMaximum` blocks the gate on every row and
+> stalls the run **without a word**. ⛔ **Do not fix this by lowering θ:** TEST B moves `huntFrom` (§30.8),
+> which on a ripening fill discards the only good look in the run. ⇒ **TEST C is the mirror image of TEST B,
+> not another instance of it** — see §31.3's table.
 
 ### ⭐⭐ 14.6 THE LATCH — the answer is fixed when it is read, and observation cannot change it  *(2026-08-17)*
 
@@ -4540,3 +4550,540 @@ after a reset, so nothing is wrong today — but it is the one place where the t
 - ⚠ **R2.5 cannot make the photo the winning window's own.** The engine promotes a REDUCED spectrum and the
   raw frames behind it are gone (§9.1a). Keeping two frames only stops the picture coming from the opposite
   end of the run from the spectrum beside it.
+
+<!--PAGEBREAK-->
+
+## ⭐⭐ 31 · TEST C — THE DEGRADING FILL — a monotone rise that neither A nor B can see  *(Edwin's run 001 of 2026-08-19; DESIGN, not built)*
+
+> *"i am currently measuring an old sample from yesterday where the turbidity seems to rise and rise and
+> rise. so the settlement algorithm takes long. think that is okay?"*
+
+⭐ **The answer it produced was right. The way it got there was not, and it got out by luck.**
+
+### ⭐ 31.1 THE EVIDENCE — `20260819/001`, a day-old fill, 43 rows
+
+```
+outcome SETTLED_IMMEDIATE | answer Q% = 13.585 at t = 6.32 s | branch arrived-clear
+readAs FIRST_SETTLED_WINDOW | depth 0.111 vs threshold 0.126 | browningPerMinute 0.048
+clearingSeconds 758.1 | rowsAfterRead 43 | W = 60
+```
+
+| | row 0 (6.3 s) | row 42 (758.1 s) | |
+|---|---|---|---|
+| `A_valley` | 0.0463 | 0.0610 | ⛔ **+32 %, monotone — it never once fell** |
+| `A_Soret` | 0.6798 | 0.6551 | −3.6 %, monotone |
+| `Q%` | 13.585 | 14.185 | dips to 13.474 at row 7, then climbs |
+
+⭐ **Nothing settled at any point in 12.6 minutes.** This is what a day-old dilution is expected to do —
+Ostwald ripening and coalescence coarsening the droplets (`DOC_sample_physics.md` §4.4,
+`SPEC_capture_quality.md` §16.12.2). ⚠ The mechanism is inferred from the shape and the sample's age; it was
+not independently confirmed on this fill.
+
+### ⛔⛔ 31.2 WHY IT TOOK 12.6 MINUTES — and why it nearly took 25 with no answer at all
+
+⛔ **It was not the rate test.** The valley climbs at **0.0012 /min**, comfortably under `θ = 0.005`, so
+**TEST A called the fill flat from the third row onward** and `__consecutiveFlat` was satisfied almost
+immediately. What blocked the gate for forty-two consecutive rows was this:
+
+```python
+def __hasFallenSinceMaximum(self, decisions):        # §14.5, "never settle at the TOP of a re-clouding dip"
+    maximumIndex = valleys.index(max(valleys))
+    return maximumIndex < len(valleys) - 1
+```
+
+⭐⭐ **On a monotonically rising valley the maximum IS always the newest row**, so this returned `False`
+every time. The gate fired at row 42 — when the valley ticked **0.0610 → 0.0609**. ⛔ **A noise tick of
+0.0001 released the run.**
+
+⛔ **Had the rise continued cleanly to `maxSeconds`, the gate would have been blocked to the cap and the run
+would have ended `NEVER_SETTLED` with NO VALUE** — while a perfectly good first look sat in the trajectory
+from 6.3 seconds. ⚠ That is the §30.3 failure mode ("a run can end with no answer at all") arriving through
+a door §30.3 did not close.
+
+⚠ **And the guard stalls SILENTLY.** Forty-two rows of blocked gate produced no note, no diagnostic and no
+operator-facing word. The record of run 001 does not say why it took 12.6 minutes; it had to be reconstructed
+from the trace.
+
+### ⛔ 31.3 WHY TEST B IS THE WRONG TEST FOR IT — the mirror image, not another instance
+
+The first instinct is *"the valley is rising, that is TEST B"*. ⛔ **It is the opposite case, and merging them
+would be a defect.** TEST B (§14.5, `__isReclouding`) requires
+
+```python
+return slope > self.THETA_PER_MINUTE and slope > 2.0 * standardError
+#            ^ MAGNITUDE  0.005/min       ^ SIGNIFICANCE
+```
+
+⭐⭐ **Only the magnitude term separates the two cases.** Measured on the 001 trace, the significance half
+passes overwhelmingly and everywhere:
+
+| baseline | slope /min | std error | **slope / stdErr** | `> θ`? |
+|---|---|---|---|---|
+| 5 rows @ row 8 | 0.00094 | 0.000099 | **9.5** | ⛔ no |
+| 5 rows @ row 30 | 0.00140 | 0.000036 | **38.6** | ⛔ no |
+| 5 rows @ row 41 | 0.00104 | 0.000064 | **16.1** | ⛔ no |
+| **whole run, 43 rows** | **0.00122** | 0.0000071 | **171.5** | ⛔ no |
+
+⇒ **θ is a magnitude threshold: right for flatness, wrong for a trend.** ⚠ Note the pre-§27.26 value of
+0.0017 would have missed it too — this is not an artefact of the jar-B raise.
+
+⛔⛔ **AND LOWERING θ WOULD BE ACTIVELY HARMFUL, WHICH IS THE REAL POINT.** TEST B does not merely reset the
+gate; per §30.8 it resets the hunt window:
+
+```python
+self.__huntFrom = len(decisions) - 1     # everything before this row belongs to a cloudier fill
+```
+
+⭐ That is correct for a re-cloud — the fill re-clouded and will clear again, so the pre-event rows describe a
+different fill. ⛔ **It is exactly wrong for a ripening fill, where the earliest row is the LEAST contaminated
+one and the answer.** A θ low enough to catch 001 would have fired TEST B on nearly every row, marched
+`huntFrom` forward behind the degradation, discarded the best data at each step, restarted `clearingSeconds`
+each time, and run to the 25-minute cap — then reported the **most** degraded look of the run, or nothing.
+
+| | ⭐ **TEST B — re-clouding** | ⭐⭐ **TEST C — degrading fill** |
+|---|---|---|
+| rate | fast, above θ | slow creep, ≪ θ, but hugely significant |
+| shape | a step — an **event** with a start | monotone **from row 0** |
+| physics | crossing the cloud point on the way in (§14.5) | ripening / coalescence (`DOC_sample_physics` §4.4) |
+| reversible | ⭐ **yes** — the lamp re-warms it and it clears | ⛔ **no** — droplets do not un-coarsen |
+| the future | it will get better | it will only get worse |
+| earlier rows | ⛔ invalid — discard (`huntFrom`) | ⭐ **the best data — keep** |
+| correct action | **wait**, reset the clock | ⭐⭐ **stop**, read the first look, say so |
+
+### ⭐⭐ 31.4 THE RULE
+
+```
+   ⭐ TEST C — DEGRADING FILL   (LONG baseline, SIGNED, significance-only — no magnitude term)
+
+        least-squares slope of A_valley over the last m_degrade = 10 decision rows
+             slope > k_sig * its own standard error,   k_sig = 4
+        AND  the rise across that baseline >= f_floor * A_valley(now),  f_floor = 1 %
+        AND  TEST B did not fire on this row
+        for k_degrade = 2 consecutive decision rows
+
+        ->  DEGRADING: stop the run, read NOW, and tell the operator the fill is going backwards
+```
+
+⭐ **Three terms, three different jobs, and none of them is θ.**
+
+- **`slope > 4 * stdErr` is the detector.** It is the only clause with evidence behind it: on 001 it holds at
+  9–39 on every window and 171 over the run, while on a flat fill the slope is zero-mean noise and the test
+  is a 4σ one-sided event per row, squared by `k_degrade = 2`.
+- **`rise ≥ 1 % of A_valley` is not a second significance test — it is a RELEVANCE test.** With enough rows,
+  an arbitrarily small real drift becomes significant; this clause says *do not end a run over a rise that
+  does not matter*. ⚠ **Reasoned, not measured.** On 001 the rise across ten rows is **6.0 %** — six times
+  the floor — so the rule is not sitting on this number; it is a backstop.
+- **`m = 10` rather than TEST B's 5** buys separation from TEST B *and* an honest lever arm. ⚠ It costs the
+  first ~3 minutes: TEST C cannot fire before ten decision rows exist.
+
+⭐ **Simulated against the 001 trace** (the rule replayed row by row):
+
+| `m` | fires at row | **t** | slope/stdErr there | rise | vs the 12.63 min it actually took |
+|---|---|---|---|---|---|
+| 5 | 5 | 1.57 min | 7.3 | 2.9 % | 8.0× less lamp — ⛔ but shares TEST B's baseline |
+| 8 | 8 | 2.46 min | 16.0 | 4.3 % | 5.1× less |
+| ⭐ **10** | **10** | **3.06 min** | **21.2** | **6.0 %** | ⭐ **4.1× less lamp, at 21σ** |
+
+⇒ **`m = 10` is the recommendation**: it ends run 001 at 3.06 minutes instead of 12.63 with a 21σ margin —
+not a knife-edge — and it cannot be confused with a re-cloud, which fires at 5 rows and a 4× larger rate.
+
+### ⛔⛔ 31.5 WHAT IT READS — and the ONE place the vertex must be refused
+
+⭐ **TEST C does not invent its own read.** It stops the looking and hands the curve to `__read` (§30.1: one
+read, asked repeatedly) — with a single exception, and the exception is load-bearing:
+
+```
+   if  argmin(A_valley) == huntFrom     # the turbidity NEVER fell: the fill never cleared at all
+   ->  the vertex branch is REFUSED. The FIRST look is the answer, whatever the depth says.
+```
+
+⛔⛔ **Why.** On 001 the `Q%` curve *does* have a turning point — 13.585 → 13.474 over seven rows, then up to
+14.185 — and `depth = 0.111` against `threshold = 0.126` is only a **12 % margin**. Had it cleared that
+threshold, `__read` would have taken the **vertex at row 7 and called it the settled value.** ⛔ On a fill
+whose turbidity never fell, that turning point is not a settling minimum: it is the **crossover where rising
+turbidity and falling Soret happen to balance** — the point where two contaminations cancel, not the point
+where either is smallest. ⭐ It is meaningless, and it would have been reported with a straight face.
+
+⚠ **The other shape is real and must keep the vertex.** A fill that genuinely clears, reaches its minimum,
+and *then* begins to ripen has a true settling vertex; there TEST C's only job is to stop the run early and
+flag the sample. The `argmin(A_valley)` test is what separates the two, and it is the same quantity §29.2
+moved *away* from for the branch decision — ⭐ used here for a different question ("did it ever clear at
+all?"), which is the one question turbidity is still the right witness for.
+
+⚠ **The depth test's own weakness, recorded and NOT fixed here.** It compares a seven-row trend against
+*single-window* noise (§30.5's σ), which understates the trend's significance. On 001 it gave the right
+answer for the wrong reason. ⛔ Do not lower `depthThreshold` before this is re-derived.
+
+### ⭐ 31.6 WHERE IT SITS IN `decide()`
+
+```python
+if self.__gateIndex is not None:          # unchanged — §30.1
+    return self.__read(decisions)
+
+if self.__isReclouding(decisions):        # ⭐ TEST B FIRST, ALWAYS. A real re-cloud outranks a slow
+    ...                                   #    trend, and it moves huntFrom, which resets C's baseline.
+    self.__degradingRun = 0
+elif self.__isDegrading(decisions):       # ⭐ TEST C — new
+    self.__degradingRun += 1
+elif self.__isFlat(decisions):            # ⭐ TEST A — unchanged
+    self.__consecutiveFlat += 1
+else:
+    self.__consecutiveFlat = 0
+    self.__degradingRun = 0
+
+if self.__degradingRun >= self.DEGRADE_CONSECUTIVE:
+    return self.__fireDegraded(decisions)             # stop + read, per §31.5
+if self.__consecutiveFlat >= self.GATE_CONSECUTIVE and self.__hasFallenSinceMaximum(decisions):
+    return self.__fireGate(decisions)
+return MonitorDecision.carryOn(note)
+```
+
+⚠ **Ordering claims, stated so they can be checked:** (1) TEST B is evaluated first because a genuine
+re-cloud must not be read as degradation — its rate is 4× larger, so on real data the two do not overlap;
+(2) a TEST B reset **must** zero `__degradingRun`, because `huntFrom` has moved and the baseline TEST C was
+fitting no longer describes the fill in the beam; (3) TEST C is checked before the gate so that a degrading
+fill can never reach `__fireGate` and take the clearing path.
+
+⭐ **TEST C is an `elif` of TEST A on purpose.** A row cannot be both flat and significantly rising — but
+`__isFlat` uses one 70-second comparison and `__isDegrading` a ten-row fit, so both *can* be true at once,
+and on 001 both were true for forty rows. ⇒ **degradation outranks flatness**, or the gate would win the race
+on exactly the fill TEST C exists to catch.
+
+### ⭐ 31.7 WHAT THE RUN SAYS ABOUT ITSELF
+
+⭐ **A new outcome, and the enum's own comment is the argument for it:** *"an outcome without a value must
+always say WHY."* Here the outcome **has** a value, and it must still say why the run ended.
+
+```python
+DEGRADING_FILL = "DEGRADING_FILL"   # the fill was coarsening, not settling — the FIRST look is the answer
+...
+def hasValue(self):
+    return self in (SETTLED_IMMEDIATE, SETTLED_AFTER_CLEARING, COMPLETED, DEGRADING_FILL)
+```
+
+⚠ **This is an ADDITION, not a rename** — §30.12's objection to renaming `SETTLED_IMMEDIATE` (it is persisted
+in every saved `MonitorRecord`) does not apply: adding a member orphans nothing. Touch points are few and
+known: `MonitorOutcome.hasValue`, the outcome glossary at `DevSpectralPlugin.py:668`, the coach line, the
+report header, and `test_monitor_engine` / `test_clearing_evaluator`.
+
+⛔ **The alternative — reuse `SETTLED_IMMEDIATE` and carry the degradation in `diagnostics` — is rejected**,
+because the operator would then be told *"settled"* about a fill that never settled, with the truth one level
+down in a dict. ⚠ **The one open question for Edwin:** whether `branch` also gains a third value
+(`"degrading"` beside `"arrived-clear"` / `"was-clearing"`). Recommendation: **no** — the read genuinely *is*
+the first settled window, and `branch` is consumed by the report renderer and the settling views; the outcome
+carries the news.
+
+**Diagnostics to record** (opaque dict, §30/R2.1 — no record key, no migration):
+
+| key | |
+|---|---|
+| `degradingPerMinute` | the fitted `A_valley` slope at the firing row — ⭐ the number that says *how fast the sample is dying* |
+| `degradingSignificance` | `slope / stdErr` — 21.2 on 001 |
+| `degradingRisePercent` | rise across the baseline as % of `A_valley` — 6.0 on 001 |
+| `valleyFell` | `argmin(A_valley) > huntFrom` — ⭐ **whether the vertex was available at all** (§31.5) |
+| `depth`, `depthThreshold`, `browningPerMinute` | unchanged |
+
+**Operator-facing, per §13.** The coach line becomes `"⚠ the fill is getting cloudier, not clearer — reading
+now"`, severity `WARN`, and the run ends with a verdict-level sentence the miller can act on:
+
+> ⭐ **"This fill is degrading — the reading stands, but prepare a fresh dilution."**
+
+⭐ That connects to a rule the archive already carries: **measure within the hour** (`SPEC_capture_quality`
+§16.11, the aged-fill finding). ⇒ TEST C is the instrument finally *enforcing* a protocol rule it had only
+been documenting.
+
+### ⚠ 31.8 THE SILENT STALL IS A SEPARATE FIX — do it with C, not instead of it
+
+⛔ `__hasFallenSinceMaximum` blocking the gate produces **no note whatsoever**. Even with TEST C in place it
+can still block (a rise too slow or too small for C), and it must stop doing so mutely:
+
+```python
+"gate held — A_valley's maximum is the newest look (%d rows), so nothing has settled yet"
+```
+
+⭐ The phrase must not contain *"gate fired"*, which §14.3's acceptance test greps for.
+
+### ⚠ 31.9 WHAT COULD GO WRONG — checked against the seven series F runs and the code
+
+| ⚠ | |
+|---|---|
+| **a slow re-cloud that would have recovered** — C ends a run that TEST B would have let clear | ⭐ mitigated by `m = 10` (a cloud-and-recover episode has a falling side within ten rows, which breaks the fit) and by TEST B's priority. ⚠ **Not measured** — none of the seven series F runs re-clouded, and the re-clouding fixture is synthetic |
+| **a false positive on a genuinely clear fill** | slope is zero-mean noise there; `4σ` on two consecutive rows plus a 1 % rise floor. ⛔ **must be replayed against all seven series F records before it ships** — a rule that fires on a good fill costs a measurement |
+| **`huntFrom` interaction** | ⭐ TEST C must NEVER move `huntFrom`. Stated here because it is the single easiest mistake to make while implementing it beside TEST B |
+| **the first frames after insertion** | ⚠ §16.36 records a real settling transient on a *fresh* fill; ten rows at ~18 s is ~3 min, well past it. At a 5-second cadence (§30.7) ten rows is **50 s**, which is not — ⛔ `m` may need re-deriving in TIME rather than in rows when the cadence changes, exactly as §14.3 did for the rate |
+| **`A_Soret` divergence as a second discriminator** | ⛔ **MEASURED AND REFUTED for TEST C's regime — §31.9a, refined in §31.9b.** The coupling is real (`k = 1.49 ± 0.03` in our turbidity regime), but bleaching swamps it at any rise rate slow enough to be TEST C's business — and the break-even depends on *this fill's* bleach rate, which varies 4× and is unknowable mid-run. ⇒ ⛔ **never gate on the sign** |
+
+### ⛔⛔ 31.9a THE `A_Soret` DIVERGENCE, MEASURED AGAINST SERIES F — the premise is TRUE and the discriminator is USELESS  *(2026-08-19, from the seven Lugitsch A records already on disk)*
+
+§31.9 offered the sign of `ΔA_Soret` as a second discriminator: *a re-cloud adds a scattering pedestal that
+lifts both bands, so divergent signs mean ripening and same signs mean re-clouding.* ⭐ **Edwin asked for it to
+be checked against the last Lugitsch runs rather than left as reasoning. It was, and the answer splits in two.**
+
+#### ⭐ THE PREMISE IS CONFIRMED — `k = 1.05`, measured almost free of any bleaching assumption
+
+⭐⭐ **Run 006 is the instrument for this**, and it was already in the archive: its first nine rows sweep
+`A_valley` from **1.0671 to 0.1424** — a **13× turbidity range** — in 2.06 minutes. Over so large a change in
+so short a time, photobleaching is a rounding error, so the ratio is nearly assumption-free:
+
+| assumed bleach rate | **k = ΔA_Soret / ΔA_valley** | bleaching's share of the Soret change |
+|---|---|---|
+| 0.000 /min | 1.065 | 0.0 % |
+| −0.005 /min | **1.054** | 1.0 % |
+| −0.010 /min | 1.043 | 2.1 % |
+| −0.020 /min | 1.021 | 4.2 % |
+
+⇒ ⭐ **`k = 1.05 ± 0.02` across the whole plausible bleach range.** Turbidity really does move both bands
+together, and it moves the Soret *slightly more* — which is the right sign for a scattering pedestal, since
+448–460 nm is bluer than 500–560 nm.
+
+#### ⭐ AND IT YIELDS THE BLEACH RATE OF EVERY FILL — `b = (ΔA_Soret − k·ΔA_valley) / Δt`
+
+| run | ΔA_valley | ΔA_Soret | Δt | **b /min** |
+|---|---|---|---|---|
+| 001 | −0.0013 | −0.0075 | 1.70 | −0.0036 |
+| 002 | −0.0019 | −0.0075 | 1.69 | **−0.0033** ⭐ the gentlest |
+| 003 | −0.0016 | −0.0210 | 1.66 | **−0.0117** ⛔ the harshest — and 003 is §29.1's −0.482 run |
+| 004 | −0.0182 | −0.0415 | 3.37 | −0.0066 |
+| 005 | −0.0083 | −0.0251 | 1.66 | −0.0099 |
+| 006 | −0.9836 | −1.0854 | 5.14 | −0.0102 |
+| 007 | −0.0175 | −0.0388 | 3.36 | −0.0061 |
+
+⭐ **A 3.6× spread across seven fills of the same oil on one evening.** ⇒ ⛔ **`ΔA_Soret` can never be a
+predictive gate on magnitude** — there is no "expected" Soret fall to compare against. Only its *sign* was ever
+on offer, which is what the next paragraph kills.
+
+#### ⛔⛔ THE DISCRIMINATOR DIES ON THE BREAK-EVEN ARITHMETIC
+
+A rising valley lifts the Soret by `k·ΔA_valley` while the lamp removes `|b|·Δt`. The sign is diagnostic **only
+when the lift wins**:
+
+```
+   k * riseRate * dt  >  |b| * dt        ⇒        riseRate  >  |b| / k
+```
+
+| bleach rate | rise rate the fill must exceed before the Soret sign means anything |
+|---|---|
+| −0.0033 /min (gentlest fill) | 0.0031 /min |
+| −0.0066 /min (median) | **0.0063 /min** |
+| −0.0117 /min (harshest fill) | 0.0111 /min |
+
+⛔⛔ **That break-even band straddles `θ = 0.005 /min` — TEST B's own threshold.** ⇒ **the Soret sign only
+becomes readable in the regime where TEST B already fires on the rate alone.** It tells you nothing you did not
+already know, and it is silent everywhere TEST C operates.
+
+⭐ **Checked on the fill itself.** `20260819/001` rose at **0.0012 /min** — **5× below the median break-even**:
+
+```
+   scattering lift over the run   k * dA_valley   =  +0.0154
+   bleaching over the same run    |b| * dt        =  -0.0827   (at the median b)
+                                                     ^ 5.4x larger. The Soret falls either way.
+```
+
+⇒ ⛔ **On a slow fill the Soret sign is decided by the lamp, not by the turbidity direction.** A slowly
+*re-clouding* fill would show exactly the same divergence as a ripening one. **The test cannot distinguish the
+two cases it was proposed to distinguish.**
+
+#### ⚠ ONE CONSISTENCY CHECK THAT PASSES — and it is weak, so it is stated as weak
+
+Running the coupling backwards on 001 gives an implied bleach rate of **−0.0032 /min**, which sits at the
+bottom edge of series F's −0.0033…−0.0117. ⭐ With `k = 0` — no coupling at all — the implied rate would be
+**−0.0020 /min, below the entire observed range.** ⇒ the data lean toward the coupling being real, ⚠ **but a
+0.0012 difference against a 3.6× spread is not a decisive test**, and it is not offered as one. The `k = 1.05`
+measurement above is the load-bearing evidence; this is corroboration.
+
+#### ⛔ WHAT THIS DOES NOT SHOW
+
+⛔ **No series F run re-clouded**, so the *positive* arm — "same signs ⇒ re-clouding" — remains **entirely
+unmeasured**. What has been measured is the coupling constant that arm depends on, and it turns out to be too
+small to beat the lamp at slow rates. ⇒ the arm is not merely unproven; it is **unreachable in TEST C's range**.
+
+#### ⛔⛔ A SIDE FINDING THAT WAS RUN THE NEXT HOUR, AND CAME BACK WRONG — ⚠ **READ §31.9b BEFORE THIS BLOCK**
+
+> ⛔ **The `n = 0.32` below is WITHDRAWN, and `k = 1.05` is superseded by `k = 1.49 ± 0.03`.** Edwin asked
+> for §16.12.2B's real fit to be run on the seven records; it was (§31.9b), and it refutes the power law the
+> conversion below assumes. ⭐ **§31.9a's conclusion — never gate on the Soret sign — survives**, with a
+> margin of 2.2× rather than 5.4×. The block is kept because it is what prompted the fit.
+
+#### ⚠ THE SIDE FINDING AS FIRST WRITTEN — the pedestal exponent may be ≈ 0
+
+`k` is a two-point estimate of the pedestal's spectral slope. With band centres 454 and 530 nm,
+
+```
+   k = (530/454)^n   =>   n = 0.32          Rayleigh n = 4;  large Mie droplets n -> 0
+```
+
+⛔ **`SPEC_capture_quality.md` §16.12.2B pre-registered this exact reading**: *"n lands in 2–4 → droplets
+growing, Ostwald ripening observed directly"*, against *"**n ≈ 0** → it is a flat offset, not scatter, and
+§16.12.2 is wrong."* ⭐ **This estimate lands near the second branch**, on a 13× lever arm, 20 rows, from data
+that has been on disk since 2026-08-18.
+
+⚠ **Do not promote this to a verdict from here.** It is **two band means, not §16.12.2B's ~50-point λ⁻ⁿ fit**;
+the bands are wide; `k` and `n` trade against a genuine flat offset by that section's own caveat; and it
+measures the slope of the material that *left* the beam, which need not equal the slope of what remains.
+⭐ **Reproduce every number above with `diagnostics/soret_valley_coupling.py`** (reads the seven PDFs
+directly — no fixture, no rig).
+
+⇒ ⭐ **it makes running the real fit urgent, and it is now cheap** — the seven records carry three bands per row
+and the reference spectra are attached. ⭐ It bears directly on `DOC_pedestal_correction.md`, whose premise is
+that the residual is an instrument artifact rather than scatter — a near-flat exponent is *consistent* with
+that document's own chapter 10, not against it.
+
+### ⛔⛔ 31.9b §16.12.2B's λ⁻ⁿ FIT, RUN ON THE SEVEN RECORDS — the model is refuted, not the exponent  *(Edwin, 2026-08-19)*
+
+⭐ `SPEC_capture_quality.md` §16.12.2B pre-registered the reading before any data was seen:
+
+```
+   n in 2-4, and n DECREASING run-to-run  ->  the droplets are growing: Ostwald ripening observed directly
+   n ~ 0                                  ->  it is a flat offset, not scatter, and §16.12.2 is wrong
+```
+
+⛔⛔ **The measured answer is NEITHER, and §16.12.2B lists no third branch.** Three findings, in the order
+they had to be established. ⭐ Reproduce all of them with **`diagnostics/pedestal_exponent_fit.py`**.
+
+#### ⛔ 1 — THE FIT CANNOT BE RUN ON THE SHIPPED ANCHORS. `PB_BASELINE_WINDOWS`' far window is not pigment-free.
+
+| run | A(520–540) | A(620–630) | ratio | **n (power)** | n (offset+power) |
+|---|---|---|---|---|---|
+| 001 | 0.1057 | 0.2558 | 2.42 | **−5.45** | −47.4 |
+| 002 | 0.0810 | 0.2103 | 2.60 | **−5.91** | −53.8 |
+| 003 | 0.0928 | 0.2189 | 2.36 | **−5.32** | −57.8 |
+| 004 | 0.0774 | 0.2036 | 2.63 | **−6.01** | −57.6 |
+| 005 | 0.1076 | 0.2498 | 2.32 | **−5.21** | −54.8 |
+| 006 | 0.0897 | 0.2221 | 2.48 | **−5.62** | −58.0 |
+| 007 | 0.0918 | 0.2368 | 2.58 | **−5.89** | −58.8 |
+
+⛔ **`n` is negative on every run — absorbance RISES toward the red inside the "baseline".** That is not a
+scattering pedestal; it is **protochlorophyll Qy at ~623–626 nm sitting inside the 620–630 window.** ⭐ The
+windows were only ever a *straight-line anchor pair*; nothing ever claimed they were pigment-free, and
+§16.12.2B inherited them without checking. ⚠ The pigment-light stretches actually are **505–515** (A ≈ 0.086)
+and **595–605** (A ≈ 0.122); 620–630 sits on the rising Qy flank.
+⚠ Two smaller corrections while we are here: the windows hold **207 points**, not §16.12.2B's *"~50"* (the
+grid is finer than it assumed), and the 3-parameter `c + k·λ⁻ⁿ` form is **degenerate exactly as that section's
+own caveat predicted** — `c` runs to the window mean and `n` to nonsense.
+
+#### ⛔ 2 — AND THE ARCHIVE COULD NOT SUPPORT THE FIT ANYWAY
+
+⭐ **Only the WINNER spectrum of each run was persisted** (§9.1a, §27.25). ⇒ there is **no within-run pair of
+full spectra at two turbidities**, which is what a pedestal fit needs; seven winners are seven different fills.
+⚠ Between-run difference spectra do not substitute: 003 − 004 (the two halves of one dilution) reads
+**−0.079 at 450 nm** — pigment, not scatter. ⇒ ⭐ **the only spectrally-resolved time series in the archive is
+three band means per decision row**, and that is what the rest of this section uses.
+
+#### ⛔⛔ 3 — ON THOSE THREE BANDS THE POWER LAW ITSELF IS REFUTED
+
+Within one run the pigment concentration is fixed, so `d(band)/d(A_valley)` isolates whatever leaves the beam.
+⭐ **A λ⁻ⁿ pedestal must make that slope MONOTONE in wavelength.** Measured:
+
+| | soret (454 nm) | valley (530 nm) | qBand (572 nm) |
+|---|---|---|---|
+| 006 rows 0–8 — the 13× sweep | 1.065 | 1.000 | **1.302** |
+| 006 rows 9–19 — the tail | 1.900 | 1.000 | **1.494** |
+| 004, whole run | 2.126 | 1.000 | **1.406** |
+| 007, whole run | 2.223 | 1.000 | **1.453** |
+
+⛔⛔ **The redder band moves MORE than the valley, and so does the bluer one — an interior minimum. No power
+law, at any exponent, has one.** Solving the sweep for `n` band by band gives **+0.40 from the Soret and −3.42
+from the Q band**; Rayleigh predicts **+4.0 at both**. ⇒ the two estimates are not a noisy pair, they are
+**incompatible**, and it is the model that fails.
+
+⚠ **Candidate readings, none established here.** Something that multiplies the pigment's *own* bands would
+produce exactly this shape — **pathlength amplification by multiple scattering**, or **pigment leaving the beam
+inside the droplets it is dissolved in** (§16.12.7d's inference, arriving in the data). ⛔ Both are hypotheses;
+this section establishes only that a single-exponent pedestal is not what is there.
+⚠ **And one confound on the sweep row**: at `A_Soret ≈ 2.0` the transmission is ~1 %, where detector
+nonlinearity and stray light compress the reading. ⇒ the **tail** figure is the trustworthy one, and the sweep's
+1.065 should not be quoted alone.
+
+#### ⭐⭐ 4 — WHAT THE POOLED FIT GIVES INSTEAD, AND IT IS BETTER THAN WHAT §31.9a USED
+
+`soret_ij = a_i + k·valley_ij + b_i·t_ij` — one common `k`, a per-run intercept **and** a per-run bleach rate,
+identifiable because the runs differ in how `A_valley` moves against time:
+
+| | **k** | rms | points |
+|---|---|---|---|
+| all rows, all runs | 1.055 ± 0.013 | 0.0095 | 74 |
+| ⭐ **006 truncated to its tail** | **1.490 ± 0.032** | **0.00043** | 65 |
+
+⭐⭐ **`k` is not a constant — 1.06 at `A_valley ≈ 1`, 1.49 at `A_valley ≈ 0.09`.** That is a second, independent
+way to see that one exponent does not describe this sample. ⇒ **`k = 1.49 ± 0.03` is the value for the regime
+we actually measure in**, and it supersedes §31.9a's 1.05.
+
+⭐ **The same fit hands over each fill's photobleaching rate**, and this is the number that matters downstream:
+
+| 001 | 002 | 003 | 004 | 005 | 006 | 007 |
+|---|---|---|---|---|---|---|
+| −0.0031 | −0.0028 | **−0.0113** ⛔ *(§29.1's −0.482 run)* | −0.0037 | −0.0074 | −0.0043 | −0.0038 |
+
+⇒ **a 4.0× spread across seven fills of one oil in one evening.**
+
+#### ⚠ 5 — WHAT IT DOES TO §31.9a
+
+| break-even (`abs(b)/k`, at k = 1.49) | rise rate the fill must exceed |
+|---|---|
+| gentlest fill (−0.0028/min) | 0.0019 /min |
+| median (−0.0038/min) | 0.0026 /min |
+| harshest fill (−0.0113/min) | 0.0076 /min |
+
+The 2026-08-19 fill rose at **0.0012 /min**: scattering lift `k·ΔA_valley = +0.0219` against bleaching
+`|b|·Δt = 0.0480` — ⭐ **still 2.2× larger, so the conclusion holds and the Soret falls either way.**
+⚠ **But the margin is 2.2×, not §31.9a's 5.4×, and only 1.6× against the gentlest fill.**
+
+⭐⭐ **So the reason not to gate on the sign gets stronger, not weaker, and it changes shape:** the break-even
+is not a constant to be checked against — **it depends on THIS fill's bleach rate, which varies 4× and cannot
+be known while the run is still going.** A gate whose threshold is only knowable afterwards is not a gate.
+
+⛔ **WITHDRAWN, per §16.7.0's practice:** §31.9a's **`n = 0.32`**. It converted a band-pair coupling into an
+exponent through the very power law finding 3 refutes. `k = 1.49` is a coupling between two bands and nothing
+more. ⚠ §31.9a's `k = 1.05` is not wrong — it is the high-turbidity value, correctly measured on the wrong
+regime for our purposes.
+
+#### ⭐ WHAT §16.12.2B SHOULD SAY NOW
+
+⛔ **Do not re-run it on `PB_BASELINE_WINDOWS`.** If the question is still worth asking, it needs (a) genuinely
+pigment-free windows — **505–515 and 595–605** are the candidates on this instrument, and even those are only
+*local minima*, not proven pigment-free; and (b) **row spectra**, which the engine does not persist. ⚠ (b) is
+the real blocker and it is a §9.1a decision, not an analysis one.
+⭐ **Its underlying question is answered in the negative regardless**: whatever the residual pedestal is, it is
+**not a single-exponent scattering term**, so neither *"n in 2–4 ⇒ ripening observed"* nor *"n ≈ 0 ⇒ flat
+offset"* can be concluded from this archive. ⚠ This bears on `DOC_pedestal_correction.md`, whose position is
+that the residual is an **instrument artifact rather than scatter** — finding 3 is *consistent* with that
+document's chapter 10, and it removes the λ⁻ⁿ fit from the list of things that could still overturn it.
+
+### ⭐ 31.10 ACCEPTANCE — what must be shown, not argued
+
+1. ⭐⭐ **Replay `20260819/001`'s 43 rows through `decide()` alone** (§11.9b's CSV-replay harness): TEST C
+   fires at **row 10, t = 3.06 min**, outcome `DEGRADING_FILL`, answer **13.585 at 6.32 s** — ⭐ *bit-identical
+   to the value the shipped code produced*, at 24 % of the lamp dose.
+2. ⭐ **All seven series F runs replay unchanged** — same outcome, same branch, same value, TEST C never fires.
+   ⛔ A single changed value here blocks the whole section.
+3. ⭐ **The re-clouding fixture still takes TEST B**, `huntFrom` still moves to 5, and it still reads the
+   vertex at 13.42 / 6.6 min (§30.17).
+4. ⚠ **A synthetic "cleared then ripened" curve** takes the vertex, not the first look — the §31.5 exception
+   must be shown to be conditional, not a blanket refusal.
+5. ⚠ **A flat noisy fill of 43 rows does not fire C** at the shipped constants.
+
+### ⭐ 31.11 PHASED  *(C1–C5 — DESIGN, none of it built)*
+
+| | | |
+|---|---|---|
+| **C1** | `__isDegrading` + constants (`DEGRADE_TREND_ROWS = 10`, `DEGRADE_SIGMA = 4.0`, `DEGRADE_RISE_FRACTION = 0.01`, `DEGRADE_CONSECUTIVE = 2`), wired into `decide()` per §31.6, with the replay test of §31.10.1 | ⭐ the whole finding |
+| **C2** | `__fireDegraded` + the §31.5 `argmin(A_valley)` refusal + `valleyFell` diagnostic | ⛔ without this C1 can still report a crossover vertex |
+| **C3** | `DEGRADING_FILL` outcome, `hasValue`, glossary, coach line, report header | the operator hears it |
+| **C4** | the §31.8 note on the stalled guard | cheap, independent |
+| **C5** | ⚠ regression replay of all seven series F records + the re-clouding fixture (§31.10.2–3) | ⛔ the gate on shipping any of it |
+
+⚠ **C1–C4 are ~60 lines in `DevSpectralPlugin.py` plus one enum member.** ⛔ **C5 is the expensive half and
+the one that decides whether the constants are right** — it is not optional, and the constants above are
+calibrated on **one run**.
+
+### ⛔ 31.12 WHAT THIS SECTION DOES NOT DO
+
+- ⛔ **It does not detect a bad fill before the lamp goes on.** Three minutes of dose is the floor as
+  specified; a pre-check on the very first window is a different design.
+- ⛔ **It does not rescue the measurement.** The answer is still the first look of a fill that was already
+  degrading when it arrived — ⭐ the honest verdict is *"prepare a fresh dilution"*, not a corrected number.
+- ⚠ **It does not touch `depthThreshold`,** whose trend-vs-single-window weakness (§31.5) is recorded and left
+  open.
+- ⭐ **And it becomes vestigial the day the oil dissolves** — `SPEC_capture_quality.md` §16.12.7d's hydrocarbon
+  route retires the whole settling machine, TEST C included. ⚠ That is a reason to keep it small, not a
+  reason to skip it: the shipping solvent is isopropanol today.
