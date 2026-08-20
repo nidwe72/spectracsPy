@@ -1,8 +1,16 @@
 # SPEC — ONE FILL, ONE WAIT, ONE BEST MEASUREMENT
 
-> **Status: DESIGN, 2026-08-15. No code written. ⭐ HIGHEST PRIORITY — it precedes the σ_fill run, the
-> refill test and the lamp rebuild**, because every one of those is an attempt to measure something
-> stable, and until this lands the instrument does not produce one.
+> **Status: ⭐ LARGELY BUILT.** §27 (2026-08-17) · §30.16 · §31.11a · and ⭐⭐ **§51 — phases 0·A·B·E·C·D of
+> §46/§50, built 2026-08-20, 511 tests green.** ⏸ **The rig click-through of §51 is owed**, and the
+> constants still rest on four clean fills of one oil on one evening (§35's T1).
+>
+> ⚠ Sections are kept in the order they were written, not in the order they are true: **later sections
+> correct earlier ones and say so.** The fastest honest entry points are **§50** (what to build), **§51**
+> (what was built), and **§47** (what is still open).
+>
+> *Originally: DESIGN, 2026-08-15, no code written — the highest priority, preceding the σ_fill run, the
+> refill test and the lamp rebuild, because every one of those is an attempt to measure something stable
+> and until this lands the instrument does not produce one.*
 >
 > Evidence base: `SPEC_capture_quality.md` §16.36 (the lamp changes the sample), §16.34.3d (the σ_fill
 > design change), `SPEC_metric_research.md` §10. Prototype and every number below:
@@ -5224,3 +5232,3118 @@ be before it ripens comes from this session and from nowhere else.**
 - ⭐ **And it becomes vestigial the day the oil dissolves** — `SPEC_capture_quality.md` §16.12.7d's hydrocarbon
   route retires the whole settling machine, TEST C included. ⚠ That is a reason to keep it small, not a
   reason to skip it: the shipping solvent is isopropanol today.
+
+---
+
+## ⭐⭐ 32 · THE BILLA CLEVER TRIAD — three fills, three verdicts, two of them wrong  *(Edwin's runs 001–003 of 2026-08-19; DESIGN, not built)*
+
+> **Records:** `spectracs-references/tmp/20280819BillaClever/{001,002,003}.pdf` (the folder name carries a
+> `2028` typo; the runs are 2026-08-19, 20:50 / 21:12 / 21:32). All three under `clearing-2.0`, W = 60.
+> ⭐ Every number in this section was **read out of the embedded `workflow.json`**, not re-measured — the
+> `monitorRecord` of §15.2 is what made this analysis possible at all, on the same evening.
+>
+> ⭐ Edwin's own reading, before any of this was computed: *"001 is okay; 002 I have the feeling the `Q%`
+> curve would go down to about 20 if we had waited; 003 — I think 20 would be the right choice. Maybe we
+> should look at values of `Q%`."* ⭐⭐ **All three intuitions are confirmed below. The mechanism he guessed
+> for 002 is not the one the data support, and the one they do support is better** (§32.7).
+
+### 32.1 · What the three runs are, and what the instrument said
+
+| run | fill | outcome | branch / read | **answer** | t | rows | A_valley first → last |
+|---|---|---|---|---|---|---|---|
+| 001 | dilution **A**, "first 4 ml" | `SETTLED_AFTER_CLEARING` | was-clearing / VERTEX | **19.866** | 807.6 s | 46 | 0.691 → 0.1279 |
+| 002 | dilution **B**, "second 4 ml", **warm-bath treated** | `SETTLED_IMMEDIATE` | arrived-clear / FIRST | **20.990** | 6.7 s | 6 | 0.2076 → 0.2042 |
+| 003 | dilution **B**, deliberately **clouded in the fridge** | `SETTLED_IMMEDIATE` | arrived-clear / FIRST | **8.450** | 6.6 s | 46 | 2.667 → 0.0586 |
+
+⭐⭐ **002 and 003 are the same liquid.** That is what makes this session the most informative the archive
+holds: for the first time two runs of one material were driven through **very different turbidity
+histories**, and they can be held against each other.
+
+### ⛔⛔ 32.2 · DEFECT 1 — run 003 reported the darkest row of the run, and it is off by 188 instrument floors
+
+Run 003's `Q%` trace, in full:
+
+```
+ t/s     6.6    93   199    343   473    624    836
+ Q%     8.45  17.18 34.31  26.06 21.04  20.98  20.31
+ A_v    2.667 2.290 1.663  0.852 0.205  0.085  0.0586
+        ^ REPORTED           ^ peak        ^ the honest region
+```
+
+The evaluator gated correctly — it refused to settle for 46 rows and 13.9 minutes, exactly as designed —
+and then **read the first look**: `Q% = 8.450`, against a curve whose last and best value is `20.310`.
+⇒ **an error of 11.86 units = 188 × the 0.063 no-re-seat floor.** It is by a wide margin the worst number
+the instrument has ever produced, and nothing in the outcome (`SETTLED_IMMEDIATE`) says so.
+
+#### Why it happened, exactly
+
+`__depthOf()` asks *"how far below its **first look** does the `Q%` minimum sit?"* On 003 the first look **is**
+the minimum of the whole run, so `depth = 0.000` against `depthThreshold = 0.126`, and §29.3's first rule
+fires: *"no turning point deeper than this window's own noise ⇒ nothing has happened since the first look
+but photodamage, so the first look IS the least-damaged measurement of the run."*
+
+⛔ **The premise is false here.** A great deal happened since the first look, and none of it was photodamage.
+
+#### ⭐ The record already contained its own refutation
+
+The promoted answer carries `diagnostics.valleyFell = true` on the branch named `arrived-clear`. **The
+evaluator computed "the turbidity fell" and then filed it beside "the fill arrived clear."** §31.5 consults
+`valleyFell` only when `__degrading` is latched; on a fill that clears and never trips TEST C, the
+contradiction is recorded and ignored.
+
+#### ⚠ And `MATERIAL_FALL` was half right
+
+§30.1 deleted `MATERIAL_FALL = 0.010` with the argument that it *"took the decision about HOW TO READ `Q%`
+from a DIFFERENT QUANTITY"*. That argument is sound for choosing **where the minimum is**; it is **wrong for
+deciding whether the first look is admissible at all**, because "did this fill arrive clear?" is a question
+about turbidity and can only be answered by the turbidity. ⇒ §32.7's C2 puts a turbidity term back, in a
+scale-free form, and only in front of the first-look branch.
+
+### ⛔⛔ 32.3 · THE PHYSICS FINDING — `Q%` is NOT monotone in turbidity, and §1's founding premise is refuted
+
+§1 states the whole design in one picture: *turbidity falls and `Q%` falls with it; photodamage grows and
+`Q%` rises; they cross; the minimum is the truth.* Run 003 traverses **eight times more turbidity than any
+run before it** and shows the relation is a **hump**:
+
+```
+Q%                34.3 ┐  peak, at A_valley = 1.663
+                       │╲
+                  20.3 ┤ ╲__________  the asymptote, A_valley -> 0
+                       │
+                   8.5 ┘  A_valley = 2.667   <- the "minimum" the read rule selected
+                       └───────────────────────────────
+                        2.7      1.7      0.8      0.06   A_valley
+```
+
+⭐ Below `A_valley ≈ 1.7` the archive's rule of thumb holds: **more turbidity ⇒ higher `Q%`.** Above it the
+relation **reverses**, and a fill entering the beam above the hump produces its lowest `Q%` at its worst
+moment. ⇒ **on such a fill the `Q%` minimum is not a settling point at all, and any rule that hunts a
+minimum over the whole run will find the wrong end of it.**
+
+⚠ **Do not model the reversal as a λ⁻ⁿ scattering pedestal.** A pedestal with n = 4 predicts
+`dQ%/dp = −87.6` at 003's clear end — i.e. turbidity would *lower* `Q%` everywhere, which contradicts the
++4 to +5 measured in §32.6 and every earlier observation. §31.9b already refuted the λ⁻ⁿ model on the seven
+Lugitsch records; this is the second independent refutation, from the other end of the turbidity range.
+⭐ The hump is **empirical**; §32.4 explains at least its upper limb without any optics at all.
+
+### ⛔⛔ 32.4 · DEFECT 2 — there is a floor on absorbance and **no ceiling**, and 21 of 003's 46 rows are dark-floor arithmetic
+
+`V_SORET_FLOOR = 0.15` rejects a row whose Soret is too *small*. Nothing rejects one whose Soret is too
+*large*. Run 003's first look reports `A_Soret = 2.979`:
+
+```
+A = 2.979  =>  the sample transmits 0.105 % of the reference
+reference in its own DN target (DN_TARGET_LOW/HIGH = 20-50 DN)
+          =>  the sample sits at 0.02 - 0.05 DN  --  below one code of an 8-bit YUYV sensor
+```
+
+⇒ **the first six rows of run 003 are not measurements of oil. They are arithmetic on the dark floor**, and
+the smooth 8.45 → 17.18 ramp they trace is the floor releasing its grip as the fill clears, not a spectrum.
+That is the honest explanation of the hump's upper limb, and it needs no optics.
+
+⭐⭐ **THE CONSTANT ALREADY EXISTS IN THE FILE.** `VALUE_CEILING = 1.5` — *"drop saturated-Soret λ (A > 1.5)"*
+— is applied inside the band machinery and **never reaches `monitorMetrics()`**. The guard was reasoned,
+written down, and then not wired to the one caller that can burn 14 minutes of lamp on the strength of it.
+
+⚠ **THE TABLE BELOW IS STALE AND IS KEPT AS WRITTEN — see §51.4.** It was measured before runs 004–007
+existed. The ceiling in fact touches **five** runs, not three: Lugitsch 006 (5 rows), Billa 001 (2), **Billa
+003 (21)**, Billa 005 (6), Billa 006 (1). ⭐ The conclusion is unchanged and stronger — it costs none of them
+an answer except 003.
+
+What a ceiling at 1.5 costs the archive, measured over the twelve monitored runs that existed on 2026-08-19:
+
+| run | max A_Soret | rows > 1.5 | first admissible look | its `Q%` | answer changes? |
+|---|---|---|---|---|---|
+| Lugitsch 001–005, 007 | 0.856 – 0.992 | **0** | t = 5.5 s | — | no |
+| 20260818A/001 | 0.875 | **0** | t = 5.5 s | — | no |
+| 20260819/001 (TEST C) | 0.680 | **0** | t = 6.3 s | — | no |
+| Lugitsch 006 | 2.019 | 5 | t = 81.1 s | 15.747 | **no** (vertex stays 13.972) |
+| BillaClever 001 | 1.641 | 2 | t = 38.1 s | 21.447 | **no** (vertex stays 19.866) |
+| **BillaClever 003** | **2.979** | **21** | **t = 380.6 s** | **23.936** | ⭐ **8.450 → "keep waiting"** |
+
+⭐⭐ **A fix that changes exactly the one run it was written for, and nothing else in the archive.** That is
+the property to demand of every change in this section.
+
+#### ⛔⛔ 32.4a · AND IT COLLIDES WITH THE SUB-FLOOR ABORT — the same representation, the opposite prognosis
+
+`decide()` treats a row with no `values` as evidence that the **measurement is broken**:
+
+```python
+if len(decisions) >= 2 and not any(row.values for row in decisions[-2:]):
+    return MonitorDecision(stop=True, outcome=MonitorOutcome.MEASUREMENT_BROKEN, ...)
+```
+
+⇒ if an over-ceiling row is represented as `values = {}` like a sub-floor row, **run 003 aborts at t ≈ 40 s
+as `MEASUREMENT_BROKEN`** — a different wrong answer, arrived at faster.
+
+⭐ The two conditions are the TEST B / TEST C motif again: *same observable, opposite prognosis.*
+
+- **sub-floor Soret** — no light is being absorbed; there is nothing in the cuvette; **abort, the fill cannot
+  produce a number.**
+- **over-ceiling Soret** — too much light is being absorbed; the cuvette is full of a fill that is still
+  clearing; **wait, it will produce a number.**
+
+⇒ they need **two states, not one**: `values = {}` keeps its meaning, and a new `tooDark` row-state means
+*"not a look, keep looking"* — it never reaches the gate, never enters the hunt, and **never counts toward
+the broken-measurement abort**. A run that stays over the ceiling to the 25-minute cap ends with no value,
+which is the right ending for a fill too cloudy to read.
+
+### ⚠ 32.5 · DEFECT 3 — run 002: the gate is a **rate** test with no **level** term, and it settled on a turbid plateau
+
+002 was warm-bath treated, entered the beam at `A_valley = 0.2076`, and **stopped clearing**:
+
+```
+t/s      6.7    23.1   41.8   60.6   79.5   98.5
+A_v    0.2076 0.2050 0.2057 0.2056 0.2060 0.2042   -> -0.0022 /min  (theta = 0.005)  FLAT
+Q%     20.990 21.047 21.076 21.094 21.145 21.164   -> +0.1089 /min at 11.2 sigma     RISING
+```
+
+TEST A is satisfied twice and the gate fires at 98.5 s, 1.6 minutes after insertion. **On its own terms the
+evaluator is not wrong**: the turbidity is not moving, the `Q%` curve has no turning point, so the first
+look is the least-damaged one. It reports 20.990.
+
+#### ⭐⭐ The cross-run evidence that 20.990 is high — and it is the cleanest the archive has
+
+Run 003, **the same liquid**, sweeps down through 002's turbidity level on its way to clear:
+
+```
+003 crosses A_valley = 0.2053 at t = 473 s   ->  Q% = 21.035
+002 sat at A_valley  = 0.204 - 0.208         ->  Q% = 21.086  (mean of its six looks)
+                                                  ------  agreement: 0.05  ( < 1 instrument floor )
+003 then continues to A_valley = 0.0586      ->  Q% = 20.310  ( a further -0.725 )
+```
+
+⭐⭐ **`Q%` is a reproducible function of `A_valley` for a given material.** Two fills of the same liquid,
+prepared differently, measured half an hour apart, agree to 0.05 at the same turbidity — and the one that
+kept clearing shows there were **0.725 units still to fall**, eleven instrument floors.
+
+⇒ 002's plateau was **not clear. It was stalled.**
+
+#### ⛔ And the level test that would catch it is NOT derivable from the archive
+
+| terminal `A_valley` | run |
+|---|---|
+| 0.0586 – 0.105 | BillaClever 003, TEST-C 001, all seven Lugitsch |
+| 0.1279 | BillaClever 001 |
+| 0.1510 | 20260818A/001 |
+| **0.2042** | **BillaClever 002** ⛔ the highest in the archive |
+
+002 tops every ranking — absolute (0.204), over Soret (0.215 vs 0.079–0.173), over `A_Q` (0.503 vs
+0.283–0.432) — but **the gap to the next run is 1.35×, not the 15× that licensed `depthThreshold`** (§29.2).
+⛔ Any threshold planted between 0.151 and 0.204 today would be a number chosen to separate two runs, one of
+which is a different oil. ⇒ **do not plant one.** §32.6 offers something better than a threshold.
+
+### ⛔⛔ 32.6 · κ, the turbidity contamination coefficient — ⚠ **DEMOTED BY §33.** Edwin answered *"same stock"*, and a one-coordinate correction cannot survive that answer. Kept because the observation inside it is real and §33 builds on it.
+
+Edwin's *"maybe we should look at values of `Q%`"*, taken literally: plot `Q%` against `A_valley` instead of
+against time. In the post-clearing region the relation is **linear**, and it is the same relation on two
+independent runs:
+
+| run | fit window | n | lever arm in `A_valley` | **κ = d`Q%`/d`A_valley`** | intercept at `A_valley` = 0 | r |
+|---|---|---|---|---|---|---|
+| BillaClever 001 (dil. A) | `A_v ≤ 0.25` | 28 | 0.116 | **+4.03** | 19.377 | +0.955 |
+| BillaClever 003 (dil. B) | `A_v ≤ 0.25` | 20 | 0.147 | **+6.26** | 20.217 | +0.714 |
+| BillaClever 003, two-point (0.205 → 0.0586) | — | — | 0.147 | **+4.94** | — | — |
+
+⇒ **`Q% ≈ Q₀ + κ·A_valley` with κ ≈ 4.5.** Residual turbidity does not merely add noise; it adds a *bias
+proportional to how cloudy the fill still is*, and that bias is **estimable from the same two numbers the
+monitor already records on every row.**
+
+#### ⭐⭐ Applied to the same-material pair, it reconciles them to 0.01
+
+```
+kappa   002 (A_v 0.2076) ->    003 (A_v 0.0586) ->    gap
+ 3.5           20.264                 20.105          0.159
+ 4.0           20.160                 20.075          0.085
+ 4.5           20.056                 20.046        ⭐0.010
+ 5.0           19.953                 20.017          0.064
+ 6.0           19.745                 19.958          0.213
+                                        uncorrected gap: 0.681  ( 11 instrument floors )
+```
+
+⭐ **The correction is insensitive to κ over the whole plausible range** — anywhere in 3.5–6.0 it removes at
+least three quarters of the disagreement. And it lands where Edwin said it would:
+
+> *002 → **20.06**, 003 → **20.05**.* His "about 20" for both, from two runs that reported 20.990 and 8.450.
+
+⭐⭐ ⇒ **his intuition was right and his mechanism was not.** 002 was never going to fall to 20 by waiting —
+its turbidity was flat and its `Q%` was *rising* at 11σ. It reaches 20 by **correction**, not by patience.
+That distinction is the difference between a protocol that costs 14 minutes of photodamage and one that
+does not.
+
+#### ⛔ Three things this does NOT yet establish, and they are why C4 is gated
+
+1. ⛔ **κ is confounded with dose.** Both fits run along a trajectory where turbidity falls *while the lamp
+   browns the sample*. The two effects push `Q%` in opposite directions, so the measured κ is a **lower
+   bound** on the true turbidity sensitivity — but its size is not clean. ⇒ κ must be measured with
+   turbidity varied **independently of dose** (§32.10).
+2. ⛔ **It does not reconcile 001 with 002/003.** Corrected, 001 (dilution A) reads 19.29 against the pair's
+   20.05 — the correction moves it *away*, from 0.44 apart to 0.76. Either the two pours are genuinely
+   different material, or `A_valley` is the wrong regressor because it contains **real pigment absorption as
+   well as turbidity**, and only the turbidity part should be corrected. ⚠ Normalising by `A_Soret` does not
+   rescue it (19.20). ⭐⭐ **ANSWERED 2026-08-19: SAME STOCK** ⇒ §33. *(the question as put: were A and B two pours of one
+   stock — in which case they must agree and this is a real defect in the correction — or two separately
+   made dilutions?)*
+3. ⛔ **The intercept is not a per-run quantity.** Refitting `Q%` on `A_valley` run-by-run gives 12.0 – 22.2
+   across the seven Lugitsch runs, which all sit within 0.04 of each other in `A_valley` — **no lever arm,
+   so the fit fits noise.** ⇒ a per-run extrapolation to zero turbidity is **refused**, measured, not
+   argued. κ must be a **calibrated constant**, applied as a correction, never a per-run slope.
+
+#### ⚠ And if κ is real, it re-prices the whole archive
+
+At κ = 4.5 the turbidity carried into every archived answer is:
+
+| run set | `A_valley` at the read | contamination `κ·A_v` | in instrument floors (0.063) |
+|---|---|---|---|
+| Lugitsch A (seven) | 0.069 – 0.105 | 0.31 – 0.47 | **5 – 7** |
+| BillaClever 001 | 0.129 | 0.58 | **9** |
+| BillaClever 002 | 0.208 | 0.93 | **15** |
+
+⇒ ⚠ **every number the instrument has ever produced sits several floors above its own zero-turbidity value**,
+and the size of that offset varies with how well the fill happened to clear. That is a **bias**, not a noise
+term, and `SPEC_capture_quality.md` §16.24's error budget does not contain it. ⛔ Contingent on κ — stated
+here so that it is checked, not so that it is believed.
+
+### ⭐ 32.7 · THE RULE CHANGES
+
+⭐ Ordered by confidence. **C1 and C2 are corrections to a broken read and should land together; C3 is a
+verdict, not a read; C4 is a research result that needs an experiment before it is allowed near an answer.**
+
+#### ⭐⭐ C1 — an absorbance CEILING, with its own row state *(the load-bearing fix)*
+
+- a monitored row whose `A_Soret` exceeds `V_SORET_CEILING` (= the existing `VALUE_CEILING`, 1.5) is
+  **`tooDark`**: it produces no metric, enters no window, and **is not evidence of a broken measurement**
+  (§32.4a).
+- the coach says so — *"too dark to read — still clearing"* — instead of the current silence.
+- the run ends at the cap with **no value** if it never comes under the ceiling. ⭐ That is the correct
+  ending for a fill nobody can measure, and it is the ending 003 should have had at 6 minutes rather than
+  the answer it got at 14.
+- ⚠ the ceiling belongs on the **monitored bands**, plural: a fill can be over the ceiling at 454 nm and
+  under it at 572 nm, and a `Q%` built from a floor-limited Soret and a valid Q band is worse than one built
+  from neither.
+
+#### ⭐⭐ C2 — the `Q%` hunt is restricted to looks taken at a comparable turbidity
+
+Generalise §30.8. Today only a re-clouding event moves `huntFrom`; the argument it rests on — *"everything
+before this row belongs to a fill that was cloudier than the one now being measured"* — **applies to the
+turbid opening of every clearing fill**, re-cloud or not.
+
+```
+eligible looks  =  rows with  A_valley <= K * min(A_valley so far)          K = 2
+```
+
+- ⭐ it is a **ratchet**: the running minimum only falls, so the window only advances — the same shape as
+  `huntFrom`, computed from the quantity that justifies it rather than from an event.
+- ⭐ it subsumes the re-cloud case: a re-clouded row leaves the window on its own.
+- ⭐ **`depth` finally means what its docstring says** — how far the minimum sits below *the first
+  comparable look*, not below the cloudiest row of the run.
+
+Replayed over all twelve archived runs at **K = 1.5, 2.0 and 3.0**:
+
+| | K = 1.5 | K = 2.0 | K = 3.0 |
+|---|---|---|---|
+| eleven runs | answer reproduced to ≤ 0.001 | ≤ 0.001 | ≤ 0.001 |
+| BillaClever 003 | 8.450 → 20.310, **argmin is the newest look ⇒ keep waiting** | same | same |
+
+⭐⭐ **Insensitive across a factor of two in K, and it changes exactly one run.** K = 2 sits mid-plateau, in
+the §27.26 habit.
+
+#### ⭐ C3 — 002 gets a **fill-quality verdict**, not a different number
+
+⭐ The read on 002 was not wrong; **the fill was.** ⇒ do not chase 002 with a read rule. Report, at the
+answer (§17/D5):
+
+- `A_valley` at the promoted row, and — once C4 lands — the implied contamination `κ·A_valley`;
+- ⛔ **`clearingObserved`** — the fractional fall of `A_valley` from the run's first admissible look to the
+  read. 002: **1.6 %**. 003: 97.8 %. Lugitsch: 1–7 %.
+- ⚠ `clearingObserved` alone cannot condemn a fill — a genuinely clear fill also shows no fall (Lugitsch
+  001/002/005 settle honestly in 105 s at `A_valley` ≈ 0.08–0.10). **It is the pair (level, fall) that is
+  diagnostic**, and until §32.10 supplies a level there is no threshold. ⇒ **record both, gate on neither.**
+
+#### ⛔ C4 — the κ correction: ⚠ **WITHDRAWN BY §33.7.** Kept for the record; do not build it.
+
+- ⛔ **Never applied to a raw look.** At 003's first row, `20.31 − 4.5 × 2.667 = −3.55`. The relation is
+  linear only in the clear regime, so the correction is a **residual** correction applied *after* C1 and C2
+  have removed everything that is not a measurement of a nearly-clear fill.
+- ⛔ **Never folded into the answer** until κ is measured dose-independently — §2.3's rule for the
+  zero-dose extrapolation, for the same reason.
+- ⭐ Recorded beside it from the day it is measured, as `qPercentAtZeroTurbidity`, with κ and `A_valley`
+  travelling with it so any archived number can be recomputed when κ moves.
+
+### ⭐ 32.8 · WHAT THE THREE RUNS BECOME
+
+| run | today | after C1 + C2 | Edwin's call | with C4 at κ = 4.5 |
+|---|---|---|---|---|
+| 001 | 19.866 | **19.866** (unchanged) | "okay" ⛔ **not okay — §33.3** | ⛔ 19.29, withdrawn (§33.7) |
+| 002 | 20.990 | 20.990 + *"never cleared: 1.6 % fall, `A_valley` 0.204"* | "would be about 20" | **20.06** ✅ |
+| 003 | **8.450** ⛔ | first 21 rows inadmissible; run continues past 836 s; reads ≈ **20.31** | "20 would be right" ✅ | **20.05** ✅ |
+
+### ⚠ 32.9 · WHAT COULD GO WRONG — checked against the twelve records
+
+1. ⚠ **C1 lengthens runs.** A very cloudy fill now spends its opening minutes producing no rows at all and
+   may reach the 25-minute cap with nothing. ⭐ That is the point: it converts a confidently wrong number
+   into an honest refusal. ⛔ But §17/U3's finish prediction has nothing to predict from while every row is
+   `tooDark` — the bar must stay INDETERMINATE and the coach must explain, or the operator watches six
+   silent minutes and cancels.
+2. ⚠ **C2 can starve the vertex.** If the running minimum falls fast, the eligible window can hold fewer
+   than the three rows `__vertex()` needs. ⭐ Already handled — the existing guard falls back to the raw
+   row — but the fallback must be **recorded**, not silent.
+3. ⚠ **C1's ceiling is a Soret ceiling, and dilution sets the Soret.** A deliberately concentrated dilution
+   could sit over 1.5 while perfectly clear. ⭐ The archive says otherwise for the working protocol (nine of
+   twelve runs never exceed 1.0), but the ceiling must be **stated in the record** so a run refused by it
+   can be recognised as a dilution problem rather than a turbidity one.
+4. ⛔ **None of this touches the 002 case.** After C1 and C2, 002 still reports 20.990. The only thing that
+   moves it is κ, and κ is not measured yet. ⇒ **say this out loud rather than implying the triad is fixed.**
+5. ⚠ **The seven Lugitsch records are `clearing-1.0`.** Their reported answers were produced by the rule
+   §29 replaced, so "unchanged" above means *the rows replay to the same read under 2.0 with and without
+   C1/C2* — not that the printed 2026-08-17 numbers are reproduced.
+
+### ⭐⭐ 32.10 · THE EXPERIMENT THAT CLOSES κ — pre-registered, one session
+
+⭐ Turbidity must be varied **independently of lamp dose**, which is exactly what the fridge trick already
+does and what no run so far has exploited on purpose.
+
+- **one dilution**, split into **five jars**. Fridge-cloud them to different degrees (0, 5, 10, 20, 40
+  minutes cold) so they enter the beam at spread `A_valley` — target 0.05 / 0.10 / 0.15 / 0.20 / 0.30, all
+  **under the C1 ceiling**.
+- **read each one FAST** — the first admissible window, ≤ 30 s of lamp — so dose is equal and negligible
+  across arms.
+- ⭐ **plot `Q%` against `A_valley` across jars.** The slope is κ, free of the dose confound; the intercept
+  is `Q₀` for that dilution.
+- ⭐ **then let one jar run to completion.** Its within-run slope is the confounded κ of §32.6. **The
+  difference between the two slopes is the dose contribution**, which the archive has never separated.
+
+#### The decision rule, fixed before the run *(§16.34.3's habit)*
+
+| result | verdict |
+|---|---|
+| across-jar κ within ±30 % of 4.5, r > 0.9 | ⭐ κ is real and calibratable ⇒ **C4 ships** |
+| across-jar κ significant but far from 4.5 | ⭐ κ is real, the within-run fits are dose-poisoned ⇒ C4 ships on the **across-jar** value |
+| across-jar slope not significant | ⛔ the 002/003 reconciliation was luck ⇒ **C4 is dropped**, C3 becomes the whole answer, and a level threshold must be planted after all |
+
+⚠ **Repeat the whole series on a second oil before κ is treated as an instrument constant** — one oil cannot
+tell a property of the measurement from a property of the pigment.
+
+### ⭐ 32.11 · PHASED
+
+| | what | depends on |
+|---|---|---|
+| **B1** | replay harness over the archived `monitorRecord`s — twelve runs, real `ClearingEvaluator.decide()`, assert every recorded answer reproduces before any rule moves (§19/I5) | — |
+| **B2** | **C1** ceiling + `tooDark` row state + the sub-floor/over-ceiling split (§32.4a) + coach line | B1 |
+| **B3** | **C2** eligibility window at K = 2; `huntFrom` becomes its degenerate case | B1 |
+| **B4** | **C3** `clearingObserved` + `A_valley` at the read, into `MonitorRecord` and onto the report | B2 |
+| **B5** | rig session: re-run the 003 fill (fridge-cloud a dilution) and confirm the refusal-then-answer path end to end | B2, B3 |
+| **B6** | §32.10 — the five-jar κ session | B5 |
+| **B7** | **C4**, only if §32.10's decision rule says so | B6 |
+
+⭐ B1 is not ceremony. Every number in §32 was computed **outside** the evaluator, from the records; the
+claim *"eleven runs unchanged"* is only worth what the real `decide()` says it is.
+
+### ⛔ 32.12 · WHAT THIS SECTION DOES NOT DO
+
+- ⛔ **It does not explain the hump's lower limb.** §32.4 explains the collapse above `A_valley ≈ 1.7` as the
+  dark floor. Why `Q%` *rises* with turbidity from 0.06 to 1.7 is still unexplained, and λ⁻ⁿ scattering
+  predicts the opposite sign (§32.3). ⇒ κ is a **measured coefficient with no model behind it**, and it must
+  be labelled that way wherever it appears.
+- ⛔ **It does not give 002 a better number.** Only κ can, and κ is not measured.
+- ⛔ **It does not revisit `depthThreshold`,** whose single-window basis is still the open item of §31.5.
+- ⭐ **And it too becomes vestigial the day the oil dissolves** — a hydrocarbon solution has no turbidity to
+  correct for (`SPEC_capture_quality.md` §16.12.7). ⚠ Again a reason to keep C1–C3 small, not a reason to
+  skip them: the shipping solvent is isopropanol today.
+
+---
+
+## ⭐⭐⭐ 33 · SAME STOCK — the answer that kills κ and names the defect underneath it  *(Edwin, 2026-08-19; DESIGN, not built)*
+
+> ⭐ **A and B were two pours of one stock.** §32.6 said that if the answer was "same stock", the failure of
+> the κ correction to reconcile 001 with 002/003 is a **real defect**. It is, and chasing it opened the
+> three stored **spectra** — the promoted capture's `REFERENCE` and `SAMPLE` arrays are in the same
+> `workflow.json` as the rows — which no analysis in §32 had touched.
+>
+> ⛔⛔ **The conclusion is worse than §32's and simpler: not one of the three fills was ever measured in a
+> settled state, and the gate could not have known.**
+
+### ⭐ 33.1 · The data confirm "same stock" before anything is concluded from it
+
+| | A_Soret at the read | | |
+|---|---|---|---|
+| 001 | 0.9631 | | ⭐ 001 and 002 agree to **0.5 %** — two fills of one stock at one concentration, |
+| 002 | 0.9586 | | as Beer-Lambert requires. The premise is not assumed, it is measured. |
+| 003 | 0.7312 *(last row)* | | ⛔ **24 % lower.** Same stock. Same concentration. |
+
+### ⛔⛔ 33.2 · Therefore 0.731 is what this stock reads when clear — and 001 and 002 were read at **+32 % turbidity**
+
+Concentration is identical by construction, so **every unit of A_Soret above the clear value is turbidity**.
+003 is the only fill that was ever driven down to it, because it was the only one the gate refused to let go:
+
+```
+clear (003's last row, and still falling at -1.2 %/min)   A_Soret = 0.7312
+001 read at                                               A_Soret = 0.9631  = clear + 0.2319   (+32 %)
+002 read at                                               A_Soret = 0.9586  = clear + 0.2274   (+31 %)
+```
+
+⭐⭐ ⇒ **the fill Edwin called "okay" was read carrying the same residual turbidity as the fill he called
+wrong.** 001 is not the control. There is no control in this session.
+
+⚠ And 0.7312 is an **upper bound** on clear: 003's own Soret was falling at 1.18 %/min when the run ended.
+⇒ the excesses above are **at least** 32 %.
+
+### ⛔⛔ 33.3 · The two fills disagree by 18 floors **at the same turbidity**, which is why no single-coordinate correction can work
+
+| | A_Soret | A_valley | Q% |
+|---|---|---|---|
+| 001 (native haze) | 0.9631 | **0.1289** | 19.867 |
+| 002 (warm-bath haze) | 0.9586 | **0.2076** | 20.990 |
+| 003 passing through the same A_Soret (t = 473 s) | 0.9392 | 0.2053 | 21.035 |
+
+⭐ 002 and 003 sit at the **same point in both coordinates** and read the same Q% to 0.05 — §32.5's
+crossing, now confirmed in two dimensions instead of one.
+⛔⛔ **001 sits at the same A_Soret with 38 % less A_valley, and reads 1.12 lower — 18 instrument floors.**
+
+⇒ **turbidity is not a one-parameter family.** Native haze and warm-bath haze have different spectral
+shape, so a fill's cloudiness cannot be summarised by any single band. **κ·A_valley was fitting a
+trajectory, not a physical coefficient**, which is why it reconciled two points on 003's trajectory (002 and
+003) and threw 001 further away.
+
+⚠ ⛔ And a plain grey (Mie) pedestal does not save it either: a wavelength-flat offset **cancels in the
+numerator** of `Q% = −100·(A_v − A_Q)/A_S` and inflates only the denominator, so it would make the *more*
+turbid fill read *lower*. 002 reads **higher**. ⇒ neither λ⁻ⁿ (§32.3) nor grey. **We have no model of the
+turbidity term, and §32's κ was a model-free stand-in that this section refutes.**
+
+### ⛔⛔ 33.4 · WHY THE GATE COULD NOT SEE IT — it watches one band's **absolute** rate
+
+At the row each run was read, the three monitored bands were moving like this:
+
+| run | dA_valley | | dA_Soret | | dA_Q | | dQ%/dt |
+|---|---|---|---|---|---|---|---|
+| | /min | %/min | /min | %/min | /min | %/min | /min |
+| **BillaClever 001** | −0.0039 | **−3.04** | −0.0102 | **−1.06** | −0.0059 | **−1.85** | **+0.0020** |
+| BillaClever 002 | −0.0006 | −0.30 | −0.0023 | −0.24 | −0.0002 | −0.05 | +0.0930 |
+| BillaClever 003 | −0.0046 | −7.87 | −0.0086 | −1.18 | −0.0073 | −3.52 | −0.1259 |
+| Lugitsch 004 | −0.0036 | −5.18 | −0.0089 | −1.02 | −0.0048 | −2.50 | +0.0012 |
+| Lugitsch 005 | −0.0047 | −4.55 | −0.0136 | −1.41 | −0.0065 | −2.70 | +0.0142 |
+| Lugitsch 007 | −0.0040 | −4.64 | −0.0098 | −1.09 | −0.0058 | −2.78 | −0.0488 |
+| Lugitsch 001/002/003/006, 20260818A, 20260819/001 | | −0.6 … −2.0 | | −0.3 … −1.5 | | −0.4 … −1.3 | |
+
+⭐⭐ **Nine of the twelve archived runs were still clearing at 1–5 %/min in at least one band at the moment
+they were declared settled.** `THETA_PER_MINUTE = 0.005` is an **absolute** threshold on the **smallest**
+of the three bands: `A_valley` is a fifth the size of `A_Soret`, so it reaches 0.005/min while the Soret is
+still shedding 0.010/min — **twice as much absorbance per minute, and invisible to the gate.**
+
+⇒ **the gate's quantity is right (turbidity) and its units are wrong.** A rate threshold on an absorbance
+must be **relative**, or it is a threshold on the dilution.
+
+### ⛔⛔ 33.5 · AND `dQ%/dt ≈ 0` PROVES NOTHING — it is the read rule's own construction
+
+Split `dQ%/dt` into its two terms (`Q% = −100·(A_v − A_Q)/A_S`), at the read row:
+
+```
+run                    numerator term   denominator term      sum    measured
+BillaClever 001              -0.2096          +0.2116       +0.0020   +0.0020
+Lugitsch 004                 -0.1439          +0.1451       +0.0012   +0.0012
+Lugitsch 005                 -0.1851          +0.1996       +0.0145   +0.0142
+Lugitsch 002                 -0.0730          +0.0755       +0.0026   +0.0025
+Lugitsch 006                 -0.1123          +0.1036       -0.0087   -0.0086
+```
+
+⭐⭐⭐ **The two terms are 50–100× the residue and they cancel.** On 001 each side is moving at 0.21 Q% per
+minute and the answer sits still at 0.002. ⇒ *"`Q%` has stopped changing"* is **not** evidence that the fill
+has stopped clearing; it is evidence that `V` is doing exactly what it was designed to do — **be invariant
+to what clearing does to the spectrum** (`DOC_metric_algebra.md`, the dilution-invariance proof).
+
+⛔⛔ **The metric's greatest virtue is precisely what disqualifies it as the settling detector.** A quantity
+built to ignore multiplicative changes in `A` cannot be used to decide when multiplicative changes in `A`
+have finished. ⚠ §2.1 chose `A_valley` over `Q%` for the gate on **dose** grounds; **this is the deeper
+reason, and it was never written down.**
+
+⚠ It also means §32.6's plan to watch `Q%` values is only half right: **Edwin's instinct to look at `Q%`
+was correct as a diagnosis** — the disagreements are visible there — **and wrong as a detector.**
+
+### ⚠ 33.6 · A THIRD FINDING, FREE FROM THE SAME SPECTRA — the reference drifts, and NOT uniformly
+
+The three runs' `REFERENCE` captures, 20:50 / 21:12 / 21:32, over 42 minutes:
+
+| band | 001 → 003 |
+|---|---|
+| Soret 448–460 | **−2.1 %** |
+| valley 500–560 | **−5.6 %** |
+| Q 565–580 | **−8.9 %** |
+
+⭐ §17/D4 (*"the reference ages while the sample settles"*) is **confirmed and quantified for the first
+time**, and the drift is **wavelength-dependent — the red end falls four times faster than the blue.**
+⇒ a single scalar reference-drift correction would be wrong.
+
+Within a run the sample is captured *after* the reference, so the drift **inflates A**. On 001 (13.5 min
+between them) that is +0.0029 / +0.0079 / +0.0126 in Soret / valley / Q:
+
+```
+001 as reported                19.863
+001 with the drift removed     19.434     <- moves it FURTHER from 002 and 003
+```
+
+⭐ ⇒ **reference drift is a real, sizeable error and it is NOT the explanation for §33.3's disagreement** —
+removing it makes the disagreement worse. Recorded here so nobody spends an evening on that hypothesis.
+⚠ The lamp is not the only candidate (the reference jar was re-seated between runs); **separating lamp drift
+from re-seating needs the null-run design of §16.26, not this data.**
+
+### ⭐⭐ 33.7 · WHAT CHANGES
+
+⛔ **C4 (κ) is withdrawn.** §32.10's five-jar session is **not** cancelled — it becomes the experiment that
+measures *whether turbidity has a correctable spectral signature at all* — but nothing κ-shaped goes near an
+answer.
+
+⭐ **C1 (ceiling) and C2 (hunt window) stand unchanged.** They fix a read that reported the dark floor;
+nothing in this section touches them, and they are still the only two changes that are safe to build today.
+
+Three new ones, in confidence order:
+
+#### ⭐⭐ C5 — the gate's threshold becomes **relative**, and it watches **A_Soret**
+
+```
+today   |dA_valley/dt| < 0.005 /min                    absolute, on the smallest band
+C5      |dA/dt| / A     < theta_rel   for A_Soret AND A_valley, both
+```
+
+- ⭐ `A_Soret` is the largest band (best SNR) and the concentration carrier; `A_valley` stays because it is
+  the most turbidity-sensitive. **Both must be flat**, which is what would have caught 001.
+- ⭐ Relative units make the threshold **dilution-free** — today's 0.005 means something different for every
+  dilution, which is a bug nobody had named.
+- ⛔ **`theta_rel` IS NOT DERIVABLE FROM THE ARCHIVE.** At the read the twelve runs span 0.24–1.50 %/min in
+  the Soret; any threshold under 1.5 %/min lengthens **almost every run**, and there is no cluster gap to
+  plant it in (unlike `depthThreshold`, §29.2). ⇒ it must come from §33.8, and until then C5 is **recorded
+  in the record, not enforced in the gate** (see C7).
+- ⛔ ⚠ **AND IT MAY NEVER TERMINATE.** §1's whole premise is that clearing and browning fight; a fill whose
+  Soret is still falling at 1 %/min after 25 minutes gets **no answer** under C5. ⭐ That is the honest
+  outcome, and §33.8 is what tells us how often it happens.
+
+#### ⭐⭐ C6 — the answer carries the **residual turbidity**, once history can supply "clear"
+
+`A_Soret` at the read minus the stock's clear `A_Soret` is a *number*, not a judgement — but it needs a
+per-stock clear value, which is `SPEC_history_tracker.md`'s job. ⇒ **C6 is the first concrete thing the
+history tracker would buy**, and it turns every archived answer into something correctable rather than
+something suspect.
+
+#### ⭐⭐ C7 — until C5 and C6 exist, **the run must say what it was doing when it stopped** *(build this now)*
+
+All three band rates are already computed every row. Cost: three numbers in `MonitorRecord` and one line on
+the report.
+
+```
+001  read at t = 807.6 s -- still clearing: A_Soret -1.06 %/min, A_valley -3.04 %/min, A_Q -1.85 %/min
+```
+
+⭐ That one line would have told Edwin not to trust 19.867 **on the evening he measured it**, without any
+new physics, any new threshold, or any new experiment. ⛔ **It is the highest value-per-line change in this
+whole section and it depends on nothing.**
+
+### ⭐⭐ 33.8 · THE EXPERIMENT — ONE FILL, DRIVEN TO ACTUAL COMPLETION *(it has never been done)*
+
+Every number in the archive comes from a run that stopped when a threshold fired. **Nobody has ever watched
+a fill until it stopped changing.** Until that exists there is no "clear", no `theta_rel`, and no way to
+grade any answer.
+
+- **one jar of one stock**, DIAGNOSTIC mode, **60–90 minutes**, cap raised, no promotion.
+- record the three band rates every row; ⭐ the question is simply **does `A_Soret` flatten, when, and at
+  what value** — and what `Q%` reads there.
+- ⭐⭐ **run a second jar of the same stock with the lamp shuttered between looks** (manual is fine — the
+  operator blocks the beam between windows). ⚠ Without it, "the Soret never flattens" is unattributable
+  between clearing that has not finished and browning that has started. §16.36 says both are real; **this
+  pair separates them, and no run so far can.**
+
+| result | consequence |
+|---|---|
+| `A_Soret` flattens, lit and shuttered arms agree | ⭐ clearing genuinely completes ⇒ `theta_rel` is derivable, C5 ships, and "clear" is defined per stock |
+| flattens only in the shuttered arm | ⛔ the lamp is what prevents settling ⇒ **the shutter stops being an optimisation and becomes a prerequisite** (§29.4 argued for it; this would decide it) |
+| flattens in neither | ⛔⛔ no fill in isopropanol ever settles ⇒ **the whole wait-for-settling protocol is unreachable**, and `SPEC_capture_quality.md` §16.12.7's hydrocarbon route is not an improvement but the only route |
+
+⚠ **Pre-register the reading before the run**, per §16.34.3. ⭐ Note the third row: this experiment can
+falsify §1 itself, which is why it precedes every remaining item in this spec.
+
+### ⛔ 33.9 · WHAT §33 DOES NOT CLAIM
+
+- ⛔ **It does not say the three answers are useless.** It says none of them is a *settled* measurement, and
+  that the spread between two fills of one stock — **1.12 units, 18 floors** — is the honest size of the
+  error the protocol currently carries. ⚠ That number is one pair; it is not σ_fill.
+- ⛔ **It does not explain the turbidity term.** Neither λ⁻ⁿ nor grey fits (§33.3). **We do not have a model,
+  and C6 deliberately reports a raw excess rather than pretending to one.**
+- ⛔ **It does not touch C1 or C2**, which fix a different defect (a read on the dark floor) and remain the
+  only buildable items.
+- ⚠ **`theta_rel`, "clear", and the shutter question are all one experiment away**, and that experiment is
+  one jar and one evening (§33.8).
+
+---
+
+## ⭐⭐⭐ 34 · THE BLACK BOX — Edwin's fixed-time protocol, and the correction it forces on §33  *(Edwin, 2026-08-19; DESIGN, not built)*
+
+> ⭐ Edwin: *"think we should measure always for 20 minutes and take where Q changes the least … what is
+> astounding: 001 and 003 would end at about the same 20.0 … view it as a black box: same recipe, same
+> parameters (maybe also hidden ones), same outcome — that would help from a pragmatic point."*
+>
+> ⛔⛔ **He is right about 20.0, and being right about it refutes a conclusion §33 drew.** That correction
+> comes first, because everything else in this section follows from it.
+
+### ⛔⛔ 34.1 · THE CORRECTION TO §33 — 001 lands on the clear run's number, so its turbidity excess did not hurt it
+
+```
+001   last five looks   19.870  19.867  19.889  19.867  19.873    slope +0.0013 /min   SETTLED at 19.87
+003   last five looks   20.471  20.409  20.349  20.317  20.310    slope -0.1296 /min   still FALLING
+      003 extrapolated  +2 min -> 19.995      +5 min -> 19.568
+```
+
+⭐⭐ **Two preparations, one number: 19.87 and 19.99.** Edwin's "about 20.0" for both, and 003 reaches it in
+**two more minutes** of a run that had already gone 13.9.
+
+⛔ §33.2 concluded that 001 was *"read carrying the same residual turbidity as the fill he called wrong"*,
+because both sat at ≈ +32 % `A_Soret` above 003's clear value. **The outcome refutes the inference:**
+
+| | `A_Soret` excess | Q% | agrees with the clear run? |
+|---|---|---|---|
+| 001 | **+32 %** | 19.867 | ⭐ **yes**, to 0.13 |
+| 002 | **+31 %** | 20.990 | ⛔ **no**, by 1.00 |
+
+⇒ **`A_Soret` excess does not predict the error in `Q%`.** Two fills with the same excess land 1.12 apart.
+⭐⭐ **`V` is far more robust to ordinary residual haze than §33 credited** — which is what it was designed
+for — and **the outlier is 002, not 001.** §33.2 and §33.3 are corrected here: the finding is not *"all
+three were contaminated"*, it is *"two normal preparations agree and the warm-bath one does not."*
+
+⚠ What survives from §33 unchanged: §33.4 (the gate watches one band's absolute rate), §33.5 (`dQ%/dt ≈ 0`
+is the read rule's own construction), §33.6 (the reference drifts wavelength-dependently). ⛔ What does not:
+the framing that every archived answer is turbidity-contaminated in proportion to its Soret excess.
+
+### ⭐⭐ 34.2 · SO WHAT DID THE WARM BATH DO? — it is a *preparation* fault, not a *reading* fault
+
+At **the same `A_Soret`** the two fills differ only in the green:
+
+| | `A_Soret` | `A_valley` | `A_Q` | Q% |
+|---|---|---|---|---|
+| 001 — prepared, inserted, waited | 0.9631 | **0.1289** | 0.3202 | 19.867 |
+| 002 — warm-bath treated | 0.9586 | **0.2076** (+61 %) | 0.4082 | 20.990 |
+
+⭐ Edwin's glyceride remark is the mechanism that fits: **the bath melts the higher-melting glyceride/wax
+fraction; on the way into a cooler holder it comes back out of solution as a fine dispersion** that (a)
+scatters in the green, (b) does **not** settle — 002's `A_valley` moved 1.6 % in 98 s — and (c) keeps
+growing, which is why 002's `Q%` **rose** at 11σ instead of falling.
+
+⇒ ⭐⭐ **PRAGMATIC VERDICT, and it is the cheapest result of the session: do not warm-bath.** Prepare the
+dilution, insert it, wait. That is 001's recipe, it produced the archive's only clean Billa settle, and it
+is exactly Edwin's black-box proposal.
+
+⚠ One fill, one mechanism, no repeat. It should be checked by making the bath the *only* difference between
+two fills of one stock — but the direction of the evidence is not ambiguous.
+
+### ⭐ 34.3 · WHAT `A_valley` IS, IN NUMBERS  *(Edwin: "don't know how to interpret the A_valley values")*
+
+`A_valley` = mean absorbance over **500–560 nm**, the *clarity floor*: the window where pumpkin-oil pigment
+absorbs **least**, sitting between the Soret band (blue) and the Q band (green-yellow). Almost everything
+measured there is **turbidity**, plus a small pigment tail. ⇒ it is the instrument's cloudiness gauge, and
+its units are absorbance, so it scales with dilution.
+
+| `A_valley` | what it means, on this rig |
+|---|---|
+| **0.06 – 0.10** | clear — the whole Lugitsch archive, and 003's endpoint |
+| **0.13** | 001 at its read: ⭐ visually clear, still ~2× the clear floor |
+| **0.20** | 002's plateau: hazy, and it never moved |
+| **0.7** | 001 on insertion: cloudy |
+| **2.7** | 003 on insertion: **opaque** — 0.1 % of the light gets through, below one sensor code (§32.4) |
+
+The three runs, in one line each — and the decision notes are in the record even though the report does not
+print them (⭐ that is itself a fault worth fixing):
+
+```
+001  A_valley 0.691 -> 0.128 over 13.8 min, monotone      "788.7s gate fired (was clearing) - waiting one row for the vertex"
+                                                          "807.6s gate fired (still clearing) - the minimum is still the newest look"
+                                                          "826.3s settled - read as a parabola vertex"
+002  A_valley 0.208 -> 0.204 over 1.6 min, FLAT           "98.5s gate fired - settled - no turning point deeper than 0.126,
+                                                           so the FIRST look is the answer"
+003  A_valley 2.667 -> 0.059 over 13.9 min, -98 %         "835.8s gate fired - settled - no turning point deeper than 0.126,
+                                                           so the FIRST look is the answer"        <- the §32.2 defect
+```
+
+### ⚠ 34.4 · THE TIMING COINCIDENCE — real, and it belongs to the **gate**, not to the fill
+
+⭐ Edwin: *"interesting that 001 and 003 stop at nearly the same time though their Q% curves differ."*
+Measured, and it is closer than "nearly":
+
+```
+001  gate at 826.3 s        starting A_valley 0.691
+003  gate at 835.8 s        starting A_valley 2.667      3.86x more turbidity, 9.5 s later = 1.1 %
+```
+
+⚠ **But it is not evidence of a fixed physical clock.** A shared-τ exponential predicts the cloudier fill
+gates `τ·ln(3.86)` later — **+243 s at τ = 3 min, +567 s at τ = 7 min**. It gated **+9.5 s** later. And the
+two fills were **not** doing the same thing at that moment:
+
+| at t = 825 s | relative rate of `A_valley` | absolute rate |
+|---|---|---|
+| 001 | **−3.0 %/min** | −0.0039 /min |
+| 003 | **−8.0 %/min** | −0.0046 /min |
+
+⇒ ⭐⭐ **the two runs stopped together because `θ` is an ABSOLUTE threshold and their absolute rates happened
+to cross it together, while their relative rates differ by 2.6×.** Under §33.4's relative gate they would
+have stopped far apart — 003 much later, which is what it needed.
+
+⚠ ⇒ the coincidence is **not** support for a physical 14-minute constant. ⭐ It **is** a small piece of
+support for a *fixed-duration protocol*: nothing about these two fills demanded different treatment.
+
+### ⭐⭐ 34.5 · EDWIN'S RULE, TESTED — "run 20 min, take the window where Q% changes least"
+
+Applied to all twelve archived runs, at window sizes m = 4 / 6 / 8 rows:
+
+| run | flattest window | its Q% | recorded answer | verdict |
+|---|---|---|---|---|
+| **BillaClever 001** | t ≈ 780 s, slope +0.0001 /min | **19.874** | 19.866 | ⭐ **reproduces it to 0.008** |
+| Lugitsch 002 / 004 / 005 / 006 / 007 | late, slope < 0.05 /min | 13.47 – 14.17 | same ± 0.03 | ⭐ agrees |
+| 20260818A/001 | t ≈ 207 s, slope +0.0002 /min | 28.419 | 28.321 | ⭐ agrees |
+| 20260819/001 (TEST C) | t ≈ 192 s | 13.481 | 13.585 | ⭐ agrees |
+| BillaClever 002 | t ≈ 52 s, slope **+0.109 /min** | 21.086 | 20.990 | ⚠ no flat window exists |
+| **BillaClever 003** | t ≈ 501 s, slope +0.008 /min | ⛔ **21.197** | 8.450 | ⛔ **picks the wrong plateau** |
+
+⛔ **On 003 the rule lands on a false shoulder.** Between t = 473 s and t = 567 s the `Q%` curve genuinely
+flattens at ≈ 21.2 on its way down, and that shoulder is flatter than anything else in the 13.9 minutes the
+run lasted.
+
+⭐⭐ **BUT THAT IS NOT A REFUTATION, IT IS THE PREMISE BEING MISSING: not one run in the archive lasted 20
+minutes.** The longest is 13.9. Edwin's rule asks for a duration no run has ever been given, and on 003 the
+final plateau — the one the rule is meant to find — begins roughly where the data stop.
+
+#### ⭐⭐ The fix costs nothing: take the **LAST** flat window, not the **flattest**
+
+Scan backwards from the end and take the first window whose `Q%` slope is flat within noise. On the archive
+this is decisive:
+
+| run | last window flat? | answer |
+|---|---|---|
+| BillaClever 001 | ⭐ yes, +0.0013 /min | **19.87** ✅ |
+| BillaClever 003 (as run, 13.9 min) | ⛔ no, −0.130 /min | **no answer — "still falling"** ✅ correct |
+| BillaClever 002 | ⛔ no, +0.109 /min | **no answer — "still rising"** ✅ correct |
+| Lugitsch 003 | ⛔ no, +0.318 /min | no answer ⭐ — and §29.1 already named this run's read the worst of its series |
+| Lugitsch 002 / 004 / 006, 20260818A | ⭐ yes | unchanged |
+
+⭐⭐ **It answers the one fill that settled and refuses the three that did not** — including 003, whose
+shoulder it now walks straight past. ⛔ The 21.2 trap only exists for a rule that ranks windows by flatness;
+a rule that reads *the last* flat one cannot fall into it.
+
+⚠ "Flat within noise" needs a number, and it is derivable rather than chosen: the residual scatter of `Q%`
+inside a window is **0.009 – 0.037**, so a slope is resolvable to ≈ 0.01 /min. ⭐ Set the threshold from
+**what the answer would still move over the remainder of the protocol** — at 0.01 /min over a final 5
+minutes that is 0.05, under one instrument floor. ⇒ `|slope| < 0.01 /min` **and** not significant at 2σ.
+
+### ⭐⭐⭐ 34.6 · THE ARGUMENT FOR THE FIXED PROTOCOL THAT NEITHER OF US MADE — it deletes a σ_fill term
+
+§2.4 of this spec says, in its own words:
+
+> *"Damage accumulates while the fill clears, and clearing time varies between fills … at the measured +1.0
+> to +1.6 `Q%` per hour, [the damage term varies with it]."*
+
+⭐⭐ **A fixed duration turns that variable into a constant.** Every fill receives the **same dose**, so
+photodamage stops being a per-fill error and becomes a **common offset** — which cancels in every comparison
+the product actually makes (oil vs oil, batch vs batch, this month vs last). ⛔ Today the archive's runs
+range from **98 s to 836 s of lamp**, an 8.5× spread in dose, and §2.4 counts that spread as noise.
+
+⭐ It also retires §2.1's objection. §2.1 rejected gating on `Q%` because it *"works and costs ten minutes of
+light"*. **Under a fixed duration the light is already paid for**, so the objection has nothing left to
+object to — and `Q%`, the quantity we actually report, becomes the quantity we judge.
+
+### ⭐⭐ 34.7 · THE PROPOSAL — the protocol replaces most of the machine
+
+| | |
+|---|---|
+| **P1** | ⭐ **Fixed run duration**, default **20 min**, a setting rather than a constant. **No gate.** |
+| **P2** | ⭐ **Read = the LAST window flat within noise** (§34.5). No flat window ⇒ **no answer**, and the record says which way it was still moving and how fast. |
+| **P3** | ⭐ **Keep C1** (the absorbance ceiling, §32.7). A dark-floor row is not a look under any protocol. |
+| **P4** | ⭐ **Keep C7** (all three band rates in the record, §33.7). It is the honesty line, and it costs nothing. |
+| **P5** | ⭐ **Protocol rule: no warm bath** (§34.2). |
+
+⭐⭐ **And note what it DELETES:** `THETA_PER_MINUTE`, `GATE_SPAN_SECONDS`, `GATE_CONSECUTIVE`,
+`__hasFallenSinceMaximum`, the depth discriminator and `depthThreshold`, the vertex read, C2's hunt window,
+C5's relative gate — **the entire gate-and-branch apparatus of §14, §29, §30 and §32.7.** TEST B and TEST C
+survive only as *diagnostics* (a re-clouding or ripening fill still needs to be named), not as terminators.
+
+⚠ That is a large deletion and it should feel uncomfortable. ⭐ The case for it is that **every defect found
+in §32 and §33 lives in the deleted part**, and the part that keeps working — the metric, the ring buffer,
+the record, the report — is untouched.
+
+### ⚠ 34.8 · WHAT IT COSTS, AND WHERE IT CAN STILL GO WRONG
+
+1. ⛔ **002 under a 20-minute protocol is unknown, and it is the case that could look bad.** It was rising
+   at 0.109 /min with no sign of stopping; extrapolated blindly it reaches ≈ 23 by minute 20. ⭐ P2 refuses
+   it either way — *no flat window, no answer* — so the protocol is safe, but **we still do not know what a
+   warm-bath fill does over 20 minutes**, and P5 exists so we do not have to find out.
+2. ⚠ **20 minutes is a protocol constant, not a law, and it is oil-dependent.** **5 of 7 Lugitsch fills
+   arrived clear** and settled in 105 s; **0 of 3 Billa fills did.** The one Lugitsch fill that had to clear
+   did 92 % of its haze in **314 s**; Billa 001 did 81 % in **826 s** — ⭐ consistent with Edwin's glyceride
+   reading, and it means 20 min is generous for Lugitsch and may be **tight for a worse oil**. ⇒ P1 makes it
+   a setting, and §34.9 measures it.
+3. ⚠ **20 minutes of dose on every fill, including the ones that were ready in 105 s.** At the measured
+   browning rates that is 0.02–0.11 `Q%`/min of damage banked. ⭐ P2 mitigates it — the read is the last
+   *flat* window, so a fill that starts browning has no flat window late and gets refused rather than
+   silently over-baked. ⛔ But it is a real cost, and it is the strongest argument for the shutter (§29.4).
+4. ⚠ **A false plateau longer than the window can still fool P2.** 003's shoulder was ~95 s of genuine
+   flatness. ⭐ Requiring the flat window to be the last one, *and* to be followed by nothing, is what makes
+   this safe — so the protocol must never stop early "because it looks flat". **Run the full 20 minutes,
+   always.** That is Edwin's rule and it is load-bearing.
+
+### ⭐⭐ 34.9 · THE EXPERIMENT — unchanged in substance, cheaper in form
+
+§33.8 asked for one fill driven to completion. ⭐ **It is now simply the protocol run long:** one Billa fill,
+prepared 001's way, **60 minutes**, DIAGNOSTIC, no promotion — plus **a second jar with the lamp shuttered
+between looks**.
+
+Three questions, one session:
+
+| question | what the run answers |
+|---|---|
+| **is 20 minutes enough?** | when does the last flat window first appear — and does it appear at all |
+| **where does it land?** | ⭐ does the flat value agree with 19.87 / 19.99, which would confirm §34.1 outright |
+| **is the lamp the limit?** | the shuttered arm separates "still clearing" from "already browning" (§16.36) |
+
+⭐ **And it is now falsifiable in Edwin's own terms:** if a 60-minute run of a fresh 001-style prep lands on
+**20.0**, the black-box claim — *same recipe, same parameters, same outcome* — is established for this oil,
+and the fixed protocol can ship without any of the deleted machinery.
+
+### ⛔ 34.10 · WHAT §34 DOES NOT CLAIM
+
+- ⛔ **It does not prove 20 minutes is the right number.** It shows no run has ever tested it and gives the
+  one session that would.
+- ⛔ **It does not establish the glyceride mechanism.** It is the best fit to 002's behaviour and to the
+  Lugitsch/Billa clearing-speed gap; it is not measured.
+- ⛔ **It does not retract §33.4 or §33.5.** The gate really does watch one band's absolute rate, and
+  `dQ%/dt ≈ 0` really is the read rule's own construction — ⭐ which is precisely why P1/P2 delete the gate
+  instead of repairing it.
+- ⚠ **It rests on one pair.** 001 and 003 agreeing at ≈ 20.0 is two fills of one stock on one evening. ⭐ It
+  is enough to change the design; it is not enough to close it, and §34.9 is one evening away.
+
+---
+
+## ⭐⭐ 35 · THE REPEATABILITY SERIES — Edwin's "make some other 001-like measurements"  *(2026-08-19; DESIGN, not built)*
+
+> ⭐ Edwin: *"think I should make some other 001-like measurement and look if it gives the same result — can
+> then repeat this with the same oil — and could repeat the same lab recipe (no waterbath, which introduces
+> other artefacts maybe and is uncontrollable in some way). BTW the metric itself says the oil is a brown
+> one. At least this is correct."*
+
+### ⭐⭐ 35.1 · THE VERDICT CHECK FIRST — and the domain guard saved a false GREEN
+
+`V_THRESHOLD = −18.6` (**higher `Q%` = browner**), `V_VERDICT_BAND = (12.0, 22.0)`, scored corpus corridor
+12.70–20.82.
+
+| candidate answer for these fills | verdict | margin above the 18.6 line |
+|---|---|---|
+| 001 as reported — **19.87** | 🟤 **brown** | +1.27 = **20 floors** |
+| 003 extrapolated — **19.99** | 🟤 brown | +1.39 = 22 floors |
+| 003 last row — **20.31** | 🟤 brown | +1.71 = 27 floors |
+| 002 as reported — **20.99** | 🟤 brown ⚠ past the scored corridor (20.82), inside the band | +2.39 = 38 floors |
+| §34.5's false shoulder — 21.20 | 🟤 brown | +2.60 |
+| ⛔ 003 as reported — **8.45** | **NO VERDICT** | — |
+
+⭐⭐ **Every candidate answer except the broken one gives the same verdict.** The entire §32–§34 argument
+moves the number by ~1 unit; the sample sits **20 to 38 instrument floors** on the brown side of the line.
+⇒ **for this oil, none of the read-rule work changes a decision.** It matters for samples near 18.6, and
+that is the honest scope of it.
+
+⭐⭐⭐ **AND THE 8.450 DID NOT PRODUCE A WRONG VERDICT — IT PRODUCED NONE.** The report for run 003 carries
+**no `Verdict · Q%` item at all**, because 8.45 falls below `V_VERDICT_BAND`'s floor of 12.0 and §3.1a
+withholds rather than clamps. ⇒ **a guard written for out-of-domain *samples* caught an out-of-domain
+*read*, and the false GREEN that 8.45 would otherwise have drawn never reached paper.**
+
+⚠ **Do not conclude the defect is harmless.** The guard caught 8.45 because it was catastrophic. A dark-floor
+read that lands at 13 or 17 sits comfortably inside the band and would print a confident GREEN. ⭐ C1 (§32.7)
+is still required; §3.1a is a backstop that happened to be in the right place, not a fix.
+
+⚠ Lugitsch A reads 13.5–14.5 ⇒ **green**, Billa Clever ≈ 20 ⇒ **brown**: a class gap of ≈ 6 `Q%` units
+against a disputed precision of ≈ 1. ⭐ Edwin's *"at least this is correct"* is the standing sanity check,
+and it should be **written into every session**: if the verdict ever disagrees with what the oil looks like
+in the jar, stop and find out why before trusting any number that evening.
+
+### ⭐⭐ 35.2 · WHY THE REPEAT SERIES IS THE RIGHT NEXT MOVE
+
+Everything §32–§34 concluded rests on **one evening and three fills**, two of which were deliberately
+abnormal (a warm bath, a fridge-clouding). ⭐ Edwin's proposal removes exactly that weakness: **repeat the
+one recipe that worked, several times, and see whether the black box returns the same number.** No new
+physics is needed to make it informative, and it is the only experiment that can *establish* the pragmatic
+claim rather than argue it.
+
+⛔ **And the warm bath is out on his own grounds** — *"uncontrollable in some way"*. §34.2 says the same
+thing from the data: it changes `A_valley` by +61 % at unchanged `A_Soret` and leaves a dispersion that does
+not settle. ⇒ **the bath is not a faster route to the same state; it is a different state.**
+
+### ⭐⭐ 35.3 · THE SERIES, IN ORDER — and the order is load-bearing
+
+⛔ **Do the long run FIRST.** Repeating at 20 minutes before knowing whether 20 minutes is enough would
+produce five numbers that agree with each other and mean nothing.
+
+| | what | how long | why |
+|---|---|---|---|
+| **T0** | ⭐ **one fill, 60 min**, DIAGNOSTIC, no promotion *(= §34.9)* | 60 min | when does the last flat window first appear? does it appear at all? does it land on ≈ 20.0? |
+| **T0b** | ⭐ **second fill, 60 min, lamp SHUTTERED between looks** (operator blocks the beam by hand) | 60 min | separates *still clearing* from *already browning* — the one thing no run can currently do |
+| **T1** | ⭐⭐ **five fills, same stock, same recipe, no bath**, at the duration T0 says | 5 × ~20 min | **σ_fill** — the number the whole product rests on |
+| **T2** | ⚠ **another day: a FRESH dilution from the same bottle, three fills** | 3 × ~20 min | separates σ_fill from **σ_prep** — is the dilution or the fill the variable? |
+
+⚠ T0 + T0b is one evening; T1 is a second; T2 is a third. ⭐ T0 alone already answers the question that
+blocks the fixed protocol, so **it is worth doing even if the rest slips.**
+
+### ⭐⭐ 35.4 · THE READING, FIXED BEFORE THE RUN  *(§16.34.3's habit)*
+
+The archive's own benchmark: **Lugitsch A, seven fills, one session — mean 13.997, sd 0.377.** That is
+today's σ_fill, and it is what T1 must be judged against.
+
+| T1 result | verdict |
+|---|---|
+| **sd ≤ 0.20** across five fills | ⭐⭐ the black box holds and is **better** than Lugitsch A ⇒ the fixed protocol ships, and the whole §14/§29/§30 gate apparatus is deleted (§34.7) |
+| **sd 0.20 – 0.40** | ⭐ the black box holds at today's known repeatability ⇒ the protocol ships; σ_fill stays the dominant error and the shutter becomes the next target |
+| **sd > 0.50** | ⛔ a hidden parameter is not controlled ⇒ **do not ship the protocol**; the next job is to find the variable, and §35.5's log is where it will be |
+| any fill lands **> 1.0** from the others | ⛔ treat it as a 002 — look for what was different about that fill before averaging it in |
+
+⭐ Second reading, free: **does the mean land on 19.9 – 20.0?** If it does, §34.1's *"001 and 003 agree"* is
+confirmed on five fills instead of two, and the black-box claim is established for this oil.
+
+### ⭐ 35.5 · THE HIDDEN PARAMETERS — write them down, because that is what "same parameters" means
+
+⭐ Edwin's *"maybe also hidden ones"* is the whole risk of the black-box argument: it holds only if the
+things nobody recorded really were the same. **Per fill:**
+
+- **room temperature**, and the **holder** temperature if a thermometer is to hand
+- ⭐ **lamp warm-up** — minutes the lamp had been on before the reference capture *(§14.5a already asks for
+  a pre-warmed instrument; this is where it gets checked)*
+- ⭐ **time from prep to insertion**, in minutes — the fill ages before it is measured
+- **stock age** (when the dilution was made), and whether the stock was **shaken** before the pour
+- **which pour** of the stock (§33 showed "first 4 ml" and "second 4 ml" are not automatically alike)
+- **jar identity** — the same physical jar, or a different one
+- ⚠ and, per §33.6, **when the reference was captured relative to the sample**
+
+⭐ ⚠ One deliberate control worth adding at no cost: **vary the prep-to-insertion time on purpose across the
+five fills** (say 2, 5, 10, 20, 40 minutes). If σ_fill is dominated by fill *age*, that shows up as a trend
+rather than as scatter — and a trend is diagnosable where scatter is not.
+
+### ⭐ 35.6 · TWO THINGS THE SERIES BUYS BEYOND THE ANSWER
+
+1. ⭐ **A re-seat check, for one jar, for free.** After the last fill's run, lift the jar out, re-seat it,
+   and read 3 more minutes. Memory of §16.26 says **jar re-seating is the whole archive's CV**; this is the
+   cheapest possible confirmation, and it comes at the end where the extra dose can no longer contaminate a
+   fresh answer.
+2. ⭐ **The first real test of C7** (§33.7 — the three band rates on the record). Five runs of one recipe
+   should show the *same* band rates at the read. If they do not, the rates are the diagnostic that says
+   which fill was different — which is precisely the "hidden parameter" detector §35.5 asks for.
+
+### ⛔ 35.7 · WHAT THE SERIES CANNOT DO
+
+- ⛔ **It cannot validate the metric**, only its repeatability. Five fills agreeing on 19.9 says the
+  instrument is consistent; it does not say 19.9 is the right description of the oil.
+- ⛔ **It cannot separate σ_fill from lamp drift** within a session — §33.6 measured the reference moving
+  −2.1 % / −5.6 % / −8.9 % across 42 minutes, and a five-fill series spans ~2 hours. ⭐ **Capture a fresh
+  reference for every fill** (already the protocol) and record the reference band means, so the drift is at
+  least visible in the record rather than folded into σ_fill.
+- ⚠ **It cannot settle the 20-minute constant for other oils.** Lugitsch fills mostly arrive clear; Billa
+  never does. The number is per-oil until a second oil has been through the same series.
+
+---
+
+## ⭐⭐⭐ 36 · RUNS 004 AND 005 — the pour is a real variable, the black box works, and §34 must be walked back  *(Edwin, 2026-08-19; DESIGN, not built)*
+
+> ⭐ **004** — new dilution **R**, the *first 4 ml*, no water bath. **005** — the same dilution, the *other
+> 4 ml*, no water bath. Both `SETTLED_AFTER_CLEARING`, both read as a VERTEX, both textbook.
+>
+> ⛔⛔ **Two of §34's conclusions are wrong and are retracted below.** They were drawn from an archive that
+> contained no clean V-shaped Billa run; 004 and 005 are two, and they refute the retracted parts directly.
+
+### ⭐⭐⭐ 36.1 · THE HEADLINE — the best repeatability the archive has ever produced
+
+| stock | run | pour | treatment | answer |
+|---|---|---|---|---|
+| 1 (A/B) | 001 | **first 4 ml** | none | **19.866** |
+| 1 (A/B) | 003 | second 4 ml | fridge-clouded | **20.310** |
+| 1 (A/B) | 002 | second 4 ml | ⛔ warm bath | 20.990 |
+| 2 (R) | **004** | **first 4 ml** | none | **19.431** |
+| 2 (R) | **005** | second 4 ml | none | **20.234** |
+
+```
+first  pours   19.866  19.431      spread 0.435
+second pours   20.310  20.234      spread 0.076   <- 1.2 instrument floors, across TWO SEPARATE DILUTIONS
+```
+
+⭐⭐ **Two independently prepared stocks, same recipe, same pour position, agree to 0.076.** Against the
+Lugitsch A benchmark of **sd 0.377** over seven fills of one dilution, that is the best number this
+instrument has ever produced — and it is σ_prep + σ_fill combined, not σ_fill alone.
+
+⇒ ⭐⭐⭐ **Edwin's black box holds. Same recipe, same parameters, same outcome — measured, not argued.**
+
+### ⭐⭐ 36.2 · THE POUR IS A REAL VARIABLE, AND IT CLOSES §33.3's UNEXPLAINED GAP
+
+```
+within stock 1:   001 -> 003    +0.444        (first -> second pour)
+within stock 2:   004 -> 005    +0.803        (first -> second pour)
+                                -------
+                  mean          +0.623        SAME SIGN IN BOTH STOCKS
+warm bath, same pour, same stock:  003 -> 002   +0.680
+```
+
+⭐⭐ **§33.3's "1.124 apart and no correction can explain it" now decomposes exactly:** 001 → 002 is a pour
+step (+0.444) *plus* a bath step (+0.680). ⭐ The pour term is **independently reproduced in stock 2**, in
+the same direction and of the same order — which is what turns it from arithmetic into a finding.
+
+⚠ **The second pour reads BROWNER.** The obvious reading is that the first 4 ml is supernatant and the
+second drags the heavier, settled fraction — but ⛔ **it is confounded with two other things**: the second
+pour is always measured *later* (18–22 min), so it is also the *older stock*, and it is also a later point
+on the lamp's evening. §36.6 says how to break the confound in one session.
+
+⇒ ⭐ **Until it is broken, the pour is part of the recipe.** Two fills are comparable only if they came from
+the same pour position. §35.5 already asked for "which pour" in the log; this promotes it from a nice-to-have
+to a **required field**.
+
+### ⛔⛔ 36.3 · RETRACTION 1 — §34.7's "delete the gate apparatus" is WRONG
+
+004 and 005 are exactly the case the vertex machinery was built for, and it handled both correctly:
+
+| run | Q% minimum | position | rise after it | vertex read | run length |
+|---|---|---|---|---|---|
+| 004 | 19.436 at t = 232 s | **row 13 of 32** | **+0.234** | **19.431** ✅ | 9.8 min |
+| 005 | 20.236 at t = 537 s | **row 30 of 49** | **+0.280** | **20.234** ✅ | 14.9 min |
+
+⭐⭐ **Clean V-shapes with an interior minimum and a genuine browning limb after it — and `__read`'s
+"argmin interior ⇒ VERTEX" branch read both of them right.** §34.7 proposed deleting `depthThreshold`, the
+vertex read and the whole §14/§29/§30 branch structure on the strength of an archive that happened to
+contain no such run. ⛔ **That proposal is withdrawn.**
+
+⭐ The defects found in §32/§33 are **narrower** than §34 claimed:
+
+- **003** — a dark-floor read. Fixed by **C1** (the absorbance ceiling), which stands.
+- **002** — a fill that never cleared. Needs a **verdict**, not a different read (C3), which stands.
+- **everything else in the archive** — the machinery works.
+
+### ⛔⛔ 36.4 · RETRACTION 2 — §34.5's "take the LAST flat window" is worse than what it replaced, and it did not even fix its own test case
+
+Replayed over all fourteen runs, against Edwin's original *flattest* window:
+
+| run | Edwin: **flattest** | mine: **last flat** | recorded (vertex) | truth |
+|---|---|---|---|---|
+| 004 | 19.454 ⭐ | 19.458 ⭐ | **19.431** | ~19.44 |
+| **005** | 20.457 ⛔ **+0.22** | 20.457 ⛔ **+0.22** | **20.234** | ~20.24 |
+| **003** | 21.197 ⛔ | 21.197 ⛔ **— unchanged!** | 8.450 ⛔ | ~20.0 |
+| Lugitsch 001 / 003 / 005 / 006 / 007 | 13.5 – 14.2 ⭐ | ⛔ **REFUSED** ×5 | 13.5 – 14.5 | — |
+
+⛔ **My modification refuses five archived runs that were fine**, lands 0.22 high on 005 — it settles on the
+*browning plateau*, which on 005 is flatter than the minimum region — and ⛔⛔ **leaves 003 at 21.197, the
+exact failure it was invented to fix.** It was wrong on its own terms and I did not check it against a
+V-shaped run because none existed.
+
+⚠ **Edwin's original rule is the better of the two**, but it is not right either: it also takes 005's
+browning plateau (20.457), because a curve that has finished browning is genuinely flat.
+
+⭐⭐ **What actually separates them is what comes AFTER the flat part** — a rise. `__read`'s existing
+"argmin must be interior" test asks precisely that, and it is why the vertex read beat both window rules on
+005. ⇒ **the minimum, confirmed by a rise, is the right rule. Keep it.**
+
+### ⭐⭐ 36.5 · WHAT EDWIN'S 20 MINUTES *IS* RIGHT FOR — guaranteeing the rise has time to appear
+
+The one place the fixed duration is clearly load-bearing:
+
+| run | minimum at | run length | rows after the minimum |
+|---|---|---|---|
+| 004 | **3.9 min** | 9.8 min | 19 ⭐ well confirmed |
+| 005 | **9.0 min** | 14.9 min | 19 ⭐ well confirmed |
+| 001 | **13.5 min** | 13.8 min | ⚠ **1** — rise of +0.006, barely interior |
+
+⭐⭐ **001's run outlasted its own minimum by a single row.** Its answer is right, and it is right by
+9.5 seconds. A run one row shorter would have hit *"the minimum is still the newest look — waiting for its
+far side"* and ended with **no value**.
+
+⇒ ⭐ **Fixed 20 minutes, kept from §34, for a reason §34 did not give:** not to replace the minimum rule but
+to guarantee it can be *confirmed*. The three minima land at 3.9 / 9.0 / 13.5 min; 20 min covers all three
+with margin, 15 min would have been marginal for 001.
+
+⭐ And §34.6's argument survives untouched: a fixed duration makes the dose equal across fills, which
+deletes §2.4's varying-clearing-time term from σ_fill. ⚠ With one addition — the read is the *minimum*, not
+the last look, so the extra minutes cost lamp without touching the answer. **That is the price of confirming
+the minimum, and 004/005 show it is worth paying.**
+
+### ⚠ 36.6 · CORRECTION TO §33.6 — it is a WARM-UP TRANSIENT, not a linear drift, and the first run of the evening is the outlier
+
+With five references instead of three, over 149 minutes instead of 42:
+
+| run | clock | min | Soret | valley | Q |
+|---|---|---|---|---|---|
+| 001 | 20:50 | 0 | 128.83 | **148.37** | **70.10** |
+| 002 | 21:12 | 22 | 126.80 | 141.41 (−4.7 %) | 65.36 (−6.8 %) |
+| 003 | 21:32 | 42 | 126.16 | 140.00 (−5.6 %) | 63.89 (−8.9 %) |
+| 004 | 23:01 | 131 | 128.45 | 142.79 (−3.8 %) | 66.33 (−5.4 %) |
+| 005 | 23:19 | 149 | 129.56 | 141.89 (−4.4 %) | 65.03 (−7.2 %) |
+
+⛔ **There is no linear trend** (fits give r = −0.37 to +0.53). **001's reference is simply 5–9 % brighter in
+the red than every later one, and 002–005 agree to ~1.5 %.** ⇒ what §33.6 read as a drift rate is a
+**warm-up transient in the first twenty minutes of the evening**, followed by a stable lamp.
+
+⭐ **§14.5a's "pre-warm the instrument" now has a number**: the first run of an evening carries a reference
+up to 9 % off in the red, and **run 001 spans the transient** — its reference at 20:50, its answer 13.5 min
+later. ⇒ ⚠ **001 is the least trustworthy of the three unbathed runs**, which is a reason to weight
+**004 → 005 (+0.803, both well after warm-up)** above 001 → 003 (+0.444) for the pour term.
+
+⭐ And the drift *correction* on the answers is small, not the 0.43 §33.6 implied:
+
+```
+001  -0.060      002  -0.001      003  -0.000      004  -0.016      005  -0.041
+```
+
+⇒ ⛔ **§33.6's "reference drift is a real, sizeable error" is withdrawn as stated.** The real rule is simpler
+and cheaper: **pre-warm, and discard or flag the first run of the evening.**
+
+### ⭐ 36.7 · THE PROTOCOL, AS IT NOW STANDS
+
+| | |
+|---|---|
+| **P1** | ⭐ Fixed run duration, **20 min** — so the browning limb always has time to confirm the minimum (§36.5) |
+| **P2** | ⛔ ~~read the last flat window~~ → ⭐ **keep the existing read: the Q% minimum, confirmed by an interior argmin, read as a vertex** (§36.4) |
+| **P3** | ⭐ Keep **C1**, the absorbance ceiling (§32.7) — still required for 003 |
+| **P4** | ⭐ Keep **C7**, the three band rates in the record (§33.7) |
+| **P5** | ⭐ **No warm bath** (§34.2) — the bath term is +0.680 |
+| **P6** | ⭐⭐ **NEW — record the pour position, and compare only like with like** (§36.2). The pour term is +0.44 to +0.80, larger than everything else on this list. |
+| **P7** | ⭐⭐ **NEW — pre-warm the lamp, and flag the first run of the evening** (§36.6) |
+
+⭐ Note what is **no longer** on the list: the deletion of the gate apparatus, the last-flat-window read, the
+κ correction, and the relative-rate gate C5 — ⚠ C5 is not withdrawn, but 004 and 005 show the current gate
+producing correct answers, so it drops from "required" to "revisit after §35's T1".
+
+### ⭐⭐ 36.8 · THE NEXT SESSION — one change to §35, and it breaks the pour confound
+
+§35's T1 (five fills, one stock) is still the right series. ⭐ **Add one thing that costs nothing:**
+
+> **Pour BOTH aliquots at the same moment, and measure them in the OPPOSITE order on alternate stocks.**
+
+| what follows the effect | what it is |
+|---|---|
+| the **pour position** (first vs second), regardless of order measured | ⭐ real stratification in the jar — the second pour carries the heavier fraction |
+| the **measurement order** (whatever runs second) | ⚠ stock ageing, or the lamp's evening — and then §36.2's finding is not about pouring at all |
+
+⭐ Two stocks, four runs, one evening, and it settles a **+0.6 to +0.8 term** — larger than σ_fill, larger
+than the drift, and second only to the warm bath among everything measured so far.
+
+⚠ And keep §35.4's reading unchanged: five fills, sd ≤ 0.20 ⇒ ship; > 0.50 ⇒ a hidden parameter is loose.
+⭐ The 0.076 agreement of §36.1 says the ≤ 0.20 outcome is plausible — **from two fills, which is not a
+repeatability measurement.**
+
+### ⛔ 36.9 · WHAT §36 DOES NOT CLAIM
+
+- ⛔ **0.076 is two numbers.** It is the most encouraging result in the file and it is not σ_fill. §35's T1
+  is still owed.
+- ⛔ **The pour mechanism is not established** — stratification, stock age and lamp evening are confounded
+  (§36.8).
+- ⛔ **It does not rescue 003 or 002.** C1 and C3 are still required; 004 and 005 simply show that the rest of
+  the machine was never broken.
+- ⭐ **And it does not change the verdict:** 19.431 and 20.234 are both **brown**, 13 and 26 instrument
+  floors above the 18.6 line (§35.1).
+
+---
+
+## ⭐⭐ 37 · THE DESK LIGHT, THE FRIDGE, AND WHETHER THREE RUNS SEED THE HISTORY TRACKER  *(Edwin, 2026-08-19; DESIGN, not built)*
+
+### ⭐⭐ 37.1 · THE DESK LIGHT — tested against each run's own browning track, and it explains 15 % of the gap
+
+⭐ Edwin: *"the 'other 4 ml' were sitting on my desk before some monitor and some light … but the light is
+low (very low) compared with the lamp."*
+
+⭐⭐ **This is testable without any new run**, because every run traces its own photodamage track: along the
+browning limb, `A_Soret` falls and `Q%` rises, and the slope of that track says what a given amount of
+bleaching costs in `Q%`.
+
+```
+004 browning limb (20 rows)   A_Soret 1.0123 -> 0.9281 (-8.3 %)   Q% 19.436 -> 19.669 (+0.234)
+                              slope  dQ%/dA_Soret = -2.211
+005 browning limb (20 rows)   A_Soret 0.9571 -> 0.8812 (-7.9 %)   Q% 20.236 -> 20.440 (+0.204)
+                              slope  dQ%/dA_Soret = -3.402
+```
+
+If 005 were simply *"004, further browned by the desk"*, it must sit on 004's own track:
+
+```
+004 answer 19.431 at A_Soret 1.0123
+005        measured at A_Soret 0.9571      (dA_Soret -0.0552)
+   predicted by pure browning:  19.553
+   MEASURED:                    20.234
+   ------------------------------------
+   SHORTFALL:                   +0.681     <- 85 % of the +0.803 gap is NOT photodamage
+```
+
+⇒ ⭐⭐ **Edwin's own caveat is confirmed by the data: the desk light cannot account for it.** It buys about
+0.12 of 0.80. ⚠ The test assumes desk-light browning follows the same `(A_Soret, Q%)` track as lamp browning
+— a different spectrum could bleach differently — but a **5.7× shortfall** is not a marginal miss.
+
+⭐ It is still worth removing: **keep both aliquots in the dark** costs nothing and deletes a term. §37.5's
+design does that anyway.
+
+### ⭐ 37.2 · TEMPERATURE ON THE WAY IN IS **NOT** A PROBLEM — Edwin is right, and the numbers are stronger than he claimed
+
+⭐ Edwin: *"the one that was put in the fridge also gave a good value — so temperature of the solution as it
+is input into the spectrometer seems to be NO real problem, as the spectrometer's warming settles it."*
+
+Run **003** went in cold and opaque (`A_valley` 2.667, 0.1 % transmission) and:
+
+| | terminal `A_valley` |
+|---|---|
+| 003 — **from the fridge** | **0.0586** ⭐ the **lowest of all five** |
+| 005 | 0.1209 |
+| 001 | 0.1279 |
+| 004 | 0.1406 |
+| 002 — warm bath | 0.2042 |
+
+⭐⭐ **The cold fill did not merely recover — it ended the clearest of the evening**, and its `Q%` (20.310)
+agrees with the other second aliquot (20.234) to **0.076**. ⇒ the lamp's warming fully resolves cold-induced
+haze, and does so *more* completely than it resolves native haze.
+
+⚠ **One confound, named:** 003 was also the more dilute aliquot of stock 1 (`A_Soret` 0.7312 against 001's
+0.9599), so it had less material to hold in suspension. ⭐ The conclusion — *cold in is recoverable* — does
+not depend on it; the "clearest of all" ranking does.
+
+⛔ **The cost is time, not accuracy:** 003 needed 13.9 minutes and had not finished. ⇒ **a cold fill is
+acceptable and slow**, which under §36.5's fixed 20-minute protocol costs nothing at all.
+
+### ⛔ 37.3 · THE WARM BATH IS DEAD — agreed, and the epitaph is three numbers
+
+| | |
+|---|---|
+| **+0.680** | the bath's own bias, same stock, same aliquot (003 → 002) |
+| **1.6 %** | how much its `A_valley` fell in 98 s — it does not settle at all |
+| **+0.109 /min at 11σ** | its `Q%` was still *rising* when the instrument answered |
+
+⇒ ⭐ **P5 stands: no warm bath.** It is not a faster route to the settled state; it is a different, unstable
+state that the instrument cannot recognise as bad.
+
+### ⛔⛔ 37.4 · THREE RUNS DO **NOT** SEED THE HISTORY TRACKER — and the reason is worse than the count
+
+⭐ Edwin: *"taking 001, 004 and 005 — do you think that this would suffice for the history tracker?"*
+
+`SPEC_history_tracker.md`'s alarm is the SNV shape distance `D = √(1 − r²)`. Computed on the **promoted
+capture** of each run, over 460–630 nm:
+
+```
+          001      004      005      002
+ 001   0.0000   0.1675   0.1576   0.1964
+ 004   0.1675   0.0000   0.0882   0.1150
+ 005   0.1576   0.0882   0.0000   0.0856
+```
+
+⛔⛔ **There is no separation at all.** The three *good* runs span D = 0.088 – 0.168; the distance from a good
+run to **002 — the fill we know is bad** — is 0.086 – 0.196. **002 is closer in shape to 005 (0.086) than
+001 is to 004 (0.168).** Separation factor **0.5×**: an alarm has nowhere to sit.
+
+#### ⭐⭐ And the diagnosis is the useful part: `D` is measuring TURBIDITY, not chemistry
+
+```
+  correlation of D against |ΔA_valley| across the six pairs:   r = +0.835
+```
+
+⭐⭐ **The shape distance is a turbidity-difference detector.** ⚠ Removing a fitted linear baseline from each
+spectrum does not rescue it (separation 0.35×) — the pedestal is not a straight line (§32.3, §33.3).
+
+#### ⭐⭐⭐ WHY — and it is a consequence of this spec's own read rule
+
+The answer is read at the `Q%` **minimum**, which is where clearing and browning *cross*. **That crossing
+happens at a different turbidity for every fill:**
+
+```
+A_valley at the promoted capture   001 0.1289  004 0.1955  005 0.1716  006 0.1544  007 0.0921   sd 0.0398
+A_valley at the LAST row           001 0.1279  004 0.1406  005 0.1209  006 0.1263  007 0.0915   sd 0.0182
+   (updated 2026-08-20 to the five good Billa fills; the first cut of this table used four runs
+    from before 006/007 existed and quoted ranges, not sd)
+```
+
+⇒ ⭐⭐ **the spectrum stored beside the answer is, by design, at an idiosyncratic clearing state.** That is
+right for the verdict — `Q%` is what is comparable — and **wrong for shape tracking**, which needs spectra
+taken in the same condition.
+
+#### ⭐⭐ THE FIX, AND IT IS CHEAP
+
+- ⭐ **Store the LAST row's spectrum as well as the answer's.** The last row is **2.2× more consistent** in
+  turbidity across fills (sd 0.0182 against 0.0398) and is what the history tracker should compare.
+  ⭐ Drawn out: `docs/figures/w5_two_spectra.png`.
+  ⚠ §15.1 stores only the answer's spectrum; this adds one array per run.
+- ⭐ **Or compare at a matched `A_valley`** — pick, from each run's ring, the row nearest a fixed turbidity.
+  ⛔ Needs per-row spectra retained, which §9.1a's retention window does not currently guarantee.
+- ⚠ Either way, **`SPEC_history_tracker.md` gains a second blocker beside dose**: the *clearing state* of the
+  compared captures. It should be written there before the tracker is built.
+
+#### ⭐ So how many runs would seed it?
+
+⛔ **Unanswerable until the turbidity confound is removed** — with `D` dominated by clearing state, more runs
+would only measure the clearing-state spread more precisely. ⭐ **Fix the compared quantity first, then three
+to five runs of one recipe will tell you the floor.** Edwin's good feeling is about the *`Q%` repeatability*
+(0.076 — genuinely excellent), and that feeling is justified; it just does not transfer to the shape metric.
+
+### ⭐⭐ 37.5 · THE TWO MORE MEASUREMENTS — Edwin's count is right, and here is the design
+
+⭐ Edwin: *"so you would need two more measurements I guess."* **Yes — two, on one new stock.** The existing
+four runs are all *first-then-second*; two runs in the opposite order complete the square.
+
+```
+stock 3:  draw BOTH aliquots at the same moment, into two jars
+          jar A = the FIRST 4 ml      jar B = the OTHER 4 ml
+          both kept IN THE DARK from the moment they are drawn   (removes §37.1's term)
+          measure jar B FIRST, then jar A                        (reverses the order)
+```
+
+| what the +0.6…+0.8 follows | conclusion |
+|---|---|
+| the **draw** (B still reads high even when measured first) | ⭐ real stratification in the vessel ⇒ P6 stands: pour position is part of the recipe |
+| the **order** (whatever runs second reads high) | ⚠ it is ageing or the lamp's evening, **not** the pour ⇒ §36.2 is renamed and P6 is replaced by "measure within N minutes of drawing" |
+| **nothing — the gap vanishes** | ⭐ it was the desk light after all, and §37.1's browning-track test is wrong about the mechanism ⇒ the fix is "keep aliquots dark", which is free |
+
+⚠ **Two runs distinguish the three outcomes but cannot size the effect.** ⭐ They are worth doing first
+anyway: all three answers change what §35's five-fill T1 has to control for, and T1 is the expensive session.
+
+### ⭐ 37.6 · THE LEDGER, AS IT STANDS TONIGHT
+
+| term | size | status |
+|---|---|---|
+| the **warm bath** | +0.680 | ⛔ **dead** — P5, do not use it |
+| the **aliquot / pour** | +0.44 … +0.80 | ⚠ **real, mechanism open** — §37.5 settles it in two runs |
+| **desk light on the waiting aliquot** | ≈ +0.12 of it | ⚠ small; removed for free by keeping aliquots dark |
+| **cold fill (fridge)** | ≈ 0 in `Q%`, +14 min in time | ⭐ **not a problem** — Edwin is right, and 20 min absorbs it |
+| **first run of the evening** (warm-up) | reference 5–9 % off in the red | ⚠ flag or discard it — P7 |
+| **σ (prep + fill), like-for-like** | **0.076** on two runs | ⭐ excellent, and it is two runs — T1 still owed |
+| **reference "drift"** | −0.001 … −0.060 on the answers | ⭐ small; it was a warm-up transient, not drift (§36.6) |
+| **history-tracker shape distance** | no separation (0.5×) | ⛔ **blocked** on the clearing-state confound (§37.4) |
+
+### ⛔⛔ 37.7 · CORRECTION TO §37.4 — THE HISTORY TRACKER IS **NOT** BLOCKED. I USED THE WRONG CONTROL.  *(Edwin: "why is the history tracker dead or 'blocked on clearing state'?", 2026-08-19)*
+
+⛔ **§37.4's conclusion is withdrawn.** It rested on a category error and on a correlation measured over six
+pairs of one oil.
+
+#### ⛔ The category error
+
+I used **002 as the "known bad" negative control**. 002 is **the same oil, from the same stock** — badly
+*prepared*, not chemically different. ⇒ **a shape alarm is supposed to be blind to it.** "D fails to separate
+002 from the good runs" was never evidence that D is broken; if anything it is evidence that D is doing its
+job, since the oil did not change.
+
+#### ⭐⭐ The test that actually answers the question — and D passes it cleanly
+
+Same `D = √(1 − r²)`, same 460–630 nm window, but asking **does it separate DIFFERENT OILS while staying
+small WITHIN one oil?**
+
+| comparison | pairs | min | median | max |
+|---|---|---|---|---|
+| **within** Lugitsch A (7 fills, one oil) | 21 | 0.0454 | **0.1043** | 0.1982 |
+| **within** Billa, the three good runs | 3 | 0.0882 | 0.1576 | 0.1675 |
+| **within** Billa, including the bath fill 002 | 6 | 0.0856 | 0.1363 | 0.1964 |
+| ⭐⭐ **between** Lugitsch and Billa — *different oils* | 21 | **0.3375** | **0.3844** | 0.4755 |
+
+```
+worst within-oil  0.1982        best between-oil  0.3375        NO OVERLAP,  1.70x on the worst case
+median within     0.104         median between    0.384                     3.7x on the medians
+```
+
+⭐⭐⭐ **D separates the two oils with no overlap across 45 pairs.** The history tracker's own quantity works.
+
+#### ⭐ And the turbidity correlation does not survive a wider test
+
+```
+Billa, 6 pairs, A_valley spanning 0.129 - 0.208    r(D, |dA_valley|) = +0.835
+Lugitsch, 21 pairs, A_valley spanning 0.072 - 0.105  r(D, |dA_valley|) = +0.073
+```
+
+⇒ ⚠ **the turbidity term is real but small, and it only shows up when fills clear to widely different
+states.** Lugitsch's fills arrive clear and land in a narrow band, and there `D` does not track turbidity at
+all. §37.4's `r = +0.835` was **six pairs of the one oil whose fills happen to be most unevenly cleared** —
+it was a finding about the Billa set, not about the metric.
+
+#### ⭐ What survives from §37.4, correctly scoped
+
+1. ⭐ **Residual turbidity inflates the WITHIN-oil floor** — Billa's median 0.158 against Lugitsch's 0.104,
+   and Billa's fills spread 0.129–0.196 in `A_valley` against Lugitsch's 0.072–0.105. **It costs sensitivity,
+   not correctness.**
+2. ⭐ **Storing the LAST row's spectrum beside the answer's is still worth doing** (§37.4's fix), because the
+   last row's turbidity spread is 4× tighter. ⚠ It is an **optimisation now, not a prerequisite.**
+3. ⭐ **The warm-up run inflates D too:** 001's two pairs are the highest in the Billa set (0.158, 0.168)
+   while 004–005 is the lowest (0.088) — consistent with §36.6's finding that 001's reference is 5–9 % off
+   in the red. ⇒ **another reason for P7 (flag the first run of the evening)**, and it applies to shapes as
+   well as to numbers.
+
+### ⭐⭐ 37.8 · SO: DO 001, 004 AND 005 SEED IT? — yes, at the minimum the tracker's own rule allows
+
+`SPEC_history_tracker.md` already requires **reference = mean of ≥ 3 fills (5 comfortable)**, and says the
+tracker must draw no band and announce *"reference still forming"* below that. Three fills is therefore
+exactly the floor, not a shortcut.
+
+⛔ **The one thing three fills cannot give you is the alarm THRESHOLD.** Three fills make three pairs, and a
+spread from three numbers is not a spread. ⭐ **But it does not have to come from Billa:**
+
+```
+pooled within-oil floor, 24 pairs across two oils:   max 0.198
+best between-oil distance, 21 pairs:                 min 0.338
+                                                     -> a threshold at ~0.25 has margin on both sides
+```
+
+⭐⭐ **Take the alarm threshold from the pooled within-oil floor and the reference mean from the three Billa
+fills.** That is buildable today.
+
+⚠ Three caveats, all of them cheap to respect:
+
+- ⭐ **Announce n.** With n = 3 the reference is one bad fill away from being wrong — §11's own finding was
+  that a single outlier chosen as the anchor throws the band 0.41 off centre.
+- ⚠ **Drop or flag 001** if a fourth good fill exists: it is the warm-up run, and it contributes the two
+  widest pairs in the set.
+- ⚠ **The threshold is provisional on two oils.** 0.25 sits in a gap measured between Lugitsch and Billa;
+  a third oil could land closer, and the standing rule stays *compare verdicts, never numbers*.
+
+⇒ ⭐ **Edwin's good feeling was right on both halves after all** — the scalar side (σ 0.076 like-for-like)
+and the shape side (1.70× worst-case separation). §37.4 said otherwise because it tested the metric against
+a bad *fill* instead of a different *oil*.
+
+### ⭐⭐ 37.9 · HOW SENSITIVE IS THE SHAPE ALARM, AND DOES IT DEPEND ON OTHER OILS?  *(Edwin, 2026-08-19)*
+
+#### ⭐⭐⭐ `D` and `Q%` carry nearly the same information — 55 pairs, r = +0.972
+
+```
+D = 0.0494 * |dQ%| + 0.0897            r = +0.972 over 55 pairs, two oils
+
+|dQ%| 0 - 1   n=25   D median 0.104        <- the noise floor: a 1-unit change is invisible
+|dQ%| 1 - 3   n= 2   D median 0.156
+|dQ%| 3 - 6   n=14   D median 0.374
+|dQ%| 6 - 8   n=14   D median 0.410
+```
+
+| | resolves | |
+|---|---|---|
+| the **scalar** tracker (`Q%`) | **0.076** | like-for-like, §36.1 |
+| the **shape** alarm at D = 0.25 | **≈ 3.2 `Q%` units** | |
+| the within-oil floor D = 0.198 | ≈ 2.2 `Q%` units | |
+
+⭐⭐ **The scalar tracker is ~40× the more sensitive of the two, and `D` is very largely a noisier restatement
+of it.** ⇒ **the shape half is NOT an independent second opinion on drift.**
+
+⚠ That is not an argument against building it — it is an argument for **what to build it for**. `D`'s job is
+the *categorical* question: **is this even the same kind of oil?** (a different pressing, a different
+supplier, adulteration — something that moves the spectrum's shape without necessarily moving `Q%`).
+⛔ Nothing in the archive contains such a sample, so **D's value against the case it is actually for remains
+unmeasured**; what §37.7 proved is that it separates two genuinely different oils, which is the weakest
+version of that claim.
+
+⇒ ⭐ **Build the scalar tracker for drift. Keep D as the categorical check, and say so in its own spec, or it
+will be read as a sensitive alarm that it is not.**
+
+#### ⭐ The pour is a SCALAR effect, not a shape effect
+
+```
+004 vs 005   different pours, dQ% = 0.803   ->  D = 0.0882   <- the TIGHTEST Billa pair
+001 vs 004   same pour,       dQ% = 0.435   ->  D = 0.1675
+001 vs 005   different pours, dQ% = 0.368   ->  D = 0.1576
+```
+
+⭐ The two widest Billa pairs are the two that involve **001, the warm-up run** (§36.6). The pour, which moves
+`Q%` by 0.80, barely moves the shape at all. ⇒ **P6 (record the pour) is a scalar-tracker concern; P7 (flag
+the first run of the evening) is a shape-tracker concern.**
+
+#### ⭐⭐ Does buildability depend on other oils behaving like Billa? — only if the threshold is SHARED
+
+| threshold design | depends on other oils? |
+|---|---|
+| ⚠ **shared** — one number (≈ 0.25) for every oil | ⭐ **yes.** It assumes every oil's within-oil floor stays under ~0.2. An oil whose fills clear as unevenly as Billa's, or worse, raises its own floor and starts false-alarming. |
+| ⭐⭐ **per-oil** — each oil's threshold from its OWN reference fills | ⛔ **no.** Nothing about oil B can invalidate oil A's alarm. |
+
+⇒ ⭐⭐ **Recommend per-oil thresholds.** The tracker already stores ≥ 3 reference fills per oil; the floor
+comes from the same fills at no extra cost, and the shared 0.25 becomes only the **fallback for an oil that
+does not yet have enough fills of its own**.
+
+⚠ With n = 3 a per-oil floor is poorly determined (3 pairs). ⭐ Use the pooled 0.25 until an oil reaches
+**five** fills, then switch it to its own — which is exactly `SPEC_history_tracker.md`'s existing "≥3, 5
+comfortable" ladder, now with a reason attached to each rung.
+
+#### ⭐ What one more Billa fill tonight would buy
+
+| what it gives | |
+|---|---|
+| ⭐ a **fourth** good fill, so **001 can be dropped** | 001 is the warm-up run and contributes both widest pairs (0.158, 0.168) |
+| ⭐ the first true **σ_fill within one stock** on this oil | 004 and 005 are different pours, so the archive still has **no Billa replicate** |
+| ⚠ what it does NOT give | a third draw from the same vessel is a *third pour* — confounded again (§36.2) |
+
+⇒ ⭐ **A fresh stock, single first-pour fill, measured straight away** is the clean version, and the lamp is
+already warm at that hour, which removes P7's term for free.
+
+---
+
+## ⭐⭐ 38 · RUNS 006 AND 007 — one exemplary run, one compromised one, and a bias §2.2 claimed to have cured  *(2026-08-20, runs of 2026-08-19 night)*
+
+### ⭐ 38.1 · 007 is the best-behaved run the instrument has produced
+
+Monotone from 20.705, gate at 384.5 s, then **five consecutive rows of *"the minimum is still the newest
+look — waiting for its far side"*** before settling at 501.0 s. Answer **19.573**; its own settled plateau is
+19.613 — **0.040 apart.** It also reached the **lowest turbidity of any Billa fill** (`A_valley` 0.0915,
+`A_Soret` 0.8173).
+
+⭐ The "wait for the far side" rule doing exactly its job, five times in a row, is worth recording: that is
+§30.14's read behaving as designed on a real fill.
+
+### ⛔⛔ 38.2 · 006's answer is read off a NOISY EXCURSION, and it is 0.884 low
+
+```
+   local residual scatter about a 5-row line, run 006
+     t   0-150 s   n= 8   sd 0.4777
+     t 150-260 s   n= 6   sd 0.2749      <- the vertex was read here, at t = 225.5, Q% 19.004
+     t 260-400 s   n= 8   sd 0.2325
+     t 400-660 s   n=14   sd 0.0143      <- the run's own noise floor, 20x quieter
+```
+
+The Q% trace through the excursion: `20.128 · 19.780 · 20.146 · 19.465 · 19.004 · 19.192 · 19.347 · 19.656 ·
+19.985 · 20.115` — then it comes **back to trend** and holds 19.86–19.89 for fifteen rows.
+
+```
+   006 answer (vertex)      18.989
+   006 settled plateau      19.873
+   ------------------------ -0.884
+```
+
+⛔ **That is not a browning limb, it is a bounce.** The curve dips 0.9, returns, and then behaves. The vertex
+read the bottom of the dip. ⚠ Something disturbed the fill through the first four minutes and the record
+does not say what; `A_valley` also stalls there (0.2051 → 0.1961 → 0.1959) before resuming its fall.
+
+### ⭐⭐⭐ 38.3 · AND IT IS NOT AN ISOLATED CASE — the vertex is below the plateau on EVERY run
+
+| run | vertex | settled plateau | difference | end slope |
+|---|---|---|---|---|
+| 001 | 19.866 | 19.878 | −0.012 | −0.009 /min |
+| 007 | 19.573 | 19.613 | −0.040 | −0.038 /min |
+| 004 | 19.431 | 19.578 | **−0.147** | +0.076 /min |
+| 005 | 20.234 | 20.468 | **−0.235** | +0.013 /min |
+| **006** | 18.989 | 19.873 | ⛔ **−0.884** | +0.007 /min |
+
+⛔⛔ **§2.2's premise does not hold as written.** It says: *"The minimum of n noisy samples is biased low by
+~0.9 sd because it selects the most negative excursion. A parabola through the three samples around it
+averages instead of selecting."* ⭐ **The parabola is fitted AROUND THE SELECTED MINIMUM — so the selection
+happens first, and the fit inherits it.** Averaging three points reduces the variance of the estimate; it
+does not undo the choice of *which* three.
+
+⚠ **Two of the five differences are legitimate** — 004 and 005 are browning after their minimum (+0.076 and
++0.013 /min), so their plateau really is more damaged than their minimum, and the vertex is right to sit
+below it. ⛔ **006 is not**: its plateau is flat (+0.007 /min) and its dip was noise.
+
+⇒ ⭐ **The instrument cannot presently tell "genuinely least-damaged" from "noise dip", and 006 is the first
+run where the difference is large enough to be unmissable.**
+
+#### ⭐ Candidate guards, none of them yet chosen
+
+- ⭐⭐ **Local-scatter admissibility.** Compute the residual scatter around the candidate minimum and compare
+  it with the run's own tail scatter. 006: **0.275 against 0.014 — 20×.** A minimum found in a stretch that
+  noisy is not a measurement. ⚠ Needs a factor, and the archive can supply one: the other four runs' minima
+  sit in stretches within ~2× of their tails.
+- ⭐ **Require the rise after the minimum to be SUSTAINED.** 004, 005 and 007 rise monotonically to the end;
+  006 rises 1.11 and then falls back. A browning limb does not come back down. ⚠ Cheap, and it needs the
+  full 20 minutes to be visible — another argument for P1.
+- ⚠ **Refuse a vertex more than X below the settled plateau** — ⛔ would also flag 005, whose 0.235 is real
+  browning. Not usable alone.
+
+### ⛔ 38.4 · SO STOCK 3 CANNOT SETTLE ORDER-vs-POUR — the two reads disagree in SIGN
+
+```
+using the VERTEX answers    006 18.989 -> 007 19.573   = +0.584
+using the settled PLATEAUS  006 19.873 -> 007 19.613   = -0.260
+```
+
+⛔ **Opposite signs.** With 006 compromised, the pair cannot decide anything, and §37.5's experiment is
+**not yet done** — it needs repeating with two clean runs.
+
+### ⚠ 38.5 · AND I NEED ONE FACT FROM EDWIN BEFORE EVEN THE SIGN MEANS ANYTHING
+
+**Which aliquot was 006 and which was 007?** §37.5 asked for the *second* aliquot to be measured *first*. If
+that swap happened the interpretation inverts, and I cannot read it off the data.
+
+⭐ The one hint the data give — in both earlier stocks the **second aliquot was the more dilute** one:
+
+| | first-measured ends `A_Soret` | second-measured ends | |
+|---|---|---|---|
+| stock 1 | 001 0.9599 | 003 0.7312 | −23.8 % |
+| stock 2 | 004 0.9281 | 005 0.8812 | −5.1 % |
+| **stock 3** | **006 0.8762** | **007 0.8173** | **−6.7 %** |
+
+⇒ ⚠ **by that signature 007 looks like the second aliquot, i.e. the swap did not happen** — but that is an
+inference from n = 2, not a record. **Please say which was which.**
+
+### ⚠ 38.6 · SOFTENING §36.6 — the reference WANDERS, it is not a one-way warm-up
+
+With seven references instead of five (reference band means, 500–560 nm):
+
+```
+001 148.4   002 141.4   003 140.0   004 142.8   005 141.9   006 147.8   007 144.7
+```
+
+⛔ **006 is back up near 001's level.** So the pattern is not "high at the start, then stable" — it is a
+**±3 % wander over the evening with no trend**, range 140.0–148.4. ⭐ That is much more consistent with
+**re-seating the reference jar for every run** (`SPEC_capture_quality.md` §16.26: *jar reseating = the whole
+archive CV*) than with a lamp warm-up.
+
+⇒ ⚠ **§36.6's "warm-up transient" is downgraded to "001 sat at one end of the wander".** ⭐ **P7 survives but
+changes meaning:** not *"discard the first run"* but *"record the reference band means every run, and treat
+a run whose reference sits at the edge of the spread as suspect."* ⚠ Still worth pre-warming; just not for
+the reason §36.6 gave.
+
+### ⭐ 38.7 · SHAPE DISTANCES WITH FIVE BILLA FILLS — still separating, with a thinner margin
+
+```
+          001      004      005      006      007
+ 001   0.0000   0.1675   0.1576   0.1812   0.1378
+ 004   0.1675   0.0000   0.0882   0.0670   0.2219
+ 005   0.1576   0.0882   0.1314   0.0000   0.2312
+ 006   0.1812   0.0670   0.1314   0.0000   0.2161
+ 007   0.1378   0.2219   0.2312   0.2161   0.0000
+```
+
+| | n | min | median | max |
+|---|---|---|---|---|
+| within Billa (5 fills) | 10 | 0.0670 | 0.1625 | **0.2312** |
+| Lugitsch vs Billa | 35 | **0.3375** | 0.3844 | — |
+
+⭐ **Still no overlap — but the separation falls from 1.70× to 1.46×**, and §37.8's proposed threshold of
+0.25 now sits only 0.019 above the worst within-oil pair. ⛔ **0.25 is too tight. Use 0.28–0.30**, or better,
+the per-oil rule of §37.9.
+
+⭐⭐ And the outlier is instructive: **007 is far from everything (0.216–0.231) and it is the CLEAREST fill**
+(`A_valley` 0.0915 against the others' 0.121–0.141). ⇒ **the turbidity term in `D` is confirmed a third
+time**, and §37.4's fix — comparing spectra at a matched clearing state — moves back up the list from
+"optional" to "worth doing before the tracker ships".
+
+---
+
+## ⭐⭐⭐ 39 · THE SWAP HAPPENED — it is not the pour, not the order, it is **LIGHT ON THE WAITING ALIQUOT**  *(Edwin confirmed the assignment, 2026-08-20)*
+
+> ⭐ **006 was the second aliquot, 007 the first — the §37.5 swap happened**, both drawn at the same moment
+> and both kept in the dark.
+>
+> ⛔⛔ **§36.2's "pour effect" is withdrawn, and so is §37.1's dismissal of the desk light.** Both were right
+> about the number and wrong about the cause.
+
+### ⭐⭐⭐ 39.1 · THE TEST — each pair compared at MATCHED turbidity, not at its own answer
+
+Comparing the two aliquots at their own answers compares them at different clearing states (§37.4). Reading
+each run's `Q%` at the **shallowest turbidity both members reached** removes that:
+
+| pair | matched at `A_valley` | 1st aliquot | 2nd aliquot | 2nd − 1st |
+|---|---|---|---|---|
+| stock 1 — 001 / 003 | 0.1279 | 19.873 | 21.216 | ⛔ **+1.343** |
+| stock 2 — 004 / 005 | 0.1406 | 19.669 | 20.411 | ⛔ **+0.742** |
+| **stock 3 — 007 / 006** | 0.1263 | 19.912 | 19.886 | ⭐⭐ **−0.026** |
+
+⭐⭐⭐ **The one pair drawn simultaneously and kept in the dark agrees to 0.026. The other two disagree by
+0.74 and 1.34.**
+
+### ⭐⭐ 39.2 · WHAT THAT ELIMINATES — three hypotheses, two die
+
+| hypothesis | verdict |
+|---|---|
+| **the draw** (2nd aliquot carries a different fraction) | ⛔ **dead.** In stock 3 the 2nd aliquot reads the same as the 1st. And 007 is 6.7 % *more dilute* than 006 while reading the same `Q%` — a concentration difference with no `Q%` consequence, exactly as the metric's dilution-invariance requires. |
+| **the measurement order** (whatever runs second reads high) | ⛔ **dead.** In stock 3 **006 ran first and 007 second**, and the gap is −0.026. Fifteen minutes of waiting, per se, costs nothing. |
+| ⭐⭐ **light on the waiting aliquot** | ⭐ **the only one left standing.** Stocks 1 and 2: the waiting aliquot sat on the desk under a monitor. Stock 3: it waited **in the dark** — and the effect vanished. |
+
+⇒ ⭐⭐⭐ **By elimination: Edwin's own throwaway remark — *"the 'other 4 ml' were sitting on my desk before some
+monitor and some light"* — was the answer, and §37.1 dismissed it.**
+
+### ⛔⛔ 39.3 · WHY §37.1's TEST SAID OTHERWISE, AND WHY IT WAS THE WRONG TEST
+
+§37.1 predicted 005 from 004 along **004's own lamp-browning track** (`dQ%/dA_Soret`) and found a shortfall
+of 0.681 — concluding the desk light explained only 15 %.
+
+⛔ **The test assumed ambient browning follows the same spectral track as lamp browning. It does not, and it
+has no reason to:**
+
+- ⭐ the **lamp** illuminates a **narrow column** of the fill in a few specific bands; damage is confined to
+  the beam path and reaches the rest only by convection
+- ⭐ **ambient white light floods the whole 4 ml** from every direction, broadband
+
+⇒ a weak omnidirectional source can deliver more dose *per unit volume* than a bright pencil beam, and it
+bleaches a different mixture of chromophores. **The shortfall §37.1 measured is real — it is evidence that
+the two photochemistries differ, not that the desk light is innocent.**
+
+⚠ ⇒ **it cannot be calibrated out.** There is no conversion from lamp-dose to desk-dose. The only fix is the
+procedural one, and it is free.
+
+### ⭐⭐ 39.4 · THE ARCHIVE, RE-PARTITIONED — and it is the tightest set yet
+
+| run | aliquot | what happened before it was measured | value | |
+|---|---|---|---|---|
+| 001 | 1st | measured first, no wait | 19.866 | ⭐ clean |
+| 004 | 1st | measured first, no wait | 19.431 | ⭐ clean |
+| 006 | 2nd | measured first, no wait *(dark design)* | **19.873** | ⭐ clean — **plateau**, its vertex is §38.2's noise dip |
+| 007 | 1st | waited ~15 min **IN THE DARK** | 19.573 | ⭐ clean |
+| 003 | 2nd | waited ~40 min **in light** (+ fridge) | 20.310 | ⛔ lit |
+| 005 | 2nd | waited ~13 min **in light** | 20.234 | ⛔ lit |
+
+```
+CLEAN, n=4     mean 19.686   sd 0.220   range 0.442
+LIT,   n=2     mean 20.272                        -> +0.586 above the clean mean
+Lugitsch A benchmark, 7 fills                        sd 0.377
+```
+
+⭐⭐ **sd 0.220 over four fills, 1.7× tighter than the Lugitsch benchmark** — and that is across **three
+separate dilutions**, so it is σ_prep + σ_fill together. ⚠ Four fills, and one of them (006) is rescued by a
+plateau read rather than by the shipped rule.
+
+### ⛔⛔ 39.5 · κ IS BURIED — the extrapolation makes things three times WORSE
+
+Fitting each good run's own tail (`A_valley` ≤ 0.16) and extrapolating to zero turbidity:
+
+```
+run     slope        Q0(v=0)
+001    +8.195         18.793
+004   -12.036         21.329
+005    -5.572         21.174
+006    -3.076         20.277
+007   +12.781         18.397
+                      ------
+       sd of Q0        1.346          vs  sd of the raw vertex answers  0.467
+```
+
+⛔ **The slopes do not even agree in sign.** §32.6's κ ≈ 4.5 was two runs that happened to line up; with five
+runs the extrapolation triples the scatter. ⭐ **Withdrawn for good — do not revisit it.**
+
+⚠ Note this does **not** contradict §39.1: comparing two runs *at the same turbidity* needs no model and
+works; extrapolating one run *to zero turbidity* needs a slope, and the slope is not identifiable from a
+tail where turbidity and dose move together (§32.6's caveat 1, now measured).
+
+### ⭐⭐ 39.6 · WHAT CHANGES
+
+| | |
+|---|---|
+| ⛔ **P6 withdrawn** | "record the pour position" — the pour has no effect. ⭐ Replace with: **P6′ — every aliquot stays in the dark from the moment it is drawn until it enters the holder.** Amber glass, a drawer, foil; anything. |
+| ⭐ **P1, P3, P4, P5, P7 unchanged** | fixed 20 min · absorbance ceiling · band rates in the record · no warm bath · reference band means recorded |
+| ⭐⭐ **P8 — NEW** | **compare fills at matched `A_valley`, not at their own answers**, whenever two runs are held against each other. §39.1 is the method; it turned a 0.74 disagreement into 0.026. |
+| ⚠ **§38.2's noise-dip guard is now urgent** | 006 is in the clean set only because its plateau was used by hand. ⭐ Of the two candidates, **"the rise after the minimum must be sustained"** is the one that separates 006 from 004/005/007, and the fixed 20 minutes is what makes it observable. |
+
+### ⭐ 39.7 · WHAT IS STILL OPEN
+
+- ⚠ **The clean set is four fills, one of them hand-rescued.** §35's T1 is still owed, now with P6′ in force.
+- ⚠ **How much light, for how long, matters?** Unmeasured. ⭐ Cheap to bound: draw three aliquots at once,
+  measure one immediately, one after 15 min dark, one after 15 min on the desk. **One evening, and it turns
+  §39.2's elimination into a measurement.**
+- ⛔ **The lit runs are not recoverable.** No conversion exists (§39.3). 003 and 005 stay in the archive as
+  *lit*, not as data about the oil.
+- ⭐ **And the verdict never moved:** every one of the six is **brown**, 6 – 27 instrument floors above 18.6.
+
+---
+
+## ⭐⭐⭐ 40 · THE DRAWDOWN RULE — "a real minimum is one the curve never comes back down from"  *(Edwin's reading of run 006, 2026-08-20)*
+
+> ⭐ Edwin, on the 006 plot: *"shouldn't we use the first minimum (1) after 'the answer'?"* — pointing at the
+> shallow minimum at t ≈ 6.9 min, past the spurious dip the vertex read.
+>
+> ⭐⭐ **He is right, and formalising it gives a rule with a 14× cluster gap that reproduces every archived
+> answer and repairs only run 006.**
+
+### ⭐ 40.1 · What 006's curve actually does
+
+```
+Q%
+22 |*
+   |  * *  *
+21 |       * * *  *                                the spurious excursion
+20 |             * *  *  *      * * *              /
+   |                    *  *  *       * * *_______________________ the browning limb
+19 |                       (*)                     ^
+   |                         "the answer" 19.004   (1) 19.782 at t=412.9
+   +----|----|----|----|----|----|----|----|----|----|----
+        0    2    4    6    8   10  minutes since insertion
+```
+
+The shipped read took the bottom of the dip (18.989). **After it the curve rises 1.11 and then falls 0.33
+again** to Edwin's (1) at 19.782 — and from there it only ever goes up, to 19.886 at the gate.
+
+### ⭐⭐⭐ 40.2 · THE RULE
+
+```
+candidate     = any interior local minimum of Q%
+drawdown(i)   = the largest fall from a running maximum, over the rows AFTER i
+tailSd        = residual scatter of the last 8 rows about a line   (the run's OWN noise floor)
+
+ADMISSIBLE    iff  drawdown(i) <= G * tailSd
+ANSWER        = the vertex around the DEEPEST admissible candidate
+```
+
+⭐ In one sentence: **a settling minimum is the point after which the curve only goes up. If it comes back
+down, something other than browning was happening and it was not the minimum.**
+
+### ⭐⭐ 40.3 · THE GAP IS 14×, AND THE THRESHOLD FALLS INSIDE IT
+
+Every interior local minimum in run 006:
+
+| t | Q% | drawdown after | ×tailSd (0.0084) | |
+|---|---|---|---|---|
+| 22.5 s | 21.066 | 2.0699 | 247 | ⛔ |
+| 58.7 s | 20.758 | 1.8757 | 224 | ⛔ |
+| 132.6 s | 20.046 | 1.1419 | 136 | ⛔ |
+| 169.6 s | 19.780 | 1.1419 | 136 | ⛔ |
+| **225.5 s** | **19.004** ← the shipped answer | 0.3329 | **39.8** | ⛔ |
+| **412.9 s** | **19.782** ← ⭐ **Edwin's (1)** | 0.0212 | **2.5** | ⭐ admissible |
+| 507.0 – 639.2 s | 19.849 – 19.876 | ≤ 0.0212 | ≤ 2.5 | admissible, shallower |
+
+And across the whole archive:
+
+```
+legitimate minima, ten runs:   drawdown 0.0 - 2.8 x tailSd
+run 006's spurious dip:                     39.8 x tailSd
+                                            ------
+                               a 14x gap. ANY G between 3 and 39 gives identical answers everywhere.
+```
+
+⭐⭐ **Derived, not chosen** — the same standard §29.2's `depthThreshold` was held to. **G = 10** sits at the
+geometric centre.
+
+### ⭐⭐ 40.4 · REPLAYED OVER THE ARCHIVE — it changes exactly one run
+
+| run | rule | shipped | 2.0 raw min (vertex) | drawdown of that min | **drawdown rule, G = 10** | change |
+|---|---|---|---|---|---|---|
+| Lugitsch 001 | 1.0 | 14.459 | 14.428 | 0.0× | **14.428** | — unchanged |
+| Lugitsch 002 | 1.0 | 13.476 | 13.467 | 1.7× | **13.467** | — unchanged |
+| Lugitsch 003 | 1.0 | 14.246 | *no interior minimum* | — | *first-look branch* | — |
+| Lugitsch 004 | 1.0 | 14.156 | 14.156 | 0.4× | **14.156** | — unchanged |
+| Lugitsch 005 | 1.0 | 14.173 | 14.126 | 0.7× | **14.126** | — unchanged |
+| Lugitsch 006 | 1.0 | 13.972 | 13.972 | 0.0× | **13.972** | — unchanged |
+| Lugitsch 007 | 1.0 | 13.499 | 13.499 | 0.0× | **13.499** | — unchanged |
+| 20260818A/001 | 2.0 | 28.321 | 28.321 | 0.0× | **28.321** | — unchanged |
+| 20260819/001 | 2.0 | 13.585 | 13.471 | 0.5× | **13.471** | — unchanged |
+| Billa 001 | 2.0 | 19.866 | 19.866 | 0.0× | **19.866** | — unchanged |
+| Billa 002 | 2.0 | 20.990 | *no interior minimum* | — | *first-look branch* | ⚠ needs **C3** |
+| **Billa 003** | 2.0 | ⛔ 8.450 | 21.015 | ⛔ **41.5×** | ⭐ **none admissible — NO ANSWER** | ⭐ **also caught** |
+| Billa 004 | 2.0 | 19.431 | 19.431 | 1.4× | **19.431** | — unchanged |
+| Billa 005 | 2.0 | 20.234 | 20.234 | 2.8× | **20.234** | — unchanged |
+| **Billa 006** | 2.0 | ⛔ 18.989 | 18.989 | ⛔ **39.8×** | ⭐ **19.782** | **+0.793 REPAIRED** |
+| Billa 007 | 2.0 | 19.573 | 19.573 | 0.0× | **19.573** | — unchanged |
+
+⭐⭐ **A SECOND CATCH NOBODY ASKED FOR: run 003.** Its deepest interior minimum has a drawdown of 41.5×, so
+**no candidate is admissible and the rule refuses to answer** — which is the correct ending for a fill that
+never settled. ⇒ **§32.2's catastrophe is caught twice over**: by C1 (the absorbance ceiling, on the input
+side) and independently by §40 (on the read side). ⚠ Run 002 still needs **C3**: a monotone rise has no
+interior minimum at all, so it falls through to the first-look branch exactly as before.
+
+⭐⭐⭐ **Ten runs bit-identical, one repaired.** Same property C1 and C2 have, and the reason to trust it.
+
+### ⭐⭐ 40.5 · IT IS AN END-OF-RUN READ — WHICH IS WHY IT NEEDS EDWIN'S FIXED DURATION
+
+⛔ `tailSd` and `drawdown` are both defined over **the rows after the candidate**, so neither exists until
+the run is over. **The drawdown rule cannot drive a gate.**
+
+⭐⭐ That is not a limitation, it is the **second independent argument for P1**: under a fixed 20-minute
+protocol the run length is decided by the clock, the read happens once at the end, and the rule has all the
+rows it needs. ⇒ **§34's fixed duration and §40's read rule are the same design arriving from two
+directions** — Edwin proposed the first from a feeling and the second from a plot.
+
+⚠ Two implementation notes:
+- ⛔ **a candidate needs rows after it.** A minimum on the last row has `drawdown = 0` and would be trivially
+  admissible — the existing *"the minimum is still the newest look, waiting for its far side"* guard must
+  stay, or the last row always wins.
+- ⚠ **`tailSd` assumes the tail is settled.** On a fill still clearing at the cap (003) the tail carries real
+  slope; the residual-about-a-line form handles that, but the run should be reported as unsettled anyway
+  (§33.7's band rates).
+
+### ⭐ 40.6 · WHAT IT DOES TO THE CLEAN SET
+
+```
+006 = 18.989   shipped vertex (noise dip)     clean-4 mean 19.465   sd 0.365
+006 = 19.873   plateau, taken by hand         clean-4 mean 19.686   sd 0.220
+006 = 19.782   ⭐ Edwin's (1) / drawdown rule  clean-4 mean 19.663   sd 0.198
+```
+
+⭐⭐ **sd 0.198 over four fills of three separate dilutions** — better than my hand-picked plateau, and
+**1.9× tighter than the Lugitsch benchmark of 0.377**. ⚠ And it is now produced by a *rule*, not by me
+choosing a number off a chart, which is the part that matters.
+
+### ⭐ 40.7 · IT REPLACES §38.3's OTHER CANDIDATES
+
+- ⛔ **local-scatter admissibility** — tested, and it overshoots: at F = 3 or 5 it rejects Edwin's (1) too
+  (its neighbourhood sits at 7.1× the tail) and lands on a noise wiggle further up the limb at 19.849. **The
+  drawdown rule needs no window and no smoothing.**
+- ⛔ **"vertex too far below the plateau"** — would also flag 005, whose 0.235 is real browning. Dead.
+- ⭐ **"the rise must be sustained"** — this *is* that idea, made testable.
+
+⇒ ⭐⭐ **§38.3's open guard is closed.** The read rule becomes: **vertex around the deepest local minimum
+whose drawdown is within 10 × the run's own tail noise.**
+
+---
+
+## ⭐⭐ 41 · CURVATURE — Edwin's alternative, tested three ways  *(Edwin, 2026-08-20: "take the minima and take the one with the lowest curvature? or something like that")*
+
+The intuition is sound and it is the right one: **a noise dip is a sharp V; a settling minimum is a broad
+basin.** Three forms of it were tested; the third is the keeper.
+
+### ⛔ 41.1 · FORM 1 — "the LOWEST curvature wins". Fails, and in a familiar way.
+
+| run | lowest-curvature minimum | correct |
+|---|---|---|
+| Billa 005 | ⛔ 20.455 @ 798.8 s | 20.236 |
+| Billa 006 | ⛔ 19.876 @ 639.2 s | 19.782 |
+| Billa 004 | 19.451 @ 362.1 s | 19.436 |
+
+⛔ **The flattest point on a curve that has finished browning is flatter than the minimum**, so the rule
+drifts up the browning limb — **exactly §34.5's failure mode again** (the "flattest window" rule landing on
+005's browning plateau). ⭐ Flatness alone always walks forward in time; it needs a depth criterion beside it.
+
+### ⚠ 41.2 · FORM 2 — "the DEEPEST minimum whose curvature is below a cut". Works, with no margin.
+
+At a cut of `a < 2.0 Q%/min²` **every one of the thirteen runs gives the right answer, including 006 →
+19.782.** But:
+
+```
+largest curvature among the CORRECT minima :  +1.832   (20260818A/001)
+curvature of 006's spurious star           :  +3.365
+                                              ------
+                                              gap 1.8x
+```
+
+⛔ **A 1.8× gap is not a place to plant a threshold** — the drawdown rule's is 14.2×. At a cut of 5.0 run 006
+reverts to 18.989.
+
+#### ⛔⛔ And raw curvature is CADENCE-DEPENDENT, which disqualifies it outright
+
+A three-point curvature scales as **1/Δt²**. Today's cadence is ~18.7 s, and §30.7 already has a 5-second
+cadence queued:
+
+| cadence | the same physical curve reads | a cut of 2.0 becomes |
+|---|---|---|
+| 5 s | **14.0×** today's value | 27.98 |
+| 10 s | 3.5× | 6.99 |
+| **18.7 s** | 1.00× | 2.00 |
+| 30 s | 0.39× | 0.78 |
+
+⇒ ⛔ **a constant in `Q%/min²` is §30.4's `W` mistake in a new costume** — a number derived at one setting and
+used at another.
+
+### ⭐⭐⭐ 41.3 · FORM 3 — THE NORMALISED SECOND DIFFERENCE. This is the keeper.
+
+```
+D2(i)  =  ( q[i-1] - 2*q[i] + q[i+1] ) / tailSd            dimensionless: Q% over Q%
+ADMISSIBLE  iff  D2 < 20
+```
+
+| | |
+|---|---|
+| correct minima, thirteen runs | **0.9 – 6.6** |
+| 006's spurious star | **77.5** |
+| ⇒ gap | **11.8×** |
+
+⭐ And a sweep of the cut at **20 / 30 / 40 / 50 agrees with the drawdown rule on 13 of 13 runs** — it is a
+plateau, not a knife edge.
+
+#### ⭐⭐ Why it is cadence-free where raw curvature is not
+
+For pure noise the second difference has sd **√6 · σ_row**, and `tailSd ≈ σ_row` — so **a noise dip sits at
+D2 ≈ 2.4 whatever the cadence**, and a 3σ excursion at ~7. Both numerator and denominator are amplitudes in
+`Q%`; nothing is divided by Δt. ⇒ the cut is a **statement about noise**, not about sampling.
+
+⚠ Read what the numbers then say: the correct minima sit at **0.9 – 6.6, i.e. at or below the level noise
+alone produces.** A genuine settling basin is so broad that its second difference is invisible. And 006's
+star at **77.5 is 32× the noise level — it is not noise at all**, it is a real, fast physical excursion in
+the fill. ⭐ The rule is not "reject noise"; it is **"reject anything too sharp to be a settling minimum."**
+
+#### ⭐⭐⭐ AND IT IS LOCAL — which the drawdown rule is not
+
+`D2` needs **one row after the candidate**. `drawdown` and `tailSd` need the whole run.
+
+⇒ ⭐ **`D2` can run live, during acquisition**; it can feed the coach line and, in principle, a gate.
+§40.5 said the drawdown rule forces an end-of-run read; **Edwin's curvature idea removes that constraint.**
+
+⚠ `tailSd` is still an end-of-run quantity. ⭐ A live implementation substitutes the **running** residual
+scatter of the last 8 rows, which is available from row 9 onward and converges to `tailSd`.
+
+### ⭐⭐ 41.4 · THE RECOMMENDATION — use BOTH, they are complementary
+
+| | `D2 < 20` (Edwin) | `drawdown ≤ 10 × tailSd` (§40) |
+|---|---|---|
+| what it asks | *is this dip too sharp to be a basin?* | *does the curve ever come back down after it?* |
+| gap on the archive | **11.8×** | **14.2×** |
+| when it can be evaluated | ⭐ **one row later — LIVE** | ⛔ end of run only |
+| cadence-dependent | ⭐ no | ⭐ no |
+| agreement on 13 runs | ⭐⭐ **identical** | ⭐⭐ **identical** |
+
+⭐⭐ **Both give 19.782 for 006 and leave the other twelve untouched.** They are independent questions about
+the same defect — one about the shape *at* the candidate, one about the history *after* it — so requiring
+**both** costs nothing on this archive and covers two different ways to be wrong.
+
+⇒ ⭐ **`D2` runs live and can stop a run from settling on a spike; `drawdown` is the authoritative read at
+the end. A disagreement between them is a run worth looking at by hand**, and the record should say so.
+
+⚠ ⛔ **`D2` does NOT rescue the early stop.** 006's star is rejected at t = 244 s, but knowing the star is
+bad does not tell you the run may end — the real minimum arrives 3 minutes later. **P1's fixed duration
+still stands**; `D2` just makes the run honest while it is running.
+
+### ⛔⛔ 41.5 · D2 ALONE CANNOT REFUSE RUN 003 — AT ANY CUT  *(Edwin: "I would use D2")*
+
+Replaying `D2 < 20` over the whole archive reproduces every answer and repairs 006 — **but it answers 003**,
+which the drawdown rule refuses:
+
+| run | before (shipped) | 2.0 deepest min | its `D2` | **after, `D2 < 20`** | drawdown rule |
+|---|---|---|---|---|---|
+| **Billa 006** | ⛔ 18.989 | 18.989 | **77.5** | ⭐ **19.782** | ⭐ 19.782 |
+| **Billa 003** | ⛔ 8.450 | 21.015 | 17.5 | ⚠ **21.015** | ⭐ **NO ANSWER** |
+
+⛔ **And no cut fixes it.** 003 has a *second* local minimum at t = 529.0 s with `D2 = 2.9` — a broad, gentle
+wiggle on a curve that is still descending — so tightening the cut merely moves the answer from 21.035 to
+21.205:
+
+```
+cut  8 / 10 / 12 / 15  ->  003 answers 21.205
+cut 20                 ->  003 answers 21.035
+correct                ->  no answer (the fill never settled; it was still falling at -0.13 /min)
+```
+
+⚠ **C1 does not help either** — 003's two minima both sit at `A_Soret` 0.83–0.94, well under the ceiling, so
+dropping the dark-floor rows leaves them untouched.
+
+#### ⭐⭐ Why: the two rules ask different questions, and only one of them is about *settling*
+
+| | asks | 003 |
+|---|---|---|
+| `D2` | *is this dip too **sharp** to be a basin?* | ⛔ **no — it is a perfectly gentle basin.** It just is not the last one. |
+| drawdown | *does the curve ever come **back down** after it?* | ⭐ **yes, by 0.9** ⇒ not a settling minimum |
+
+⇒ ⭐⭐⭐ **`D2` is a shape test; drawdown is a *finality* test.** A run that has not finished clearing
+produces gentle, well-shaped, entirely spurious minima all the way down — and only the finality test can see
+that. **On this archive the drawdown rule is strictly stronger: it catches everything `D2` catches, plus 003.**
+
+#### ⭐ The recommendation, unchanged in substance but now with a reason
+
+- ⭐⭐ **drawdown is the ANSWER rule.** It is the one that can refuse.
+- ⭐ **`D2` is the LIVE rule.** It is the one that can run during acquisition (§41.3) and tell the operator
+  *"that dip was not real"* three minutes before the run ends.
+- ⚠ **Neither replaces P1.** 003's real problem is that it stopped at 13.9 minutes while still falling at
+  0.13 /min; the fixed 20 minutes is what gives such a fill the chance to settle, and the drawdown rule is
+  what refuses it honestly if it does not.
+
+---
+
+## ⭐⭐ 42 · WHAT I WOULD ACTUALLY BUILD — the shortlist after §32–§41  *(Edwin asked, 2026-08-20; DESIGN, nothing built)*
+
+> ⭐ **The whole algorithm on one page:** `docs/figures/settling_algorithm_overview.png` — the acquire loop,
+> the stop conditions, the read, what the record carries, the lab protocol, and the W0 prerequisite, with the
+> seven §42 changes marked in green against what is already built.
+> ⭐ And the drawdown rule on its own: `docs/figures/drawdown_explained.png`.
+
+⭐ Six sections of analysis produced a lot of candidates. **Most of them should not be built.** This is the
+list that survives, in landing order, with what each one costs and why it is safe.
+
+### ⭐⭐ 42.0 · W0 — THE REPLAY HARNESS. First, and it is the safety net for everything after it.
+
+A test that drives the **real** `ClearingEvaluator.decide()` over the archived `monitorRecord` rows of all
+sixteen runs and asserts each recorded answer. The records are already on disk inside the report PDFs
+(`workflow.json` → `monitorRecord.rows`), so this needs **no camera, no plugin, no Qt** — §21/M-note already
+says `decide()` is pure arithmetic over rows.
+
+⛔ **Without it, W2 and W3 are unverifiable claims.** Every "ten runs bit-identical" in §40 and §41 was
+computed *outside* the evaluator by me; W0 is what makes those statements the tree's, not mine.
+
+⚠ Extract the rows into a fixture file at build time — do **not** make the test read PDFs.
+
+### ⭐⭐⭐ 42.1 · W1 — C7: the three band rates in the record and one line on the report
+
+```
+006  read at t = 412.9 s -- still clearing: A_Soret -1.06 %/min, A_valley -3.04 %/min, A_Q -1.85 %/min
+```
+
+- **All three rates are already computed every row.** This is three numbers into `MonitorRecord` and one
+  line into the report.
+- ⭐ **Highest value per line in the whole list.** It would have told Edwin not to trust 19.867 *on the
+  evening he measured it* (§33.4), with no new physics, no threshold, and no experiment.
+- ⛔ Depends on nothing. **Build it first.**
+
+### ⭐⭐ 42.2 · W2 — the drawdown admissibility test in `__read`
+
+```python
+drawdown(i)  = max over j>i of ( max(q[i+1..j]) - q[j] )
+tailSd       = residual sd of the last 8 decision rows about a line
+admissible   = drawdown(i) <= DRAWDOWN_TAIL_MULTIPLE * tailSd     # 10
+answer       = vertex around the DEEPEST admissible local minimum
+```
+
+- lives in `ClearingEvaluator` beside `__depthOf` — **~30 lines**, one new class constant, one new
+  diagnostic field.
+- ⭐ **Replay: ten runs bit-identical, 006 repaired 18.989 → 19.782, 003 correctly refused** (§40.4).
+- ⭐ threshold gap **14.2×** — derived, not chosen.
+- ⛔ **Keep the existing "the minimum is still the newest look, waiting for its far side" guard**, or a
+  last-row minimum has drawdown 0 and always wins (§40.5).
+- ⚠ It is an end-of-run read. Today the gate decides when the run ends; that is fine — the rule reads over
+  whatever rows exist. W7 makes it better, it is not a prerequisite.
+
+### ⭐⭐ 42.3 · W3 — C1: the absorbance ceiling, with its own row state
+
+- a row whose `A_Soret` exceeds `VALUE_CEILING` (1.5, **already in the file**) becomes **`tooDark`**.
+- ⛔⛔ **`tooDark` must NOT be the same as `values = {}`** or run 003 aborts at t ≈ 40 s as
+  `MEASUREMENT_BROKEN` (§32.4a). Sub-floor = *abort, nothing in the cuvette*; over-ceiling = *wait, it is
+  still clearing*.
+- the coach says *"too dark to read — still clearing"* instead of the current silence.
+- ⭐ Replay: **nine of twelve runs untouched**, Lugitsch 006 and Billa 001 lose 5 and 2 opening rows with no
+  change of answer, Billa 003 loses its first 21 (§32.4).
+- ⚠ Touches `MonitorEngine` (the row state) as well as the plugin (the test) — the only item here that
+  crosses the SDK boundary.
+
+### ⭐ 42.4 · W4 — record what the run knew about itself
+
+Three recordings, no gating, no thresholds:
+
+| field | why |
+|---|---|
+| `clearingObserved` — fractional fall of `A_valley` from the first admissible look to the read | 002: **1.6 %**; 003: 97.8 %. The pair *(level, fall)* is diagnostic even though neither alone is (§32.7/C3) |
+| `A_valley` **at the promoted row** | the answer's clearing state; needed by every cross-run comparison (§39.1's matched-turbidity method) |
+| the **reference band means** (Soret / valley / Q) | P7. The reference wanders ±3 % run to run (§38.6); today that wander is invisible in the record |
+
+⭐ All three are numbers already in memory at promotion time.
+
+### ⛔ 42.5 · W5 — ⚠ **WITHDRAWN by Edwin, 2026-08-20 (§43/RD10): do not persist it.** Kept for the record.
+
+§15.1 stores the answer's spectrum, which is right for the verdict and wrong for shape comparison: the
+answer sits at the `Q%` minimum, i.e. **a different turbidity for every fill** — sd 0.0398 across the five
+good Billa fills against the last row's 0.0182, **2.2× tighter** (§37.4, figure `w5_two_spectra.png`).
+
+⭐ One extra array per run, and it is what unblocks the history tracker's shape half later.
+
+### ⛔ 42.6 · W6 — ⚠ **KILLED by §43/RD5: with a running scale `D2` never fires.** Kept for the record.
+
+```
+D2(i) = ( q[i-1] - 2*q[i] + q[i+1] ) / runningTailSd        reject the candidate if D2 >= 20
+```
+
+- ⭐ **Local — one row after the candidate**, so unlike W2 it can run *during* acquisition (§41.3).
+- it does not change the answer (W2 does that); it lets the coach say *"that dip was not real"* three
+  minutes before the run ends, instead of the operator finding out from the report.
+- ⛔ **Not a substitute for W2**: `D2` cannot refuse run 003 at any cut (§41.5). Shape test vs finality test.
+- ⚠ Needs a *running* tail scatter rather than the final one; available from row 9.
+
+### ⚠ 42.7 · W7 — P1: fixed run duration, as a SETTING with default 20 min
+
+- ⭐ Two independent arguments: it makes dose equal across fills, which deletes §2.4's varying-clearing-time
+  term from σ_fill (§34.6); and it guarantees the browning limb has time to **confirm** the minimum — 001
+  outlasted its own minimum by **one row** (§36.5).
+- ⚠ **The number 20 is provisional** until §33.8's T0 (one fill driven to completion). ⭐ Which is why it is
+  a setting: shipping it as a setting costs nothing and does not pretend the constant is derived.
+- ⛔ Do not remove the gate. Let it run to the clock and record when the gate *would* have fired — that is
+  free evidence for whether the clock or the gate should win later.
+
+### ⛔ 42.8 · WHAT I WOULD **NOT** BUILD, AND WHY
+
+| | verdict |
+|---|---|
+| **C2** — the `A_valley ≤ 2 × min` hunt window (§32.7) | ⭐ **Drop it.** Its only case in the whole archive was run 003, and W2 + W3 both catch 003 independently. A rule with no remaining case is a rule that can only misfire. |
+| **C4** — the κ turbidity correction (§32.6) | ⛔ **Withdrawn.** Per-run slopes disagree in sign; extrapolating to zero turbidity triples the scatter (sd 1.346 vs 0.467, §39.5). |
+| **C5** — the relative-rate gate on `A_Soret` (§33.7) | ⚠ **Defer.** The finding behind it stands — the gate watches one band's absolute rate — but `theta_rel` is not derivable from the archive, and 004/005/007 show the current gate producing correct answers. Revisit after T1. |
+| **C3 as a verdict** — "this fill never cleared" | ⚠ **Record it (W4), do not gate on it.** The level threshold is not derivable: 002's 0.204 is only 1.35× the next-highest terminal `A_valley` (§32.5). |
+| **C6** — residual turbidity against the stock's clear value | ⚠ Needs a per-stock "clear", which is the history tracker's job. Later. |
+| **the history tracker itself** | ⚠ Buildable (§37.7) but wait: the **scalar** half is the valuable one (40× more sensitive than the shape half, §37.9), and it wants T1's σ_fill to set its band. The shape half wants W5 first. |
+| **P8** — matched-`A_valley` comparison | ⭐ It is an **analysis method** (§39.1), not a product feature yet. Keep it in the diagnostics scripts until two runs need comparing inside the app. |
+| **P6** — record the pour position | ⛔ **Withdrawn** (§39.2). Replaced by **P6′**, which is a lab rule and not code: *aliquots stay in the dark*. |
+
+### ⭐ 42.9 · THE ORDER, AND WHY IT IS THIS ORDER
+
+```
+W0  replay harness            <- the safety net; nothing below is verifiable without it
+W1  band rates in the record  <- zero risk, zero dependencies, highest value per line
+W4  clearingObserved + A_valley at the read + reference band means
+W2  drawdown admissibility    <- the answer changes here; W0 is what makes that safe
+W3  ceiling + tooDark         <- crosses into the SDK; do it after the read is settled
+W5  last row's spectrum
+W6  D2 in the coach
+W7  fixed duration as a setting
+```
+
+⭐ **W0 + W1 + W4 change no answer at all** — they are pure recording and can land in one commit with the
+tree green. **W2 is the only step that moves a number**, and it moves exactly one (18.989 → 19.782).
+
+⚠ And the honest caveat on all of it: **the clean set is four fills.** Everything above is derived from an
+archive of sixteen monitored runs, six of them from one evening. §35's T1 is still owed, and it is what
+turns these constants from *"derived with a gap"* into *"measured"*.
+
+---
+
+## ⭐⭐ 43 · RUBBER-DUCK PASS ON §42 — walked against the AS-IS code  *(Edwin asked for it, 2026-08-20)*
+
+⭐ Ten findings. **One kills an item outright, one is a prerequisite nobody costed, and one is Edwin's own
+call.** The list of seven becomes a list of five plus a new seam.
+
+### ⛔⛔ RD1 — THERE IS NO END-OF-RUN HOOK, AND W2 AND W7 BOTH NEED ONE
+
+`MonitorEngine.decide()` is reached from exactly one place:
+
+```python
+def offer(...):
+    ...
+    if row.isDecisionRow and not self.__finished:
+        self.__applyDecision(row)          # <- the ONLY caller of evaluator.decide()
+    self.__enforceCaps()
+```
+
+and `__finish()` — reached from `__enforceCaps`, `cancel()`, `stall()` and `decision.stop` — **never calls
+the evaluator again.** ⇒ **the evaluator is never asked *"the run is over, what is your answer?"***
+
+⛔ §40.5 established that the drawdown read is **end-of-run** (`tailSd` and `drawdown` both need the rows
+*after* a candidate). ⛔ §34/W7's fixed duration ends a run on the clock, with nothing promoted.
+**Neither can be built on today's seam.**
+
+#### ⭐ The fix: a `finalize(rows)` seam — and it is small
+
+```python
+def __finish(self, outcome):
+    if self.__finished: return
+    final = getattr(self.evaluator, "finalize", None)
+    if final is not None and self.__error is None:
+        try:    self.__applyFinal(final(list(self.rows)))
+        except Exception: self.__error = traceback.format_exc()
+    self.outcome = ...
+    self.__finished = True
+```
+
+⚠ **`__pruneSpectra` must have kept the winner.** Retention is `maxSeconds` (§27.25), and the fixed duration
+is ≤ `maxSeconds`, so every decision row still holds its spectrum at finalize time. ⛔ **W7 must therefore
+NOT implement itself by lowering `maxSeconds`** — that would shrink retention along with the run.
+
+### ⛔ RD2 — `clearingSeconds` SILENTLY BECOMES "the run length"
+
+`__applyDecision` sets `self.__clearingSeconds = row.t` **at the moment of promotion**. Under a finalize-time
+read the promoting row is always the last one ⇒ **`clearingSeconds` degenerates to the run duration** and
+§2.4's "log the clearing time, it is a σ_fill component" quietly stops being logged.
+
+⭐ Fix: the evaluator already knows when the gate fired (`__gateIndex`). Carry `gateSeconds` in
+`diagnostics`, and let the engine keep `clearingSeconds` for whatever still sets it.
+
+### ⭐ RD3 — `tooDark` needs NO SDK change, and here is the exact shape
+
+⛔ §32.4a says `tooDark` must not be `values = {}`. The minimal implementation keeps the SDK untouched:
+
+- the plugin's `monitorMetrics()` returns `{}` below the floor (as today) and **`{"tooDark": 1.0}`** above the
+  ceiling;
+- `ClearingEvaluator.decide()` drops `tooDark` rows from `decisions` **before anything else**;
+- the `MEASUREMENT_BROKEN` test counts only rows whose `values` are genuinely **empty**.
+
+⭐ Three free consequences: `MonitorRow.values` stays opaque to the engine; `toDict()` carries the flag into
+the record, so the report can show *which* rows were unreadable; and `MONITOR_COLUMNS` is declared
+explicitly, so no plot or table changes.
+⚠ One waste to fix: `__evaluateIfDue` attaches a spectrum to **every** decision row — a `tooDark` row will
+hold a spectrum that can never be read. Prune it at creation.
+
+### ⚠ RD4 — W6's coach line collides with §17/U1
+
+§17/U1 is categorical: *"DO NOT SHOW A PROVISIONAL `Q%`. AT ALL."* A live *"that dip was not real"* announces
+that there **was** a dip and invites the operator to ask how deep. ⇒ the wording may say a spike was
+rejected; it may **never** name a value, a depth or a direction.
+
+### ⛔⛔ RD5 — W6 CANNOT RUN LIVE. MEASURED, AND IT KILLS THE ITEM.
+
+§41.3 claimed `D2` is local: *"it needs one row after the candidate"*. **The numerator does. The denominator
+does not** — `tailSd` is the quiet tail of a finished run. Replacing it with a **running** last-8-rows
+scatter, which is all a live check can have:
+
+| run 006, local minimum | running `tailSd` | `D2` live | final `D2` |
+|---|---|---|---|
+| t = 169.6 s | 0.1250 | 5.7 | — |
+| **t = 225.5 s — the spurious star** | **0.2481** | ⛔ **2.6** | **77.5** |
+| t = 412.9 s — the real minimum | 0.1544 | 0.3 | 4.8 |
+
+⛔⛔ **`D2` never fires anywhere, on any of the four good runs, with a running scale.** The reason is
+structural: during the noisy stretch the running scatter is *itself* inflated by that same noise (0.248
+against the final 0.0084), so the dip is small **relative to its own neighbourhood**. The 77.5 exists only
+because the final tail is quiet.
+
+⇒ ⭐ **DROP W6.** At end-of-run `D2` and drawdown agree on all thirteen runs (§41.4), so `D2` adds nothing
+there; and the one property that justified it — running live — is not real. ⚠ §41.3 and §41.4's
+"⭐ LOCAL / can run live" claims are **withdrawn**; §41.5's shape-vs-finality analysis stands.
+
+### ⚠ RD6 — THE EXISTING TESTS ASSERT PROMOTION FROM `decide()`, AND §19/I5 SAYS DO NOT REWRITE THEM
+
+`test_clearing_evaluator.py` inspects `decision.promote` / `decision.promoteRow` in at least five tests
+(`..._lands_on_the_measured_Q_MINIMUM_not_on_the_gate_row`, `..._an_ALREADY_CLEAR_fill_settles_immediately`,
+`..._a_fill_that_never_clears_never_promotes`, `..._the_read_WAITS_when_the_minimum_is_still_the_newest_look`,
+`..._DIAGNOSTIC_mode_reads_the_answer_but_does_NOT_stop`). Moving the read wholesale into `finalize()`
+breaks all of them.
+
+⭐ **Keep `decide()` exactly as it is.** `finalize()` calls the SAME `__read()` over the complete row list
+and may **revise** the latched answer once.
+
+⛔⛔ **That is an amendment to §14.6 and must be written as one.** §14.6's latch exists so that *observation
+during a run cannot move the answer*; **one end-of-run revision is a different act**, and the record must
+say which read produced the value — a `readPhase: "gate" | "final"` field — or two runs stop being
+comparable.
+
+### ⚠ RD7 — THE OUTCOME SET HAS NO "the clock ran out as planned"
+
+Today a cap with nothing promoted gives `NEVER_SETTLED` — *"a cap was hit with the gate never firing, NO
+value"*. Under W7 the clock running out is the **normal** ending. ⇒ `MonitorPolicy` needs an additive
+`plannedSeconds` (distinct from `maxSeconds`, which stays the un-removable guarantee), and finalize decides
+the outcome. ⭐ Additive fields orphan no saved record (§30.12's rule).
+
+### ⭐ RD8 — W1 AND W4 ARE FREE, INCLUDING THE ONE THAT LOOKED EXPENSIVE
+
+All three band rates and `clearingObserved` fall out of `__readDiagnostics`, which already exists and already
+rides into the record inside `answer["diagnostics"]` — **no record key, no result field, no migration**
+(§30/R2.1). ⭐ And the **reference band means** are reachable too: the evaluator holds `self.__reference`,
+so it can compute them once at read time.
+
+### ⚠ RD9 — W0's FIXTURE MUST PIN *RECOMPUTED* ANSWERS, NOT THE PRINTED ONES
+
+Seven of the sixteen archived runs are `clearing-1.0` records (§36.9). Their printed answers were produced
+by the rule §29 replaced. ⇒ the fixture stores **the rows** plus **the `clearing-2.0` answer recomputed once
+and pinned**, and the harness asserts against that. ⛔ Asserting against the printed value would encode the
+old rule as the expectation.
+
+### ⭐ RD10 — W5 IS WITHDRAWN  *(Edwin: "I do not want this to be persisted")*
+
+⭐ **Dropped.** `MonitorRow.spectrum` is transient and absent from `toDict()`, so W5 would have meant a new
+`MonitorResult` field, a new record key and a persistence change — for a metric that is already 40× less
+sensitive than the scalar tracker (§37.9).
+
+⚠ What it costs, stated honestly: the history tracker's shape distance keeps a within-oil floor inflated by
+the clearing-state spread (sd 0.0398 at the answer against 0.0182 at the last row, §37.4). **It costs
+sensitivity, not correctness** — §37.7's separation is 1.46× worst case with no overlap across 45 pairs.
+
+⭐ **And W4 covers the honest half for free:** `A_valley` at the promoted row is persisted, so the tracker can
+*see* when two spectra were taken at very different clearing states and **flag the comparison** rather than
+silently making it.
+
+---
+
+## ⭐⭐ 44 · IMPLEMENTATION PHASES — after the rubber duck  *(2026-08-20; DESIGN, nothing built)*
+
+⭐ Five phases. **Each one leaves the tree green**, and the order is chosen so the phase that changes an
+answer lands *after* the phase that can prove it did not change any other.
+
+### ⭐ PHASE A — the harness and the recording  *(no answer changes at all)*
+
+| | what | where |
+|---|---|---|
+| **A1** | **W0 · replay fixture** — extract the `monitorRecord` rows of all sixteen archived runs into `tests/data/monitor_replay.json`, with the `clearing-2.0` answer recomputed once and pinned (RD9). | new fixture |
+| **A2** | **W0 · replay test** — drive the real `ClearingEvaluator.decide()` over every fixture run and assert the pinned answer. ⭐ From here on, "ten runs bit-identical" is the tree's claim, not a spreadsheet's. | `tests/` |
+| **A3** | **W1 · the three band rates** into `__readDiagnostics`, and one line on the report. | plugin |
+| **A4** | **W4 · `clearingObserved`, `A_valley` at the promoted row, the reference band means** — same dict, no record key, no migration (RD8). | plugin |
+
+⭐ **A1–A4 change no number.** A2 must pass before and after A3/A4, which is the point.
+
+### ⭐⭐ PHASE B — the seam  *(no answer changes; the mechanism to change one)*
+
+| | what | where |
+|---|---|---|
+| **B1** | **`finalize(rows)` on the evaluator contract**, called once from `MonitorEngine.__finish()` before the outcome is set (RD1). Absent on an evaluator ⇒ nothing happens, so the burst plugin (§10.6) is untouched. | SDK |
+| **B2** | **the latch amendment** — one end-of-run revision is permitted; write it into §14.6 as an amendment, and add **`readPhase: "gate" \| "final"`** to the answer (RD6). | SDK + spec |
+| **B3** | **`gateSeconds` into diagnostics**, so `clearingSeconds` does not degenerate into the run length (RD2). | plugin |
+| **B4** | **`ClearingEvaluator.finalize()` = today's `__read()` over the whole row list.** ⭐ At this point it must reproduce the gate-time answer on all sixteen fixture runs — a pure refactor, proven by A2. | plugin |
+
+⚠ B4 is the checkpoint: **if finalize and the gate disagree anywhere before C1 lands, the seam is wrong, not
+the rule.**
+
+### ⭐⭐ PHASE C — the read  *(the only phase that moves a number)*
+
+| | what |
+|---|---|
+| **C1** | **W2 · drawdown admissibility** inside `__read` — `drawdown(i) ≤ DRAWDOWN_TAIL_MULTIPLE × tailSd`, `DRAWDOWN_TAIL_MULTIPLE = 10`, answer = the vertex around the deepest admissible minimum. ⛔ Keep the "waiting for its far side" guard. |
+| **C2** | update the A1 fixture: **exactly two rows change** — Billa 006 `18.989 → 19.782`, Billa 003 `8.450 → no answer`. Everything else byte-identical. |
+| **C3** | the record carries `drawdown`, `tailSd` and the rejected candidates, so a refusal can be argued with rather than believed. |
+
+### ⭐ PHASE D — the input guard
+
+| | what |
+|---|---|
+| **D1** | **W3 · the ceiling** — `monitorMetrics()` returns `{"tooDark": 1.0}` above `VALUE_CEILING`; `decide()` filters those rows first; the `MEASUREMENT_BROKEN` count uses genuinely-empty values only (RD3). |
+| **D2** | do not attach a spectrum to a `tooDark` row (RD3). |
+| **D3** | coach: *"too dark to read — still clearing"*; the ⛔ INDETERMINATE bar stays (§17/U3 has nothing to predict from). |
+| **D4** | fixture: **nine of twelve runs untouched**, 006L and Billa 001 lose opening rows with no change of answer, Billa 003 loses its first 21. |
+
+### ⚠ PHASE E — the clock  *(ship as a setting; the number is provisional)*
+
+| | what |
+|---|---|
+| **E1** | `MonitorPolicy.plannedSeconds`, additive, distinct from `maxSeconds` (RD7). ⛔ Never implement W7 by lowering `maxSeconds` — that shrinks spectrum retention with it (RD1). |
+| **E2** | a `PLANNED_END` outcome, or finalize choosing among the existing ones; `NEVER_SETTLED` keeps its meaning of *"the guarantee cap fired"*. |
+| **E3** | the gate keeps running underneath and the record says when it **would** have fired — free evidence for the clock-versus-gate question. |
+| **E4** | the Frames/duration control in the bench, default 20 min. |
+
+### ⛔ 44.1 · WHAT IS NOT IN ANY PHASE
+
+| | why |
+|---|---|
+| **W5** — persist the last row's spectrum | ⭐ **Edwin's call** (RD10). Costs shape-tracker sensitivity, not correctness. |
+| **W6** — `D2` as a live check | ⛔ **Killed by RD5** — measured: with a running scale it never fires, including on the star it was written for. At end-of-run it duplicates C1. |
+| C2 hunt window · C4 κ · C5 relative gate · C3-as-verdict · C6 · P8 · the history tracker | §42.8, unchanged. |
+
+### ⭐ 44.2 · THE SHAPE OF THE WHOLE THING
+
+```
+A  harness + recording      no answer moves      <- prove the baseline
+B  the finalize seam        no answer moves      <- prove the mechanism
+C  the drawdown read        TWO answers move     <- the actual change
+D  the ceiling              no answer moves      <- one run gains a refusal it already had from C
+E  the clock                no answer moves      <- a setting, and the number is provisional
+```
+
+⭐⭐ **Only phase C moves a number, and it moves two.** ⚠ Everything above rests on four clean fills from
+one evening; §35's T1 is what turns the constants from *derived-with-a-gap* into *measured*, and it does not
+block any of A–E.
+
+---
+
+## ⭐⭐ 45 · SECOND RUBBER-DUCK PASS — the MECHANICS of writing it  *(Edwin, 2026-08-20)*
+
+⭐ §43 asked *"is the design right?"*. This asks *"what will bite the person typing it?"* — the §21 question.
+Nine findings; **two are check-before-you-write-a-line, one is a silent failure mode.**
+
+### ⛔⛔ M1 — IS THE BENCH RUNNING THE FILE, OR A SEALED DB ROW? CHECK THIS FIRST.
+
+`PluginRegistry` line 83, verbatim: *"a published sealed row **OVERRIDES** the built-in, while the seed's
+bare rows and offline both fall back."*
+
+⇒ **if a sealed `dev.DevSpectralPlugin` row exists in the server DB for the version the bench binds to,
+every edit to `spectracs-plugins/.../DevSpectralPlugin.py` changes nothing at the rig.** ⚠ This exact class
+of confusion is already in the record — *"bit me seeding DB plugins that never appeared in the bench"* —
+and it costs an evening if it is discovered after the change instead of before.
+
+⭐ **The check is one query, and it belongs in A0**, before anything else. Note the server DB is CWD-dependent
+(`runServer.sh` → `~/.spectracsPy-server/*.db`).
+
+### ⛔⛔ M2 — FIVE REPOS, NO VERSION PIN, AND A SKEW FAILS **SILENTLY** — CHANGING THE ANSWER
+
+`spectracsPy` · `spectracsPy-core` · `spectracs-plugins` · `spectracsPy-model` · `spectracsPy-base` are five
+separate git repos joined only by `PYTHONPATH`. The finalize seam splits across two of them:
+
+```
+spectracsPy-core     MonitorEngine.__finish()  ->  probes evaluator.finalize
+spectracs-plugins    ClearingEvaluator.finalize()
+```
+
+⛔ **An old core with a new plugin is not an error — the probe simply finds nothing, finalize is never
+called, and the run silently reverts to the gate-time answer.** No exception, no log line, and on 006 the
+number goes back to 18.989.
+
+⭐ **`readPhase` (§43/RD6) is the detector, and that promotes it from nice-to-have to required**: a record
+that says `"gate"` when the operator expected `"final"` names the skew immediately. ⚠ Land **core first**,
+plugins second, and assert `readPhase == "final"` in the replay test.
+
+### ⭐ M3 — THE EXISTING TEST DOUBLES ARE PLAIN CLASSES, SO THE `getattr` PROBE IS SAFE
+
+`test_monitor_engine.py` uses `FakeEvaluator`, `PromoteAlways`, `NeverSettles`, `RaisesLate`,
+`BurstEvaluator`; `test_the_winner_keeps_its_spectrum.py` uses `PromotesAnOldRow`. **None is a `MagicMock`.**
+⇒ `getattr(evaluator, "finalize", None)` returns `None` for all of them and B1 breaks no test.
+
+⛔ **The rule this establishes must be written down**: a `MagicMock` evaluator would return a truthy callable
+for *any* attribute, so the probe would call a mock and hand its return value to `__applyFinal`. **Future
+doubles stay plain classes.**
+
+⭐ And `BurstEvaluator` (the SDK's degenerate monitor, §10.6) must **not** grow a `finalize` — a plain burst's
+answer is its last row, decided at `decide()` time, and giving it an end-of-run read would change §10.6's
+shape for no reason.
+
+### ⛔ M4 — `tailSd` OVER "THE LAST 8 ROWS" HAS NO RULE FOR A SHORT RUN. **OPEN.**
+
+Run 002 has **six** decision rows. `tailSd` needs at least 4 for a residual-about-a-line with `ddof=2` to
+mean anything, and 8 is what every number in §40 was computed with.
+
+⚠ 002 happens not to reach the drawdown path (a monotone rise has no interior minimum), so the archive does
+not force the question — **which is exactly why it will be met first on the rig.** ⇒ **decide it now**:
+
+| rows available | proposal |
+|---|---|
+| ≥ 8 | as specified |
+| 4 – 7 | use what there is, and **record `tailRows`** so the number can be discounted later |
+| < 4 | ⛔ no drawdown test is possible ⇒ **fall back to today's read** and say so in the record |
+
+### ⛔ M5 — DOES `finalize()` RUN ON A CANCEL, A STALL, A FAILURE? **THREE DECISIONS, NOT ONE.**
+
+`__finish()` is reached from five paths and they do not mean the same thing:
+
+| path | run finalize? | why |
+|---|---|---|
+| `decision.stop` (settled / degrading) | ⭐ **yes** | the normal ending |
+| caps / planned duration | ⭐ **yes** | this is the ending W7 exists for |
+| `FAILED` | ⛔ **no** | the evaluator just raised; calling it again invites a second traceback over the first |
+| `CANCELLED` | ⚠ **no** — §12.1: *"a cancelled capture is not a capture"* | the trajectory is kept and marked, not read |
+| `STALLED` | ⚠ **yes, but the outcome stays `STALLED`** | frames stopped; the rows that exist are real, and refusing to read them throws away a run the operator cannot repeat cheaply |
+
+⭐ Encode it as an explicit set in `__finish()`, not as an `if` nobody can find later.
+
+### ⚠ M6 — DO NOT REUSE `VALUE_CEILING` FOR THE MONITOR
+
+`VALUE_CEILING = 1.5` exists to **drop saturated λ inside a band computation**. The monitor's ceiling asks a
+different question — *"is this whole row a measurement?"* — and the two will want to move apart the first
+time either is re-derived. ⭐ **A separate `MONITOR_SORET_CEILING`, its own comment, the same 1.5 today.**
+⛔ Sharing the constant is exactly the trap this file's own opening comment describes about the two retired
+gauges.
+
+### ⚠ M7 — WHEN finalize REVISES, THE GATE-TIME ANSWER MUST SURVIVE
+
+Otherwise the only evidence that a revision happened is a version string. ⭐ Keep it in `diagnostics`:
+
+```
+readPhase: "final"        gateAnswer: 18.989        gateSeconds: 658.5        answer: 19.782
+```
+
+⚠ It costs three JSON keys and rides inside `answer`, which `toRecord()` serialises wholesale — **no record
+key, no migration** (§43/RD8).
+
+### ⭐ M8 — THE WRITE ORDER THAT KEEPS EVERY COMMIT GREEN
+
+```
+1  spectracsPy        A1 fixture + A2 replay test        green (asserts today's behaviour)
+2  spectracs-plugins  A3 band rates + A4 recording       green (A2 still passes — no answer moved)
+3  spectracsPy-core   B1 finalize seam (probe only)      green (no evaluator defines finalize yet)
+4  spectracs-plugins  B3 gateSeconds + B4 finalize=read  green  <- THE CHECKPOINT: A2 must still pass
+5  spectracsPy        B2 readPhase assertion in A2       green
+6  spectracs-plugins  C1 drawdown                        RED until 7
+7  spectracsPy        C2 fixture: exactly two rows move  green
+8  spectracs-plugins  D1-D3 ceiling + tooDark            green
+9  spectracsPy        D4 fixture check                   green
+10 core + plugins + app   E1-E4 the clock                green
+```
+
+⚠ **Step 6 is the only red one, and it is red on purpose** — the fixture is the thing being changed, so it
+must be changed in a separate commit that says which two numbers moved and why.
+
+### ⭐ M9 — SMALL THINGS, EACH CHEAP NOW
+
+- ⭐ **No `SDK_VERSION` bump** (§19/I2 stands): an *optional* seam probed by `getattr` is backwards
+  compatible in the direction that matters — an old plugin on a new core is fine.
+- ⭐ **The android tree's `DevSpectralPlugin.py` is a 269-line spike stub**, not a copy of the 2105-line real
+  one. **No sync burden** — but say so, or someone will try to keep them in step.
+- ⚠ `toRecord()` serialises `decisionRows()` only. A `tooDark` row **is** a decision row, so `{"tooDark": 1.0}`
+  reaches the record for free and the report can show which rows were unreadable.
+- ⚠ `CapturePanel.py:902` is the single write point (`workflow.setMonitorRecord(result.toRecord())`) — **no
+  host change is needed for any of A–D.**
+- ⚠ `MonitorPolicy` raises on a non-positive `maxSeconds`. `plannedSeconds` must validate the same way **and
+  additionally** that `plannedSeconds ≤ maxSeconds`, or retention (§43/RD1) silently outlives the run.
+
+### ⛔ 45.1 · SO: IS EVERYTHING AT HAND?
+
+| | |
+|---|---|
+| ⭐ **the rules** | yes — every threshold is derived with a stated gap and replay-verified on sixteen runs |
+| ⭐ **the data** | yes — all sixteen records are on disk inside the report PDFs |
+| ⭐ **the seams** | yes, after B1; the write point, the record path and the report path all exist |
+| ⛔ **M1** | **unknown until checked** — sealed DB row versus the file. One query, and it gates everything. |
+| ⛔ **M4** | **undecided** — `tailSd` on a short run. Proposal above; needs a yes. |
+| ⛔ **M5** | **undecided** — finalize on cancel/stall/failure. Proposal above; needs a yes. |
+| ⚠ **the 20 minutes** | provisional until §33.8's T0. ⭐ Does not block A–D; E ships it as a setting. |
+| ⚠ **the constants** | derived from **four clean fills of one oil on one evening**. §35's T1 is what makes them measured. |
+
+---
+
+## ⭐⭐ 46 · IMPLEMENTATION PHASES — the table  *(supersedes §44's prose; DESIGN, nothing built)*
+
+```
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+| STEP | WHAT                                   | REPO                | SIZE  | ANSWERS  | GREEN AFTER?    |
++======+========================================+=====================+=======+==========+=================+
+|                       PHASE 0  ·  BEFORE A LINE IS WRITTEN                                              |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+| A0.1 | Is a SEALED dev.DevSpectralPlugin row  | (server DB query)   |  --   |   none   | n/a  ** M1 **   |
+|      | in the DB? If yes the file is IGNORED. |                     |       |          |                 |
+| A0.2 | DECIDE M4: tailSd on a run with < 8    | (spec)              |  --   |   none   | n/a             |
+|      | decision rows                          |                     |       |          |                 |
+| A0.3 | DECIDE M5: finalize on cancel / stall  | (spec)              |  --   |   none   | n/a             |
+|      | / failure                              |                     |       |          |                 |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+|                       PHASE A  ·  HARNESS AND RECORDING          no answer moves                        |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+| A1   | replay FIXTURE: rows of all 16 archived| spectracsPy/tests   |  ~M   |   none   | yes             |
+|      | runs + the RECOMPUTED 2.0 answer (RD9) |                     |       |          |                 |
+| A2   | replay TEST: drive the real decide()   | spectracsPy/tests   |  ~S   |   none   | yes             |
+|      | over every run, assert the answer      |                     |       |          |                 |
+| A3   | W1: three band rates -> diagnostics    | spectracs-plugins   |  ~S   |   none   | yes  (A2 holds) |
+|      | + one line on the report               |                     |       |          |                 |
+| A4   | W4: clearingObserved, A_valley at the  | spectracs-plugins   |  ~S   |   none   | yes  (A2 holds) |
+|      | read, reference band means             |                     |       |          |                 |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+|                       PHASE B  ·  THE SEAM                       no answer moves                        |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+| B1   | finalize(rows) probed from __finish(); | spectracsPy-core    |  ~S   |   none   | yes  (no        |
+|      | M5's path set; NOT on BurstEvaluator   |                     |       |          |  evaluator has  |
+|      |                                        |                     |       |          |  finalize yet)  |
+| B2   | readPhase "gate"|"final" on the answer | core + spec         |  ~XS  |   none   | yes             |
+|      | + the §14.6 LATCH AMENDMENT written    |                     |       |          |                 |
+| B3   | gateSeconds -> diagnostics, so         | spectracs-plugins   |  ~XS  |   none   | yes             |
+|      | clearingSeconds does not degenerate    |                     |       |          |                 |
+| B4   | ClearingEvaluator.finalize() = today's | spectracs-plugins   |  ~S   |   none   | yes  <== THE    |
+|      | __read() over the WHOLE row list       |                     |       |          |  CHECKPOINT     |
+| B5   | A2 also asserts readPhase == "final"   | spectracsPy/tests   |  ~XS  |   none   | yes  ** M2 **   |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+|                       PHASE C  ·  THE READ                       TWO answers move                       |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+| C1   | W2: drawdown(i) <= 10 x tailSd;        | spectracs-plugins   |  ~M   |  006 and | ** RED **       |
+|      | answer = vertex at the DEEPEST         |                     |       |  003     |  until C2       |
+|      | admissible minimum. Keep the far-side  |                     |       |          |                 |
+|      | guard.                                 |                     |       |          |                 |
+| C2   | fixture update: EXACTLY two rows move  | spectracsPy/tests   |  ~XS  |   --     | yes             |
+|      | 006 18.989 -> 19.782 ; 003 -> refused  |                     |       |          |                 |
+| C3   | record drawdown, tailSd, tailRows and  | spectracs-plugins   |  ~XS  |   none   | yes             |
+|      | the REJECTED candidates                |                     |       |          |                 |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+|                       PHASE D  ·  THE INPUT GUARD                no answer moves                        |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+| D1   | MONITOR_SORET_CEILING (own constant,   | spectracs-plugins   |  ~S   |   none   | yes             |
+|      | M6) -> {"tooDark": 1.0}; decide()      |                     |       |          |                 |
+|      | filters first; BROKEN counts empty only|                     |       |          |                 |
+| D2   | no spectrum attached to a tooDark row  | spectracs-plugins   |  ~XS  |   none   | yes             |
+| D3   | coach "too dark to read"; the          | spectracs-plugins   |  ~XS  |   none   | yes             |
+|      | INDETERMINATE bar stays                |                     |       |          |                 |
+| D4   | fixture: 9/12 untouched; 006L and      | spectracsPy/tests   |  ~XS  |   none   | yes             |
+|      | Billa 001 lose opening rows; 003 -21   |                     |       |          |                 |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+|                       PHASE E  ·  THE CLOCK                      no answer moves                        |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+| E1   | MonitorPolicy.plannedSeconds, additive,| spectracsPy-core    |  ~XS  |   none   | yes             |
+|      | validated <= maxSeconds  (M9)          |                     |       |          |                 |
+| E2   | a planned ending distinct from         | core + plugins      |  ~S   |   none   | yes             |
+|      | NEVER_SETTLED (RD7)                    |                     |       |          |                 |
+| E3   | the gate runs on underneath; record    | spectracs-plugins   |  ~XS  |   none   | yes             |
+|      | when it WOULD have fired               |                     |       |          |                 |
+| E4   | the duration control, default 20 min   | spectracsPy         |  ~S   |   none   | yes             |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+|                       NOT IN ANY PHASE                                                                  |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+| W5   | persist the last row's spectrum        |  --  Edwin's call, §43/RD10                          |
+| W6   | D2 as a live check                     |  --  killed by §43/RD5 (never fires on a running scale)|
+| C2*  | the A_valley hunt window               |  --  §42.8: no case left, and a rule with no case      |
+|      |                                        |      can only misfire                                  |
+| C4   | the kappa correction                   |  --  §39.5: extrapolation triples the scatter          |
+| C5   | the relative-rate gate                 |  --  theta_rel not derivable; revisit after T1         |
+| C6 / P8 / the history tracker              |  --  §42.8, unchanged                                  |
++------+----------------------------------------+---------------------+-------+----------+-----------------+
+
+  SIZE:  XS < 20 lines   S ~ 20-60   M ~ 60-150      ANSWERS: which archived answers change
+  LANDING ORDER ACROSS REPOS (M2 — a skew fails SILENTLY):  core  ->  plugins  ->  app tests
+```
+
+⭐⭐ **Read the ANSWERS column downward: every phase says "none" except C, which says "006 and 003".** That
+is the whole safety argument — and A2, written first, is what turns it from a claim into a test.
+
+---
+
+## ⭐⭐ 47 · THE OPEN-QUESTIONS REGISTER — everything §32–§46 left undecided  *(2026-08-20)*
+
+⭐ Six sections of analysis closed a lot. **What is left, in one place**, sorted by what it blocks.
+⛔ Nothing here is rhetorical: each one has a proposal or a named experiment.
+
+### ⛔⛔ A · BLOCKS THE IMPLEMENTATION — six answers, all at the desk
+
+| # | question | proposal | who |
+|---|---|---|---|
+| **A1** | ⛔ **Is a SEALED `dev.DevSpectralPlugin` row in the server DB?** If yes, editing the plugin file changes nothing at the rig (§45/M1). | a check, not a decision — one query against `~/.spectracsPy-server/*.db` | me, first thing |
+| **A2** | ✅ **CLOSED 2026-08-20 — Edwin accepted.** `tailSd` when a run has fewer than 8 decision rows (002 has 6) — §45/M4 | ≥8 as specified · 4–7 use what there is and **record `tailRows`** · <4 **fall back to today's read** and say so in the record | ✅ agreed |
+| **A3** | ⛔ **Does `finalize()` run on cancel / stall / failure?** — §45/M5. ⭐ **Lean and two refinements in §48.1.** | stop ✅ · caps & planned ✅ · `FAILED` ⛔ · `CANCELLED` ⛔ (§12.1) · `STALLED` ✅, outcome unchanged, answer **recorded but not reported** | Edwin ✔/✘ |
+| **A4** | ⛔⛔ **May finalize REVISE a latched answer?** §14.6 says the answer is fixed when read and observation cannot change it (§43/RD6). ⭐ **Lean in §48.2.** | yes, exactly once, with `readPhase` + `gateAnswer` — ⭐ **plus `MonitorEngine.SUPPORTS_FINALIZE` so a repo skew fails loudly at run start**, which buys the alternative's only real advantage | **Edwin — the one real design call left** |
+| **A5** | ✅ **DISSOLVED 2026-08-20 — no new outcome is needed.** See §47.2. | ⭐ the outcome comes from finalize as it would anyway (`SETTLED_*` if it found an answer, `NEVER_SETTLED` if it did not); add a **`plannedEnd` boolean beside the existing `capsHit`** so the record still distinguishes "ran its 20 minutes" from "hit the 25-minute guarantee" | ✅ resolved |
+| **A6** | ⚠ **Where does W1's band-rate line go** — the PDF report, the bench, or both? | both; it is one `MetricFieldView` with `shownInReport` | me, default |
+
+### ⚠ B · BLOCKS SHIPPING, NOT BUILDING — the rig owes three sessions
+
+| # | question | the session | what it unblocks |
+|---|---|---|---|
+| **B1** | ⭐⭐ **Is 20 minutes enough — and does a fill ever actually settle?** No run in the archive has ever been watched until it stopped changing. | §33.8 **T0**: one Billa fill, 001's recipe, **60 min**, DIAGNOSTIC, no promotion — **plus a second jar with the lamp SHUTTERED between looks** | E4's default; and it can falsify §1 itself |
+| **B2** | ⭐⭐ **What is σ_fill, really?** Every constant rests on **four clean fills of one oil on one evening**. | §35 **T1**: five fills, one stock, same recipe, P6′ in force | turns the thresholds from *derived-with-a-gap* into *measured*; C5; the tracker's band |
+| **B3** | ⚠ **How much light, for how long?** §39 reached "it is the light" by **elimination**, not measurement. | three aliquots drawn at once — one read immediately, one after 15 min dark, one after 15 min on the desk | nothing (the fix is free) — but it converts an elimination into a number |
+
+### ⛔ C · NOT DERIVABLE FROM TODAY'S ARCHIVE — deliberately deferred
+
+| # | question | why it is stuck | when to revisit |
+|---|---|---|---|
+| **C1** | a **level threshold** for "this fill never cleared" (run 002) | 002's terminal `A_valley` 0.204 is only **1.35×** the next highest — no cluster gap (§32.5) | after B2 |
+| **C2** | **`theta_rel`** for a relative-rate gate | the twelve runs span 0.24–1.50 %/min at the read with no gap (§33.7/C5) | after B2 |
+| **C3** | the history tracker's **per-oil threshold** | needs ≥5 fills **per oil**; the pooled 0.25–0.30 is the interim (§37.9) | after B2, per oil |
+| **C4** | **is `D` worth anything against the case it exists for** — a genuinely different or adulterated oil? | ⛔ **no such sample is in the archive.** §37.7 only proved it separates two different oils, the weakest form | when a real adulteration/foreign sample exists |
+
+### ⚠ D · OPEN SCIENCE — blocks nothing, and each is a real hole
+
+| # | question |
+|---|---|
+| **D1** | ⛔ **The hump's lower limb has no model.** §32.4 explains the collapse above `A_valley ≈ 1.7` as the dark floor. Why `Q%` *rises* with turbidity from 0.06 to 1.7 is unexplained, and λ⁻ⁿ scattering predicts the **opposite sign** (§32.3, §33.3). ⇒ every turbidity statement in this file is empirical. |
+| **D2** | ⚠ **What disturbed run 006 between t = 150 and 300 s?** Scatter 20× the tail, `A_valley` stalls, then everything returns to trend. The record says nothing, and §40 handles the symptom, not the cause. |
+| **D3** | ⚠ **Why is the second aliquot consistently more dilute?** −23.8 % / −5.1 % / −6.7 % across three stocks. ⭐ It has **no `Q%` consequence** — which is dilution-invariance working exactly as designed — but the concentration difference itself is unexplained. |
+| **D4** | ⚠ **Is the reference's ±3 % wander the lamp or the re-seating?** §38.6 downgraded it from "drift" to "wander"; separating the two needs §16.26's null-run design, not this data. |
+| **D5** | ⚠ **Does any of this transfer to a second oil?** 5 of 7 Lugitsch fills arrive clear; 0 of 3 Billa fills do, and Billa clears ~5× slower. Every constant here is a Billa constant until a second oil runs the same series. |
+
+### ⭐ 47.1 · WHAT IS **NOT** OPEN ANY MORE
+
+⭐ Worth saying, because several of these consumed a whole exchange each:
+
+- **"same stock?"** — answered: yes. **"which aliquot was 006?"** — answered: the second, measured first.
+- **κ** — dead (§39.5: extrapolation triples the scatter, slopes disagree in sign).
+- **the pour** — dead as a mechanism; it was **light on the waiting aliquot** (§39.2).
+- **W5** — Edwin's call: not persisted. **W6 / `D2` live** — killed by measurement (§43/RD5).
+- **the C2 hunt window** — dropped; C1 and §40 both catch its only case.
+- **which read rule** — settled: the **drawdown** rule is the answer rule; `D2` is a shape test that cannot
+  refuse a still-clearing run (§41.5).
+- **is the history tracker blocked?** — no (§37.7). Buildable, but the scalar half is the valuable one.
+
+
+### ⭐⭐ 47.2 · A5 DISSOLVED — the outcome enum needs nothing  *(2026-08-20, working it through)*
+
+§43/RD7 asked for a new `PLANNED_END` member because *"the clock running out is the normal ending"*. ⛔ That
+conflated **why the run stopped** with **what the answer is**. Walk the two cases at the planned end:
+
+| at the 20-minute mark | outcome |
+|---|---|
+| finalize finds an admissible minimum | ⭐ `SETTLED_AFTER_CLEARING` / `SETTLED_IMMEDIATE` — **exactly as today** |
+| finalize finds none | ⭐ `NEVER_SETTLED` — *"the run ended without settling, no value"*, which is **precisely right** |
+
+⇒ ⭐⭐ **no enum member is needed, and no persisted string changes.**
+
+⚠ The one thing worth keeping is the distinction between *"it ran its planned 20 minutes"* and *"it blew
+through to the 25-minute guarantee"* — the second means the planned end failed to fire and something is
+wrong. ⭐ **`capsHit` already exists** in `MonitorResult.toRecord()`; add a `plannedEnd` boolean beside it.
+
+⭐ **A5 was the cheapest of the six and it turned out to cost nothing at all** — which is the argument for
+walking a proposal through its cases before writing it down as a decision.
+
+---
+
+## ⭐⭐ 48 · A3 AND A4 — the leans, and a finding that reorders the phases  *(2026-08-20)*
+
+### ⭐ 48.1 · A3 — as proposed, with two refinements found while checking it
+
+| a run ends because… | lean | why |
+|---|---|---|
+| `decision.stop` — settled / degrading | ⭐ **yes** | and it is a **no-op today**: finalize sees the same row list the gate saw, so it re-derives the same answer. ⭐ That is what makes B4 a real checkpoint. |
+| caps / the planned duration | ⭐ **yes** | the ending W7 exists for |
+| `FAILED` | ⛔ **no** | the evaluator just raised; calling it again stacks a second traceback on the first and the record loses which one was the cause |
+| `CANCELLED` | ⛔ **no** | §12.1. ⭐ And the stronger reason: *not calling it* makes "a cancelled run carries no number" true **by construction**, instead of relying on the host to remember to ignore one |
+| `STALLED` | ⭐ **yes** — outcome unchanged | the rows that exist are real, and the operator cannot cheaply repeat a fill |
+
+#### ⚠ Refinement 1 — a STALLED run's answer is RECORDED but NOT REPORTED
+
+`MonitorOutcome.hasValue()` does not include `STALLED`. ⇒ a stalled run that finalize reads would carry an
+answer the outcome says does not exist.
+
+⭐ **Leave `hasValue()` alone.** The number lands in the `MonitorRecord` for later analysis and is **not**
+presented as a measurement. That is the same treatment §12.1 gives a cancelled run's trajectory — evidence
+kept, not promoted.
+
+#### ⚠ Refinement 2 — the CANCELLED/STALLED asymmetry is deliberate, and must be written down
+
+They look alike and are not: **cancel is the operator deciding this run does not count; a stall is the
+instrument failing a run the operator still wanted.** ⇒ the trajectory is kept in both cases; only the stall
+gets read.
+
+### ⭐⭐ 48.2 · A4 — yes, revise once — **and buy the alternative's one real advantage anyway**
+
+⭐ **Lean: allow exactly one revision, at finalize.**
+
+1. §14.6's harm model is *the operator watches and the number creeps*. One re-read at a moment when no
+   further data can arrive is not that.
+2. The alternative — *the gate never promotes; only finalize may* — is conceptually cleaner but breaks five
+   tests (§43/RD6), changes DIAGNOSTIC mode, and **throws away the gate-time answer**, which is what makes
+   B4 a checkpoint and M2's skew visible.
+3. The revision is never invisible: `readPhase` · `gateAnswer` · `gateSeconds` (§45/M7).
+
+#### ⛔ But the alternative HAS one real advantage, and it should not be waved away
+
+Under a core/plugin skew (§45/M2):
+
+| | skew behaviour |
+|---|---|
+| **revise** | finalize is never called ⇒ the gate answer stands **silently** (006 back to 18.989) |
+| **only finalize promotes** | finalize is never called ⇒ **no answer at all** — a loud failure |
+
+⭐ The loud failure is genuinely safer. ⭐⭐ **And it can be bought without the alternative's costs:**
+
+```
+spectracsPy-core      MonitorEngine.SUPPORTS_FINALIZE = True
+spectracs-plugins     createMonitor() refuses to build a monitor if the engine does not advertise it
+```
+
+⇒ **the skew then fails at the start of the run, loudly, before a drop of lamp is spent on it.** One line
+each side, and it makes A4's proposal strictly better than the alternative rather than merely cheaper.
+
+⚠ One behaviour change the operator will see and must be told about: **run 003 goes from "8.450" to no
+answer at all.** That is correct, and it is still a change.
+
+### ⛔⛔ 48.3 · THE FINDING — C IS SAFE WITHOUT E, AND NEARLY TOOTHLESS WITHOUT IT
+
+Checking A3 meant asking how much evidence the drawdown test actually has. **It has almost none on most
+runs**, because today's gate stops a run one or two rows after it confirms the minimum:
+
+| run | rows after the chosen minimum | drawdown |
+|---|---|---|
+| 20260819/001 | 35 | 0.0076 |
+| Billa 004 · 005 | 19 · 19 | 0.0197 · 0.0755 |
+| Billa 006 | 13 | 0.0212 |
+| Lugitsch 005 | 4 | 0.0097 |
+| Lugitsch 004 | 3 | 0.0110 |
+| Lugitsch 002 · 007, 20260818A | 2 · 2 · 2 | 0.0100 · **0.0000** · **0.0000** |
+| **Billa 001 · Billa 007 · Lugitsch 001 · 006** | **1 · 1 · 1 · 1** | **0.0000** |
+
+⛔⛔ **Eight of thirteen runs have fewer than four rows after their minimum, and six of those score
+`drawdown = 0.0000` — admissible by ABSENCE of evidence, not by evidence.** The rule is right on the archive
+(it moves only 006 and refuses 003) largely because the runs where it *mattered* happen to be the long ones.
+
+⇒ ⭐⭐⭐ **E is not an optional nicety beside C. The fixed duration is what gives the drawdown rule anything
+to look at.** Three consequences:
+
+- ⭐ **E moves up the order** — it can land before or with C rather than last. It changes no answer, so
+  moving it is free.
+- ⭐ **C1 must record `rowsAfterMinimum`** beside `drawdown`, or a `0.0000` from one row is indistinguishable
+  from a `0.0000` from nineteen.
+- ⭐ **A4's revision only ever matters on a run long enough to have a tail** — which is the same argument
+  again, from the other end.
+
+⚠ And it re-prices §33.8's T0: the 60-minute run is not only *"is 20 minutes enough to settle?"* — it is
+also *"how many rows does the read need after the minimum to mean anything?"*
+
+---
+
+## ⭐⭐ 49 · FINAL RUBBER-DUCK PASS — and it catches a cap wearing a costume  *(2026-08-20)*
+
+⭐ Third and last pass. **Six findings; one would have broken the very first 20-minute run.**
+
+### ⛔⛔ F1 — `maxFrames = 4000` IS A ~20-MINUTE CAP IN DISGUISE. THE FRAME CAP FIRES BEFORE THE CLOCK.
+
+The archive's own frame rate, computed from `frameIndex` and `t`:
+
+| run | fps | frames a 1200 s run would need | `maxFrames` |
+|---|---|---|---|
+| Billa 001 | **3.34** | ⛔ **4008** | 4000 |
+| Billa 005 | 3.29 | 3950 | 4000 |
+| Billa 006 | 3.28 | 3936 | 4000 |
+| Billa 004 | 3.26 | 3918 | 4000 |
+| Billa 007 | 3.23 | 3880 | 4000 |
+
+⛔⛔ **Every archived run's rate puts a 20-minute run within 2 % of the frame cap, and one of them is already
+over it.** `__enforceCaps` would fire on frames at ~19.9 minutes, set `capsHit = True`, and — with nothing
+promoted, which is the normal state until finalize runs — finish as **`NEVER_SETTLED`**. ⇒ **the planned
+ending would essentially never be reached, and the outcome would be wrong on every run.**
+
+⭐ The diagnosis: `maxFrames` was set as a runaway guard and, at this camera's ~3.3 fps, it is *numerically*
+a 20-minute limit. **It is a second time cap wearing a frame costume, and it happens to sit exactly where
+the planned duration wants to be.**
+
+⭐⭐ **Fix, and it is free** — `maxFrames` counts; it does not allocate (the ring is sized by
+`windowFrames + retention`, not by `maxFrames`). Derive it instead of pinning it:
+
+```
+maxFrames  =  ceil( maxSeconds  x  ASSUMED_MAX_FPS )        ASSUMED_MAX_FPS = 10, stated, not guessed
+           =  15000 at the 1500 s guarantee
+```
+
+⚠ And E1 must **assert `plannedSeconds x observedFps < maxFrames`** at construction, or the next camera
+change silently reintroduces the same bug.
+
+### ⭐⭐ F2 — E SOLVES §17/U3 AND §27.23. THE BAR CAN FINALLY BE DETERMINATE.
+
+`CapturePanel` line 1002: `signal.stepsCount = 0` — the app-wide *"no knowable end"* convention, and §27.23
+had to design a stripe-less INDETERMINATE bar around it because **nothing could predict when a gated run
+would finish.**
+
+⭐ **A planned duration is a knowable end.** ⇒ `stepsCount` becomes real, the bar fills honestly, and
+§17/U3's complaint — *"the cap is a 25-minute silence ending in nothing"* — is answered by construction.
+
+⚠ Keep the INDETERMINATE path: it is still right for a `tooDark` opening (§43/RD3 — nothing to predict from
+while no row produces a metric) and for a plain burst.
+
+### ⚠ F3 — `finalize()` RUNS INSIDE `offer()`, ON WHOEVER'S THREAD PUMPS FRAMES
+
+`__enforceCaps()` → `__finish()` → `finalize()`, and `__enforceCaps` is called from `offer()`. ⇒ the
+end-of-run read executes on the frame-delivery thread. ⭐ The work is small — one pass over ≤ 70 rows and a
+three-point polyfit — but it must **stay** small, and it must never raise: §25/X5's guard covers `decide()`,
+and finalize needs the same `try/except → FAILED` treatment.
+
+### ⭐ F4 — THE RETENTION ARITHMETIC IS SAFE, EVEN AT `plannedSeconds == maxSeconds`  *(checked, not assumed)*
+
+`__pruneSpectra` computes `horizon = newest - maxSeconds`. At the end of a 1200 s run with `maxSeconds`
+1500, `horizon = -300` — everything kept. Set `maxSeconds` to 1200 as well and `horizon = 0`, while the
+first row's `t` is ~6 s — **still everything kept.** ⭐ No spectrum can be pruned before finalize reads it.
+
+### ⚠ F5 — §17/U4 GETS WORSE BEFORE IT GETS BETTER
+
+*"Twenty minutes is a long time to hold a panel hostage"* was written when runs were 2–14 minutes. E makes
+every run 20. ⭐ Three things already exist and should be named in the same breath: cancel works (§12.1), the
+bar becomes determinate (F2), and the coach line says what the fill is doing. ⛔ **Do not ship E without F2**
+— a 20-minute wait behind a stripe-less bar is a materially worse bench than a 6-minute one.
+
+### ⭐ 49.1 · WHAT THIS PASS DID **NOT** FIND — and why it is the last one
+
+Checked and clean: the record path (`CapturePanel:902`, one line, unchanged for A–D) · the serialisation
+(`answer` and `rows` ride wholesale, no migration) · the test doubles (plain classes, §45/M3) · the lint
+(`plugin_sdk` imports are permitted) · the android copy (a 269-line spike stub) · the ring sizing
+(`FrameRing`'s own W + max(5, W//5) rule) · `evaluateEveryNFrames = 1` at 3.3 fps (~3900 evaluations, the
+same load as today).
+
+⭐ **Three passes have now returned: a missing seam (§43), a silent skew and two undecided rules (§45), and
+one cap in a costume (§49).** The yield is falling and the remaining risk is no longer in the code — it is in
+**four clean fills of one oil on one evening** (§35's T1). ⇒ **stop ducking, start typing, and let the rig
+supply the next correction.**
+
+---
+
+## ⭐⭐⭐ 50 · THE PHASES — FINAL  *(supersedes §44 and §46; DESIGN, nothing built)*
+
+⭐ Changes from §46: **E moves up to sit beside C** (§48.3 — the drawdown rule is starved without it),
+**A2 and A5 are closed**, and **F1's frame cap joins E1**.
+
+```
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+| STEP | WHAT                                            | REPO              | SIZE | ANSWERS   | GREEN?   |
++======+=================================================+===================+======+===========+==========+
+|                      PHASE 0  ·  BEFORE A LINE IS WRITTEN                                                |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+| 0.1  | Is a SEALED dev.DevSpectralPlugin row in the DB?| server DB query   |  --  |   none    |   n/a    |
+|      | If yes the FILE is ignored at the rig.  ** M1 **|                   |      |           |          |
+| 0.2  | A3 - finalize on cancel / stall / failure       | Edwin             |  --  |   none    |   n/a    |
+| 0.3  | A4 - may finalize REVISE a latched answer       | Edwin             |  --  |   none    |   n/a    |
+|      | (the §14.6 amendment)                           |                   |      |           |          |
+|      | A2 tailSd on <8 rows .............. CLOSED  ok  |                   |      |           |          |
+|      | A5 planned-end outcome ....... DISSOLVED §47.2  |                   |      |           |          |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+|                      PHASE A  ·  HARNESS AND RECORDING              no answer moves                      |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+| A1   | replay FIXTURE: rows of all 16 runs + the       | spectracsPy/tests |  M   |   none    |   yes    |
+|      | RECOMPUTED clearing-2.0 answer        ** RD9 ** |                   |      |           |          |
+| A2   | replay TEST over the real decide()              | spectracsPy/tests |  S   |   none    |   yes    |
+| A3   | W1: three band rates -> diagnostics + one line  | spectracs-plugins |  S   |   none    |   yes    |
+|      | on the report (PDF and bench)                   |                   |      |           |          |
+| A4   | W4: clearingObserved, A_valley at the read,     | spectracs-plugins |  S   |   none    |   yes    |
+|      | the reference band means                        |                   |      |           |          |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+|                      PHASE B  ·  THE SEAM                           no answer moves                      |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+| B1   | finalize(rows) probed from __finish(); the A3   | spectracsPy-core  |  S   |   none    |   yes    |
+|      | path set; try/except -> FAILED       ** F3 **   |                   |      |           |          |
+| B1b  | MonitorEngine.SUPPORTS_FINALIZE = True, and     | core + plugins    |  XS  |   none    |   yes    |
+|      | createMonitor() REFUSES without it   ** M2 **   |                   |      |           |          |
+| B2   | readPhase / gateAnswer / gateSeconds;           | core + plugins    |  XS  |   none    |   yes    |
+|      | the §14.6 LATCH AMENDMENT written down          | + spec            |      |           |          |
+| B3   | ClearingEvaluator.finalize() = today's __read() | spectracs-plugins |  S   |   none    | yes <== |
+|      | over the WHOLE row list                         |                   |      |           | CHECKPT |
+| B4   | A2 also asserts readPhase == "final"            | spectracsPy/tests |  XS  |   none    |   yes    |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+|                      PHASE E  ·  THE CLOCK   (moved UP - §48.3)     no answer moves                      |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+| E1   | MonitorPolicy.plannedSeconds (<= maxSeconds),   | spectracsPy-core  |  S   |   none    |   yes    |
+|      | AND maxFrames = ceil(maxSeconds x 10 fps),      |                   |      |           |          |
+|      | AND assert plannedSeconds x fps < maxFrames     |                   |      |           |          |
+|      |                                      ** F1 **   |                   |      |           |          |
+| E2   | plannedEnd boolean beside capsHit; the outcome  | core + plugins    |  XS  |   none    |   yes    |
+|      | still comes from finalize        ** §47.2 **    |                   |      |           |          |
+| E3   | the gate runs on underneath; record when it     | spectracs-plugins |  XS  |   none    |   yes    |
+|      | WOULD have fired                                |                   |      |           |          |
+| E4   | DETERMINATE progress bar (stepsCount from       | spectracsPy       |  S   |   none    |   yes    |
+|      | plannedSeconds); INDETERMINATE kept for tooDark |                   |      |           |          |
+|      | and bursts            ** F2 - ship WITH E **    |                   |      |           |          |
+| E5   | the duration control, default 20 min            | spectracsPy       |  S   |   none    |   yes    |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+|                      PHASE C  ·  THE READ                           TWO answers move                     |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+| C1   | W2: drawdown(i) <= 10 x tailSd; answer = vertex | spectracs-plugins |  M   | 006, 003  | ** RED **|
+|      | at the DEEPEST admissible minimum. Keep the     |                   |      |           | until C2 |
+|      | far-side guard. A2's <8-row rule.               |                   |      |           |          |
+| C2   | fixture: EXACTLY two rows move                  | spectracsPy/tests |  XS  |    --     |   yes    |
+|      | 006 18.989 -> 19.782 ;  003 -> refused          |                   |      |           |          |
+| C3   | record drawdown, tailSd, tailRows,              | spectracs-plugins |  XS  |   none    |   yes    |
+|      | rowsAfterMinimum, and the REJECTED candidates   |                   |      |           |          |
+|      |                                     ** §48.3 ** |                   |      |           |          |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+|                      PHASE D  ·  THE INPUT GUARD                    no answer moves                      |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+| D1   | MONITOR_SORET_CEILING (its OWN constant, M6)    | spectracs-plugins |  S   |   none    |   yes    |
+|      | -> {"tooDark": 1.0}; decide() filters first;    |                   |      |           |          |
+|      | MEASUREMENT_BROKEN counts empty values only     |                   |      |           |          |
+| D2   | no spectrum attached to a tooDark row           | spectracs-plugins |  XS  |   none    |   yes    |
+| D3   | coach "too dark to read - still clearing";      | spectracs-plugins |  XS  |   none    |   yes    |
+|      | the bar goes INDETERMINATE while it lasts       |                   |      |           |          |
+| D4   | fixture: 9/12 untouched; 006L and Billa 001     | spectracsPy/tests |  XS  |   none    |   yes    |
+|      | lose opening rows; Billa 003 loses its first 21 |                   |      |           |          |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+|                      NOT IN ANY PHASE                                                                    |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+| W5 persist the last row's spectrum   | Edwin's call, §43/RD10                                            |
+| W6 D2 as a live check                | killed by §43/RD5 - never fires on a running scale                |
+| the A_valley hunt window             | §42.8 - no case left; a rule with no case can only misfire        |
+| kappa / theta_rel / C3-as-verdict /  | §42.8 - not derivable from today's archive; revisit after T1      |
+| C6 / P8 / the history tracker        |                                                                   |
++------+-------------------------------------------------+-------------------+------+-----------+----------+
+
+ SIZE: XS <20 lines · S 20-60 · M 60-150      LANDING ORDER: core -> plugins -> app tests   (M2: a skew
+                                              fails silently, and B1b is what makes it fail loudly)
+```
+
+### ⭐ 50.1 · READ THE TABLE TWO WAYS
+
+- ⭐ **Down the ANSWERS column:** every phase says *none* except **C**, which says *006 and 003*. That is the
+  whole safety argument, and **A2 — written first — is what turns it from a claim into a test.**
+- ⭐ **Down the GREEN column:** one red cell, **C1**, red on purpose and for exactly one commit, because the
+  fixture that defines correctness is the thing being changed.
+
+---
+
+## ✅⭐⭐ 51 · AS BUILT — phases 0 · A · B · E · C · D, 2026-08-20  *(511 tests green, was 460)*
+
+⭐ All five phases landed. **Only phase C moved a number, and it moved exactly the two §46 predicted.**
+
+### ⛔⛔ 51.0 · PHASE 0 — M1 WAS A REAL HAZARD, AND THE ANSWER IS "THE FILE IS LIVE"
+
+`~/.spectracsPy-server/spectracsPyServer.db` **does** carry a sealed row:
+
+```
+title    Measurement bench (dev) (DB)
+codeRef  sciens.spectracs.plugins.dev.DevSpectralPlugin.DevSpectralPlugin
+version  1.1.0     source 17,218 chars     signed, keyId 0c618b47f8a17f36
+```
+
+⛔ **That source contains none of the settling machinery** — no `ClearingEvaluator`, no `createMonitor`, no
+`monitorMetrics`, no `V_THRESHOLD` — against the live file's **153,100 chars**. It is a stale seed from
+before the settling work.
+
+⭐ **The bench is nonetheless running the FILE**, proven by the runs themselves: 006 and 007 carry
+`monitorRecord`s stamped `evaluatorId: "dev-clearing"`, which only the file can produce. ⇒ the edits below
+take effect.
+
+⚠ **But the stale row is a live trap**: assign v1.1.0 to any user and the bench silently loses the entire
+settling feature. **Edwin's call** — delete it, or re-publish from the current file.
+
+### ✅ 51.1 · WHAT LANDED
+
+| | | repo |
+|---|---|---|
+| **A1/A2** | `tests/data/monitor_replay.json` — sixteen runs, 379 rows, `expected` recomputed and pinned — plus `test_monitor_replay.py`, 34 tests | spectracsPy |
+| **A3** | the three band rates as `%/min` in `__stateAtRead`, and a *"⚠ still clearing / settled?"* line on the Settling view and the report | spectracs-plugins |
+| **A4** | `clearingObserved` · `valleyAtRead` · `valleyAtEnd` · `referenceSoret/Valley/Q` | spectracs-plugins |
+| **B1** | `MonitorEngine.__finalRead()` from `__finish()`, with §48.1's ending set and §49/F3's guard | spectracsPy-core |
+| **B1b** | `MonitorEngine.SUPPORTS_FINALIZE`; `createMonitor()` **raises** without it | core + plugins |
+| **B2** | `readPhase` · `gateAnswer` · `gateSeconds`; `MonitorDecision.withdraw` | core + plugins |
+| **B3** | `ClearingEvaluator.finalize()` → the same `__read()`, over the whole row list | spectracs-plugins |
+| **E1** | `MonitorPolicy.plannedSeconds`, and ⭐ **`maxFrames` now DERIVED** — `maxSeconds × ASSUMED_MAX_FPS` | spectracsPy-core |
+| **E2** | `plannedEnd` beside `capsHit`; ⭐ **no new outcome member** (§47.2) | core + plugins |
+| **E4/E5** | a **determinate** status bar against `plannedSeconds`; `MONITOR_PLANNED_SECONDS = 1200` | app + plugins |
+| **C1/C3** | `drawdownAfter` · `tailSd` · `__admissibleMinimum`, and the rejected candidates in the record | spectracs-plugins |
+| **D1–D3** | `MONITOR_SORET_CEILING` → `{"tooDark": 1.0}`; filtered first in `decide()`; the coach line | spectracs-plugins |
+
+### ⭐⭐ 51.2 · THE ANSWERS THAT MOVED — exactly two, as promised
+
+```
+20280819BillaClever/003    8.450  ->  NO ANSWER      (every turning point was followed by a further fall)
+20280819BillaClever/006   18.989  ->  19.7822        (= Edwin's (1), t = 412.9 s)
+```
+
+⭐ **Fourteen of sixteen bit-identical**, including the five runs the ceiling touches. And
+`test_series_f_replay.py` — written months earlier and untouched here — still passes every one of its
+assertions but the version literal, which is independent evidence that B3 was a pure refactor.
+
+### ⛔⛔ 51.3 · THE HARNESS EARNED ITSELF ON ITS FIRST RUN — THREE FINDINGS
+
+**1 · `evaluatorVersion` is a lie in the archive.** `20260818A/001` is stamped `clearing-2.0` and prints
+**28.321** (a VERTEX); today's 2.0 replays it to **28.569** (the first look), because **TEST C landed on
+2026-08-19 without bumping the string**. ⇒ *"clearing-2.0" identifies two different algorithms.* §29.6 and
+§30.12 set that string up as the one thing that says which rule produced a number, and it silently stopped
+doing so. ⭐ **Bumped to `clearing-3.0` here, and `test_series_f_replay` asserts the literal so the next bump
+must be a visible act.**
+
+**2 · "no turning point at all" is not a refusal.** The first cut of `__admissibleMinimum` conflated *"no
+candidates"* with *"all candidates rejected"* and refused **Lugitsch 003 and Billa 002** — two perfectly
+good monotone runs whose answer is the first look. A monotone curve belongs to the depth test, not to §40.
+
+**3 · A finalize that refuses must WITHDRAW the gate's answer.** Without it, run 003 kept the 8.450 the
+end-of-run read had just judged unsound — §32.2's defect surviving the fix written for it. `withdraw` is now
+an explicit field, and the engine clears the answer, the spectrum and the winning row while keeping the
+trajectory.
+
+⚠ All three were found by the harness within minutes of it existing, which is the argument for A2 going
+first.
+
+### ⚠ 51.4 · CORRECTIONS TO THE SPEC, FROM THE BUILD
+
+- ⚠ **§32.4's ceiling table was stale.** It was written before runs 004–007 existed. Measured now: the
+  ceiling touches **five** runs, not three — Lugitsch 006 (5 rows), Billa 001 (2), **Billa 003 (21)**, Billa
+  005 (6), Billa 006 (1). ⭐ **And it costs none of them an answer except 003**, which is the point.
+- ⭐ `MonitorPolicy.maxFrames` **defaults to `None` now** and derives itself. An explicit value is still
+  honoured, and §49/F1's assertion rejects one that would pre-empt the planned duration.
+
+### ⏸ 51.5 · WHAT IS STILL OWED
+
+| | |
+|---|---|
+| ⏸ **the rig click-through** | none of this has run against a camera. E4's determinate bar and D3's coach line are the two that only the bench can verify. |
+| ⏸ **the stale sealed row** | §51.0 — Edwin's call |
+| ⏸ **T0 / T1** | the 20 minutes is provisional, and every constant still rests on four clean fills of one oil on one evening |
+| ⛔ **not built, by decision** | W5 (§43/RD10) · W6 (§43/RD5) · the hunt window · κ · θ_rel · C3-as-verdict · the history tracker |

@@ -839,8 +839,11 @@ class CapturePanel(QWidget):
         """Per-row UI. ⚠ Cheap on purpose (§23/V3): `handleVideoThreadSignal` ends with `event.set()`, so
         the camera thread WAITS for the GUI — every millisecond spent here is a millisecond not grabbing.
 
-        ⛔ NO PERCENTAGE (§13.1): a monitored run has no known end, and a bar creeping to 90 % and sitting
-        there is worse than none. The status bar goes INDETERMINATE and the legend box carries the state.
+        ⚠ §13.1 SAID "NO PERCENTAGE", AND A PLANNED DURATION RETIRES HALF OF THAT (§49/F2). The rule was
+        written when a monitored run had no knowable end, so a bar creeping to 90 % and sitting there was
+        worse than none. A clock IS a knowable end. ⇒ the bar is now DETERMINATE against `plannedSeconds`,
+        and INDETERMINATE survives exactly where the reason still holds: a fill too dark to produce a metric
+        (§46/D3), a gated run with no planned duration, and a plain burst.
         ⚠ Numbers refresh no faster than ~2 s — a value flickering at 1.4 Hz reads as instability."""
         import time as _time
         now = _time.monotonic()
@@ -869,6 +872,21 @@ class CapturePanel(QWidget):
         if coach is None:
             return
         self.__paintCoach(coach, row)
+        # ⭐⭐ E4 (SPEC_settled_measurement.md §49/F2) — WITH A PLANNED DURATION THE BAR CAN FINALLY BE
+        # HONEST. §27.23 had to design a stripe-less INDETERMINATE bar because nothing could predict when a
+        # GATED run would end; a clock is a knowable end, so §17/U3's complaint — "the cap is a 25-minute
+        # silence ending in nothing" — is answered by construction.
+        # ⛔ Ship this WITH the 20-minute duration, never after it: twenty minutes behind a stripe-less bar
+        # is a materially worse bench than the six-minute runs that convention was written for.
+        # ⚠ INDETERMINATE is still right while the fill is TOO DARK to produce a metric (§46/D3) — there is
+        # genuinely nothing to predict from — and for a plain burst, which has no duration.
+        planned = getattr(getattr(monitor, "policy", None), "plannedSeconds", None)
+        elapsed = row.t if row is not None else None
+        if planned and elapsed is not None and not coach.get("indeterminate"):
+            self.__emitElapsed(planned, elapsed, "%s   %s" % (
+                coach.get("state", "measuring …"),
+                "  ".join("%s %s" % pair for pair in coach.get("fields", []))))
+            return
         # ⭐ §13.2: the falling gate number IS the progress indicator — it says both where it is and how
         # fast it is getting there, which a percentage never could.
         self.__emitIndeterminate("%s   %s" % (coach.get("state", "measuring …"),
@@ -992,6 +1010,22 @@ class CapturePanel(QWidget):
         self.__captureButton.setProperty("danger", False)
         role = self.__activeStep.getRole() if self.__activeStep is not None else None
         self.__captureButton.setText("Capture reference" if role == REFERENCE else "Capture sample")
+
+    def __emitElapsed(self, plannedSeconds, elapsedSeconds, text):
+        """⭐ E4 — a DETERMINATE bar, in whole seconds of the planned duration (§49/F2).
+
+        ⚠ Clamped at the planned end rather than allowed to overshoot: the last window's CENTRE stamp (§9.3)
+        sits half a window behind the newest frame, so `elapsed` can legitimately exceed `planned` by a few
+        seconds while the run is still finishing — and a bar that reads 101 % is a bar nobody trusts again.
+        """
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.stepsCount = int(plannedSeconds)
+        signal.currentStepIndex = max(0, min(int(plannedSeconds), int(elapsedSeconds)))
+        signal.text = "%s   ·   %d:%02d of %d:%02d" % (
+            text, int(elapsedSeconds) // 60, int(elapsedSeconds) % 60,
+            int(plannedSeconds) // 60, int(plannedSeconds) % 60)
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     def __emitIndeterminate(self, text):
         # ⭐ `stepsCount = 0` is the app-wide "no knowable end" convention (§13.2): MainStatusBarViewModule

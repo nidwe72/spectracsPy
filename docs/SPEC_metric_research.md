@@ -2330,3 +2330,41 @@ than any table of Cohen's `d`.
 | the go/no-go this feeds | `SPEC_capability_proof.md` |
 | ⚠ **candidate source, NOT held** — free-base porphyrin band positions (protoporphyrin IX 506/532/580/630 nm) | [MDPI Pharmaceuticals 14(2):138](https://www.mdpi.com/1424-8247/14/2/138) · [PMC7914864](https://pmc.ncbi.nlm.nih.gov/articles/PMC7914864/) |
 | ⚠ **the errand** — a primary UV-Vis of *protopheophytin a* | not on the open web; needs Scheer *Chlorophylls* or a primary paper |
+
+---
+
+## ⛔⛔ κ IS DEAD — the turbidity correction, proposed and buried in one week  *(2026-08-19/20)*
+
+This spec hunts a baseline-free, dilution-invariant metric, and §10 left the **pedestal correction** open.
+`SPEC_settled_measurement.md` §32.6 proposed one from the Billa Clever series and §39.5 buried it. Recorded
+here so the idea is not re-invented from the same evidence.
+
+**The proposal.** `Q% ≈ Q₀ + κ·A_valley`, κ ≈ 4.5. It looked extremely strong: at κ = 4.5 two runs of the
+same dilution measured half an hour apart reconciled from **0.681 apart to 0.010**, and the corrected values
+(20.06 and 20.05) matched Edwin's independent expectation exactly.
+
+**Why it is dead.** Fitting each run's own tail (`A_valley ≤ 0.16`) and extrapolating to zero turbidity, over
+the five good runs:
+
+```
+run     slope        Q0(v=0)
+001    +8.195         18.793
+004   -12.036         21.329
+005    -5.572         21.174
+006    -3.076         20.277
+007   +12.781         18.397
+                      ------
+       sd of Q0        1.346      vs  sd of the raw answers  0.467   ->  THREE TIMES WORSE
+```
+
+⛔ **The slopes do not agree in sign.** The 002/003 reconciliation was two runs that happened to line up.
+
+⭐⭐ **What survives, and it is the useful half:** comparing two runs **AT the same turbidity** needs no model
+and works — matched-`A_valley` reading turned a 0.742 disagreement into **−0.026** (§39.1). Extrapolating
+ONE run **TO** zero turbidity needs a slope, and the slope is not identifiable from a tail where turbidity
+and lamp dose move together. ⇒ **compare at matched `A_valley`; never extrapolate to zero.**
+
+⚠ And the physics behind the pedestal is still unmodelled: **λ⁻ⁿ scattering predicts the OPPOSITE SIGN** of
+the measured κ (§32.3, §33.3), and a grey/Mie pedestal cancels in the numerator of `V` and would make the
+more turbid fill read *lower* — it reads higher. §16.12.2B's λ⁻ⁿ refutation now has a second, independent
+confirmation from the other end of the turbidity range.

@@ -14603,3 +14603,27 @@ data-URI images resolved against the repo and `spectracs-references/`, `<!--TOC-
 
 **Figures** are embedded from `spectracs-references/tmp/`: `lamp_spd_annotated.png` (§2.6) and
 `sensor_warmup_curve.png` (§3.6). The PDF is therefore self-contained and portable as a single file.
+
+---
+
+## ⭐ §16.24 AND §16.36, REVISITED BY THE BILLA CLEVER SERIES  *(2026-08-19/20 — pointers, not a new section)*
+
+Three results from `SPEC_settled_measurement.md` §32–§51 bear directly on this spec:
+
+- ⭐⭐ **THE ABSORBANCE CEILING NOW EXISTS** (§32.4, built §51). There was a floor (`V_SORET_FLOOR = 0.15`)
+  and **no ceiling**: run 003's first look reported `A_Soret = 2.979`, i.e. the sample transmitting **0.105 %**
+  of the reference — 0.02–0.05 DN against a reference in its 20–50 DN target, **below one code of an 8-bit
+  sensor**. Twenty-one of its forty-six rows were arithmetic on the dark floor. `MONITOR_SORET_CEILING = 1.5`
+  now marks such a row `tooDark`: ⛔ **not** the same as a sub-floor row, which aborts — an over-ceiling fill
+  is still clearing and the run must wait.
+- ⚠ **THE REFERENCE WANDERS ±3 %, AND IT IS PROBABLY RE-SEATING, NOT THE LAMP** (§38.6). Seven
+  valley-band reference means over one evening: `148.4 · 141.4 · 140.0 · 142.8 · 141.9 · 147.8 · 144.7` — no
+  trend (fits give r = −0.37 to +0.53). ⭐ A first reading of three of them as a warm-up drift (§33.6) is
+  withdrawn. ⇒ §16.26's *"jar reseating = the whole archive CV"* gains a second witness, and the reference
+  band means are now recorded per run so an edge-of-spread reference is visible afterwards.
+- ⛔ **§16.24's ERROR BUDGET HAS NO TURBIDITY TERM, AND THE ONE PROPOSED WAS WITHDRAWN.** §32.6's κ implied
+  every archived answer sits 5–15 instrument floors above its zero-turbidity value; §39.5 buried κ (the
+  per-run slopes disagree in sign). ⭐ What replaced it is procedural, not numerical: **compare fills at
+  matched `A_valley`** (§39.1), and **keep every aliquot in the dark** — the "+0.6 to +0.8 pour effect" was
+  light on the waiting aliquot, and it vanished (−0.026) the moment both aliquots were drawn together and
+  kept dark.

@@ -70,7 +70,12 @@ def test_every_series_F_run_reads_what_29_2_measured(name):
     assert decision.branch == expected["branchUnderClearing2_0"]
     assert decision.diagnostics["depth"] == pytest.approx(expected["depthBelowFirstLook"], abs=0.001)
     assert decision.diagnostics["windowFrames"] == expected["windowFrames"]
-    assert decision.diagnostics["readRule"] == "clearing-2.0"
+    # ⚠ 2.0 -> 3.0 on 2026-08-20 (§40, §46/C1): the read now happens at the END of the run and refuses a
+    # minimum the curve later fell below. ⭐ EVERY OTHER ASSERTION IN THIS TEST IS UNCHANGED, which is the
+    # evidence that the gate-time read §29/§30 derived is exactly where it was.
+    # ⛔ The literal is deliberate. §51: TEST C changed a read on 2026-08-19 WITHOUT bumping this string, so
+    # "clearing-2.0" names two different algorithms in the archive — a bump has to be a visible act.
+    assert decision.diagnostics["readRule"] == "clearing-3.0"
 
     # ⭐ The value: a REAL look on the clear branch (`answer is None` ⇒ the engine takes the promoted
     # row's own number), a fitted vertex on the muddy one.

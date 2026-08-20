@@ -791,3 +791,66 @@ right; whether the band is 0.85 or 0.5 is decided by the brown series.
    invalidates a season of data.
 3. ⚠ **σ = 0.277 rests on five fills of one oil in one evening** and still contains the unexplained R/S gap
    (§28.5). ⭐ The brown series (§9.1) sets the real number, and every row above moves with it.
+
+---
+
+## ⭐⭐ THE 2026-08-19/20 FINDINGS — what the Billa Clever series says about this spec  *(SPEC_settled_measurement.md §37, §39, §43)*
+
+### ⭐⭐ THE SHAPE DISTANCE WORKS — and an earlier note here said otherwise, wrongly
+
+`D = √(1 − r²)` over 460–630 nm, on each run's promoted capture:
+
+| | pairs | min | median | max |
+|---|---|---|---|---|
+| **within** Lugitsch A (7 fills, one oil) | 21 | 0.045 | **0.104** | 0.198 |
+| **within** Billa Clever (5 fills) | 10 | 0.067 | 0.163 | 0.231 |
+| ⭐ **between** the two oils | 35 | **0.338** | 0.384 | 0.476 |
+
+⭐ **No overlap across 45 pairs.** ⛔ A first pass (§37.4) called the tracker *blocked* on the strength of
+`D` failing to separate run **002** from the good ones — a **category error**: 002 is the same oil, badly
+*prepared*, and a shape alarm is supposed to be blind to it. The turbidity correlation that pass reported
+(r = +0.835) was six pairs of the one oil whose fills clear most unevenly; on Lugitsch's 21 pairs it is
+**+0.073**. Both claims are withdrawn (§37.7).
+
+### ⭐⭐ BUT `D` AND `Q%` CARRY NEARLY THE SAME INFORMATION — build the SCALAR half for drift
+
+```
+D  =  0.0494 · |ΔQ%|  +  0.0897            r = +0.972 over 55 pairs, two oils
+```
+
+| | resolves |
+|---|---|
+| the **scalar** tracker (`Q%`) | **0.076** — measured like-for-like across two separate dilutions |
+| the **shape** alarm at D = 0.25 | ≈ **3.2 `Q%` units** |
+
+⇒ ⭐⭐ **the scalar side is ~40× the more sensitive, and `D` is largely a noisier restatement of it.** The
+shape half is **not** an independent second opinion on drift. ⭐ Its real job is the *categorical* question —
+*is this even the same kind of oil?* (a different pressing, a different supplier, adulteration) — and
+⛔ **no such sample exists in the archive, so `D`'s value against its actual use case is UNMEASURED.**
+
+### ⭐⭐ THRESHOLD: PER-OIL, NOT SHARED
+
+⚠ A shared number assumes every oil's within-oil floor stays under ~0.2; an oil whose fills clear as
+unevenly as Billa's raises its own floor and starts false-alarming. ⭐ A per-oil threshold, from that oil's
+own reference fills, depends on nothing else.
+
+- ⭐ **interim:** the pooled floor — 24 within-oil pairs, max 0.198, against a best between-oil 0.338 ⇒
+  ⚠ **0.28–0.30**, not the 0.25 first proposed: with five Billa fills the worst within-oil pair is 0.231.
+- ⭐ **switch to the oil's own floor at five fills** — which is this spec's existing "≥3, 5 comfortable"
+  ladder, now with a reason attached to each rung.
+- ⭐ **three fills DO seed a reference** (the ≥3 floor). What three fills cannot give is the *threshold*, and
+  it does not have to come from them.
+
+### ⛔ W5 WAS WITHDRAWN — the last row's spectrum is NOT persisted  *(Edwin, 2026-08-20)*
+
+The answer is read at the `Q%` minimum, i.e. **a different turbidity for every fill** (sd 0.0398 at the
+answer against 0.0182 at the last row, 2.2× — figure `figures/w5_two_spectra.png`). Storing the last row's
+spectrum too would have tightened the within-oil floor.
+
+⛔ **It is not stored.** `MonitorRow.spectrum` is transient and absent from `toDict()`, so it would have meant
+a new `MonitorResult` field, a record key and a persistence change — for the less sensitive half of the
+tracker. ⚠ **The cost is sensitivity, not correctness**: the separation above is unaffected.
+
+⭐ **And the honest half comes free:** `valleyAtRead` **is** persisted (built 2026-08-20, §51), so the tracker
+can *see* when two spectra were taken at very different clearing states and **flag the comparison** rather
+than silently making it.
