@@ -256,9 +256,12 @@ enough to kill single hot pixels.
 
 > **⚠ It does not remove the two named instrument artifacts.** Two narrow features near **473 nm**
 > (FWHM 1.0 nm) and **607 nm** (FWHM 2.7 nm) are wider than the kernel and survive it. Both are **lamp
-> emission lines** that fail to cancel in $S/R$ (§E.9). **Since the far anchor moved to 620–630, both now
-> sit outside every measurement window** and both are harmless to the index. On the old 600–630 anchor the
-> 607 nm line lay *inside* it — one of the reasons the window moved (§Ea.1).
+> emission lines** that fail to cancel in $S/R$ (§E.9). **Both sit outside every BAND window** the shipped
+> metrics read — `Q%`'s three and `dQ100`'s two. ⚠ **But 448–626 nm is `dQ100`'s denominator**, and both
+> lines fall inside it: masking them out of that `sd` shifts `dQ100` by **−0.735 ± 0.929** units (up to
+> 2.34), about 11 % of its corridor. ⛔ Masking is not the fix — it *narrows* the corridor slightly, 6.846
+> → 6.433 — but "harmless" is the wrong word for a band mean's ruler. On the old 600–630 anchor the 607 nm
+> line lay inside a *measuring* window, which is one of the reasons that window moved (§Ea.1).
 
 <!--PAGEBREAK-->
 
@@ -984,7 +987,8 @@ share. The metric wins precisely because it looks at **narrow windows**; colour 
 
 $A_{Soret}$ separates our two sets at *d* = 2.31 and $B_{Soret}$ at *d* = 2.70, with no overlap. **Do not
 use them.** The two sets happen to share a dilution recipe, so the comparison is valid only *within* that
-accident. Only ratios divide the common factor out — which is why the UI marks ratios in bold as decision
+accident. ⭐ §5.2 measures the same trap from the other side: across **twenty** oils $A_{Soret}$ scores
+*d* = 0.16 — it is class-blind, and what looks like separation on one pair is dose. Only ratios divide the common factor out — which is why the UI marks ratios in bold as decision
 metrics and shows the band means without thresholds.
 
 ### 9.2 A ratio is invariant only if BOTH sides are corrected the same way
@@ -997,21 +1001,29 @@ locally baseline-corrected numerator over an uncorrected denominator. They are n
 discriminators; they are *structurally* incapable of dilution invariance (`SPEC_capture_quality.md`
 §16.14.3).
 
-### 9.3 The three verdicts are not on the same scale
+### 9.3 ⚠ The verdict ladder — and why only one rung carries a pill
 
-The tab shows **three** readings of the same capture (§Ea.3), each on its own scale:
+The dev tab grew **three** readings of the same capture, on three different scales. It is worth knowing
+what happened to each, because the numbers are still printed and only one of them decides anything:
 
-| | metric | threshold |
-|---|---|---|
-| **1** | $B_{Soret}/(B_{Q} - r_{Q})$ — baseline **and** pedestal | **10.6** |
-| **2** | $B_{Soret}/B_{Q}$ — baseline only *(Appendix E's Pigment Index)* | **12.5** |
-| **3** | $A_{Soret}/A_{Q}$ — raw | **none** |
+| | metric | its threshold was | today |
+|---|---|---|---|
+| **1** | $B_{Soret}/(B_{Q} - r_{Q})$ — baseline **and** pedestal | 10.6 | ⛔ gauge **retired** (§16.20) |
+| **2** | $B_{Soret}/B_{Q}$ — baseline only, **the Pigment Index** | 12.5 | ⛔ was the verdict until 2026-08-21 → **Appendix E** |
+| **3** | $A_{Soret}/A_{Q}$ — raw | 4.4 | ⛔ gauge **retired**; still printed, deliberately **with no verdict** |
+| **4** | $Q_{\op{pct}}$ — chapter 5 | — | ⭐ **18.6, and the only gauge the plugin now builds** |
 
-**Only the verdicts are comparable — never the numbers.** They are ratios of different quantities, and the
-two thresholds are not interchangeable: 10.6 belongs to metric 1 and 12.5 to metric 2. ⚠ That 10.6 was
-*also* the old 600–630 gauge's threshold is a coincidence of arithmetic, not a shared scale — it was
-retained on metric 1 by explicit decision after being checked against the new corridor, not carried over
-(`SPEC_roast_ampel.md` §2b).
+⛔ **Rung 3 is the cautionary one.** On post-rebuild data the raw ratio does not separate the classes at
+all — green 5.387 ± 0.510 against brown 4.842 ± 0.290, Cohen's *d* = 1.20, with the lowest green run
+(4.863) below the highest brown one (5.340). No threshold classifies all 28 archived runs. Its shipped
+`T = 4.4` sat **below the entire brown class** (minimum 4.622) and therefore called every run of the brown
+S-Budget oil *"good — green"*. It is still shown, without a pill, for continuity with older reports.
+
+⚠ **The durable lesson, and the reason this section survives its own subject matter: only VERDICTS are
+comparable, never the numbers.** These are ratios of different quantities and their thresholds are not
+interchangeable — 10.6 belonged to rung 1 and 12.5 to rung 2, and that 10.6 was *also* the old 600–630
+gauge's threshold is a coincidence of arithmetic, not a shared scale (`SPEC_roast_ampel.md` §2b).
+⛔ The same applies to `Q%` at 18.6 and `dQ100` at 30.0: nothing carries across.
 
 ### 9.4 ⚠ We do not know what the 560–580 band is
 
