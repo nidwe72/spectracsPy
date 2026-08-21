@@ -45,8 +45,10 @@ spectrum, a camera photographs it, and the software divides that by the same mea
 without oil in the beam. The result is **absorbance** — how much light the sample removed, wavelength
 by wavelength.
 
-Two features of the absorbance curve tell green oil from over-roasted oil: a strong band in the blue
-near 440–460 nm, and a weak one in the yellow-green near 560–580 nm. Their **ratio** is the verdict.
+Three features of the absorbance curve tell green oil from over-roasted oil: a strong band in the blue
+near **448–460 nm**, a weak one in the yellow-green near **565–580 nm**, and the flat **500–560 nm**
+valley between them. The verdict is the yellow-green band measured **above that valley** and scaled by the
+blue one — a difference over a level, not a ratio of two bands (`DOC_metric_algebra.md` §5.1).
 
 ### 1.2 The five things worth remembering
 
@@ -59,7 +61,10 @@ near 440–460 nm, and a weak one in the yellow-green near 560–580 nm. Their *
 > straight out. This is why a €30 camera can do quantitative work (§2.3).
 >
 > **3. What survives a ratio is anything ADDITIVE.** Stray light, dark current — and above all
-> **scattering by suspended matter**. These add to both bands and do not cancel (§2.5, §5).
+> **scattering by suspended matter**. These add to both bands and a ratio cannot remove them (§2.5, §5).
+> ⭐ Which is exactly why the shipped metric is a **difference** over a level rather than a ratio of two
+> bands: a difference cancels a *flat* pedestal outright. ⚠ Real Mie scattering has spectral **slope**, and
+> that part still survives (§5.2).
 >
 > **4. The sample is not a solution.** A few drops of oil in isopropanol is a *dispersion*: the two
 > are only partly miscible, so the oil arrives as suspended droplets alongside waxes that never
@@ -139,6 +144,11 @@ A₁ / A₂  =  (ε₁ · c · l) / (ε₂ · c · l)  =  ε₁ / ε₂
 **Concentration and path length cancel exactly.** So does anything else that multiplies the whole
 curve — lamp brightness, camera gain, grating efficiency. What remains is a pure property of the
 substance.
+
+⭐ **The shipped metric uses this for its DENOMINATOR only.** `Q%` divides by the Soret band, which is what
+makes it dilution-invariant — but its numerator is a **difference** of two windows rather than a second
+band, because that is what removes the additive half of the problem (item 3 above). One nuisance each:
+the division kills what multiplies, the subtraction kills what adds.
 
 This is why the pumpkin verdict is a *ratio* and not an absolute absorbance. It is also why the
 dilution recipe can be changed without recalibrating the verdict: measured across a 50 % change in
@@ -268,9 +278,11 @@ the absorber at ~625 nm and nowhere near chlorophyll's 662.
 > do not obviously include it, which mildly favours the second reading — but the oil contains both
 > molecules plus carotenoids, and no source we have assigns this band.
 >
-> **Why it matters:** the 560–580 window is the *denominator* of the shipped verdict metric. If it is a
-> degradation-product band, the metric is a direct intact ÷ degraded ratio and its physical justification
-> is much stronger than we currently claim. **This is worth one measurement to settle** — and unusually,
+> **Why it matters:** the 565–580 window is the **numerator** of the shipped verdict metric, `Q%` — it
+> rises into brown. ⚠ It was the *denominator* of the Pigment Index that shipped until 2026-08-21, where
+> it fell into brown instead; the sign of every statement about this band therefore depends on which
+> metric is being discussed. If it is a degradation-product band the physical justification is much
+> stronger than we currently claim, whichever way up it is read. **This is worth one measurement to settle** — and unusually,
 > a hint already exists in our own data: relative to the 560–580 band, the 600–630 Qy flank is
 > substantially *weaker* in brown oil than in green (ratio 0.58 vs 0.69), which is what you would expect
 > if 600–630 tracks the intact pigment more specifically than 560–580 does. Suggestive, not conclusive.
@@ -387,11 +399,12 @@ half — acidification is the standard laboratory route. Same bottle, same turbi
 variable. If the 600–630 slope collapses in the acidified half, the causal link stops being an
 interpretation and becomes a measurement.
 
-> ⭐ **Read the slope on BOTH windows when that run happens.** Since 2026-08-03 the shipped far anchor is
-> **620–630 nm**, not 600–630 (`SPEC_capture_quality.md` §16.20). The prediction above is about the
-> *pigment*, so it is anchor-agnostic and stands as written — but 620–630 is what the instrument now acts
-> on, and it is only 10 nm wide, so it is also the noisier of the two. Recording both costs nothing (the
-> diagnostics compute both) and keeps the prediction falsifiable on the window that matters.
+> ⭐ **Read the slope on BOTH windows when that run happens.** The 620–630 anchor replaced 600–630 on
+> 2026-08-03 (`SPEC_capture_quality.md` §16.20). ⚠ **Neither is shipped any more** — both belong to the
+> Pigment Index, which became `DOC_metric_algebra.md`'s Appendix E on 2026-08-21. The prediction above is
+> about the *pigment*, so it is anchor-agnostic and stands as written; record both windows anyway, because
+> the diagnostics compute them for free and because §3.4a's version of this experiment reads a third pair
+> (565–580 and 623–626) that neither anchor covers.
 
 ### 3.4a ⭐⭐ The see-saw — the same mechanism, as two numbers  *(2026-08-21)*
 
@@ -694,9 +707,10 @@ that the settling read was built to work around.
 *The red end.* The strongest argument against a non-polar solvent was that the pigment's red band sits
 at 623–626 nm against a detector that stopped at 629.8 — no room for a solvatochromic shift, and the
 shift direction is not predictable for a magnesium pigment. Both halves have moved. The capture window
-now reaches **635.9 nm**, and the shipped metric never looks past **580 nm** — it reads 448–460,
-500–560 and 565–580. The red-end argument still bites the *baseline anchor* at 620–630, but not the
-number the instrument actually reports.
+now reaches **635.9 nm**, and the **verdict** metric never looks past **580 nm** — `Q%` reads 448–460,
+500–560 and 565–580. ⚠ But `dQ100`, printed beside it as a scalar since 2026-08-21, reads **623–626**, and
+§3.4a's see-saw is built on that band — so the red-end argument still bites, just not the number that
+carries the pill.
 
 *The hazard.* De-aromatised white spirit carries an aspiration classification that isopropanol does not.
 But it is an **ingestion** hazard — the danger is swallowing and then aspirating, which is why the case
@@ -802,6 +816,13 @@ baseline correction, one after — and it is why a baseline correction exists at
 Note what this does to §2.3's reassuring algebra: a ratio is immune to everything *multiplicative*,
 and turbidity is the classic *additive* offender. Robustness has a specific shape, and this is the
 hole in it.
+
+⭐ **And it is why the shipped metric is not a ratio of two bands.** `Q%` puts the two pigment windows into
+a **difference** — $A_{Q} - A_{valley}$ — so a flat pedestal subtracts out instead of dragging a quotient
+toward 1, and only then divides by the Soret to remove the multiplicative half. ⚠ **The hole is narrowed,
+not closed**: real Mie scattering has spectral *slope* (§5.2), and a slope does not cancel between two
+windows at different wavelengths. What this section measures is still the largest single nuisance in the
+jar; what changed is which part of it survives the arithmetic.
 
 ### 5.4 An accidental experiment: three years on a shelf
 
