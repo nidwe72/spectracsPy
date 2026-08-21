@@ -2829,6 +2829,26 @@ property of `B`, and it costs ~30 % of the decision margin.
 *choices* are stable; they do not make the corridors free. **`ROADMAP.md` M9 — pre-registration before the
 next rig session — is the only route from "best candidate" to "validated".**
 
+### ⚠⚠ 13.2a `Spar Premium` is not a labelling problem more fills can fix
+
+Every `0 / 88` in the table above is conditional on one three-run tube whose class has never been clear.
+⭐ **The evening's own data says the reason is that the oil is genuinely intermediate.** Excluded from the
+fit, `B` opens a **15-unit** gap — green max **52.93**, brown min **67.93** — and `Spar Premium`'s three
+runs land **inside** it, at **63.08 / 63.06 / 65.78**, 70–85 % of the way across and on neither side.
+
+⇒ ⛔ **More fills of `Spar Premium` would settle whether that TUBE is representative — a real question —
+but nothing about the LABEL.** If the oil sits between the classes, measuring it more precisely locates the
+middle more precisely. And §16.31.3a already forbids settling it from the spectrum: one pigment system, so
+every spectral statistic is a projection of the same chemistry and none of them is independent evidence.
+
+| the two ways out | |
+|---|---|
+| ⭐ **exclude it, and say so** | report **0 / 85** with the exclusion stated — the branch §16.31.3a explicitly allows. Both `dQ100` and `B` pass it |
+| ⭐⭐ **ground truth from OUTSIDE the spectrum** | taste, the mill's roast record, provenance, for that one oil. Permanent, and nothing else is |
+
+⚠ ⇒ **Any headline of the form "0 / 88" must name its labelling.** The honest form of every count in §13.2
+is *"0 / 85 with `Spar Premium` excluded, and 0 / 88 under the archive's current label for it."*
+
 ### ⭐⭐ 13.3 THE RULE — differences survive, ratios do not
 
 > **Differences of equal-width windows survive; ratios of baseline-subtracted quantities do not.**
