@@ -2016,6 +2016,67 @@ an earlier draft of this document overstated it.
 
 <!--PAGEBREAK-->
 
+### ⭐ E.10 The pedestal correction — what it was, and why it is legacy  *(added 2026-08-21)*
+
+§E.7 shows *why* a straight chord leaves an error: a real scattering pedestal is **convex** in λ, a fitted
+line is not, and the line therefore over-subtracts in the middle of the window. §E.7 stops at the
+diagnosis. **The correction is what the plugin did about it**, and it is the third number the reference
+sheet prints:
+
+```math
+\op{index}_{corrected} = \frac{B_{Soret}}{B_{Q} - r_{Q}}, \qquad r_{Q} = -0.0184\ A
+```
+
+with $r_{Q}$ shipped as the constant `PB_R_Q`.
+
+⇒ **`r_Q` puts back what the straight line took out.** The residual lands almost entirely in $B_{Q}$
+rather than $B_{Soret}$, because $B_{Q}$ is the small quantity — the same asymmetry §E.3a's error budget
+is about — so correcting the denominator alone recovers most of the effect for one constant.
+
+| | green `20270729C` | brown `20260731A` | Cohen's *d* | threshold |
+|---|---|---|---|---|
+| $B_{Soret}/B_{Q}$ — the Pigment Index | 15.499 | 10.160 | **10.20** | 12.5 |
+| $B_{Soret}/(B_{Q} - r_{Q})$ — pedestal put back | 12.380 | 8.590 | **9.33** | 10.6 |
+
+⚠ **Note that the correction SCORES WORSE** — *d* falls from 10.20 to 9.33. It was never adopted to
+discriminate better; it was adopted because $B_{Q}$ without it is not the pigment's absorbance but the
+pigment's absorbance minus a line's error, and a quantity that means something is worth a little
+separation. That trade is the whole case for it, and it should be stated rather than implied.
+
+Two properties carried forward from `DOC_pedestal_correction.md`:
+
+| | |
+|---|---|
+| ⭐ **`r_Q` is a property of the INSTRUMENT, not the oil** | which is what makes a single constant defensible at all. ⛔ It does **not** survive a mechanical rebuild |
+| ⚠ **`r_Q` belongs to its anchor** | −0.0246 A on 600–630, −0.0184 A on 620–630 (§Ea.2). Pairing one anchor's band means with the other's constant is a category error, and an easy one because both are called `r_Q` |
+
+#### ⛔ Why it is legacy
+
+**1 · Its gauge is retired.** `RoastBaselineGaugeView` (T = 10.6) went with §16.20; the number is still
+computed and printed, but it draws no pill (§9.3, rung 1).
+
+**2 · There is no longer a residual to correct.** `r_Q` is defined as *the pedestal's departure from its
+own best-fit line*. `Q%` fits no line (§5.2), so no such line exists and the quantity is undefined for it —
+not small, **undefined**. The correction did not fail; its subject was removed.
+
+⭐⭐ **3 · And this is the part worth keeping.** The pedestal did not stop mattering — **the correction
+stopped applying.** `Q%` handles the same physics differently and, for one component, better: its numerator
+is a **difference**, so a *flat* pedestal cancels **exactly**, with no constant to measure, no anchor to
+belong to and nothing to invalidate on a rebuild. That is strictly stronger than correcting for it.
+
+⚠ **But only for the flat component.** Real Mie scattering has spectral **slope**
+(`DOC_sample_physics.md` §5.2), and a slope does not cancel between two windows at different wavelengths.
+⇒ `Q%` traded a *curvature* residual it had to measure for a *slope* residual it does not — an improvement,
+not an escape. The honest one-line summary of this appendix's subject is: **the pedestal is still the
+largest single nuisance in the jar; what changed is which part of it survives the arithmetic.**
+
+⚠ **Nothing here is retracted.** `r_Q`'s measurement, the instrument-property claim and
+`DOC_pedestal_correction.md` in full remain valid, and they are what any reading of the archive's **143
+older reports** depends on — those numbers were produced by this correction and cannot be interpreted
+without it.
+
+<!--PAGEBREAK-->
+
 ## Appendix Ea — ⭐⭐ Where the far anchor came from — and the three verdicts  *(2026-08-03; `SPEC_capture_quality.md` §16.20)*
 
 Everything above is written on the shipped **620–630 nm** far anchor. It was **600–630** until 2026-08-03,
