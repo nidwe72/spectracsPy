@@ -854,3 +854,34 @@ tracker. ⚠ **The cost is sensitivity, not correctness**: the separation above 
 ⭐ **And the honest half comes free:** `valleyAtRead` **is** persisted (built 2026-08-20, §51), so the tracker
 can *see* when two spectra were taken at very different clearing states and **flag the comparison** rather
 than silently making it.
+
+---
+
+### ⛔⛔ A SOLVENT CHANGE IS INDISTINGUISHABLE FROM AN OIL CHANGE — measured  *(2026-08-21)*
+
+`D` over the archive's labelled sessions plus the four white-spirit fills of
+`SPEC_capture_quality.md` §16.12.7f, on **both** windows this document names
+(`diagnostics/tracker_d_solvent.py`):
+
+| | 460–630 nm | 550–600 nm |
+|---|---|---|
+| **within** one oil, one solvent, fill vs fill — *the noise floor* | 0.047 – 0.274 | 0.012 – 0.258 |
+| **between** two different oils, same solvent — *the signal* | 0.066 – 0.505 | 0.049 – 0.373 |
+| ⛔ **same oil, isopropanol vs white spirit** | **0.326 – 0.466** | **0.430 – 0.572** |
+| | 1.3× the alarm | **1.7× the alarm** |
+
+⭐ **On 550–600 nm the solvent change is LARGER than any oil difference in the archive**; on 460–630 it
+sits inside the range two different oils span. Either way it clears the `D = 0.25` alarm comfortably.
+
+⇒ ⭐⭐ **This is the operational argument for never changing the solvent, and it stands on its own.** A
+history tracker is a **longitudinal** instrument: a protocol change does not degrade the history, it
+**deletes** it — every archived point becomes incomparable, the reference lot must be re-measured and the
+threshold re-derived. `DOC_sample_physics.md` §4.9 makes the chemical case for isopropanol; this one needs
+no chemistry at all.
+
+⚠ **And one number here is a warning, not a reassurance.** The within-oil floor reaches **D = 0.274** —
+*above the alarm*, on one oil in one session, fill against fill. The fills inflating it are the turbid
+ones. ⇒ the emulsion is also this tracker's largest noise source, and the fix is **settling discipline**
+(`SPEC_settled_measurement.md` §40's drawdown rule), **not** a change of solvent.
+
+⭐ Frame: `DOC_metric_algebra.md` §1.5a — *the less you explain, the more you must control.*

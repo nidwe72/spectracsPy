@@ -5600,6 +5600,13 @@ The archive is **not** "neat oil". §16.23 is the shipping recipe — **two 60 �
 isopropanol** — so every comparison below is **IPA against white spirit**, two solvents, not solvent against
 none. Any sentence anywhere that calls the archive "neat" means "the isopropanol route".
 
+⛔⛔ **AND A SECOND CORRECTION, TO THIS SECTION'S HEADLINE RESULT — added 2026-08-21 evening.** The
+"two bands become resolved peaks" finding below was read as a **wavelength shift**. It is not one. The bands
+are **taller**, not moved: the 568 nm band is at 568 in *both* solvents and merely outgrows a **~581 nm
+instrument line** in white spirit, and the 624 nm question cannot be answered at all against a clamp that ends
+at 630. The corrected reading is in the sub-section itself, and it is a **stronger** result than the one it
+replaces — but it is a different one.
+
 #### ⛔ WHAT DID NOT RUN — read this before any number below
 
 | pre-registered | status |
@@ -5691,26 +5698,98 @@ and `R448/R530` differs by 6.5 %, worth at most +0.75 units. **The change is in 
 the Ampel are **not** re-derived here, and this section does not propose to. A route that moves the metric by
 18 σ needs its own threshold work, behind a blank, a ruler and arms B and C.
 
-#### ⭐⭐⭐ WHAT THE SESSION ACTUALLY FOUND — two bands the isopropanol route never resolves
+#### ⭐⭐⭐ WHAT THE SESSION ACTUALLY FOUND — two bands, and they are TALLER, not SHIFTED  *(⛔ corrected 2026-08-21 evening)*
 
-Edwin marked two peaks on the white-spirit trace. They are at **568 nm** and **~624 nm**, and their positions
-repeat to a fraction of a nm across all four fills (567.2 / 567.5 / 567.8 / 567.8 and 622.8 / 623.2 / 624.8 /
-625.0). Across the whole archive:
+Edwin marked two peaks on the white-spirit trace, at **568 nm** and **~624 nm**, whose positions repeat to a
+fraction of a nm across all four fills (567.2 / 567.5 / 567.8 / 567.8 and 622.8 / 623.2 / 624.8 / 625.0).
+**That observation stands. The reading first put on it does not**, and both halves of it are withdrawn below.
 
-| | n | maximum found at ≤ 627 nm | median position |
-|---|---|---|---|
-| labelled **isopropanol** runs | 110 | **7 %** | 628.8 nm |
-| **white spirit** runs | 4 | **100 %** | 624.0 nm |
+> ⛔ **AS FIRST WRITTEN, AND NOW SUPERSEDED.** *"The 624 nm band's maximum sits ≥ 5 nm bluer in white spirit,
+> which is what brings it inside the measurable window at all. The same happens at 568: in every isopropanol
+> run `Pigment D_Q` pins at the 577–581 nm window edge; in all four spirit runs it is an interior peak at
+> 567–568."* Supporting table: 110 labelled isopropanol runs, **7 %** with a maximum at ≤ 627 nm, median
+> position 628.8 nm, against **100 %** and 624.0 nm for the four spirit runs.
 
-⚠ **The clamp ends at 630**, so "628.8" means *at or beyond the clamp edge*, **not** "there is no band". The
-defensible statement is that **the 624 nm band's maximum sits ≥ 5 nm bluer in white spirit**, which is what
-brings it inside the measurable window at all. The same happens at 568: in every isopropanol run
-`Pigment D_Q` pins at the 577–581 nm window edge; in all four spirit runs it is an interior peak at 567–568.
+##### ⛔ Why the 568 nm half is an artefact — a peak-finder outranking, not a shift
 
-⇒ ⭐⭐ **The ratio of those two peak heights separates green from brown across 85 archived runs where `Q%`
+The chord-subtracted Q profile carries **two** features, not one. Averaged per set, on the Soret-normalised
+absorbance with a chord drawn from 542–546 to 600–606:
+
+```
+   nm     Lugitsch IPA   Lugitsch SPIRIT   Billa IPA   Billa SPIRIT
+  566        0.0840          0.2269          0.1362       0.2733
+  568        0.1050          0.2363          0.1664       0.2853    <- the broad pigment band, ~15 nm wide
+  572        0.1348          0.2118          0.1955       0.2314
+  576        0.1500          0.2062          0.2024       0.2013
+  580        0.1600          0.2122          0.2044       0.2102    <- a 2 nm SPIKE, in all four sets
+  582        0.1097          0.1343          0.1495       0.1473
+  584        0.0592          0.0774          0.0916       0.0978
+```
+
+The 580 nm feature's second derivative is **−0.023 to −0.047**, an order of magnitude larger than anything else
+in the window. ⛔ **A feature 2 nm wide cannot be a molecular band** — electronic bands of a large molecule in
+room-temperature solution are ≥ 15 nm wide. It is the **~581 nm Bayer channel crossover** (`DOC_lamp_rebuild.md`
+§6 names the sibling artefact at 608–610), and it is present in every set at the same place with the same shape.
+
+⇒ ⭐ **The pigment band sits at 568 nm in BOTH solvents.** In isopropanol it is small (0.105) and the 581 line
+wins the argmax, so any peak-finder reports "580". In white spirit it grows to 0.236 and overtakes the line, so
+the finder reports "568". **Nothing moved — one of two competing features changed rank.**
+
+⭐⭐ **AND THIS IS NOT A NEW FINDING — two other documents reached it first, by a different route, and this
+section simply failed to be updated with them.** `DOC_lamp_rebuild.md` §6 measured the same thing from the
+**reference** side: a Bayer channel crossover near 583 nm, with the reference throughput falling to a minimum
+at 581 nm and then jumping **+17 %/nm**, identically in every run on disk. Its conclusion is already the one
+above — *"the band is real in both solvents; in isopropanol the instrument feature is simply bigger than it"* —
+and `KB_spectroscopy_physics.md` §4.1a acted on it, moving our Q band from ≈ 574 to **568 nm**. ⇒ the profile
+above is an **independent confirmation from the absorbance side**, not a discovery, and the error corrected
+here is that §16.12.7f went on reading a rank change as a shift after those two had said otherwise.
+
+⛔ **One consequence carries over verbatim from `DOC_lamp_rebuild.md` §6, and it is the important one: DO NOT
+RE-TUNE `V`'s WINDOWS on the strength of this.** Trimming `A_Q` off the step was measured there — 563–573,
+562–575 and 565–575 all leave the classes overlapping and make Cohen's *d* **worse** (2.78 → 2.33–2.45) — and
+independently here: moving `A_Q` to 565–577 shifts `Q%` by −0.44…−0.76 in isopropanol but **+0.20…+0.86** in
+white spirit, and does not reduce scatter (Lugitsch within-session sd **0.377 → 0.388**). It is a near-constant
+offset already absorbed into `T = 18.6`.
+
+##### ⛔ Why the 624 nm half is UNANSWERABLE, not merely wrong
+
+The capture clamp ends at **630 nm**. "Maximum at 628.8" therefore means *still rising at the edge* — the band's
+true maximum is somewhere past the clamp and its position is not measured. Whether the band **moved bluer** in
+white spirit, or merely **grew tall enough to crest inside the window**, cannot be distinguished from data that
+stops at 630. ⛔ **The ≥ 5 nm claim is withdrawn, and no replacement position claim is made.** This is the
+630 nm clamp binding on a scientific question — ⚠ **not a new argument for the red extension**, but a
+concrete instance of `SPEC_metric_research.md` §13.6's fourth line, *"Qy read as a shoulder, never as a
+band"*. The count of independent arguments stays at four.
+
+##### ⭐⭐ WHAT SURVIVES — and it is a cleaner result than the one it replaces
+
+Measured as a **height above a local chord** on the **Soret-normalised** absorbance, so that any flat or smooth
+pedestal cancels:
+
+| | n | 568 nm band height |
+|---|---|---|
+| labelled **isopropanol** fills | 106 | 0.087 – **0.213** *(median 0.147)* |
+| **white spirit** fills | 4 | **0.235** – 0.289 |
+
+⭐ **Zero overlap on 110 fills.** The tallest isopropanol fill in the archive (`20260727D/002`, 0.2127) is still
+below the weakest spirit fill. Per oil the band roughly **doubles**: Lugitsch 0.105 → 0.236 (2.25×), Billa
+Clever 0.165 → 0.285 (1.73×).
+
+⛔ **And it is not turbidity.** Both measures are chord-subtracted, so a pedestal cancels; across the 106
+labelled isopropanol fills the correlation of normalised turbidity with the 624 nm height is **−0.016**; and the
+spirit fills are *more* turbid (0.165–0.260) than the clearest isopropanol fills (0.042) while carrying far
+taller bands. ⛔ **Nor is it the package/sieve effect**, which predicts the **opposite sign**: flattening
+suppresses the Soret harder than the Q band, so it would make the isopropanol Q/Soret ratio *higher*, and it is
+lower. ⚠ The sieve effect does appear *within* the isopropanol archive (turbidity vs 568 height, corr **+0.573**)
+— it is simply not the isopropanol-versus-spirit story. **What causes the doubling is UNSETTLED**; a genuine
+solvent effect on the intrinsic Soret:Q intensity ratio is the remaining candidate and is not established here.
+
+⇒ ⭐⭐ **The ratio of those two band heights separates green from brown across 85 archived runs where `Q%`
 overlaps, and it survives both the rig rebuild and this solvent change.** That work is
-**`SPEC_metric_research.md` §12**, not here. ⛔ It does not adopt the hydrocarbon: the metric works on the
-isopropanol archive too. What white spirit buys is that both bands become *resolvable*.
+**`SPEC_metric_research.md` §12**, not here, and **it is unaffected by this correction** — `R` is built from
+heights and anchors at fixed windows, never from a fitted peak position. ⛔ It does not adopt the hydrocarbon:
+the metric works on the isopropanol archive too. What white spirit buys is that both bands become **large enough
+to measure well**, which is the corrected form of "resolvable".
 
 #### ⏸ STATUS — what this session may and may not conclude
 
@@ -5719,7 +5798,7 @@ isopropanol archive too. What white spirit buys is that both bands become *resol
 | ✅ | Lugitsch **arrives clear** in white spirit; Billa Clever does not |
 | ✅ | the **pour term collapses** on the oil that dissolves — `−0.166` against IPA's `+0.44 … +0.80` |
 | ✅ | a **flat +0.078 A pedestal** is what "imperfect dissolution" looks like in a spectrum |
-| ✅ | the **568 and 624 nm bands become resolved peaks** — the session's most valuable result |
+| ✅ | the **568 and 624 nm bands roughly DOUBLE in height** relative to the Soret — no overlap across 110 fills — the session's most valuable result. ⛔ **Corrected 2026-08-21:** they are **taller**, not **shifted**; the position claim is withdrawn |
 | ⛔ | **arm A fails its pre-registered `A_valley` gate**, and the gate is confounded and needs re-specifying |
 | ⛔ | **dilution-invariance in the hydrocarbon is UNTESTED** — arm B never ran, and it can still refuse the solvent |
 | ⛔ | **arm C never ran** — the 0.063 / 0.70 question §16.12.7d raised is exactly as open as it was |

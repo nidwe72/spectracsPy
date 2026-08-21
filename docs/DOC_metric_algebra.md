@@ -26,6 +26,10 @@ source — and puts the physics beside the algebra, because the metric only make
 *Light, Pigment and Solvent* covers the sample — what is in the jar and what it does to a photon. This
 one starts where those finish, at the absorbance curve $A(\lambda)$, and ends at the verdict.
 
+**⭐⭐ Read §1.5a first if you read nothing else.** It is one page on *what kind of number this is* —
+operational rather than mechanistic, in-matrix rather than molecular — and it is the frame every chapter
+after it sits in. It also carries the discipline that frame costs.
+
 **How to read it.** Chapter 1 stands alone and contains the claim. Chapter 3 is the physics, chapter 5
 the metric that decides the verdict — if you read only two, read those. Chapter 6 is how the instrument
 decides *when* that number is ready, chapter 7 the difference metric that scores better and still does not
@@ -196,6 +200,54 @@ wrong.
 ⚠ **These are re-seat numbers.** Both sets are six re-seats of *one fill*, so they exclude sample
 preparation entirely. Fill-to-fill scatter remains unmeasured for brown
 (`SPEC_capability_proof.md` §11.4f B).
+
+### 1.5a ⭐⭐ WHAT KIND OF NUMBER THIS IS — one page, and it frames every chapter after it  *(2026-08-21)*
+
+*Everything past this chapter is detail. This section is the frame the detail sits in, and it is short on
+purpose. If a sentence in this document is ever quoted on its own, quote from here first.*
+
+⭐⭐ **A detector does not need a causal model in order to be valid.** The validity requirement for
+something that answers *"is this oil too brown?"* is that it responds to what you care about and not to
+what you do not. Naming the mechanism is **interpretation** — a different question, and not a
+precondition. An **octane number**, a **Brix** reading and a **durometer** value are all operational
+definitions: real physics underneath, rigorously defined, decision-grade — and nobody mistakes 95 RON for
+a measurement of a molecule. It is defined against a reference engine and reference fuels; change the
+engine and the number changes, and *that is not a defect*. `DOC_pedestal_correction.md` says the same of
+`Q%` in one line: **dilution-invariant but not absolutely calibrated.**
+
+⭐⭐ **And a metric restricted to ONE mechanism can be worse than one that reads the whole sample.** If
+roasting moves the pigment **and** the waxes **and** the press fines **and** the moisture together, then a
+number reading the bundle carries more signal than a number reading only the pigment. Discarding
+covarying information *because it is not yet explained* throws away real discriminating power — which is
+why broad chemometric models routinely beat single-wavelength targeted reads on real product.
+
+⭐ **This describes what already ships. It is not a proposal, and not a change of direction.** `Q%` is
+measured on a **turbid emulsion** (`DOC_sample_physics.md` chapter 5 and §4.9); its valley window contains
+that turbidity; its `A_Q` window contains a ~581 nm instrument line (`DOC_lamp_rebuild.md` §6). It has
+always been an **in-matrix** number. Chapter 3's Gouterman physics is the **rationale for the metric's
+SHAPE** — why a difference of two windows, why those bands, why a ratio — and **not** a claim that
+magnesium is the only thing contributing to the value.
+
+#### ⛔ The price of not explaining — and it is the whole discipline
+
+**An unattributed number is valid exactly to the degree that everything except the product is held
+constant.** That is not a philosophical caveat; it is an operating condition, and it fails easily. Two
+examples, both measured in a single afternoon (2026-08-21):
+
+- a spectral feature that separated the archive's oils at **F = 32.07** — five times better than the
+  turbidity level, and non-monotone in `Q%`, so it looked like an independent axis — split **perfectly by
+  calendar date** across 12 sessions and 52 fills, with no oil on both sides. A rig-or-processing era
+  boundary, not a property of any product *(`SPEC_metric_research.md` §13.4)*.
+- the **same oil** measured in two solvents sits `D` = **0.43–0.57** apart on the history tracker's own
+  shape distance — **larger than any oil difference in the archive** on that window, and 1.7× its alarm
+  threshold *(`SPEC_history_tracker.md`, "a solvent change is indistinguishable from an oil change")*.
+
+⇒ ⭐⭐ **THE LESS YOU EXPLAIN, THE MORE YOU MUST CONTROL.** An operational metric does not lower the
+standard of discipline; it **raises** it. Same solvent, same recipe, same rig, same settling rule, same
+jar — because when the number moves and there is no mechanism to appeal to, the *only* thing standing
+between *"the oil changed"* and *"the instrument changed"* is the protocol. This is exactly what a control
+chart demands of a process, and it is why the history tracker's reference must be the mill's own lot at
+`k ≥ 5` rather than a single nominated run (`SPEC_history_tracker.md` §3.4).
 
 ### 1.6 The chain, in one line
 

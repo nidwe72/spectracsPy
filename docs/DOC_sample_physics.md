@@ -625,6 +625,8 @@ These can be varied nearly independently, and that is a lever.
 | solvent | ε (25 °C) | b.p. °C | flash pt °C | dissolves oil | polystyrene | usable here |
 |---|---|---|---|---|---|---|
 | water | 78 | 100 | — | not at all | ✅ | — |
+| methanol | ≈ 33 | 64.7 | 11 | **poor** — the most polar of the alcohols | ✅ safe | ⛔ **acutely toxic, skin-absorbed** *(§4.7)* |
+| ethanol | ≈ 24.5 | 78.4 | 13 | poorer than isopropanol | ✅ safe | ⚠ **§4.9 — a ligand candidate, not a solvency one** |
 | **2-propanol** *(in use, and staying)* | **≈ 17.9** | 82.6 | 12 | **marginal** | ✅ safe | ✅ **chosen** |
 | 1-propanol | ≈ 20.1 | 97.2 | 22 | better | ✅ safe | ⛔ H318 |
 | **1-butanol** | ≈ 17.5 | 117.7 | 35 | **good** | ✅ safe | ⛔ **H318** |
@@ -637,6 +639,12 @@ These can be varied nearly independently, and that is a lever.
 **In principle a longer-chain alcohol is the interesting direction.** Its dielectric constant is close
 to isopropanol's, so absorption bands should barely move, while its longer chain makes it a better
 triglyceride solvent — dissolution without solvatochromism.
+
+⭐ **And the reverse direction is not the mirror image of it** *(2026-08-21)*. A *shorter* alcohol — ethanol,
+methanol — is **more** polar, so it dissolves the oil less well and would coarsen the emulsion rather than
+clear it. What it buys lies on a different axis entirely: a smaller molecule is a better **fifth ligand** for
+the pigment's magnesium (§4.9). The two axes pull in opposite directions, which is the likeliest reason
+§4.7's standard methods reach for a **mixture** rather than for either end of the alcohol series.
 
 ### 4.6 ✅ The decision: isopropanol stays  *(⚠ still the shipping answer — but see §4.8, which reopens the hydrocarbon half of it)*
 
@@ -667,6 +675,11 @@ position and therefore the threshold itself would have to be re-derived.
 > on turbidity not being the limiting term. That rests in turn on a measurement whose interpretation has
 > since been questioned: the re-seating scatter that we attribute to the *holder* was measured on a
 > **turbid** sample, and nobody has checked what it would be in a clear one.
+>
+> ⭐⭐ **And §4.9 makes the case this table never made — the case FOR isopropanol** *(2026-08-21)*. Everything
+> above decides the solvent by **elimination**. After the white-spirit evening there is a positive argument as
+> well, and the surprising half of it is that the emulsion chapter 5 treats as the bill we pay is also what
+> makes dilution-invariance **structural**.
 
 ### 4.7 What the analytical literature actually uses
 
@@ -677,6 +690,34 @@ Nobody uses neat isopropanol.
 **The field converged on hydrocarbons precisely because they give a true solution** — no dispersion,
 no scattering, no settling. Our choice of an alcohol is a deliberate trade for field usability, and
 chapter 5 is the bill for it.
+
+⭐⭐ **And the paper this document's pigment chapter is built on reads its spectra in METHANOL**
+*(added 2026-08-21, after the claim that methanol is a poor choice was queried at the bench)*. Fruhwirth &
+Hermetter (2007) say so in the Fig. 3 caption — *"All spectra were recorded in methanol"* — and Fig. 3C
+describes *"a methanolic solution of Styrian pumpkin seed oil"*. So methanol is a perfectly good
+spectroscopic solvent for **exactly our sample**, and a flat claim that it dissolves oil badly is *true
+about the molecule and wrong about the measurement*. What separates the two is concentration:
+
+| | oil in the cell | regime |
+|---|---|---|
+| Fruhwirth, laboratory UV/Vis | micrograms, very high dilution | far below any solubility limit — methanol holds it |
+| **our §16.23 recipe** | 120 µL into 10 mL = **1.2 % v/v** | 10–100× more concentrated; this is where solubility bites |
+
+⇒ **at their dilution methanol is fine; at ours it would be worse than isopropanol.** ⛔ It is still not a
+candidate: acutely toxic and absorbed through the skin, which ends the discussion for an instrument operated
+in food premises.
+
+⚠ **But one consequence deserves following up, and it is not cosmetic.** If Fruhwirth's methanolic sample is
+a **true solution**, then Fig. 3A is the right comparison for a **white-spirit** run and not for one of ours
+in isopropanol. `spectracs-references/comparisons/fig3A_vs_spectracs/` records the paper's Q band at
+**573.8 nm** against a 2026-07-16 isopropanol run at **572.9 nm**, and calls that a ~1 nm reproduction. Two
+things have happened since. `KB_spectroscopy_physics.md` §4.1a moved our Q band to **568 nm**; and the
+2026-08-21 re-reading of the archive found that the apparent 573–580 nm maximum in every isopropanol run is
+the **~581 nm Bayer channel crossover** — a 2 nm-wide feature, far too narrow to be an electronic band of a
+large molecule in room-temperature solution — while the four white-spirit fills, the only true solutions we
+have measured, read **568**. ⇒ the "reproduces to ~1 nm" agreement may be **two artefacts meeting**.
+⛔ **Open. This document does not resolve it**, and the candidate explanations — a pixel digitisation of
+Fig. 3A, methanol against a hydrocarbon, our own wavelength calibration — are not separated.
 
 > **On waiting.** Two pieces of standard guidance are often quoted and neither applies to us.
 > *"Measure turbid samples within ten minutes"* comes from **nephelometry**, where the particles
@@ -766,6 +807,92 @@ measurement, not for a substitution.
 > cuvette at all** — §6.6 rejects it as hazy, which is to say it would manufacture the very scattering
 > pedestal chapter 5 is about, and feed it back through the beam. The PP cups are for mixing and storage;
 > the light must not pass through them.
+
+### 4.9 ⭐⭐ The fifth ligand — and why the emulsion may be a FEATURE  *(2026-08-21)*
+
+§4.8 asked what a hydrocarbon would **remove**. The white-spirit evening then ran, and its results are
+`SPEC_capture_quality.md` §16.12.7f. This section answers the question nobody had asked: **what does the
+emulsion give us that a true solution would take away?**
+
+#### What a "coordinating solvent" means, in one paragraph
+
+The pigment carries a **magnesium ion at the centre of a flat ring**, held by four nitrogens (§3.2). Four
+bonds is one or two short of what magnesium prefers, so it keeps an **open site pointing straight out of the
+ring face**, perpendicular to it. Any molecule with a spare lone pair of electrons can donate into that site,
+and an alcohol's oxygen does it well. **Steric hindrance** is simply how much bulk sits around that oxygen and
+gets in the way as it approaches the flat face:
+
+| solvent | what the oxygen carries | the fifth site |
+|---|---|---|
+| **methanol** | one small CH₃ | binds readily — the least hindered of the series |
+| **ethanol** | CH₂CH₃ | between the two |
+| **2-propanol** *(in use)* | CH(CH₃)₂ — two methyls branching off the very carbon next to the oxygen | **binds, but more weakly**: that bulk collides with the ring face on approach |
+| **de-aromatised white spirit** | no lone pair anywhere | ⛔ **cannot bind at all** |
+
+⛔ **That last row is the hydrocarbon's hidden cost.** With no solvent ligand available, the magnesium can
+take its fifth ligand from a **neighbouring pigment molecule** instead — a dimer, with shifted and broadened
+bands. Dimerisation is an *equilibrium*, so the spectrum then depends on concentration, and a metric built on
+dilution-invariance cannot survive that. §4.8 gives four reasons it should not happen here: micromolar
+concentrations against a millimolar phenomenon; roughly ten thousand ester carbonyls per pigment molecule
+supplied by the dissolved oil, and any ligand in excess breaks the aggregates; up to a third of the pool being
+magnesium-free protopheophytin already; and hardware-shop solvent carrying water, which is itself a ligand.
+⚠ **They are arguments, not measurements.**
+
+#### ⭐⭐ Structural invariance against conditional invariance
+
+![**Figure 6** — the mechanism, drawn. **A:** in isopropanol the pigment is lipophilic and sits *inside* the oil droplets. Diluting changes how many droplets stand in the beam, never the concentration inside one — so the magnified view is identical at both dilutions, and every concentration-dependent process is frozen at one operating point. **B:** in white spirit the oil dissolves and the pigment's real concentration *is* the nominal one; halve it and the molecules sit ≈ 1.26× further apart, so aggregation and the dimer of the table above become live variables. ⚠ A mechanism drawing, not measured data.](figures/solvent_dilution_invariance.svg)
+
+The point is geometric, and it is easier to see than to say. In the emulsion the pigment is **lipophilic and
+therefore inside the oil droplets**, at whatever concentration the oil itself has. Diluting the preparation
+changes **how many droplets sit in the beam** — never the concentration inside one of them. Every process that
+depends on concentration is therefore **frozen at a single operating point** and cannot respond to dilution at
+all. In a true solution the pigment's real concentration **is** the nominal one; halve it and the molecules sit
+about 1.26× further apart — the cube root of two — and those same processes become live variables.
+
+⇒ ⭐ **In isopropanol, dilution-invariance is *structural*. In a hydrocarbon it becomes *conditional*** —
+conditional on the pigment not interacting with itself. `DOC_capture_fidelity.md` §3.12 measures the
+isopropanol case at **± 0.35 % across every dilution simulated, against an 8.7 % run-to-run spread.** The
+hydrocarbon case is **untested**: arm B of §16.12.7e — three dilutions in both solvents — has not run, and it
+is the arm that can refuse the solvent outright.
+
+⛔ **None of this says the emulsion reads the TRUE spectrum. It does not.** The pigment is packaged rather
+than dispersed, and Beer–Lambert assumes dispersed (§2.2); the reading is wrong. What matters is that it is
+wrong *consistently*: **constant-but-wrong is exactly what a ratio metric survives, and variable-but-right is
+not.**
+
+#### ⭐ The positive case for isopropanol, which had never been written down
+
+§4.6 decides the solvent by **elimination** — every alternative fails on a named, checkable ground. That table
+is still correct and nothing here revises it. But it leaves the impression that isopropanol is merely what
+remains once the better options are struck out, and after the white-spirit evening that is no longer the whole
+picture:
+
+| | |
+|---|---|
+| **Safety** | non-toxic enough for a miller's shed. Decisive on its own, and it needs no physics |
+| **Solvency at our working concentration** | marginal — but it holds more oil at 1.2 % v/v than the shorter alcohols do (§4.7) |
+| **Ligand** | bulkier than methanol, but it coordinates the magnesium well enough to keep the pigment monomeric. The failure mode of the hydrocarbon row never arises |
+| **⭐ The emulsion itself** | pins the pigment's *local* concentration, which is what makes dilution-invariance structural rather than something to be re-measured after every recipe change |
+| **The threshold** | `T = 18.6` and the 12–22 verdict domain exist on this route and nowhere else. `Q%` shifted **+6.71** and **+2.09** between the two solvents — by different amounts per oil — so nothing carries across (§16.12.7f) |
+
+⛔ **And what it costs, stated as plainly.** Worse fill-to-fill repeatability — the entire settling apparatus
+of `SPEC_settled_measurement.md` exists to fight scatter that a true solution would not have produced — the
+**+0.44 / +0.80** first-to-second-pour term of §36.2, which collapsed to **−0.166** in white spirit, and
+absorbances that are wrong in absolute terms.
+
+⚠ **"Better" here means better on the axes that have been measured, not proven best.** §4.8's case for the
+hydrocarbon is **not withdrawn**, and arm B remains the one cheap experiment that could reorder all of this.
+
+#### ⚠ One candidate this reopens, weakly: ethanol
+
+Recorded so that it is not re-derived from scratch; it is **not a proposal and creates no work item.**
+**Ethanol** is the only member of the series that is both **food-grade** and a **less hindered ligand** than
+isopropanol. ⛔ It is *worse* on the axis §4.5 says matters most — more polar than isopropanol, so poorer at
+dissolving triglyceride, and it would coarsen the emulsion rather than clear it. Its real interest is
+indirect: §4.7's standard methods use **ethanol/isooctane** and **ethanol/heptane** *mixtures*, which suggests
+that if the solvent question is ever genuinely reopened the answer is a **mixture** — an alcohol for the
+ligand, a hydrocarbon for the solvency — rather than any single solvent at either end of the series.
+⛔ Methanol is not a candidate at any dilution: acutely toxic and skin-absorbed.
 
 <!--PAGEBREAK-->
 

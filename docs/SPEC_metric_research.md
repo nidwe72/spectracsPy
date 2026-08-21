@@ -2516,21 +2516,44 @@ study. **39 of the 63 have a NEGATIVE `R`** — no 624 nm band above the 613 anc
 outside `Q%`'s own 12–22 verdict band. Mixed rigs, mixed doses, no oil identity on disk. Unusable for either
 metric, and they are excluded from **both** sides of every comparison above.
 
-### ⭐ 12.6 · The 624 nm band is only *resolvable* in white spirit
+### ⭐ 12.6 · Both bands are only *measurable* in white spirit — because they are TALLER there, not because they moved  *(⛔ corrected 2026-08-21)*
 
 | | n | maximum found at ≤ 627 nm | median position |
 |---|---|---|---|
 | labelled **isopropanol** runs | 110 | **7 %** | 628.8 nm |
 | **white spirit** runs | 4 | **100 %** | 624.0 nm |
 
-⚠ **The clamp ends at 630**, so "628.8" means *at or beyond the clamp edge*, **not** "there is no band" —
-`R` is computable and correct on the isopropanol archive, which is the whole of §12.2. The defensible
-statement is that **the band's maximum sits ≥ 5 nm bluer in white spirit.** The same holds at 568 nm:
-`Pigment D_Q` pins at the 577–581 window edge in every isopropanol run and is an interior peak at 567–568 nm
-in all four spirit runs.
+> ⛔ **AS FIRST WRITTEN, AND NOW WITHDRAWN.** *"The defensible statement is that the band's maximum sits
+> ≥ 5 nm bluer in white spirit. The same holds at 568 nm: `Pigment D_Q` pins at the 577–581 window edge in
+> every isopropanol run and is an interior peak at 567–568 nm in all four spirit runs."* Both halves read a
+> **rank change as a wavelength shift.** `SPEC_capture_quality.md` §16.12.7f carries the full correction.
 
-⇒ ⭐ **`R` is not an argument for the hydrocarbon.** It works on the shipping solvent. What white spirit
-buys is that both bands become *visible*, which is how the metric got noticed at all.
+⛔ **At 568 nm there is no shift at all.** The band sits at 568 in **both** solvents. What competes with it is
+a **~2 nm instrument feature at 580–581 nm** — the Bayer channel crossover of `DOC_lamp_rebuild.md` §6, where
+reference throughput bottoms at 581 nm and then jumps +17 %/nm. In isopropanol the pigment band is small and
+the artefact wins the argmax, so a peak-finder reports "580"; in white spirit the band roughly doubles and
+overtakes it, so the finder reports "568". `KB_spectroscopy_physics.md` §4.1a already acted on this when it
+moved our Q band from ≈ 574 to 568.
+
+⛔ **At 624 nm the question is UNANSWERABLE, not merely unproven.** The clamp ends at **630**, so a maximum
+"at 628.8" means *still rising at the edge* — the isopropanol band's true position is **not measured**.
+"≥ 5 nm bluer" asserts a difference between two positions when only one of them exists. Whether the band moved
+bluer, or merely grew tall enough to crest inside the window, cannot be told from data that stops at 630.
+⚠ **This is not a fifth argument for the red extension** — it is a concrete instance of §13.6's fourth
+line, *"Qy read as a shoulder, never as a band"*. The count stays at four.
+
+⭐⭐ **What replaces both, and it is stronger.** Measured as a height above a local chord on Soret-normalised
+absorbance — so a flat or smooth pedestal cancels — the 568 nm band runs **0.087–0.213** across 106 labelled
+isopropanol fills and **0.235–0.289** across the four white-spirit fills: **no overlap on 110 fills.** Per oil
+it roughly doubles (Lugitsch 2.25×, Billa Clever 1.73×). ⛔ Not turbidity — the correlation of normalised
+turbidity with the 624 nm height across the isopropanol archive is **−0.016**, and the spirit fills are *more*
+turbid than the clearest isopropanol ones while carrying taller bands. ⚠ **The cause is unsettled**; the
+package/sieve effect predicts the opposite sign.
+
+⇒ ⭐ **`R` is not an argument for the hydrocarbon, and this correction does not touch it.** `R` is built from
+band heights against fixed anchor windows and never from a fitted peak position, so nothing above changes a
+number in §12.2. It works on the shipping solvent. What white spirit buys is that both bands become **large
+enough to measure well**, which is how the metric got noticed at all.
 
 ### ⏸ 12.7 · What has to happen before this is more than a hypothesis
 
@@ -2873,6 +2896,7 @@ finding re-derived from three independent directions in one evening, which is wh
 | one horizontal **line** + the two band **areas** above it | ⛔ 7–15 / 88, under all four ways of drawing the line |
 | the **two-species model** *inside 440–630* | ⛔ PC1 of the SNV'd red region is the **lamp**, not the oil (46 % of variance, a dipole on 608–610 nm, and it does **not** separate the classes) · ⛔ **no isosbestic point** (every class-mean crossing scores *d'* = 0.01–0.48) · ⛔ the archive cannot supply the degradation direction (within-fill drift vs the class axis, cos ≤ 0.57; the +24 h aged pair only +0.40) |
 | the Qy **peak position** by parabola | ⛔ unconstrained on a shoulder (green 626.4 ± 129.6 nm) |
+| ⭐ the pedestal's spectral **SLOPE** as a second, non-pigment channel *(2026-08-21)* | ⛔ **a CALENDAR artefact.** `[A(470–490)−A(600–620)]/A_Soret` scores **F = 32.07** between sessions against **6.97** for the turbidity level, and is non-monotone in `Q%` — so it looks like an independent axis. It splits **perfectly by date** over 12 sessions and 52 fills: **0.055–0.078** up to 2026-08-07, **0.018–0.029** from 2026-08-12 on, **no oil on both sides**. A rig-or-processing era boundary, not a property of any product. ⚠ **The near-miss is the lesson** — an unattributed channel cannot tell a rig change from an oil change (`DOC_metric_algebra.md` §1.5a). `diagnostics/pedestal_slope_era.py` |
 
 ⭐ **Kept as candidates, not pursued:** the **valley+591–597 chord** (noise-to-margin 0.24×, but it is a
 third band read disguised as a baseline — `A(600–606)/A_Soret` carries class signal at *d* = 1.23 while
