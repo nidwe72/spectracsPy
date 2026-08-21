@@ -24,6 +24,31 @@ list in build_capture_fidelity_pdf.py. It does NOT support \; — use plain spac
 *Why the Pigment Index reads about 26 % too high, where the error comes from, and what a single
 subtraction would do about it.*
 
+> ⚠⚠ **STATUS, 2026-08-21 — the metric this document corrects is no longer the verdict.** `Q%` replaced
+> the **Pigment Index** as the shipped verdict source that day (`ROADMAP.md`, *DECIDED 2026-08-21
+> (evening)*), and the Pigment Index moved to **Appendix E of `DOC_metric_algebra.md`**.
+
+<!-- ⚠ The table below must stay OUT of the block quote above: this renderer does not typeset tables
+     inside block quotes and they come out as raw pipe characters (the same trap
+     diagnostics/metric_algebra_plots.py records for 2026-08-03). -->
+
+Three consequences, and only the first is a change to anything here:
+
+| | |
+|---|---|
+| ⛔ **the gauge is retired** | `RoastBaselineGaugeView` (T = 10.6) went with `SPEC_capture_quality.md` §16.20. The corrected number is still computed and printed; it draws no pill |
+| ⭐ **nothing here is retracted** | `r_Q`'s measurement, the instrument-property claim and the whole derivation stand. ⭐⭐ **143 archived reports were produced under this correction and cannot be read without it** |
+| ⚠ **but it no longer APPLIES to what ships** | `r_Q` is defined as the pedestal's departure from *its own best-fit line*. `Q%` fits no line, so the quantity is **undefined** for it — not small. `DOC_metric_algebra.md` §E.10 is the short account of why, and of what replaced it: a *flat* pedestal now cancels in `Q%`'s numerator by construction, with no constant to measure and nothing to invalidate on a rebuild. ⚠ Only the flat component — Mie **slope** still does not cancel |
+
+⇒ **The pedestal did not stop mattering. The correction stopped applying.** It remains the largest single
+nuisance in the jar (`DOC_sample_physics.md` §5.3); what changed is which part of it survives the
+arithmetic.
+
+⚠ **One thing for Edwin to settle, not me:** this file's header comment says *"the proposal (chapter 7) is
+NOT implemented"*, while §1 records that the shipped plugin retains `T = 10.6` on the corrected metric and
+`PB_R_Q = −0.0184` is live in `DevSpectralPlugin`. One of the two is stale and the sources do not say
+which — chapter 7 may propose more than the single subtraction that shipped.
+
 **Why this document exists.** On 2026-08-01 three preparations of the same green oil returned three
 different verdict numbers — 17.12, 15.45 and 15.91 — a spread of 10.3 % on an oil that had not
 changed. Chasing that down produced a measurement of a quantity the specification had only ever
