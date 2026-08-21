@@ -2772,3 +2772,160 @@ with `W8`'s columns, read through a full clearing curve, compared at matched `A_
 | ⚠ **the bimodal green class** | Ja!Natürlich (−26) and Lugitsch (−16) sit 30 units below Kiendler / Steirerkraft / Spar ggA (+11…+19) — four corridor-widths. Real structure or a mislabel |
 | ⭐ **S1, the acid test** | pheophytinisation is acid-catalysed and irreversible. ⚠ **Run it in isopropanol** — acids barely dissociate in a de-aromatised hydrocarbon |
 
+
+
+---
+
+## ⭐⭐ 13 · THE EVENING SESSION — one axis, one rule, and what it refutes  *(2026-08-21 evening; analysis only, no rig time)*
+
+§12 chose `dQ100`. The same evening Edwin asked four questions in a row — *is `Q%` more reproducible · can
+`A_valley` be the baseline · can the two bands be compared against a local reference · can `Q%` and
+`dQ100` be combined* — and answering them on the archive produced a tighter picture than any of the
+individual answers. **The decision that came out of it is in `ROADMAP.md`'s 2026-08-21 evening block:
+`Q%` keeps the gauges, the history tracker and the verdict; `dQ100` ships as a scalar.** This section is
+the research record.
+
+⭐ The mechanism is written up for readers rather than for us in [`DOC_sample_physics.md`](DOC_sample_physics.md)
+§3.4a and [`DOC_metric_algebra.md`](DOC_metric_algebra.md) §5.8, both with the see-saw figure.
+
+**The corpus throughout**: 88 labelled isopropanol runs (55 green / 33 brown, 20 oils), recomputed from
+each report's own de-spiked trace, diffuser-IN runs and the opaque fill excluded.
+
+### ⭐⭐⭐ 13.1 There is ONE axis, and `dQ100` already reads it
+
+The measured green→brown direction in SNV space is **+0.12 at 571 nm and −0.14 at 624–626 nm** — so the
+optimal linear read available inside 440–630 nm is a positive weight on the Q band and a negative one on
+the Qy band, which is what `dQ100` computes. Correlations over the corpus:
+
+```
+   r(Q%,       dQ100) = +0.842        r(Q%_0.75,  dQ100) = +0.990
+   r(B,        dQ100) = +0.997        r(chord dQ, dQ100) = +0.984
+```
+
+⇒ ⛔ **Metric algebra inside this window has hit diminishing returns.** The variants differ in
+**conditioning, not in information**. What is left is windows, conditioning, and the clamp (§13.6).
+
+### 13.2 The two packagings, both `0 / 88` with 100 % leave-one-oil-out
+
+```
+   B     = dQ100 + 1.617 x Q%                                          T = 58.0
+   Q%_k  = 100 [ (A_Q - A_valley) - k (A_Qy - A_valley) ] / A_Soret    k = 0.75, T = 11.36
+```
+
+| | corridor | within-oil sd | within/corridor | diffuser | dose | at its own `T` |
+|---|---|---|---|---|---|---|
+| `Q%` | ⛔ −2.807 | 1.100 | — | 0.25× | 0.38× | 7 / 88 |
+| `dQ100` | +6.846 | 4.308 | 0.63× | 0.89× | 0.47× | 0 / 88 |
+| `Q%_0.75` | +2.517 | 0.717 | **0.28×** | 0.87× | 0.29× | 0 / 88 |
+| `B` | +10.136 | 4.044 | 0.40× | **0.71×** | **0.23×** | 0 / 88 |
+
+⭐ **`Q%_k` is `Q%` with a red-band term**: `k = 0` is `Q%` exactly, and anywhere in `k = 0.5 … 1.0` it goes
+from 7/88 to 0/88. It keeps `Q%`'s units and the continuity of 143 archived reports for **one new constant
+and one extra band mean**. ⚠ Whether a form clears §16.31.3a's bar is a *continuous* function of how much
+`Q%` weight it carries (`k = 0.50` and `B` pass; `k = 0.75` gives 3; `dQ100` gives 2) — it is **not** a deep
+property of `B`, and it costs ~30 % of the decision margin.
+
+⛔ **Every constant here is fitted on the corpus it is scored on.** Broad plateaus and 100 % LOO say the
+*choices* are stable; they do not make the corridors free. **`ROADMAP.md` M9 — pre-registration before the
+next rig session — is the only route from "best candidate" to "validated".**
+
+### ⭐⭐ 13.3 THE RULE — differences survive, ratios do not
+
+> **Differences of equal-width windows survive; ratios of baseline-subtracted quantities do not.**
+> Every candidate baseline in this spectrum — the valley, the trough between the bands, the flat bottom,
+> the 607 nm bump — varies **more between fills than between oils**. A difference cancels it exactly; a
+> ratio multiplies by it.
+
+⚠ **The windows must be EQUAL WIDTH**, or the baseline does not fully cancel: 20 nm against 9 nm leaves a
+residual `b × Δwidth` term (measured, r = 0.926 rather than 1.000 between the line-subtracted and the
+no-line forms).
+
+⇒ **No future candidate may divide by a locally-estimated baseline.** This is §12.8c's `R`-versus-`(3)/(2)`
+finding re-derived from three independent directions in one evening, which is why it is promoted to a rule.
+
+### ⛔ 13.4 REFUTED — so nobody re-runs them
+
+| idea | result |
+|---|---|
+| `A_valley` as the **denominator** of `dQ` | worst measured, **11 / 88**. The level swings **19×** across the archive (0.013–0.248 A) — it is the fill's pedestal, not the oil's property |
+| the 590–615 **rise** as a slope or a step | ⛔ 5–43 / 88. The 607 nm lamp line sits in the middle and the two sides behave differently |
+| the **trough** between the bands as a baseline | ⛔ **there is no trough**: the argmin pins against its own search edge in 43 / 93 runs, and with the bump excised the deepest point is a coin flip between two sides 10 nm apart (sd 5–7 nm) |
+| one horizontal **line** + the two band **areas** above it | ⛔ 7–15 / 88, under all four ways of drawing the line |
+| the **two-species model** *inside 440–630* | ⛔ PC1 of the SNV'd red region is the **lamp**, not the oil (46 % of variance, a dipole on 608–610 nm, and it does **not** separate the classes) · ⛔ **no isosbestic point** (every class-mean crossing scores *d'* = 0.01–0.48) · ⛔ the archive cannot supply the degradation direction (within-fill drift vs the class axis, cos ≤ 0.57; the +24 h aged pair only +0.40) |
+| the Qy **peak position** by parabola | ⛔ unconstrained on a shoulder (green 626.4 ± 129.6 nm) |
+
+⭐ **Kept as candidates, not pursued:** the **valley+591–597 chord** (noise-to-margin 0.24×, but it is a
+third band read disguised as a baseline — `A(600–606)/A_Soret` carries class signal at *d* = 1.23 while
+`A(623–626)/A_Soret` is the QUIETEST window in the red at *d* = 0.45); and the **red centroid** (green
+617.31 ± 0.63 nm vs brown 611.87 ± 1.39 nm, `0 / 88`, and the **best diffuser robustness measured, 0.26×**
+— but truncated at the clamp).
+
+⚠ **The 607 nm lamp line is the trap in this region.** A right-anchor scan shows a broad plateau at
+588–603 and a **cliff at 606** (corridor +15.5 → −6.9, 7/88, diffuser 2.50×). The ~1 nm de-spike does not
+remove the line (FWHM 2.7 nm).
+
+### ⭐⭐ 13.5 THE COUPLING, THE CONSERVED SUM — and a correction to §3.2's prediction
+
+Measure **both** red features the same way — height above the valley, over the Soret:
+
+| across the 20 oil means | green | brown | Cohen's *d* |
+|---|---|---|---|
+| `h(568)` | 15.80 | 20.00 | +2.78 |
+| `h(624)` | 12.78 | 7.55 | −2.28 |
+| **`h(568) + 0.68·h(624)`** | — | — | ⛔ **+0.28** — class-blind |
+| `A_Soret` — the shared denominator | 0.7522 | 0.7777 | ⛔ **+0.16** |
+
+⭐ **The coupling changes sign between the two levels**: `r(h568, h624)` is **−0.832** between oils
+(composition — the plank tips) and **+0.811** within one oil's repeat fills (amount — the plank lifts).
+A shared divisor moves both heights the *same* way, so a divisor artefact could only ever produce a
+**positive** correlation. ⇒ the negative one is chemistry.
+
+⭐ **The sum is conserved**: CV **5.4 %** across oils against 13.4 % and 30.6 % for the bands alone —
+5.7× steadier than the noisier band and unable to tell green from brown. That is an **empirical stand-in
+for an isosbestic point**, arrived at without the red extension. ⚠ The unweighted sum scores almost as
+well (CV 6.5 %), so the effect is not a knife-edge fit.
+
+⛔⛔ **AND THE CORRECTION.** §3.2 predicts that demetallation *weakens* the Soret. **We cannot see that.**
+At *d* = 0.16 across oils the Soret is class-blind on this instrument, and the small sign it carries runs
+the **other** way. Dose dominates it, and dose is not a class property. Two consequences:
+
+1. ⭐ **`Q%`'s discrimination lives in its NUMERATOR** (*d* = 1.69) and not in a ruler that shrinks for one
+   class (*d* = 0.30). Dividing by the Soret lifts *d* from 1.69 to **2.78** — it carries the nuisance and
+   none of the effect, which is exactly what a normaliser should do. **The failure mode worth fearing is
+   not present.**
+2. ⚠ **§3.2's prediction remains untested here**, and anywhere it was treated as confirmed should say so.
+   ⚠ The running pair `20270729C` / `20260731A` shows `A_Soret` 0.828 vs 0.730 (*d* = −2.77), which looks
+   like a class difference and is a **dose difference between two fills**.
+
+⇒ ⭐⭐ **It sharpens `S1`, the acid test, into a falsifiable prediction.** Not merely *"does the slope
+collapse"* but: acidify one half of a split fill and **`h(568)` must RISE, `h(624)` must FALL, and their
+SUM must stay put.** A conversion has to conserve the sum; a solvent artefact, a turbidity change or a
+dilution error would not.
+
+### ⛔⛔ 13.6 THE CLAMP IS NOW THE BINDING CONSTRAINT, not the arithmetic
+
+Four independent lines hit the same 630 nm wall in one evening:
+
+| line | how it hits the clamp |
+|---|---|
+| the red centroid | integrates to 626 nm ⇒ a truncated centroid is biased by wherever you truncate |
+| the two-species model | the chl→pheo isosbestic lives near 660–680 nm, outside |
+| valley-to-valley baselines | only ONE real valley is inside the window (500–560); the second sits ~640–660 |
+| Qy itself | read as a **shoulder**, never as a band — which is why the parabola fit is unconstrained |
+
+⇒ ROADMAP item 5's **red extension past ~660 nm** gained four arguments it did not have that morning, on
+top of `KB_spectroscopy_physics.md` §4.1's own note that the widening should be **re-costed**. ⚠ None of
+these is a metric problem.
+
+### 13.7 ⚠ The solvent, re-measured
+
+`Q%`'s white-spirit shift is **differential, not common-mode**, which is why no calibration constant fixes
+it: green Lugitsch rises **+6.71** and brown Billa Clever **+2.08**, so the class gap collapses from
+**5.85 → 1.23** (×0.21) and both oils cross `T`. `dQ100`'s gap **widens** (56.2 → 77.5). ⭐ Turbidity
+explains only ~7 % of the green shift (the archive's within-session slope predicts +0.46 against +6.71
+observed) — the rest is solvent chemistry.
+
+⚠ **Neither metric is solvent-portable in VALUE**; `dQ100` shifts *more* (+32 on Billa Clever). What
+differs is that its shifts do not cross its threshold. **Both thresholds are solvent-specific.**
+⚠ And arm A failed its own `A_valley` gate (§16.12.7f), so the direction is trustworthy and the magnitude
+is not.

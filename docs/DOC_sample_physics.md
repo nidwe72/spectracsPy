@@ -393,6 +393,102 @@ interpretation and becomes a measurement.
 > on, and it is only 10 nm wide, so it is also the noisier of the two. Recording both costs nothing (the
 > diagnostics compute both) and keeps the prediction falsifiable on the window that matters.
 
+### 3.4a ⭐⭐ The see-saw — the same mechanism, as two numbers  *(2026-08-21)*
+
+§3.3 says roasting **redistributes** oscillator strength rather than destroying it, and §3.4 says that
+shows up as a change of slope. Both are statements about a mechanism. This section is the same claim
+turned into two numbers that can be read off any spectrum we hold.
+
+Measure the two red features the **same way** — each as a height above the flat valley, scaled by the
+Soret flank, so both are concentration-free and directly comparable:
+
+```
+   h(568) = 100 x [ A(565-580) - A(500-560) ] / A(448-460)
+   h(624) = 100 x [ A(623-626) - A(500-560) ] / A(448-460)
+```
+
+Class means over the **88 labelled isopropanol runs** of the report archive (55 green / 33 brown;
+diffuser-IN runs and the opaque fill excluded):
+
+| | `h(568)` | `h(624)` | sum | half-difference |
+|---|---|---|---|---|
+| green oils | 15.80 | 12.78 | **28.58** | 1.51 |
+| brown oils | 20.00 | 7.55 | **27.55** | 6.22 |
+
+⭐ **The split changes completely; the total barely moves.** Browning adds 4.2 units at 568 nm and takes
+5.2 away at 624 nm — and the sum of the two ends stays within 3.6 % of itself. That is what a
+**conversion at roughly constant total pigment** looks like, and it is §3.3's mechanism stated as a
+measurement rather than as an inference from symmetry.
+
+![**Figure 5** — the see-saw. **Left:** the mechanism — the same plank, tipped further as the magnesium leaves. **Right:** the same thing as the numbers a metric actually uses. Each band bar is a common grey **pivot** — half the total, and nearly identical for both classes — plus a coloured cap at 568 nm and exactly the same amount taken away at 624 nm. A metric that reads one end collects one of the two class gaps; a metric built as a **difference** collects both and discards the pivot. ⚠ The "tilt" drawn here is not the shipped `dQ100`, which uses a different denominator; see the figure's own footnotes.](figures/tilt_seesaw.svg)
+
+#### ⭐ The coupling changes SIGN between the two levels — and that is the whole argument
+
+Correlating the two band heights across the archive gives opposite answers depending on what is being
+varied, and the disagreement is the point:
+
+| what varies | correlation `r(h568, h624)` | what it means |
+|---|---|---|
+| **between oils** *(20 oil means)* | **−0.832** | **which pigment** — a conversion redistributes a fixed budget, so one end rises as the other falls. The plank **tips** |
+| **within one oil's repeat fills** *(pooled)* | **+0.811** | **how much pigment**, and how the light got there — concentration, path, re-seating, turbidity all scale or offset the whole spectrum. The plank **lifts** |
+
+⭐⭐ **The sign tells you which of the two you are looking at.** Compare *different oils* and the bands move
+**apart**; compare *repeat fills of one oil* and they move **together**. Nothing else in the measurement
+separates *which pigment* from *how much pigment*, and this costs nothing to read.
+
+⭐ **It is also what shows the effect is chemistry and not arithmetic.** Both heights are divided by the
+same `A_Soret`, so it is fair to ask whether the anti-correlation is just an artefact of that shared
+division. It is not, and the reason needs no subtlety: **dividing two numbers by the same thing moves them
+the same way** — make the divisor smaller and *both* heights grow. A divisor artefact can therefore only
+ever produce a **positive** correlation. That is exactly the sign we see *within* a fill, and the opposite
+of the one we see *between* oils. One division cannot make both signs at once, so something other than the
+division is moving the bands apart.
+
+⭐ **And there is nothing in the divisor to do it with anyway** — the Soret barely differs between the
+classes:
+
+| across the 20 oil means | green | brown | Cohen's *d* |
+|---|---|---|---|
+| $A_{Soret}$ — the shared denominator | 0.7522 | 0.7777 | **+0.16** |
+| $A_{Q} - A_{valley}$ — the numerator | 0.1185 | 0.1551 | **+1.43** |
+
+⚠ **Theory says demetallation should *weaken* the Soret (§3.2). We cannot see that.** At *d* = 0.16 the
+Soret is class-blind on this instrument, and the small sign it does carry runs the other way. Dose
+dominates it, and dose is not a class property. ⇒ the shared denominator cannot be manufacturing the
+coupling in either direction — but neither is it evidence *for* the mechanism, and §3.2's prediction
+remains untested here.
+
+#### ⭐ The conserved quantity, and what it is good for
+
+If this is a conversion, some weighted sum of the two ends should be far steadier across oils than either
+end alone. Measured over the 20 oil means:
+
+| quantity | spread across oils | separates green from brown? |
+|---|---|---|
+| `h(568)` alone | CV **13.4 %** | yes, Cohen *d* = **+2.78** |
+| `h(624)` alone | CV **30.6 %** | yes, *d* = **−2.28** |
+| `h(568) + 0.68 · h(624)` | CV **5.4 %** | ⛔ **no** — *d* = **+0.28** |
+| `h(568) + h(624)` *(unweighted)* | CV **6.5 %** | — |
+
+⭐ **The individual bands carry the composition; their sum is conserved and nearly class-blind** — 5.7×
+steadier than the noisier band, and it cannot tell a green oil from a brown one. That is an **empirical
+stand-in for an isosbestic point**: a total-pigment reference that does not care how far the conversion
+has gone. ⚠ Note the unweighted sum scores almost as well as the fitted one, so the effect is not a
+knife-edge fit.
+
+⚠ **What this is and is not evidence for.** It is consistent with a two-species conversion and it is the
+clearest such signature the archive contains. It is **not** proof: oils could differ in total pigment and
+in composition in a correlated way; the 0.68 weight is fitted on the same 20 oil means it is scored on;
+and ⛔ **no true isosbestic point exists inside our 440–630 nm window** — searched for and not found, which
+is itself expected if the chlorophyll→pheophytin isosbestic lies near 660–680 nm, outside the clamp.
+
+⭐⭐ **It sharpens §3.4's acid experiment into a falsifiable prediction.** That run was specified as
+*"does the 600–630 slope collapse in the acidified half?"* — a directional check. The see-saw says more
+than direction: acidify one half of a split fill and **`h(568)` must RISE, `h(624)` must FALL, and their
+SUM must stay put.** A conversion has to conserve the sum; a solvent artefact, a turbidity change or a
+dilution error would not. Same bottle, same turbidity, one variable — and now three predictions instead
+of one.
+
 ### 3.5 The carotenoids
 
 The second pigment family is the **carotenoids** — β-carotene, lutein and relatives. These are long

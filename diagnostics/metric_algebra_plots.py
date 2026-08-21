@@ -48,8 +48,24 @@ def meanLine(paths):
     return fits.mean(axis=0)
 
 
-def shade(axis, label=True):
+def shippedWindows():
+    """The windows the SHIPPED metrics read — taken from the plugin so the figure cannot drift from
+    the code (same principle as the Soret caption below). `Q%` reads the first three; `dQ100` the last two."""
+    return ((plugin.V_SORET_BAND, "#4a6fd0", "Soret\n%g–%g" % plugin.V_SORET_BAND),
+            (plugin.V_VALLEY_BAND, "#3f7d3f", "valley\n%g–%g" % plugin.V_VALLEY_BAND),
+            (plugin.V_Q_BAND, "#c04a4a", "Q\n%g–%g" % plugin.V_Q_BAND),
+            ((623.0, 626.0), "#8d5524", "Qy\n623–626"))
+
+
+def shade(axis, label=True, shipped=False):
     bottom, top = axis.get_ylim()
+    if shipped:
+        for (lo, hi), colour, name in shippedWindows():
+            axis.axvspan(lo, hi, color=colour, alpha=0.15, lw=0)
+            if label:
+                axis.text((lo + hi) / 2, bottom + 0.035 * (top - bottom), name, ha="center", va="bottom",
+                          fontsize=7.5, color="#444")
+        return
     # ⚠ The Soret caption is DERIVED from the constant, not typed (SPEC_soret_448_trim.md §3): the window moved
     # 440-460 -> 448-460 on 2026-08-10, and a hardcoded label would have kept saying 440-460 over a shaded band
     # that had moved. ⚠ The figures COMMITTED under docs/figures/ (and the published Spectracs_MetricAlgebra.pdf)
@@ -76,20 +92,18 @@ def main():
     for axis, limit in zip(axes, ((0, 2.25), (0.03, 0.30))):
         axis.plot(lam, green, color=GREEN_COLOUR, lw=1.6, label="green oil (20270729C, mean of 6)")
         axis.plot(lam, brown, color=BROWN_COLOUR, lw=1.6, label="brown oil (20260731A, mean of 6)")
-        axis.plot(lam, greenLine[0] * lam + greenLine[1], color=GREEN_COLOUR, lw=1.1, ls="--",
-                  label="fitted baseline (green)")
-        axis.plot(lam, brownLine[0] * lam + brownLine[1], color=BROWN_COLOUR, lw=1.1, ls="--",
-                  label="fitted baseline (brown)")
+        # ⛔ NO FITTED BASELINE HERE (2026-08-21). The dashed lines this figure used to carry belong to
+        # the Pigment Index, which is now Appendix E; drawing them beside chapter 4's windows implied the
+        # shipped metric subtracts something, and it subtracts nothing.
         axis.set_ylim(*limit)
-        shade(axis, label=limit[1] < 1)          # label the magnified row only — the top row has no room
+        shade(axis, label=limit[1] < 1, shipped=True)
         axis.set_ylabel("absorbance A")
         axis.grid(alpha=0.25, lw=0.5)
-    axes[0].set_title("A(λ), de-spiked — the four windows and the baseline fitted through two of them",
-                      fontsize=10.5)
+    axes[0].set_title("A(λ), de-spiked — the windows the shipped metrics read. No baseline is fitted "
+                      "and none is subtracted.", fontsize=10.5)
     axes[0].legend(fontsize=8, loc="upper right", framealpha=0.95)
-    axes[1].set_title("same curves, magnified onto the weak-absorbance region — no part of this "
-                      "window is signal-free (note the ~473 and ~607 nm lamp lines, both now OUTSIDE "
-                      "every window the metric reads)", fontsize=8.4)
+    axes[1].set_title("magnified onto the weak-absorbance region — no part of it is signal-free "
+                      "(the ~473 and ~607 nm lamp lines sit OUTSIDE every shipped window)", fontsize=8.6)
     axes[1].set_xlabel("wavelength (nm)")
     figure.tight_layout()
     figure.savefig(os.path.join(OUT, "metric_algebra_bands.png"), dpi=170)
