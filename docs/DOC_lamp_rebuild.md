@@ -315,6 +315,43 @@ is baffling and blackening. Steps hold ⇒ the reduction's channel handling.
 ⚠ **Fix this before the lamp.** It costs no hardware and it is the largest defect in the stored
 spectra. §9.5 and Figure 8 are how.
 
+### ⭐⭐ 6.1 What the ~583 nm step COSTS — it is inside the shipped `A_Q` window  *(2026-08-21)*
+
+⛔⛔ **The step is not merely a cosmetic level shift; the shipped metric averages across it.** `V`'s
+`A_Q` window is **565–580 nm** and it **ends exactly on the step's near side.** Measured on the raw
+REFERENCE trace of four runs spanning both solvents and both rig eras, each normalised to its own 574 nm
+value:
+
+```
+    nm       580     581     582      the reference falls to a MINIMUM at 581 and
+    LUG sp  0.635   0.603   0.741     then jumps +17 %/nm. Identical in all four
+    BC  sp  0.636   0.609   0.759     runs — a property of the instrument, not the
+    LUG ipa 0.636   0.611   0.765     sample, and unchanged by a solvent swap.
+    BC  ipa 0.635   0.598   0.742
+```
+
+⇒ the 574–580 half of `A_Q` is the **ramp into that minimum**, i.e. the dimmest, noisiest stretch in the
+region, and what survives in `A` is the residual of `R` and `S` failing to cancel across the handover.
+
+⭐⭐ **Three consequences, all measured** (`SPEC_capture_quality.md` §16.12.7f):
+
+1. **`Pigment D_Q` has been finding the ramp, not the pigment.** Across **110 labelled isopropanol runs**
+   its maximum lands at 577–581 nm — the search-window edge — in **93 %** of them. In the four white-spirit
+   runs, where the real 568 nm band grows large enough to beat the artifact, it lands at **567–568 nm in
+   100 %**. ⇒ the band is real in both solvents; in isopropanol the instrument feature is simply **bigger
+   than it**.
+2. **The ratio ④/③ (580 above chord ÷ 568 above chord) is 1.23–1.53 in isopropanol and 0.70–0.90 in white
+   spirit.** ⛔ It also separates the two oils — because ④'s height is instrument **×** sample, not
+   instrument alone. Any metric touching 574–580 is riding that interaction term, and it will move with any
+   optics change.
+3. ⚠ **But trimming `A_Q` off the step does NOT rescue `Q%`** — measured, not assumed. Windows 563–573,
+   562–575 and 565–575 all leave the green/brown classes overlapping and make Cohen's *d* slightly **worse**
+   (2.78 → 2.33–2.45). ⇒ **do not re-tune `V`'s windows on the strength of this finding.**
+
+⭐ **`dQ100`'s windows were chosen to avoid the step entirely** — 563–573 and 623–626, with the 612–615
+anchor clear of the 611 nm crossover. `SPEC_metric_research.md` §12.8/§12.9. The 2 628-pair search's own
+winner sits at **574/626**, i.e. it prefers the artifact; §12.9 rejects it for exactly that reason.
+
 ---
 
 ## 7 · What must be re-derived after the swap

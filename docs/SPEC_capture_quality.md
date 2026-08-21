@@ -4498,6 +4498,14 @@ spec and `SPEC_capability_proof.md` §7.3 — recorded at the end, because it ma
 > after 24 h that same fill misclassifies as brown on 3 of 3 runs, because the pigment has demetallated in
 > the solvent. The hour itself has never been tested from either side — §16.11.17 pre-registers the run
 > that would bound it.
+>
+> ⭐⭐ **REVISED A SECOND TIME, 2026-08-21 — the binding requirement is DARK, not FAST.** §16.11.16 item 3
+> adds light dose as a fourth confound on set A, and `SPEC_settled_measurement.md` §39.1 shows the effect is
+> worth ~1.3 units on its own while a dark-kept pair agrees to 0.026. ⇒ **P6′ (§39.6) — amber glass, foil or
+> a drawer, from the moment the aliquot is drawn — is a container problem, and it is cheaper and far better
+> evidenced than a clock.** ⚠ The words "measured within the hour" stay, because the **DARK ageing rate has
+> never been measured either**: no run on disk separates elapsed time from light dose. One foil-wrapped vial
+> read at 0 / 4 h / 1 d / 3 d / 7 d would settle it, and it is on the roadmap as **S2**.
 
 #### Check 1 — CV tracks 1/A_Q, so a weaker dilution costs precision
 
@@ -4710,6 +4718,20 @@ the reason attached to them changes.
    tested from either side.
 2. **It is confounded.** Set A is aged **and** at 55 % concentration **and** n = 3. The −17 % / +14 % split
    is concentration-free and survives that, but its *size* is one sample of one fill.
+3. ⛔⛔ **AND THERE IS A FOURTH CONFOUND THIS SECTION NEVER LISTED — LIGHT DOSE** *(added 2026-08-21, Edwin:
+   "the oil that got worse got worse as it was in the transparent jar")*. The mechanism paragraph above
+   attributes the browning to *"left standing 24 hours **at room temperature**"* — time and temperature,
+   with no light term. **It was written 2026-08-03, before the project measured light.**
+   `SPEC_capture_quality.md` §16.36 has since established that **heat CLEARS (reversibly) and light BROWNS
+   (irreversibly)**, and `SPEC_settled_measurement.md` §39.1 measured it directly on three aliquot pairs
+   read at matched turbidity: the two light-exposed pairs disagree by **+1.343** and **+0.742**, the one
+   *"drawn simultaneously and kept in the dark"* by **−0.026**. §39.6 then withdrew the pour hypothesis
+   outright and replaced it with **P6′ — every aliquot stays in the dark from the moment it is drawn until
+   it enters the holder.**
+   ⇒ ⭐ **set A stood 24 h in a TRANSPARENT jar, so its dose was a light dose, not merely elapsed time.**
+   That does not overturn §16.11.16's finding — the oil really had got browner, and the −17 % / +14 % split
+   still names demetallation — but it **re-attributes the driver**, and it changes the protocol rule that
+   follows from it: see the note on §16.11.15's working-window diagram.
 3. **The driver is unidentified.** Time, light exposure under the lamp, dissolved oxygen and the solvent's
    own water content all co-vary over 24 h on a bench. Nothing here separates them.
 4. **⛔ It says nothing about the OIL in its bottle.** This is the *dilution* ageing in isopropanol over a
@@ -5556,9 +5578,164 @@ lingers longer than IPA's even though there is less of it.
 
 #### ⏸ STATUS
 
+> ✅ **RAN 2026-08-20/21 — the results are §16.12.7f, and arm A fails the gate below.** Only arm A
+> ran, without GATE 0/1/2; arms B and C are still owed.
+
 ⭐ **Hardware bought, experiment specified, nothing run.** The decision this session can reach is *"the
 hydrocarbon is worth adopting / is not"* — ⛔ **not** *"the hydrocarbon is adopted"*, which needs the threshold
 work, the vessel qualified on leaks, and a re-derived §16.7 behind it.
+
+### ⭐⭐ 16.12.7f THE THURSDAY SESSION, AS RUN — arm A fails its own gate, and the session finds something else instead  *(Edwin 2026-08-20/21, four measurements; RESULTS against §16.12.7e's pre-registration)*
+
+⭐ **The session ran.** Two oils, de-aromatised white spirit, four measurements through the bench monitor at
+`Frames = 60`, all four carrying an embedded `workflow.json`:
+
+| | folder | fills |
+|---|---|---|
+| **Lugitsch A** | `tmp/20260821LugitschA` | `001` = first 4 mL, `002` = second 4 mL of one 8 mL dilution |
+| **Billa Clever** | `tmp/20260821BillaCleverA` | `001` = first 4 mL, `002` = second 4 mL of one 8 mL dilution |
+
+⛔⛔ **FIRST, A CORRECTION TO OUR OWN LANGUAGE, because it was wrong in the first reading of this session.**
+The archive is **not** "neat oil". §16.23 is the shipping recipe — **two 60 µL capillaries into 10 mL of
+isopropanol** — so every comparison below is **IPA against white spirit**, two solvents, not solvent against
+none. Any sentence anywhere that calls the archive "neat" means "the isopropanol route".
+
+#### ⛔ WHAT DID NOT RUN — read this before any number below
+
+| pre-registered | status |
+|---|---|
+| **GATE 0** · vessel argued on leaks | ⚠ **not recorded.** The absorbances sit in the archive's own range (`A_Soret` 0.70–0.99), which is consistent with the existing jar at its 1.3 cm path — but that is an *inference from the data*, not a note from the bench. ⛔ Edwin must confirm which vessel was in the beam |
+| **GATE 1** · path length, seating, wall with a ruler | ⚠ **not recorded** |
+| **GATE 2** · solvent blank first, same bottle | ⚠ **not recorded.** ⛔ This one bites: without it, the +2.1/+6.7 level shift below cannot be split between the solvent, the blank and §16.7's reopened focal plane |
+| **Arm A** · clarity | ✅ **ran**, four fills |
+| **Arm B** · dilution series 1× / 0.5× / 0.25× in both solvents | ⛔ **not run** — so **dilution-invariance in the hydrocarbon is still untested**, and it is the arm that can refuse the solvent outright |
+| **Arm C** · 10 untouched + 10 re-seated | ⛔ **not run** — §16.12.7e calls it *"the cheapest and the most decisive"*, and it is still owed |
+
+⇒ ⭐ **One arm of three, without its gates.** Everything below is read at that weight.
+
+#### ⛔⛔ ARM A — IT FAILS THE PRE-REGISTERED GATE, ON BOTH OILS
+
+§16.12.7e wrote the criterion down in advance: *"⭐ CLEAR — `A_valley` ~ 0.08 flat from row 1, branch
+`arrived-clear`"*. That 0.08 is the **isopropanol** figure. Measured:
+
+| | `A_valley` at the read | IPA archive, same oil | branch |
+|---|---|---|---|
+| Lugitsch `001` | **0.1428** | 0.069 – 0.105 | `arrived-clear` |
+| Lugitsch `002` | **0.1217** | " | `was-clearing` |
+| Billa Clever `001` | **0.2647** | 0.092 – 0.208 | `arrived-clear` |
+| Billa Clever `002` | **0.1554** | " | `arrived-clear` |
+
+⛔ **`A_valley` did not fall to 0.08. It ROSE, on both oils** — Lugitsch by ~1.6×, and Billa Clever `001` to
+**0.2647, the highest value in the entire archive outside the opaque `20280819BillaClever/003` fill.**
+By the letter of the pre-registration this is **⚠ PARTIAL at best and ⛔ CLOUDY for Billa Clever `001`.**
+
+⚠ **AND THE GATE ITSELF IS CONFOUNDED — which is a finding, not an excuse.** `A_valley` is 500–560 nm
+absorbance; it is turbidity **plus the pigment's own absorbance there**. This session measured that the
+solvent moves the second term hard: at a *matched* Soret loading (`20280819BillaClever/002` `A448` = 1.458
+against `20260821BillaCleverA/002` `A448` = 1.379; Lugitsch `20260817LigitschA/002` `A448` = 1.412 against
+`20260821LugitschA/001` `A448` = 1.410) the white-spirit spectrum carries **~1.5–2.0× the absorbance
+everywhere from 500 to 630 nm**. ⇒ **a raised `A_valley` in a new solvent cannot be read as turbidity**, and
+§16.12.7e's arm-A gate is not readable as written. ⛔ It needs re-specifying before the arm is re-run.
+
+⭐ **The solvent-independent half of the gate is the TIME COURSE, and it still reads:**
+
+```
+                clearingObserved   what the monitor saw
+ Lugitsch 001      -0.0081         valley flat/rising from row 1 -> nothing to clear
+ Lugitsch 002      -0.0178         a real V-shape, DEGRADING_FILL, vertex at 91 s
+ Billa 001         +0.0455         valley FELL through the whole run -> still clearing at the read
+ Billa 002         +0.0120         nearly flat
+```
+
+⇒ ⭐ **Lugitsch arrives clear in white spirit; Billa Clever does not.** That matches Edwin's eye
+(*"dissolves rather perfect"* / *"rather imperfect"*) and it is the one part of arm A that survives the
+confound.
+
+#### ⭐⭐ THE UNPLANNED ARM — the pour repeat, and it is the session's best result
+
+Neither oil's pair was pre-registered as an experiment; both are **first 4 mL vs second 4 mL of one
+dilution**, which is exactly §36.2's *pour* variable. Fitting one fill's spectrum against the other over
+490–630 nm:
+
+```
+ Lugitsch     A_001 = 1.1590 * A_002 + 0.0052      resid 0.0059    <- pure SCALE, no pedestal
+ Billa Clever A_001 = 1.1631 * A_002 + 0.0776      resid 0.0160    <- scale + a FLAT PEDESTAL
+```
+
+⭐⭐ **The multiplicative term is the same in both sessions (1.159 / 1.163)** — capillary 1 is consistently
+~16 % thicker than capillary 2, which is a property of the pair of vessels and not of either oil. **The only
+thing that differs between the two oils is the additive term**, and on Billa Clever it is **+0.078 A, flat
+from 490 to 630 nm**: `A_001 − A_002` sits at +0.10…+0.14 across the whole range while the *ratio* swings
+1.17 → 1.80. A constant **difference**, not a constant ratio ⇒ broad wavelength-flat extinction — suspended
+material. **That is Edwin's "imperfect" made into a number.**
+
+⭐ And on Lugitsch the pedestal is **0.005 — nothing.** A pure-scale model fits as well as the affine one
+(0.0061 vs 0.0059). ⇒ **in white spirit, Lugitsch's first→second pour term, which cost `+0.444` and `+0.803`
+in isopropanol (§36.2), is `−0.166`** — three to five times smaller and of the opposite sign. A homogeneous
+solution has no supernatant to stratify. ⚠ Two fills, one oil, one evening.
+
+#### ⛔ THE LEVEL MOVES, AND IT MOVES BY DIFFERENT AMOUNTS PER OIL
+
+| oil | IPA | white spirit | shift |
+|---|---|---|---|
+| Lugitsch A | 13.997 ± 0.377 *(n=7)* | 20.706 ± 0.118 *(n=2)* | **+6.71** = 18 σ |
+| Billa Clever | 19.847 ± 0.699 *(n=6)* | 21.935 ± 0.146 *(n=2)* | **+2.09** |
+
+⛔ **`Q%` is not portable across the solvent**, and not by a constant either — pooled across both routes the
+two oils' ranges **overlap** (Lugitsch-in-spirit 20.62–20.79 sits inside Billa-in-IPA 18.99–20.99). ⚠ It is
+not a nonlinearity: at *matched* `A448` (1.412 vs 1.410) the two Lugitsch spectra still differ by 6.7 units.
+⚠ It is not the reference either: lamp shape `R567/R530` is 0.583–0.610 in IPA against 0.580/0.592 in spirit,
+and `R448/R530` differs by 6.5 %, worth at most +0.75 units. **The change is in the sample.**
+
+⭐ **This is exactly what §16.12.7e's "WHAT MUST NOT HAPPEN" anticipated** — `T = 18.6`, the 12–22 domain and
+the Ampel are **not** re-derived here, and this section does not propose to. A route that moves the metric by
+18 σ needs its own threshold work, behind a blank, a ruler and arms B and C.
+
+#### ⭐⭐⭐ WHAT THE SESSION ACTUALLY FOUND — two bands the isopropanol route never resolves
+
+Edwin marked two peaks on the white-spirit trace. They are at **568 nm** and **~624 nm**, and their positions
+repeat to a fraction of a nm across all four fills (567.2 / 567.5 / 567.8 / 567.8 and 622.8 / 623.2 / 624.8 /
+625.0). Across the whole archive:
+
+| | n | maximum found at ≤ 627 nm | median position |
+|---|---|---|---|
+| labelled **isopropanol** runs | 110 | **7 %** | 628.8 nm |
+| **white spirit** runs | 4 | **100 %** | 624.0 nm |
+
+⚠ **The clamp ends at 630**, so "628.8" means *at or beyond the clamp edge*, **not** "there is no band". The
+defensible statement is that **the 624 nm band's maximum sits ≥ 5 nm bluer in white spirit**, which is what
+brings it inside the measurable window at all. The same happens at 568: in every isopropanol run
+`Pigment D_Q` pins at the 577–581 nm window edge; in all four spirit runs it is an interior peak at 567–568.
+
+⇒ ⭐⭐ **The ratio of those two peak heights separates green from brown across 85 archived runs where `Q%`
+overlaps, and it survives both the rig rebuild and this solvent change.** That work is
+**`SPEC_metric_research.md` §12**, not here. ⛔ It does not adopt the hydrocarbon: the metric works on the
+isopropanol archive too. What white spirit buys is that both bands become *resolvable*.
+
+#### ⏸ STATUS — what this session may and may not conclude
+
+| | |
+|---|---|
+| ✅ | Lugitsch **arrives clear** in white spirit; Billa Clever does not |
+| ✅ | the **pour term collapses** on the oil that dissolves — `−0.166` against IPA's `+0.44 … +0.80` |
+| ✅ | a **flat +0.078 A pedestal** is what "imperfect dissolution" looks like in a spectrum |
+| ✅ | the **568 and 624 nm bands become resolved peaks** — the session's most valuable result |
+| ⛔ | **arm A fails its pre-registered `A_valley` gate**, and the gate is confounded and needs re-specifying |
+| ⛔ | **dilution-invariance in the hydrocarbon is UNTESTED** — arm B never ran, and it can still refuse the solvent |
+| ⛔ | **arm C never ran** — the 0.063 / 0.70 question §16.12.7d raised is exactly as open as it was |
+| ⛔ | **no blank, no ruler, no vessel note** — the level shift cannot be attributed |
+| ⛔ | **the shipping solvent does not change.** Isopropanol ships |
+
+⚠ **AND ONE RULE OF §16.12.7e WAS BENT — deliberately, and it is flagged rather than assumed forgiven.**
+The pre-registration says *"⛔ the 143-report archive is not reprocessed."* It **was** reprocessed, by
+`diagnostics/peak_ratio_archive.py`, to test the new peak ratio. ⭐ The letter of that rule is about
+**re-running old files under new constants** — no shipped constant was touched, no archived verdict was
+restated, and `Q%` was only recomputed as a like-for-like control. ⛔ But the rule did not carve that
+exception out, so **Edwin rules on it**, not this section.
+
+⇒ ⭐ **Re-run the session properly**: GATE 0/1/2 first, a fresh Billa Clever dilution, then arms B and C.
+⚠ And re-specify arm A's gate before doing so — `A_valley` alone cannot answer "is it clear?" across a
+solvent change, now that we know the solvent moves the pigment's own 500–630 absorbance by 1.5–2.0×.
 
 ### 16.12.8 The container problem is DOWNSTREAM of the solvent — do not buy anything yet
 

@@ -8347,3 +8347,165 @@ first.
 | ⏸ **the stale sealed row** | §51.0 — Edwin's call |
 | ⏸ **T0 / T1** | the 20 minutes is provisional, and every constant still rests on four clean fills of one oil on one evening |
 | ⛔ **not built, by decision** | W5 (§43/RD10) · W6 (§43/RD5) · the hunt window · κ · θ_rel · C3-as-verdict · the history tracker |
+
+---
+
+## ⭐⭐ 52 · THE WHITE-SPIRIT SESSION, READ AS A TEST OF THE GATE — and it finds a failure mode the gate cannot see  *(Edwin 2026-08-20/21, four measurements; `SPEC_capture_quality.md` §16.12.7f is the solvent half)*
+
+§16.12.7e ended with a claim about this subsystem: *"if the hydrocarbon works, the settling subsystem's last
+job is to prove itself unnecessary."* Four fills ran. ⛔ **It did not prove itself unnecessary. It proved it
+has a blind spot**, and this section is that.
+
+⚠ **Language first**, because §51 and everything before it got it wrong for two days: the archive is **oil in
+isopropanol** (§16.23 — two 60 µL capillaries into 10 mL), not neat oil. Every "IPA" below is the shipping
+route; every "spirit" is the new one.
+
+### ⭐ 52.1 · THE FOUR RUNS, AS THE MONITOR SAW THEM
+
+| run | outcome | read | `Q%` | `A_valley` at read | browning /min |
+|---|---|---|---|---|---|
+| Lugitsch `001` | `SETTLED_IMMEDIATE` | `FIRST_SETTLED_WINDOW`, t = 6.1 s | 20.789 | 0.1428 | 0.114 |
+| Lugitsch `002` | `DEGRADING_FILL` | `VERTEX`, t = 91.0 s, depth 0.344 | 20.623 | 0.1217 | 0.066 |
+| Billa `001` | `SETTLED_IMMEDIATE` | `FIRST_SETTLED_WINDOW`, t = 6.7 s | 21.832 | **0.2647** | 0.400 |
+| Billa `002` | `SETTLED_IMMEDIATE` | `FIRST_SETTLED_WINDOW`, t = 6.8 s | 22.038 | 0.1554 | 0.217 |
+
+⭐ **§31's TEST C machinery fired correctly on Lugitsch `002`** — four `gate held` notes on a rising
+`A_valley`, then the coarsening warning, then `DEGRADING_FILL` with a vertex read and *"a fresh dilution is
+needed"*. ⭐ **The read rule was right on all four**, and `clearing-3.0` needed no change.
+
+### ⛔⛔ 52.2 · THE BLIND SPOT — a turbid, still-clearing fill is classed `arrived-clear`
+
+Billa `001` was read at **t = 6.7 s, its most turbid moment**, on the `arrived-clear` branch, while
+`A_valley` was **still falling** (0.2647 → 0.2526 over 140 s, `clearingObserved` **+0.0455**). Its
+`A_valley` of **0.2647 is the highest in the whole archive** outside the opaque `20280819BillaClever/003`.
+
+⛔ **The gate could not see it, and the reason is structural: `Q%` is pedestal-blind by construction.** A
+flat pedestal `b` cancels exactly in `V`'s numerator, `(A_Q + b) − (A_valley + b)`. The monitor watches
+`Q%`. ⇒ **a fill can be as turbid as you like and still look "arrived-clear" to the monitor**, provided the
+turbidity is grey. §31's TEST C only catches `A_valley` **rising**; here it was *falling*, from a start that
+should have been refused outright. **There is no absolute `A_valley` ceiling anywhere in the gate.**
+
+⇒ ⭐⭐ **This is the evidence §42's W3 was spec'd on, and it promotes W3 from an improvement to a
+prerequisite.** The threshold suggests itself from the data: every clean fill on record sits at
+`A_valley ≤ 0.21`; this one sat at 0.2647. ⛔ W3 must be an **absolute** refusal, not another rate test.
+
+### ⛔ 52.3 · WHY THE `Q%` AGREEMENT ON BILLA CLEVER IS LUCK, NOT ROBUSTNESS
+
+The two Billa fills agree to **0.206** — better than that oil's own IPA fill-to-fill sd of 0.699. ⛔ **Do not
+read that as the metric surviving the bad fill.** Fitting one spectrum against the other over 490–630 nm:
+
+```
+ A_001 = 1.1631 * A_002 + 0.0776       resid 0.0160     <- a FLAT pedestal of +0.078 A
+```
+
+Two large errors cancelled:
+
+| | |
+|---|---|
+| the pedestal cancels in `V`'s **numerator** and survives only in the **denominator**, inflating `A_Soret` by +0.078 | `Q%` depressed ~8 % — **remove it and `001` reads 23.71, not 21.85** |
+| working against it, `001`'s Soret is **compressed** — the affine fit predicts `A_Soret` 0.9893, measured **0.9295** — because `A448` = 1.671 is into the nonlinear top of the range | `Q%` inflated |
+
++0.078 and −0.060 leave 0.018 on a ~0.99 denominator. ⇒ **the 0.206 is the residue of two errors an order of
+magnitude larger.** A turbid fill that had *not* also saturated the Soret would have read ~1.9 units out.
+
+⭐ **What did report the damage honestly**, on the same pair: `Greenness G` 0.891 vs 1.330 (+49 %), `Pigment
+ratio · clarity` 3.687 vs 5.291 (+43 %), `Clarity A_green` 0.268 vs 0.158 (−41 %), `Intrinsic` hue 286° vs
+297°. ⇒ ⛔ **`Q%` agreement is not a fill-quality check. `A_valley` and `Pigment ratio · clarity` both
+flagged this pair loudly; `Q%` did not.**
+
+⚠ **And the contrast with Lugitsch is the cleanest thing in the session:**
+
+```
+ Lugitsch     A_001 = 1.1590 * A_002 + 0.0052      resid 0.0059    <- pure SCALE
+ Billa Clever A_001 = 1.1631 * A_002 + 0.0776      resid 0.0160    <- scale + pedestal
+```
+
+Same multiplicative term (1.159 / 1.163 — the two capillaries differ by ~16 %, a property of the vessels).
+**The pedestal is the whole difference between "dissolves perfectly" and "dissolves imperfectly."**
+
+### ⭐ 52.4 · THE DOMAIN GUARD FIRED, ON REAL DATA, FOR THE SECOND TIME
+
+Billa `002` printed **no `Verdict · Q%` pill at all.** Its 22.038 is past
+`DevSpectralPlugin.V_VERDICT_BAND = (12.0, 22.0)`, so `DevSpectralPlugin.py:2210` withheld it — numbers and
+plot intact, verdict withheld, exactly as §51's comment says it should. ⭐ **After the 8.45 case, this is the
+second time the guard has caught a real run**, and the first time it caught one for being too *high*.
+
+⇒ ⚠ **It also says the white-spirit route pushes this oil out the top of the metric's declared scale.** The
+band was drawn on the isopropanol corpus. ⛔ Not a reason to widen it — a reason not to read `Q%` across a
+solvent change at all (§16.12.7f).
+
+### ⚠ 52.5 · THE POUR, IN THE OTHER SOLVENT
+
+Both pairs are **first 4 mL vs second 4 mL of one dilution** — §36.2's pour variable, unplanned.
+
+| | first → second pour |
+|---|---|
+| isopropanol, stock 1 (§36.2) | **+0.444** |
+| isopropanol, stock 2 (§36.2) | **+0.803** |
+| **white spirit, Lugitsch** | **−0.166** |
+| **white spirit, Billa Clever** | +0.206 ⚠ *(and §52.3 says this number means nothing)* |
+
+⭐ **On the oil that dissolves, the pour term collapses and flips sign** — consistent with §36.2's own
+reading that the second pour drags a heavier settled fraction, which a true solution does not have. ⛔ **Two
+fills, one oil, one evening. This does not retire P6.** §36.2's requirement that two fills are comparable
+only from the same pour position stands until a designed repeat says otherwise.
+
+### ⏸ 52.6 · WHAT THIS ADDS TO THE OWED LIST
+
+| | |
+|---|---|
+| ⭐⭐ **W3 becomes a prerequisite** | an **absolute** `A_valley` ceiling, not a rate test. Clean fills ≤ 0.21; this one 0.2647 |
+| ⭐⭐ **W8 — NEW, 2026-08-21** | record `A(563–573)` and `A(623–626)` as `MONITOR_COLUMNS`. ⛔ **Prerequisite** for anything `dQ100`-shaped and ⛔ **not retroactive** — see §52.7 |
+| ⚠ **re-specify §16.12.7e's arm-A gate** | `A_valley` alone cannot answer "is it clear?" across a solvent change — the solvent moves the pigment's own 500–630 absorbance 1.5–2.0× (§16.12.7f) |
+| ⚠ **a fill-quality check that is not `Q%`** | `Pigment ratio · clarity` and `A_valley` both worked here; `Q%` did not |
+| ⛔ **unchanged** | `clearing-3.0` read all four runs correctly and needs no edit |
+| ⏸ **still owed from §51** | the rig click-through, the stale sealed row, T0/T1 |
+
+### ⭐⭐ 52.7 · WHAT THE METRIC DECISION OF 2026-08-21 DOES TO THIS SUBSYSTEM — and it is less than it looks
+
+`dQ100` replaced `Q%` as the main metric that day (`SPEC_metric_research.md` §12.8, roadmap *DECIDED
+2026-08-21*). The obvious next move is to repoint `ClearingEvaluator` at it. ⛔ **Do not, yet.**
+
+#### ⛔ 52.7a · No `dQ100` settling curve has ever been observed
+
+`MONITOR_COLUMNS` carries `qPercent · soret(448–460) · valley(500–560) · qBand(565–580)`. **Neither
+`A(563–573)` nor `A(623–626)` exists in any run ever taken**, and `qBand`'s window is the wrong one — it
+straddles the 581 nm crossover (`DOC_lamp_rebuild.md` §6.1). ⇒ `dQ100` **cannot be reconstructed from a
+`MonitorRecord`**, not for the 2026-08-21 runs and not for anything in the archive.
+
+⇒ **W8 is a prerequisite, and it is not retroactive.** Every run taken before it lands is permanently
+un-analysable for `dQ` trajectories. ⚠ It should go in **before the next lab session**, or that session's
+runs will be as un-analysable as this one's.
+
+#### ⚠ 52.7b · Theory and evidence disagree about what that curve looks like
+
+| | |
+|---|---|
+| **theory says** | `dQ100`'s numerator is a difference, so a flat pedestal cancels, and `sd` is offset-blind ⇒ **clearing is invisible to it** ⇒ flat, then rising as the 624 band collapses ⇒ **no minimum**, the first look is the answer, and §40's drawdown, §41's `D2`, the hunt and the vertex read are all simply **inapplicable** |
+| **the data said** | per-session correlations against `A_valley` as high as `r = −0.94` ⇒ it may well **have** a clearing limb |
+
+⭐ **R1 has since weakened the second column considerably** (§12.11): the pooled *within-session* turbidity
+coefficient is only **−21.4 with `r = −0.13`**, and the per-session slopes scatter from −718 to +75 — a
+large `r` on six points with a small real slope. ⛔ But "weakened" is not "measured": R1 is cross-sectional,
+and **nobody has watched `dQ100` move through a clearing curve.**
+
+⇒ **W8 plus ONE monitored fill (roadmap R2) decides it**, and it is the *designed* version of R1:
+
+```
+   flat-then-rising  ->  read the FIRST look; do not apply the vertex machinery to dQ.
+                         ⭐ NOTHING IS DELETED — Q% keeps its gate and its rules.
+   V-shaped          ->  the existing vertex / drawdown rules transfer UNCHANGED;
+                         only the column the evaluator reads changes.
+```
+
+#### ⭐ 52.7c · What does NOT change
+
+- **`Q%` keeps driving the gate.** §51 shipped it, 511 tests are green, and §52.1 shows `clearing-3.0` read
+  all four white-spirit runs correctly. ⛔ No read-rule edit is implied by the metric decision.
+- **`Q%` keeps its `MonitorRecord` column and its metric row.** It loses only its **gauge** — the report
+  must never show two verdict pills that contradict each other, and on the Spar session they disagree on 5
+  of 6 runs (`SPEC_metric_research.md` §12.2).
+- **W3 is metric-independent.** It refuses a fill that should not be measured at all, whichever number is
+  read off it — and §52.3 shows it is `R` and `(3)/(2)` that the turbid fill would have destroyed, not
+  `Q%` or `dQ100`. That is an argument for the ceiling, not against it: we cannot know in advance which
+  metric a stored run will later be re-analysed with.

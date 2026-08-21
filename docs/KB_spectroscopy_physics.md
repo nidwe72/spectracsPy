@@ -165,8 +165,21 @@ wrong band position and **should be corrected before the virtual device is used 
 | feature | centre | our measurement window | |
 |---|---|---|---|
 | **Soret** | **~432 nm** | 448–460 nm | ⚠ **16–28 nm above the peak — we measure the flank** |
-| **Q band** | ~574 nm | 560–580 nm | ✓ contains it (§3.6 resolves the peak at ≈ 574) |
+| **Q band** | ⛔ ~~~574 nm~~ → **~568 nm** | 560–580 nm | ⚠ contains it — but see the correction below |
 | **Qy** | **~623–626 nm** | 620–630 nm | ⚠ contains it — but that window is used as a **baseline anchor** |
+
+> ⛔⛔ **CORRECTION 2026-08-21 — the Q band is at ~568 nm, and the "≈ 574" was an INSTRUMENT ARTIFACT.**
+> `DOC_lamp_rebuild.md` §6 records a Bayer channel crossover at ~583 nm; the reference throughput falls to a
+> **minimum at 581 nm and then jumps +17 %/nm**, identically in every run ever taken. The apparent maximum
+> near 574–580 is the ramp into it, not a band. ⭐ In white spirit — where the real band grows large enough
+> to beat the artifact — the maximum lands at **567.2, 567.5, 567.8 and 567.8 nm** on four independent
+> fills, and `Pigment D_Q` finds an interior peak in 100 % of them against **7 %** of 110 isopropanol runs.
+> ⚠ §3.6 "resolves the peak at ≈ 574" on isopropanol data and is subject to the same artifact; it should be
+> re-read before being quoted. `SPEC_capture_quality.md` §16.12.7f and `DOC_lamp_rebuild.md` §6.1.
+>
+> ⚠ The **Qy at ~623–626 nm is UNAFFECTED and now confirmed a fourth time**: the same four white-spirit
+> fills put its maximum at **622.8–625.0 nm**, inside §4.1's literature range (623 nm in 80 % acetone /
+> 626 nm in methanol), from an instrument that was not looking for it.
 
 ⇒ **The windows were chosen by where the instrument had light and dynamic range, not by where the chemistry
 is.** That is `SPEC_metric_research.md` §7.8's wall — *"both principal bands are flanks"* — stated from the

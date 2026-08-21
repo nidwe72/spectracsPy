@@ -2319,7 +2319,9 @@ than any table of Cohen's `d`.
 
 | topic | where |
 |---|---|
+| ⭐⭐ **`R`, the 624/568 peak ratio — the §12 candidate** | **§12 below** · `diagnostics/peak_ratio_archive.py` |
 | ⭐ **`V` / `Q%` in the DEV plugin — gauge, rows, the new band plot** | **`SPEC_v_metric_integration.md`** |
+| ⭐ **the white-spirit session that found it** | **`SPEC_capture_quality.md` §16.12.7f** · `SPEC_settled_measurement.md` §52 |
 | ⭐ **the lamp changes the sample; the band-fall ratio; the no-re-seat floor** | **`SPEC_capture_quality.md` §16.36** |
 | the metric being replaced, and its algebra | `DOC_metric_algebra.md` |
 | the correction this document steps back from | `DOC_pedestal_correction.md` — esp. App. D.6, ch. 13 T4 |
@@ -2368,3 +2370,405 @@ and lamp dose move together. ⇒ **compare at matched `A_valley`; never extrapol
 the measured κ (§32.3, §33.3), and a grey/Mie pedestal cancels in the numerator of `V` and would make the
 more turbid fill read *lower* — it reads higher. §16.12.2B's λ⁻ⁿ refutation now has a second, independent
 confirmation from the other end of the turbidity range.
+
+---
+
+## ⭐⭐⭐ 12 · `R` — THE 624/568 PEAK RATIO, and it separates the archive where `Q%` overlaps  *(Edwin 2026-08-21, from two peaks he marked on a screenshot; DESIGN — nothing built)*
+
+> ⚠⚠ **SUPERSEDED IN PART, THE SAME DAY.** `R` was the first construction from these two bands; the one
+> Edwin **decided on** is **`dQ100` — §12.8**, which is better on a bad fill, on dilution and against an
+> optics change. §12.0–§12.7 are kept as the reasoning that got there and as the record of what `R` can and
+> cannot do. ⭐ **§12.11 is R1, the turbidity arm, and it clears the confound this document raised three
+> times.** The decision itself is on the roadmap under *DECIDED 2026-08-21*.
+
+This spec hunts *"a baseline-free, dilution-invariant metric"* (§1). §10 found `V`, and shipped it. **§12 is a
+second candidate, found by accident, that beats `V` on the one job §2's corpus exists to test — and it has a
+failure mode `V` does not have.** ⛔ Nothing is built and nothing is proposed for shipping.
+
+### 12.0 · How it was found
+
+`SPEC_capture_quality.md` §16.12.7f ran two oils in de-aromatised white spirit. Edwin looked at the trace,
+circled two peaks — **(1) at 568 nm** and **(2) at ~624 nm** — and asked whether the two oils differ there.
+They do, by a factor of ~1.7, on a quantity that is pure shape.
+
+⚠ **Language correction that this section inherits.** The archive is **oil in isopropanol** (§16.23), not
+neat oil. Every comparison here is **IPA against white spirit**.
+
+### ⭐ 12.1 · The definition, and every choice in it is forced
+
+```
+   R  =  P2 / P1
+
+   P1 = A(568)  above the straight chord through 542-546 and 600-606      [the 568 nm band]
+   P2 = A(623-626) - A(612-615)                                           [the 624 nm band]
+```
+
+| choice | why it is forced |
+|---|---|
+| ⭐ **both terms are DIFFERENCES of two absorbances** | a flat (grey/Mie) pedestal cancels **exactly** in each. `SPEC_settled_measurement.md` §52.3 measured one fill carrying **+0.078 A** of exactly that |
+| ⭐ **both terms scale with concentration** | the ratio is dilution-invariant on the same algebra as `V` (`DOC_metric_algebra.md`) |
+| ⭐⭐ **⛔ NO SORET ANYWHERE** | every window lies between 542 and 626 nm at `A` = 0.1–0.5. The 448–460 flank runs `A` = 1.2–1.7 with the 440–447 bins past 2.0, and §16.24's error budget is **dominated** by it. **A metric that never touches the Soret has no saturation term** — and §52.3 shows a real run where Soret compression moved `Q%` by 0.060 A of denominator |
+| ⛔ **the right anchor is 612–615, NOT anything past 630** | the capture clamp is 440–630; 137 of the archive's reports carry exactly that span. A variant anchored at 632–635 scored **better** (gap/spread 5.8× vs 4.1×) and is **rejected for reading outside the clamp** |
+| ⚠ **612 is the earliest usable left anchor** | the 608–610 nm lamp line (`DOC_lamp_rebuild.md` §6 — a Bayer channel crossover) reads **1.6–2.2× the 613 nm value in every run on disk**, and already contaminates the 612 nm bin of `20260817LigitschA/007`. Five anchors were tried (612–615, 613–616, 614–617, 612–616, 613–617); **all keep the corridor**, worst case +0.317. 612–615 is the widest margin |
+
+⭐ Reproduced by **`diagnostics/peak_ratio_archive.py`** → `spectracs-references/tmp/peak_ratio_archive.csv`.
+⚠ It reads each report's **own de-spiked trace** rather than the shipped code path, because 176 of the 196
+reports predate `Absorption (bands)`'s current construction.
+
+### ⭐⭐ 12.2 · The archive-wide result
+
+**196 reports carry a `workflow.json`; 190 cover 542–628 nm; 137 sit at exactly the 440–630 clamp.**
+
+| corpus | | green | brown | Cohen d | corridor | |
+|---|---|---|---|---|---|---|
+| §16.20.4's own threshold corpus *(Steirerkraft B+C n=12 vs S-Budget D n=6)* | **`R`** | 0.779 ± 0.049 | 0.417 ± 0.032 | **8.14** | +0.182 | CLEAN |
+| " | `Q%` | 15.941 ± 1.169 | 20.436 ± 0.261 | 4.59 | +3.041 | CLEAN |
+| **all labelled runs, both rig eras** *(n = 55 / 33)* | **`R`** | 0.804 [0.541–1.183] | 0.360 [0.215–0.479] | 3.19 | **+0.062** | ⭐ **CLEAN** |
+| " | `Q%` | 15.807 [12.742–19.957] | 19.995 [17.145–24.657] | 2.78 | −2.812 | ⛔ **OVERLAP** |
+
+⭐⭐ **At `T = 0.510`, zero misclassifications over 88 runs, 9 oils, 16 sessions and a rig rebuild**, and the
+corridor survives leave-one-session-out on every session. The shipped `Q%` overlaps on the same corpus.
+⚠ The brown class includes **Spar Premium under §16.30.1a's relabel** — see §12.5; leaving it out changes
+`R`'s corridor by nothing (it sits at 0.350–0.359, well inside brown) and narrows `Q%`'s overlap to −1.558.
+
+⛔ **`T = 0.510` IS FITTED, NOT VALIDATED.** It is the midpoint of a corridor drawn on this same corpus. The
+three tests below are the only genuinely out-of-sample evidence that exists.
+
+### ⭐⭐ 12.3 · Three out-of-sample tests it was not tuned on
+
+**(a) The rig rebuild.** Pre-rebuild, 2026-07-27, different lamp, no part in setting `T`:
+
+```
+ green  20260727E   0.658 0.729 0.808 0.817 0.822 0.823 0.917
+ brown  20260727C   0.298 0.310 0.369 0.369 0.445 0.468        corridor +0.190, both sides correct at T
+```
+
+⭐ `SPEC_v_metric_integration.md` §5 records that **a lamp swap moves `Q%` by 4.84 units** — more than its
+whole green/brown span. **`R`'s threshold does not move at all.**
+
+**(b) The solvent.** Both white-spirit sessions land on the correct side of a threshold derived entirely
+from isopropanol data: Lugitsch **0.826 / 0.838 → green**, Billa Clever **0.344 / 0.438 → brown**. `Q%`
+cannot do this — it moved **+6.71** and **+2.09** between the routes (§16.12.7f).
+
+**(c) ⭐⭐ Fresh vs 24 h aged, same oil, same session** — the archive's only such pair, and the test that
+decides whether `R` measures *which oil* or *how brown*:
+
+| | fresh `20270729B/C` (n=12) | aged `20270729A_aged24h` (n=3) | d | corridor |
+|---|---|---|---|---|
+| **`R`** | 0.779 ± 0.049 | 0.590 ± 0.048 | **3.86** | **+0.020 SEPARATES**, aged reads lower ✓ |
+| `Q%` | 15.941 ± 1.169 | 17.791 ± 1.708 | 1.46 | −1.186 OVERLAP |
+
+⭐ It sees the ageing, in the right direction, on a set §16.11.16 records as *misclassifying on 3 of 3 runs*
+under the older metric. ⛔ **But the corridor is 0.020 against 0.062 for the class split, on n = 3, one
+session, one oil. This is the weakest link and the first thing to re-test.**
+
+### ⛔⛔ 12.4 · THE FAILURE MODE — a paper diffuser erases the 624 nm band
+
+`20260727B` is the archive's **diffuser A/B test** (§16.7.2f: it came off between run 003 and run 004).
+Split by that, and by nothing else:
+
+```
+ diffuser IN   (001-003, 008-009)   R = 0.121 +/- 0.126     P2 collapses to  0.000 - 0.031 A
+ diffuser OUT  (004-007)            R = 0.635 +/- 0.013     P2 a steady      0.066 - 0.072 A
+```
+
+⛔⛔ **Perfect separation, on an INSTRUMENT change.** Meanwhile `Q%` barely moves (15.6–17.1 either way) and
+§16.15.9's own table records the shipped `M` moving **−2.4 %** and `B_Q` **−2.9 %** across the same split.
+A 5 nm band sitting near the clamp edge is exactly what a diffuser washes out.
+
+⇒ ⛔ **This is the one exclusion §12.2's corpus makes**, and it is stated rather than buried: with those five
+runs left in, `R`'s corridor is **−0.494 (OVERLAP)** and the result collapses. The exclusion is defensible —
+that session exists *to be* an optical A/B, and §16.26.6 rejected the improvised paper diffuser outright
+(14× the light for the smaller half of the problem) — but it is a real condition on the claim.
+
+⚠⚠ **AND IT IS A LIVE WARNING ABOUT `SPEC_lamp_rebuild.md`.** An optical change the shipped metric shrugs off
+can **erase** this one. Before `R` is built on anything, it must be established that it survives the rebuild
+the lamp spec proposes — and there is currently no reason to assume it will.
+
+### ⚠ 12.5 · What `R` is measuring, and the honest doubt
+
+⭐⭐ **Two peaks means two pigments — and the 624 nm one has a name.** `KB_spectroscopy_physics.md` §4.1
+puts **protochlorophyll(ide) *a* `Qy` at ≈ 623 nm (80 % acetone) / 626 nm (methanol)**. The four white-spirit
+fills land at **622.8 · 623.2 · 624.8 · 625.0 nm** — inside that literature range, from an instrument that
+was not looking for it. ⭐ That is a fourth independent confirmation of §4.1's pigment identification, and it
+arrived by accident. ⇒ `R` is a **pigment-composition** ratio, which is why it survives a solvent change that
+moves `Q%` by 18 σ.
+
+⚠ **And it raises a question §4.1 can answer and this section cannot.** In isopropanol the band's maximum
+sits at **≥ 628 nm** (§12.6) — which is where §4.1's table puts *fluorescence*, and where the
+**protopheophytins** (1.1–35.5 % of the protochlorophylls, a storage-degradation product) would be expected.
+⛔ Whether the 5 nm shift is solvatochromism or a different pigment being resolved is **open**, and it
+matters: if it is the latter, `R` is measuring the degradation product directly.
+
+⚠ **But the green class is broad — 0.541 to 1.183** — so `R` is carrying **oil identity as well as quality**,
+and in a corpus where each oil appears at essentially one age those two are only partly separable. §12.3(c)
+is the only evidence that the quality half is real, and it is n = 3.
+
+⭐ **The one oil the two metrics disagree about is the one the archive argued over.** Spar Premium g.g.A.
+(`20260807C`) reads **brown** at 0.350–0.359 under `R`, and **green** at 17.1–18.3 under `Q%`.
+⚠ **§16.30.1a is "THE THIRD RELABEL — `Spar Premium` → BROWN again"**, and
+`SPEC_v_metric_integration.md` §4.3 records `T_V` as *contradicting* that relabel in as many words. ⇒ **`R` agrees with the relabel and
+`Q%` does not.** ⛔ That is one oil and it is not proof of anything — Edwin's relabel is itself a judgement,
+not a reference measurement — but it is the opposite of a miss, and it is worth putting on the record.
+
+⛔ **76 of 190 reports are not scored**: the 63 loose root one-offs, `20260806A` and the `20260811A` lamp
+study. **39 of the 63 have a NEGATIVE `R`** — no 624 nm band above the 613 anchor at all — and 46 fall
+outside `Q%`'s own 12–22 verdict band. Mixed rigs, mixed doses, no oil identity on disk. Unusable for either
+metric, and they are excluded from **both** sides of every comparison above.
+
+### ⭐ 12.6 · The 624 nm band is only *resolvable* in white spirit
+
+| | n | maximum found at ≤ 627 nm | median position |
+|---|---|---|---|
+| labelled **isopropanol** runs | 110 | **7 %** | 628.8 nm |
+| **white spirit** runs | 4 | **100 %** | 624.0 nm |
+
+⚠ **The clamp ends at 630**, so "628.8" means *at or beyond the clamp edge*, **not** "there is no band" —
+`R` is computable and correct on the isopropanol archive, which is the whole of §12.2. The defensible
+statement is that **the band's maximum sits ≥ 5 nm bluer in white spirit.** The same holds at 568 nm:
+`Pigment D_Q` pins at the 577–581 window edge in every isopropanol run and is an interior peak at 567–568 nm
+in all four spirit runs.
+
+⇒ ⭐ **`R` is not an argument for the hydrocarbon.** It works on the shipping solvent. What white spirit
+buys is that both bands become *visible*, which is how the metric got noticed at all.
+
+### ⏸ 12.7 · What has to happen before this is more than a hypothesis
+
+| | |
+|---|---|
+| ⭐⭐ **1 · fresh vs aged on a SECOND oil** | the single experiment that decides quality-vs-identity. §12.3(c) is one session wide and its corridor is 0.020 |
+| ⭐ **2 · survive the lamp rebuild** | §12.4 says an optical change can erase the band. ⛔ Test before ordering, not after |
+| ⭐ **3 · a designed dilution series** | `R` is dilution-invariant *by construction*; that has not been **measured**. §2's Kiendler set (`B_Q` spans 48 %) is the corpus for it and the analysis is free |
+| ⚠ **4 · a real threshold** | `T = 0.510` is a fitted midpoint. §16.17's mistake was deriving a threshold from too little; do not repeat it |
+| ⛔ **not now** | no gauge, no plugin row, no verdict. `V`/`Q%` ships unchanged |
+
+⚠ **And §16.12.7e's rule was bent to produce §12.2.** It says *"the 143-report archive is not reprocessed."*
+It was, by `diagnostics/peak_ratio_archive.py`. ⭐ No shipped constant was touched and no archived verdict was
+restated — `Q%` appears only as a like-for-like control — but the rule carved no such exception, so **Edwin
+rules on it.**
+
+---
+
+### ⭐⭐⭐ 12.8 · `dQ100` — THE METRIC THAT WAS ACTUALLY DECIDED  *(Edwin 2026-08-21; supersedes `R` above as the candidate)*
+
+⭐ **§12.0–§12.7 are kept as the reasoning that got here, and `R` is no longer the proposal.** The same
+evening's work produced a better construction from the same two bands, and Edwin chose it. The path was:
+`R = (2)/(3)` → Edwin's `(3)/(2)` → the SNV-580-aligned view → and out of that, algebraically, `dQ`.
+
+```
+                mean A over [563, 573]  -  mean A over [623, 626]
+  dQ100 = 100 x ---------------------------------------------------
+                        sd of A over [448, 626]
+```
+
+| | |
+|---|---|
+| **`A`** | the **de-spiked RAW absorbance** — ⛔ no baseline, no pedestal correction, no SNV applied first |
+| ⭐⭐ **sampling** | **NATIVE**, the convention `V` uses (§10.1a). ⛔ **Not** a resampled grid — see §12.8b |
+| **sign** | higher = browner. ⭐ Negative means the 624 band stands *taller* than 563–573 — the intact-pigment state. **Zero is a real landmark, so there is no shift and no offset constant** |
+| **threshold** | `T = 30.0`; green `< 26.6` · borderline `26.6–33.5` · brown `> 33.5` |
+
+#### ⭐ 12.8a · Why it is the same thing Edwin was reading off the SNV plot
+
+He had been reading `y(568) − y(624)` in the SNV-580-aligned view. Written out:
+
+```
+  y(568) - y(624) = [(A568-mu)/sd - (A580-mu)/sd] - [(A624-mu)/sd - (A580-mu)/sd]
+                  = (A568 - A624) / sd          <- mu AND A580 both cancel
+```
+
+⇒ **the 580 alignment and the SNV mean-centring drop out completely; only the SNV *scale* survives.**
+Verified numerically on `20260821LugitschA/001`: the direct formula gives `0.039311`, the SNV-580 route
+gives `0.039311`. ⚠ The alignment was scaffolding for the eye — it is what exposed the 581 nm crossover as
+an instrument artifact (§16.12.7f) — but it is not part of the quantity, so the name must not reference it.
+
+#### ⛔⛔ 12.8b · NATIVE SAMPLING IS LOAD-BEARING, and this was nearly shipped wrong
+
+The first written definition said *"resample onto 448–626 nm in 0.25 nm steps."* Measured over the 68-run
+corpus, that is **a different metric**:
+
+```
+                green max   brown min   corridor       T
+  0.25 nm resample  +26.28     +32.99     +6.714      29.64
+  NATIVE            +26.61     +33.45     +6.846      30.03      <- validated, and better
+  max per-run difference 0.889 units, mean +0.458
+```
+
+⭐ Native is the project's existing convention, gives the *wider* corridor, and lands `T` on a round 30.0.
+⚠ `tests/test_v_metric_windows.py`'s sibling must assert the convention, or the two will drift and
+**nothing will error**.
+
+#### ⭐⭐ 12.8c · Why `dQ100` beat `R` and `(3)/(2)` — the denominator is the whole story
+
+The Billa Clever pair of 2026-08-21 is the only stress test on record: two pours of ONE dilution, one of
+them the most turbid fill in the archive (`A_valley` 0.2647).
+
+```
+   metric on BC-1 (turbid) vs BC-2 (clean)      spread as % of the oil-to-oil gap
+   ------------------------------------------------------------------------------
+   (2) P2 alone           0.1222 / 0.0834             ~85 %   ruined
+   (3)/(2)                2.2828 / 2.9079             ~57 %   ruined
+   R  = (2)/(3)           0.4381 / 0.3439             ~24 %   damaged
+   Q%                    21.832  / 22.038             ~ 2 %   survives
+   dQ100                 +72.7   / +70.9              ~ 2 %   SURVIVES
+```
+
+⭐ **`R` and `(3)/(2)` carry identical information and are not equally good.** The noise lives in `P2`, a
+small band height (0.1222 → 0.0834, nearly halving). In the **denominator** it is amplified (spread 0.625);
+in the **numerator** merely scaled (0.094) — 6.6× less scatter for the same content. ⇒ **`R` is strictly
+better than `(3)/(2)`**, and both are beaten by `dQ100`, whose denominator is a whole-window `sd` that a
+local pedestal barely moves.
+
+#### ⭐ 12.8d · Averaging around the peak — Edwin's suggestion, and it fixed the dilution problem
+
+Sweeping the half-width `w1` around 568 nm (v1 = a point read, v2 = a 10 nm window):
+
+```
+    w1    corridor   corr/gap  |  dose drift (Kiendler, 48 % span)  drift/corridor
+   -------------------------------------------------------------------------------
+     0     +0.0229    0.055    |          0.0441                       1.9x  FAILS
+     4     +0.0346    0.083    |          0.0353                       1.0x
+     8     +0.0559    0.136    |          0.0319                       0.6x  OK
+    10     +0.0671    0.166    |          0.0335                       0.5x  OK   <- SHIPPED
+    12     +0.0777    0.194    |          0.0392                       0.5x  (touches 574)
+   -------------------------------------------------------------------------------
+   leave-one-oil-out chose w1=12 in 8/8 folds, 64/68 = 94 % held out
+```
+
+⭐⭐ **It nearly triples the corridor AND drops the dose drift below it** — v1 was *not* dilution-invariant
+in practice (1.9× its corridor) despite being so algebraically; v2 is (0.5×). The dose slope barely moved
+(−0.142 → −0.108); **what changed is that the corridor got wide enough to absorb it.**
+
+⚠ **`w1 = 10`, not the 12 the search prefers.** 12 spans 562–574 and touches the 581 nm crossover ramp, for
+14 % more corridor. 10 spans 563–573 and stays clear. ⛔ The half-width is still **fitted on the corpus it
+is scored on** — 94 % leave-one-oil-out says the choice is stable, but the corridor value is not free.
+
+### ⛔ 12.9 · THE BAND-PAIR SEARCH — and the trap it walks into
+
+All 2 628 pairs of the form `[A(λ1) − A(λ2)] / sd(448–626)`, ranked by corridor/gap, with leave-one-oil-out:
+
+```
+    L1     L2    corr/gap   held out
+   574    626     0.340     66/68 = 97 %, and 8/8 folds chose L1 in {574,576}
+   576    624     0.320
+   ---------------------------------------------------------------------------
+   568    624    (dQ100)    the shipped construction
+```
+
+⛔⛔ **574–576 is the ramp into the 581 nm crossover** — the lamp feature §16.12.7f identifies, which is not
+a band. The search's honest answer is that *the instrument's own artifact discriminates these oils better
+than the 568 pigment band does*. That may even be true: ④'s height is not the lamp alone but **how the
+reference and the sample fail to cancel across the handover**, which is instrument × sample. ⇒ it carries
+real oil information **and it will move with any optics change.** §12.10 is why that disqualifies it.
+
+⚠ A variant anchored at 632–635 scored better still and is rejected outright for reading **outside the
+440–630 capture clamp**.
+
+### ⛔⛔ 12.10 · THE DIFFUSER TEST — the one known failure mode, now measured on `dQ100`
+
+`20260727B` is the archive's diffuser A/B test (§16.7.2f: it came off between run 003 and run 004). One
+oil, one fill, an instrument change and nothing else:
+
+```
+   metric        diffuser IN (n=5)     diffuser OUT (n=4)   shift   % of class gap   vs corridor
+   -------------------------------------------------------------------------------------------
+   Q%           16.534 +/- 0.478      15.827 +/- 1.038      0.707       16.9 %      (no corridor)
+   dQ100 v2     21.416 +/- 4.440      15.219 +/- 3.185      6.197       14.9 %      0.9x  SURVIVES
+   dQ100 v1     23.290 +/- 4.337      19.529 +/- 3.060      3.761        9.0 %      1.6x  BROKEN
+   R = (2)/(3)   0.121 +/- 0.126       0.635 +/- 0.013      0.514      115.9 %      8.3x  DESTROYED
+```
+
+⭐ **`dQ100 v2` is the only candidate that survives** — and §12.8d's window widening is again what saved it.
+⚠ But by **0.9×**: an optics change of that size eats 92 % of the decision margin. It does not flip this oil
+(which sits 9–15 units from `T`), but an oil near the line would flip. In *relative* terms (14.9 % of the
+class gap) it is marginally steadier than `Q%` at 16.9 %.
+
+⚠⚠ **`SPEC_lamp_rebuild.md`'s rebuild is a far larger optical change than a paper diffuser. `dQ100` must be
+tested against it BEFORE the emitters are ordered, not after.**
+
+### ⭐⭐⭐ 12.11 · R1 — THE TURBIDITY ARM, and the confound is not there  *(run 2026-08-21, analysis only, no rig time)*
+
+**The question this had to answer**: `dQ100`'s numerator is a difference, so a **flat** pedestal cancels —
+but real Mie turbidity has spectral **slope**, which does not cancel and does move `sd`. Per-session
+correlations against `A_valley` ran as high as `r = −0.94`. ⇒ **did `dQ100` separate green from brown
+because brown oils scatter more?** Different answers make it a different product.
+
+**The corpus**: 68 isopropanol runs, 44 green / 24 brown. **Turbidity index `tau = A(510–540) / A_Soret`** —
+concentration-free, because both terms scale with `c` (the raw `A_valley` is not, across oils).
+
+#### 12.11a · Is turbidity confounded with class at all? — partly, and weakly
+
+```
+   green  tau 0.1087 +/- 0.0335  [0.0472, 0.2207]
+   brown  tau 0.1389 +/- 0.0406  [0.0621, 0.2308]      Cohen d 0.84
+   the two ranges OVERLAP over 0.0621 .. 0.2207 — nearly the whole span
+```
+
+Brown oils are somewhat more turbid. Not nothing, and not enough on its own.
+
+#### ⭐⭐ 12.11b · THE DECIDING TEST — the within-session and between-class slopes have OPPOSITE SIGNS
+
+ANCOVA: the slope of the metric on `tau` pooled from **within-session deviations only**, so every
+between-oil difference is removed. That is the *pure* turbidity coefficient.
+
+```
+              within-session slope      between-class slope     ratio
+   dQ100          -21.4  (r -0.13)          +1349.1           -63x   OPPOSITE SIGN
+   Q%             +10.4  (r +0.36)           +138.5           +13x   same sign
+```
+
+⭐⭐⭐ **If turbidity drove the class separation the two slopes would agree. For `dQ100` they point in
+opposite directions and differ 63-fold.** Within one session — same oil, same dilution, turbidity the only
+thing moving — more turbidity drives `dQ100` **down**; between the classes it goes **up**. Turbidity works
+*against* the separation, not for it.
+
+⇒ and therefore **adjusting for turbidity makes the corridor WIDER**: `+6.846 → +6.950`.
+
+⚠ **The contamination belongs to `Q%`, not to `dQ100`.** `Q%`'s within-session slope has the **same** sign
+as its between-class slope, and turbidity explains 21 % of its variance against `dQ100`'s 12 %.
+
+#### ⭐⭐ 12.11c · At MATCHED turbidity the classes still separate — in every bin
+
+```
+    tau bin        nG   nB   dQ green   dQ brown     gap
+   0.060-0.090      9    2     -4.01      43.62     27.50   CLEAN
+   0.090-0.110      8    5     -6.27      41.34      6.85   CLEAN
+   0.110-0.130     13    2      7.90      46.47     21.81   CLEAN
+   0.130-0.160      9    9     12.09      44.89     14.53   CLEAN
+   0.160-0.240      1    6   (too few green)
+```
+
+**Clean in all four populated bins.** The tightest, 0.090–0.110, still gives 6.85 — essentially the
+full-corpus corridor. ⇒ **nothing is lost by holding turbidity constant.**
+
+#### ⛔ 12.11d · CORRECTIONS TO THIS DOCUMENT'S OWN EARLIER ALARM
+
+1. **The `r = −0.94` figures were over-read.** They are per-session correlations on `n ≈ 6`. The pooled
+   within-session slope is **−21.4 with `r = −0.13`**, and the individual session slopes scatter wildly:
+   −718, −644, −235, −142, −15, +13, +75. A large `r` on six points with a small real slope is noise
+   wearing a coefficient. The confound was raised three times in this document and it is not there.
+2. **A naive pooled regression of `dQ100` on `tau` is the WRONG adjustment** and was tried first. It gives a
+   `+207.6` slope and a residual corridor of `−17.4` — because the classes differ in **both** `tau` and
+   `dQ100`, so a pooled fit removes the class signal along with the covariate. ⚠ The within-group
+   (ANCOVA) coefficient is the correct one, and it is what §12.11b uses.
+
+#### ⚠ 12.11e · WHAT R1 DOES NOT CLAIM
+
+⛔ **R1 is an ELIMINATION, not an identification.** It rules out the one alternative explanation we could
+name; it does not show what `dQ100` *is* measuring. **§12.12/S1 — the acid test — is what would make the
+claim positive**, and it remains unrun.
+
+⚠ It is also observational. `tau` is a proxy, the bins are unbalanced (2 brown runs in two of them), and no
+fill's turbidity was ever *set* — only observed. **The designed version is still `R2`**: one monitored fill
+with `W8`'s columns, read through a full clearing curve, compared at matched `A_valley` by §39.1's method.
+
+### ⏸ 12.12 · WHAT IS STILL OPEN
+
+| | |
+|---|---|
+| ⛔ **the lamp rebuild** | §12.10 — `dQ100` survives a diffuser by 0.9× its corridor; test before ordering |
+| ⚠ **the settling curve** | `dQ100` has **never been recorded per-frame**; no run on disk carries `A(563–573)` or `A(623–626)`. `W8` then one run. ⛔ Not retroactive |
+| ⚠ **the fitted half-width** | §12.8d — 94 % leave-one-oil-out, but chosen on the corpus it is scored on |
+| ⚠ **the bimodal green class** | Ja!Natürlich (−26) and Lugitsch (−16) sit 30 units below Kiendler / Steirerkraft / Spar ggA (+11…+19) — four corridor-widths. Real structure or a mislabel |
+| ⭐ **S1, the acid test** | pheophytinisation is acid-catalysed and irreversible. ⚠ **Run it in isopropanol** — acids barely dissociate in a de-aromatised hydrocarbon |
+
