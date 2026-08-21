@@ -515,10 +515,10 @@ differ between the classes.
 0.730 brown (*d* = −2.77, §10), which looks like a class difference. It is a **dose difference between those
 two fills**; across twenty oils it washes out to 0.16.
 
-⛔ **That distinction is not cosmetic here.** The shipped baseline chord's far foot sits at 620–630 nm,
-which `KB_spectroscopy_physics.md` §4.1a places **on the Qy band**. Its slope is therefore fill-dependent,
-and every statistic computed on the corrected curve inherits a tilt. `Q%` never fits a line, so it cannot
-inherit one.
+⛔ **That distinction is not cosmetic.** A fitted line has to stand on something, and in this window there
+is nothing quiet to stand on — §3.4 measures the far anchor carrying a **5.1 σ** class difference of its
+own. Appendix E's metric fits through it **deliberately** and accounts for what that costs (§E.1, §E.4);
+`Q%` fits nothing, so the question never arises for it.
 
 ### 5.3 What it measures
 
