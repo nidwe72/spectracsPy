@@ -2016,22 +2016,68 @@ an earlier draft of this document overstated it.
 
 <!--PAGEBREAK-->
 
-### ⭐ E.10 The pedestal correction — what it was, and why it is legacy  *(added 2026-08-21)*
+### ⭐ E.10 The pedestal correction — the idea, the measurement, and why it is legacy  *(added 2026-08-21)*
 
 §E.7 shows *why* a straight chord leaves an error: a real scattering pedestal is **convex** in λ, a fitted
-line is not, and the line therefore over-subtracts in the middle of the window. §E.7 stops at the
-diagnosis. **The correction is what the plugin did about it**, and it is the third number the reference
-sheet prints:
+line is not, so the line cannot follow it and a leftover survives the subtraction. §E.7 stops at the
+diagnosis. **This section is what the plugin did about it.** The full account is
+`DOC_pedestal_correction.md`; this is the shape of it.
+
+#### The idea, in one chain
+
+Carrying one real set through — Kiendler C, post-rebuild:
+
+| # | what happens | | Kiendler C |
+|---|---|---|---|
+| 1–2 | capture, and average over the four windows | $A_{X}$ | `A_Soret` 1.1705 · `A_Q` 0.2082 |
+| 3 | fit the chord through the two anchors | 520–540 and 620–630 | |
+| 4 | subtract it everywhere | $B_{X} = A_{X} - \op{chord}$ | `B_Soret` **1.1397** · `B_Q` **0.0716** |
+| 5 | divide | $M = B_{Soret}/B_{Q}$ | **15.91** ← the uncorrected verdict |
+| 6 | ⛔ but the chord is straight and the pedestal is not, so a leftover stays at Q | $r_{Q}$ | −0.0184 A |
+| 7 | ⚠ a leftover in the **denominator** inflates the ratio | $F = 1 - r_{Q}/B_{Q}$ | **1.257** — i.e. **+25.7 %** |
+| 8 | put it back, then divide again | $M_{\infty} = B_{Soret}/(B_{Q} - r_{Q})$ | **12.66** ← the corrected verdict |
+
+⭐ **Step 7 is why this was worth doing at all.** The leftover is the same size at both bands, but
+$B_{Q}$ is **sixteen times smaller** than $B_{Soret}$ — so the identical absolute error is a rounding
+detail in the numerator and a **quarter of the value** in the denominator. Correcting the denominator
+alone therefore recovers almost the whole effect, for one constant. It is the same asymmetry §E.3a's error
+budget is about, seen from the other end.
+
+#### ⭐⭐ How `r_Q` is measured — a test with no free parameters
+
+This is the elegant part, and it is what makes the constant defensible rather than fitted. Take chapter
+E.7's two measured quantities and **eliminate the concentration**:
 
 ```math
-\op{index}_{corrected} = \frac{B_{Soret}}{B_{Q} - r_{Q}}, \qquad r_{Q} = -0.0184\ A
+B_{Soret} = M_{\infty} \cdot B_{Q} + \big( r_{Soret} - M_{\infty} \cdot r_{Q} \big)
 ```
 
-with $r_{Q}$ shipped as the constant `PB_R_Q`.
+That is a straight line relating two things the instrument measures directly — and **`c` has vanished
+from it.** Concentration moves a run **along** the line, never off it. So you may prepare the same oil as
+sloppily as you like at two or more strengths; every run must still land on that line.
 
-⇒ **`r_Q` puts back what the straight line took out.** The residual lands almost entirely in $B_{Q}$
-rather than $B_{Soret}$, because $B_{Q}$ is the small quantity — the same asymmetry §E.3a's error budget
-is about — so correcting the denominator alone recovers most of the effect for one constant.
+⭐ **And the test writes itself.** If the baseline were perfect, both $r$ terms are zero, the bracket
+vanishes, and **the line passes through the origin** — which is exactly what it should mean physically:
+with no pedestal left, when one band's pigment signal is zero so is the other's. **It does not pass
+through the origin.** The intercept *is* the leftover, and $r_{Q} = -k / M_{\infty}$ falls out of the fit.
+
+⇒ No fitted concentration, no free parameter, and the null hypothesis is a **point**, not a range.
+
+#### ⚠ Measuring it and applying it are two different jobs
+
+Confusing these is the commonest misreading of `DOC_pedestal_correction.md`, so it is worth separating:
+
+| | **measuring `r_Q`** | **applying the correction** |
+|---|---|---|
+| what it is | a **calibration**, once per rig state | one subtraction, on **every** run |
+| what it needs | one oil at **two or more genuinely different concentrations** | nothing but $B_{Q}$ and the stored constant |
+| how often | after every mechanical change to the instrument | every measurement |
+| which oils | only those prepared at more than one strength | ⭐ **any oil, any sample** |
+
+⇒ The correction applies to every oil, including the brown one. What some oils cannot do is *contribute
+to measuring* the constant — a statement about how they were prepared, not about what they are.
+
+#### What it cost
 
 | | green `20270729C` | brown `20260731A` | Cohen's *d* | threshold |
 |---|---|---|---|---|
