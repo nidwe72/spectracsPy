@@ -2973,3 +2973,109 @@ observed) — the rest is solvent chemistry.
 differs is that its shifts do not cross its threshold. **Both thresholds are solvent-specific.**
 ⚠ And arm A failed its own `A_valley` gate (§16.12.7f), so the direction is trustworthy and the magnitude
 is not.
+
+---
+
+## ⭐⭐ 14 · THE TRIGLYCERIDE ARM — sunflower, and what it does to the three metrics  *(2026-08-22/23; analysis only)*
+
+> Pumpkin oil diluted in **sunflower oil** instead of isopropanol — run as a feasibility test for **MCT**, not
+> as a solvent proposal. `20260822BillaClever/001` and `20260822Lugitsch/002`, both the standard 8 ml + 2
+> capillaries, one session. A third fill at **3 capillaries** followed on 08-23.
+> Written up for circulation as `docs/DOC_solvent_and_hue.md` →
+> `spectracs-references/business/internal/commmunication/Spectracs_SolventAndHue_2026-08-23.pdf`.
+
+### ⭐ 14.1 The headline — the baseline goes away
+
+| | Billa `001` | Lugitsch `002` |
+|---|--:|--:|
+| `Q%` | 21.44 | 16.21 |
+| `dQ100 v2` | +63.79 | −21.74 |
+| `R` = A(623–626)/A(563–573) | 0.673 | 1.321 |
+| `A_Soret` | 0.797 | 0.596 |
+| **`A_valley`** | 0.165 | **0.018** |
+
+**`A_valley` = 0.018 is the second lowest of 116 archived runs and the lowest at a usable pigment load**
+(`valley/Soret` = 0.030 against an archive median of 0.13). RI: IPA 1.377, sunflower 1.473, pumpkin ≈ 1.47 —
+the oil was never in solution in IPA, it was dispersed. ⭐ That fill also **settled immediately**:
+`SETTLED_IMMEDIATE` at 106 s, `Q%` span **0.03** across seven reads, `tailSd` 0.0069.
+
+### ⭐⭐ 14.2 The floor is a phase, not a pedestal — and its exponent is measurable
+
+Define `F` = mean absorbance over pigment-free windows (472–500, 505–555, 588–604 nm). Four independent lines
+say `F` is **undissolved oil**:
+
+1. **spectrally flat** across 470–605 (IPA excess `S` = −3.1, sunflower −0.07 per 1000 nm) ⇒ particles ≫ λ,
+   geometric regime. ⛔ Rules out sub-micron scatter (λ⁻¹…λ⁻⁴) *and* humic browning (exponential, S ≈ 10–20).
+2. **supra-linear in loading.** `F ∝ c^p` with `c` measured pigment-only:
+
+   | series | p | r (log-log) |
+   |---|--:|--:|
+   | Billa 20260812 (a dilution series) | **4.27** | 0.979 |
+   | Lugitsch 20260814 (a dilution series) | **6.23** | 0.984 |
+   | ⭐ **Lugitsch 2→3 cap, SUNFLOWER** | **2.04** | *(two points)* |
+
+   `p = 1` is a dissolved component, `p = 0` a fixed jar/instrument term, `p ≫ 1` a solubility limit.
+   ⇒ **sunflower is much closer to a true solution than IPA, and MCT should reach `p = 1`.** Two fills at
+   different loadings measure it in one evening — a cheap, pre-registerable acceptance test for any new solvent.
+3. **survives 300 s of ultrasound** (Edwin, 08-23) — sonication disperses, it cannot dissolve.
+4. **collapses in a triglyceride** — `F/A_Soret` = 0.053 on the Lugitsch sunflower fill, the lowest of 31.
+
+### ⚠ 14.3 The 3-capillary fill — Q% is the dilution-invariant one, not `dQ100`
+
+Loading went ×2.21 (nominal 1.5 — a **47 % recipe overshoot**, itself a useful measurement):
+
+| | 2 cap | 3 cap | shift | in fill-σ |
+|---|--:|--:|--:|--:|
+| **`Q%`** | 16.213 | 16.664 | **+0.45** | **+0.9 σ** |
+| `dQ100 v2` | −21.743 | −15.617 | **+6.13** | **+2.3 σ** |
+| `R` | 1.321 | 1.155 | −0.166 | — |
+
+⛔ **§12.8d's claim that the widened window made `dQ100` dilution-invariant does not reproduce here** — it moved
+2.5× more than `Q%`, and *toward* misclassification. ⚠ The 3-cap fill is past the instrument's edge
+(`A_Soret` 1.405; **1.2 DN transmitted at 450 nm**), so `A_Soret` is probably under-read and `dQ100`'s
+`sd(448–626)` inherits that. **Take a third loading point downward, not upward.**
+
+### 14.4 Pooled fill noise, and the gaps in units of it
+
+Within-session repeat fills, pooled over 6 sessions: **`Q%` sd 0.515 · `dQ100 v2` sd 2.681.** dQ100 is 5× noisier
+in absolute units, so its large gaps must be read against that.
+
+| set | `Q%` | `dQ100 v2` | ratio |
+|---|---|---|---|
+| white spirit | 1.23 = **2.4 σ** | 77.5 = **28.9 σ** | **×12** |
+| sunflower, as measured | 5.23 = 10.2 σ | 85.5 = 31.9 σ | ×3.1 |
+| **sunflower, floor-corrected** | 10.61 = **20.6 σ** | 85.5 = **31.9 σ** | **×1.5** |
+| IPA, post-settling | 5.86 = 11.4 σ | 57.0 = 21.3 σ | ×1.9 |
+
+⭐ **White spirit is `dQ100`'s strongest evidence on record** — `Q%` collapses to 1.23 units there for chemical
+reasons (floor-correcting lifts it only to ~6 σ), exactly as §12.10's "no Soret ⇒ no saturation term" predicts.
+⚠ **But half of dQ100's sunflower advantage is the floor suppressing `Q%`**, and the floor is what MCT removes.
+In a clean prep the lead is ~×1.5, not "miles".
+
+### ⛔ 14.5 Nothing is solvent-portable in VALUE — and the shift is DIFFERENTIAL
+
+| | IPA | white spirit | sunflower |
+|---|---|---|---|
+| `dQ100` Billa | 36.6–46.6 (n=9) | 71.7 / 73.4 | 63.8 |
+| `dQ100` Lugitsch | −20.6…−11.4 (n=13) | −4.1 / −5.8 | −21.7 |
+| class gap | ~57 | ~77 | ~85 |
+
+White spirit → sunflower shifts Billa −8.7 and Lugitsch −16.8 against a fill repeatability of 1.2 — 7 σ and 14 σ,
+and **differential, not common-mode**. A common shift could be rescued by re-fitting `T` with one constant; this
+cannot. **`T = 18.6` and `T = 30.0` both need re-deriving in MCT.** ⭐ `R`, by contrast, has now held across
+three solvents without overlap: Billa 0.506–0.811, Lugitsch 1.024–1.321.
+
+### ⭐ 14.6 The floor cannot be corrected away — one refuted attempt, recorded
+
+`Q%′ = 100(A_Q − A_valley)/(A_Soret − A_valley)` — the same baseline applied to the denominator too — **is worse**:
+
+| set | d(`Q%`) | d(`Q%′`) |
+|---|--:|--:|
+| IPA only | **9.27** | 5.57 |
+| all three solvents | 2.82 | 2.50 |
+| within-oil sd, Billa | ±1.00 | **±2.49** |
+
+§13.4 already refuted the adjacent construction for the same reason: *`A_valley` swings 19× across the archive —
+it is the fill's pedestal, not the oil's property.* ⇒ **`Q%` works *because* it leaves the denominator alone**;
+the floor cancels exactly in its numerator and costs only −27 per A in the denominator. That is the design, and
+it is right. **Fix the preparation, not the metric.**

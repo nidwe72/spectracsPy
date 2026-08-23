@@ -14883,3 +14883,85 @@ Three results from `SPEC_settled_measurement.md` §32–§51 bear directly on th
   matched `A_valley`** (§39.1), and **keep every aliquot in the dark** — the "+0.6 to +0.8 pour effect" was
   light on the waiting aliquot, and it vanished (−0.026) the moment both aliquots were drawn together and
   kept dark.
+
+---
+
+## ⛔⛔ 16.37 THE LIGHT DOSE IN A TRIGLYCERIDE SOLVENT — §16.36's signature does not reproduce  *(2026-08-22, sunflower, Lugitsch; analysis only)*
+
+> One fill, read twice, **the same reference capture reused for both** (`max|ΔR| = 0.0`), ~12–15 min of lamp
+> between them. `20260822Lugitsch/002` then the light-dosed re-read. ⚠ That re-read's PDF was later replaced
+> on disk by the 3-capillary run under the same filename — the numbers below are from the extraction, the
+> file is gone.
+
+### 16.37.1 It is the sample, not the lamp
+
+Fitting `ΔA = a·A_fresh + b + c·λ` over 448–630:
+
+| model | R² |
+|---|---|
+| proportional pigment loss alone | 0.63 |
+| **flat offset + tilt alone** (a lamp / reference drift) | **0.002** |
+| both | 0.94 |
+
+An instrument drift gives a flat or tilted `ΔA`. This gives **−15.6 % of the pigment spectrum plus a new
+absorber**. Photobleaching, confirmed.
+
+### 16.37.2 What moved, normalised to the Soret fall
+
+| band | change | ×Soret |
+|---|--:|--:|
+| **624 nm** | **−20.2 %** | **×1.93** — the fastest-dying band in the spectrum |
+| Soret 448–460 | −10.5 % | ×1.00 |
+| Q 565–580 | −7.0 % | ×0.67 |
+| **470–490** | **+30.8 %** | ×−2.94 |
+| **valley 500–560** | **+35.7 %** | ×−3.41 |
+
+⇒ pigment destroyed at three peaks, and a **new broad absorber across 465–558 nm**, peaking ~+0.020 A near 480.
+
+### 16.37.3 ⛔ Q% moves the WRONG WAY, and it is entirely the valley
+
+| | `Q%` |
+|---|--:|
+| fresh | 16.21 |
+| after the dose | **15.33** (−0.88) |
+| *counterfactual: `A_valley` held fixed* | 16.54 → **+0.33 UP** |
+| *counterfactual: only the valley raised* | 15.00 → −1.21 |
+
+**The pigment destruction pushes `Q%` up; the photoproduct filling the valley overpowers it and drags it
+down.** The oil is being destroyed and the metric reads *fresher*.
+
+### 16.37.4 ⛔⛔ And none of it matches §16.36
+
+| | §16.36 (IPA, 72 min) | here (sunflower, ~15 min) |
+|---|---|---|
+| `Q%` | **+1.46** units (+1.0…+1.6 / hr) | **−0.88**; **−14 / hr** in-run |
+| `A_valley` | **FLAT throughout** | **+36 %** |
+| band-fall ratio (§16.36.1) | 1.56–2.34 — Soret dies 2× faster | **0.77** — Q dies faster |
+| pigment loss rate | 0.19 %/min | 0.34 (run 002) → **2.04 %/min** (the re-read) |
+
+Sign flipped, ratio inverted, rate up to 10× faster. ⚠ **And it accelerated 6× inside one fill**
+(−0.34 → −2.04 %/min). A simple photobleach *decelerates* as pigment depletes; acceleration is autocatalysis.
+Sunflower is ~60 % linoleic and photo-oxidises readily where IPA does not — **best hypothesis: the solvent is
+a photo-oxidation amplifier**, and its own oxidation products are the broad 470–560 absorber.
+
+⛔ **Unresolved, and the comparison is not controlled**: today's fill is more dilute (`A_Soret` 0.596 vs ~0.85)
+and §16.36.3 argues dilution makes bleaching *worse*; and 2.04 %/min is an *instantaneous* rate compared
+against a 72-minute *average*, which is not a valid comparison. n = 1 either side.
+
+### 16.37.5 What it costs, and the control that settles it
+
+⚠ §16.36.4's *"NOT a product problem — a real measurement is 1–2 % of this dose"* was measured at 0.19 %/min.
+At 2.04 %/min a **20-minute settling run burns ~40 % of the Soret**. If a triglyceride solvent is adopted the
+**shutter (§16.36.7) stops being a diagnostic nicety.**
+
+⚠ **TEST C misdiagnosed it.** The re-read printed *"the fill is DEGRADING … a fresh dilution is needed"*. The
+valley did rise, so the observation is right — but the cause is photochemistry, and a fresh dilution does the
+same thing again. Two causes, one message, opposite remedies.
+
+⭐ **The control:** dose **pure sunflower** in the beam for the same minutes against the same reference.
+Broad 470–560 rise with no pigment bands ⇒ the solvent. Flat ⇒ the pumpkin pigment, and sunflower merely fails
+to protect it. Then the matched IPA arm, and a dark-rest arm (§16.36.2's reversibility test).
+
+⚠ **This also prices `dQ100`**: the same dose moved it **+13.8 units — eleven fill-repeatabilities** — because
+it leans on the 624 band, the fastest-bleaching feature there is. See
+[`SPEC_metric_research.md`](SPEC_metric_research.md) §14.

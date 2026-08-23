@@ -1,4 +1,4 @@
-"""SPEC_color_retrieval.md — the colour-chip machinery (K4).
+"""SPEC_color_retrieval.md — the colour-chip machinery (K4) and the §7.12 colour fix (C1/C3).
 
 Proves the physics (dilution-invariance of the absorbance colour, dichromatism of the transmission colour) and the
 guards (F9 negative-absorbance clamp, F10 achromatic source), plus a render smoke for the swatch+HSL cell.
@@ -151,3 +151,79 @@ class RenderSmokeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ColourFixTest(unittest.TestCase):
+    """SPEC_color_retrieval.md §7.12 — C1 (excitation purity replaces the pinned HSL S) and C3 (`spectrumToLab`,
+    the "as seen" chip that KEEPS luminance)."""
+
+    def setUp(self):
+        self.util = EvaluationColorUtil()
+        self.absorbance = _absorbance()
+
+    # --- C1: the S = 100 % defect -----------------------------------------------------------------------
+    def test_hsl_saturation_is_pinned_at_100_which_is_why_purity_exists(self):
+        # The defect, asserted so it cannot be "fixed" by accident without this test being revisited: an
+        # out-of-gamut absorbed chromaticity clips a channel to 0, and HSL reads that back as S = 100.
+        _, saturation, _ = self.util.spectrumToHsl(_spectrum(self.absorbance), converter="srgb")
+        self.assertEqual(round(saturation), 100)
+
+    def test_purity_discriminates_where_hsl_saturation_cannot(self):
+        # A ladder of absorbances that are ALL out of sRGB, so HSL S pins to 100 on every rung and carries no
+        # information at all — while excitation purity, which is defined on the chromaticity diagram rather than
+        # by a display gamut, falls monotonically. This is the whole of §7.12 C1 in one assertion.
+        ladder = [{nm: scale * v + offset for nm, v in self.absorbance.items()}
+                  for scale, offset in ((1.0, 0.00), (0.8, 0.08), (0.6, 0.12), (0.5, 0.15))]
+        saturations = [self.util.spectrumToHsl(_spectrum(rung), converter="srgb")[1] for rung in ladder]
+        purities = [self.util.spectrumToPurity(_spectrum(rung)) for rung in ladder]
+        self.assertEqual([round(value) for value in saturations], [100, 100, 100, 100], saturations)
+        self.assertEqual(purities, sorted(purities, reverse=True), purities)   # strictly falls
+        self.assertGreater(purities[0] - purities[-1], 10.0, purities)
+        for value in purities:
+            self.assertTrue(0.0 <= value <= 100.0, value)
+
+    def test_purity_is_dilution_invariant_like_the_other_chromaticity_chips(self):
+        doubled = {nm: 2.0 * v for nm, v in self.absorbance.items()}
+        self.assertAlmostEqual(self.util.spectrumToPurity(_spectrum(self.absorbance)),
+                               self.util.spectrumToPurity(_spectrum(doubled)), delta=1.0)
+
+    def test_purity_of_an_empty_spectrum_is_zero(self):
+        self.assertEqual(self.util.spectrumToPurity(_spectrum({})), 0.0)
+
+    # --- C3: the "as seen" chip -------------------------------------------------------------------------
+    def test_as_seen_chip_is_deliberately_NOT_dilution_invariant(self):
+        # This is the whole point of chip 6 (§7.6): brownness IS lightness IS concentration. Twice the oil
+        # must read darker — the opposite of the F8 property the five invariant chips hold.
+        light, _, _, _ = self.util.spectrumToLab(_spectrum(self.absorbance), path=1.0)
+        doubled = {nm: 2.0 * v for nm, v in self.absorbance.items()}
+        dark, _, _, _ = self.util.spectrumToLab(_spectrum(doubled), path=1.0)
+        self.assertLess(dark, light - 5.0)
+
+    def test_as_seen_chip_darkens_with_the_declared_viewing_path(self):
+        thin, _, _, _ = self.util.spectrumToLab(_spectrum(self.absorbance), path=1.0)
+        thick, _, _, _ = self.util.spectrumToLab(_spectrum(self.absorbance), path=3.0)
+        self.assertLess(thick, thin - 5.0)
+
+    def test_as_seen_chip_stays_in_a_sane_range(self):
+        # Guards the two traps of §7.12's __cieXyzDense: `align`'s constant-hold red tail, and the cubic
+        # overshoot that produced L* = 144 when sparse T=1 anchors were used instead.
+        for path in (0.5, 1.0, 3.0, 5.0):
+            lightness, chroma, hue, rgb = self.util.spectrumToLab(_spectrum(self.absorbance), path=path)
+            self.assertTrue(0.0 <= lightness <= 100.0, (path, lightness))
+            self.assertTrue(0.0 <= chroma <= 150.0, (path, chroma))
+            self.assertTrue(0.0 <= hue < 360.0, (path, hue))
+            for channel in rgb:
+                self.assertTrue(0 <= channel <= 255, (path, rgb))
+
+    def test_as_seen_chip_reads_a_flat_floor_as_DARKER_not_as_a_different_hue(self):
+        # §7.6 / §7.10 F21: a neutral floor is what the eye sees, and it must show up as lightness, not hue.
+        floored = {nm: v + 0.15 for nm, v in self.absorbance.items()}
+        clean = self.util.spectrumToLab(_spectrum(self.absorbance), path=1.0)
+        murky = self.util.spectrumToLab(_spectrum(floored), path=1.0)
+        self.assertLess(murky[0], clean[0] - 5.0)                  # darker
+        self.assertLess(_hueDelta(murky[2], clean[2]), 12.0)       # roughly the same hue at this lightness
+
+    def test_as_seen_chip_of_an_empty_spectrum_is_neutral_grey(self):
+        lightness, chroma, hue, rgb = self.util.spectrumToLab(_spectrum({}))
+        self.assertEqual((lightness, chroma, hue), (0.0, 0.0, 0.0))
+        self.assertEqual(rgb, (128, 128, 128))
