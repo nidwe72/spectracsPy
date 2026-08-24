@@ -883,33 +883,64 @@ undiminished.
 band where they differ.** Isopropanol, being colourless, leaves the uninformative blue residue in the
 light reaching the eye, diluting the contrast.
 
-### ⭐⭐ 7.16.4a Observation 2: angular scrambling costs spectral RESOLUTION
+### ⛔⛔ 7.16.4a Observation 2 — a mechanism proposed and REFUTED by its own test  *(2026-08-24)*
 
-A grating spectrograph maps **input angle onto wavelength**. Micron droplets scatter into a forward lobe
-of width ~λ/2a — roughly **17°** for a 1 µm droplet at 600 nm. Light entering the slit over a spread of
-angles is dispersed over a spread of wavelengths, so the effective linewidth broadens and **narrow
-features wash out while broad ones survive**:
+⚠ **§12.6 of `SPEC_metric_research.md` already established the phenomenon**, on 110 fills and before this
+section existed: measured as a height above a local chord on **Soret-normalised** absorbance, the 568 nm
+band runs 0.087–0.213 across 106 isopropanol fills and 0.235–0.289 across four white-spirit fills — no
+overlap — and it already rules turbidity out ($r$ = −0.016 with normalised turbidity, and the spirit
+fills are the *more* turbid). §12.6 records the cause as **unsettled**. This section does not change
+that; it removes one candidate.
 
-| feature | width | under scrambling |
-|---|---|---|
-| **624 nm Qy** | ~5 nm | ⛔ washed out |
-| **568 nm** | narrow | ⛔ washed out |
-| Soret 420–460 nm | ~30 nm | survives |
+**What was proposed here, and is now withdrawn.** That a grating maps input angle onto wavelength, so an
+emulsion's ~17° forward lobe broadens the effective linewidth: narrow features wash out, broad ones
+survive. It has the right shape and it is wrong.
 
-⭐⭐ **The archive already holds the controlled experiment.** `20260727B` is the paper-diffuser A/B test
-(§16.7.2f of `SPEC_capture_quality.md`) — a pure scatterer, no chemistry:
+**The test.** ⭐ **Convolution conserves area.** Blurring lowers a band's height and widens it, leaving
+the integral alone. So measure the 624 nm band's **area** above its local chord, as a fraction of the
+**Soret** area — dose-free, since both scale with concentration
+(`diagnostics/band_width_by_solvent.py`):
 
-| | 624 nm band height `P2` | `Q%` (broad bands) |
-|---|---|---|
-| **diffuser IN** (001–003, 008–009) | ⛔ **0.000 – 0.031 A** | 15.6 – 17.1 |
-| **diffuser OUT** (004–007) | **0.066 – 0.072 A** | 15.6 – 17.1 |
+| | n | A_Soret (the dose check) | 624 area / Soret area |
+|---|--:|---|---|
+| **index-matched** (white spirit + sunflower) | 7 | 0.877 ± 0.263 | **0.0221 ± 0.0107** — [0.0110, 0.0368] |
+| **isopropanol** | 72 | 0.762 ± 0.146 | **0.0013 ± 0.0010** — [0.0001, 0.0036] |
 
-⇒ The narrow band is destroyed, the broad-band metric does not move. An emulsion is a weak diffuser
-distributed through the sample rather than sitting in front of it.
+⇒ **16.6× at matched dose** (the two A_Soret populations differ by 1.2× and overlap), $d$ = +6.65, ranges
+separate.
 
-⚠ **Consequence for `SPEC_metric_research.md` §12, if this is right:** `R = 624/568` is the most
-scatter-sensitive quantity in the project, and the SOLVENT becomes part of that metric's specification
-rather than a convenience. Consistent with the diffuser already being `R`'s one documented failure mode.
+⛔ **A 16.6× dose-free AREA difference cannot be convolution.** Resolution loss is refuted by its own
+prediction.
+
+⛔ **And so are the other optical candidates, all for one reason: they hurt the SORET more.**
+
+- **veiling glare** scales contrast by $T_{base}/(T_{base}+S)$, which is severe at the Soret
+  ($T \approx 0.03$) and mild at 624 nm ($T \approx 0.6$) — that makes the *ratio* larger in
+  isopropanol, not 16.6× smaller;
+- the **package / sieve effect** flattens the strongest bands most, so it too predicts a larger
+  Soret-normalised Q band in the emulsion. §12.6 had already noted it "predicts the opposite sign".
+
+⇒ **What survives is not optics at all.** At essentially the same pigment load the 624 nm transition
+carries 16.6× less area relative to the Soret in isopropanol — a change in the pigment's own state
+(speciation, or aggregation at the droplet interface), not in how the light gets to the detector.
+⏸ Unsettled, exactly as §12.6 left it.
+
+#### ⚠ 7.16.4b What this test could NOT do — the width comparison is invalid
+
+The first cut measured **equivalent width** $W = \text{area}/\text{height}$ and reported the isopropanol
+band as 3× *narrower*. ⛔ **That number is confounded and must not be quoted.**
+
+- Within isopropanol, $r(W,\ \text{height})$ = **+0.543**, and $W$ rises monotonically across height
+  tertiles: 1.63 → 2.21 → 2.70 nm. A band near the noise floor has its "peak" set by a noise excursion,
+  which inflates the height and deflates $W$.
+- **The height populations do not overlap at all** — every isopropanol band (0.0041–0.0256 A) is fainter
+  than the weakest index-matched one (0.0371 A). There is no fair slice on which to compare $W$.
+
+⚠ **And the diffuser A/B could not validate $W$ either.** It is the archive's one known blurring event,
+so it should have shown $W$ rising — but the diffuser erases the 624 band completely (no band above the
+chord on all five diffuser-IN runs), so $W$ is undefined there. **$W$ has never been demonstrated to
+detect blurring on this instrument.** The conclusion above rests on AREA alone, which needs no such
+demonstration.
 
 ### 7.16.5 ⚠ Where to hold back, and the experiments
 
@@ -931,10 +962,21 @@ archive's silence is explained rather than contradicted.
 ⚠ **Match the dose carefully.** Sunflower oil is far more viscous than isopropanol, so a capillary
 delivers a different mass into each — otherwise concentration confounds the entire comparison.
 
-**E3 — ⭐ the decisive one, no new hardware.** §7.16.3 and §7.16.4a make OPPOSITE predictions about
-WIDTH: resolution loss broadens a narrow feature as well as shortening it; veiling glare shortens it
-without broadening, and hurts the Soret most.
+⛔ **E3 as first written is unrunnable and has been replaced.** It said to measure the WIDTH of a narrow
+lamp line under two solvents. **There is no such line in this beam.** Both candidates are DETECTOR
+artefacts rather than optical features: 608–610 nm is a Bayer channel crossover (`DOC_lamp_rebuild.md`
+§6), and the 473 nm "blue-pump edge" rises in **one or two samples** (0.15–0.29 nm against a 0.146 nm
+grid step) — far below any plausible instrument linewidth — and sits at **472.5 nm in the REFERENCE and
+473.1 nm in the SAMPLE of the same run**. An optical feature cannot move; a threshold where the dominant
+Bayer channel switches moves with signal level, and 0.6 nm is that.
 
-⇒ Measure the **width of the 608–610 nm lamp line** — the Bayer-crossover line already documented as
-reading 1.6–2.2× its neighbours — with an isopropanol fill and with a white-spirit fill. If it broadens,
-it is resolution. One number off two spectra that would be captured anyway.
+**E3 — ⭐ the split sample.** §7.16.4a leaves a chemistry hypothesis with every optical explanation
+removed, and §12.6 leaves the cause unsettled. Both are limited by the same confound: 7 index-matched
+fills of one oil pair against 72 isopropanol runs spanning a year, two rigs and a rebuild.
+
+⇒ **Take ONE oil, prepare ONE dilution, split it, and put half into each solvent in the same session on
+the same rig.** Report `area(624) / area(Soret)` — dose-free, so the split need not be perfect. Two
+spectra, one evening, and every confound above disappears at once.
+
+⚠ Run it on the **green** oil: its 624 band is the taller of the two, so the isopropanol arm is furthest
+from the noise floor where §7.16.4b's problems live.

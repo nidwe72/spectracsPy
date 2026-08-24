@@ -2485,26 +2485,38 @@ that session exists *to be* an optical A/B, and §16.26.6 rejected the improvise
 can **erase** this one. Before `R` is built on anything, it must be established that it survives the rebuild
 the lamp spec proposes — and there is currently no reason to assume it will.
 
-#### ⭐ 12.4a · The mechanism, and it makes the SOLVENT part of this metric's specification  *(2026-08-24)*
+#### ⛔ 12.4a · A mechanism for §12.6's open question, proposed and REFUTED the same day  *(2026-08-24)*
 
-`SPEC_color_retrieval.md` §7.16.4a offers a physical account of §12.4, prompted by Edwin observing that
-the 624 nm peak became **more pronounced in sunflower oil — and in white spirit**. Both are nonpolar and
-index-matched to the oil (n ≈ 1.44 and 1.473 against the oil's 1.47) where isopropanol is polar at 1.377,
-so both DISSOLVE the oil where isopropanol only emulsifies it.
+Edwin observed the 624 nm peak strengthening in **sunflower oil AND white spirit** — both nonpolar and
+index-matched to the oil (n ≈ 1.44, 1.473 against 1.47) where isopropanol is polar at 1.377 and only
+emulsifies it. `SPEC_color_retrieval.md` §7.16.4a proposed that an emulsion's ~17° forward scattering
+lobe broadens the spectrograph's effective linewidth, washing out narrow features while broad ones
+survive — which would have explained §12.4's diffuser result and §12.6's band-height doubling with one
+mechanism.
 
-⇒ **A grating spectrograph maps input angle onto wavelength.** Micron droplets scatter into a forward
-lobe ~17° wide at 600 nm, so an emulsion broadens the instrument's effective linewidth. Narrow features
-wash out; broad ones survive — which is exactly §12.4's diffuser result (`P2` 0.066–0.072 → 0.000–0.031
-while `Q%` does not move), with the emulsion acting as a weak diffuser distributed through the sample
-instead of sitting in front of it.
+⛔ **Refuted by its own prediction.** Convolution CONSERVES AREA, so blurring must leave the band's
+integral alone. Measured dose-free as `area(624) / area(Soret)`, with A_Soret matched to 1.2× between
+the groups (`diagnostics/band_width_by_solvent.py`):
 
-⛔ **If this holds, `R` is the most scatter-sensitive quantity in the project, and the SOLVENT is part of
-its specification rather than a convenience.** It also predicts a narrower entrance aperture would
-recover some of the band in isopropanol, at the cost of light.
+```
+   index-matched (spirit + sunflower, n = 7)   0.0221 +/- 0.0107     [0.0110 .. 0.0368]
+   isopropanol                    (n = 72)     0.0013 +/- 0.0010     [0.0001 .. 0.0036]
+                                               16.6x, d = +6.65, ranges SEPARATE
+```
 
-⏸ **Untested.** The decisive experiment is E3 of `SPEC_color_retrieval.md` §7.16.5: measure the WIDTH of
-the 608–610 nm lamp line with an isopropanol fill and with a white-spirit fill. Resolution loss broadens
-it; veiling glare would shorten it without broadening. One number off two spectra.
+⇒ A 16.6× dose-free **area** difference is not convolution. And the other optical candidates fail for
+one shared reason — **they all hurt the SORET more**, so each predicts a *larger* Soret-normalised Q band
+in the emulsion: veiling glare scales contrast by `T_base/(T_base+S)`, severe at the Soret and mild at
+624 nm; the package/sieve effect flattens the strongest bands most, which §12.6 had already noted.
+
+⇒ ⭐ **Nothing optical survives**, which leaves §12.6's open question where it was — a change in the
+pigment's own state — with one more candidate removed. **This does not touch `R`'s numbers**: `R` reads
+band heights against fixed anchors and never a fitted position or width.
+
+⏸ The test that would settle it is E3 of `SPEC_color_retrieval.md` §7.16.5, rewritten the same day: **one
+oil, one dilution, split between the two solvents in one session on one rig**, reported as
+`area(624)/area(Soret)`. It removes the confound both §12.6 and §7.16.4a are limited by — 7 fills of one
+oil pair against 72 runs spanning a year, two rigs and a rebuild.
 
 ### ⚠ 12.5 · What `R` is measuring, and the honest doubt
 
