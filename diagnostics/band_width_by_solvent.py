@@ -145,18 +145,14 @@ def main():
         for _, relative in INDEX_MATCHED:
             take(os.path.join(archive.ARCHIVE, relative), matched, relative)
 
-        for folder, subfolders, names in sorted(os.walk(archive.ARCHIVE)):
-            subfolders[:] = [d for d in subfolders if d not in archive.EXCLUDED_DIRS]
-            for name in sorted(names):
-                if not name.endswith(".pdf"):
-                    continue
-                series = os.path.relpath(folder, archive.ARCHIVE)
-                series = "(root)" if series == "." else series
-                key = name[:-4] if series == "(root)" else "%s__%s" % (series, name[:-4])
-                if archive.classOf({"series": series, "run": key}) not in ("green", "brown"):
-                    continue
-                take(os.path.join(folder, name), isopropanol,
-                     "%s/%s" % (series, name) + ("  [diffuser IN]" if key in archive.DIFFUSER_IN else ""))
+        for folder, name in archive.walkReports():
+            series = os.path.relpath(folder, archive.ARCHIVE)
+            series = "(root)" if series == "." else series
+            key = name[:-4] if series == "(root)" else "%s__%s" % (series, name[:-4])
+            if archive.classOf({"series": series, "run": key}) not in ("green", "brown"):
+                continue
+            take(os.path.join(folder, name), isopropanol,
+                 "%s/%s" % (series, name) + ("  [diffuser IN]" if key in archive.DIFFUSER_IN else ""))
 
     print("EQUIVALENT WIDTH of the 624 nm band  =  area / height  above the 612-615 -> 627-630 chord")
     print("⭐ convolution CONSERVES AREA: blurring lowers the height and raises W, while veiling glare")

@@ -132,22 +132,18 @@ def main():
                 sunflower.append(row)
 
         isopropanol = []
-        for folder, subfolders, names in sorted(os.walk(archive.ARCHIVE)):
-            subfolders[:] = [d for d in subfolders if d not in archive.EXCLUDED_DIRS]
-            for name in sorted(names):
-                if not name.endswith(".pdf"):
-                    continue
-                series = os.path.relpath(folder, archive.ARCHIVE)
-                series = "(root)" if series == "." else series
-                key = name[:-4] if series == "(root)" else "%s__%s" % (series, name[:-4])
-                label = archive.classOf({"series": series, "run": key})
-                if label not in ("green", "brown"):
-                    continue
-                row = measure(os.path.join(folder, name), scratch)
-                if row:
-                    row["class"] = label
-                    row["series"] = series
-                    isopropanol.append(row)
+        for folder, name in archive.walkReports():
+            series = os.path.relpath(folder, archive.ARCHIVE)
+            series = "(root)" if series == "." else series
+            key = name[:-4] if series == "(root)" else "%s__%s" % (series, name[:-4])
+            label = archive.classOf({"series": series, "run": key})
+            if label not in ("green", "brown"):
+                continue
+            row = measure(os.path.join(folder, name), scratch)
+            if row:
+                row["class"] = label
+                row["series"] = series
+                isopropanol.append(row)
 
     print("=" * 96)
     print("1  THE NAIVE COMPARISON  -  printed to be discounted, not believed")

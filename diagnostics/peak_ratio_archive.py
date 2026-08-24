@@ -82,6 +82,28 @@ ARCHIVE = os.path.expanduser("~/development/spectracs/spectracs-references/tmp")
 EXCLUDED_DIRS = {"oldPdfs", "discussion"}
 OUT_CSV = os.path.join(ARCHIVE, "peak_ratio_archive.csv")
 
+
+def walkReports(root=None):
+    """Yield `(folder, name)` for every report PDF under `root`, deterministically ordered.
+
+    ⛔⛔ USE THIS -- never `for folder, subfolders, names in sorted(os.walk(root))`. `sorted()` consumes
+    the generator BEFORE the loop body runs, so the in-place `subfolders[:] = [...]` prune that
+    `EXCLUDED_DIRS` depends on can no longer influence the traversal: os.walk has already decided where
+    it went. Every `oldPdfs/` copy then leaks back in and each run is counted TWICE -- silently, because
+    the duplicates parse fine and only inflate whole-corpus counts. Found 2026-08-24 while auditing
+    section 16.12.7g's n = 72 (`SPEC_red_ratio_metric.md` section 11.1).
+
+    Pruning is done in place on the live `subfolders` list, and ordering comes from sorting that list
+    plus `names` -- which yields the same order the buggy `sorted(os.walk(...))` produced for the
+    directories it did visit, so no caller's output is reordered.
+    """
+    for folder, subfolders, names in os.walk(root if root is not None else ARCHIVE):
+        subfolders[:] = sorted(d for d in subfolders if d not in EXCLUDED_DIRS)
+        for name in sorted(names):
+            if name.endswith(".pdf"):
+                yield folder, name
+
+
 # The two bands Edwin marked, and the anchors each is measured against. See the docstring for why
 # every one of these numbers is forced.
 P1_PEAK = 568.0
@@ -185,35 +207,31 @@ def peak2Position(wavelengths, absorbance):
 def collect():
     rows = []
     with tempfile.TemporaryDirectory() as scratch:
-        for folder, subfolders, names in sorted(os.walk(ARCHIVE)):
-            subfolders[:] = [d for d in subfolders if d not in EXCLUDED_DIRS]
-            for name in sorted(names):
-                if not name.endswith(".pdf"):
-                    continue
-                path = os.path.join(folder, name)
-                series = os.path.relpath(folder, ARCHIVE)
-                series = "(root)" if series == "." else series
-                run = name[:-4]
-                key = run if series == "(root)" else "%s__%s" % (series, run)
-                workflow = workflowOf(path, scratch)
-                if workflow is None:
-                    continue
-                trace = despikedTrace(workflow)
-                if trace is None:
-                    continue
-                wavelengths, absorbance = trace
-                if wavelengths[0] > 542.0 or wavelengths[-1] < 628.0:
-                    rows.append({"run": key, "series": series, "note": "coverage %.0f-%.0f"
-                                 % (wavelengths[0], wavelengths[-1])})
-                    continue
-                p1, p2, ratio = peakRatio(wavelengths, absorbance)
-                rows.append({"run": key, "series": series,
-                             "wlo": "%.0f" % wavelengths[0], "whi": "%.0f" % wavelengths[-1],
-                             "P1": "%.4f" % p1, "P2": "%.4f" % p2, "R": "%.4f" % ratio,
-                             "Qpct": "%.3f" % qPercent(wavelengths, absorbance),
-                             "peak2nm": "%.1f" % peak2Position(wavelengths, absorbance),
-                             "soret": "%.4f" % bandMean(wavelengths, absorbance, 448.0, 460.0),
-                             "valley": "%.4f" % bandMean(wavelengths, absorbance, 500.0, 560.0)})
+        for folder, name in walkReports():
+            path = os.path.join(folder, name)
+            series = os.path.relpath(folder, ARCHIVE)
+            series = "(root)" if series == "." else series
+            run = name[:-4]
+            key = run if series == "(root)" else "%s__%s" % (series, run)
+            workflow = workflowOf(path, scratch)
+            if workflow is None:
+                continue
+            trace = despikedTrace(workflow)
+            if trace is None:
+                continue
+            wavelengths, absorbance = trace
+            if wavelengths[0] > 542.0 or wavelengths[-1] < 628.0:
+                rows.append({"run": key, "series": series, "note": "coverage %.0f-%.0f"
+                             % (wavelengths[0], wavelengths[-1])})
+                continue
+            p1, p2, ratio = peakRatio(wavelengths, absorbance)
+            rows.append({"run": key, "series": series,
+                         "wlo": "%.0f" % wavelengths[0], "whi": "%.0f" % wavelengths[-1],
+                         "P1": "%.4f" % p1, "P2": "%.4f" % p2, "R": "%.4f" % ratio,
+                         "Qpct": "%.3f" % qPercent(wavelengths, absorbance),
+                         "peak2nm": "%.1f" % peak2Position(wavelengths, absorbance),
+                         "soret": "%.4f" % bandMean(wavelengths, absorbance, 448.0, 460.0),
+                         "valley": "%.4f" % bandMean(wavelengths, absorbance, 500.0, 560.0)})
     return rows
 
 

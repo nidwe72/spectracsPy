@@ -141,53 +141,52 @@ def polar(xy):
 def collect():
     rows = []
     with tempfile.TemporaryDirectory() as scratch:
-        for folder, _, names in sorted(os.walk(archive.ARCHIVE)):
-            for name in sorted(names):
-                if not name.endswith(".pdf"):
-                    continue
-                series = os.path.relpath(folder, archive.ARCHIVE)
-                series = "(root)" if series == "." else series
-                key = name[:-4] if series == "(root)" else "%s__%s" % (series, name[:-4])
-                workflow = archive.workflowOf(os.path.join(folder, name), scratch)
-                if workflow is None:
-                    continue
-                trace = archive.despikedTrace(workflow)
-                if trace is None:
-                    continue
-                wavelengths, absorbance = trace
-                spectrum = Spectrum()
-                spectrum.valuesByNanometers = {float(w): float(a)
-                                               for w, a in zip(wavelengths, absorbance)}
-                clean = sanitize(spectrum, util.RELATIVE)
-                if clean is None:
-                    continue
-                raw = {float(w): max(0.0, float(a)) for w, a in zip(wavelengths, absorbance)}
-                ceiling = util._EvaluationColorUtil__resolveCeiling(raw, util.RELATIVE)
-                heldXy, padXy = legacyAlignXy(clean), cieXy(clean)
-                heldWl, heldPurity = polar(heldXy)
-                padWl, padPurity = polar(padXy)
-                compHeld = complementPurity(heldXy)
-                compPad = complementPurity(padXy)
-                complementXy = (2.0 * WHITE[0] - padXy[0], 2.0 * WHITE[1] - padXy[1])
-                perceivedXy = transmittedXy(spectrum)
-                if perceivedXy is None:
-                    continue
-                dThetaComp = angleGap(angleFromWhite(complementXy), angleFromWhite(perceivedXy))
-                dHueComp = angleGap(hslHue(complementXy), hslHue(perceivedXy))
-                dHueFlip = angleGap(hslHue(heldXy) + 180.0, hslHue(perceivedXy))
-                rows.append({"run": key, "series": series,
-                             "wlo": float(wavelengths[0]), "whi": float(wavelengths[-1]),
-                             "peakA": max(raw.values()), "ceiling": ceiling,
-                             "ceilFired": max(raw.values()) > (ceiling or 1e9),
-                             "xHeld": heldXy[0], "yHeld": heldXy[1],
-                             "xPad": padXy[0], "yPad": padXy[1],
-                             "wlHeld": heldWl, "peHeld": heldPurity,
-                             "wlPad": padWl, "pePad": padPurity,
-                             "compHeld": compHeld, "compPad": compPad,
-                             "compImaginary": compPad > 100.0,
-                             "xPerc": perceivedXy[0], "yPerc": perceivedXy[1],
-                             "dThetaComp": dThetaComp, "dHueComp": dHueComp,
-                             "dHueFlip": dHueFlip})
+        # ⛔ Was `sorted(os.walk(...))` with NO prune at all, so every `oldPdfs/` copy was counted a
+        # second time. `walkReports` honours EXCLUDED_DIRS. Fixed 2026-08-24.
+        for folder, name in archive.walkReports():
+            series = os.path.relpath(folder, archive.ARCHIVE)
+            series = "(root)" if series == "." else series
+            key = name[:-4] if series == "(root)" else "%s__%s" % (series, name[:-4])
+            workflow = archive.workflowOf(os.path.join(folder, name), scratch)
+            if workflow is None:
+                continue
+            trace = archive.despikedTrace(workflow)
+            if trace is None:
+                continue
+            wavelengths, absorbance = trace
+            spectrum = Spectrum()
+            spectrum.valuesByNanometers = {float(w): float(a)
+                                           for w, a in zip(wavelengths, absorbance)}
+            clean = sanitize(spectrum, util.RELATIVE)
+            if clean is None:
+                continue
+            raw = {float(w): max(0.0, float(a)) for w, a in zip(wavelengths, absorbance)}
+            ceiling = util._EvaluationColorUtil__resolveCeiling(raw, util.RELATIVE)
+            heldXy, padXy = legacyAlignXy(clean), cieXy(clean)
+            heldWl, heldPurity = polar(heldXy)
+            padWl, padPurity = polar(padXy)
+            compHeld = complementPurity(heldXy)
+            compPad = complementPurity(padXy)
+            complementXy = (2.0 * WHITE[0] - padXy[0], 2.0 * WHITE[1] - padXy[1])
+            perceivedXy = transmittedXy(spectrum)
+            if perceivedXy is None:
+                continue
+            dThetaComp = angleGap(angleFromWhite(complementXy), angleFromWhite(perceivedXy))
+            dHueComp = angleGap(hslHue(complementXy), hslHue(perceivedXy))
+            dHueFlip = angleGap(hslHue(heldXy) + 180.0, hslHue(perceivedXy))
+            rows.append({"run": key, "series": series,
+                         "wlo": float(wavelengths[0]), "whi": float(wavelengths[-1]),
+                         "peakA": max(raw.values()), "ceiling": ceiling,
+                         "ceilFired": max(raw.values()) > (ceiling or 1e9),
+                         "xHeld": heldXy[0], "yHeld": heldXy[1],
+                         "xPad": padXy[0], "yPad": padXy[1],
+                         "wlHeld": heldWl, "peHeld": heldPurity,
+                         "wlPad": padWl, "pePad": padPurity,
+                         "compHeld": compHeld, "compPad": compPad,
+                         "compImaginary": compPad > 100.0,
+                         "xPerc": perceivedXy[0], "yPerc": perceivedXy[1],
+                         "dThetaComp": dThetaComp, "dHueComp": dHueComp,
+                         "dHueFlip": dHueFlip})
     return rows
 
 
