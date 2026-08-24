@@ -1,5 +1,14 @@
 # SPEC — `V` / `Q%` in the DEV plugin
 
+> ⛔⛔ **SUPERSEDED AS THE INTENDED VERDICT, 2026-08-25 — but STILL SHIPPING.** `Rv` is now the verdict
+> metric (`SPEC_red_ratio_metric.md`, `ROADMAP.md` item 1). `Q%` keeps the gauge and the pill until `Rv`
+> is implemented and clears M9, so **everything below remains live and correct** — it is the account of
+> what the instrument computes today, not of what it should compute tomorrow.
+>
+> ⭐ **Most of this document is reusable rather than replaceable.** `Rv` shares `V_VALLEY_BAND` and
+> `V_Q_BAND` exactly, inherits §3.1's `A_Soret` floor and the lower half of §3.1a's domain band, and lands
+> on the same `Absorption (bands)` plot with one added marker. The gauge work in §4 is the template.
+>
 > **Status: IMPLEMENTED 2026-08-14 — V2–V7, V9 (domain guard) and V10 (archive regenerated) all done.
 > Only V8, the rig click-through, is left.** This document is the UI-and-integration half of
 > [`SPEC_metric_research.md` §10](SPEC_metric_research.md) — which owns the *finding* and is

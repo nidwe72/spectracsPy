@@ -542,6 +542,47 @@ the same effect, and it is not attributed to lamp line structure.
 ⇒ It is no longer a purchase gate. It is the measurement that would have prevented this chapter's error,
 and both parts are on the R2 order anyway.
 
+## ⭐⭐ 6a · TWO OF THIS DOCUMENT'S FINDINGS NOW CARRY MORE WEIGHT THAN WHEN WRITTEN  *(2026-08-25)*
+
+The verdict metric is now **`Rv` = 100·(A[622–627] − A_valley)/(A[565–580] − A_valley)**
+(`SPEC_red_ratio_metric.md`). Two things already argued here turn out to bear directly on it.
+
+### ⭐⭐ 6a.1 Figure 5's carotenoid note is now evidence AGAINST the metric it was written under
+
+Figure 5 says of the blue end:
+
+> the carotenoid absorption at ~455 nm rides on top of the Soret, so the peak you can see is not the peak
+> the chemistry is at
+
+⭐ **That is the physical case against `Q%`'s denominator.** `Q%` divides a porphyrin Q band by the
+448–460 nm window — a window this document shows is **contaminated by a pigment family that has no Q
+bands at all**. Two unrelated chromophore systems in one ratio.
+
+`Rv` divides one Q band by another. Numerator and denominator come from the **same** electronic system, so
+Gouterman's four-orbital account applies to both terms — and demetallation (D₄ₕ → D₂ₕ) making band I the
+weakest of four *is* what `Rv` measures. That is the likely reason `Rv` absorbs a 40–45 % dose swing and
+three solvents where `Q%` moves 6.5 units on one oil.
+
+### ⛔ 6a.2 §7.3's peak-POSITION hope does NOT apply to the red band — it lives in the Soret
+
+This document argues that **position metrics are the ideal** — dilution-invariant by construction, since
+Beer–Lambert scales amplitude and does not move a maximum — and that the demetallation shift is a position
+*"unreachable from one flank"*.
+
+⭐ **The far flank is now reachable**: in an index-matched solvent the 624 nm band is a whole peak, maximum
+at 623–625 nm falling 81–99 % by 633 nm (`SPEC_red_ratio_metric.md` §6.6). So the objection is answered.
+
+⛔ **But the red band's position is not a discriminator.** Measured over the index-matched runs it spans
+**623.0–624.8 nm with green and brown interleaved**; second-derivative dip positions agree
+(623.8 ± 0.6 nm in sunflower). **The demetallation blue shift this document wants is in the SORET**, and
+it remains unreachable for the reason §7.2 gives — the incumbent cannot see the Soret's short-wavelength
+side.
+
+⇒ ⭐ **This does not weaken the case for the wider range; it redirects it.** The red extension is still
+wanted — the 660–680 nm quiet window is a true pigment-free anchor, which nothing inside 440–630 is (the
+quietest points measured are 540.5 and 558.0 nm, and both sit *inside* `Rv`'s own valley window). But it
+should be justified as **an anchor**, not as a route to a red peak position.
+
 ## 7 · Recommendation
 
 ### 7.1 ⭐⭐ The board to build — R2, and every part is Avonec

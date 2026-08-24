@@ -5816,7 +5816,50 @@ exception out, so **Edwin rules on it**, not this section.
 ⚠ And re-specify arm A's gate before doing so — `A_valley` alone cannot answer "is it clear?" across a
 solvent change, now that we know the solvent moves the pigment's own 500–630 absorbance by 1.5–2.0×.
 
+### ⭐⭐⭐ 16.12.7h THE VERDICT METRIC IS NOW `Rv`  *(Edwin's decision, 2026-08-25)*
+
+```
+Rv = 100 · (A[622–627] − A_valley) / (A[565–580] − A_valley)      T = 52,  higher = greener
+```
+
+⭐ **§16.12.7g's solvent thread is what produced it.** Resolving the 624 nm band in an index-matched
+solvent is what made a 624-based metric possible at all — and §6.6 of `SPEC_red_ratio_metric.md` shows
+the band is a **whole peak only in an index-matched solvent** (max at 623–625 nm falling 81–99 % by
+633 nm; in isopropanol it rises to 629–630 and plateaus, falling 4–14 %).
+
+| | |
+|---|---|
+| archive | **1 error / 98** vs `Q%`'s 9 |
+| solvent | no green/brown overlap in isopropanol, white spirit **or** sunflower; `Q%` overlaps |
+| dilution | a 40–45 % dose swing moves it **< 0.8 %** |
+| contract | `SPEC_red_ratio_metric.md` · finding record `SPEC_metric_research.md` §15 |
+
+⛔ **CHOSEN, NOT BUILT.** `Q%` still computes the pill. ⛔ **§16.31.3a is NOT waived** — every `Rv`
+constant is fitted on the corpus it is scored on, exactly as `dQ100`'s were. The decision picks the
+metric; M9 decides when it may carry a verdict.
+
+⛔⛔ **And this section's own arm is now a standing `Rv` blocker.** `SPEC_red_ratio_metric.md` §6.7: on
+the archive's diffuser A/B, **2 of 5** blurred runs of a GREEN oil read brown with **both guards
+passing**. `Q%` is unaffected. ⇒ any optical change — the lamp rebuild included — forces a full `Rv`
+re-validation, and no cheap guard can detect the condition.
+
 ### ⭐⭐ 16.12.7g SUNFLOWER — the food-safe arm, and it carries the effect on its own  *(2026-08-24; the case, and the gate)*
+
+> ## ⭐⭐⭐ DECIDED 2026-08-25 — SUNFLOWER IS THE SOLVENT
+>
+> Edwin's decision. `DOC_sample_physics.md` **§4A** carries the case; this section remains the technical
+> record and its gate below is **not waived**.
+>
+> ⭐ **What makes it safe is `Rv`.** This section's own warning — *"every threshold is
+> isopropanol-fitted … a solvent migration is a full re-calibration, not a swap"* — is exactly right for
+> `Q%`, which moves 13.5–15.5 → 16.2–16.7 → 20.6–20.8 on ONE oil across the three solvents. But `Rv`'s
+> `T = 52` transfers **unchanged, 0 errors in every solvent**, and its margin is **widest in sunflower**
+> (+67.9 vs isopropanol's +52.0). ⇒ the re-calibration this section feared does not apply to the metric
+> that was chosen.
+>
+> ⛔ **CHOSEN, NOT MIGRATED.** Isopropanol is still the recipe, the E3 gate below has not run in full,
+> only two oils have been measured in sunflower *and* another solvent, and the preparation **stratifies**
+> (second half +15–45 % absorber). §4A.4–4A.5.
 
 §16.12.7d–7f pursued **de-aromatised white spirit**, which cannot enter a product. The 22 August evening
 used **sunflower oil** instead (`DOC_solvent_and_hue.md`), and re-splitting the archive by solvent rather

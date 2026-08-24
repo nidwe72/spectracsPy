@@ -8,6 +8,49 @@
 > which is §4 of `Spectracs_LightPigmentSolvent.pdf`. The decision record is
 > `SPEC_capture_quality.md` §16.12.7g. **Edit those; this note is not maintained.**
 
+## ⭐⭐⭐ WHAT CHANGED SINCE — read this before the table below  *(2026-08-25)*
+
+The body below is deliberately left as written on 23 August. Two of its statements have since been
+**overtaken**, and one line in it is now known to be **confounded**.
+
+### 1 · `Q%` is no longer the verdict metric
+
+§1's table calls it *"the shipped verdict metric"*; that was true when written. The verdict metric is now
+**`Rv`**:
+
+```math
+R_{v} = 100\,\frac{A_{624} - A_{valley}}{A_{Q} - A_{valley}}
+\qquad
+T = 52 \quad \text{(higher = greener)}
+```
+
+On this note's own two fills: **Billa Clever `Rv` = 34, Lugitsch `Rv` = 125** — the same separation the
+table reports, read on a metric that also survives the solvent change. ⛔ `Q%` does not: the same Lugitsch
+oil reads **13.5–15.5 in isopropanol and 20.6–20.8 in white spirit**. Contract:
+`SPEC_red_ratio_metric.md`; decision record `SPEC_metric_research.md` §15.
+
+### 2 · ⛔ §2's `A_valley` = 0.018 headline is DOSE-CONFOUNDED
+
+That fill carried the **lowest pigment load of the sunflower set** (`A_Soret` 0.596). Normalised —
+`A_valley / A_Soret` — it reads **0.030** against 0.092 for the sibling fill and 0.103–0.145 for the three
+fresh-bottle fills of 2026-08-24. It was one exceptionally lean fill, **not a property of sunflower**.
+`SPEC_red_ratio_metric.md` §6.6.
+
+### ⭐⭐⭐ 3 · AND SUNFLOWER IS NOW THE SOLVENT
+
+Decided 2026-08-25. This note's feasibility test became the recipe. `DOC_sample_physics.md` §4A is the
+case; the short form is that `Rv`'s threshold `T = 52` transfers across solvents **unchanged with zero
+errors**, and its margin is **widest here** — **+67.9** against isopropanol's +52.0.
+
+⛔ **Chosen, not migrated** — the E3 gate has not run in full, and §4A.4 lists what is still open.
+
+### 4 · ⭐ What this note got RIGHT, and it turned out to be the important part
+
+Resolving the 624 nm band in an index-matched solvent is what made a 624-based metric possible at all. The
+band is a **whole peak only in an index-matched solvent** — maximum at 623–625 nm falling 81–99 % by
+633 nm, where isopropanol merely rises to 629–630 and plateaus (4–14 %). **Every metric that beats `Q%`
+reads that band.**
+
 <!--
   SOURCE OF TRUTH: this file. Edit the prose HERE, never the PDF.
   REGENERATE:

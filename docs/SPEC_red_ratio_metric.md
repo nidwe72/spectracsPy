@@ -1,0 +1,690 @@
+# SPEC — `Rv`, the red ratio: the 624 band measured against the Q band
+
+> # ⭐⭐⭐ `Rv` IS THE VERDICT METRIC
+>
+> **Edwin's decision, 2026-08-25.** Implementing it is the highest-priority item on `ROADMAP.md`.
+> This document is the contract.
+>
+> ```
+> Rv = 100 · (A[622–627] − A_valley) / (A[565–580] − A_valley)     T = 52,  higher = greener
+> ```
+>
+> ⛔ **STATUS: CHOSEN, NOT YET BUILT.** `Q%` is what the code ships today and it keeps the verdict pill
+> until `Rv` lands **and** clears §7. Do not read "winner" as "shipped" — nothing below is implemented.
+>
+> ⛔ **§7 still stands and is not waived by the decision.** Every constant here is fitted on the corpus it
+> is scored on, exactly as `dQ100`'s were when `SPEC_capture_quality.md` §16.31.3a refused it. The
+> decision settles *which metric the programme builds toward*; §7 settles *when it may carry a verdict*.
+> Applying that bar unevenly would make it meaningless.
+>
+> Origin: **Edwin, 2026-08-24**, reading the `Absorption (bands)` page of `20260824Lugitsch/001.pdf` —
+> *"take (3) mean and a potential mean marked by the red boxes and put them into relation"*
+> (`~/ksnip_20260824-220622.png`). The observation is that the **624 nm peak is the only feature on that
+> page with no band marker.**
+>
+> The *finding* is recorded in `SPEC_metric_research.md` §15; the physics in §2.5 below.
+>
+> Reproduce every number from the embedded `workflow.json` of the archived reports;
+> `diagnostics/d2r_all_runs.py` and `diagnostics/today_report.py` carry the working code.
+
+---
+
+## 1 · What this delivers, in one screen
+
+```
+EVALUATION
+ ├─ Metrics                    ← Rv gauge BESIDE the Q% gauge, + 2 new metric rows
+ ├─ Absorption (bands)         ← ONE new band marker (6) at 622–627 nm; markers 1–5 unchanged
+ ├─ Absorption (bands, baseline)   unchanged
+ ├─ Report                         additive
+ ├─ Metrics (dev)              ← Rv variants (window sweep, hR) for research only
+ └─ Absorption (bands, dev)        unchanged
+```
+
+⭐ **No new spectral machinery.** `Rv` is built from **three band means the plugin already computes** —
+`A_valley`, `A_Q`, `A_Soret` — plus **one new band mean**. No baseline fit, no local floor, no level
+crossing, no robust statistic. `bandMean` is the only primitive required.
+
+⛔ **`Rv` does NOT replace `Q%`.** Q% keeps its gauge and its verdict until §7 passes. `Rv` ships first
+as a **number beside it**, which is the same discipline `dQ100` was held to on 2026-08-21.
+
+---
+
+## 2 · The metric
+
+```math
+R_v \;=\; 100 \times \frac{A_{624} - A_{valley}}{A_{Q} - A_{valley}}
+```
+
+**Both peaks measured above the same line** — marker **(4)**, `A_valley`, which the plot already draws.
+
+| | |
+|---|---|
+| direction | ⭐ **higher = greener.** Opposite to `Q%`. This inverts every ordering sentence — see §2.3 |
+| units | dimensionless; absorbance cancels |
+| dilution | **scale-invariant by construction**: `A → cA` sends numerator and denominator both to `c·(…)` |
+| range, labelled corpus | **21.9 … 125.8** over 98 guarded runs |
+| display precision | ⭐ **one decimal.** Pooled within-series sd is 5.7 (§6.3) — a second decimal would be theatre |
+
+### 2.1 ⭐⭐ It is `Q%` with the denominator swapped
+
+```math
+Q\% = 100\cdot\frac{A_{Q}-A_{valley}}{A_{Soret}}
+\qquad\qquad
+R_v = 100\cdot\frac{A_{624}-A_{valley}}{A_{Q}-A_{valley}}
+```
+
+**Same numerator quantity.** `Q%` divides the Q band's height above the valley by the **Soret flank**;
+`Rv` divides the **624 band's** height above the valley by that same Q-band height. So `Rv` is not a new
+family — it is the shipped metric with its denominator replaced by the term that carries the
+green/brown information, and `A_Soret` drops out of the verdict path entirely.
+
+⭐ **This is why the guards compose exactly** (§3.2): `Rv`'s denominator *is* `Q%`'s numerator.
+
+### 2.2 Why the pedestal subtraction is load-bearing, not a refinement
+
+Edwin's ratio as first drawn is `A_624 / A_Q` — no `A_valley`. Both peaks sit **on** the scattering
+pedestal, and that pedestal is **additive**, so it does **not** cancel in a raw ratio:
+
+| form | errors, 95 guarded labelled runs |
+|---|--:|
+| `A_624 / A_Q` — as first drawn | **4** |
+| **`Rv` — pedestal removed** | **1** |
+
+⇒ Subtracting marker (4) from **both** terms is the whole difference. It is not optional.
+
+### 2.3 ⛔ The direction trap
+
+`Q%` reads *higher = browner*; `Rv` reads *higher = greener*. **Green is now ABOVE the line.** Every
+gauge preset, every ordering sentence and every threshold comparison flips. `SPEC_v_metric_integration.md`
+§2 records the same hazard for the `V → Q%` sign flip and calls it *"the one place a careless edit flips
+a verdict."* It applies here with equal force, and §8 T3 pins it.
+
+### ⭐⭐ 2.5 Why this ratio, physically — the metric and the photophysics are congruent
+
+⭐ **`Rv` is not a curve-fit that happens to work.** `KB_spectroscopy_physics.md` predicted its shape
+before the measurement existed:
+
+> A metallated ring (D₄ₕ) shows **two** Q bands (α, β); the free base (D₂ₕ) shows **four**, numbered I–IV
+> from the longest wavelength. […] **Band I is the weakest in every one of them.** So a pigment whose
+> Qy(0,0) is its dominant long-λ band while metallated becomes, on demetallation, the *weakest* of four.
+
+| | pigment | symmetry | predicted | measured (SNV, 500–627 nm) |
+|---|---|---|---|---|
+| green oil | protochlorophyll, **Mg in** | ~D₄ₕ | long-λ band dominant | **624 nm is the tallest feature**, z ≈ 2.2 |
+| brown oil | protopheophytin, **Mg out** | D₂ₕ | band I becomes weakest of four | **569 nm tallest** (z ≈ 2.75); 624 falls to z ≈ 0.5–0.75 |
+
+⇒ **624 nm is band I**, 565–580 nm a shorter Q component. `Rv` is therefore a **symmetry diagnostic**: it
+measures the D₄ₕ→D₂ₕ demetallation directly — the chemistry that browns the oil. Protopheophytin carries
+the ring-E carbonyl, a rhodofying group, so the expected ordering is *rhodo* (III > IV > II > I) and band I
+is still weakest.
+
+⭐⭐ **And this is the physical case against `Q%`.** `Q%` divides by the Soret, and
+`DOC_lamp_410_680.md` Fig. 5 already says of that window: *"the carotenoid absorption at ~455 nm rides on
+top of the Soret, so the peak you can see is not the peak the chemistry is at."* **Carotenoids have no Q
+bands and are not part of the porphyrin system**, so `Q%` ratios a porphyrin band against a window
+contaminated by a different pigment family. `Rv` stays inside one chromophore's Q manifold — numerator and
+denominator from the same electronic system. That is the likely reason `Rv` absorbed a 40–45 % dose swing
+and three solvents (§6.2, §6.6) where `Q%` moved 6.5 units on one oil.
+
+⭐ `Rv` is the **ratio form** of `DOC_metric_algebra.md` §5.8's see-saw at 568/624; `dQ100` is the
+difference form.
+
+⚠ **Three caveats travel with this argument and must not be dropped when it is quoted:**
+
+1. ⛔ **Q-manifold conservation is untested, not shown** — total Q per unit Soret reads 7.85 / 5.56 / 6.71
+   on the three oils. If demetallation only redistributed intensity that should be flat. It is not —
+   though the denominator is the same contaminated Soret, so this is not a clean test either way.
+2. ⛔ **The band assignment is literature, not this instrument.** The KB's own 2026-08-04 warning:
+   *"OUR OWN INSTRUMENT DOES NOT CONFIRM THE Qy POSITION, and cannot at this range."*
+3. ⛔ **Consistency is not mechanism.** Two different pigments in differing proportions would produce the
+   same crossover. Separating them needs the red extension or a deliberate demetallation.
+
+⏸ **The fuller write-up is still owed** — into the *body* of `KB_spectroscopy_physics.md` (the passage is
+currently buried in its sources list), `DOC_sample_physics.md`, and §5.8 — then regenerate
+`Spectracs_LightPigmentSolvent.pdf` and `Spectracs_MetricAlgebra.pdf`.
+
+### 2.4 What was rejected, and why
+
+| form | why not |
+|---|---|
+| `R = A(624)/A(568)` (`SPEC_metric_research.md` §12) | no pedestal removal ⇒ 3 errors where `Rv` makes 1; and its 568 window is *not* marker (3), so it cannot reuse the plot |
+| `hR = h624/h568` on **local floors** | 1 error, and the flattest across solvents (§6.2) — but its 624 floor window **604–616 contains the 609 nm Bayer crossover** (`DOC_lamp_rebuild.md` §6). A plain mean there is inflated by +0.024…+0.050 A against a band height of only 0.071…0.077 on brown oils — **up to 40 % of the measurand** — so it needs a robust statistic on an artefact-bearing window. Kept as a **dev-panel research variant**, not a shipping candidate |
+| `area(624)/area(Soret)` (`diagnostics/band_width_by_solvent.py`) | ⛔ **not a quality metric at all** — 25 errors / 82 on green-vs-brown, and a 300× swing on ONE oil across solvents. It is a *solvent* discriminator and E3 built it as one. §9 restates this |
+| `dQ100` | **0 errors** and still the best single discriminator — but it is a *different* proposal with its own withdrawn history (2026-08-21), it needs `sd` over 448–626 rather than band means, and it cannot be drawn on the bands plot. Orthogonal decision; not settled here |
+
+---
+
+## 3 · The computation
+
+Beside the existing `V_*` constants in `DevSpectralPlugin`:
+
+```python
+RV_VALLEY_BAND = (500.0, 560.0)   # == V_VALLEY_BAND — the SAME window, marker (4)
+RV_Q_BAND      = (565.0, 580.0)   # == V_Q_BAND      — the SAME window, marker (3)
+RV_RED_BAND    = (622.0, 627.0)   # ⛔ NEW — the only new window. §3.1
+RV_THRESHOLD   = 52.0             # ⛔ PROVISIONAL AND FITTED — §7 owns it
+RV_QPCT_FLOOR  = 12.0             # §3.2 — the LOWER half of Q%'s domain band, and only the lower half
+RV_VERDICT_BAND = (20.0, 130.0)   # §4.1 domain guard, must equal the gauge band
+```
+
+```python
+valley = util.bandMean(despiked, *RV_VALLEY_BAND)
+q      = util.bandMean(despiked, *RV_Q_BAND)
+red    = util.bandMean(despiked, *RV_RED_BAND)
+rv     = 100.0 * (red - valley) / (q - valley)  # denominator guarded by §3.2
+```
+
+Computed on the **de-spiked** absorbance the tab already holds (`__despikedAbsorption`, median kernel 7),
+with **no baseline of any kind** — the same trace `Q%` reads, so the two cannot diverge.
+
+⛔⛔ **THE TRAP — marker (3) is 565–580, not 560–580.** The plugin carries **both** `PB_Q_BAND = (560,580)`
+and `V_Q_BAND = (565,580)`. The `Absorption (bands)` page Edwin was reading is **V's** plot, so its marker
+(3) is **565–580**. `SPEC_v_metric_integration.md` §3 already warns that reusing `PB_Q_BAND` *"would render
+plausibly, disagree with `box_metrics.py`, and nothing would error."* Using the wrong one here additionally
+**breaks the guard proof of §3.2**, because that proof requires `Rv`'s denominator to be *exactly* `Q%`'s
+numerator. Pinned by §8 T1.
+
+### 3.1 ⭐ Why 622–627 and not Edwin's wider box — the clamp decides it
+
+The red box drawn on the screenshot spans roughly 618–632 nm. **That window does not exist on most of the
+archive.** Report wavelength maxima, deduplicated:
+
+| `wlmax` | reports |
+|---|--:|
+| **629.8 nm** | 143 |
+| 635.9 nm | 47 |
+| 649.9 nm | 14 |
+| 661.6 / 664.5 nm | 2 / 2 |
+
+⇒ **A 620–630 window is truncated on the majority of the corpus**, and silently: `bandMean` averages
+whatever samples fall inside and returns a number either way. Measured on the 95 guarded labelled runs:
+
+| red window | errors | overlap | clamp-safe at 629.8 |
+|---|--:|--:|---|
+| **622–627** | **1** | **−0.107** | ✅ |
+| 621–627 | 1 | −0.132 | ✅ |
+| 620–628 | 2 | −0.161 | ✅ |
+| 620–630 | 2 | −0.172 | ⛔ truncated on 143 reports |
+
+**622–627 is chosen on principle first**: symmetric about 624.5, entirely inside every epoch in the
+archive, and clear of the 609 nm crossover. That it also scores best is **not** the argument — see §7.2,
+where window choice is named as one of the fitted degrees of freedom.
+
+⚠ **The red flank is still cut.** Even at 635.9 nm the 624 band has not returned to baseline (0.127 /
+0.075 / 0.111 A at 633 nm on the triad). `Rv` reads the peak, not the whole band. This is a **fifth
+argument** for the red extension in `SPEC_lamp_rebuild.md`, alongside the four in
+`SPEC_metric_research.md` §13.
+
+### 3.2 ⭐⭐ The guards — inherited, provably sufficient, and only the LOWER half
+
+`Rv` **adds no new denominator guard.** It needs exactly two conditions, both already computed:
+
+1. `A_Soret ≥ 0.15` — `SPEC_v_metric_integration.md` §3.1
+2. `Q% ≥ 12.0` — ⛔ **the LOWER edge of §3.1a's domain band, and only the lower edge**
+
+**Proof.** `Rv`'s denominator is `A_Q − A_valley`, which by §2.1 equals `Q% · A_Soret / 100`. Under both
+conditions it is bounded below by `12.0 × 0.15 / 100 = 0.0180 > 0`. It cannot vanish or change sign
+wherever `Rv` is reported.
+
+**Verified on the archive:** of 141 guarded report-parses, **0 have a non-positive denominator**; observed
+minimum **0.0372**, twice the algebraic bound. Ungarded, 12 distinct reports do go non-positive — every
+one the `cappy` non-oil samples or the `20260806A` null series with no oil in the beam, i.e. exactly what
+the existing guards already withhold.
+
+### ⛔⛔ 3.2a Why the UPPER bound must NOT be inherited — the first draft of this spec got it wrong
+
+The first draft made `Rv` inherit the whole band, `Q% ∈ [12, 22]`, on the tidy-sounding principle
+*"where `Q%` reports, `Rv` reports."* **That principle is wrong**, and a replicate fill measured at 22:32
+on the evening this was written proved it:
+
+| | `Q%` | verdict | `Rv` | verdict |
+|---|--:|---|--:|---|
+| `20260824SparSBudget/001` | 21.32 | brown | 31.1 | brown |
+| **`20260824SparSBudget/002`** | **23.12** | ⛔ **none — outside the domain band** | **42.4** | brown ✅ |
+
+`Q%` correctly withholds: 23.12 is past the scale it was scored on. But `Rv` reads 42.4, comfortably
+inside its own corridor and on the correct side of the line — and the first draft would have **thrown
+that verdict away because a metric it does not use ran off its own scale.**
+
+⭐ **The upper bound is `Q%`'s domain concern, not `Rv`'s.** Only the lower bound enters the denominator
+proof. Measured over the labelled corpus, dropping it recovers **3 runs** — and all three read correctly:
+
+| run | `Q%` | `Rv` | reads |
+|---|--:|--:|---|
+| `20260821BillaCleverA/002` | 22.04 | 36.9 | brown ✅ |
+| `20260727C/006` | 24.65 | 51.0 | brown ✅ |
+| `20260727D/002` | 22.83 | 36.7 | brown ✅ |
+
+Error count is **unchanged at 1** either way (§6.1), so this is not a scoring improvement — it is a
+correctness fix. `Rv` is then evaluated on **98** labelled runs rather than 95.
+
+⇒ ⭐ **`Rv` has its own domain guard** (§4.1) and does not borrow anyone else's.
+
+---
+
+## 4 · The gauge
+
+A second `VerdictGaugeView` preset beside the `Q%` gauge — **not** replacing it.
+
+```
+   probably too brown  │  52  │            good — green
+  bandLeft 20                                        bandRight 130
+```
+
+| | |
+|---|---|
+| band | **ascending, green on the RIGHT** — the mirror of the `Q%` gauge. `GaugeColorUtil` is orientation-aware, so no SDK change |
+| classes | **two** at first. A third *borderline* class needs a scatter estimate `Rv` does not yet have (§6.3) — adding one now would invent its width |
+| headroom | labelled corpus spans 21.9…125.8; the band clears both ends |
+
+### 4.1 The domain guard is still needed, and is `Rv`'s own
+
+Q%'s domain guard does **not** bound `Rv`. Over the 141 guarded report-parses `Rv` ranges **−6.6 …
+294.4** — far outside the labelled corpus — because a sample may pass `Q%`'s domain and still have no
+624 band at all. ⇒ `RV_VERDICT_BAND = (20.0, 130.0)`, applied with the same §3.1a semantics: **the value
+and the bars stand; only the pill is withheld.** A gauge clamps past its band edge, so without this a
+`Rv` of 294 would read *"good — green"* on authority it does not have.
+
+---
+
+## 5 · The plot — one new marker
+
+`Absorption (bands)` gains marker **(6)**, a band bar over 622–627 at the mean of that window, in the
+existing `addLevel` idiom (`SPEC_soret_448_trim.md` §12.2). Markers (1)–(5) are untouched; the legend
+gains one row: `6  red band mean`.
+
+⭐ **This is the smallest change that makes Edwin's observation visible by default.** The peak he had to
+draw a box around becomes a labelled feature, and the two quantities `Rv` relates — (6) and (3), both
+above (4) — are then readable straight off the page.
+
+---
+
+## 6 · Evidence
+
+### 6.1 Classification, 98 guarded labelled runs (60 green / 38 brown)
+
+| metric | green | brown | best cut | errors |
+|---|---|---|--:|--:|
+| **`Q%`** (shipped) | 16.04 ± 1.80 [12.73 … 20.79] | 19.99 ± 1.30 [17.14 … 24.65] | 18.19 | **9** |
+| **`Rv`** | 83.6 ± 21.8 [39.5 … 125.8] | 37.7 ± 6.4 [21.9 … 51.0] | 51.0 | **1** |
+
+At the provisional `T = 52`: **1 error**. Excluding the single failing fill (§6.4): **0 errors**,
+gap **+3.1** (green min 54.1, brown max 51.0).
+
+⚠ Effect sizes are close — `|d|` 2.60 vs 2.42. **`Rv`'s advantage is in the tails, not the means.**
+`Q%`'s classes overlap across a 3.65-unit span containing 9 runs; `Rv`'s overlap is one fill wide.
+
+### 6.2 ⭐⭐ Across solvents — the result `Q%` cannot match
+
+Two oils, every solvent measured, guarded runs only:
+
+| | `Rv` | `Q%` |
+|---|---|---|
+| **Lugitsch** (green) isopropanol, n=16 | 98.4 … 125.2 | 13.48 … 18.90 |
+| white spirit, n=2 | 103.1 … 104.9 | 20.62 … 20.79 |
+| sunflower (old bottle), n=2 | 114.5 … 125.2 | 16.21 … 16.66 |
+| sunflower (fresh bottle), n=1 | 115.0 | 18.90 |
+| **Lugitsch, all solvents** | **98.4 … 125.2** | **13.48 … 20.79** |
+| **BillaClever** (brown) isopropanol, n=14 | 28.3 … 46.4 | 18.76 … 21.45 |
+| white spirit, n=1 | 36.4 | 21.83 |
+| sunflower (old bottle), n=1 | 34.2 | 21.45 |
+| **BillaClever, all solvents** | **28.3 … 46.4** | **18.76 … 21.83** |
+
+⇒ **`Rv` separates the two oils by a factor of 2.1 with no overlap in any solvent** (green floor 98.4,
+brown ceiling 46.4). **`Q%` overlaps outright** on 18.76 … 20.79 — a brown Billa fill and a green
+Lugitsch fill are indistinguishable by the shipped metric once the solvent is allowed to vary.
+
+⚠ Not a portability *proof*: two oils, and n=1 in three of the six cells.
+
+### 6.3 ⛔ The margin is thinner than the noise
+
+**Pooled within-series sd of `Rv` = 5.74** across 18 repeat-fill series. The green–brown gap at its
+narrowest is **3.1**. ⇒ The corpus separates, but **a single borderline fill has no safety margin.**
+This is the strongest argument against giving `Rv` a verdict pill on this evidence, and it is why §4
+ships two classes and no *borderline* band — the width of that band is exactly what is not yet known.
+
+⇒ ⏸ **`σ_fill` for `Rv` is owed**, from the same T1 five-fill session `SPEC_settled_measurement.md` §35
+already schedules for `Q%`. It costs nothing extra: the same fills, one more column.
+
+### 6.4 The one failure, stated as a failure
+
+`20270729B/002.pdf`, labelled **green**, reads `Rv = 39.5` against a best cut of 51.0.
+
+| its five siblings | 54.1, 57.5, 63.3, 65.7, 70.2 |
+|---|---|
+| `dQ100` on 002 | **+26.6** vs siblings +6.7 … +14.4 — also flagged |
+| `Q%` on 002 | **13.02** — the *greenest* reading in the whole archive |
+
+Two independent 624-based metrics call that fill anomalous and `Q%` calls it exceptional. ⛔ **It is
+scored as an error regardless.** Excluding it requires a reason that is not "it disagrees with the
+metric" — §16.31.3a forbids exactly that move. ⏸ **P1: pull its raw frames** before it is discussed again.
+
+### ⭐⭐ 6.5 THE SECOND LIGHT DOSE — all three oils, and `Rv`'s margin holds
+
+⚠ **Revision note.** This section was written twice before it was right. Draft 1 read the `002` runs as
+**replicate fills** — wrong: Edwin re-measured *the same already-exposed aliquots*. Draft 2 read them as a
+dose experiment but had only the two brown oils and concluded `Rv` was in trouble. The **Lugitsch second
+dose** (`20260824Lugitsch/002`, 22:40) completes the set and changes that conclusion.
+
+#### What one further dose did to each oil
+
+| | `A_Soret` | `A_valley` | `A_Q` | `A_624` | `Q%` | `Rv` |
+|---|--:|--:|--:|--:|--:|--:|
+| **Lugitsch** (green) | −1.0 % | **+4.9 %** | **+1.7 %** | **+0.6 %** | +0.18 | **−1.6** |
+| **SparPremium** (brown) | +2.1 % | +24.9 % | +16.7 % | +20.9 % | +1.71 | +1.4 |
+| **SparSBudget** (brown) | +3.3 % | **+33.3 %** | +20.6 % | **+39.4 %** | +1.80 | +11.3 |
+
+⭐⭐ **The green oil barely moves; the brown oils move 17–39 %.** Lugitsch's bands shift 0.6–4.9 % where
+the browns shift by an order of magnitude more. Whatever the beam is doing to these samples, it is doing
+it **far more to the brown oils**.
+
+#### ⭐⭐ g4: the green/brown margin survives — and `Rv` gets the order right twice
+
+| | run 001 | run 002 | margin 001 | margin 002 |
+|---|---|---|--:|--:|
+| **`Rv`** — Lugitsch vs nearest brown | 115.0 vs 44.0 | 113.4 vs 45.5 | **+71.0** | **+67.9** |
+| **`Q%`** — Lugitsch vs nearest brown | 18.90 vs 18.19 | 19.08 vs 19.90 | ⛔ **−0.71** | +0.81 |
+
+**`Rv`'s green/brown margin falls only 4.4 %** and stays an order of magnitude clear of the §6.3 scatter.
+⇒ ⭐ **g4 passes.** Draft 2's worry — that exposure erodes what `Rv` is actually for — is **not** borne out.
+
+Full ordering, against Edwin's bench ranking *Lugitsch ≫ SparPremium ≳ SparSBudget*:
+
+| run | `Rv` | `Q%` |
+|---|---|---|
+| **001** | Lug 115.0 > Prem 44.0 > SBud 31.1 ✅ | Prem 18.19 < Lug 18.90 < SBud 21.32 ⛔ |
+| **002** | Lug 113.4 > Prem 45.5 > SBud 42.4 ✅ | Lug 19.08 < Prem 19.90 < SBud 23.12 ✅ |
+
+⇒ **`Rv` is right in both runs. `Q%` is wrong in 001 and right in 002** — and it is right in 002 only
+because the *brown* oils degraded past Lugitsch. `Q%` did not measure better; the sample moved under it.
+⛔ A metric that reaches the right answer because the sample spoiled has not earned the verdict.
+
+#### ⛔ What still stands from draft 2
+
+`Rv`'s **between-brown** gap still collapses **77 %** (12.9 → 3.0) while `Q%`'s holds (3.13 → 3.23):
+SparSBudget's 624 band rises +39.4 % against SparPremium's +20.9 %, so the two browns converge. ⇒ **`Rv`
+must not be used to rank two brown oils against each other on exposed samples.** That is outside §2's
+claim, and §9 now says so.
+
+⚠ The false-pass concern is **narrowed, not withdrawn**: the browns drift toward green (+1.4, +11.3)
+while the green drifts slightly toward brown (−1.6), so the margin closes from both sides — but by
+3.1 against a margin of 71.0.
+
+#### ⛔⛔ The confound this cannot resolve
+
+**Lugitsch had ~2.4× the beam time in run 001**: `SETTLED_AFTER_CLEARING`, 257 s of clearing over 16 rows,
+against ~105 s and 7 rows for both Spars. Its `002` then came back `SETTLED_IMMEDIATE`. So two readings
+fit equally well:
+
+| | |
+|---|---|
+| **(a) green oil is photostable** | the pigment that makes it green resists the beam |
+| **(b) Lugitsch had already saturated** | it absorbed its change during the longer 001 run, and 002 shows the flat tail |
+
+⇒ ⏸ **g4′ — the discriminating run**: dose a **fresh** Lugitsch aliquot with a *matched* beam time to the
+Spars (~105 s), then re-dose. If it then moves 17–39 % like the browns, (b) is right and §6.5's headline
+is an artefact of unequal exposure. **Cheap, one evening, and it decides whether "green oil is
+photostable" is a finding or a coincidence.**
+
+### ⭐⭐⭐ 6.6 THE FRESH POUR — dilution-invariance demonstrated at 40 %, and §6.5's mechanism identified
+
+At 23:13–23:21 Edwin poured the **remaining ~4 ml** of each prepared sample into a clean tube and measured
+again (`003`). That stock had stood the same ~2.5 h **but never entered the beam** — which separates
+standing time from beam dose, and turned out to answer §6.5's open mechanism outright.
+
+#### ⛔⛔ The remaining 4 ml is FAR more concentrated — the prep is not homogeneous
+
+| `003` vs `001` | `A_Soret` | `A_valley` | `A_Q` | `A_624` |
+|---|--:|--:|--:|--:|
+| Lugitsch | **+39.5 %** | +50.1 % | +42.3 % | +41.5 % |
+| SparPremium | **+45.5 %** | +88.7 % | +60.0 % | +70.3 % |
+| SparSBudget | +15.2 % | +1.2 % | +14.2 % | +16.1 % |
+
+The second half of the same prepared sample carries up to **45 % more absorber** than the first half.
+⇒ **The pigment-rich material settles in the mixing vessel**: the first pour takes the leaner top, the
+remainder is the richer bottom.
+
+⛔ **This challenges `SPEC_capture_quality.md` §16.12.7g's "the oil dissolves — a true solution"**, which
+rests on the refractive-index match (n 1.473 vs 1.47). A true solution does not stratify in two hours.
+⚠ It does not refute the index match; it says the *preparation* is not homogeneous, whatever the optics.
+⇒ ⏸ **Mix immediately before pouring, and record whether the pour is first or second half.**
+
+#### ⭐⭐ It also identifies §6.5's mechanism — settling, not photochemistry
+
+§6.5 offered "more oil in the beam" against "photo-browning" and could not choose. The fresh pour chooses:
+the same stratification that makes the *remainder* richer will, inside a standing tube, enrich the
+**beam region** over 96 minutes. That is §6.5's near-uniform scaling (`k` = 1.02 / 1.18 / 1.26), and it is
+the hypothesis §6.5 ranked first.
+
+⇒ ⭐ **Photo-browning is now doubly disfavoured**, and "green oil is photostable" (§6.5's confound (a))
+loses its footing: Lugitsch changed least between 001 and 002 because it is the **best-dissolved** — the
+oil sunflower's index match serves best — not because its pigment resists light. **The finding is about
+the preparation, not the pigment.** ⏸ g4′ still worth running, but its likely answer is now (b).
+
+#### ⭐⭐⭐ And this is the strongest dilution-invariance evidence in the corpus
+
+A ~40 % dose change is exactly what a dilution-invariant metric must absorb:
+
+| | `A_Soret` change | `Q%` change | `Rv` change |
+|---|--:|--:|--:|
+| Lugitsch | **+39.5 %** | −0.20 | **−0.5** |
+| SparPremium | **+45.5 %** | −0.39 | **+0.7** |
+| SparSBudget | +15.2 % | +1.45 | +6.5 |
+
+⭐ On the two well-behaved oils, a **40–45 % dose swing moves `Rv` by under 0.8 %**. §2's
+scale-invariance is no longer only algebraic — it is measured, on samples that did not exist when the
+metric was defined.
+
+#### ⭐⭐ Order across all three rounds — `Rv` 3/3, `Q%` 1/3
+
+| round | `Rv` | `Q%` |
+|---|---|---|
+| **001** first pour | Lug 115.0 > Prem 44.0 > SBud 31.1 ✅ | Prem 18.19 < Lug 18.90 < SBud 21.32 ⛔ |
+| **002** same tube, +96 min | Lug 113.4 > Prem 45.5 > SBud 42.4 ✅ | Lug 19.08 < Prem 19.90 < SBud 23.12 ✅ |
+| **003** fresh pour, 2nd half | Lug 114.5 > Prem 44.7 > SBud 37.6 ✅ | **Prem 17.80 < Lug 18.70** < SBud 22.77 ⛔ |
+
+⛔ **`Q%` inverts Lugitsch and SparPremium in BOTH pours of fresh sample**, and is right only in `002` —
+the round where the brown oils had degraded past Lugitsch. ⭐ `Rv` is right in all three.
+
+Per-oil spread over the nine runs:
+
+| | `Rv` spread | `Q%` spread |
+|---|--:|--:|
+| Lugitsch | **1.6** | 0.38 |
+| SparPremium | **1.4** | **2.10** |
+| SparSBudget | 11.3 | 1.80 |
+
+`Q%`'s 2.10-unit spread on one oil across one evening exceeds any green/brown margin it offers.
+`Rv`'s worst spread is 11.3, ~16 % of its 71-unit margin.
+
+⚠ **SparSBudget is the exception in every panel here** — the smallest concentration step, the only
+non-monotone `Rv`, the only `003` to show a clearing transient (`SETTLED_AFTER_CLEARING`, 210 s / 13 rows
+against ~108 s / 7 for the others). Something about that fill behaves differently and this spec does not
+explain it. ⏸ It is the first candidate for a repeat.
+
+### ⛔⛔⛔ 6.7 THE DIFFUSER TEST HAS ALREADY RUN — AND `Rv` FAILS IT
+
+`20260727B` is the archive's diffuser A/B (`SPEC_capture_quality.md` §16.7.2f): the paper diffuser was
+**IN** for runs 001–003 and 008–009 and came **OUT** for 004–007. **All nine are the same green oil.**
+`Rv` must read green, or refuse.
+
+| run | diffuser | `A_Soret` | `Q%` | `Rv` | guard | `Rv` verdict |
+|---|---|--:|--:|--:|---|---|
+| 001 | IN | 0.663 | 17.10 | 54.6 | passes | green |
+| **002** | **IN** | 0.678 | 16.35 | **50.3** | **passes** | ⛔ **BROWN — WRONG** |
+| 003 | IN | 0.591 | 15.88 | 65.0 | passes | green |
+| 004 | OUT | 0.726 | 15.60 | 66.5 | passes | green |
+| 005 | OUT | 0.698 | 16.07 | 71.1 | passes | green |
+| 006 | OUT | 0.694 | 17.08 | 73.5 | passes | green |
+| 007 | OUT | 0.759 | 14.56 | 73.7 | passes | green |
+| **008** | **IN** | 0.688 | 16.86 | **50.9** | **passes** | ⛔ **BROWN — WRONG** |
+| 009 | IN | 0.589 | 16.37 | 53.9 | passes | green |
+
+- diffuser **OUT**: `Rv` = 66.5 … 73.7, spread **7.2**, all comfortably green.
+- diffuser **IN**: `Rv` = 50.3 … 65.0, straddling the line — **2 of 5 read brown**.
+- ⛔⛔ **Both guards pass on every one of the nine.** `A_Soret` ≥ 0.15 ✅, `Q%` ≥ 12 ✅, `Rv` inside
+  (20, 130) ✅. **§3.2 and §4.1 do not catch this.** The number simply comes out wrong and looks fine.
+- ⭐ **`Q%` is untouched**: 15.6 … 17.1 with the diffuser IN, 14.6 … 17.1 with it OUT. The shipped metric
+  shrugs off an optical change that moves `Rv` by 20 units.
+
+⛔ **And the headline 1/98 does not see this**, because `peak_ratio_archive.DIFFUSER_IN` excludes those
+five runs as an instrument fault — an exclusion that **predates `Rv`** and is not special pleading, but it
+does mean **§6.1's corpus has the known `Rv`-breaking condition removed from it.** Stated plainly here so
+the two numbers are never quoted without each other.
+
+#### ⛔ The obvious mitigation does not work
+
+A band-presence guard — refuse when the 624 feature has no height above its local 612–615 → 627–630 chord —
+looked like the fix. It is not:
+
+| | chord height |
+|---|---|
+| diffuser IN (n=5) | 0.0000 (band gone) |
+| diffuser OUT (n=4) | 0.0046 … 0.0218 |
+| `20260812_BillaClever/001` — a **normal brown** run | **0.0000** |
+| `20280819BillaClever/001` — a **normal brown** run | **0.0000** |
+| `20260817LigitschA/001` — a **normal green** run | 0.0098 |
+
+⇒ **A washed-out band and a genuinely weak band are the same measurement.** Any threshold that refuses the
+diffuser also refuses most brown isopropanol runs — which are exactly the runs `Rv` exists to classify.
+There is no cheap algorithmic guard here.
+
+⇒ ⭐ **The mitigation is procedural, not algorithmic**: the optical path must be fixed and recorded, and
+**`Rv` must be re-validated after ANY optical change** — the lamp rebuild included. `SPEC_lamp_rebuild.md`
+should carry this as a blocker.
+
+---
+
+## 7 · ⛔⛔ THE GATE — pre-registration, and it blocks everything above
+
+**Nothing in §1–§6 may be quoted as a validated result.** Every number above is measured on the corpus
+that the metric's form was chosen against.
+
+### 7.1 What `Rv` inherits from `dQ100`'s refusal
+
+`SPEC_capture_quality.md` §16.31.3a refused `dQ100` because its constants were fitted on its own corpus
+and its headline rested on the **Spar Premium relabel**. `Rv` is in the *same* position, with one
+difference in its favour and one against:
+
+| | |
+|---|---|
+| ⭐ **in favour** | the 2026-08-24 triad fixes SparPremium's class **by eye at the bench** — a label no metric could have contaminated, and the first such label for that oil. Under it `Rv` is right and `Q%` is wrong |
+| ⛔ **against** | n = 1 fill per oil in that triad, and `Rv`'s *form* was still chosen post-hoc on the archive |
+
+### 7.2 The fitted degrees of freedom — declare them or the test is worthless
+
+1. **the red window** — 4 candidates compared on the scored corpus (§3.1);
+2. **the threshold 52** — the midpoint of a gap measured on the scored corpus;
+3. **the pedestal subtraction** — chosen *because* it beat the raw form 4 → 1 (§2.2);
+4. **the domain band (20, 130)** — drawn around the observed corpus range.
+
+### 7.3 The held-out test
+
+⭐ **Freeze §3's constants in this document, then measure fills that did not exist when it was written.**
+
+| | |
+|---|---|
+| **pre-registered claim** | `Rv > 52` classifies green vs brown with ≤ 1 error |
+| **held-out set** | ≥ 12 fills: ≥ 3 oils × ≥ 2 fills × ≥ 2 solvents, labelled **by eye before the number is read** |
+| **must include** | the **brown arm in the fresh bottle** — BillaClever has no fresh-sunflower fill, so §6.2's bottle result rests on one oil |
+| **fails if** | > 1 error, or the threshold has to move to hold |
+| ✅ **g4 — the dose arm** | ✅ **RAN 2026-08-24 (§6.5) and PASSED**: `Rv`'s green/brown margin falls only 4.4 % (71.0 → 67.9) under a second dose and the 3-oil order is correct in both runs. ⏸ **g4′ still owed** — a matched-beam-time Lugitsch dose, to separate "green oil is photostable" from "Lugitsch had already saturated" (§6.5) |
+
+⛔ **Until §7.3 reports, `Rv` ships as a number and `Q%` keeps the verdict.** That is not caution for its
+own sake — it is the identical bar `dQ100` was held to, and applying it unevenly would make the standard
+meaningless.
+
+---
+
+## 8 · Tests
+
+| id | test |
+|---|---|
+| **T1** | `RV_Q_BAND == V_Q_BAND` and `RV_VALLEY_BAND == V_VALLEY_BAND`, asserted on the constants — the §3 trap |
+| **T2** | the guard proof: sweeping a synthetic spectrum across `A_Soret` and `Q%`, the denominator is `> 0.018` whenever `A_Soret ≥ 0.15` **and** `Q% ≥ 12` — and ⛔ a run with `Q% > 22` still yields an `Rv` verdict (§3.2a) |
+| **T3** | direction: a spectrum with a larger 624 band yields a **higher** `Rv` and a **greener** verdict — §2.3 |
+| **T4** | domain guard: `Rv = 294` renders the value and the bars but **no pill** |
+| **T5** | clamp: a trace truncated at 629.8 nm yields the **same** `Rv` as the identical trace extended to 635.9 — proves 622–627 is epoch-independent |
+| **T6** | golden values: the 2026-08-24 first pour reproduces 115.0 / 44.0 / 31.1 to 1 decimal |
+| **T7** | `diagnostics/` and the plugin agree to 1e-9 on the whole archive — the `box_metrics.py` reconciliation, extended |
+| **T8** | `walkReports()` yields **no path containing `/oldPdfs/`**, and its count equals `find <archive> -name "*.pdf" -not -path "*/oldPdfs/*" | wc -l` — pins §11.1 so the bug cannot return |
+
+---
+
+## 9 · What is NOT claimed
+
+- ⛔ **Not that `Rv` beats `dQ100`.** `dQ100` makes **0** errors on the same 95 runs. `Rv`'s case is that it
+  is drawable on the existing plot, computable from existing band means, and guard-compatible — **not**
+  that it classifies better.
+- ⛔ **Not that `Rv` is solvent-portable.** §6.2 is two oils, three solvents, several cells at n=1.
+- ⛔ **Not that the 624 band is understood.** `SPEC_capture_quality.md` §16.12.7g records the mechanism as
+  an *argument, not a measurement*, and `SPEC_color_retrieval.md` §7.16.4a establishes only the negative half.
+- ⛔ **Not that `area(624)/area(Soret)` is related.** It is a solvent discriminator: 25 errors / 82 on
+  green-vs-brown. It must never be promoted to a quality metric.
+- ⛔ **Not a ranking between two BROWN oils on exposed samples.** §6.5: `Rv`'s between-brown gap collapses
+  77 % under one further dose while `Q%`'s holds. `Rv` is a green/brown discriminator, and that is all.
+- ⛔⛔ **NOT robust to a diffuser — measured, not feared (§6.7).** On the archive's own diffuser A/B,
+  2 of 5 blurred runs of a GREEN oil read brown, **both guards passing**. `Q%` is unaffected. No cheap
+  guard exists, because a washed-out band and a weak band are indistinguishable. ⇒ `Rv` must be
+  re-validated after any optical change, and this is a **blocker on `SPEC_lamp_rebuild.md`**.
+
+---
+
+## 10 · Build order
+
+| phase | what | gate |
+|---|---|---|
+| **P0** | ✅ **DONE** — `sorted(os.walk(...))` fixed via `peak_ratio_archive.walkReports()`, all four walkers migrated, §16.12.7g re-run and `n = 72` confirmed (§11.1). ⏸ still owed: promote the scratchpad scripts to `diagnostics/red_ratio_archive.py` and add T8 | — |
+| **P1** | pull the raw frames of `20270729B/002` (§6.4) | — |
+| **P2** | `Rv` + the two metric rows + marker (6), **no gauge** | P0 |
+| **P3** | record the finding in `SPEC_metric_research.md` §12 as `R`'s valley-referenced sibling | P2 |
+| **P4** | `σ_fill` for `Rv` from the T1 five-fill session (§6.3) | lab |
+| **P5** | ⛔ **the §7.3 held-out set**, incl. the fresh-bottle brown arm | lab |
+| **P6** | the gauge + `RV_THRESHOLD`, **only if P5 passes** | P4, P5 |
+
+⇒ **P2 is the only phase that touches shipping code before a lab session**, and it moves no verdict.
+
+---
+
+## 11 · Open questions
+
+1. ✅ **RESOLVED 2026-08-24 — the walk bug is fixed and `n = 72` is CONFIRMED UNCHANGED.**
+   `sorted(os.walk(root))` consumes the generator before the loop body runs, so the in-place
+   `subfolders[:]` prune could not affect traversal: **415 PDFs were walked where 210 exist**, 205 of them
+   `oldPdfs/` duplicates. Fixed by `peak_ratio_archive.walkReports()`, now used by all four walkers
+   (`peak_ratio_archive`, `band_width_by_solvent`, `solvent_colour_separation`,
+   `dominant_wavelength_archive` — the last never pruned at all).
+   ⭐ **No published number moves.** Every leaked copy sits under a `oldPdfs/...` series, and `classOf`
+   returns `None` for those, so **0 of the 205 duplicates were ever labelled green/brown**: every
+   label-filtered statistic was already correct. Re-running the fixed `band_width_by_solvent.py` reproduces
+   §16.12.7g exactly — **isopropanol n = 72**, index-matched n = 7, per-fill areas identical.
+   ⚠ The two *unfiltered* scripts were the real exposure: `peak_ratio_archive.collect()` and
+   `dominant_wavelength_archive` would have doubled on their next run. `collect()` now returns **208 rows,
+   0 from `oldPdfs/`**, a superset of the 196-row CSV on disk (the 12 extra are genuinely new reports —
+   the 0822 sunflower, 0823 newchips and 0824 triad). **The CSVs on disk were never contaminated**; they
+   predate `oldPdfs/`. They are stale, not wrong — regenerating them is a separate call.
+
+2. ⏸⭐⭐ **OWED AND ESSENTIAL — the PHYSICAL argument is not written down here yet.** Edwin, 2026-08-25:
+   the Gouterman four-orbital account and `Rv` are **congruent**, and that must reach the specs and the
+   regenerated PDFs. In one line: demetallation D₄ₕ→D₂ₕ (protochlorophyll → protopheophytin) makes the
+   longest-wavelength Q band — **band I, our 624 nm** — the *weakest of four*, so `Rv` is a **symmetry
+   diagnostic**, not a curve-fit; and `Q%`'s Soret denominator is carotenoid-contaminated
+   (`DOC_lamp_410_680.md` Fig. 5), i.e. it ratios a porphyrin band against a different pigment family,
+   while `Rv` stays inside one chromophore's Q manifold. `Rv` is also the **ratio form of
+   `DOC_metric_algebra.md` §5.8's see-saw** (`dQ100` being the difference form).
+   ⇒ lands in **§2.5 here**, the **body** of `KB_spectroscopy_physics.md` (the passage is currently buried
+   in its sources list), `DOC_sample_physics.md`, and §5.8 — then regenerate
+   `Spectracs_LightPigmentSolvent.pdf` and `Spectracs_MetricAlgebra.pdf`.
+   ⚠ Three caveats must travel with it: Q-manifold conservation is **untested, not shown**; the band
+   assignment is literature, not this instrument (the KB's own 2026-08-04 warning); and the same crossover
+   could come from **two pigments in differing proportions** rather than one changing symmetry.
+   **Full working note: memory `spectracs-rv-gouterman-owed`.**
+3. **The name.** `Rv` signals kinship with §12's `R` and states the difference (valley-referenced). `E`
+   collides with the E3 experiment. Edwin's call.
+4. **Two classes or three?** §4 says two until §6.3's scatter is measured. Confirm.
+5. **Does `Rv` supersede `R`** in `SPEC_metric_research.md` §12, or sit beside it? They differ only by the
+   pedestal, and `Rv` is strictly better on this corpus (1 error vs 3).
+6. **Is the solvent recorded anywhere?** It is not — the `METADATA` phase is empty and `pluginVersion` is
+   `None` in every archived report. §6.2 could only be assembled because Edwin remembered. **This should
+   be fixed before any further solvent work**, independently of `Rv`.

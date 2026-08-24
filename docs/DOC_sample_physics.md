@@ -36,6 +36,78 @@ sources in the appendix.
 
 <!--PAGEBREAK-->
 
+## ⭐⭐⭐ The verdict metric is `Rv` — and this document is why  *(2026-08-25)*
+
+```math
+R_{v} = 100\,\frac{A_{624} - A_{valley}}{A_{Q} - A_{valley}}
+\qquad
+T = 52 \quad \text{(higher = greener)}
+```
+
+⭐ **The demetallation this document is about is not background to the metric. It IS the metric.**
+
+### The chain, in four steps
+
+**1 · The pigment.** Pumpkin seed oil's green is **protochlorophyll**, and storage and roasting convert it
+to **protopheophytin** by stripping the central magnesium — the speciation §4.1 sets out, with
+protopheophytins running 1.1–35.5 % of protochlorophylls and rising with seed storage.
+
+**2 · What losing the magnesium does to the spectrum.** A metallated ring has **D₄ₕ** symmetry and shows
+**two** Q bands. The free base drops to **D₂ₕ** and shows **four**, numbered I–IV from the longest
+wavelength. Gouterman's four-orbital model classifies their intensity ordering into four types by
+substituent pattern — etio, rhodo, oxo-rhodo, phyllo — and **band I is the weakest in every one of them**.
+Protopheophytin carries the ring-E carbonyl, a rhodofying group, so *rhodo* (III > IV > II > I) is the
+expected ordering here.
+
+⇒ **A pigment whose longest-wavelength band dominates while metallated ends up with that band the weakest
+of four once the magnesium leaves.**
+
+**3 · Which band is ours.** Our 624 nm feature **is band I**. So demetallation should collapse it while
+intensity moves to shorter Q components — and that is measurable as a *ratio between two Q bands*, with no
+reference to anything outside the porphyrin system.
+
+**4 · What was measured.** Standard-normal-variate over 500–627 nm, nine fills, three oils:
+
+| | pigment state | predicted | measured |
+|---|---|---|---|
+| green oil | protochlorophyll, **Mg in** | long-λ band dominant | **624 nm is the tallest feature**, *z* ≈ 2.2 |
+| brown oils | protopheophytin, **Mg out** | band I weakest of four | **569 nm tallest** (*z* ≈ 2.75); 624 falls to *z* ≈ 0.5–0.75 |
+
+The two classes **cross over** — the green and brown means intersect at 541 and 558 nm — which is what a
+two-species conversion produces, and what §4.9's ligand argument would predict if the conversion is what
+is varying between oils.
+
+### ⭐⭐ Why the Soret is the wrong denominator — and this document already said so
+
+The metric `Rv` replaces divided by the 448–460 nm Soret window. `DOC_lamp_410_680.md` Figure 5:
+
+> the carotenoid absorption at ~455 nm rides on top of the Soret, so the peak you can see is not the peak
+> the chemistry is at
+
+**Carotenoids have no Q bands and are not tetrapyrroles.** Their concentration varies with cultivar,
+season and pressing — for reasons unconnected to roasting. So the old metric divided a porphyrin band by a
+window belonging to a different pigment family, and Gouterman's account governed only its numerator.
+
+`Rv` keeps both terms inside **one chromophore's Q manifold**. That is the mechanistic reason it survives a
+40–45 % dose change and three different solvents where the Soret-normalised metric moves 6.5 units on a
+single oil.
+
+### ⚠ Three caveats that must travel with this argument
+
+1. ⛔ **Q-manifold conservation is untested, not shown.** If demetallation only *redistributed* intensity,
+   total Q per unit Soret would be constant across oils. Measured, it reads 7.85 / 5.56 / 6.71 — not flat.
+   ⚠ But the denominator is that same carotenoid-contaminated Soret, so this is not a clean test either
+   way. **Untested, not refuted.**
+2. ⛔ **The band assignment is literature, not this instrument.** §4's own 2026-08-04 warning stands: *"OUR
+   OWN INSTRUMENT DOES NOT CONFIRM THE Qy POSITION, and cannot at this range."* The clamp ends at 630 nm
+   and cannot see whether a band sits at 660.
+3. ⛔ **Consistency is not mechanism.** Two *different pigments* in differing proportions would produce the
+   same crossover as one pigment changing symmetry. Separating them needs the red extension, or a
+   deliberate demetallation of one fill re-measured against itself.
+
+⛔ **Status: `Rv` is chosen, not built.** The Soret-normalised metric still computes the verdict until it
+lands. Contract: `SPEC_red_ratio_metric.md`; full treatment `DOC_metric_algebra.md` **chapter 4a**.
+
 ## 1. The short version
 
 ### 1.1 What the instrument is really doing
@@ -897,6 +969,95 @@ ligand, a hydrocarbon for the solvency — rather than any single solvent at eit
 ⇒ ⭐ **And there is a row this table does not have.** Every entry above treats the axis as *polarity* —
 alcohols coordinate, hydrocarbons do not. A **triglyceride** is nonpolar *and* carries ester carbonyls,
 so it can do both. §4.10.
+
+## ⭐⭐⭐ 4A. SUNFLOWER IS THE SOLVENT  *(Edwin's decision, 2026-08-25)*
+
+§4.9's table asked which solvent coordinates the magnesium. §4.10 found the row that table did not have.
+This chapter records what happened next: **sunflower oil is the solvent the instrument will use.**
+
+⛔ **CHOSEN, NOT MIGRATED.** Isopropanol is still the shipping recipe and the archive is still 88 %
+isopropanol. What follows is the case, and §4A.4 is the honest list of what the decision does not settle.
+
+### ⭐⭐ 4A.1 The result that makes the decision safe — the threshold transfers unchanged
+
+A solvent migration normally means a full re-calibration: §16.12.7g's own warning is that *"every
+threshold is isopropanol-fitted."* For the metric being retired that is exactly right — the **same
+Lugitsch oil** reads `Q%` **13.5–15.5** in isopropanol, **16.2–16.7** in sunflower and **20.6–20.8** in
+white spirit. No single threshold survives that.
+
+⭐ **The verdict metric does not have that problem.** `Rv` at its provisional `T = 52`:
+
+| solvent | green, lowest | brown, highest | **margin** | errors at `T = 52` |
+|---|--:|--:|--:|--:|
+| isopropanol (n = 28) | 98.4 | 46.4 | **+52.0** | **0** |
+| **sunflower (n = 12)** | **113.4** | **45.5** | **+67.9** | **0** |
+| white spirit (n = 4) | 103.1 | 36.9 | +66.2 | **0** |
+
+⇒ **The threshold does not move, and the margin is WIDEST in sunflower** — 31 % wider than in the
+solvent it replaces. The metric and the solvent were chosen independently and turn out to fit each other:
+`Rv` is what makes a solvent change cheap, and sunflower is where `Rv` performs best.
+
+### ⭐⭐ 4A.2 Why sunflower wins — six measured advantages
+
+| | |
+|---|---|
+| **1 · it dissolves the oil** | n = 1.473 against the oil's 1.47. Isopropanol is 1.377 and only **emulsifies** it. A true solution, not a dispersion |
+| **2 · ⭐ the 624 nm band becomes a WHOLE PEAK** | maximum at **623–625 nm falling 81–99 %** by 633 nm. In isopropanol the same window merely rises to 629–630 and plateaus (4–14 %) — there is no resolved band to measure at all |
+| **3 · the bands are 2–6× better localised** | second-derivative dip positions **623.8 ± 0.6** and **568.5 ± 0.3 nm**, against isopropanol's 626.0 ± 1.5 and 570.1 ± 1.8 |
+| **4 · the margin is wider** | §4A.1, and green-class scatter falls from sd 8.1 to **4.9** |
+| **5 · food-safe** | white spirit is not, at any concentration (§6.6). This is what rules the hydrocarbon out of a product regardless of how well it performs |
+| **6 · visible to the naked eye** | the difference between two pumpkin oils, seen at the bench without an instrument (`DOC_solvent_and_hue.md` §3) |
+
+⭐ **Advantage 2 is the one that matters most**, and it is the reason the metric exists. `Rv` reads a 5 nm
+band at 624 nm. In an emulsion that band is broadened and shifted until there is no peak inside the
+measured range; in an index-matched solvent it is a clean maximum with both flanks. **The solvent did not
+improve the measurement of a band — it produced the band.**
+
+### 4A.3 Why the index match does that — and what it says about the pigment
+
+§4.10 below sets out the chemistry: a triglyceride is nonpolar **and** carries three ester carbonyls per
+molecule, so it occupies the corner §4.9's polarity axis has no room for — a true solution *and* a ligand
+in vast excess.
+
+The optics follow. Matching n to 1.47 removes droplet scattering, which is why the pedestal collapses.
+But the band **position** also moves — 629–630 nm in the emulsion against 623–625 nm in solution — and a
+band that is both **broadened and red-shifted** in the dispersed phase is the signature of **aggregation**:
+inside a droplet the pigment is at neat-oil concentration, not micromolar, and that is the regime where a
+chromophore interacts with itself. §16.12.7g argues this from a 13.6× dose-free area difference; the peak
+shift is a second, independent line of evidence for the same mechanism.
+
+⚠ The alternative is not excluded: in isopropanol the band may be so weak that the rise toward 630 nm
+belongs to a *background* rather than to the band, in which case there is no shift to explain.
+
+### ⛔ 4A.4 What the decision does NOT settle
+
+- ⛔ **The E3 gate has not run in full.** §16.12.7g requires four fills — green and brown oil × isopropanol
+  and sunflower — reported as `area(624)/area(Soret)`. Two arms exist; the full design does not.
+- ⛔ **n is small and narrow.** Twelve sunflower runs against 88 labelled isopropanol ones, and only **two
+  oils** (Lugitsch, Billa Clever) have been measured in sunflower *and* another solvent.
+- ⛔⛔ **The preparation stratifies, and it is worse in a viscous solvent.** The second half of a prepared
+  sample carries **15–45 % more absorber** than the first: pigment-rich material settles in the mixing
+  vessel over ~2 h. `Rv` absorbs it (a 40–45 % dose swing moves it < 0.8 %), but any level-reading quantity
+  will not. ⇒ mix immediately before pouring, and record which half was poured.
+- ⛔ **The bottle is a variable.** Old versus fresh sunflower moved `Q%` by 2.4 units on one oil while
+  leaving `Rv` flat. Record the bottle.
+- ⛔ **Sunflower may be the proof of concept, not the destination.** `DOC_solvent_and_hue.md` §5 argues
+  **MCT oil** is better where sunflower is weak — thinner, cleaner, and colourless. The case above is a
+  case for *index matching*; sunflower is the cheapest available instance of it.
+- ⚠ **The turbid oil is still the problem.** In sunflower the worst oil still scatters 15 % run-to-run
+  (`Rv` sd 5.68) against 0.72 for the best. The solvent did not fix that; the preparation arm might.
+
+### 4A.5 What must happen before the migration
+
+1. **Record the solvent and the bottle in every report.** The `METADATA` phase is empty today, and the
+   solvent is now the largest single term in the metric being retired.
+2. **Run the preparation arm** — one turbid oil, four ways (shaken/immediate, shaken/fixed wait, filtered,
+   sonicated) — to decide whether particulate removal is safe. ⭐ The readout: if turbidity falls and the
+   pigment bands hold, the particulates carry no pigment and filtration is safe.
+3. **Re-run the pre-registered test in sunflower**, not only in isopropanol, so the frozen `T = 52` is
+   validated in the solvent it will actually run in.
+
+---
 
 ### ⭐⭐ 4.10 SUNFLOWER OIL — the row §4.9's table does not have  *(2026-08-22 evening, measured 2026-08-24)*
 

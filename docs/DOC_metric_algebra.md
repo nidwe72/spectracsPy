@@ -57,9 +57,45 @@ comparable green/brown pair on record. Quoted values are the **mean of the six r
 
 ## 1. The claim
 
-### 1.1 The metric that decides the verdict
+### ⭐⭐⭐ 1.1 The metric that decides the verdict — `Rv`
 
-One number decides it, and since 2026-08-21 that number is **`Q%`**:
+*(2026-08-25)* One number decides it, and that number is **`Rv`**, the **red ratio**:
+
+```math
+R_v = 100\,\frac{A_{624} - A_{valley}}{A_{Q} - A_{valley}}
+```
+
+with $A_{624}$ over **622–627 nm**, $A_{Q}$ over **565–580 nm** and $A_{valley}$ over **500–560 nm**,
+each a plain mean of the de-spiked absorbance. **Higher is greener** — the opposite of the metric it
+replaces — and the provisional threshold is **`T = 52`**.
+
+⭐ **Read it as one sentence:** *the 624 nm band's height above the valley, as a percentage of the
+Q band's height above that same valley.* Both terms sit above the same datum, both scale with dose, so
+the ratio is scale-invariant by construction — and a 40–45 % dose swing moves it by under 0.8 %.
+
+⭐⭐ **It is a symmetry diagnostic, not an intensity one.** Chapter 3's photophysics says demetallation
+(D₄ₕ → D₂ₕ, protochlorophyll → protopheophytin) makes the longest-wavelength Q band the *weakest of
+four*. `Rv` compares that band against a shorter one, so it measures the browning chemistry itself
+rather than a proxy for it. Numerator and denominator come from **one** chromophore's Q manifold.
+
+| against the archive | |
+|---|---|
+| labelled runs misclassified | **1 / 98** — `Q%` makes **9** |
+| across three solvents | green 98.4–125.2, brown 28.3–46.4, **no overlap** — `Q%` overlaps outright |
+| one oil, one solvent change | `Rv` moves ~3 %; **`Q%` moves 6.5 units**, more than its whole class separation |
+
+⛔ **STATUS.** `Rv` is **chosen, not yet built**. `Q%` — chapter 5 — is what the instrument computes
+today and it keeps the verdict until `Rv` is implemented and pre-registered. This chapter describes
+where the programme is going; chapter 5 describes what it currently does.
+
+⛔ **Three things `Rv` does not fix.** It is **turbidity-sensitive** (opposite-signed slopes: turbidity
+pushes brown up and green down, eroding the gap from both sides); its **margin is smaller than the
+within-fill scatter**; and a **paper diffuser erases the band it reads**, silently, with every guard
+passing. Chapter 9 is the full list.
+
+### 1.1a The metric it replaces
+
+Until 2026-08-25 that number was **`Q%`**:
 
 ```math
 Q_{\op{pct}} = 100\,\frac{A_{Q} - A_{valley}}{A_{Soret}}
@@ -518,7 +554,180 @@ because it stands **on** the Qy band instead of straddling its foot (§Ea.1).
 
 <!--PAGEBREAK-->
 
-## 5. ⭐⭐ `Q%` — the metric that decides the verdict
+## ⭐⭐⭐ 4a. `Rv` — the metric that decides the verdict  *(2026-08-25)*
+
+Chapter 4's table ends on a sentence worth re-reading before this one starts: the **620–630 nm window
+separates the classes by 33 %**, the largest class difference of any window in the table — *"and it is why
+§3.4 calls the far window a measuring band."* That window was introduced as a **baseline anchor**. It
+turned out to be the measurement.
+
+`Rv` is what you get when you stop using it as an anchor and read it as the band it is.
+
+### 4a.1 The definition
+
+```math
+R_{v} = 100\,\frac{A_{624} - A_{valley}}{A_{Q} - A_{valley}}
+```
+
+with $A_{624}$ over **622–627 nm**, $A_{Q}$ over **565–580 nm** and $A_{valley}$ over **500–560 nm** — the
+same three plain means of the de-spiked absorbance chapter 4 defines. Only $A_{624}$ is new; the other two
+are `Q%`'s own windows, unchanged.
+
+**Higher is greener**, and the provisional threshold is **`T = 52`**.
+
+⭐ **In one sentence:** *the 624 nm band's height above the valley, as a percentage of the Q band's height
+above that same valley.* Both peaks measured above one datum — the line the `Absorption (bands)` plot
+already draws as marker (4).
+
+### 4a.2 It is `Q%` with the denominator swapped
+
+```math
+Q_{\op{pct}} = 100\,\frac{A_{Q}-A_{valley}}{A_{Soret}}
+\qquad\qquad
+R_{v} = 100\,\frac{A_{624}-A_{valley}}{A_{Q}-A_{valley}}
+```
+
+**The numerator quantity is the same.** `Q%` divides the Q band's height above the valley by the **Soret
+flank**; `Rv` divides the **624 band's** height above that same valley by that same Q-band height. This is
+not a new family — it is the shipped metric with its denominator replaced, and $A_{Soret}$ dropping out of
+the verdict path entirely.
+
+⭐ That single fact carries most of chapter 4a: every advantage below follows from *which* quantity sits
+underneath.
+
+### ⭐⭐ 4a.3 Why this ratio, physically — the metric and the photophysics are congruent
+
+This is the part that does not depend on any statistic, and it survives the threshold moving.
+
+`KB_spectroscopy_physics.md` states the four-orbital result before any of this was measured:
+
+> A metallated ring (D₄ₕ) shows **two** Q bands (α, β); the free base (D₂ₕ) shows **four**, numbered I–IV
+> from the longest wavelength. […] **Band I is the weakest in every one of them.** So a pigment whose
+> Qy(0,0) is its dominant long-λ band while metallated becomes, on demetallation, the *weakest* of four.
+
+Chapter 3 supplies the chemistry: our pigment is **protochlorophyll**, and roasting and storage convert it
+to **protopheophytin** by stripping the magnesium. That conversion is exactly a D₄ₕ → D₂ₕ symmetry drop.
+
+| | pigment | symmetry | Gouterman predicts | measured — SNV over 500–627 nm |
+|---|---|---|---|---|
+| **green oil** | protochlorophyll, **Mg in** | ~D₄ₕ | long-λ band dominant | **624 nm is the tallest feature**, *z* ≈ 2.2 |
+| **brown oil** | protopheophytin, **Mg out** | D₂ₕ | band I becomes the **weakest of four** | **569 nm tallest** (*z* ≈ 2.75); 624 collapses to *z* ≈ 0.5–0.75 |
+
+⇒ **624 nm is band I.** `Rv` compares band I against a shorter Q component, which makes it a **symmetry
+diagnostic**: it measures the demetallation itself, not a downstream consequence of it. Protopheophytin
+carries the ring-E carbonyl — a rhodofying group — so the expected intensity ordering is *rhodo*
+(III > IV > II > I), and band I is still the weakest.
+
+⭐ `Rv` is the **ratio form** of §5.8's see-saw; `dQ100` is the **difference form**. §5.8 already draws the
+plank with a cap at 568 nm and the same amount removed at 624 nm. `Rv` reads both ends as one number.
+
+### ⭐⭐ 4a.4 And this is the physical case against the Soret denominator
+
+`DOC_lamp_410_680.md` Figure 5 says of the blue end:
+
+> the carotenoid absorption at ~455 nm rides on top of the Soret, so the peak you can see is not the peak
+> the chemistry is at
+
+**Carotenoids have no Q bands and are not part of the porphyrin system at all.** So `Q%` divides a
+porphyrin band by a window belonging to a *different pigment family*, whose concentration varies for
+reasons that have nothing to do with roasting. Gouterman's account governs the numerator and says nothing
+about the denominator.
+
+`Rv` keeps both terms inside **one chromophore's Q manifold**. That is almost certainly why it absorbs a
+40–45 % dose swing and three solvents where `Q%` moves 6.5 units on one oil — and it is an argument from
+mechanism, not from the corpus.
+
+### 4a.5 What it buys — the four measured advantages
+
+| | `Rv` | `Q%` |
+|---|---|---|
+| **1 · archive** | **1 error / 98** labelled runs; **0 / 88** within isopropanol | **9 errors / 98** |
+| **2 · solvent** | green **98.4–125.2**, brown **28.3–46.4** across isopropanol, white spirit *and* sunflower — **no overlap in any** | classes **overlap outright**; one oil moves **6.5 units** on solvent alone |
+| **3 · dilution** | a **40–45 % dose swing moves it < 0.8 %** | — |
+| **4 · ordering** | correct in **3 of 3** rounds of the 2026-08-24 triad | correct in **1 of 3**, and that one only because the brown oils had degraded past the green |
+
+⭐ **Advantage 3 is the one that was not fitted.** The 2026-08-24 fresh pours carried 15–45 % more absorber
+than the first pours of the same preparations, on samples that did not exist when the metric was defined.
+`Rv` moved by 0.5 and 0.7 units on the two well-behaved oils. Scale-invariance is algebraic — numerator and
+denominator both scale with $c$ — but here it is also **measured**.
+
+⭐ **Advantage 4 deserves its sting spelled out.** `Q%` was right in round 002 *because the sample spoiled*:
+the brown oils degraded past Lugitsch between the two rounds. A metric that reaches the right answer
+because the sample changed has not earned the verdict.
+
+### 4a.6 Two structural advantages that are not about accuracy
+
+**It is drawable.** `Rv` needs **one** new band mean. The `Absorption (bands)` page already plots markers
+(2), (3) and (4) — valley, Q band, valley level. Adding marker (6) at 622–627 makes `Rv` a **distance you
+can read off the page**: on an axis where the valley is pinned to 0 and the Q band to 1, the height of the
+624 band *is* `Rv`/100.
+
+**The guards compose for free.** `Rv`'s denominator **is** `Q%`'s numerator, since
+$A_{Q}-A_{valley} = Q_{\op{pct}}\cdot A_{Soret}/100$. So the two guards already in the plugin —
+$A_{Soret} \ge 0.15$ and $Q_{\op{pct}} \ge 12$ — bound it below by $12 \times 0.15/100 = 0.018$. Verified
+across the archive: **0 of 141 guarded reports** have a non-positive denominator, observed minimum 0.0372.
+No new guard, no second code path.
+
+⚠ Only the **lower** half of `Q%`'s domain band may be inherited. The upper bound is `Q%`'s own scale
+concern: a fill reading `Q%` 23.12 is past `Q%`'s corridor but yields a perfectly good `Rv` of 42.4.
+
+### ⛔⛔ 4a.7 Where it fails — and every failure here is measured, not feared
+
+**1 · A diffuser silently breaks it.** `20260727B` is the archive's diffuser A/B — nine runs, all the same
+green oil. Diffuser out: `Rv` = 66.5, 71.1, 73.5, 73.7. Diffuser in: 54.6, **50.3**, 65.0, **50.9**, 53.9 —
+**2 of 5 read brown**, with **both guards passing on all nine**. `Q%` is untouched (15.6–17.1 in, 14.6–17.1
+out). ⛔ And no cheap guard exists: a washed-out band and a genuinely weak band are the same measurement,
+so any threshold that refuses the diffuser also refuses most brown runs. ⇒ **any optical change forces a
+full re-validation** — a standing blocker on the lamp rebuild.
+
+**2 · It is turbidity-sensitive, with opposite-signed slopes.** Within-oil: **+105** `Rv` per unit
+turbidity on a brown oil, **−108 to −148** on a green one. Turbidity does not *create* the separation — it
+**erodes** it from both sides, pushing brown up and green down toward the line. This is the whole of the
+11.3-unit wobble on the one turbid oil of 2026-08-24.
+
+**3 · The margin is thinner than the noise.** Pooled within-series sd is **5.7**; the green/brown gap at
+its narrowest is **3.1**. The corpus separates, but a genuinely borderline oil has no safety margin. This
+is why the gauge ships **two** classes and no *borderline* band — the width of that band is exactly what is
+not yet known.
+
+**4 · It needs the far flank.** A second-derivative check on `Rv`'s band is computable on only **44 of 98**
+labelled runs, because the archive's 629.8 nm epoch has no data past the peak.
+
+### 4a.8 ⛔ Why not `dQ100`, which scores better
+
+`dQ100` makes **0 errors** on the same 98 runs to `Rv`'s 1. It was not adopted, and the reason should be
+stated plainly enough to argue with: `Rv` is **drawable on the existing plot**, **guard-compatible without
+new code**, and **interpretable as one physical quantity** rather than a z-scored difference. `dQ100` also
+needs $\op{sd}$ over 448–626 rather than band means, and carries its own withdrawal history.
+
+⇒ **The decision is on buildability and interpretability, not accuracy.** If a future corpus separates them
+on accuracy, that is a reason to revisit it.
+
+### 4a.9 Status, and what would overturn this
+
+⛔ **`Rv` is chosen, not built.** `Q%` — chapter 5 — is what the instrument computes today and keeps the
+verdict pill until `Rv` is implemented **and** pre-registered.
+
+⛔ **The pre-registration is not waived by the decision.** Every constant here — the 622–627 window,
+`T = 52`, the pedestal subtraction, the domain band — is fitted on the corpus it is scored on, exactly as
+`dQ100`'s were when they were refused. The decision settles *which metric the programme builds toward*;
+M9 settles *when it may carry a verdict*.
+
+⭐ **What would overturn it**, stated in advance so it can happen:
+
+1. the pre-registered test misclassifies more than one held-out fill, or `T` has to move to hold;
+2. the lamp rebuild moves `Rv` while leaving `Q%` alone (§4a.7 case 1);
+3. a preparation that removes turbidity turns out to remove pigment with it, so the sample cannot be made
+   homogeneous without changing what is measured.
+
+<!--PAGEBREAK-->
+
+## 5. ⭐⭐ `Q%` — the metric that decides the verdict TODAY
+
+> ⛔ **Superseded as the intended verdict by `Rv` (§1.1), 2026-08-25 — but still SHIPPING.** Everything
+> in this chapter remains an accurate account of what the instrument computes, and the see-saw of §5.8 is
+> the mechanism `Rv` reads the other way round: `Rv` is that see-saw as a **ratio**, `dQ100` as a
+> **difference**.
 
 ### 5.1 The definition
 
@@ -1098,11 +1307,12 @@ unvalidated**; and σ_fill — the scatter a real single measurement is subject 
 
 Green = `20270729C`, brown = `20260731A`, both the mean of six runs.
 
-**The shipped metric and its companion scalar**
+**The verdict metric, the metric it replaces, and the companion scalar**
 
 | shown as | symbol | formula | green | brown | *d* |
 |---|---|---|---|---|---|
-| **`Q%`** *(the verdict)* | $Q_{\op{pct}}$ | $100(A_{Q} - A_{valley})/A_{Soret}$ | **15.891** | **20.443** | **+7.28** |
+| ⭐ **`Rv`** *(the verdict, ch. 4a)* | $R_{v}$ | $100(A_{624} - A_{valley})/(A_{Q} - A_{valley})$ | **66.9** | **37.0** | **+3.95** |
+| **`Q%`** *(shipped today)* | $Q_{\op{pct}}$ | $100(A_{Q} - A_{valley})/A_{Soret}$ | **15.891** | **20.443** | **+7.28** |
 | `dQ100` *(scalar only)* | — | $100\,[A(563..573) - A(623..626)]/\op{sd}A(448..626)$ | 13.746 | 47.369 | +6.40 |
 | Soret · 448–460 | $A_{Soret}$ | mean $A_{d}$ over 448–460 | 0.8281 | 0.7304 | −2.77 |
 | Q · 565–580 | $A_{Q}$ | mean $A_{d}$ over 565–580 | 0.2478 | 0.2448 | −0.15 |
@@ -1110,6 +1320,17 @@ Green = `20270729C`, brown = `20260731A`, both the mean of six runs.
 | Q · 563–573 | — | mean $A_{d}$ over 563–573 | 0.2331 | 0.2314 | −0.09 |
 | Qy · 623–626 | — | mean $A_{d}$ over 623–626 | 0.2069 | 0.1502 | −2.29 |
 | window sd · 448–626 | — | $\op{sd}$ of $A_{d}$ over 448–626 | 0.1915 | 0.1716 | −3.07 |
+
+⚠⚠ **Read the `Rv` and `Q%` rows against each other, and do not skip past it.** On *this particular pair*
+`Q%` separates **better** — *d* = +7.28 against `Rv`'s +3.95. That is not a misprint and it is not
+explained away: this sheet compares **one** green series against **one** brown series, and this pair is
+one `Q%` handles well. `Rv`'s case is not that it beats `Q%` on every pair; it is that across the **whole**
+labelled archive it misclassifies **1 run to `Q%`'s 9**, and that it holds across solvents and dose where
+`Q%` does not (§4a.5). ⭐ A metric can lose a chosen pair and still win the corpus — and a document that
+only printed the pairs where the new metric wins would be worthless.
+
+⚠ Note also `Rv`'s scatter on the green series: sd **8.9** over six runs (54.1–81.6) against the brown
+series' 5.9. That is §4a.7 case 3 — the margin is thinner than the noise — visible in one cell.
 
 ⭐ **Read the $A_{Q}$ and $A(563..573)$ rows.** On their own the Q band carries **no** class information
 (*d* = −0.15 and −0.09). It becomes decisive only when referenced — to the valley (`Q%`) or to the Qy band

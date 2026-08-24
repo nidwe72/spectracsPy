@@ -354,6 +354,64 @@ winner sits at **574/626**, i.e. it prefers the artifact; §12.9 rejects it for 
 
 ---
 
+## ⛔⛔⛔ 6a · THE SWAP IS NOW BLOCKED ON `Rv`, AND THE ARCHIVE ALREADY SHOWS WHY  *(2026-08-25)*
+
+The verdict metric is now **`Rv`** (`SPEC_red_ratio_metric.md`; decision record
+`SPEC_metric_research.md` §15):
+
+```
+Rv = 100 · (A[622–627] − A_valley) / (A[565–580] − A_valley)     T = 52,  higher = greener
+```
+
+It reads a **5 nm band at 624 nm**. That is exactly the kind of feature an optical change can erase — and
+the archive contains the experiment already.
+
+⭐ **`20260727B` is the diffuser A/B of `SPEC_capture_quality.md` §16.7.2f.** Nine runs, **all the same
+green oil**, diffuser IN for 001–003 and 008–009, OUT for 004–007:
+
+| | `Rv` | verdict |
+|---|---|---|
+| diffuser **OUT** (n = 4) | 66.5, 71.1, 73.5, 73.7 | all green, spread 7.2 |
+| diffuser **IN** (n = 5) | 54.6, **50.3**, 65.0, **50.9**, 53.9 | ⛔ **2 of 5 read BROWN** |
+
+⛔⛔ **And both guards pass on every one of the nine.** `A_Soret` 0.59–0.76 ✅, `Q%` 15.9–17.1 ✅, `Rv`
+inside its domain band ✅. **Nothing refuses the reading.** The number simply comes out wrong and looks
+entirely reasonable.
+
+⭐ **`Q%` is untouched by the same change** — 15.6–17.1 with the diffuser in, 14.6–17.1 with it out. The
+metric being retired shrugs off an optical change that moves the metric being adopted by 20 units.
+
+### 6a.1 ⛔ There is no cheap guard, and the obvious one was tried
+
+A band-presence test — refuse when the 624 feature has no height above its local 612–615 → 627–630 chord —
+fails, because **a washed-out band and a genuinely weak band are the same measurement**:
+
+| | chord height |
+|---|---|
+| diffuser IN (n = 5) | 0.0000 |
+| a **normal brown** isopropanol run (`20260812_BillaClever/001`) | **0.0000** |
+| a **normal green** isopropanol run (`20260817LigitschA/001`) | 0.0098 |
+
+Any threshold that refuses the diffuser also refuses most brown runs — the very ones `Rv` exists to
+classify.
+
+### 6a.2 ⇒ What this adds to §7
+
+⛔ **`Rv` must be re-validated after the swap, and it is not a re-derivation — it is a re-qualification.**
+§7's list assumes the metric survives and its constants move. Here the metric may **not** survive: a lamp
+that changes the delivered linewidth at 624 nm can move `Rv` without moving `Q%`, silently.
+
+⇒ **Add to §7, as a gate rather than an item:**
+
+1. Measure **one green and one brown oil, same fills, old lamp and new**, and report `Rv` for both.
+2. `Rv` must keep every fill on the same side of `T` and hold the class gap to within the within-fill
+   scatter (5.7 units, `SPEC_red_ratio_metric.md` §6.3).
+3. ⛔ If it does not, the lamp is not wrong — **`Rv` is not lamp-portable**, and that must be discovered
+   before the board is ordered, not after.
+
+⚠ The 624 band also sits ~6 nm from the clamp, so anything that changes the red end changes what `Rv`
+integrates. §16.12.7h and `SPEC_red_ratio_metric.md` §3.1 carry that.
+
 ## 7 · What must be re-derived after the swap
 
 ⚠ **Every one of these invalidates the thresholds, and the recalibration is the expensive part. Build it as

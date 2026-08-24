@@ -2046,6 +2046,10 @@ means the dosing discipline has slipped. That turns a retired correction into a 
 
 ## ⭐⭐ 10 · `V` — THE BEST METRIC ON RECORD, and the one to implement  *(2026-08-14)*
 
+> ⛔ **SUPERSEDED 2026-08-25 by §15: `Rv` is the verdict metric.** `V`/`Q%` remains what the code SHIPS
+> and keeps the pill until `Rv` lands, so nothing in this section is wrong — but "the one to implement"
+> is no longer true. Read it as the record of how the programme got here.
+
 > **Status: PRE-REGISTERED. Definition FROZEN below.** Found on 2026-08-14 from Edwin's reading of the
 > pivoted spectral panels; scored on 13 fills / 7 products / 53 runs. ⛔ **Not yet tested on data it was
 > not tuned on** — ROADMAP **PRIO 2c / σ_fill** is that test. Reproduce everything with
@@ -2372,6 +2376,9 @@ more turbid fill read *lower* — it reads higher. §16.12.2B's λ⁻ⁿ refutat
 confirmation from the other end of the turbidity range.
 
 ---
+
+> ⭐ **§12 chose the right BAND; §15 chose the right FORM of it.** `Rv` is `R` with the scattering
+> pedestal removed from both terms — 1 error on the archive against `R`'s 3.
 
 ## ⭐⭐⭐ 12 · `R` — THE 624/568 PEAK RATIO, and it separates the archive where `Q%` overlaps  *(Edwin 2026-08-21, from two peaks he marked on a screenshot; DESIGN — nothing built)*
 
@@ -3121,3 +3128,51 @@ three solvents without overlap: Billa 0.506–0.811, Lugitsch 1.024–1.321.
 it is the fill's pedestal, not the oil's property.* ⇒ **`Q%` works *because* it leaves the denominator alone**;
 the floor cancels exactly in its numerator and costs only −27 per A in the denominator. That is the design, and
 it is right. **Fix the preparation, not the metric.**
+
+
+---
+
+## ⭐⭐⭐ 15 · `Rv` — THE DECISION  *(Edwin, 2026-08-25)*
+
+```math
+R_v \;=\; 100 \times \frac{A_{624} - A_{valley}}{A_{Q} - A_{valley}}
+\qquad T = 52,\ \text{higher} = \text{greener}
+```
+
+windows **622–627** (new) · **565–580** (`V_Q_BAND`, marker 3) · **500–560** (`V_VALLEY_BAND`, marker 4).
+
+⭐⭐ **This section is the finding record. `SPEC_red_ratio_metric.md` is the contract and owns every
+detail.** What is recorded here is why the programme stopped searching.
+
+| | |
+|---|---|
+| **archive** | **1 error / 98** labelled runs against `Q%`'s **9**; 0 within isopropanol alone |
+| **solvent** | green 98.4–125.2 vs brown 28.3–46.4 across isopropanol, white spirit and sunflower — **no overlap in any of them**. `Q%` overlaps outright, and swings **6.5 units on ONE oil** from the solvent alone |
+| ⭐ **dilution** | a **40–45 % dose swing moves `Rv` under 0.8 %** (2026-08-24 fresh pours) — measured, on samples that did not exist when the metric was defined |
+| **ordering** | correct in **3 of 3** rounds of the 2026-08-24 triad; `Q%` correct in 1, and that one only because the brown oils had degraded past the green |
+| ⭐ **physics** | a **symmetry diagnostic** — band I vs a shorter Q component, i.e. the D₄ₕ→D₂ₕ demetallation itself (`SPEC_red_ratio_metric.md` §2.5) |
+| **cost** | three band means the plugin already computes, plus **one** new window. No baseline fit, no local floor, no robust statistic |
+| **guards** | ⭐ compose for free — `Rv`'s denominator **is** `Q%`'s numerator, so `A_Soret ≥ 0.15` and `Q% ≥ 12` bound it below by 0.018 |
+
+### 15.1 ⛔ Why NOT `dQ100`, which scores better
+
+`dQ100` makes **0 errors** on the same 98 runs to `Rv`'s 1. It was not adopted, and the reason is stated
+plainly so it can be argued with: `Rv` is **drawable on the existing bands plot** (one new marker),
+**guard-compatible without new code**, and **physically interpretable as one quantity** rather than a
+z-scored difference. `dQ100` also carries its own withdrawal history (2026-08-21) and needs `sd` over
+448–626 rather than band means. ⇒ The decision is on buildability and interpretability, **not accuracy**.
+
+### 15.2 ⛔ What the decision does NOT settle
+
+- **§7 of the contract still stands.** Every constant is fitted on the corpus it is scored on. The
+  decision picks the metric; **M9 decides when it may carry a verdict.**
+- ⛔ **The diffuser.** `SPEC_red_ratio_metric.md` §6.7: on the archive's own diffuser A/B, **2 of 5**
+  blurred runs of a GREEN oil read brown with **both guards passing**, and no cheap guard can catch it
+  (a washed-out band and a weak band are the same measurement). `Q%` is unaffected. ⇒ **any optical
+  change forces a full `Rv` re-validation** — a standing blocker on `SPEC_lamp_rebuild.md`.
+- ⛔ **`Rv` is turbidity-sensitive**, with **opposite-signed** within-oil slopes: +105 Rv per unit
+  turbidity on a brown oil, −108 to −148 on a green one. Turbidity does not create the separation, it
+  **erodes** it from both sides — the whole of SparSBudget's 11.3-unit wobble. ⇒ the preparation arm on
+  `ROADMAP.md` item 5.
+- ⛔ **The margin (3.1 units) is smaller than the within-fill scatter (5.7).** The corpus separates; a
+  borderline oil has no safety margin. Two gauge classes, no *borderline* band, until σ_fill is measured.
