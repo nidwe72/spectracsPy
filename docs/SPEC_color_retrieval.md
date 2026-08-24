@@ -673,3 +673,268 @@ one. ⇒ another argument for the red extension.
 
 ⇒ **C7 proper still owed:** equal fill heights, grey card in frame, fixed manual exposure and white balance,
 chip 6 rendered beside the tube at the declared path.
+
+---
+
+## ⭐⭐ 7.15 AS BUILT — 2026-08-24: HSL retired from the chips, one CIE path, four chips
+
+**582 tests green (520 app + 62 plugins). `SDK_VERSION` unchanged at 1.** The full reasoning, with the
+measurements behind every decision, is `docs/DOC_colour_geometry.md` (22 pp) — this section is the
+contract.
+
+### 7.15.1 What forced it
+
+Four archive checks over the **88 labelled isopropanol runs** (`diagnostics/dominant_wavelength_archive.py`,
+same corpus and labelling as `SPEC_metric_research.md` §12). Three refuted a claim this spec made:
+
+| claim | result |
+|---|---|
+| §7.13 C1′ — *"purity discriminates where HSL saturation cannot"* | ⛔ It carries information where `S` does not, but it does **not** separate the oils: *d* = 0.56, ranges overlapping. |
+| a proposed replacement — dominant wavelength | ⛔ Undefined on **31 %** of runs (the ray exits the purple line), *d* = −0.08 where defined, and **r = 0.923 with the capture's blue edge**. It reports where the measurement starts. |
+| §1a — *"the white-point complement is ~4° from the true perceived hue"* | ✅ **Confirmed and improved: 2.50 ± 1.90° over 88 runs**, against 52.7° for the retired `+180°` flip. Does not degrade where the complement is imaginary. |
+| new — is `Absorbed-complement` a real colour? | ⛔ Outside the **spectrum locus** on 10 % of runs, at or past the edge of vision on 25 %. Predictable exactly: absorbed `p_e` above ≈ 76 %. |
+
+⭐ And the reason none of them work, measured: **`theta_W` = 244.06 ± 1.25° over the whole archive.**
+The absorbed direction is a constant of the chlorophyll-derivative family. What varies between oils is
+the RADIUS — which is precisely what a dilution-invariant chip discards. Not a software problem.
+
+### 7.15.2 The contract
+
+**Core (`EvaluationColorUtil`) — ADDITIVE ONLY.**
+
+```
++ spectrumToChromaticity(spectrum, source=ABSORBANCE|TRANSMITTANCE, ceiling)  -> (x, y) | None
++ complementOf(xy) / directionFromWhite(xy) / purityOf(xy) / lchOf(xy) / isRenderable(xy)
++ ABSORBANCE / TRANSMITTANCE / ACHROMATIC_CHROMA_LAB = 7.0
+~ __cieXyz  now delegates to __cieXyzDense (P1/D5) -- CHANGES NUMBERS on every chromaticity chip
+= spectrumToHsl / rgbFromHsl / chroma / ACHROMATIC_CHROMA / spectrumToRgbAndHue  ALL KEPT
+```
+
+⛔ **Nothing was removed, and that is load-bearing.** Plugins ship as sealed DB blobs against the host's
+SDK; `checkSdkCompatibleVersion` is strict equality; three sealed rows exist. Shrinking this surface
+would force `SDK_VERSION` to 2 and break all of them. **"Retire HSL" means the dev plugin stops calling
+it.**
+
+⛔ **`source` is load-bearing too.** "Un-measured = transparent" is `A = 0` for an absorbance and `T = 1`
+for a transmittance. Getting it wrong pads the un-measured red as OPAQUE and swings `theta_W` by ~13°.
+It is an explicit argument, never inferred.
+
+**Model.** `MetricFieldViewStyle.isOutOfGamut` — the chromaticity is outside sRGB, so the swatch is a
+per-channel clamp and not the colour the numbers describe. Rendered as a dashed amber border by **both**
+`QtWorkflowRenderer` and `MatplotlibWorkflowRenderer`. Carried as style, not appended to the value text,
+so it survives into the report JSON as a queryable fact.
+
+**Plugin.** Four chips, in this order, plus one demoted row and a sub-tab:
+
+| chip | reports | why |
+|---|---|---|
+| **`Transmitted from absorbance · ×3 path`** | `L* · C* · h` | ⭐ FIRST. The only chip the archive measured as carrying anything, and the one that matched a photograph to 2.1°. Its `L*` is a measurement and its `C*` (30–63) is inside Lab's domain. |
+| `Absorbed` | `theta_W · purity` | |
+| `Absorbed-complement` | `theta_W` **only** | its chroma would describe an imaginary stimulus |
+| `Transmitted-measured` | `theta_W · purity` | |
+| `Absorbed · purity` (row) | `%` | demoted; kept as the free predictor above |
+| sub-tab `Colour · processing rungs` | the de-spiked / baseline recomputations | eight chips reporting a near-constant do not belong in the headline |
+
+⛔ **No chip prints `L*` except the first.** At the fixed swatch luminance it is the constant 76.07, and
+a constant that looks like a measurement is the defect this section exists to remove.
+
+⭐ **`theta_W`, not `h_ab`, is the reported hue** — measured, not chosen: 2.50° against `h_ab`'s 5.60°
+and the retired HSL's 4.15°. Lab's hue depends on chroma by design, and these chips compare colours
+whose chroma differ ~4×.
+
+### 7.15.3 What this section VOIDS in §7.13
+
+- ⛔ **C2 ("NOT NEEDED — the HSL path is byte-for-byte unchanged")** is void. The guard was re-derived
+  in Lab units: near grey, where it is the only place it fires, HSL chroma and `C*` track at ratio ≈ 0.85,
+  so `8.0` ports to `ACHROMATIC_CHROMA_LAB = 7.0`.
+- ⛔ **C1′'s discrimination claim** is void — see 7.15.1. Purity stays for the reason C1 gave (it is the
+  honest replacement for `S ≡ 100`), not for the reason C1′ gave.
+- ⚠ **The `S = 100` tripwire test still passes**, because `spectrumToHsl` was kept. It now guards a
+  method the chips no longer call.
+- ✅ **§7.14's phone check stands** — the `×3 path` chip is byte-identical across P1, which is the
+  check that P1 did only what it claimed.
+
+### 7.15.5 The whole archive regenerated — and one regression it caught
+
+**All 203 archived reports re-rendered onto the new chip set, 0 failures**
+(`diagnostics/regenerate_reports.py --write`). The pre-2026-08-24 originals are at
+`spectracs-references/tmp/oldPdfs/`, an exact 205-file mirror.
+
+⛔ **`oldPdfs` lives INSIDE the archive root**, which every diagnostic walks — so without an exclusion
+each run would be counted TWICE and every archive statistic silently corrupted. `EXCLUDED_DIRS =
+{"oldPdfs", "discussion"}` is now honoured by `peak_ratio_archive`, `all_metrics_archive`,
+`regenerate_reports`, `report_reconstruct` and `settling_sweep`. ⚠ Earlier backups (`tmp_backup_*`) were
+placed OUTSIDE `tmp/` for exactly this reason; anything added under `tmp/` in future must be excluded
+here too.
+
+⭐ **The bulk run caught a regression the unit tests did not.** Two runs of the `20260806A` null series
+have an absorbance that is negative at *every* wavelength, so it sanitizes to nothing. F10 and F13 are
+different cases and the rewrite had collapsed them:
+
+| | before the rewrite | after (wrong) | fixed |
+|---|---|---|---|
+| spectrum **missing** | no row | no row | no row |
+| spectrum **present, no positive signal** | grey `achromatic / undefined` | ⛔ row vanished | grey `achromatic / undefined` |
+
+⇒ A null run looked like a run whose colour had simply not been computed. Fixed, and asserted by
+`test_a_spectrum_with_no_positive_signal_still_renders_a_chip`.
+
+⚠ **One deliberate behaviour change beyond the phases.** `__asSeenChip` also returned `None` on such a
+sample — pre-existing, and tolerable while that chip sat last. It now leads the list, so a silent gap
+reads as "not computed" rather than "there is no colour here". It now renders the same grey
+`achromatic / undefined` as every other chip. This is the one place the implementation went past what
+§7.15 was asked for; it is here so it is a decision on record rather than a drift.
+
+### 7.15.4 Owed
+
+⏸ Rig click-through · ⏸ the PDF report by eye · ⚠ old saved runs keep their old labels (the label is
+data in the `DbMeasurement` blob; no migration) · ⚠ the android `app_src` trees carry stale copies of
+`EvaluationColorUtil` and were deliberately not touched · ⛔ the roast verdict's own `align` red tail is
+still live, on purpose.
+
+---
+
+## ⭐ 7.16 Why the SOLVENT changes what the EYE can see — physical argument *(2026-08-24; ARGUMENT, not measurement)*
+
+**Edwin's observations, both from the bench.**
+
+1. After many eprouvettes of oil in isopropanol, switching to sunflower oil made the difference between
+   the green and the brown oil obvious **by eye, immediately**. He is explicit that it might have been
+   accident, and that he cannot be sure he would have noticed it in isopropanol earlier.
+2. **The red peak became more pronounced** in sunflower oil — and the same had been seen in the
+   **white spirit** session.
+
+⚠ The second is the more diagnostic, and it is what identifies the mechanism: it happened in *both*
+solvents. White spirit (n ~ 1.44) and sunflower oil (n = 1.473) share nothing except being **nonpolar
+and index-matched to the oil**, so both DISSOLVE it where isopropanol only emulsifies it.
+⛔ Do not read this section as "sunflower": the property is *true dissolution*, not that solvent.
+
+⛔ **This section is ARGUMENT. Nothing in it is measured.** It exists because the archive appears to
+contradict the observation and does not; §7.16.1 is why. The two experiments in §7.16.5 are what would
+settle it, and until they run this is a hypothesis with a mechanism, not a result.
+
+### 7.16.1 ⭐⭐ The instrument cannot see what the eye sees — by construction
+
+`T = S/R`, and `R` is the **solvent blank**. Two consequences, and both are design, not defect:
+
+1. **The solvent's own colour divides out.** Sunflower oil is visibly yellow; the measurement removes it
+   exactly. Every colour number in this spec and in `DOC_colour_geometry.md` describes *the pumpkin
+   oil's excess over the solvent*. The eye in front of an eprouvette sees **the whole liquid**.
+2. **A scattering veil largely divides out too**, because the blank is the same preparation with the
+   same turbidity.
+
+⇒ The archive's silence on this is not evidence against the observation. **It is a different quantity.**
+§7.16.2 and §7.16.4 are both invisible to `T = S/R` on principle.
+
+### 7.16.2 The dominant mechanism: refractive-index matching
+
+| | n | m = n_oil / n_medium | scattering factor |
+|---|--:|--:|--:|
+| pumpkin oil | 1.47 | — | — |
+| **isopropanol** | 1.377 | 1.0675 | **1.98 × 10⁻³** |
+| **sunflower oil** | 1.473 | 0.9980 | **1.85 × 10⁻⁶** |
+
+where the scattering factor is
+
+```math
+\Big( \frac{m^{2}-1}{m^{2}+2} \Big)^{2}
+```
+
+⇒ **about 1070× less scattering in sunflower oil.** In isopropanol the oil never dissolves — it
+emulsifies, and every droplet is a lens. In sunflower oil, like into like: the droplets are optically
+invisible even where they are physically present. This is the same `n` argument
+`DOC_solvent_and_hue.md` §2 makes from the *baseline* side; here it is made from the *visual* side.
+
+### 7.16.3 ⭐ Why scattering specifically destroys a colour DIFFERENCE
+
+**Scattering puts a floor under the transmittance, and the floor kills the exponential.**
+
+```math
+T_{obs}(\lambda) = T_{direct}(\lambda) + S
+```
+
+$S$ is forward-scattered light. It took short randomised paths through little absorbing material, so it
+is **much whiter than the direct beam**.
+
+In a clear liquid at 3 cm, $T = 10^{-kA}$ ranges over orders of magnitude: the deep bands go genuinely
+black and the windows stay bright. That dynamic range **is** the saturation, and it is the whole
+mechanism §7 of this spec rests on. With a veil, $T$ can never fall below $S$ — the deep parts of the
+spectrum are clamped, the spectrum flattens, and the chromaticity walks toward white.
+
+⇒ Both samples become pale yellow-grey, and pale colours are hard to separate without a side-by-side
+reference. **That is a sufficient explanation of observation 1.**
+
+⛔ **It does NOT explain observation 2, and a first draft of this section claimed it did.** The contrast
+reduction goes as $T_{base}/(T_{base}+S)$, which bites hardest where $T$ is *lowest* — the Soret at
+$T \approx 0.03$, not the red bands at $T \approx 0.6$. The floor predicts scattering flattens the
+**blue** and spares the **red**; observation 2 is the reverse. §7.16.4a is the mechanism that predicts
+the right asymmetry.
+
+### 7.16.4 The second mechanism, which also favours sunflower
+
+Transmittances multiply: $T_{total} = T_{solvent} \times T_{pumpkin}$.
+
+Sunflower oil is yellow — it absorbs blue. And **blue is where the two pumpkin oils AGREE**: the Soret
+dominates both, which is why $\theta_W$ is near-constant across the archive
+(`DOC_colour_geometry.md` §3.1). In the red, sunflower is transparent, so the pumpkin difference passes
+undiminished.
+
+⇒ The solvent acts as a **filter that suppresses the band where the oils are identical and passes the
+band where they differ.** Isopropanol, being colourless, leaves the uninformative blue residue in the
+light reaching the eye, diluting the contrast.
+
+### ⭐⭐ 7.16.4a Observation 2: angular scrambling costs spectral RESOLUTION
+
+A grating spectrograph maps **input angle onto wavelength**. Micron droplets scatter into a forward lobe
+of width ~λ/2a — roughly **17°** for a 1 µm droplet at 600 nm. Light entering the slit over a spread of
+angles is dispersed over a spread of wavelengths, so the effective linewidth broadens and **narrow
+features wash out while broad ones survive**:
+
+| feature | width | under scrambling |
+|---|---|---|
+| **624 nm Qy** | ~5 nm | ⛔ washed out |
+| **568 nm** | narrow | ⛔ washed out |
+| Soret 420–460 nm | ~30 nm | survives |
+
+⭐⭐ **The archive already holds the controlled experiment.** `20260727B` is the paper-diffuser A/B test
+(§16.7.2f of `SPEC_capture_quality.md`) — a pure scatterer, no chemistry:
+
+| | 624 nm band height `P2` | `Q%` (broad bands) |
+|---|---|---|
+| **diffuser IN** (001–003, 008–009) | ⛔ **0.000 – 0.031 A** | 15.6 – 17.1 |
+| **diffuser OUT** (004–007) | **0.066 – 0.072 A** | 15.6 – 17.1 |
+
+⇒ The narrow band is destroyed, the broad-band metric does not move. An emulsion is a weak diffuser
+distributed through the sample rather than sitting in front of it.
+
+⚠ **Consequence for `SPEC_metric_research.md` §12, if this is right:** `R = 624/568` is the most
+scatter-sensitive quantity in the project, and the SOLVENT becomes part of that metric's specification
+rather than a convenience. Consistent with the diffuser already being `R`'s one documented failure mode.
+
+### 7.16.5 ⚠ Where to hold back, and the experiments
+
+⚠ **All three arguments push the same way, which means none of them is being tested by the
+observation.** And Edwin's own caveat is the right one: a side-by-side pair in one light is far more
+sensitive than sequential viewing on different days. The eye adapts and memory for colour is poor, so
+*"I would have noticed it in isopropanol"* is not safe.
+
+**E1 — the premise, ten seconds.** Shine a narrow beam (laser pointer, or a phone torch through a slit)
+**sideways** through each eprouvette in a dark room. The isopropanol emulsion will show a visible
+**Tyndall beam**; the sunflower solution will show nothing. Tests "is it scattering?" directly, with no
+colorimetry at all.
+
+**E2 — the claim.** Four eprouvettes at once, same light, same day: green and brown oil × isopropanol
+and sunflower, **matched pigment dose**. Judge the *pairs*, not the individual tubes. If the sunflower
+pair separates and the isopropanol pair does not at equal dose, the mechanism is confirmed and the
+archive's silence is explained rather than contradicted.
+
+⚠ **Match the dose carefully.** Sunflower oil is far more viscous than isopropanol, so a capillary
+delivers a different mass into each — otherwise concentration confounds the entire comparison.
+
+**E3 — ⭐ the decisive one, no new hardware.** §7.16.3 and §7.16.4a make OPPOSITE predictions about
+WIDTH: resolution loss broadens a narrow feature as well as shortening it; veiling glare shortens it
+without broadening, and hurts the Soret most.
+
+⇒ Measure the **width of the 608–610 nm lamp line** — the Bayer-crossover line already documented as
+reading 1.6–2.2× its neighbours — with an isopropanol fill and with a white-spirit fill. If it broadens,
+it is resolution. One number off two spectra that would be captured anyway.

@@ -59,11 +59,20 @@ from sciens.spectracs.plugins.dev.DevSpectralPlugin import DevSpectralPlugin
 # metric tool skips exactly these two (`all_metrics_archive.SKIP`).
 SKIP = {"CapabilityProof_pumpkin-oil_summary.pdf", "Spectracs_CapabilityProof_status.pdf"}
 
+# ⛔ `oldPdfs` holds the PRE-2026-08-24 copies of every report (Edwin's request, 2026-08-24). It lives
+# INSIDE the archive root, so a tool that walks the tree would otherwise count each run TWICE and corrupt
+# every archive statistic. Earlier backups (tmp_backup_*) sit OUTSIDE tmp/ precisely to avoid this.
+# `discussion` holds the colour-geometry PDF, which is not a measurement report at all.
+EXCLUDED_DIRS = {"oldPdfs", "discussion"}
+
 
 def reportPaths():
-    return sorted(os.path.join(root, name)
-                  for root, _, files in os.walk(BASE) for name in files
-                  if name.endswith(".pdf") and name not in SKIP)
+    paths = []
+    for root, subfolders, files in os.walk(BASE):
+        subfolders[:] = [d for d in subfolders if d not in EXCLUDED_DIRS]
+        paths.extend(os.path.join(root, name) for name in files
+                     if name.endswith(".pdf") and name not in SKIP)
+    return sorted(paths)
 
 
 def rebuild(path):
@@ -134,6 +143,16 @@ def main():
     parser.add_argument("--one", help="a single report, relative to the archive root")
     parser.add_argument("--out", help="with --one: write here instead of over the original")
     parser.add_argument("--limit", type=int, help="stop after N reports (for a staged run)")
+    # ⭐ 2026-08-24. The pixel guard assumes the ORIGINAL carried its captures — true for the 124-report
+    # archive, and the reason it exists. It is not true for a report that was itself produced by an earlier
+    # re-render: `savePdf` embeds only the attachments the builder collected, so a re-rendered file whose
+    # captures had no pixels carries NO capture attachment at all and its capture pages are already blank.
+    # Regenerating such a file loses nothing. This flag permits exactly that case and no other: it fires only
+    # when restored == 0 AND the source PDF's sole attachment is workflow.json — i.e. the file provably never
+    # had capture pixels to lose. It cannot silently drop captures from a normal archived report.
+    parser.add_argument("--allow-missing-captures", dest="allowMissingCaptures", action="store_true",
+                        help="permit a report that provably carries no capture attachments (a re-render of "
+                             "a re-render); refuses any file that actually has some")
     args = parser.parse_args()
 
     paths = [os.path.join(BASE, args.one)] if args.one else reportPaths()
@@ -152,7 +171,8 @@ def main():
         try:
             expected = set(PdfReader(path).attachments.keys())
             builder, workflow, captures, restored = rebuild(path)
-            if restored != captures:
+            if restored != captures and not (args.allowMissingCaptures and restored == 0
+                                             and not PdfReader(path).attachments.keys() - {"workflow.json"}):
                 raise RuntimeError("only %d of %d captures had pixels — the report would lose pages"
                                    % (restored, captures))
             target = args.out if (args.one and args.out) else path

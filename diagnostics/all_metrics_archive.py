@@ -48,7 +48,7 @@ import sys
 
 import numpy as np
 
-from settling_sweep import BASE, measure
+from settling_sweep import BASE, EXCLUDED_DIRS, measure
 from all_metrics_table import GROUPS, rowFor
 
 # Only where a doc names the oil. `SPEC_capture_quality.md` §16.7.2o/§16.10.2 (0727 series),
@@ -77,6 +77,8 @@ def discover():
     """[(seriesName, [relativePath, ...])], chronological by the series' earliest capture."""
     series = {}
     for entry in sorted(os.listdir(BASE)):
+        if entry in EXCLUDED_DIRS:
+            continue
         full = os.path.join(BASE, entry)
         if os.path.isdir(full):
             runs = sorted(f for f in os.listdir(full) if f.endswith(".pdf"))

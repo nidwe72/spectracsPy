@@ -2485,6 +2485,27 @@ that session exists *to be* an optical A/B, and §16.26.6 rejected the improvise
 can **erase** this one. Before `R` is built on anything, it must be established that it survives the rebuild
 the lamp spec proposes — and there is currently no reason to assume it will.
 
+#### ⭐ 12.4a · The mechanism, and it makes the SOLVENT part of this metric's specification  *(2026-08-24)*
+
+`SPEC_color_retrieval.md` §7.16.4a offers a physical account of §12.4, prompted by Edwin observing that
+the 624 nm peak became **more pronounced in sunflower oil — and in white spirit**. Both are nonpolar and
+index-matched to the oil (n ≈ 1.44 and 1.473 against the oil's 1.47) where isopropanol is polar at 1.377,
+so both DISSOLVE the oil where isopropanol only emulsifies it.
+
+⇒ **A grating spectrograph maps input angle onto wavelength.** Micron droplets scatter into a forward
+lobe ~17° wide at 600 nm, so an emulsion broadens the instrument's effective linewidth. Narrow features
+wash out; broad ones survive — which is exactly §12.4's diffuser result (`P2` 0.066–0.072 → 0.000–0.031
+while `Q%` does not move), with the emulsion acting as a weak diffuser distributed through the sample
+instead of sitting in front of it.
+
+⛔ **If this holds, `R` is the most scatter-sensitive quantity in the project, and the SOLVENT is part of
+its specification rather than a convenience.** It also predicts a narrower entrance aperture would
+recover some of the band in isopropanol, at the cost of light.
+
+⏸ **Untested.** The decisive experiment is E3 of `SPEC_color_retrieval.md` §7.16.5: measure the WIDTH of
+the 608–610 nm lamp line with an isopropanol fill and with a white-spirit fill. Resolution loss broadens
+it; veiling glare would shorten it without broadening. One number off two spectra.
+
 ### ⚠ 12.5 · What `R` is measuring, and the honest doubt
 
 ⭐⭐ **Two peaks means two pigments — and the 624 nm one has a name.** `KB_spectroscopy_physics.md` §4.1

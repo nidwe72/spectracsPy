@@ -122,7 +122,16 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
         if color is not None:
             red, green, blue = color
             swatch = QLabel()
-            swatch.setStyleSheet("background-color: rgb(%d,%d,%d); border: 1px solid #444;" % (red, green, blue))
+            # D2: an out-of-gamut chromaticity is DRAWN as a per-channel clamp of itself, so the swatch is not
+            # the colour the numbers describe. Mark it with a dashed amber border rather than silently painting
+            # a confident wrong colour (DOC_colour_geometry.md §12.1).
+            isOutOfGamut = style is not None and getattr(style, "isOutOfGamut", False)
+            border = "2px dashed #c8862a" if isOutOfGamut else "1px solid #444"
+            swatch.setStyleSheet("background-color: rgb(%d,%d,%d); border: %s;"
+                                 % (red, green, blue, border))
+            if isOutOfGamut:
+                swatch.setToolTip("This chromaticity is outside sRGB — the swatch is a clamped "
+                                  "approximation, not the colour the numbers describe.")
             if view.value is not None:
                 swatch.setFixedSize(fieldHeight, fieldHeight)     # square chip beside the HSL field
                 cell = QWidget()

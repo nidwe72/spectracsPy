@@ -73,6 +73,13 @@ import tempfile
 import numpy
 
 ARCHIVE = os.path.expanduser("~/development/spectracs/spectracs-references/tmp")
+
+# ⛔ `oldPdfs` holds the PRE-2026-08-24 copies of every report (Edwin's request). It lives INSIDE the
+# archive root, so every tool that walks the tree would otherwise count each run TWICE and silently halve
+# every archive statistic. Excluded here, and in peak_ratio_archive / all_metrics_archive /
+# regenerate_reports / report_reconstruct / pedestal_slope_era. Earlier backups (tmp_backup_*) were placed
+# OUTSIDE tmp/ precisely to avoid this.
+EXCLUDED_DIRS = {"oldPdfs", "discussion"}
 OUT_CSV = os.path.join(ARCHIVE, "peak_ratio_archive.csv")
 
 # The two bands Edwin marked, and the anchors each is measured against. See the docstring for why
@@ -178,7 +185,8 @@ def peak2Position(wavelengths, absorbance):
 def collect():
     rows = []
     with tempfile.TemporaryDirectory() as scratch:
-        for folder, _, names in sorted(os.walk(ARCHIVE)):
+        for folder, subfolders, names in sorted(os.walk(ARCHIVE)):
+            subfolders[:] = [d for d in subfolders if d not in EXCLUDED_DIRS]
             for name in sorted(names):
                 if not name.endswith(".pdf"):
                     continue

@@ -29,6 +29,12 @@ from sciens.spectracs.plugin_sdk.util.SpectrumFeatureUtil import SpectrumFeature
 from sciens.spectracs.plugins.dev.DevSpectralPlugin import DevSpectralPlugin
 
 BASE = "/home/nidwe72/development/spectracs/spectracs-references/tmp/"
+
+# ⛔ `oldPdfs` holds the PRE-2026-08-24 copies of every report (Edwin's request, 2026-08-24). It lives
+# INSIDE the archive root, so a tool that walks the tree would otherwise count each run TWICE and corrupt
+# every archive statistic. Earlier backups (tmp_backup_*) sit OUTSIDE tmp/ precisely to avoid this.
+# `discussion` holds the colour-geometry PDF, which is not a measurement report at all.
+EXCLUDED_DIRS = {"oldPdfs", "discussion"}
 plugin, feature = DevSpectralPlugin(), SpectrumFeatureUtil()
 # ⚠ The `... linear` keys below are the LEGACY 600-630 anchor, ON PURPOSE. They are the reference every
 # comparison table in SPEC_capture_quality.md §16 is built on; repointing them would silently redefine

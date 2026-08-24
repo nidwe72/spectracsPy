@@ -40,6 +40,13 @@ from sciens.spectracs.model.spectral.plugin.view.ViewModelFactory import ViewMod
 from sciens.spectracs.model.spectral.plugin.view.SpectrumCaptureView import SpectrumCaptureView
 
 
+# ⛔ `oldPdfs` holds the PRE-2026-08-24 copies of every report (Edwin's request, 2026-08-24). It lives
+# INSIDE the archive root, so a tool that walks the tree would otherwise count each run TWICE and corrupt
+# every archive statistic. Earlier backups (tmp_backup_*) sit OUTSIDE tmp/ precisely to avoid this.
+# `discussion` holds the colour-geometry PDF, which is not a measurement report at all.
+EXCLUDED_DIRS = {"oldPdfs", "discussion"}
+
+
 def phaseTypeOf(name):
     """'ACQUISITION' -> SpectralWorkflowPhaseType.ACQUISITION, tolerating value- or name-style tags."""
     for phaseType in SpectralWorkflowPhaseType:
@@ -148,7 +155,9 @@ def readReport(path):
 def main():
     from settling_sweep import BASE
     paths = sorted(os.path.join(root, name)
-                   for root, _, files in os.walk(BASE) for name in files if name.endswith(".pdf"))
+                   for root, subs, files in os.walk(BASE)
+                   if not subs.__setitem__(slice(None), [d for d in subs if d not in EXCLUDED_DIRS])
+                   for name in files if name.endswith(".pdf"))
     print("Reconstructing %d archived reports — checking the round trip is lossless where it matters.\n"
           % len(paths))
     print("   %-46s %6s %6s %6s %8s %s" % ("report", "phases", "steps", "items", "captures", "note"))
