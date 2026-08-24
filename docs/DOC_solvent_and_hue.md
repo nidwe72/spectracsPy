@@ -160,3 +160,85 @@ One evening, two runs, one solvent swap:
 - and a **measured target** — `p = 1` — for the MCT run that comes next
 
 ⭐ The measurement is not the bottleneck any more. The preparation was, and we now know what to do about it.
+
+---
+
+## ⭐⭐ 8. What sunflower oil buys — the case, in plain terms  *(added 2026-08-24)*
+
+Six advantages, each with the number behind it.
+
+**1. The oil actually dissolves.** Sunflower oil bends light almost exactly like pumpkin oil — n = 1.473
+against 1.47. In isopropanol (n = 1.377) the oil never dissolves; it breaks into droplets and makes a
+cloudy emulsion. Like into like, and the cloudiness goes away.
+
+**2. The red peak is 13.6× bigger.** Measured dose-free as `area(624 nm) / area(Soret)`, so different
+pigment loads cannot explain it:
+
+| | n | 624 area / Soret area | vs isopropanol |
+|---|--:|---|--:|
+| **sunflower** | 3 | 0.01808 ± 0.00561 — [0.01161, 0.02157] | **13.6×**, no overlap |
+| white spirit | 4 | 0.02514 ± 0.01333 | 18.9×, no overlap |
+| isopropanol | 72 | 0.00133 ± 0.00100 — [0.00011, 0.00364] | — |
+
+Sunflower's **weakest** fill is still 3.2× isopropanol's **strongest**. This is the band the `R` metric
+is built on, and in isopropanol it barely exists.
+
+**3. The 568 nm peak roughly doubles too** — and that is the band the **shipped verdict** reads
+(`A_Q`, 563–573 nm). §12.6 of `SPEC_metric_research.md` measured it on 110 fills: 0.087–0.213 across 106
+isopropanol fills against 0.235–0.289 across four white-spirit fills, no overlap. So `Q%` is currently
+running on roughly half the signal available to it.
+
+**4. The baseline goes away.** §2 above: **0.018 A**, the second lowest of 116 archived runs and the
+lowest at a usable pigment load, against a typical 0.09 and a worst 0.28. That is the flat murk every
+metric has to subtract before it can read anything.
+
+**5. It settles immediately.** §2's call-out: `SETTLED_IMMEDIATE` at 106 s, `Q%` moving 16.213 → 16.200
+across the whole run — a span of **0.03** against a fill-to-fill benchmark of 0.38. ⭐ The entire
+"one fill, one wait" apparatus (`SPEC_settled_measurement.md`) exists because isopropanol fills drift
+for twenty minutes. This one did not drift at all.
+
+**6. It is food-safe.** White spirit shows the same effects more strongly and can never enter a product.
+Sunflower oil can.
+
+⭐ And one that matters commercially: **the difference is visible to the naked eye** (§3). A device whose
+answer a miller can confirm by looking is a much easier device to sell than one that must be believed.
+
+### ⭐⭐ 8.1 And the ORDERING survives the solvent change
+
+This is the question that decides whether a solvent migration is a gain or a hazard — does the change
+merely make the numbers bigger, or does it move the two oils differently?
+
+```
+                 green                     brown
+  isopropanol    0.00157 +/- 0.00105       0.00069 +/- 0.00040     d = +0.96  (n = 72)
+  sunflower      0.02106, 0.02157          0.01161
+  white spirit   0.03627, 0.03677          0.01650, 0.01103
+```
+
+Green sits above brown in **all three** solvents. The solvent scales the quantity up **without flipping
+the oils**, and widens the gap between them from 0.0009 to 0.0095.
+
+⭐ **A validation that arrived by accident.** The two green sunflower fills read **0.02106 and 0.02157 —
+2 % apart — at pigment loads differing 2.4×** (A_Soret 0.596 against 1.405). The dose-free ratio really
+does cancel dose, demonstrated rather than assumed. That matters here because sunflower is viscous and a
+capillary will not deliver a repeatable mass.
+
+### ⚠ 8.2 What it costs, and what is still missing
+
+- **It is thick.** A capillary delivers a different mass than into isopropanol. Tolerable only because
+  the measurement above cancels dose.
+- **Cleaning is worse.** Oil leaves a film; isopropanol evaporates.
+- ⛔ **Every threshold would need re-deriving.** `Q%`'s 18.6, the roast gauge's 4.4 — all fitted on
+  isopropanol spectra. And `SPEC_capture_quality.md` §16.12.7f already found `Q%` **not
+  solvent-portable** (+6.7 vs +2.1 for the two oils). §8.1's ordering result concerns the `624/Soret`
+  ratio, a different quantity — it neither contradicts that nor rescues it.
+- ⛔ **The evidence is three fills, one of them the only brown one.** Good enough to justify an evening;
+  not good enough to switch on.
+
+⇒ ⏸ **The gate is E3** (`SPEC_color_retrieval.md` §7.16.5): four fills in one evening on one rig — green
+and brown oil × isopropanol and sunflower — reported as `area(624)/area(Soret)`. Two fills answer *does
+the band really grow when only the solvent changes*; four also answer *do the oils keep their order*, at
+n bigger than one.
+
+⚠ **And sunflower may be the proof of concept rather than the destination.** §5 above already flags MCT
+oil as better on the counts where sunflower is weak.

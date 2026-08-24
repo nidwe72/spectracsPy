@@ -5816,6 +5816,62 @@ exception out, so **Edwin rules on it**, not this section.
 ⚠ And re-specify arm A's gate before doing so — `A_valley` alone cannot answer "is it clear?" across a
 solvent change, now that we know the solvent moves the pigment's own 500–630 absorbance by 1.5–2.0×.
 
+### ⭐⭐ 16.12.7g SUNFLOWER — the food-safe arm, and it carries the effect on its own  *(2026-08-24; the case, and the gate)*
+
+§16.12.7d–7f pursued **de-aromatised white spirit**, which cannot enter a product. The 22 August evening
+used **sunflower oil** instead (`DOC_solvent_and_hue.md`), and re-splitting the archive by solvent rather
+than pooling the two as "index-matched" shows sunflower does not depend on the hydrocarbon arm.
+
+#### The case
+
+| | measured | source |
+|---|---|---|
+| **the oil dissolves** | n = 1.473 against the oil's 1.47; isopropanol is 1.377 and only emulsifies it | `SPEC_color_retrieval.md` §7.16.2 |
+| **624 nm band 13.6×** | dose-free `area(624)/area(Soret)`: 0.01808 ± 0.00561 (n = 3) vs 0.00133 ± 0.00100 (n = 72), **no overlap** — the weakest sunflower fill is 3.2× the strongest isopropanol one | §7.16.4a.1 |
+| **568 nm band ~2×** | 0.235–0.289 vs 0.087–0.213 on 110 fills — **and 568 is the band the SHIPPED verdict reads** | `SPEC_metric_research.md` §12.6 |
+| **baseline gone** | `A_valley` **0.018**, second lowest of 116 runs and lowest at a usable pigment load, against a typical 0.09 and a worst 0.28 | `DOC_solvent_and_hue.md` §2 |
+| ⭐ **settles immediately** | `SETTLED_IMMEDIATE` at 106 s, `Q%` 16.213 → 16.200 over the whole run — span **0.03** against a fill-to-fill benchmark of 0.38 | `DOC_solvent_and_hue.md` §2 |
+| **food-safe** | white spirit is not, at any concentration | §16.12.7d |
+| **visible to the eye** | Edwin, at the bench, unprompted — and §7.14's phone check predicted one hue to 2.1° | `DOC_solvent_and_hue.md` §3 |
+
+⭐ **The settling line is the one to notice.** `SPEC_settled_measurement.md` — the ring buffer, the
+drawdown rule, the whole finalize/latch apparatus — exists because isopropanol fills drift for twenty
+minutes. A solvent in which the fill does not drift does not make that work wrong; it makes it
+**cheap to satisfy**.
+
+#### ⭐⭐ And the ORDERING survives, which is the question that decides it
+
+```
+                 green                     brown
+  isopropanol    0.00157 +/- 0.00105       0.00069 +/- 0.00040     d = +0.96  (n = 72)
+  sunflower      0.02106, 0.02157          0.01161
+  white spirit   0.03627, 0.03677          0.01650, 0.01103
+```
+
+Green above brown in all three, with the gap widening from 0.0009 to 0.0095. The solvent scales the
+quantity up **without moving the oils relative to each other** — on this measure.
+
+⭐ **A validation that arrived by accident:** the two green sunflower fills read **0.02106 and 0.02157,
+2 % apart, at pigment loads differing 2.4×** (`A_Soret` 0.596 vs 1.405). The dose-free ratio cancels dose,
+demonstrated rather than assumed — which matters because sunflower is viscous and a capillary will not
+deliver a repeatable mass.
+
+#### ⛔ What is NOT settled, and must not be skipped
+
+- ⛔ **`Q%` is not solvent-portable** — §16.12.7f measured +6.7 and +2.1 for the two oils. The ordering
+  result above is the **`624/Soret` ratio**, a different quantity. It neither contradicts §16.12.7f nor
+  rescues it, and the two must not be conflated.
+- ⛔ **Every threshold is isopropanol-fitted** — `Q%`'s 18.6, the roast gauge's 4.4. A solvent migration
+  is a full re-calibration, not a swap.
+- ⛔ **n = 3, with ONE brown fill.** The ordering claim rests on a single brown data point.
+- ⚠ Thick to dose, worse to clean, and `DOC_solvent_and_hue.md` §5 already argues **MCT oil** is better
+  where sunflower is weak. Sunflower may be the proof of concept, not the destination.
+
+⇒ ⏸ **THE GATE: E3** (`SPEC_color_retrieval.md` §7.16.5). Four fills, one evening, one rig — green and
+brown oil × isopropanol and sunflower — reported as `area(624)/area(Soret)`. Two fills answer *does the
+band really grow when only the solvent changes*; four also answer *do the oils keep their order*, at
+n bigger than one. **Nothing above justifies a migration until that runs.**
+
 ### 16.12.8 The container problem is DOWNSTREAM of the solvent — do not buy anything yet
 
 > ⚠ **OVERTAKEN BY EVENTS, 2026-08-19 — and not contradicted.** This section was written about *heptane*, and
