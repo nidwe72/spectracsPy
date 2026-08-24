@@ -925,6 +925,40 @@ carries 16.6× less area relative to the Soret in isopropanol — a change in th
 (speciation, or aggregation at the droplet interface), not in how the light gets to the detector.
 ⏸ Unsettled, exactly as §12.6 left it.
 
+##### ⭐ 7.16.4a.1 · SUNFLOWER carries it on its own, and the ORDERING survives
+
+Split by solvent rather than pooled, and sunflower does not ride on white spirit's coat-tails:
+
+| | n | 624 area / Soret area | vs isopropanol |
+|---|--:|---|--:|
+| **sunflower** | 3 | 0.01808 ± 0.00561 — [0.01161, 0.02157] | **13.6×**, no overlap |
+| **white spirit** | 4 | 0.02514 ± 0.01333 — [0.01103, 0.03677] | 18.9×, no overlap |
+| **isopropanol** | 72 | 0.00133 ± 0.00100 — [0.00011, 0.00364] | — |
+
+Sunflower's *weakest* fill (0.01161) is still **3.2× above isopropanol's strongest** (0.00364).
+
+⭐⭐ **And the measure validated itself by accident.** The two green sunflower fills read **0.02106 and
+0.02157 — 2 % apart — while their pigment loads differ by 2.4×** (A_Soret 0.596 against 1.405). The
+ratio really does cancel dose, demonstrated rather than assumed.
+
+⭐⭐ **The ordering survives the solvent change**, which is the question that decides whether a solvent
+migration is a gain or a hazard:
+
+```
+                 green                    brown                  
+  isopropanol    0.00157 +/- 0.00105      0.00069 +/- 0.00040     d = +0.96  (n = 72)
+  sunflower      0.02106, 0.02157         0.01161
+  white spirit   0.03627, 0.03677         0.01650, 0.01103
+```
+
+Green sits above brown in all three. The solvent scales the quantity up **without flipping the oils** —
+and it widens the gap between them, from 0.0009 in isopropanol to 0.0095 in sunflower.
+
+⚠ **On n = 3, with ONE brown fill.** "The ordering holds" currently rests on a single brown data point.
+⚠ And this is the `624/Soret` ratio; `SPEC_capture_quality.md` §16.12.7f's finding that `Q%` is **not**
+solvent-portable (+6.7 vs +2.1) concerns a different quantity and is neither contradicted nor tested
+here.
+
 #### ⚠ 7.16.4b What this test could NOT do — the width comparison is invalid
 
 The first cut measured **equivalent width** $W = \text{area}/\text{height}$ and reported the isopropanol
@@ -970,13 +1004,33 @@ grid step) — far below any plausible instrument linewidth — and sits at **47
 473.1 nm in the SAMPLE of the same run**. An optical feature cannot move; a threshold where the dominant
 Bayer channel switches moves with signal level, and 0.6 nm is that.
 
-**E3 — ⭐ the split sample.** §7.16.4a leaves a chemistry hypothesis with every optical explanation
-removed, and §12.6 leaves the cause unsettled. Both are limited by the same confound: 7 index-matched
-fills of one oil pair against 72 isopropanol runs spanning a year, two rigs and a rebuild.
+**E3 — ⭐ the split sample: SUNFLOWER against ISOPROPANOL.** White spirit shows the effect more strongly
+but can never enter a product; sunflower is the food-safe candidate and carries the effect on its own
+(§7.16.4a.1). ⛔ **The experiment is sunflower vs isopropanol.**
 
-⇒ **Take ONE oil, prepare ONE dilution, split it, and put half into each solvent in the same session on
-the same rig.** Report `area(624) / area(Soret)` — dose-free, so the split need not be perfect. Two
-spectra, one evening, and every confound above disappears at once.
+§7.16.4a leaves a chemistry hypothesis with every optical explanation removed, and §12.6 leaves the cause
+unsettled. Both are limited by the same confound: 3 sunflower fills of one oil pair, one session, against
+72 isopropanol runs spanning a year, two rigs and a rebuild.
 
-⚠ Run it on the **green** oil: its 624 band is the taller of the two, so the isopropanol arm is furthest
-from the noise floor where §7.16.4b's problems live.
+⇒ **Four fills, one evening, one rig:**
+
+```
+                    isopropanol        sunflower oil
+    green oil            ●                  ●
+    brown oil            ●                  ●
+```
+
+Same bottle of each oil, capillaries filled the same night. Report `area(624) / area(Soret)`.
+
+Two fills would answer *"does the band really grow when only the solvent changes?"*. **Four also answer
+*"do the two oils keep their order?"*** — which is what decides whether a solvent migration is a free
+2–16× signal gain or a new confound. §7.16.4a.1 says the ordering holds, but on **one brown fill**.
+
+⚠ Sunflower is viscous, so a capillary will not deliver the same mass as into isopropanol. That is
+tolerable precisely because the ratio cancels dose — demonstrated in §7.16.4a.1 by two fills agreeing to
+2 % across a 2.4× load difference — but do not attempt to match volumes by eye and then read absolute
+heights.
+
+⚠ **Sunflower is the proof of concept, not necessarily the destination.** `DOC_solvent_and_hue.md` §5
+already flags **MCT oil** (C8/C10) as better where sunflower is weak — thinner, colourless and more
+stable. If this goes anywhere, MCT is the likely endpoint.
