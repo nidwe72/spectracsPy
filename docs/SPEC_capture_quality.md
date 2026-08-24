@@ -5615,7 +5615,7 @@ replaces — but it is a different one.
 | **GATE 1** · path length, seating, wall with a ruler | ⚠ **not recorded** |
 | **GATE 2** · solvent blank first, same bottle | ⚠ **not recorded.** ⛔ This one bites: without it, the +2.1/+6.7 level shift below cannot be split between the solvent, the blank and §16.7's reopened focal plane |
 | **Arm A** · clarity | ✅ **ran**, four fills |
-| **Arm B** · dilution series 1× / 0.5× / 0.25× in both solvents | ⛔ **not run** — so **dilution-invariance in the hydrocarbon is still untested**, and it is the arm that can refuse the solvent outright |
+| **Arm B** · dilution series 1× / 0.5× / 0.25× in both solvents | ⛔ **not run** — so **dilution-invariance in the hydrocarbon is still untested**, and it is the arm that can refuse the solvent outright. ⭐ **Upgraded 2026-08-24 by §16.12.7g**: it now also distinguishes whether the 624 nm deficit is aggregation *inside the droplets*, which predicts the ratio is dilution-INDEPENDENT in isopropanol and falls only at high true concentration in a solution. Same three fills per solvent — and run it in **sunflower**, not white spirit |
 | **Arm C** · 10 untouched + 10 re-seated | ⛔ **not run** — §16.12.7e calls it *"the cheapest and the most decisive"*, and it is still owed |
 
 ⇒ ⭐ **One arm of three, without its gates.** Everything below is read at that weight.
@@ -5855,6 +5855,53 @@ quantity up **without moving the oils relative to each other** — on this measu
 2 % apart, at pigment loads differing 2.4×** (`A_Soret` 0.596 vs 1.405). The dose-free ratio cancels dose,
 demonstrated rather than assumed — which matters because sunflower is viscous and a capillary will not
 deliver a repeatable mass.
+
+#### ⭐⭐ The mechanism this suggests — and the step §4.9 of `DOC_sample_physics.md` does not take
+
+Sunflower is **not on §4.9's ligand axis at all.** That table runs methanol → white spirit and sorts by
+POLARITY: alcohols coordinate the magnesium's fifth site, hydrocarbons cannot. A **triglyceride is
+nonpolar AND carries three ester carbonyls per molecule**, and a carbonyl oxygen has lone pairs:
+
+| solvent | polarity | fifth-ligand donor? | dissolves the oil? |
+|---|---|---|---|
+| 2-propanol *(shipping)* | polar | yes — hindered, but yes | ⛔ no: emulsion |
+| de-aromatised white spirit | nonpolar | ⛔ **none** | ✅ yes |
+| **sunflower oil** | **nonpolar** | ✅ **yes — ester C=O** | ✅ **yes** |
+
+⇒ Sunflower occupies the corner the hydrocarbon route could not offer: **a true solution AND a ligand in
+vast excess.** §4.9 supplies the count itself — *"roughly ten thousand ester carbonyls per pigment
+molecule"* — but argues it about dissolved pumpkin oil *inside white spirit*. In sunflower the entire
+solvent is that ligand.
+
+⛔ **And one consequence §4.9 does not follow through.** It dismisses aggregation on the ground that
+*"micromolar concentrations [face] a millimolar phenomenon"* — an argument about the **nominal**
+concentration of a true solution. **Inside a droplet the concentration is not micromolar; it is that of
+NEAT OIL**, which is precisely the regime where aggregation lives.
+
+⇒ The same packaging that makes dilution-invariance *structural* (§4.9's positive case for isopropanol)
+also **pins the pigment at the concentration where it can interact with itself.** An aggregated or
+self-coordinated pigment has a weakened, broadened Qy band — which is the 13.6× deficit above, and is
+why the deficit appears in the **narrow red band** and not in the broad Soret.
+
+⚠ **An argument, not a measurement.** `SPEC_color_retrieval.md` §7.16.4a establishes only the negative
+half: no *optical* explanation survives, because a 16.6× dose-free **area** difference cannot be
+convolution and every scattering candidate would damage the Soret more than the red band.
+
+#### ⭐⭐ What this does to ARM B — it becomes a test of MECHANISM, not of invariance
+
+§16.12.7e's **arm B** (dilution series 1× / 0.5× / 0.25× in both solvents) has never run, and §16.12.7e
+frames it as *"dilution-invariance in the hydrocarbon is still untested"*. The argument above gives it a
+second, sharper job:
+
+| solvent | if the deficit IS aggregation inside droplets |
+|---|---|
+| **isopropanol** | `area(624)/area(Soret)` must be **independent of nominal dilution** — the droplet interior never changes, whatever the recipe |
+| **sunflower** | it should hold **only until the true concentration climbs into the aggregating regime**, then fall |
+
+⇒ ⭐ **Arm B now distinguishes the mechanism as well as checking the invariance**, and it costs the same
+three fills per solvent. ⚠ Run it in **sunflower**, not white spirit: sunflower is the arm that can ship,
+and unlike the hydrocarbon it supplies a ligand, so a dimerisation result there would not be confounded
+by the missing-ligand row of the table above.
 
 #### ⛔ What is NOT settled, and must not be skipped
 

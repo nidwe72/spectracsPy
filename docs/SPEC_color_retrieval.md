@@ -925,6 +925,15 @@ carries 16.6× less area relative to the Soret in isopropanol — a change in th
 (speciation, or aggregation at the droplet interface), not in how the light gets to the detector.
 ⏸ Unsettled, exactly as §12.6 left it.
 
+⭐ **A named candidate now exists.** `SPEC_capture_quality.md` §16.12.7g argues it from
+`DOC_sample_physics.md` §4.9's own ligand chemistry: in isopropanol the pigment is lipophilic and sits
+**inside the oil droplets at NEAT-oil concentration** — not at the micromolar nominal concentration §4.9
+reasons from — which is precisely the regime where **aggregation** lives. An aggregated or
+self-coordinated pigment has a weakened, broadened Qy band, and that is both the size and the
+band-selectivity of the deficit. ⚠ Still an argument. ⇒ **Arm B of §16.12.7e tests it**: aggregation
+inside droplets predicts the ratio is *dilution-independent* in isopropanol and falls only at high true
+concentration in a solution.
+
 ##### ⭐ 7.16.4a.1 · SUNFLOWER carries it on its own, and the ORDERING survives
 
 Split by solvent rather than pooled, and sunflower does not ride on white spirit's coat-tails:

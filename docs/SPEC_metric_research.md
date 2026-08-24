@@ -2513,6 +2513,15 @@ in the emulsion: veiling glare scales contrast by `T_base/(T_base+S)`, severe at
 pigment's own state — with one more candidate removed. **This does not touch `R`'s numbers**: `R` reads
 band heights against fixed anchors and never a fitted position or width.
 
+⭐ **A named candidate now exists.** `SPEC_capture_quality.md` §16.12.7g argues it from
+`DOC_sample_physics.md` §4.9's own ligand chemistry: in isopropanol the pigment is lipophilic and sits
+**inside the oil droplets at NEAT-oil concentration** — not at the micromolar nominal concentration §4.9
+reasons from — which is precisely the regime where **aggregation** lives. An aggregated or
+self-coordinated pigment has a weakened, broadened Qy band, and that is both the size and the
+band-selectivity of the deficit. ⚠ Still an argument. ⇒ **Arm B of §16.12.7e tests it**: aggregation
+inside droplets predicts the ratio is *dilution-independent* in isopropanol and falls only at high true
+concentration in a solution.
+
 ⏸ The test that would settle it is E3 of `SPEC_color_retrieval.md` §7.16.5, rewritten the same day: **one
 oil, one dilution, split between the two solvents in one session on one rig**, reported as
 `area(624)/area(Soret)`. It removes the confound both §12.6 and §7.16.4a are limited by — 7 fills of one
