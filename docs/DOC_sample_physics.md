@@ -916,7 +916,23 @@ carbonyl oxygen has lone pairs.
 the dissolved oil, and any ligand in excess breaks the aggregates"* — but it makes that argument about
 *dissolved pumpkin oil inside white spirit*. In sunflower the entire solvent is that ligand.
 
-#### What the evening measured
+#### What sunflower buys — six things, each with its number
+
+⭐ **1. The oil actually dissolves.** n = 1.473 against the oil's 1.47, so the refractive-index mismatch
+that drives §4.2's emulsion and §5's pedestal is essentially gone. Isopropanol is 1.377 and only
+emulsifies.
+
+⭐ **2 – 5** are measured, and are the table below: the **baseline**, the **settling**, the **624 nm
+band** and the **568 nm band**.
+
+⭐ **6. It is food-safe.** §4.8's de-aromatised white spirit shows every one of these effects more
+strongly and can never enter a product at any concentration; §4.6's decision table rules solvents out on
+exactly this ground. Sunflower oil passes it.
+
+⇒ And one that is commercial rather than physical: **the difference between the two oils is visible to
+the naked eye** in sunflower (§3.7's dichromatism, and Figure 7 below). A device whose answer a miller
+can confirm by looking is a different proposition from one that must be believed. `DOC_solvent_and_hue.md`
+§3 records a four-sigma separation by eye, with the spectrometer predicting one of the two hues to 2.1°.
 
 `DOC_solvent_and_hue.md` is the full account; the numbers that bear on this section:
 
