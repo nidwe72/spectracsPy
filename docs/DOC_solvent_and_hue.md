@@ -2,6 +2,12 @@
 
 **Internal note · 2026-08-23 · one evening's result**
 
+> ⚠ **INTEGRATED 2026-08-24.** This note is the account of one evening and is kept as it was written.
+> Its findings now live in the internal document set, where they sit next to the physics that explains
+> them: **`DOC_sample_physics.md` §4.10** — *"Sunflower oil — the row §4.9's table does not have"* —
+> which is §4 of `Spectracs_LightPigmentSolvent.pdf`. The decision record is
+> `SPEC_capture_quality.md` §16.12.7g. **Edit those; this note is not maintained.**
+
 <!--
   SOURCE OF TRUTH: this file. Edit the prose HERE, never the PDF.
   REGENERATE:

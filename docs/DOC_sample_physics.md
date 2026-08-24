@@ -894,6 +894,86 @@ that if the solvent question is ever genuinely reopened the answer is a **mixtur
 ligand, a hydrocarbon for the solvency — rather than any single solvent at either end of the series.
 ⛔ Methanol is not a candidate at any dilution: acutely toxic and skin-absorbed.
 
+⇒ ⭐ **And there is a row this table does not have.** Every entry above treats the axis as *polarity* —
+alcohols coordinate, hydrocarbons do not. A **triglyceride** is nonpolar *and* carries ester carbonyls,
+so it can do both. §4.10.
+
+### ⭐⭐ 4.10 SUNFLOWER OIL — the row §4.9's table does not have  *(2026-08-22 evening, measured 2026-08-24)*
+
+§4.9's ligand table runs from methanol to de-aromatised white spirit and treats the axis as **polarity**:
+alcohols coordinate the magnesium, hydrocarbons cannot. **Sunflower oil is not on that axis.** It is a
+triglyceride — nonpolar like the hydrocarbon, but carrying **three ester carbonyls per molecule**, and a
+carbonyl oxygen has lone pairs.
+
+| solvent | polarity | fifth-ligand donor? | dissolves the oil? |
+|---|---|---|---|
+| 2-propanol *(shipping)* | polar | yes — hindered, but yes | ⛔ no: emulsion (§4.2) |
+| de-aromatised white spirit | nonpolar | ⛔ **none** | ✅ yes |
+| **sunflower oil** | **nonpolar** | ✅ **yes — ester C=O** | ✅ **yes** |
+
+⇒ ⭐ **Sunflower occupies the corner §4.9 could not offer: a true solution AND a ligand in vast excess.**
+§4.9 itself supplies the count — *"roughly ten thousand ester carbonyls per pigment molecule supplied by
+the dissolved oil, and any ligand in excess breaks the aggregates"* — but it makes that argument about
+*dissolved pumpkin oil inside white spirit*. In sunflower the entire solvent is that ligand.
+
+#### What the evening measured
+
+`DOC_solvent_and_hue.md` is the full account; the numbers that bear on this section:
+
+| | sunflower | isopropanol archive |
+|---|---|---|
+| **baseline `A_valley`** | **0.018** — 2nd lowest of 116 runs | typical 0.09, worst 0.28 |
+| ⭐ **settling** | `SETTLED_IMMEDIATE` at 106 s, `Q%` span **0.03** over the whole run | fill-to-fill benchmark 0.38 |
+| **624 nm band**, dose-free `area(624)/area(Soret)` | **0.01808 ± 0.00561** (n = 3) | **0.00133 ± 0.00100** (n = 72) |
+| **568 nm band** (the band the verdict reads) | ~2× — §12.6 of `SPEC_metric_research.md`, on 110 fills | |
+
+**13.6×, with no overlap** — sunflower's weakest fill is 3.2× isopropanol's strongest. And the
+green/brown **ordering survives**: green above brown in isopropanol (d = +0.96, n = 72), in sunflower and
+in white spirit alike, with the gap widening from 0.0009 to 0.0095.
+
+![**Figure 7** — the two oils in sunflower oil, and the same two in the report's own rendering. The difference that the archive's isopropanol runs never showed by eye.](figures/solvent_hue_photo.png)
+
+#### ⭐⭐ The mechanism this suggests — and where §4.9's own reasoning stops short
+
+§4.9 argues the emulsion is a **feature**: the pigment is lipophilic, so it sits *inside* the droplets at
+whatever concentration the neat oil has, and diluting changes only how many droplets stand in the beam.
+That is what makes dilution-invariance **structural**. Nothing here revises it.
+
+⛔ **But it has a consequence §4.9 does not follow through.** §4.9 dismisses aggregation in the
+hydrocarbon on the ground that *"micromolar concentrations [face] a millimolar phenomenon"*. That
+argument is about the **nominal** concentration of a true solution. **Inside a droplet the concentration
+is not micromolar — it is that of neat oil**, which is precisely the regime where aggregation lives.
+
+⇒ The same packaging that pins the local concentration also **pins it at the value where the pigment can
+interact with itself.** An aggregated or self-coordinated pigment has a weakened, broadened Qy band —
+which is exactly the 13.6× deficit measured above, and exactly why it appears in the **narrow red band**
+and not in the broad Soret.
+
+⚠ **This is an argument, not a measurement.** `SPEC_color_retrieval.md` §7.16.4a establishes only the
+negative half — that no *optical* explanation survives, because a 16.6× dose-free **area** difference
+cannot be convolution, and every scattering candidate would damage the Soret more than the red band.
+What remains is a change in the pigment's own state. §4.9's ligand chemistry is the natural candidate;
+it has not been shown.
+
+⇒ ⭐ **It makes arm B of §16.12.7e considerably more interesting than a dilution check.** If the deficit
+is aggregation inside droplets, then in **isopropanol** the `624/Soret` ratio must be *independent of
+nominal dilution* — the droplet interior does not change — while in **sunflower** it should stay flat
+only until the true concentration climbs into the aggregating regime. Three dilutions in both solvents
+tests the mechanism, not merely the invariance.
+
+#### ⚠ 4.10.1 What this does NOT settle
+
+- ⛔ **`Q%` is not solvent-portable.** §16.12.7f measured **+6.71** and **+2.09** — *different per oil*.
+  The ordering result above is the `624/Soret` ratio, a **different quantity**; it neither contradicts
+  that nor rescues it, and §4.9's table already records that `T = 18.6` exists on the isopropanol route
+  and nowhere else.
+- ⛔ **n = 3, with one brown fill.**
+- ⚠ Sunflower is viscous to dose and leaves a film to clean; §5 of `DOC_solvent_and_hue.md` argues **MCT
+  oil** (C8/C10) is better on exactly those counts, and is the same chemistry — a triglyceride, so the
+  ester-carbonyl ligand argument carries across unchanged.
+- ⇒ ⏸ **The gate is E3** (`SPEC_color_retrieval.md` §7.16.5): four fills, one evening, green and brown
+  oil × isopropanol and sunflower. Nothing above justifies a migration before it runs.
+
 <!--PAGEBREAK-->
 
 ## 5. Turbidity: the pedestal
