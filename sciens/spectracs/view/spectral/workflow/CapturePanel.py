@@ -1,3 +1,4 @@
+import os
 from PySide6.QtCore import Qt, QEventLoop, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QPushButton, QComboBox,
@@ -953,14 +954,47 @@ class CapturePanel(QWidget):
                                      answer["value"], answer["readAs"]))
             return True
         step.setContainer(None)
+        # ⭐⭐ NEVER LOSE THE TRAJECTORY (Edwin, 2026-08-26). A run that produces no value still produced
+        # twenty minutes of rows, and those rows are the ONLY thing that can diagnose why it did not
+        # settle — the replay harness reads exactly this record. Before this, `setContainer(None)` above
+        # left `__acquisitionComplete()` false, Next stayed disabled, and the operator's only exit
+        # discarded the evidence along with the run.
+        # ⛔ It deliberately does NOT give the step a container: a run with no value must not be able to
+        # reach PUBLISHING, and `SpectralWorkflowEngine` downstream assumes a measured step. The record is
+        # written BESIDE the workflow instead, which is the same choice `captureDecode` made — the
+        # artefact travels, the schema does not change.
+        saved = self.__saveTrajectory(result)
         self.__showStatusText({
             "NEVER_SETTLED": "⛔ the fill never cleared within the time limit — no value. Warm it and "
                              "use a FRESH fill: this one has been in the beam and has changed.",
             "MEASUREMENT_BROKEN": "⛔ no signal in the Soret band — check the fill and the lamp.",
             "STALLED": "⛔ the camera stopped delivering frames — nothing recorded.",
             "FAILED": "⛔ the plugin's evaluation raised; the trajectory was kept but there is no value.",
-        }.get(result.outcome.value, "⛔ no value — %s" % result.outcome.value))
+        }.get(result.outcome.value, "⛔ no value — %s" % result.outcome.value)
+            + ("    ⭐ trajectory saved: %s" % saved if saved else ""))
         return False
+
+    @staticmethod
+    def __saveTrajectory(result):
+        """Write the MonitorRecord of a run that produced no value. Returns the path, or None.
+
+        ⚠ Best-effort by design: this runs on the failure path, and an exception here would replace a
+        recoverable "no value" with a crash at the worst possible moment."""
+        try:
+            import json
+            import time as _time
+            from sciens.spectracs.model.databaseEntity.AppDataPathUtil import get_app_data_dir
+            folder = os.path.join(get_app_data_dir(), "trajectories")
+            os.makedirs(folder, exist_ok=True)
+            name = "%s_%s.json" % (_time.strftime("%Y%m%d_%H%M%S"), result.outcome.value)
+            target = os.path.join(folder, name)
+            with open(target, "w", encoding="utf-8") as handle:
+                json.dump(result.toRecord(), handle, indent=1)
+            print("TRAJECTORY saved (%d rows) -> %s" % (len(result.rows), target))
+            return target
+        except Exception as error:
+            print("TRAJECTORY could not be saved (%s)" % error)
+            return None
 
     @staticmethod
     def __minutesText(seconds):

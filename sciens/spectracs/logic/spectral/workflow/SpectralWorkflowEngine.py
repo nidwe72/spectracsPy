@@ -51,6 +51,10 @@ class SpectralWorkflowEngine:
 
     def __buildWorkflow(self) -> SpectralWorkflow:
         workflow = SpectralWorkflow()
+        # ⭐ The PLUGIN declares what it is measuring in; the workflow only carries it to the report.
+        solvent = getattr(self.plugin, "solvent", None)
+        workflow.solvent = getattr(solvent, "value", None) or "UNKNOWN"
+        workflow.prepProtocol = getattr(self.plugin, "prepProtocol", None)
         for phaseType in self.PHASE_ORDER:
             phase = SpectralWorkflowPhase()
             phase.setType(phaseType)

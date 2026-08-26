@@ -75,7 +75,13 @@ def test_every_series_F_run_reads_what_29_2_measured(name):
     # evidence that the gate-time read §29/§30 derived is exactly where it was.
     # ⛔ The literal is deliberate. §51: TEST C changed a read on 2026-08-19 WITHOUT bumping this string, so
     # "clearing-2.0" names two different algorithms in the archive — a bump has to be a visible act.
-    assert decision.diagnostics["readRule"] == "clearing-3.0"
+    # ⚠ 3.0 -> 4.0 on 2026-08-26: the SOLVENT now selects the read, and SUNFLOWER_OIL is answered off the
+    # clearing gate instead of by hunting a minimum. ⭐⭐ THESE SEVEN RUNS ARE UNAFFECTED AND THAT IS THE
+    # POINT — the evaluator here is built with `plugin=None`, so it takes the isopropanol path, and every
+    # other assertion in this test passed untouched when this literal was the only thing that had to move.
+    # That is the evidence the new branch did not leak; the archive-wide check is `settling_replay.py`,
+    # which reproduced all 23 recorded answers bit-identically under ISOPROPANOL.
+    assert decision.diagnostics["readRule"] == "clearing-4.0"
 
     # ⭐ The value: a REAL look on the clear branch (`answer is None` ⇒ the engine takes the promoted
     # row's own number), a fitted vertex on the muddy one.

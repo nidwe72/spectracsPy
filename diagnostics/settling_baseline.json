@@ -1,0 +1,163 @@
+{
+ "20260824Lugitsch/001.pdf": {
+  "recordedOutcome": "SETTLED_AFTER_CLEARING",
+  "recordedReadAs": "VERTEX",
+  "recordedValue": 18.89667028709551,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260824Lugitsch/002.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 19.082256785107077,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260824Lugitsch/003.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 18.69574169001094,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260824SparPremium/001.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 18.189379241637337,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260824SparPremium/002.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 19.895630072374754,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260824SparPremium/003.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 17.799339372989486,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260824SparSBudget/001.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 21.323330043872616,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260824SparSBudget/002.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 23.121315003314606,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260824SparSBudget/003.pdf": {
+  "recordedOutcome": "SETTLED_AFTER_CLEARING",
+  "recordedReadAs": "VERTEX",
+  "recordedValue": 22.771358326667816,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Esterer/001.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 15.026030689186372,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Esterer/002.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 14.988433154489018,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Esterer/003.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 13.769036004657544,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Esterer/004.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 13.848578236690305,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Lugitsch/001.pdf": {
+  "recordedOutcome": "SETTLED_AFTER_CLEARING",
+  "recordedReadAs": "VERTEX",
+  "recordedValue": 16.513424641883486,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Lugitsch/002.pdf": {
+  "recordedOutcome": "SETTLED_AFTER_CLEARING",
+  "recordedReadAs": "VERTEX",
+  "recordedValue": 16.513424641883486,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Lugitsch/003.pdf": {
+  "recordedOutcome": "SETTLED_AFTER_CLEARING",
+  "recordedReadAs": "VERTEX",
+  "recordedValue": 16.541537614394667,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Lugitsch/004.pdf": {
+  "recordedOutcome": "SETTLED_AFTER_CLEARING",
+  "recordedReadAs": "VERTEX",
+  "recordedValue": 14.593889551174584,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826LugitschB/001.pdf": {
+  "recordedOutcome": "SETTLED_AFTER_CLEARING",
+  "recordedReadAs": "VERTEX",
+  "recordedValue": 16.277816914280624,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826LugitschB/002.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 16.418859517351255,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Stekko/001.pdf": {
+  "recordedOutcome": "SETTLED_AFTER_CLEARING",
+  "recordedReadAs": "VERTEX",
+  "recordedValue": 17.49241609885621,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Stekko/002.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 17.5288049734941,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Stekko/003.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 17.968472150574662,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ },
+ "20260826Stekko/004.pdf": {
+  "recordedOutcome": "SETTLED_IMMEDIATE",
+  "recordedReadAs": "FIRST_SETTLED_WINDOW",
+  "recordedValue": 21.028251540002312,
+  "recordedVersion": "clearing-3.0",
+  "solvent": null
+ }
+}
