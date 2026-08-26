@@ -44,6 +44,22 @@ EYE = {"Lugitsch": "green (by far)", "SparPremium": "brown", "SparSBudget": "bro
 LINESTYLE = {"001": "-", "002": "--", "003": ":"}
 OILCOLOR = {"Lugitsch": "#4a7c1f", "SparPremium": "#b8860b", "SparSBudget": "#8b4513"}
 
+# ⭐ THE 08-26 LUGITSCH, overlaid on page A only (Edwin, 2026-08-26). Drawn in a colour that belongs
+# to NO oil on this page, because it is a DIFFERENT SESSION: blending it into the Lugitsch green would
+# imply it is a fourth run of the same evening, which is exactly the confusion the page exists to avoid.
+# ⛔ 002 is omitted: it is a BYTE-IDENTICAL copy of 001 (same md5), so plotting it would draw one
+# measurement twice and manufacture an agreement out of nothing. 004 is Edwin's hand-excluded run.
+# ⭐ TWO independently prepared fills of the same oil on that evening. Fill B is matched to
+# 20260824Lugitsch/001 to within 7 % on the Soret and 1 % on the valley, and still reads with fill A --
+# which is how the fill was ruled out as the cause of the step.
+LATER = ("20260826Lugitsch", "08-26")
+# ⛔ Runs are DISCOVERED, not listed: fill B gained a second run while this was being written, and a
+# hardcoded list would have silently dropped it. LATER_SKIPPED is the only hand-maintained part.
+LATER_SERIES = [("20260826Lugitsch", "A"), ("20260826LugitschB", "B")]
+LATER_SKIPPED = {"20260826Lugitsch/002": "byte-identical copy of 001",
+                 "20260826Lugitsch/004": "set aside by hand, pending discussion"}
+LATER_COLOR = "#1565c0"
+
 RV_THRESHOLD = 52.0
 OUT = os.path.join(archive.ARCHIVE, "20260824_session_report.pdf")
 
@@ -105,6 +121,29 @@ def collect():
                     "rv": 100.0 * (red - valley) / (q - valley),
                     "lch": (lightness, chroma, hue), "rgb": tuple(c / 255.0 for c in rgb),
                     "outcome": monitor.get("outcome")}
+    return rows
+
+
+def loadLater():
+    """Today's Lugitsch, both fills, read exactly as the 08-24 rows are so they are comparable."""
+    rows = {}
+    with tempfile.TemporaryDirectory() as scratch:
+        for series, fill in LATER_SERIES:
+          folder = os.path.join(archive.ARCHIVE, series)
+          for run in sorted(f[:-4] for f in os.listdir(folder) if f.endswith(".pdf")):
+            if "%s/%s" % (series, run) in LATER_SKIPPED:
+                continue
+            path = os.path.join(archive.ARCHIVE, "%s/%s.pdf" % (series, run))
+            workflow = archive.workflowOf(path, scratch)
+            if workflow is None:
+                continue
+            nm, absorbance = archive.despikedTrace(workflow)
+            valley = bandMean(nm, absorbance, 500.0, 560.0)
+            q = bandMean(nm, absorbance, 565.0, 580.0)
+            red = bandMean(nm, absorbance, 622.0, 627.0)
+            rows["%s%s" % (fill, run)] = {
+                "nm": nm, "a": absorbance, "valley": valley, "q": q, "red": red, "fill": fill,
+                "rv": 100.0 * (red - valley) / (q - valley)}
     return rows
 
 
@@ -322,7 +361,7 @@ def pageCurves(pdf, rows):
     pyplot.close(figure)
 
 
-def pageRvNative(pdf, rows):
+def pageRvNative(pdf, rows, later=None):
     """Edwin 2026-08-24: normalise on the window `Rv` ACTUALLY USES and datum it on A_valley.
 
     Two renderings, because they answer different questions:
@@ -341,9 +380,9 @@ def pageRvNative(pdf, rows):
     figure = pyplot.figure(figsize=(8.27, 11.69))
     figure.suptitle("Normalised on Rv's own window (500\u2013627 nm), datum at A_valley",
                     fontsize=13, fontweight="bold", y=0.978)
-    boxes = [[0.11, 0.690, 0.85, 0.215],
+    boxes = [[0.11, 0.706, 0.85, 0.199],
              [0.11, 0.395, 0.85, 0.200],
-             [0.11, 0.085, 0.85, 0.200]]
+             [0.11, 0.085, 0.85, 0.177]]
 
     def rvNative(row):
         return (row["a"] - row["valley"]) / (row["q"] - row["valley"])
@@ -358,6 +397,9 @@ def pageRvNative(pdf, rows):
         for run in RUNS:
             axes.plot(rows[(oil, run)]["nm"], rvNative(rows[(oil, run)]), LINESTYLE[run],
                       color=OILCOLOR[oil], lw=1.1)
+    for run, row in sorted((later or {}).items()):
+        axes.plot(row["nm"], rvNative(row), "-" if row["fill"] == "B" else "--",
+                  color=LATER_COLOR, lw=1.9 if row["fill"] == "B" else 1.4, alpha=0.95)
     axes.axhline(0.0, color="#444444", lw=0.9)
     axes.axhline(1.0, color="#444444", lw=0.9, ls=":")
     axes.set_xlim(495, 638)
@@ -369,14 +411,17 @@ def pageRvNative(pdf, rows):
     axes.text(572, 1.10, "A_Q  \u2192  y = 1", fontsize=7.5, ha="center", color="#444444")
     axes.text(624, -0.26, "A_624", fontsize=7.5, ha="center", color="#aa3333")
     # the mean Rv of each oil, drawn as what it physically is: the height of the 624 band on this axis
-    for index, oil in enumerate(OILS):
-        height = numpy.mean([rows[(oil, r)]["rv"] for r in RUNS]) / 100.0
-        x = 630.0 + index * 2.0
+    marks = [(OILCOLOR[oil], numpy.mean([rows[(oil, r)]["rv"] for r in RUNS]) / 100.0)
+             for oil in OILS]
+    if later:
+        marks.append((LATER_COLOR, numpy.mean([r["rv"] for r in later.values()]) / 100.0))
+    for index, (colour, height) in enumerate(marks):
+        x = 630.4 + index * 1.75
         axes.annotate("", xy=(x, height), xytext=(x, 0.0),
-                      arrowprops=dict(arrowstyle="<->", color=OILCOLOR[oil], lw=1.4))
+                      arrowprops=dict(arrowstyle="<->", color=colour, lw=1.4))
         axes.text(x, height + 0.045, "%.0f" % (height * 100), fontsize=7.5,
-                  color=OILCOLOR[oil], ha="center", fontweight="bold")
-    axes.text(633.0, 1.25, "mean Rv", fontsize=7.5, color="#444444", ha="center", style="italic")
+                  color=colour, ha="center", fontweight="bold")
+    axes.text(633.4, 1.28, "mean Rv", fontsize=7.5, color="#444444", ha="center", style="italic")
     axes.set_ylabel("(A \u2212 A_valley) / (A_Q \u2212 A_valley)", fontsize=9)
     axes.grid(alpha=0.25)
     axes.tick_params(labelsize=8)
@@ -386,6 +431,22 @@ def pageRvNative(pdf, rows):
                 "Everything Rv divides out is now flat, so the ONLY free quantity on the page is the 624 band \u2014 "
                 "and its height IS Rv/100.",
                 fontsize=8.5, color="#444444")
+    if later:
+        axes.plot([], [], "--", color=LATER_COLOR, lw=1.4, label="Lugitsch 08-26 fill A")
+        axes.plot([], [], "-", color=LATER_COLOR, lw=1.9, label="Lugitsch 08-26 fill B")
+        axes.legend(fontsize=7.5, loc="upper left", framealpha=0.95)
+        figure.text(0.11, 0.676,
+                    "[!]  BLUE = the SAME OIL measured %s, a different session \u2014 not a fourth run of this "
+                    "evening. Its 624 band has fallen\n"
+                    "     onto the Q band: Rv %.0f against %.0f on 08-24.  TWO independent fills, A and B, "
+                    "agree to %.1f.\n"
+                    "     Fill B is matched to 08-24/001 within 1 %% on the valley, so the PREPARATION is not "
+                    "the cause."
+                    % (LATER[1], numpy.mean([r["rv"] for r in later.values()]),
+                       numpy.mean([rows[("Lugitsch", r)]["rv"] for r in RUNS]),
+                       abs(numpy.mean([r["rv"] for r in later.values() if r["fill"] == "A"])
+                           - numpy.mean([r["rv"] for r in later.values() if r["fill"] == "B"]))),
+                    fontsize=8, color="#a03000", linespacing=1.5, va="top")
 
     axes = figure.add_axes(boxes[1])
     for oil in OILS:
@@ -393,6 +454,10 @@ def pageRvNative(pdf, rows):
             mask = rows[(oil, run)]["nm"] >= 600
             axes.plot(rows[(oil, run)]["nm"][mask], rvNative(rows[(oil, run)])[mask],
                       LINESTYLE[run], color=OILCOLOR[oil], lw=1.3)
+    for run, row in sorted((later or {}).items()):
+        mask = row["nm"] >= 600
+        axes.plot(row["nm"][mask], rvNative(row)[mask], "-" if row["fill"] == "B" else "--",
+                  color=LATER_COLOR, lw=2.0 if row["fill"] == "B" else 1.5, alpha=0.95)
     axes.axhline(0.0, color="#444444", lw=0.9)
     axes.axvspan(622, 627, color="#cc6666", alpha=0.30, lw=0)
     axes.axvline(609, color="#999999", lw=0.8, ls="-.")
@@ -416,6 +481,10 @@ def pageRvNative(pdf, rows):
             # the full 413-636 trace and then setting xlim would scale the axis to the Soret at 440.
             mask = (row["nm"] >= 495.0) & (row["nm"] <= 636.0)
             axes.plot(row["nm"][mask], snv(row)[mask], LINESTYLE[run], color=OILCOLOR[oil], lw=1.1)
+    for run, row in sorted((later or {}).items()):
+        mask = (row["nm"] >= 495.0) & (row["nm"] <= 636.0)
+        axes.plot(row["nm"][mask], snv(row)[mask], "-" if row["fill"] == "B" else "--",
+                  color=LATER_COLOR, lw=1.9 if row["fill"] == "B" else 1.4, alpha=0.95)
     axes.axhline(0.0, color="#444444", lw=0.9)
     axes.set_xlim(495, 636)
     axes.set_ylim(-1.5, 3.3)
@@ -432,10 +501,20 @@ def pageRvNative(pdf, rows):
                 "Mean and sd taken on that window ONLY. Shape is kept, the datum is not \u2014 the fair "
                 "\u201cis the shape different?\u201d picture.",
                 fontsize=8.5, color="#444444")
+    figure.text(0.11, 0.2855,
+                "[!]  The 624-vs-569 winner belongs to the oil ON A DAY, not to the oil: Lugitsch's own swing "
+                "between these sessions is \u22120.46,\n"
+                "     against a +0.58 gap to Esterer on 08-26.  SNV(624\u2212569) tracks Rv at r = 0.993 \u2014 "
+                "not independent corroboration.",
+                fontsize=7.6, color="#a03000", va="top", linespacing=1.45)
     # ⭐ falls straight out of the transform: which band is the TALLEST after SNV?
-    axes.annotate("Lugitsch peaks at 624", xy=(624, 2.25), xytext=(596, 2.95),
+    axes.annotate("Lugitsch 08-24 peaks at 624", xy=(624, 2.25), xytext=(586, 2.98),
                   fontsize=8, color=OILCOLOR["Lugitsch"], fontweight="bold",
                   arrowprops=dict(arrowstyle="->", color=OILCOLOR["Lugitsch"], lw=1.2))
+    if later:
+        axes.annotate("the SAME oil on 08-26 peaks at 569", xy=(569, 2.26), xytext=(499, 1.72),
+                      fontsize=8, color=LATER_COLOR, fontweight="bold",
+                      arrowprops=dict(arrowstyle="->", color=LATER_COLOR, lw=1.2))
     axes.annotate("both Spars peak at 569", xy=(571, 2.7), xytext=(505, 2.95),
                   fontsize=8, color=OILCOLOR["SparSBudget"], fontweight="bold",
                   arrowprops=dict(arrowstyle="->", color=OILCOLOR["SparSBudget"], lw=1.2))
@@ -629,11 +708,16 @@ def pageSwatches(pdf, rows):
 
 def main():
     rows = collect()
+    later = loadLater()
+    for run, why in sorted(LATER_SKIPPED.items()):
+        print("  [!] %s omitted from the overlay -- %s" % (run, why))
+    print("  overlay: n=%d  %s"
+          % (len(later), "  ".join("%s Rv %.2f" % (k, later[k]["rv"]) for k in sorted(later))))
     with PdfPages(OUT) as pdf:
         pageSummary(pdf, rows)
         pageStats(pdf, rows)
         pageCurves(pdf, rows)
-        pageRvNative(pdf, rows)
+        pageRvNative(pdf, rows, later)
         pageSecondDerivative(pdf, rows)
         pageSwatches(pdf, rows)
         info = pdf.infodict()
