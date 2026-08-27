@@ -719,10 +719,13 @@ Green-vs-brown is not the discriminating test any more — the order *within* gr
 ### 12.2 ⛔⛔ AND THE FILL, NOT THE OIL, IS NOW THE DOMINANT TERM
 
 ```
-WITHIN a fill, Rv repeats to        sd 1.36          the measurement is fine
-BETWEEN fills of ONE oil             8.4 Rv (Lugitsch, 3 fills)
-                                    30.0 Rv (Esterer, 4 fills)
+WITHIN a fill, Rv repeats to        sd 1.36           the measurement is fine
+BETWEEN fills of ONE oil             8.4 Rv  Lugitsch, 3 fills,  sigma_fill  4.37
+                                    30.0 Rv  Esterer,  3 fills,  sigma_fill 15.03
 ```
+⭐ **Both rows are CONFIRMED fills only.** A fourth Esterer fill whose attribution was changed at the
+bench is excluded from every statistic in this section (§12.4); it sits inside the range above and
+changes nothing.
 
 **Esterer's best fill (107.4) is indistinguishable from Lugitsch's best (107.2)**, while its worst reads
 77.5. Four fills, each internally repeatable to a few units, disagreeing with each other by thirty. ⇒ the
@@ -733,10 +736,44 @@ read off one fill.
 08-24 → 08-26 session step (12.8 `Rv`, the size of one evening's fill spread), not a tracker tolerance.
 ⇒ **ROADMAP item 0**: six fills of ONE oil, one evening, one bottle, nothing else varied.
 
-⚠ **Two of the four Esterer fills were made after 01:50 on a nine-hour bench evening, and one had already
-been reassigned between oils.** A preparation that genuinely varies by 30 `Rv` and a bench that got away
-from its operator look identical in this data. The overlap is recorded because it is what was measured;
-it is not yet established.
+⛔⛔ **THE OVERLAP RESTS ON CONFIRMED LABELS AND IS NOT A LABELLING ARTEFACT.** Esterer's highest fill
+(107.4) and Lugitsch's highest (107.2) are both operator-confirmed, made three and seven hours apart. The
+one fill whose attribution was changed sits *inside* the range and is excluded from these numbers anyway.
+⇒ a single fill cannot identify the oil, and that conclusion does not depend on any disputed label.
+
+⚠ **What is still open is the CAUSE, not the observation.** A preparation that genuinely varies by 30 `Rv`
+and a bench drifting through a nine-hour evening produce the same table. ⇒ ROADMAP item 0 measures it
+rested, in one sitting, with nothing else varied.
+
+### 12.4 ⚠ The one fill with an uncertain label
+
+`20260826EstererC` was measured as `LugitschD`, read `Rv` 86.2 — below Esterer's second fill — and so
+produced the first Lugitsch/Esterer overlap in the archive. It was then reassigned to Esterer.
+⛔ **It is plotted and named but scores NOTHING** (`PROVISIONAL_ATTRIBUTION` in `d2r_all_runs.py`), because
+letting it score would remove the overlap it created — the metric used to fix the label the metric is
+then judged on, which is §7's M9 circularity arriving from a new direction. It may inform nothing until
+an independent Esterer fill confirms the reassignment at the bench.
+⚠ **No other fill of the session is in doubt.** In particular `20260826EstererD` is operator-confirmed;
+its surprising value is a measurement, not a suspicion.
+
+### 12.5 A check on the whole story — the scatter is not Rv's windows
+
+Divide each spectrum by its own `A_Soret` (concentration out) and ask how far the fills of ONE oil differ
+at each wavelength. They differ **everywhere in the visible**, smallest in the blue-green and growing
+steadily to the red: Esterer's spread is 0.026 at 480 nm, 0.066 at 560, 0.116 at 610, 0.133 at 632 —
+a factor of five across the range. Lugitsch shows the same shape at about two-thirds the size.
+
+⇒ **not a 624-band effect and not a flat offset.** A flat offset would indicate path length or seating;
+a spike at 624 would indicate the pheophytin band alone. A smooth red-weighted divergence is neither — it
+is the balance of the whole absorber population moving, which is what incomplete dissolution in an
+index-matched solvent would do.
+
+⭐ Confirmed on a quantity sharing nothing with `Rv`: a broad **R/G** ratio (500–585 against 590–636, no
+valley datum, ratio of transmitted light rather than of corrected absorbances). Fill-to-fill spread
+**0.106** against an oil-to-oil difference of **0.005** — twenty to one, and the ranges overlap.
+⇒ ⛔ **no choice of window removes this, and no optical check at dilution — eye or camera — can identify
+a fill.** The eye's threshold at dilution sits between ~28 `Rv` (three oils, indistinguishable) and
+~70 `Rv` (Lugitsch against the Spars, plainly different in the 2026-08-24 photographs).
 
 ### 12.3 Refuted along the way — so nobody re-runs them
 
