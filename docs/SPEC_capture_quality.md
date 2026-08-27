@@ -12145,6 +12145,38 @@ cleanly. ⇒ **The honest statement is now: an exposure change alone does not co
 Whatever broke `20260804A/002` needs the thin fill, the spike leakage, or both — and §16.24.1's headline should
 be read with that qualifier.
 
+### ⭐⭐ 16.27.1a `Rv` ACROSS THE SAME EXPOSURE STEP — computed 2026-08-27, and it passes
+
+§16.27.1 bounded §16.24.1 on **`M448`**. `Rv` was not defined when this session ran, but the legs are stored,
+so the same control answers the `Rv` question **at the desk, with no rig time**. Fill `20260807B`, one
+preparation, three re-seats, the auto-exposure landing on 104 for the first and 90 for the other two:
+
+| run | AE | ref R530 | `A_valley` | `A_Q` | `A624` | **`Rv`** |
+|---|---|---|---|---|---|---|
+| B/001 | **104** | 153.0 | 0.0782 | 0.1974 | 0.1165 | **32.17** |
+| B/002 | 90 | 125.6 | 0.0903 | 0.2139 | 0.1300 | **32.08** |
+| B/003 | 90 | 125.8 | 0.0871 | 0.2116 | 0.1325 | 36.46 |
+
+⭐⭐ **Across the exposure step `Rv` moves 0.09** (B/001 → B/002, consecutive reads four minutes apart),
+against **4.38** between the two runs held at the *same* exposure (B/002 → B/003). **The exposure effect is
+an order of magnitude below the re-seat noise.** Against the mean of both exp-90 runs the step is −2.1, still
+half the re-seat spread.
+
+⇒ **`Rv` is exposure-invariant at this magnitude, and the reason is structural.** §16.24.1's damage is
+anchored on the **Soret**, where §16.27.3 localises the whole exposure sensitivity to 440–447 nm and where the
+sensor is nearest saturation. **`Rv` never touches the Soret.** Its three bands — 500–560, 565–580, 622–627 —
+all sit in the half of the spectrum §16.27.2 shows scaling nearly together.
+
+⚠ **What this does NOT license.** The step measured here is 104/90 = **×1.156**. A larger step, or one that
+drives any band into clipping, is not covered — §16.27.2's per-band mismatch reached **3.6 %** at 625 nm even
+at this size, and it is not flat. ⇒ raising exposure toward a reference peak of ~230 DN (about ×1.15 from
+`20260826EstererE`'s 199.4) is **inside** the tested range; letting the 473 nm spike clip is not, and carries
+the blooming argument of `ROADMAP.md` §0b besides.
+
+⛔ **AND THE SETTING IS STILL NOT PERSISTED.** Both this section and §16.27.0 had to reconstruct the exposure
+from the reference level because `exposure_applied` is absent from `workflow.json` — the third session in a
+row to need that archaeology. `ROADMAP.md` **§0b** carries it as a blocker on the σ_fill run.
+
 ### 16.27.2 The leg-scale mismatch is not sufficient either — 2.70 % and nothing happened
 
 §16.24.1 uses the S/R leg-scale mismatch as the corrupted run's fingerprint: **≤ 0.5 % for its controls, 2.5 %

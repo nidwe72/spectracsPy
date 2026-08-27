@@ -877,6 +877,82 @@ claim — a σ_fill quoted without its fill set means nothing.
 revisited, the corpus is the **σ_fill run** (ROADMAP item 0), which has a proper fill-variance
 denominator instead of eight fills across two oils.
 
+### ⭐⭐ 12.8 THE 2026-08-27 FILLS — the lamp is bounded, `EstererD` is decomposed, and a mechanism is refuted
+
+Five fills after midnight (`LugitschC`, `EstererB`, `EstererC`, `EstererD`, `EstererE`), ten reads.
+
+#### 12.8.1 ⭐⭐ The lamp is worth ~2 `Rv`. Measured, not argued.
+
+The evening carried exactly **two** reference spectra (md5 over all 1634 points; ref 1 before 17:21, ref 2 at
+~00:26). Because both `SAMPLE` and `REFERENCE` legs are stored, every fill can be recomputed against the
+*other* reference — a direct measurement of the whole evening's lamp tilt:
+
+| fill | time | `Rv` own ref | `Rv` other ref | shift |
+|---|---|---|---|---|
+| Esterer | 17:21 | 77.3 | 76.3 | −1.0 |
+| Stekko | 18:01 | 73.4 | 70.1 | −3.2 |
+| Lugitsch | 18:36 | 100.1 | 102.2 | +2.0 |
+| LugitschB | 22:15 | 100.5 | 102.3 | +1.8 |
+| LugitschC | 00:27 | 107.0 | 105.1 | −1.8 |
+| EstererB | 00:57 | 90.0 | 89.7 | −0.3 |
+| EstererD | 02:17 | 107.3 | 105.6 | −1.7 |
+
+⇒ **~2 `Rv`, against a 30 `Rv` Esterer trend across the same hours.** A flat dimming cancels exactly in `Rv`
+(numerator and denominator are both valley-differences), so only the *tilt* survives, and the tilt is small.
+⭐ **One reference per fill is still right** (`ROADMAP.md` §0a) — but it will not fix σ_fill, and this is the
+number that says so.
+
+#### 12.8.2 ⭐⭐ `EstererD` is a smooth spectral tilt, NOT a 624-band event
+
+Fill means, `A_D / A_B` across 440–636, straight line removed, residual in units of its own sd:
+
+```
+   Soret   +1.6 sd        raw:  A_Soret  -12.4 %
+   valley  -0.8 sd              A_valley -15.7 %
+   A_Q     +0.2 sd              A_Q       +0.04 %   <- the two curves cross here
+   A624    +0.0 sd              A624      +9.06 %
+```
+
+**Zero at 624.** The ratio climbs monotonically 0.78 → 1.15 from 480 to 630 nm with no structure where `Rv`
+looks. ⇒ `Rv` did not misfire on a band artefact; it reported a sample whose red-to-Q balance really differed.
+Regressed the §12.6 way over 490–631: `A_D = 1.150·A_B − 0.0412` — more absorber **and** 0.041 less scatter
+pedestal.
+
+#### 12.8.3 ⛔⛔ THE DISSOLUTION EXPLANATION WAS PROPOSED AND THEN REFUTED THE SAME NIGHT
+
+§12.8.2 invited the obvious reading: D read 107 because it was better dissolved. `EstererE` tested it. E was
+made by a **two-stage recipe** — 1 ml sunflower + the capillary, which empties itself, ~45 s of fast rotation
+at the bottom while still concentrated, then to 4 ml and ~60 s more; **no arm-swing, no slow inversions**.
+
+| fill means | B (old) | E (two-stage) | |
+|---|---|---|---|
+| `A_Soret` | 1.0508 | 1.1577 | **+10.2 %** |
+| `A_valley` | 0.1714 | 0.1597 | **−6.9 %** |
+| `A_Q` | 0.3173 | 0.3170 | −0.09 % |
+| `A624` | 0.3027 | 0.2985 | −1.4 % |
+| **`Rv`** | **90.0** | **88.3** | **−1.7** |
+
+⭐ **The recipe demonstrably works** — less scatter *and* more pigment in solution, and the Soret rise is
+confined to the band itself rather than the broad blue shoulder, so it is carotenoid dissolving, not turbidity.
+⛔ **And `Rv` moved 1.7, one run's noise.** A genuine dissolution improvement does not raise `Rv` by 17. ⇒ the
+dissolution story for D is **dead**, and the blue-shoulder scatter proxy that carried it is not fit either
+(`r = −0.90` across Esterer's four fills, `+0.65` across Lugitsch's three).
+
+⭐⭐ **What survives is better than the hypothesis.** `Rv` held still while the spectrum around it moved 10 %
+in the blue — preparation-invariance demonstrated on a change nobody designed as a test. And **B and E differ
+by 1.73 while the two runs inside E differ by 2.86**: the first two independent fills in the sunflower archive
+that cannot be told apart.
+
+#### 12.8.4 `EstererD` set aside — and what the exclusion costs
+
+Edwin, 2026-08-27. D is the only fill made with the hard arm-centrifuge extrusion, a step the two-stage recipe
+has **retired** — a reason about the METHOD, which is what makes it admissible where "it reads oddly" would
+not be. ⚠ **But it also removes the only Esterer/Lugitsch single-fill overlap in the archive**, and the Esterer
+mean moves 91 → 85. Reason and benefit point the same way, which is exactly when this kind of call needs a
+witness. ⇒ `diagnostics/d2r_all_runs.py` re-reads the excluded reports every run and prints σ_fill **both
+ways** — 6.9 over the three fills kept, 12.4 with D back in — on the console and on the figure. **One fill by
+D's own method reopens it.**
+
 ### 12.3 Refuted along the way — so nobody re-runs them
 
 | claim | why it died |

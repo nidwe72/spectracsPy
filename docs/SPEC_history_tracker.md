@@ -885,3 +885,40 @@ ones. ⇒ the emulsion is also this tracker's largest noise source, and the fix 
 (`SPEC_settled_measurement.md` §40's drawdown rule), **not** a change of solvent.
 
 ⭐ Frame: `DOC_metric_algebra.md` §1.5a — *the less you explain, the more you must control.*
+
+## ⭐⭐ THE 2026-08-27 POSITION — `±20` is nearly earned, and the condition is the BASELINE, not the tolerance
+
+`SPEC_red_ratio_metric.md` §12.8 · `ROADMAP.md` §0
+
+Sunflower fill means for the two oils that have several, `20260826EstererD` set aside (§12.8.4):
+
+```
+Lugitsch  all 5 fills   119.8  114.3  98.9  100.8  107.2     sd 8.86   range 20.9
+          08-26 only            98.9  100.8  107.2           sd 4.37   range  8.4
+Esterer   3 fills         77.5   90.2   88.5                 sd 6.90   range 12.7
+
+08-26:  Lugitsch 102.3  vs  Esterer 85.4     gap 16.9    pooled sd 5.78
+single fills:   Esterer max 90.2  |  Lugitsch min 98.9   clear gap 8.7
+```
+
+⭐ **Single fills of the two oils no longer overlap.** That is new, and it is the thing this spec has been
+waiting for — the ±20 band needs σ_fill ≤ **6.7** to be a 3σ alarm, and Esterer sits at 6.90 with recent
+Lugitsch at 4.37.
+
+⛔⛔ **BUT NOT AGAINST THE ARCHIVE AS IT STANDS, AND THIS IS THE DESIGN POINT.** Lugitsch's five fills span
+**20.9** — so a ±20 tracker whose reference set is built from the existing history **would fire on Lugitsch's
+own scatter**. That span is old recipe and old lamp; restricted to 08-26 it is 8.4.
+
+⇒ **The tracker is viable if and only if its reference set is rebuilt under the current recipe.** Not derived
+from the archive. This is not a tolerance question and no choice of threshold repairs it: a baseline is a claim
+about an oil measured on a particular instrument under a particular preparation, and this archive contains at
+least three of each.
+
+⭐ **The σ_fill run IS the baseline run** (`ROADMAP.md` §0). Budget ~5 fills per oil: at σ = 4.37, three fills
+pin an oil's mean to ±2.5 and five to ±2.0, which is what a ±20 band needs underneath it. ⛔ And it must carry
+`ROADMAP.md` §0b's instrument fields, or the baseline is anchored to a camera state nobody can reconstruct and
+the evening has to be repeated.
+
+⚠ **Two fills is a hint, not a result.** The strongest evidence that the recipe change helps is `EstererB`
+against `EstererE` — 1.73 apart, with within-fill run scatter of 1.8 and 2.9, i.e. **indistinguishable**. That
+is two fills. σ_fill with 5 df is what turns it into a number.
