@@ -775,6 +775,44 @@ valley datum, ratio of transmitted light rather than of corrected absorbances). 
 a fill.** The eye's threshold at dilution sits between ~28 `Rv` (three oils, indistinguishable) and
 ~70 `Rv` (Lugitsch against the Spars, plainly different in the 2026-08-24 photographs).
 
+### 12.6 ⭐⭐ `20260822Lugitsch/002` — the cleanest fill on record, and what it says about the preparation
+
+The highest `Rv` in the whole sunflower archive is **125.16**, and its `A_valley` is **0.0181** — five
+times lower than any other fill. ⛔ It is not an artefact and it should NOT be excluded.
+
+| | 002 | 003 (its sibling) | 20260824Lugitsch/001 |
+|---|---|---|---|
+| `A_Soret` | 0.5963 | 1.4048 | 0.8124 |
+| `A_valley` | **0.0181** | 0.1292 | 0.0840 |
+| **`valley / A_Soret`** | **0.0303** | 0.0920 | 0.1034 |
+| `A624 / A_Q` *(no valley at all)* | **1.2120** | 1.0933 | 1.0970 |
+| `Rv` | **125.16** | 114.47 | 115.01 |
+
+⭐ **Two things stack, and only the second is interesting.** It is the most dilute fill *and* it carries
+**three times less turbidity per unit oil**. Dilution alone leaves `valley/A_Soret` unchanged, so the
+second is a real difference in the sample, not in how much of it there is.
+
+⭐⭐ **ITS OWN SIBLING PROVES IT.** Regressing run 003 against run 002 across 490–630 nm:
+
+```
+A003 = 2.304 * A002 + 0.0885        residual sd 0.019 on a range of 0.311
+```
+
+**The same spectrum, scaled by 2.3, plus a constant.** A pure concentration difference gives a scale
+factor and nothing else; the additive pedestal of 0.0885 is the signature of **broadband scatter**. 003
+carries ~0.09 of it and 002 does not — `A_valley` measuring exactly what it exists to measure.
+
+⚠ **The reading is real but fragile.** `A624/A_Q` is 1.212 against 1.093 for both comparison runs, so the
+raw band ratio — which touches no valley — agrees that 002 is different. But with numerator and
+denominator of 0.121 and 0.096, `Rv` is then very sensitive to small errors in a valley of 0.018.
+Sanity checks pass: no negative absorbance anywhere in 500–560 (min +0.0050), coverage 410–636 nm.
+
+⇒ ⭐⭐ **KEEP IT, AND READ IT AS EVIDENCE ABOUT THE PREPARATION.** It will inflate Lugitsch's σ_fill for a
+reason that is not measurement error: a better-dissolved fill reads higher `Rv`. That is the same axis as
+the 2026-08-26 recipe change (shake → 40 inversions), observed four days *earlier* and by accident.
+⛔ Excluding it as an outlier would delete the archive's one clean data point on the very effect ROADMAP
+item 0 exists to measure.
+
 ### 12.3 Refuted along the way — so nobody re-runs them
 
 | claim | why it died |
