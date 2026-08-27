@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import peak_ratio_archive as archive
 import all_metrics_archive as metrics
 from solvent_colour_separation import SUNFLOWER as INDEX_MATCHED
-from d2r_all_runs import SERIESOIL, TODAY, EXCLUDED
+from d2r_all_runs import SERIESOIL, TODAY, EXCLUDED, firstDistinctRuns
 
 CACHE = "/tmp/claude-1000/-home-nidwe72-development-spectracs-spectracsPy/105990a7-14f7-4f84-a40b-cf4d764597f2/scratchpad/refscan_traces.pkl"
 RED = (622.0, 627.0)
@@ -77,9 +77,10 @@ def collect():
                 continue
             take(relative, label, SERIESOIL.get(series, metrics.OILS.get(series, series)), "isopropanol")
         for series, (oil, label) in TODAY.items():
-            folder = os.path.join(archive.ARCHIVE, series)
-            for name in sorted(f for f in os.listdir(folder) if f.endswith(".pdf")):
-                take("%s/%s" % (series, name), label, oil, "sunflower")
+            # ⚠ the SAME run policy as the reports, from the SAME function — a scan that judges reference
+            # bands on a corpus the pages do not show is answering a different question than it claims.
+            for relative in firstDistinctRuns(series)[0]:
+                take(relative, label, oil, "sunflower")
     with open(CACHE, "wb") as handle:
         pickle.dump(rows, handle)
     return rows

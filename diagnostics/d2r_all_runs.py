@@ -54,13 +54,16 @@ SERIESOIL = {"20260812BillJaNatuerlich": "Ja Natuerlich",
 
 # The sunflower sessions, which `walkReports` cannot label because they are not in the archive's own
 # GREEN/BROWN sets. Runs are DISCOVERED, not enumerated -- 20260826Esterer carries four.
-# ⛔ "unlabelled" is not a hedge, it is the honest state: Esterer and Stekko have no EYE-RANKING recorded
-# yet, and taking their class from the metric is exactly the circularity SPEC_metric_research §7's M9 gate
-# exists to stop. They are drawn, but enter no cut, corridor or error count. One word each flips it.
+# ⭐⭐ EYE-RANKING RECORDED 2026-08-27 (Edwin): Esterer and Stekko are BOTH GREEN, a little browner than
+# Lugitsch but green — visible by eye, and photographed. They were held as "unlabelled" all through the
+# 08-26 session precisely so their class could not be taken from the metric that was being judged on them
+# (SPEC_metric_research §7 / M9). The label now comes from the eye, which is what makes them scorable.
+# ⭐ THE INTERESTING TEST IS NO LONGER GREEN-VS-BROWN — all three pass that easily. It is whether the
+# metric REPRODUCES THE EYE'S ORDER WITHIN green: Lugitsch greenest, then Esterer and Stekko.
 TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spar Premium", "brown"),
          "20260824SparSBudget": ("Spar S-Budget", "brown"),
-         "20260826Esterer": ("Esterer", "unlabelled"),
-         "20260826Stekko": ("Stekko", "unlabelled"),
+         "20260826Esterer": ("Esterer", "green"),
+         "20260826Stekko": ("Stekko", "green"),
          # ⭐ Lugitsch is SCORED where Esterer and Stekko are not, and the difference is not the metric:
          # Lugitsch already carries an eye-ranking in the archive, in all three solvents. Reusing that
          # label is reading prior truth; inventing one for a new oil would be reading the metric.
@@ -68,7 +71,39 @@ TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spa
          # ⭐ A SECOND, INDEPENDENTLY PREPARED FILL of the same oil on the same evening. Matched to
          # 20260824Lugitsch/001 to within 7 % on the Soret and 1 % on the valley, and it reads with fill
          # A, not with 08-24 -- which is what rules the fill out as the cause of the session step.
-         "20260826LugitschB": ("Lugitsch", "green")}
+         "20260826LugitschB": ("Lugitsch", "green"),
+         # ⭐ A THIRD independently prepared fill of the same oil, ~2 h after B. It is the most turbid of
+         # the three (A_valley 0.119 against A's 0.049) and reads the highest Rv — which is what put the
+         # metric's turbidity dependence on the table.
+         "20260826LugitschC": ("Lugitsch", "green"),
+         # ⭐⭐ A SECOND ESTERER FILL, and the one that refuted the turbidity story. Its A_valley is
+         # indistinguishable from fill A's (0.171 vs 0.182) while its Rv is 15.4 HIGHER — so the +0.86
+         # correlation the three Lugitsch fills showed was three points of a coincidence.
+         "20260826EstererB": ("Esterer", "green"),
+         # ⚠ WAS `20260826LugitschD`, renamed 2026-08-27: Edwin believes the fill was drawn from the
+         # Esterer bottle by mistake. See PROVISIONAL_ATTRIBUTION — it is PLOTTED but it SCORES NOTHING.
+         "20260826EstererC": ("Esterer", "green"),
+         # ⚠ Measured AS Esterer — the label is the bench's, and it is not mine to withdraw because the
+         # numbers surprise me. ⛔ But it reads Rv 105.1/109.8 against the other Esterer fills' 77–90,
+         # repeats to 4.8 within itself, and is indistinguishable from Lugitsch fill C (107.2). It is
+         # SCORED; what it costs is reported by `eyeOrderNote`.
+         "20260826EstererD": ("Esterer", "green")}
+
+# ⛔⛔ ATTRIBUTION UNCERTAIN — PLOTTED, LABELLED, BUT EXCLUDED FROM EVERY STATISTIC.
+# ⭐⭐ THE TRAP THIS EXISTS TO STOP. This fill was measured as Lugitsch, read Rv 86.8 — below Esterer's
+# best fill — and so produced the FIRST Lugitsch/Esterer overlap in the archive. It was then reassigned
+# to Esterer, partly because its numbers look like Esterer's. Letting it score would remove the overlap
+# it created, and the metric would have been used to fix the label that the metric is then judged on.
+# That is the circularity SPEC_metric_research §7's M9 gate exists to stop, arriving from a new direction.
+# ⇒ it may inform NOTHING until an independent Esterer fill confirms the reassignment at the bench.
+PROVISIONAL_ATTRIBUTION = {
+    "20260826EstererC": "was measured as Lugitsch; reassigned to Esterer at the bench 2026-08-27, "
+                        "NOT yet confirmed"}
+
+
+def isScored(row):
+    """A row may enter a corridor, a cut or an error count only if its OIL is certain."""
+    return row["class"] in SCORED and sessionOf(row) not in PROVISIONAL_ATTRIBUTION
 CLASSCOLOR = {"green": "#2e7d32", "brown": "#8b4513", "unlabelled": "#1565c0"}
 # ⭐ SAME OIL, DIFFERENT FOLDER = DIFFERENT SHADE. Lugitsch spans six sessions and Billa Clever five,
 # and the sunflower Lugitsch column alone runs d2R 1.10-2.76 -- session scatter that a single flat
@@ -82,11 +117,54 @@ CLASSRAMP = {"green": ("#8bc34a", "#1b5e20"),
              "unlabelled": ("#66b0e8", "#10429b")}
 SCORED = ("green", "brown")                    # the classes a cut may be judged against
 
+# ⭐⭐ THE 08-26 RUN POLICY (Edwin, 2026-08-27). Only the FIRST TWO READS of each aliquot are used. Later
+# reads carry more lamp on a sample the lamp is known to change, and they are exactly where the widest
+# within-fill spreads came from (Stekko 14.8 Rv over four runs against 0.9 over the first two). Two reads
+# per fill is a repeatability figure; four is a dose series wearing one.
+# ⛔⛔ THE FIRST TWO *DISTINCT* RUNS, NOT THE FILES NAMED 001 AND 002 — and the difference is real, not
+# pedantic. 20260826Lugitsch/002 is a byte-identical copy of 001, a FAILED SAVE rather than a read; taking
+# filenames would spend a slot on it and discard 003, the aliquot's genuine second read, leaving that fill
+# with n = 1 and no within-fill scatter at all. A save failure must not cost a measurement.
+# ⛔ It is a POLICY, not a filter buried in a loop: it changes what every number on these pages means, so
+# it is named here, shared with `reference_band_scan`, and announced on every run.
+LATE_RUN_SESSIONS = "20260826"
+KEPT_RUN_COUNT = 2
+
 # ⛔ HAND-EXCLUDED RUNS. Not deleted, not silently skipped: named here with a reason, announced on
 # every run, and printed on the figure. A run dropped by judgement has to stay visible or the corpus
 # quietly becomes whatever was convenient. Edwin's call, 2026-08-26, to be revisited.
-EXCLUDED = {"20260826Lugitsch/004.pdf": "reads strange on the day — set aside pending discussion"}
+EXCLUDED = {"20260826Lugitsch/004.pdf": "reads strange on the day — set aside pending discussion",
+            # ⛔ NOT A MEASUREMENT OF THE OIL. A deliberately spoiled sample, run only to exercise the
+            # clearing-4.0 read after the app restart. Its Q% is 8.0 against ~17 for the real fills and
+            # its 624 band has collapsed; scoring it as Lugitsch would put a spoiled oil in the green set.
+            "20260826LugitschC/test.pdf": "spoiled sample, software test only — not the oil"}
 SOLVENTMARK = {"isopropanol": "o", "sunflower": "s", "spirit": "^"}
+
+
+def firstDistinctRuns(series, limit=KEPT_RUN_COUNT):
+    """The first `limit` DISTINCT reads of one fill, plus everything skipped and why.
+
+    ⚠ A duplicate does NOT consume a slot, and neither does a hand-excluded run: the slots are for READS
+    OF THE ALIQUOT, and a failed save is not a read. ⛔ Shared rather than reimplemented — three scripts
+    disagreeing about which runs exist is worse than any of their individual answers."""
+    folder = os.path.join(archive.ARCHIVE, series)
+    digests, kept, skipped = {}, [], []
+    for name in sorted(f for f in os.listdir(folder) if f.endswith(".pdf")):
+        relative = "%s/%s" % (series, name)
+        if relative in EXCLUDED:
+            skipped.append((relative, "excluded by hand"))
+            continue
+        with open(os.path.join(archive.ARCHIVE, relative), "rb") as handle:
+            digest = hashlib.md5(handle.read()).hexdigest()
+        if digest in digests:
+            skipped.append((relative, "byte-identical to %s" % digests[digest]))
+            continue
+        digests[digest] = relative
+        if not series.startswith(LATE_RUN_SESSIONS) or len(kept) < limit:
+            kept.append(relative)
+        else:
+            skipped.append((relative, "later read of the same aliquot"))
+    return kept, skipped
 
 
 def secondDerivative(nm, absorbance):
@@ -107,6 +185,7 @@ def collect():
     seen = {}                                  # content digest -> the run that claimed it first
     duplicates = []
     excluded = []
+    lateRuns = []
     with tempfile.TemporaryDirectory() as scratch:
         def take(relative, label, oil, solvent):
             path = os.path.join(archive.ARCHIVE, relative)
@@ -138,6 +217,7 @@ def collect():
             valley = bandMean(500.0, 560.0)
             qBand = bandMean(565.0, 580.0)
             rows.append({"run": relative, "class": label, "oil": oil, "solvent": solvent, "d2": d2,
+                         "provisionalOil": relative.split("/")[0] in PROVISIONAL_ATTRIBUTION,
                          "d2R": dipIn(d2, *RED_WINDOW) / dipIn(d2, *Q_WINDOW),
                          "Rv": 100.0 * (bandMean(622.0, 627.0) - valley) / (qBand - valley)})
 
@@ -159,15 +239,27 @@ def collect():
             take(relative, label, SERIESOIL.get(series, metrics.OILS.get(series, series)), "isopropanol")
 
         for series, (oil, label) in TODAY.items():
-            folder = os.path.join(archive.ARCHIVE, series)
-            for name in sorted(f for f in os.listdir(folder) if f.endswith(".pdf")):
-                take("%s/%s" % (series, name), label, oil, "sunflower")
+            kept, skipped = firstDistinctRuns(series)
+            for relative, why in skipped:
+                # ⚠ a HAND exclusion still goes through `take`, which records it — otherwise the
+                # "entry never matched a file" guard fires on a file that plainly exists.
+                if why == "excluded by hand":
+                    take(relative, label, oil, "sunflower")
+                else:
+                    lateRuns.append("%s (%s)" % (relative, why))
+            for relative in kept:
+                take(relative, label, oil, "sunflower")
     for relative, original in duplicates:
         print("  [!] DUPLICATE dropped: %s is byte-identical to %s" % (relative, original))
     for relative in excluded:
         print("  [!] EXCLUDED BY HAND: %s -- %s" % (relative, EXCLUDED[relative]))
     for relative in sorted(set(EXCLUDED) - set(excluded)):
         print("  [!] EXCLUDED entry never matched a file: %s" % relative)
+    if lateRuns:
+        print("  [!] NOT USED (%s policy: first %d DISTINCT reads per fill):" % (LATE_RUN_SESSIONS,
+                                                                                 KEPT_RUN_COUNT))
+        for entry in sorted(lateRuns):
+            print("        %s" % entry)
     return rows
 
 
@@ -225,7 +317,8 @@ def shortLabel(row):
     if oil.lower().replace(" ", "").replace("-", "").replace("_", "") in series.lower():
         oil = ""
     label = "%s %s" % (series[:23], run)
-    return "%-28s %s" % (label, oil[:13])
+    mark = " ?" if row.get("provisionalOil") else ""
+    return "%-28s %s%s" % (label, oil[:11], mark)
 
 
 def pageStrip(pdf, rows):
@@ -256,9 +349,9 @@ def pageStrip(pdf, rows):
     axes.set_xlabel("d2R", fontsize=10, fontweight="bold")
     axes.grid(axis="x", alpha=0.3)
     axes.tick_params(axis="x", labelsize=8)
-    green = [r["d2R"] for r in rows if r["class"] == "green"]
-    brown = [r["d2R"] for r in rows if r["class"] == "brown"]
-    scored = [r for r in rows if r["class"] in SCORED]
+    scored = [r for r in rows if isScored(r)]
+    green = [r["d2R"] for r in scored if r["class"] == "green"]
+    brown = [r["d2R"] for r in scored if r["class"] == "brown"]
     axes.text(CUT + 0.05, len(ordered) - 1.5,
               "cut %.2f\ngreen ≥ %.2f\nbrown ≤ %.2f\n%d / %d errors"
               % (CUT, min(green), max(brown), sum(1 for r in scored
@@ -341,6 +434,37 @@ def folderTag(session):
     """The day plus the folder's trailing capital, so two fills of one evening label distinctly."""
     suffix = session[-1] if (session[-1].isupper() and session[-2:-1].islower()) else ""
     return dateTag(session) + suffix
+
+
+def eyeOrderNote(rows):
+    """⭐⭐ THE TEST THAT MATTERS ONCE EVERYTHING IS GREEN. Edwin's eye, 2026-08-27: Lugitsch greenest,
+    Esterer and Stekko a little browner but GREEN. Green-vs-brown is easy here — all three clear T = 52 by
+    twenty or more. Whether the metric reproduces the ORDER WITHIN green is not.
+
+    ⛔⛔ AND THE MEANS AGREEING IS THE WEAK CLAIM. By late 2026-08-26 the Esterer fills span 30 Rv and the
+    best of them (107.4) is indistinguishable from Lugitsch's best (107.2) — so an oil's MEAN can sit in
+    the right place while a SINGLE FILL of it cannot be told from the other oil at all. A verdict is read
+    off ONE fill, so the fill ranges are what this reports, not only the ordering of the averages.
+    ⚠ Fills whose oil attribution is unconfirmed are left out of both."""
+    order = []
+    for oil in ("Lugitsch", "Esterer", "Stekko"):
+        values = [r["Rv"] for r in rows if r["oil"] == oil and r["solvent"] == "sunflower"
+                  and not r.get("provisionalOil")]
+        if values:
+            order.append((oil, numpy.mean(values), min(values), max(values)))
+    if len(order) < 2:
+        return "no eye-ranked sunflower oils on this page"
+    ranked = " > ".join("%s %.0f" % (oil, mean) for oil, mean, _, _ in order)
+    same = all(order[i][1] > order[i + 1][1] for i in range(len(order) - 1))
+    overlap = ["%s/%s" % (order[i][0], order[i + 1][0])
+               for i in range(len(order) - 1) if order[i][2] <= order[i + 1][3]]
+    return ("EYE 2026-08-27: Lugitsch greenest, Esterer and Stekko a little browner \u2014 all three GREEN.\n"
+            "     Rv MEANS give %s%s\n"
+            "     [!] SINGLE FILLS: %s"
+            % (ranked, "   \u2713 same order." if same else "   \u2717 DIFFERENT ORDER.",
+               ("run ranges OVERLAP for %s \u2014 one fill cannot tell those oils apart"
+                % ", ".join(overlap)) if overlap
+               else "each oil's runs stay clear of the next oil's."))
 
 
 def pageSunflower(pdf, rows):
@@ -445,10 +569,13 @@ def pageSunflower(pdf, rows):
                 "oil that can show a trend at all. Every other line in row 2 is a single folder.",
                 fontsize=8.2, va="top", linespacing=1.5)
     figure.text(0.105, 0.115,
-                "[!]  Blue = Esterer and Stekko: no eye-ranking recorded, so they are drawn but score nothing.\n"
-                "A folder's own scatter is the yardstick for any step between folders — on this data the two\n"
-                "are the same size, so read row 2 as suggestive, not as established drift.%s"
-                % ("" if not EXCLUDED else
+                "[*]  %s\n"
+                "[!]  A fill's own scatter is the yardstick for any step between fills: WITHIN a fill Rv "
+                "repeats to sd ~1.2, but\n"
+                "     INDEPENDENT FILLS of one oil sit 7\u201313 Rv apart \u2014 the preparation now "
+                "dominates the measurement by about ten to one.%s"
+                % (eyeOrderNote(rows),
+                   "" if not EXCLUDED else
                    "\nSET ASIDE BY HAND, not plotted: " + "; ".join(sorted(EXCLUDED))),
                 fontsize=8.2, color="#a03000", va="top", linespacing=1.5)
     pdf.savefig(figure)
@@ -643,7 +770,7 @@ def pageRvNewStrip(pdf, rows, d2rCount):
     axes.set_xlabel("Rv\u2032", fontsize=10, fontweight="bold")
     axes.grid(axis="x", alpha=0.3)
     axes.tick_params(labelsize=8)
-    scored = [r for r in rows if r["class"] in SCORED]
+    scored = [r for r in rows if isScored(r)]
     green = [r["rvNew"] for r in scored if r["class"] == "green"]
     brown = [r["rvNew"] for r in scored if r["class"] == "brown"]
     axes.text(RV_T_NEW + 4, len(sessions) - 1.5,
@@ -663,7 +790,7 @@ def pageRvNewStrip(pdf, rows, d2rCount):
 
 def pageRvOldNew(pdf, rows):
     """Does the new reference change any verdict, and does it hold an oil steadier across sessions?"""
-    scored = [r for r in rows if r["class"] in SCORED]
+    scored = [r for r in rows if isScored(r)]
     figure = pyplot.figure(figsize=(8.27, 11.69))
     figure.suptitle("Rv against Rv\u2032 \u2014 what the reference band actually buys",
                     fontsize=13, fontweight="bold", y=0.975)
@@ -736,14 +863,14 @@ def pageRvOldNew(pdf, rows):
 
 def main():
     rows = paint(collect())
-    green = [r["d2R"] for r in rows if r["class"] == "green"]
-    brown = [r["d2R"] for r in rows if r["class"] == "brown"]
+    green = [r["d2R"] for r in rows if isScored(r) and r["class"] == "green"]
+    brown = [r["d2R"] for r in rows if isScored(r) and r["class"] == "brown"]
     print("collected %d runs: %d green, %d brown, %d unlabelled"
           % (len(rows), len(green), len(brown), sum(1 for r in rows if r["class"] == "unlabelled")))
     print("  green [%.3f .. %.3f]   brown [%.3f .. %.3f]   gap %+.3f"
           % (min(green), max(green), min(brown), max(brown), min(green) - max(brown)))
-    for oil in sorted({r["oil"] for r in rows if r["class"] == "unlabelled"}):
-        values = [r for r in rows if r["oil"] == oil]
+    for oil in sorted({r["oil"] for r in rows if r.get("provisionalOil")}):
+        values = [r for r in rows if r.get("provisionalOil")]
         print("  %-14s UNSCORED  d2R [%.3f .. %.3f]  Rv [%.1f .. %.1f]  -> reads %s on both"
               % (oil, min(r["d2R"] for r in values), max(r["d2R"] for r in values),
                  min(r["Rv"] for r in values), max(r["Rv"] for r in values),

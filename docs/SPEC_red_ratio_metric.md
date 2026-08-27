@@ -688,3 +688,62 @@ meaningless.
 6. **Is the solvent recorded anywhere?** It is not — the `METADATA` phase is empty and `pluginVersion` is
    `None` in every archived report. §6.2 could only be assembled because Edwin remembered. **This should
    be fixed before any further solvent work**, independently of `Rv`.
+
+
+---
+
+## ⭐⭐⭐ 12 · THE 2026-08-26/27 SESSION — the eye order is reproduced, and σ_fill is the blocker
+
+Eight fills across three oils in sunflower, under the new lab recipe, **first two DISTINCT reads of each
+aliquot** (later reads are a dose series, not repeats: Stekko's four runs span 14.8 `Rv`, its first two
+span 0.9). Esterer and Stekko were held **unlabelled** through the whole session so their class could not
+be taken from the metric being judged on them; Edwin's eye-ranking arrived afterwards.
+
+### 12.1 ⭐⭐ `Rv` reproduces the eye order. `Q%` inverts it.
+
+> **EYE, 2026-08-27:** Lugitsch greenest · Esterer and Stekko a little browner · **all three GREEN.**
+
+| oil (sunflower) | `Rv` mean | `Q%` mean |
+|---|---|---|
+| Lugitsch | **109** | 17.26 |
+| Esterer | **92** | **14.45** |
+| Stekko | **74** | 17.51 |
+
+`Rv` gives Lugitsch > Esterer > Stekko — the eye's order. `Q%`, where *lower* is greener, makes **Esterer
+the greenest of the three**. ⭐ This is the sharper form of §6's Spar Premium inversion: there the oils
+straddled green and brown, here **all three are green** and `Q%` still gets the ordering wrong.
+Green-vs-brown is not the discriminating test any more — the order *within* green is.
+
+⚠ Adding six eye-labelled green runs left the archive at **1 error in 116 at T = 52**, unchanged.
+
+### 12.2 ⛔⛔ AND THE FILL, NOT THE OIL, IS NOW THE DOMINANT TERM
+
+```
+WITHIN a fill, Rv repeats to        sd 1.36          the measurement is fine
+BETWEEN fills of ONE oil             8.4 Rv (Lugitsch, 3 fills)
+                                    30.0 Rv (Esterer, 4 fills)
+```
+
+**Esterer's best fill (107.4) is indistinguishable from Lugitsch's best (107.2)**, while its worst reads
+77.5. Four fills, each internally repeatable to a few units, disagreeing with each other by thirty. ⇒ the
+oil *means* still order correctly, but **a single fill can no longer identify the oil** — and a verdict is
+read off one fill.
+
+⛔ **Nothing else in this spec can be judged until σ_fill exists.** Not §7's M9 error count, not the
+08-24 → 08-26 session step (12.8 `Rv`, the size of one evening's fill spread), not a tracker tolerance.
+⇒ **ROADMAP item 0**: six fills of ONE oil, one evening, one bottle, nothing else varied.
+
+⚠ **Two of the four Esterer fills were made after 01:50 on a nine-hour bench evening, and one had already
+been reassigned between oils.** A preparation that genuinely varies by 30 `Rv` and a bench that got away
+from its operator look identical in this data. The overlap is recorded because it is what was measured;
+it is not yet established.
+
+### 12.3 Refuted along the way — so nobody re-runs them
+
+| claim | why it died |
+|---|---|
+| **`Rv` rides turbidity** (`r = +0.86` on three Lugitsch fills, +1.1 per 0.01 `A_valley`) | the **second Esterer fill** sits at the same `A_valley` as the first (0.171 vs 0.182) and **15.4 `Rv` higher**. Over all 16 runs of the evening `r = −0.07`. ⛔ Pooling oils whose slopes have opposite signs (§5 of the ROADMAP) gives ~0 by construction and must never be quoted |
+| **the blue-flank reference** `A[556–566]` in place of `A_Q` | best of ~50 windows on 115 archived runs — corridor **−1.45 → +0.91**, errors 1 → 0, drift −25 % — and then **FAILED ON THE FIRST NEW SAMPLE**: a spoiled Lugitsch reads `Rv′` **228.1**, identical to the fresh fill's 228.1, because its thin denominator collapses with the numerator. `Rv` halves correctly on the same sample (99.5 → 50.7). ⛔ Do not re-run the sweep |
+| **`d2R` as a second witness** | not fill-invariant: 1.41–1.51 on one fill and 1.94 on another of the same oil, one evening — 76 % of the session step it was supposed to corroborate. `Rv` agreed to 0.6 across the same pair |
+| **SNV shape as independent evidence** | `SNV(624) − SNV(569)` tracks `Rv` at **r = 0.993** over 19 runs. Agreement there is the same measurement re-expressed, not corroboration. Its binary "which band is taller" also flipped for Lugitsch between two sessions |
+

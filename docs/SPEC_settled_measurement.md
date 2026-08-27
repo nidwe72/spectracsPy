@@ -8509,3 +8509,71 @@ and **nobody has watched `dQ100` move through a clearing curve.**
   read off it — and §52.3 shows it is `R` and `(3)/(2)` that the turbid fill would have destroyed, not
   `Q%` or `dQ100`. That is an argument for the ceiling, not against it: we cannot know in advance which
   metric a stored run will later be re-analysed with.
+
+
+---
+
+## ✅⭐⭐⭐ 53 · AS BUILT — `clearing-4.0`, the SOLVENT-SELECTED READ  *(2026-08-26/27, 590 tests green, was 583)*
+
+⛔⛔ **THE PREMISE OF `clearing-3.0` IS FALSE IN AN INDEX-MATCHED SOLVENT, AND THAT IS WHY THIS EXISTS.**
+The read waits for the `Q%` curve to stop moving. On 2026-08-26 a sunflower fill fell **17.6 → 14.3 over
+twenty minutes, near-linear, with no flattening** — the operator could not click *Next*, and the run was
+lost. The rule was not malfunctioning: it was correctly reporting that its assumption did not hold.
+
+⭐ **Sunflower hides incomplete mixing from the turbidity channel.** Solvent and sample are both oils with
+nearly the same refractive index — that is why sunflower was chosen — so **undissolved droplets scatter
+almost nothing**. `A_valley` cannot see them. A curve can therefore decline for reasons the gate is blind
+to, and `Q%` need never turn.
+
+### 53.1 What changed
+
+| | |
+|---|---|
+| **`Solvent`** | new SDK enum (`ISOPROPANOL` · `SUNFLOWER_OIL` · `WHITE_SPIRIT` · `UNKNOWN`), declared by the plugin, **persisted into every report header**. ⛔ Until now **nothing recorded the solvent** — every cross-solvent question had to be inferred from a folder name |
+| **`prepProtocol`** | free-form string, same journey. It exists for the reason `evaluatorVersion` does: on 2026-08-26 the lab recipe changed from *shake* to *40 inversions after the capillaries clear*, every sunflower number moved ~15 `Rv`, and **nothing recorded which runs were made which way** |
+| **the read** | `SUNFLOWER_OIL` is answered off the **CLEARING GATE** plus a settle-out; every other solvent is untouched |
+| **`SETTLE_OUT_SECONDS = 37.0`, floored at 2 rows** | in SECONDS for the reason `GATE_SPAN_SECONDS` is (§14.2b): `windowFrames` is whatever the operator picked in the Frames combo, so "two windows" means ~37 s at W = 60 and ~6 s at W = 10 |
+| **`alternateRead`** | the drawdown rule's verdict is recorded on **every** run. ⭐ The solvent decides which answer is REPORTED, never which is COMPUTED — so the archive stays re-analysable under either rule and a later change invalidates nothing |
+| **the lost run** | a no-value outcome now writes its `MonitorRecord` to `appData/trajectories/`. ⛔ It still does NOT get a container: a run with no value must not reach PUBLISHING |
+
+### 53.2 ⛔ What it costs, said out loud
+
+§27.26a's finding that raising θ was free rested on *"the answer is protected by the VERTEX read"*.
+**That protection is exactly what this removes.** The read now moves with the gate's timing — a deliberate
+trade of *an answer that depends on when the fill cleared* against *no answer at all*. On the archive the
+two rules agree to **≤ 0.11 `Q%` on every well-behaved fill** and diverge only on the long decliners,
+where the gate read is 0.6–4.0 higher because it stops instead of chasing the curve down.
+
+### 53.3 The gate on the change — `diagnostics/settling_replay.py`
+
+⭐⭐ The read is a **pure function of the rows**, so a rule change is measurable against the whole archive
+with no rig time. The harness **simulates the engine**, not just `finalize()`: `__applyDecision` latches
+the first promote and answers 15 of 23 archived runs, so replaying only the finalize half tested 8.
+
+```
+SELF-CHECK  reproduced 23   MISMATCHED 0        <- the harness IS the live read
+ISOPROPANOL bit-identical 23 / 23   PASS        <- the branch did not leak
+```
+
+⚠ **The sunflower column of that replay is indicative only.** Archived runs *stopped at the gate* under
+the old rule, so most never recorded the settle-out rows the new rule wants; the replay reads what exists
+and flags `settleOutShort`. Only new runs exercise it properly.
+
+⭐ **`test_series_f_replay` caught the version bump, not the author.** All seven runs passed every
+assertion but the `clearing-3.0` literal — which is §30.12's lesson working exactly as intended.
+
+### 53.4 Verified at the rig, 2026-08-26/27
+
+Seven real fills. `GATE_SETTLE_OUT` every time, gate at 105–111 s, settle-out 50–53 s over 3 rows,
+`settleOutShort False`, **each run finished in ~2:35 instead of 20:00**. `alternateRead` agreed to
+0.008–0.31 on six of them and reported `FALLBACK` — *no admissible minimum on the curve at all* — on two,
+which is the failure this branch was written for, caught in the wild.
+
+### 53.5 ⏸ Still owed
+
+* **an ISOPROPANOL run at the rig.** The replay proves the branch does not leak on archived rows; only a
+  live run proves it on the current bench. This is the one part of the gate no replay can close.
+* **a reference channel at 622–627.** `monitorRecord` logs `referenceSoret`, `referenceValley` and
+  `referenceQ` and **nothing in the red** — so a lamp tilt between 568 and 624, the one instrumental
+  fault that can move `Rv` without moving the sample, is invisible by construction.
+

@@ -55,10 +55,23 @@ OILCOLOR = {"Lugitsch": "#4a7c1f", "SparPremium": "#b8860b", "SparSBudget": "#8b
 LATER = ("20260826Lugitsch", "08-26")
 # ⛔ Runs are DISCOVERED, not listed: fill B gained a second run while this was being written, and a
 # hardcoded list would have silently dropped it. LATER_SKIPPED is the only hand-maintained part.
-LATER_SERIES = [("20260826Lugitsch", "A"), ("20260826LugitschB", "B")]
+LATER_SERIES = [("20260826Lugitsch", "A"), ("20260826LugitschB", "B"), ("20260826LugitschC", "C")]
+# ⭐ The OTHER oils of that evening, loaded only to test the turbidity claim honestly — a slope seen in
+# one oil's three fills is not a property of the metric until the other oils are asked the same question.
+# ⭐⭐ ONLY THE FIRST TWO DISTINCT READS OF EACH ALIQUOT (Edwin, 2026-08-27). Later reads carry more lamp
+# on a sample the lamp is known to change. ⛔ DISTINCT, not the files named 001/002: 20260826Lugitsch/002
+# is a byte-identical copy of 001 — a failed save, not a read — and spending a slot on it would discard
+# 003, that aliquot's genuine second read.
+KEPT_RUN_COUNT = 2
+# ⚠ 20260826EstererC is deliberately ABSENT: its oil attribution is unconfirmed (it was measured as
+# Lugitsch and reassigned), and an unverified label must not enter a stated statistic.
+LATER_OTHERS = ["20260826Esterer", "20260826EstererB", "20260826EstererD", "20260826Stekko"]
 LATER_SKIPPED = {"20260826Lugitsch/002": "byte-identical copy of 001",
-                 "20260826Lugitsch/004": "set aside by hand, pending discussion"}
+                 "20260826Lugitsch/004": "set aside by hand, pending discussion",
+                 # ⛔ a deliberately SPOILED sample, run only to exercise the clearing-4.0 read
+                 "20260826LugitschC/test": "spoiled sample, software test only"}
 LATER_COLOR = "#1565c0"
+LATER_STYLE = {"A": ("--", 1.4), "B": ("-", 1.9), "C": ("-.", 1.7)}
 
 RV_THRESHOLD = 52.0
 OUT = os.path.join(archive.ARCHIVE, "20260824_session_report.pdf")
@@ -124,15 +137,32 @@ def collect():
     return rows
 
 
+def keptReads(series, folder):
+    """The first KEPT_RUN_COUNT DISTINCT reads of one fill. A duplicate does not consume a slot."""
+    import hashlib
+    digests, kept = set(), []
+    for name in sorted(f for f in os.listdir(folder) if f.endswith(".pdf")):
+        run = name[:-4]
+        if "%s/%s" % (series, run) in LATER_SKIPPED:
+            continue
+        with open(os.path.join(folder, name), "rb") as handle:
+            digest = hashlib.md5(handle.read()).hexdigest()
+        if digest in digests:
+            continue
+        digests.add(digest)
+        kept.append(run)
+        if len(kept) >= KEPT_RUN_COUNT:
+            break
+    return kept
+
+
 def loadLater():
     """Today's Lugitsch, both fills, read exactly as the 08-24 rows are so they are comparable."""
     rows = {}
     with tempfile.TemporaryDirectory() as scratch:
         for series, fill in LATER_SERIES:
           folder = os.path.join(archive.ARCHIVE, series)
-          for run in sorted(f[:-4] for f in os.listdir(folder) if f.endswith(".pdf")):
-            if "%s/%s" % (series, run) in LATER_SKIPPED:
-                continue
+          for run in keptReads(series, folder):
             path = os.path.join(archive.ARCHIVE, "%s/%s.pdf" % (series, run))
             workflow = archive.workflowOf(path, scratch)
             if workflow is None:
@@ -361,7 +391,47 @@ def pageCurves(pdf, rows):
     pyplot.close(figure)
 
 
-def pageRvNative(pdf, rows, later=None):
+def fillStatistics(later):
+    """⭐ COMPUTED, never typed. What VARIES between independently prepared fills of one oil?
+
+    ⛔⛔ THIS REPLACES A TURBIDITY CLAIM THAT WAS WRONG. The three Lugitsch fills showed Rv rising with
+    A_valley at r = +0.86, and it was reported as the metric riding turbidity. The SECOND ESTERER FILL
+    refuted it: valley 0.171 against fill A's 0.182 — indistinguishable — and Rv 15.4 HIGHER. Over all
+    sixteen 08-26 runs the correlation is ~0. Three points of one oil were a coincidence.
+    ⭐ What survives is bigger and worse: fills are individually repeatable and mutually inconsistent,
+    which is a PREPARATION variable, not measurement noise."""
+    fills = {}
+    for row in later.values():
+        fills.setdefault(row["fill"], []).append(row["rv"])
+    means = [numpy.mean(v) for v in fills.values()]
+    within = [numpy.var(v, ddof=1) for v in fills.values() if len(v) > 1]
+    spread = (max(means) - min(means)) if len(means) > 1 else 0.0
+    withinSd = numpy.sqrt(numpy.mean(within)) if within else float("nan")
+    return spread, withinSd, len(fills)
+
+
+def crossOilTurbidity(later, scratch):
+    """r between Rv and A_valley over EVERY oil measured that evening, not just the one on this page."""
+    valleys = [row["valley"] for row in later.values()]
+    values = [row["rv"] for row in later.values()]
+    for series in LATER_OTHERS:
+        for run in keptReads(series, os.path.join(archive.ARCHIVE, series)):
+            workflow = archive.workflowOf(
+                os.path.join(archive.ARCHIVE, "%s/%s.pdf" % (series, run)), scratch)
+            if workflow is None:
+                continue
+            nm, absorbance = archive.despikedTrace(workflow)
+            valley = bandMean(nm, absorbance, 500.0, 560.0)
+            q = bandMean(nm, absorbance, 565.0, 580.0)
+            red = bandMean(nm, absorbance, 622.0, 627.0)
+            valleys.append(valley)
+            values.append(100.0 * (red - valley) / (q - valley))
+    if len(valleys) < 4:
+        return float("nan"), len(valleys)
+    return float(numpy.corrcoef(valleys, values)[0, 1]), len(valleys)
+
+
+def pageRvNative(pdf, rows, later=None, cross=None):
     """Edwin 2026-08-24: normalise on the window `Rv` ACTUALLY USES and datum it on A_valley.
 
     Two renderings, because they answer different questions:
@@ -380,7 +450,7 @@ def pageRvNative(pdf, rows, later=None):
     figure = pyplot.figure(figsize=(8.27, 11.69))
     figure.suptitle("Normalised on Rv's own window (500\u2013627 nm), datum at A_valley",
                     fontsize=13, fontweight="bold", y=0.978)
-    boxes = [[0.11, 0.706, 0.85, 0.199],
+    boxes = [[0.11, 0.737, 0.85, 0.168],
              [0.11, 0.395, 0.85, 0.200],
              [0.11, 0.085, 0.85, 0.177]]
 
@@ -398,8 +468,8 @@ def pageRvNative(pdf, rows, later=None):
             axes.plot(rows[(oil, run)]["nm"], rvNative(rows[(oil, run)]), LINESTYLE[run],
                       color=OILCOLOR[oil], lw=1.1)
     for run, row in sorted((later or {}).items()):
-        axes.plot(row["nm"], rvNative(row), "-" if row["fill"] == "B" else "--",
-                  color=LATER_COLOR, lw=1.9 if row["fill"] == "B" else 1.4, alpha=0.95)
+        axes.plot(row["nm"], rvNative(row), LATER_STYLE[row["fill"]][0],
+                  color=LATER_COLOR, lw=LATER_STYLE[row["fill"]][1], alpha=0.95)
     axes.axhline(0.0, color="#444444", lw=0.9)
     axes.axhline(1.0, color="#444444", lw=0.9, ls=":")
     axes.set_xlim(495, 638)
@@ -432,20 +502,28 @@ def pageRvNative(pdf, rows, later=None):
                 "and its height IS Rv/100.",
                 fontsize=8.5, color="#444444")
     if later:
-        axes.plot([], [], "--", color=LATER_COLOR, lw=1.4, label="Lugitsch 08-26 fill A")
-        axes.plot([], [], "-", color=LATER_COLOR, lw=1.9, label="Lugitsch 08-26 fill B")
+        for fill in sorted({r["fill"] for r in later.values()}):
+            style, width = LATER_STYLE[fill]
+            axes.plot([], [], style, color=LATER_COLOR, lw=width,
+                      label="Lugitsch 08-26 fill %s" % fill)
         axes.legend(fontsize=7.5, loc="upper left", framealpha=0.95)
-        figure.text(0.11, 0.676,
+        figure.text(0.11, 0.707,
                     "[!]  BLUE = the SAME OIL measured %s, a different session \u2014 not a fourth run of this "
                     "evening. Its 624 band has fallen\n"
-                    "     onto the Q band: Rv %.0f against %.0f on 08-24.  TWO independent fills, A and B, "
-                    "agree to %.1f.\n"
-                    "     Fill B is matched to 08-24/001 within 1 %% on the valley, so the PREPARATION is not "
-                    "the cause."
+                    "     onto the Q band: Rv %.0f against %.0f on 08-24, over %d independently prepared "
+                    "fills (%s).\n"
+                    "     [!] But the %d fills span %.1f Rv while repeating to sd %.1f WITHIN a fill — "
+                    "the variance is in the PREPARATION.\n"
+                    "     Not turbidity: over all %d runs of that evening Rv vs A_valley is r = %+.2f, and "
+                    "the two Esterer fills sit at the same\n"
+                    "     valley 15.4 Rv apart. Until a sigma_fill exists, neither this step nor the "
+                    "oil-to-oil gap has a yardstick."
                     % (LATER[1], numpy.mean([r["rv"] for r in later.values()]),
                        numpy.mean([rows[("Lugitsch", r)]["rv"] for r in RUNS]),
-                       abs(numpy.mean([r["rv"] for r in later.values() if r["fill"] == "A"])
-                           - numpy.mean([r["rv"] for r in later.values() if r["fill"] == "B"]))),
+                       len({r["fill"] for r in later.values()}),
+                       ", ".join(sorted({r["fill"] for r in later.values()})),
+                       fillStatistics(later)[2], fillStatistics(later)[0], fillStatistics(later)[1],
+                       (cross or (float("nan"), 0))[1], (cross or (float("nan"), 0))[0]),
                     fontsize=8, color="#a03000", linespacing=1.5, va="top")
 
     axes = figure.add_axes(boxes[1])
@@ -456,8 +534,8 @@ def pageRvNative(pdf, rows, later=None):
                       LINESTYLE[run], color=OILCOLOR[oil], lw=1.3)
     for run, row in sorted((later or {}).items()):
         mask = row["nm"] >= 600
-        axes.plot(row["nm"][mask], rvNative(row)[mask], "-" if row["fill"] == "B" else "--",
-                  color=LATER_COLOR, lw=2.0 if row["fill"] == "B" else 1.5, alpha=0.95)
+        axes.plot(row["nm"][mask], rvNative(row)[mask], LATER_STYLE[row["fill"]][0],
+                  color=LATER_COLOR, lw=LATER_STYLE[row["fill"]][1] + 0.1, alpha=0.95)
     axes.axhline(0.0, color="#444444", lw=0.9)
     axes.axvspan(622, 627, color="#cc6666", alpha=0.30, lw=0)
     axes.axvline(609, color="#999999", lw=0.8, ls="-.")
@@ -483,8 +561,8 @@ def pageRvNative(pdf, rows, later=None):
             axes.plot(row["nm"][mask], snv(row)[mask], LINESTYLE[run], color=OILCOLOR[oil], lw=1.1)
     for run, row in sorted((later or {}).items()):
         mask = (row["nm"] >= 495.0) & (row["nm"] <= 636.0)
-        axes.plot(row["nm"][mask], snv(row)[mask], "-" if row["fill"] == "B" else "--",
-                  color=LATER_COLOR, lw=1.9 if row["fill"] == "B" else 1.4, alpha=0.95)
+        axes.plot(row["nm"][mask], snv(row)[mask], LATER_STYLE[row["fill"]][0],
+                  color=LATER_COLOR, lw=LATER_STYLE[row["fill"]][1], alpha=0.95)
     axes.axhline(0.0, color="#444444", lw=0.9)
     axes.set_xlim(495, 636)
     axes.set_ylim(-1.5, 3.3)
@@ -709,6 +787,8 @@ def pageSwatches(pdf, rows):
 def main():
     rows = collect()
     later = loadLater()
+    with tempfile.TemporaryDirectory() as scratch:
+        cross = crossOilTurbidity(later, scratch)
     for run, why in sorted(LATER_SKIPPED.items()):
         print("  [!] %s omitted from the overlay -- %s" % (run, why))
     print("  overlay: n=%d  %s"
@@ -717,7 +797,7 @@ def main():
         pageSummary(pdf, rows)
         pageStats(pdf, rows)
         pageCurves(pdf, rows)
-        pageRvNative(pdf, rows, later)
+        pageRvNative(pdf, rows, later, cross)
         pageSecondDerivative(pdf, rows)
         pageSwatches(pdf, rows)
         info = pdf.infodict()
