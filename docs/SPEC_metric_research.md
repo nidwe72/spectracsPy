@@ -3162,6 +3162,18 @@ plainly so it can be argued with: `Rv` is **drawable on the existing bands plot*
 z-scored difference. `dQ100` also carries its own withdrawal history (2026-08-21) and needs `sd` over
 448–626 rather than band means. ⇒ The decision is on buildability and interpretability, **not accuracy**.
 
+### ⛔ 15.1a Why NOT bring `A_Soret` in as well  *(asked 2026-08-27)*
+
+`Rv` never looks at the Soret. Adding it as the **reference** destroys the metric (1 error → 11: the
+Soret is carotenoid-contaminated, so it mixes pigment families). Adding it as a **correction**,
+`Rv'' = Rv − Q%'`, is the one of six forms that survives: it improves the pooled σ_fill by ~20 %
+scale-free and Cohen's *d* from 3.10 to 3.40, changing **no verdict**.
+
+⛔ **Shelved anyway — Edwin, 2026-08-27: "does not change the problem."** It leaves the day-to-day drift
+of the one repeated oil unchanged (0.36 → 0.35 of its own gap) and Esterer still overlaps Lugitsch on
+single fills within one day. A correction term cannot repair a preparation that delivers different
+amounts of the absorber. ⇒ full record, algebra and both corpora in `SPEC_red_ratio_metric.md` §12.7.
+
 ### 15.2 ⛔ What the decision does NOT settle
 
 - **§7 of the contract still stands.** Every constant is fitted on the corpus it is scored on. The

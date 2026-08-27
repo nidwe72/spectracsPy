@@ -813,6 +813,70 @@ the 2026-08-26 recipe change (shake → 40 inversions), observed four days *earl
 ⛔ Excluding it as an outlier would delete the archive's one clean data point on the very effect ROADMAP
 item 0 exists to measure.
 
+### ⛔ 12.7 `Rv − Q%′` — "use `A_Soret` as well", tested and SHELVED
+
+**Edwin's question, 2026-08-27:** `Rv` weighs `A624` against `A_Q` and never looks at the Soret — should
+`A_Soret` come in as well? **Answer: it can, in exactly one form, and it does not change the problem.**
+Recorded here so the algebra is not re-derived and the sweep is not re-run.
+
+**The obvious version is a trap.** Putting the Soret in as the *reference* — `Rv_S = (R−V)/(S−V)` —
+cuts fill variance impressively and destroys the metric, because it shrinks the oil gap faster than the
+noise. The Soret is carotenoid-contaminated (§2.5), so anchoring there mixes pigment families:
+
+| candidate (08-26 fills) | σ_fill | oil gap | **gap/σ** | errors | Cohen's *d* |
+|---|---|---|---|---|---|
+| **`Rv`** — Q reference, shipped | 11.07 | 10.62 | 0.96 | **1** | 2.76 |
+| `Rv_S` — Soret as reference | **4.16** | 1.47 | 0.35 | 11 | 1.84 |
+| `hR = R/Q` — no valley datum | 5.64 | 5.13 | 0.91 | 5 | 2.54 |
+| **`Rv − Q%′`** — Soret as a *correction* | 9.31 | **10.93** | **1.17** | **1** | **3.02** |
+
+⭐ The one form that helps subtracts rather than divides — the archive's own rule, *differences survive,
+ratios don't*:
+
+```
+Rv'' = 100 · [ (R − V)/(Q − V)  −  (Q − V)/(S − V) ]
+                ^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^
+                this IS Rv          this IS Q%, valley-corrected
+```
+
+`Rv` and `Q%` correlate at **r = −0.64** over the archive — two readings of one axis — so the difference
+cancels the common mode and keeps what they disagree about.
+
+**On the full sunflower corpus, scale-free.** ⚠ `Rv'' = 1.077·Rv − 25.70` (r = 0.9954), a *wider* scale
+than `Rv`, so no raw spread may be compared between them. Divided by each metric's own green-to-brown
+distance:
+
+| | `Rv` | `Rv − Q%′` |
+|---|---|---|
+| σ_fill ÷ own gap | 0.249 | **0.199** |
+| Cohen's *d*, 116 scored runs | 3.10 | **3.40** |
+| errors | 1 | 1 |
+| **day-to-day drift of the one repeated oil ÷ own gap** | 0.36 | **0.35** |
+| Esterer vs Lugitsch, single fills inside 08-26 | overlap | **overlap** |
+
+⛔⛔ **THE VERDICT — Edwin, 2026-08-27: "does not change the problem."** The pooled σ_fill gain is real
+(≈20 % scale-free) and it buys **nothing on either thing that actually blocks the programme**. The one
+oil measured on all three days drifts by the same fraction of the gap; inside a single day Esterer's best
+fill still cannot be told from Lugitsch's worst. A correction term cannot repair a preparation that
+delivers different amounts of the absorber being measured — **fills B and D differ by 9 % in `A624` with
+`A_Q` identical to 0.03 %**, and no Soret term touches that.
+
+⛔ **And the method is the same one that already failed once.** Six algebraic forms, chosen by me, scored
+on the corpus they would be quoted against — the identical setup that made the blue-flank reference look
+excellent on 115 runs before it failed on the first new sample (§12.3). Any adoption is an §7/M9 event.
+
+⚠ **State the corpus with the number.** The table above is the full sunflower archive; the 08-26 fills
+alone give σ_fill 11.07 → 9.31 for the same two metrics. Both are correct and they are not the same
+claim — a σ_fill quoted without its fill set means nothing.
+
+⛔ **It also costs `Rv`'s best property.** On the `Rv`-native plot the 624 band's height *is* `Rv`
+(§5); a difference of two ratios cannot be drawn.
+
+⇒ **Rendered, not adopted:** pages 8 and 9 of `20260825_d2r_all_runs.pdf`
+(`diagnostics/d2r_all_runs.py`, `pageDifferenceMetric` + the parameterised `pageByDay`). If it is ever
+revisited, the corpus is the **σ_fill run** (ROADMAP item 0), which has a proper fill-variance
+denominator instead of eight fills across two oils.
+
 ### 12.3 Refuted along the way — so nobody re-runs them
 
 | claim | why it died |
@@ -821,4 +885,4 @@ item 0 exists to measure.
 | **the blue-flank reference** `A[556–566]` in place of `A_Q` | best of ~50 windows on 115 archived runs — corridor **−1.45 → +0.91**, errors 1 → 0, drift −25 % — and then **FAILED ON THE FIRST NEW SAMPLE**: a spoiled Lugitsch reads `Rv′` **228.1**, identical to the fresh fill's 228.1, because its thin denominator collapses with the numerator. `Rv` halves correctly on the same sample (99.5 → 50.7). ⛔ Do not re-run the sweep |
 | **`d2R` as a second witness** | not fill-invariant: 1.41–1.51 on one fill and 1.94 on another of the same oil, one evening — 76 % of the session step it was supposed to corroborate. `Rv` agreed to 0.6 across the same pair |
 | **SNV shape as independent evidence** | `SNV(624) − SNV(569)` tracks `Rv` at **r = 0.993** over 19 runs. Agreement there is the same measurement re-expressed, not corroboration. Its binary "which band is taller" also flipped for Lugitsch between two sessions |
-
+| **`A_Soret` brought into `Rv`** | one form of six survives (`Rv − Q%′`) and improves the pooled σ_fill by ~20 % scale-free — but leaves the day-to-day drift and the Esterer/Lugitsch single-fill overlap **unchanged**. Tested and shelved, ⇒ §12.7 |

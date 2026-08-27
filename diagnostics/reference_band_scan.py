@@ -20,6 +20,7 @@ Run:
         ./venv/bin/python diagnostics/reference_band_scan.py
 """
 import os
+import hashlib
 import pickle
 import sys
 import tempfile
@@ -30,7 +31,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import peak_ratio_archive as archive
 import all_metrics_archive as metrics
 from solvent_colour_separation import SUNFLOWER as INDEX_MATCHED
-from d2r_all_runs import SERIESOIL, TODAY, EXCLUDED, firstDistinctRuns
+from d2r_all_runs import (SERIESOIL, TODAY, EXCLUDED, KEPT_RUN_COUNT, LATE_RUN_SESSIONS,
+                          firstDistinctRuns)
 
 CACHE = "/tmp/claude-1000/-home-nidwe72-development-spectracs-spectracsPy/105990a7-14f7-4f84-a40b-cf4d764597f2/scratchpad/refscan_traces.pkl"
 RED = (622.0, 627.0)
@@ -38,11 +40,46 @@ VALLEY = (500.0, 560.0)
 ARTEFACTS = ((579.0, 584.0, "581 reference minimum"), (605.0, 613.0, "609 Bayer crossover"))
 
 
+def archiveStamp():
+    """A fingerprint of every report the walk can see: path, size and mtime.
+
+    ⛔⛔ WHY THIS EXISTS. The cache below was keyed on nothing but its own existence, so a new fill
+    added to the archive was silently absent from every Rv page until someone deleted the file by hand.
+    It happened twice. A cache that cannot notice new data is a cache that quietly answers yesterday's
+    question -- the stamp makes the invalidation automatic."""
+    parts = []
+    for folder, name in archive.walkReports():
+        path = os.path.join(folder, name)
+        # ⛔ THE GENERATORS WRITE THEIR OWN PDFs INTO THIS SAME TREE, so a stamp over everything the
+        # walk yields changes on every render and the cache is never valid. Only a run report counts:
+        # inside a fill folder anything does, at the archive root only `measurement_report_*`.
+        if os.path.samefile(folder, archive.ARCHIVE) and not name.startswith("measurement_report_"):
+            continue
+        try:
+            info = os.stat(path)
+        except OSError:
+            continue
+        parts.append("%s|%d|%d" % (os.path.relpath(path, archive.ARCHIVE), info.st_size,
+                                   int(info.st_mtime)))
+    # ⛔⛔ THE CORPUS DEPENDS ON CODE, NOT ONLY ON FILES. `EXCLUDED`, `TODAY` and the run policy all
+    # change which runs `collect` returns, and a stamp over the archive alone stays valid across an
+    # edit to any of them -- so a fill set aside in the source would go on being cached IN. Fold the
+    # configuration in, or the cache silently answers the previous rule.
+    parts.append(repr(sorted(EXCLUDED.items())))
+    parts.append(repr(sorted(TODAY.items())))
+    parts.append("%s|%d" % (LATE_RUN_SESSIONS, KEPT_RUN_COUNT))
+    return hashlib.md5("\n".join(sorted(parts)).encode()).hexdigest()
+
+
 def collect():
     """Every labelled run that covers 500-627 nm. Cached: the PDF extraction is the slow part."""
+    stamp = archiveStamp()
     if os.path.exists(CACHE):
         with open(CACHE, "rb") as handle:
-            return pickle.load(handle)
+            cached = pickle.load(handle)
+        if isinstance(cached, dict) and cached.get("stamp") == stamp:
+            return cached["rows"]
+        print("  [!] archive changed since the cache was written -- re-extracting")
     rows = []
     indexed = {relative for _, relative in INDEX_MATCHED}
     with tempfile.TemporaryDirectory() as scratch:
@@ -82,7 +119,7 @@ def collect():
             for relative in firstDistinctRuns(series)[0]:
                 take(relative, label, oil, "sunflower")
     with open(CACHE, "wb") as handle:
-        pickle.dump(rows, handle)
+        pickle.dump({"stamp": stamp, "rows": rows}, handle)
     return rows
 
 

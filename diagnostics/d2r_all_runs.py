@@ -87,7 +87,24 @@ TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spa
          # numbers surprise me. ⛔ But it reads Rv 105.1/109.8 against the other Esterer fills' 77–90,
          # repeats to 4.8 within itself, and is indistinguishable from Lugitsch fill C (107.2). It is
          # SCORED; what it costs is reported by `eyeOrderNote`.
-         "20260826EstererD": ("Esterer", "green")}
+         "20260826EstererD": ("Esterer", "green"),
+         # ⭐⭐ THE FIRST FILL MADE BY A DIFFERENT RECIPE (see PREP_PROTOCOL). Two-stage dilution:
+         # 1 ml sunflower + the capillary, dissolved, then topped to 4 ml and rotated ~60 s -- no hard
+         # arm-swing. It is the TEST of the dissolution story, and it REFUTED it: dissolution measurably
+         # improved (A_Soret +10.2 %, A_valley -6.9 % against fill B) while Rv moved -1.7, i.e. one run's
+         # noise. ⇒ a real preparation gain that Rv is blind to, because BOTH of its bands held still.
+         "20260826EstererE": ("Esterer", "green")}
+
+# ⚠⚠ FILLS NOT MADE BY THE RECIPE THE REPORT HEADER CLAIMS. The plugin writes a hardcoded
+# `prepProtocol` string into every report, so a recipe change is INVISIBLE in the record until the
+# constant is updated. Until then the exception lives here, named, and is printed on every run.
+# ⛔ Mixing preparations inside one oil's fill set without saying so is how a protocol change turns
+# into unexplained σ_fill six weeks later.
+PREP_PROTOCOL = {
+    "20260826EstererE": "two-stage: 1 ml + capillary, which EMPTIES ITSELF in the solvent \u2014 no "
+                        "arm-swing;\n     then ~45 s of FAST rotation at the bottom while still "
+                        "concentrated, then to 4 ml and ~60 s more.\n     The 40 slow inversions are "
+                        "gone. (header still records invert-40-after-capillaries-clear)"}
 
 # ⛔⛔ ATTRIBUTION UNCERTAIN — PLOTTED, LABELLED, BUT EXCLUDED FROM EVERY STATISTIC.
 # ⭐⭐ THE TRAP THIS EXISTS TO STOP. This fill was measured as Lugitsch, read Rv 86.8 — below Esterer's
@@ -137,7 +154,19 @@ EXCLUDED = {"20260826Lugitsch/004.pdf": "reads strange on the day — set aside 
             # ⛔ NOT A MEASUREMENT OF THE OIL. A deliberately spoiled sample, run only to exercise the
             # clearing-4.0 read after the app restart. Its Q% is 8.0 against ~17 for the real fills and
             # its 624 band has collapsed; scoring it as Lugitsch would put a spoiled oil in the green set.
-            "20260826LugitschC/test.pdf": "spoiled sample, software test only — not the oil"}
+            "20260826LugitschC/test.pdf": "spoiled sample, software test only — not the oil",
+            # ⛔⛔ EDWIN'S CALL, 2026-08-27 — AND THE ONE EXCLUSION THAT NEEDS WATCHING. D is the only
+            # fill made with the hard arm-centrifuge extrusion, a step the two-stage recipe has since
+            # RETIRED, so it is the last fill of a procedure that no longer exists. That is a reason
+            # about the METHOD, not about the number, which is what makes it admissible.
+            # ⚠ But it is still a fill removed after its value was seen, and it is the single largest
+            # term in Esterer's σ_fill: 12.4 with it, 6.9 without. Both figures are printed on every
+            # run so the cost of this decision can never be quiet. Revisit if the swing is ever
+            # replicated — one fill by D's own method settles it.
+            "20260826EstererD/001.pdf": "hard arm-swing extrusion, a retired procedure — set aside "
+                                        "2026-08-27 pending a replicate",
+            "20260826EstererD/002.pdf": "hard arm-swing extrusion, a retired procedure — set aside "
+                                        "2026-08-27 pending a replicate"}
 SOLVENTMARK = {"isopropanol": "o", "sunflower": "s", "spirit": "^"}
 
 
@@ -260,6 +289,11 @@ def collect():
                                                                                  KEPT_RUN_COUNT))
         for entry in sorted(lateRuns):
             print("        %s" % entry)
+    for session, note in sorted(PREP_PROTOCOL.items()):
+        if any(sessionOf(r) == session for r in rows):
+            print("  [!] DIFFERENT PREPARATION: %s -- %s" % (session, note))
+        else:
+            print("  [!] PREP_PROTOCOL entry never matched a run: %s" % session)
     return rows
 
 
@@ -467,6 +501,35 @@ def eyeOrderNote(rows):
                else "each oil's runs stay clear of the next oil's."))
 
 
+def setAsideNote():
+    """The hand exclusions, listed by FILL rather than by file, and what removing them cost.
+
+    ⛔⛔ AN EXCLUSION MUST CARRY ITS PRICE ON THE SAME PAGE AS THE NUMBER IT IMPROVES. Setting a fill
+    aside after seeing its value is the most dangerous edit in this pipeline; printing σ_fill both ways
+    is what stops it being a quiet one."""
+    if not EXCLUDED:
+        return ""
+    line = "\nSET ASIDE BY HAND, not plotted: " + "; ".join(
+        sorted({relative.split("/")[0] for relative in EXCLUDED}))
+    for oil, (n1, s1, n2, s2) in sorted(EXCLUSION_COST.items()):
+        line += ("\n     COST: %s \u03c3_fill %.1f over the %d fills kept \u2014 %.1f over %d with "
+                 "the set-aside fill back in." % (oil, s1, n1, s2, n2))
+    return line
+
+
+def prepNote(rows):
+    """⚠ Name any fill on the page whose PREPARATION differs from the header's claim.
+
+    ⛔ The report header carries one hardcoded recipe string, so a bench change is invisible in the
+    record. A mixed-preparation fill set that does not say so is an unexplained σ_fill waiting to
+    happen -- this makes the mixture visible on the figure itself, not only in the console."""
+    named = sorted(s for s in PREP_PROTOCOL if any(sessionOf(r) == s for r in rows))
+    if not named:
+        return ""
+    return "\nDIFFERENT PREPARATION, plotted and scored:\n" + "\n".join(
+        "     %s \u2014 %s" % (s, PREP_PROTOCOL[s].split(" (header")[0]) for s in named)
+
+
 def pageSunflower(pdf, rows):
     """Rv, sunflower only, the two views STACKED one per row down an A4 portrait.
 
@@ -518,7 +581,7 @@ def pageSunflower(pdf, rows):
     axes.tick_params(labelsize=8)
 
     # ---- row 2: the same numbers against the calendar
-    axes = figure.add_axes([0.105, 0.235, 0.865, 0.255])
+    axes = figure.add_axes([0.105, 0.290, 0.865, 0.230])
     dates = sorted({dateTag(sessionOf(r)) for r in rows})
     slot = {date: index for index, date in enumerate(dates)}
     tags = []
@@ -564,26 +627,27 @@ def pageSunflower(pdf, rows):
     axes.grid(axis="y", alpha=0.3)
     axes.tick_params(labelsize=8)
 
-    figure.text(0.105, 0.170,
+    figure.text(0.105, 0.245,
                 "[*]  Only Lugitsch has been measured in sunflower on more than one date, so it is the only\n"
                 "oil that can show a trend at all. Every other line in row 2 is a single folder.",
                 fontsize=8.2, va="top", linespacing=1.5)
-    figure.text(0.105, 0.115,
+    figure.text(0.105, 0.208,
                 "[*]  %s\n"
                 "[!]  A fill's own scatter is the yardstick for any step between fills: WITHIN a fill Rv "
                 "repeats to sd ~1.2, but\n"
                 "     INDEPENDENT FILLS of one oil sit 7\u201313 Rv apart \u2014 the preparation now "
                 "dominates the measurement by about ten to one.%s"
-                % (eyeOrderNote(rows),
-                   "" if not EXCLUDED else
-                   "\nSET ASIDE BY HAND, not plotted: " + "; ".join(sorted(EXCLUDED))),
+                % (eyeOrderNote(rows), prepNote(rows) +
+                   ("" if not EXCLUDED else
+                    setAsideNote())),
                 fontsize=8.2, color="#a03000", va="top", linespacing=1.5)
     pdf.savefig(figure)
     pyplot.close(figure)
 
 
-def pageByDay(pdf, rows):
-    """Rv, sunflower, ONE ROW PER MEASUREMENT DAY, stacked down an A4 portrait.
+def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
+              title="Rv in sunflower — one row per measurement day", blurb=None, caveat=""):
+    """Sunflower, ONE ROW PER MEASUREMENT DAY, stacked down an A4 portrait.
 
     ⭐ WHY PER DAY IS THE FAIR COMPARISON. Within a single day the lamp, the reference and the rig are
     held constant, so oil-vs-oil is read with the day divided out -- which the by-oil page cannot do,
@@ -592,14 +656,25 @@ def pageByDay(pdf, rows):
     line per row is where the one repeated oil sat THAT day.
 
     ⛔ Stacked, not side by side, and the shared y-axis is the whole point -- rows are meant to be read
-    DOWN the page against one another, which columns of differing width made harder than it needed to be."""
+    DOWN the page against one another, which columns of differing width made harder than it needed to be.
+
+    ⭐ PARAMETERISED over the quantity (2026-08-27) so a candidate metric gets the SAME per-day view as
+    the shipped one. That is deliberate: a candidate has to be judged on the plot that divides the day
+    out, because between-day drift is exactly what a fill-scatter claim can otherwise borrow its win from.
+    ⚠ `key` may go negative, so the y-window is taken from the data instead of pinned at zero."""
     rows = [r for r in rows if r["solvent"] == "sunflower"]
     days = sorted({dateTag(sessionOf(r)) for r in rows})
-    ceiling = max(r["Rv"] for r in rows) * 1.12
+    values = [r[key] for r in rows]
+    if min(values) >= 0.0:                    # Rv and friends: keep the zero datum, the bar is meaningful
+        floor, ceiling = 0.0, max(values) * 1.12
+    else:
+        pad = (max(values) - min(values)) * 0.10
+        floor, ceiling = min(values) - pad, max(values) + pad
+    span = ceiling - floor
     figure = pyplot.figure(figsize=(8.27, 11.69))
-    figure.suptitle("Rv in sunflower — one row per measurement day", fontsize=13, fontweight="bold",
-                    y=0.975)
+    figure.suptitle(title, fontsize=13, fontweight="bold", y=0.975)
     figure.text(0.5, 0.934,
+                blurb or
                 "The comparison with the day divided out. Same vertical scale in every row, so the rows\n"
                 "read against each other. Dotted = that day's Lugitsch mean, the one oil measured on all days.",
                 ha="center", fontsize=8.2, style="italic", linespacing=1.5)
@@ -609,33 +684,33 @@ def pageByDay(pdf, rows):
         axes = figure.add_axes([0.105, 0.700 - index * 0.245, 0.865, height])
         today = [r for r in rows if dateTag(sessionOf(r)) == day]
         oils = sorted({r["oil"] for r in today})
-        reference = [r["Rv"] for r in today if r["oil"] == "Lugitsch"]
+        reference = [r[key] for r in today if r["oil"] == "Lugitsch"]
         for position, oil in enumerate(oils):
             group = sorted((r for r in today if r["oil"] == oil), key=lambda r: r["run"])
             offsets = numpy.linspace(-0.22, 0.22, len(group)) if len(group) > 1 else [0.0]
             for offset, row in zip(offsets, group):
-                axes.plot(position + offset, row["Rv"], "s", color=row["color"], ms=7,
+                axes.plot(position + offset, row[key], "s", color=row["color"], ms=7,
                           markeredgecolor="black", markeredgewidth=0.4)
         if reference:
             axes.axhline(numpy.mean(reference), color="#2e7d32", lw=1.0, ls=":", alpha=0.85)
-            axes.text(len(oils) - 0.45, numpy.mean(reference) + ceiling * 0.015,
+            axes.text(len(oils) - 0.45, numpy.mean(reference) + span * 0.015,
                       "Lugitsch %.1f" % numpy.mean(reference), fontsize=7, color="#2e7d32",
                       ha="right", va="bottom", fontweight="bold")
-        axes.axhline(RV_CUT, color="crimson", lw=1.3, ls="--")
+        axes.axhline(cut, color="crimson", lw=1.3, ls="--")
         axes.set_xticks(range(len(oils)))
         axes.set_xticklabels([o.replace(" ", "\n") for o in oils], fontsize=8)
         axes.set_xlim(-0.6, len(oils) - 0.4)
-        axes.set_ylim(0, ceiling)
+        axes.set_ylim(floor, ceiling)
         axes.grid(axis="y", alpha=0.3)
         axes.tick_params(labelsize=8)
-        axes.set_ylabel("Rv", fontsize=10, fontweight="bold")
+        axes.set_ylabel(label, fontsize=10, fontweight="bold")
         axes.set_title("%s   ·   %d runs, %d oils" % (day, len(today), len(oils)),
                        fontsize=10.5, fontweight="bold", loc="left")
 
-    walk = " → ".join("%.1f" % numpy.mean([r["Rv"] for r in rows
-                                           if r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == day])
-                      for day in days
-                      if any(r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == day for r in rows))
+    walk = " → ".join("%.1f" % numpy.mean([r[key] for r in rows
+                                                if r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == day])
+                           for day in days
+                           if any(r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == day for r in rows))
     figure.text(0.105, 0.160,
                 "[*]  Read ACROSS a row, not down the page: inside one day the rig is common to every oil,\n"
                 "so the gaps within a row are the ones that mean something.",
@@ -644,8 +719,8 @@ def pageByDay(pdf, rows):
                 "[!]  08-22 carries only two oils and 08-24 never saw Esterer or Stekko, so no single row\n"
                 "ranks all six. Lugitsch's own line moves %s across the rows: the reference itself\n"
                 "is not fixed, which is why an oil measured on one day only cannot be placed against one\n"
-                "measured on another.%s"
-                % (walk, "" if not EXCLUDED else
+                "measured on another.%s%s"
+                % (walk, caveat, "" if not EXCLUDED else
                    "\nSET ASIDE BY HAND, not plotted: " + "; ".join(sorted(EXCLUDED))),
                 fontsize=8.2, color="#a03000", va="top", linespacing=1.5)
     pdf.savefig(figure)
@@ -739,7 +814,36 @@ def rvCorpus():
             red = float(row["a"][(row["nm"] >= 622.0) & (row["nm"] <= 627.0)].mean())
             reference = float(row["a"][(row["nm"] >= low) & (row["nm"] <= high)].mean())
             row[tag] = 100.0 * (red - valley) / (reference - valley)
+        # ⭐⭐ THE DIFFERENCE METRIC (Edwin's question, 2026-08-27): should A_Soret be used as well?
+        # ⛔ NOT as the reference — that is Q%'s anchor and it is the WORST of every candidate tried
+        # (11 errors against Rv's 1; the Soret is carotenoid-contaminated, so it mixes pigment families).
+        # ⭐ But as a CORRECTION it earns its place: Rv and Q% correlate at r = -0.64 over the archive, so
+        # they are two readings of one axis; subtracting cancels what they share and keeps what they
+        # disagree about. The archive's own rule: "differences survive, ratios don't."
+        soret = float(row["a"][(row["nm"] >= 448.0) & (row["nm"] <= 460.0)].mean())
+        qBand = float(row["a"][(row["nm"] >= 565.0) & (row["nm"] <= 580.0)].mean())
+        row["qPct"] = 100.0 * (qBand - valley) / (soret - valley)
+        row["rvMinusQ"] = row["rvOld"] - row["qPct"]
+        # ⛔ `reference_band_scan` builds its own rows and does not carry this flag, so without it the
+        # unconfirmed fill silently counts as a fourth Esterer fill on the Rv pages while being excluded
+        # everywhere else. One corpus, one rule.
+        row["provisionalOil"] = row["session"] in PROVISIONAL_ATTRIBUTION
     return paint(rows)
+
+
+def bestCut(rows, key):
+    """The threshold this quantity can achieve, and the errors there. ⚠ FITTED on this corpus — it is a
+    measurement of what the quantity CAN do, not a pre-registered constant (§7 / M9)."""
+    scored = [r for r in rows if isScored(r)]
+    green = numpy.array([r[key] for r in scored if r["class"] == "green"])
+    brown = numpy.array([r[key] for r in scored if r["class"] == "brown"])
+    best, cuts = None, numpy.unique(numpy.concatenate([green, brown]))
+    for cut in cuts:
+        errors = int((green < cut).sum() + (brown >= cut).sum())
+        if best is None or errors < best[0]:
+            best = (errors, cut)
+    band = [c for c in cuts if int((green < c).sum() + (brown >= c).sum()) == best[0]]
+    return best[0], float((min(band) + max(band)) / 2.0), green, brown
 
 
 def pageRvNewStrip(pdf, rows, d2rCount):
@@ -747,7 +851,7 @@ def pageRvNewStrip(pdf, rows, d2rCount):
     sessions = sorted({sessionOf(r) for r in rows},
                       key=lambda s: -numpy.median([r["rvNew"] for r in rows if sessionOf(r) == s]))
     figure = pyplot.figure(figsize=(8.27, 11.69))
-    figure.suptitle("Rv\u2032 \u2014 the blue-flank reference, every run of the archive",
+    figure.suptitle("REJECTED CANDIDATE \u00b7 Rv\u2032, the blue-flank reference \u2014 every run",
                     fontsize=13, fontweight="bold", y=0.975)
     figure.text(0.5, 0.937,
                 "Rv\u2032 = 100\u00b7(A622\u2013627 \u2212 A_valley) / (A556\u2013566 \u2212 A_valley).  "
@@ -792,7 +896,7 @@ def pageRvOldNew(pdf, rows):
     """Does the new reference change any verdict, and does it hold an oil steadier across sessions?"""
     scored = [r for r in rows if isScored(r)]
     figure = pyplot.figure(figsize=(8.27, 11.69))
-    figure.suptitle("Rv against Rv\u2032 \u2014 what the reference band actually buys",
+    figure.suptitle("REJECTED CANDIDATE \u00b7 Rv against Rv\u2032 \u2014 what the reference band buys",
                     fontsize=13, fontweight="bold", y=0.975)
 
     axes = figure.add_axes([0.115, 0.560, 0.845, 0.330])
@@ -861,6 +965,178 @@ def pageRvOldNew(pdf, rows):
     pyplot.close(figure)
 
 
+def pageDifferenceMetric(pdf, rows):
+    """`Rv − Q%′` — Edwin's "use the Soret as well", in the one form that survives testing.
+
+    ⛔⛔ SIX ALGEBRAIC FORMS WERE TRIED AND THIS ONE WON ON THE CORPUS IT IS QUOTED AGAINST. That is the
+    same setup that made the blue-flank reference look excellent on 115 runs before it failed on the first
+    new sample (§12.3). It is a CANDIDATE, and the σ_fill run is the corpus it was not chosen on."""
+    scored = [r for r in rows if isScored(r)]
+    errorsRv, cutRv, _, _ = bestCut(rows, "rvOld")
+    errorsD, cutD, greenD, brownD = bestCut(rows, "rvMinusQ")
+
+    figure = pyplot.figure(figsize=(8.27, 11.69))
+    figure.suptitle("SHELVED CANDIDATE \u00b7 Rv \u2212 Q%\u2032 \u2014 A_Soret as a CORRECTION, not the reference",
+                    fontsize=12.5, fontweight="bold", y=0.975)
+    figure.text(0.5, 0.936,
+                "Rv\u2032\u2032 = 100\u00b7[ (A624 \u2212 Av)/(A_Q \u2212 Av) \u2212 "
+                "(A_Q \u2212 Av)/(A_Soret \u2212 Av) ]\n"
+                "The first term IS Rv; the second IS Q%, valley-corrected. They correlate at r = \u22120.64, "
+                "so the difference cancels what they share.",
+                ha="center", fontsize=8.2, style="italic", linespacing=1.5)
+
+    axes = figure.add_axes([0.115, 0.560, 0.845, 0.330])
+    for row in rows:
+        axes.plot(row["rvOld"], row["rvMinusQ"], SOLVENTMARK[row["solvent"]], color=row["color"],
+                  ms=6, markeredgecolor="black", markeredgewidth=0.4)
+    axes.axvline(cutRv, color="crimson", lw=1.3, ls="--")
+    axes.axhline(cutD, color="crimson", lw=1.3, ls="--")
+    axes.set_xlabel("Rv   (best cut %.0f, %d errors of %d)" % (cutRv, errorsRv, len(scored)), fontsize=9.5)
+    # ⚠ the literal per-cent sign must be doubled: this string goes through the % operator
+    axes.set_ylabel("Rv \u2212 Q%%\u2032   (best cut %.0f, %d errors)" % (cutD, errorsD), fontsize=9.5)
+    axes.grid(alpha=0.25)
+    axes.tick_params(labelsize=8)
+    figure.text(0.115, 0.916, "1  \u00b7  every run, both quantities", fontsize=10.5, fontweight="bold")
+    figure.text(0.115, 0.903,
+                "Corridor %+.1f \u2192 %+.1f.  Nothing crosses a quadrant, so no VERDICT changes \u2014 "
+                "what changes is the margin." % (min(numpy.array([r["rvOld"] for r in scored if r["class"] == "green"])) -
+                    max(numpy.array([r["rvOld"] for r in scored if r["class"] == "brown"])),
+                    greenD.min() - brownD.max()),
+                fontsize=8.2, color="#444444", va="top")
+
+    # ---- what it is actually FOR: the fill spread
+    axes = figure.add_axes([0.115, 0.165, 0.845, 0.300])
+    fills = {}
+    for row in rows:
+        if row["solvent"] == "sunflower" and not row.get("provisionalOil"):
+            fills.setdefault(row["oil"], {}).setdefault(sessionOf(row), []).append(row)
+    labels, spreadRv, spreadD = [], [], []
+    for oil, sessions in sorted(fills.items()):
+        if len(sessions) < 2:
+            continue
+        means = lambda key: numpy.array([numpy.mean([r[key] for r in v]) for v in sessions.values()])
+        labels.append("%s\n%d fills" % (oil[:12], len(sessions)))
+        spreadRv.append(float(means("rvOld").std(ddof=1)))
+        spreadD.append(float(means("rvMinusQ").std(ddof=1)))
+    positions = numpy.arange(len(labels))
+    axes.bar(positions - 0.19, spreadRv, 0.36, color="#b0b0b0", edgecolor="black", lw=0.5, label="Rv")
+    axes.bar(positions + 0.19, spreadD, 0.36, color="#1565c0", edgecolor="black", lw=0.5,
+             label="Rv \u2212 Q%\u2032")
+    axes.set_xticks(positions)
+    axes.set_xticklabels(labels, fontsize=8)
+    axes.set_ylabel("\u03c3_fill  (sd of the fill means)", fontsize=9.5)
+    axes.grid(axis="y", alpha=0.25)
+    axes.tick_params(labelsize=8)
+    axes.legend(fontsize=8.5, framealpha=0.95)
+    figure.text(0.115, 0.492, "2  \u00b7  the problem it was meant to solve \u2014 fill-to-fill scatter",
+                fontsize=10.5, fontweight="bold")
+    figure.text(0.115, 0.479,
+                "Only oils with 2+ fills can carry this. Mean \u03c3_fill %.2f \u2192 %.2f."
+                % (numpy.mean(spreadRv), numpy.mean(spreadD)),
+                fontsize=8.2, color="#444444", va="top")
+
+    figure.text(0.115, 0.118,
+                "[!]  SHELVED 2026-08-27 \u2014 Edwin: \u201cdoes not change the problem\u201d. "
+                "Kept rendered as the record (SPEC_red_ratio_metric \u00a712.7).\n"
+                "[!]  A CANDIDATE, NOT A DECISION. Six algebraic forms were tried; this one won ON THE "
+                "CORPUS IT IS QUOTED AGAINST \u2014 the\n"
+                "same setup that made the blue-flank reference look excellent on 115 runs before it failed "
+                "on the first new sample.\n"
+                "[!]  It cannot fix what actually blocks the programme. Esterer fills B and D differ by "
+                "9 % in A624 with A_Q identical to\n"
+                "0.03 % \u2014 no Soret term touches that, because it is the measured band itself, not a "
+                "dose or normalisation error.\n"
+                "[!]  And it costs Rv's best property: Rv IS the height of the 624 band on the "
+                "Rv-native plot.\n"
+                "A difference of two ratios cannot be drawn at all.",
+                fontsize=8, color="#a03000", va="top", linespacing=1.5)
+    pdf.savefig(figure)
+    pyplot.close(figure)
+
+
+def dayDriftNote(rows):
+    """⭐⭐ THE PER-DAY VIEW'S OWN VERDICT ON THE CANDIDATE, in units the two metrics share.
+
+    Rv - Q%' has a slightly WIDER scale than Rv (slope 1.08), so no absolute spread can be compared
+    between them directly. Everything here is divided by that metric's own green-brown gap, which makes
+    the comparison scale-free: how much of the distance it has to work with does the drift eat?"""
+    sunflower = [r for r in rows if r["solvent"] == "sunflower"]
+    scored = [r for r in rows if isScored(r)]
+    parts = []
+    for key, name in (("rvOld", "Rv"), ("rvMinusQ", "Rv \u2212 Q%\u2032")):
+        days = sorted({dateTag(sessionOf(r)) for r in sunflower
+                       if r["oil"] == "Lugitsch"})
+        walk = [numpy.mean([r[key] for r in sunflower
+                            if r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == d]) for d in days]
+        gap = (numpy.mean([r[key] for r in scored if r["class"] == "green"])
+               - numpy.mean([r[key] for r in scored if r["class"] == "brown"]))
+        parts.append("%s %.2f" % (name, (max(walk) - min(walk)) / gap))
+    return ("\nSHELVED 2026-08-27 \u2014 Edwin: \u201cdoes not change the problem\u201d; "
+            "SPEC_red_ratio_metric \u00a712.7.\n"
+            "DIVIDED BY ITS OWN GREEN\u2013BROWN GAP the one repeated oil drifts across the days by "
+            "%s \u2014 essentially\nUNCHANGED. The candidate's pooled \u03c3_fill win does not reach "
+            "the day-to-day drift, and Esterer still overlaps\nLugitsch inside 08-26 on both. It is a "
+            "CANDIDATE chosen on this same archive; read the rows, not the pooled number."
+            % ", ".join(parts))
+
+
+EXCLUSION_COST = {}      # oil -> (kept fills, sigma, fills with the set-aside, sigma)
+
+
+def exclusionCost(rv):
+    """⭐⭐ WHAT THE HAND EXCLUSIONS COST, recomputed every run rather than remembered.
+
+    ⛔ A fill removed after its value was seen is the most dangerous edit in this whole pipeline, and the
+    only defence is that its price stays visible. This re-reads the excluded reports -- they are two
+    files, so it is cheap -- and prints each affected oil's σ_fill both ways."""
+    import tempfile
+    import peak_ratio_archive as archive
+    extra = {}
+    with tempfile.TemporaryDirectory() as scratch:
+        for relative in sorted(EXCLUDED):
+            session = relative.split("/")[0]
+            if session not in TODAY:
+                continue
+            workflow = archive.workflowOf(os.path.join(archive.ARCHIVE, relative), scratch)
+            if workflow is None:
+                continue
+            trace = archive.despikedTrace(workflow)
+            if trace is None:
+                continue
+            nm, absorbance = trace
+            if nm[0] > 500.0 or nm[-1] < 627.5:
+                continue
+            band = lambda lo, hi: float(absorbance[(nm >= lo) & (nm <= hi)].mean())
+            valley = band(500.0, 560.0)
+            extra.setdefault(TODAY[session][0], {}).setdefault(session, []).append(
+                100.0 * (band(622.0, 627.0) - valley) / (band(565.0, 580.0) - valley))
+    # ⛔ ONLY A FILL SET ASIDE WHOLE COUNTS HERE. A single excluded RUN (a failed save, a spoiled test
+    # capture) leaves its fill standing with its other reads, so adding that run back as if it were an
+    # extra fill would invent a fill that never existed and overstate the cost several times over.
+    if not extra:
+        return
+    print("\n=== WHAT THE HAND EXCLUSIONS COST  (sigma_fill over sunflower fill means)")
+    for oil, sessions in sorted(extra.items()):
+        kept = {}
+        for row in rv:
+            if row["oil"] == oil and row["solvent"] == "sunflower" and not row.get("provisionalOil"):
+                kept.setdefault(sessionOf(row), []).append(row["rvOld"])
+        whole = {s: v for s, v in sessions.items() if s not in kept}
+        if not whole:
+            continue
+        without = [numpy.mean(v) for v in kept.values()]
+        with_ = without + [numpy.mean(v) for v in whole.values()]
+        if len(without) < 2:
+            continue
+        print("  %-10s %d fills kept  sigma %.2f   |   %d fills with the set-aside  sigma %.2f"
+              % (oil, len(without), numpy.std(without, ddof=1), len(with_),
+                 numpy.std(with_, ddof=1)))
+        print("             set aside: %s" % ", ".join(
+            "%s %.1f" % (s, numpy.mean(v)) for s, v in sorted(whole.items())))
+        EXCLUSION_COST[oil] = (len(without), numpy.std(without, ddof=1),
+                               len(with_), numpy.std(with_, ddof=1))
+
+
 def main():
     rows = paint(collect())
     green = [r["d2R"] for r in rows if isScored(r) and r["class"] == "green"]
@@ -883,13 +1159,29 @@ def main():
         hits = sum(1 for r in group if GRID[inside][r["d2"][inside].argmin()] > 576.0)
         print("  %-12s %2d of %2d" % (solvent, hits, len(group)))
 
+    # ⛔ the corpus and the cost of the hand exclusions are computed BEFORE anything is drawn: the
+    # sunflower page prints that cost, so it has to exist by the time the page is rendered.
+    rv = rvCorpus()
+    exclusionCost(rv)
     with PdfPages(OUT) as pdf:
         pageStrip(pdf, rows)
         pageCurves(pdf, rows)
         pageBySolvent(pdf, rows)
         pageSunflower(pdf, rows)
         pageByDay(pdf, rows)
-        rv = rvCorpus()
+        # ⭐ ORDER IS EDITORIAL: the LIVE metric first, every SHELVED candidate behind it. A rejected
+        # candidate sitting between the pages that get read is how a refuted number gets quoted.
+        pageDifferenceMetric(pdf, rv)
+        # ⭐ the candidate gets the SAME per-day view as the shipped metric, on its own fitted cut --
+        # the plot that divides the day out is where a fill-scatter claim has to hold up.
+        pageByDay(pdf, rv, key="rvMinusQ", cut=bestCut(rv, "rvMinusQ")[1],
+                  label="Rv − Q%′",
+                  title="SHELVED CANDIDATE · Rv − Q%′ in sunflower, one row per day",
+                  blurb="Rv′′ = 100·[ (A624 − Av)/(A_Q − Av) − "
+                        "(A_Q − Av)/(A_Soret − Av) ].   Same layout as the Rv page, so the two "
+                        "read against each other.\n"
+                        "Red dashed = the cut FITTED on this archive, not a pre-registered constant.",
+                  caveat=dayDriftNote(rv))
         pageRvNewStrip(pdf, rv, len(rows))
         pageRvOldNew(pdf, rv)
         pdf.infodict()["Title"] = "d2R over every archived run reaching 632 nm"

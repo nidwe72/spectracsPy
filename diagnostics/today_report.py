@@ -65,7 +65,21 @@ LATER_SERIES = [("20260826Lugitsch", "A"), ("20260826LugitschB", "B"), ("2026082
 KEPT_RUN_COUNT = 2
 # ⚠ 20260826EstererC is deliberately ABSENT: its oil attribution is unconfirmed (it was measured as
 # Lugitsch and reassigned), and an unverified label must not enter a stated statistic.
-LATER_OTHERS = ["20260826Esterer", "20260826EstererB", "20260826EstererD", "20260826Stekko"]
+# ⭐⭐ 20260826EstererE is the FIRST fill of the two-stage recipe: 1 ml sunflower + the capillary,
+# which EMPTIES ITSELF in a short time — no arm-swing at all — then ~45 s of FAST rotation at the
+# bottom while the mixture is still concentrated, then up to 4 ml and ~60 s more. The 40 slow
+# inversions are gone.
+# ⭐ TWO UNCONTROLLED OPERATOR VARIABLES LEAVE THE PROTOCOL AT ONCE: how hard the capillary was
+# swung, and how vigorously the vial was inverted. Neither is measurable after the fact, and both
+# were free to differ between fills. That is a σ_fill argument, not an Rv argument.
+# ⛔ On Rv it changed nothing: A_Soret rose 10.2 % and A_valley fell 6.9 % against fill B — real,
+# measurable, better dissolution — while Rv moved 1.7, i.e. one run of noise. The recipe works;
+# Rv is blind to it, because both of its bands held still.
+# ⛔ 20260826EstererD set aside 2026-08-27 (Edwin): the only fill made with the hard arm-centrifuge
+# extrusion, a step the two-stage recipe has retired. ⚠ Removing it also removes the ONLY
+# Esterer/Lugitsch single-fill overlap in the archive — see the all-runs report, which prints
+# σ_fill both ways so that consequence cannot go unnoticed.
+LATER_OTHERS = ["20260826Esterer", "20260826EstererB", "20260826EstererE", "20260826Stekko"]
 LATER_SKIPPED = {"20260826Lugitsch/002": "byte-identical copy of 001",
                  "20260826Lugitsch/004": "set aside by hand, pending discussion",
                  # ⛔ a deliberately SPOILED sample, run only to exercise the clearing-4.0 read
@@ -411,9 +425,15 @@ def fillStatistics(later):
 
 
 def crossOilTurbidity(later, scratch):
-    """r between Rv and A_valley over EVERY oil measured that evening, not just the one on this page."""
+    """r between Rv and A_valley over EVERY oil measured that evening, not just the one on this page.
+
+    ⭐ Also returns the per-fill means of the OTHER oils, because the strongest single refutation of the
+    turbidity story is not the pooled r -- it is two fills of ONE oil that sit at the SAME valley and
+    read far apart. That pair has to be FOUND in the data, not typed in: it was two fills when first
+    written and is four now, and a hardcoded "15.4 Rv apart" would still be claiming the old pair."""
     valleys = [row["valley"] for row in later.values()]
     values = [row["rv"] for row in later.values()]
+    fills = {}
     for series in LATER_OTHERS:
         for run in keptReads(series, os.path.join(archive.ARCHIVE, series)):
             workflow = archive.workflowOf(
@@ -426,9 +446,33 @@ def crossOilTurbidity(later, scratch):
             red = bandMean(nm, absorbance, 622.0, 627.0)
             valleys.append(valley)
             values.append(100.0 * (red - valley) / (q - valley))
+            fills.setdefault(series, []).append((valley, values[-1]))
     if len(valleys) < 4:
-        return float("nan"), len(valleys)
-    return float(numpy.corrcoef(valleys, values)[0, 1]), len(valleys)
+        return float("nan"), len(valleys), ""
+    return float(numpy.corrcoef(valleys, values)[0, 1]), len(valleys), matchedValleyPair(fills)
+
+
+def matchedValleyPair(fills, oil="Esterer"):
+    """The two fills of one oil whose A_valley is closest, and how far apart their Rv is.
+
+    ⛔ A pooled correlation cannot refute turbidity, because oils have opposite-signed slopes and
+    pooling them gives ~0 by construction. What refutes it is a MATCHED pair: same turbidity, different
+    reading. This picks that pair out of whatever fills exist today."""
+    means = {s: (float(numpy.mean([v for v, _ in rows])), float(numpy.mean([r for _, r in rows])))
+             for s, rows in fills.items() if oil in s}
+    if len(means) < 2:
+        return ""
+    best = None
+    for a in means:
+        for b in means:
+            if a < b:
+                gap = abs(means[a][0] - means[b][0])
+                if best is None or gap < best[0]:
+                    best = (gap, a, b)
+    _, a, b = best
+    return ("%s's closest-matched fills (%d on record) sit at A_valley %.3f vs %.3f \u2014 "
+            "%.1f Rv apart" % (oil, len(means), means[a][0], means[b][0],
+                               abs(means[a][1] - means[b][1])))
 
 
 def pageRvNative(pdf, rows, later=None, cross=None):
@@ -514,16 +558,17 @@ def pageRvNative(pdf, rows, later=None, cross=None):
                     "fills (%s).\n"
                     "     [!] But the %d fills span %.1f Rv while repeating to sd %.1f WITHIN a fill — "
                     "the variance is in the PREPARATION.\n"
-                    "     Not turbidity: over all %d runs of that evening Rv vs A_valley is r = %+.2f, and "
-                    "the two Esterer fills sit at the same\n"
-                    "     valley 15.4 Rv apart. Until a sigma_fill exists, neither this step nor the "
+                    "     Not turbidity: over all %d runs of that evening Rv vs A_valley is r = %+.2f,\n"
+                    "     and %s.\n"
+                    "     Until a sigma_fill exists, neither this step nor the "
                     "oil-to-oil gap has a yardstick."
                     % (LATER[1], numpy.mean([r["rv"] for r in later.values()]),
                        numpy.mean([rows[("Lugitsch", r)]["rv"] for r in RUNS]),
                        len({r["fill"] for r in later.values()}),
                        ", ".join(sorted({r["fill"] for r in later.values()})),
                        fillStatistics(later)[2], fillStatistics(later)[0], fillStatistics(later)[1],
-                       (cross or (float("nan"), 0))[1], (cross or (float("nan"), 0))[0]),
+                       (cross or (float("nan"), 0, ""))[1], (cross or (float("nan"), 0, ""))[0],
+                       (cross or (float("nan"), 0, ""))[2] or "no matched pair yet"),
                     fontsize=8, color="#a03000", linespacing=1.5, va="top")
 
     axes = figure.add_axes(boxes[1])
