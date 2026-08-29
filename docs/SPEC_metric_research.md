@@ -3644,6 +3644,14 @@ The same-jar fills read `pq` = (A_Q − Av)/(A_Soret − Av) **below** the two-j
 | F 04:50 | 0.1536 | 0.1486 | 0.1536 | 0.0943 |
 | Billa 05:24 | 0.2057 | 0.2349 | 0.2402 | 0.1695 |
 
+> ⭐⭐ **AND THE INSTRUMENT IS EXONERATED — 2026-08-29, after Edwin asked "temperature of the camera?"**
+> A sensor or lamp drift moves BOTH legs of `A = −log10(S/R)`. Across this series `R_valley` is flat
+> (149.91 → 152.73, r = +0.25) while `S_valley` falls 10.3 % (r = −0.79). ⛔ And the 2026-08-26 two-jar
+> session is the mirror image — the lamp fell **11 %** there and the sample followed it. **Two nights, one
+> symptom, two mechanisms.** `SPEC_capture_quality.md` **§16.38** is the full write-up, including the
+> leading candidate: **solvent temperature**, whose effect §16.36 already measured and which is **logged
+> nowhere**.
+
 **1 · READ DOWN A COLUMN — the drift is in the SAMPLES.** With the reference held fixed, D → E → F still
 climbs **+0.022**, against +0.027 with each fill's own reference. ⇒ **~80 % of the session drift is in the
 fills**, three independent fills of one oil made progressively later in one night. ⛔ `pq` is dose-free AND

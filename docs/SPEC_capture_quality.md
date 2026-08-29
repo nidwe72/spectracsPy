@@ -15347,3 +15347,102 @@ to protect it. Then the matched IPA arm, and a dark-rest arm (§16.36.2's revers
 ⚠ **This also prices `dQ100`**: the same dose moved it **+13.8 units — eleven fill-repeatabilities** — because
 it leans on the 624 band, the fastest-bleaching feature there is. See
 [`SPEC_metric_research.md`](SPEC_metric_research.md) §14.
+
+---
+
+## ⭐⭐⭐ 16.38 THE UNLOGGED VARIABLE — the largest systematic in the 2026-08-29 data is one nobody records  *(Edwin's session, analysis 2026-08-29)*
+
+Six fills across 2½ hours, one recipe, and **the scatter floor per unit pigment more than doubles, dead
+linear against the clock:**
+
+```
+F/c   ( = F / (A_Soret - F), dirt per unit pigment, dose-free )
+
+    0 min   0.072        112 min   0.136
+   43 min   0.099        144 min   0.167
+   78 min   0.117
+
+   r = +0.981 in TIME.  An exponential fit degenerates to the straight line.
+```
+
+⛔ It runs **straight through the Esterer → Billa Clever change**, so it is not the oil. ⭐ And `c` is
+roughly constant across the Esterer fills (0.787 / 0.824 / 0.811), so it is not the dose.
+
+### ⭐⭐ 16.38.1 THE INSTRUMENT IS EXONERATED — by its own reference
+
+`A_valley = −log10(S_valley / R_valley)`. A sensor or lamp drift moves **both** legs; the detector does not
+know which jar is in the beam. Across the 2026-08-29 same-jar series:
+
+```
+R_valley   149.91 -> 152.73    +1.9 %    trend r = +0.25    flat
+S_valley   137.78 -> 123.56   -10.3 %    trend r = -0.79    falling
+reference peak                 241 - 245 DN, no trend
+```
+
+⇒ **The sample leg falls while the blank holds still.** Edwin proposed camera temperature; this refutes it,
+and the cross-check below refutes it twice.
+
+### ⛔⛔ 16.38.2 THE 2026-08-26 CROSS-CHECK — the SAME SYMPTOM, a DIFFERENT CAUSE
+
+The 08-26 session was **two-jar**, nine hours, three oils. It also shows `A_valley` rising. But:
+
+| | reference leg | sample leg |
+|---|---|---|
+| **2026-08-26**, two-jar, 9 h | **−11.0 %**, r = −0.87 · peak 237.2 → 228.0 DN | −7.1 % Esterer, −23.0 % Lugitsch |
+| **2026-08-29**, same-jar, 2.5 h | **+1.9 %**, r = +0.25 · peak flat | −10.3 %, r = −0.79 |
+
+⭐⭐ **On 08-26 the LAMP fell 11 % and the sample followed it** — that is §0a's finding, and it is why "one
+reference per fill" is non-negotiable. **On 08-29 the lamp held and the sample fell anyway.**
+
+⇒ ⛔ **Two nights, one symptom, two mechanisms.** Any statement of the form *"`A_valley` drifts across a
+session"* that does not say which night is describing two different things at once. ⚠ And the 08-26 σ_fill
+figures carry a lamp term that one-reference-per-fill only partly removes: the reference is fresh per fill,
+but within a fill the reference and the sample are still minutes apart on a lamp falling 11 % over an
+evening.
+
+### ⭐⭐⭐ 16.38.3 THE LEADING CANDIDATE — solvent temperature, and the mechanism is already in this spec
+
+Edwin ruled out three candidates from the bench, and **the linearity supports every rejection** — none of
+them would give a clean straight line against the clock:
+
+| candidate | Edwin |
+|---|---|
+| the solvent bottle, drawn further down | improbable |
+| the jar accumulating residue | ⛔ **a fresh clean jar every fill** |
+| the preparation degrading | improbable — the settled recipe is the most controlled yet |
+
+⇒ What is left that varies **linearly with clock time** on a session running 03:30 → 06:00 is **the room**.
+
+⭐ And this system's temperature response is the best-measured effect in this document. §16.36:
+
+> **Heat CLEARS the fill (reversibly) and the jar re-clouds on cooling.** The cloud point sits between
+> **35 and 40 °C**; a 50 °C bath clears a fill in ~2 minutes where the lamp alone takes ~17.
+
+**The sign is right.** A colder solvent disperses the pumpkin oil less well and holds more of it as
+undissolved scatter — which is precisely what `F` measures. Sunflower's viscosity climbs steeply as it
+cools, so a 05:30 fill would disperse worse than an 03:30 fill from the same bottle by the same method.
+
+⭐ **And it explains why the reference is flat.** Pure sunflower has almost nothing to precipitate, so its
+own scatter barely moves with temperature. Only a fill — where pumpkin oil must stay dispersed *in* it —
+feels the change. ⇒ the one hypothesis that predicts a falling sample leg AND a flat blank.
+
+⛔⛔ **AND IT IS RECORDED NOWHERE.** Not in the report header, not in `monitorRecord`, not in the archive.
+§16.36 measured the temperature effect deliberately with a water bath and then **the variable went
+untracked**, so every multi-hour session since has been running an uncontrolled temperature experiment
+underneath every fill.
+
+### 16.38.4 How to test it — a thermometer and a pen
+
+1. ⭐ **Log the solvent/room temperature with every fill.** One number per fill. If `F/c` tracks it across
+   the next session, that is the answer. This costs nothing and should happen whether or not it is chased.
+2. ⭐⭐ **The one-evening version:** two fills at the start and two at the end, with the late pair's solvent
+   **warmed back to the early pair's temperature** before dosing. If the ramp disappears it is temperature;
+   if it survives it is the clock and something else.
+
+⚠ **What this does NOT claim.** One session, six fills, and a hypothesis chosen after the rejections rather
+than before. The linear fit is over five distinct fills; `r` = 0.981 on five points is not strong evidence
+by itself. What makes it worth acting on is that the mechanism is **already measured in §16.36**, the sign
+is right, and it is the only candidate that predicts a flat blank alongside a falling sample.
+
+⇒ Until it is logged, **`F`, `A_valley` and every σ_fill derived from a multi-hour session carry an unknown
+temperature term.**
