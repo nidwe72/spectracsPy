@@ -15484,17 +15484,53 @@ across 2½ hours of an uncontrolled ramp. The miller's single measurement is cle
 against a constant derived from dirty ones. ⇒ **the lab-side fix matters even though the field side does
 not need it.**
 
-**2 · ⛔⛔ THE TRACKER COMPARES ACROSS MONTHS, AND THAT IS WHERE AMBIENT REALLY MOVES.** One measurement in
-a cold mill in January against one in July is not a 2½-hour drift — it is a **15 °C** difference. For the
-**verdict** that is irrelevant: the margins are 25+ units. For `SPEC_history_tracker.md`, which needs
-4–6 unit precision, it is the whole problem.
+**2 · THE TRACKER COMPARES ACROSS MONTHS.** ⛔ **An earlier draft of this paragraph said "a cold mill in
+January against one in July — a 15 °C difference". THAT IS THE WRONG PRODUCT** *(corrected 2026-08-29 by
+Edwin)*: the spectrometer is **sold for 22–28 °C, for a bureau or office, explicitly NOT for the mill
+floor** (§16.38.6). So the range is **6 °C, not 15**, and the argument has to be re-scaled rather than
+quoted.
 
-⇒ ⭐ **If the temperature hypothesis holds, the SHIPPED instrument must record temperature with every
-measurement** — not to control it, but so the tracker can refuse or correct a comparison made across a
-large one. That is a product requirement, it is cheap designed in now and expensive retrofitted, and it
-belongs beside `solvent`, `prepProtocol` and `referencePeakDn` in `ROADMAP.md` §0b's header list.
+⚠ **Re-scaled — and it is an inference, not a measurement, because the temperature was never logged.** A
+room between 03:30 and 06:00 plausibly drops 2–4 °C, and `RvLin` moved **5.9 units** across that window
+⇒ roughly **1.5–3 units per °C**. Over the spec'd 6 °C that is **9–18 units**:
+
+| | over 22–28 °C |
+|---|---|
+| **the verdict** — 45-unit corridor | ✅ **fine**, wide margin left |
+| **the tracker** — needs 4–6 unit precision | ⛔ **still a problem**, roughly halved but not removed |
+
+⇒ ⭐ **The shipped instrument must still record temperature with every measurement** — not to control it,
+but so the tracker can refuse or correct a comparison across a large one. Cheap designed in now, expensive
+retrofitted, and it belongs beside `solvent`, `prepProtocol` and `referencePeakDn` in `ROADMAP.md` §0b's
+header list.
 
 ⚠ **And the distinction is worth keeping straight in the documents**: the *recipe* (capillary, volume,
 vortex, box, 6 min) is what the miller does and ships; the *session protocol* (alternating oils, the
 bracket, the reference runs, the running order) exists only to stop OUR comparisons being confounded and
 never ships. They had been muddled together.
+
+### ⭐⭐ 16.38.6 THE OPERATING RANGE IS A SPEC'D NUMBER — and a specified range is a CONTROL, not only a constraint  *(Edwin, 2026-08-29)*
+
+> **The instrument is sold to be used at usual room temperature, ~22–28 °C, in a bureau or office —
+> explicitly NOT on the mill floor.**
+
+⛔ **This appears nowhere else in the documentation**, and it is a product claim that three arguments in
+this section depend on. Recorded here so they can be scaled against it instead of against "any mill, any
+season".
+
+⭐ **It turns an unknown ambient into a bounded, guardable variable**, which is a much better position:
+
+| | |
+|---|---|
+| **a temperature guard** | warn or refuse outside 22–28 °C — the same family as §16.23.10's DN guard, and the same shape: *warn, never block*, unless the excursion is gross |
+| **a tracker rule** | refuse or flag a comparison between two measurements more than *n* °C apart. ⛔ `n` cannot be set until the sensitivity is measured — §16.38.4's thermometer is the prerequisite |
+| **calibration scope** | any correction only ever has to span **6 °C**, not 40. Tractable if it comes to that |
+
+⭐⭐ **AND THE 2026-08-29 SESSION IS CLOSE TO A WORST CASE, NOT A TYPICAL ONE.** It ran 03:30–06:00 in a
+room that was presumably not being heated, at the coldest part of the night. A miller measures during
+working hours in a heated office, where day-to-day variation is far smaller than an overnight swing.
+
+⇒ The drift measured in §16.38 is **larger than the product will normally see** — which is the first thing
+in this thread that makes the tracker look easier rather than harder. ⚠ It does not make it go away: the
+tracker's precision requirement is 4–6 units and the estimated sensitivity is 1.5–3 units per °C, so even
+a 2 °C office swing is inside the budget it needs.
