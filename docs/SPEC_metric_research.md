@@ -3188,3 +3188,344 @@ amounts of the absorber. ⇒ full record, algebra and both corpora in `SPEC_red_
   `ROADMAP.md` item 5.
 - ⛔ **The margin (3.1 units) is smaller than the within-fill scatter (5.7).** The corpus separates; a
   borderline oil has no safety margin. Two gauge classes, no *borderline* band, until σ_fill is measured.
+
+---
+
+## ⭐⭐ 16 · THE BASELINE FAMILY — five ways to reference the 624 nm band, and what the archive says about each  *(Edwin 2026-08-29, from a screenshot of two fills; analysis only, no rig time)*
+
+> Edwin, looking at the `Absorption (bands)` plots of `20260828EstererB` and `EstererC` side by side:
+> *"the red peak on one run has been shifted more below `A_valley`"* — and then, when the obvious fix was
+> tried: *"i was thinking about some formula that takes into account `A_valley` and ALSO the minima. So
+> not simply change `A[500–560]` by `A[612–615]`. Something more advanced?"*
+>
+> Both readings were right, and the second one is the better metric.
+
+### 16.1 The observation that started it — and it is real in every oil
+
+Define the **dip** = `A[500–560] − min(A over 600–620 nm)`: how far the trough between the Q band and the
+624 nm band sits *below* the valley `Rv` uses to baseline them both.
+
+| oil | runs | corr(dip, `Rv`) |
+|---|--:|--:|
+| Esterer | 16 | **−0.891** |
+| Lugitsch | 11 | **−0.842** |
+| Stekko | 4 | **−0.939** |
+| Spar (both) | 6 | −0.275 |
+
+⭐ **Same sign in every oil.** And the two fills whose trough *inverts* — sits **above** the valley — are the
+archive's two high outliers: `20260826EstererD` (dip −0.019, `Rv` 107.4 against Esterer's 86.9) and
+`20260824Lugitsch` (−0.006 … −0.016, `Rv` 114.3 against Lugitsch's 105.4). `20260826Stekko/004` is the third
+negative one and also reads high for its oil. ⚠ **Part of that correlation is arithmetic**, since `dip` and
+`Rv`'s numerator share `A_valley` with opposite signs — which is exactly why it had to be cashed out rather
+than believed.
+
+### 16.2 The five forms
+
+```
+Av = A[500-560]      Aloc = A[612-615]      A_Q = A[565-580]      red = A[622-627]
+
+Rv      = 100 * (red - Av) / (A_Q - Av)                          the SHIPPED form
+RvTest  = 100 * (red - Aloc) / (A_Q - Av)                        red on its OWN anchor
+RvLin   = 100 * (red - B(624.5)) / (A_Q - B(572.5))              B = the line through (530,Av),(613.5,Aloc)
+RvCont  = 100 * A'[622-627] / A'[565-580]                        A' = A minus a fitted CONTINUUM
+R       = P2 / P1                                                §12, both halves locally anchored
+```
+
+⭐ **`RvCont` is Edwin's "something more advanced".** The continuum is one least-squares line over **every**
+pigment-free stretch — `472–500 ∪ 505–555 ∪ 588–604 nm`, the same windows §14.2 uses to define the floor
+`F` — subtracted from the whole spectrum before either band is measured. `A_valley` does not appear as a
+term because 505–555 is *inside the fit*: after subtraction the valley sits at ≈ 0 by construction, and both
+bands are measured above the **same** line.
+
+**Written out in full**, so neither can be reimplemented differently:
+
+```
+RvLin       Av   = mean A over 500-560 nm            window centre 530.0 nm
+            Aloc = mean A over 612-615 nm            window centre 613.5 nm
+            m    = (Aloc - Av) / (613.5 - 530.0)     = (Aloc - Av) / 83.5
+            B(l) = Av + m * (l - 530.0)
+            RvLin = 100 * (A[622-627] - B(624.5)) / (A[565-580] - B(572.5))
+
+            equivalently, with D = Aloc - Av:
+            RvLin = 100 * (red - Av - 1.131737*D) / (A_Q - Av - 0.508982*D)
+                                      ^^^^^^^^              ^^^^^^^^
+                                      94.5/83.5             42.5/83.5
+
+            ⭐ D = 0  =>  RvLin == Rv exactly. Rv is the special case where the trough
+              happens to sit at the valley's level.
+
+RvCont      W      = [472,500] u [505,555] u [588,604] nm
+            (a,b)  = argmin SUM over every GRID POINT li in W of  (A(li) - a*li - b)^2
+            A'(l)  = A(l) - (a*l + b)
+            RvCont = 100 * mean(A' over 622-627) / mean(A' over 565-580)
+
+            ⚠ ORDINARY LEAST SQUARES OVER POINTS, not over window means: on the 0.25 nm
+              grid the three windows carry 190 / 338 / 112 points, so 505-555 supplies
+              more than half the leverage. Averaging the windows first is a DIFFERENT
+              estimator and will not reproduce §16.3's numbers.
+            ⚠ NO subtraction term survives in the ratio -- the continuum has already put
+              the baseline at zero, and both bands are heights above the same line.
+```
+
+⛔ **`RvTest` is the incoherent corner and that is not a detail.** `Rv` anchors both halves on the valley;
+`R` anchors both locally; `RvTest` mixes them, so it is not scale-free with respect to a baseline tilt —
+merely *less* sensitive, with a residual of the opposite sign. The lever arms make it exact:
+
+| | numerator lever | denominator lever | moves per 0.01 A / 100 nm of tilt |
+|---|--:|--:|--:|
+| `Rv` | 624.5 − 530.0 = **94.5 nm** | 42.5 nm | **+5.1** |
+| `RvTest` | 624.5 − 613.5 = **11.0 nm** | 42.5 nm | **−1.5** |
+
+⭐⭐ **THE INVARIANCE TABLE — measured, not argued** (`20260828EstererB/001`, perturbing the whole spectrum):
+
+| added to A(λ) | `Rv` | `RvTest` | `RvLin` | `RvCont` |
+|---|--:|--:|--:|--:|
+| nothing | 95.00 | 98.35 | **97.14** | **116.25** |
+| +0.10 A flat | 95.00 | 98.35 | **97.14** | **116.25** |
+| tilt +0.02 A / 100 nm | **105.13** | **92.58** | **97.13** | **116.25** |
+| tilt −0.02 A / 100 nm | **82.96** | **105.21** | **97.14** | **116.25** |
+| both together | 105.13 | 92.58 | **97.13** | **116.25** |
+
+⇒ **Every form cancels a flat pedestal exactly.** `Rv` and `RvTest` are the only two that a TILT can move, in
+opposite directions. ⭐⭐ **`RvLin` and `RvCont` are exactly invariant to any AFFINE perturbation** — level and
+slope together — because each estimates the continuum from the spectrum itself and subtracts it.
+
+⛔ **So `RvLin` and `RvCont` differ in ESTIMATOR QUALITY, not in structure.** Both are affine-invariant; the
+difference is that `RvLin` fits the continuum from **two band means** while `RvCont` fits it by least squares
+over **640 grid points** across three windows. That is the whole of `RvLin`'s 2-error deficit in §16.3 — a
+two-point line is a noisy estimate of a line, not a wrong one. ⚠ Do not read `RvLin`'s worse score as a
+verdict on the two-anchor *idea*; it is a verdict on estimating a continuum from two numbers.
+
+⭐ And the relation between the two is an identity, not a correlation:
+
+```
+RvTest - Rv  ==  100 * (Av - Aloc) / (A_Q - Av)
+```
+
+i.e. **`RvTest` is `Rv` plus §16.1's dip, normalised by `Rv`'s own denominator** — checked to the printed
+digit on five runs. That is why the inverted-trough fills move by −20 and −30 while ordinary ones move by +3.
+
+### 16.3 ⭐⭐ SCORED ON EVERY LABELLED RUN — 124 runs, three solvents, both sides of the rebuild
+
+`diagnostics/red_anchor_ab.py`. The corpus, labels, exclusions and first-two-distinct-reads policy are
+`reference_band_scan`'s, i.e. the same ones the report pages use.
+
+**One shared cut across every solvent** — the property `Rv` was chosen for on 2026-08-25:
+
+| metric | cut | errors | corridor | Cohen's d | isopropanol | spirit | sunflower |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| `Rv` *(shipped)* | 52.5 | 1 | **−11.5** ⛔ | 2.86 | 1/88 | 0/4 | 0/32 |
+| `RvTest` | 48.4 | 4 | −8.6 ⛔ | 2.87 | 1/88 | 1/4 | 2/32 |
+| `RvLin` | 48.7 | 2 | −5.2 ⛔ | 2.98 | 0/88 | 1/4 | 1/32 |
+| **`RvCont`** | 65.0 | **0** | **+5.1** ✅ | **3.51** | **0/88** | **0/4** | **0/32** |
+| **`R`** *(§12)* | 51.2 | **0** | **+5.9** ✅ | **3.53** | **0/88** | **0/4** | **0/32** |
+
+⚠ **THE SHIPPED METRIC'S CORRIDOR IS NEGATIVE OVER THE WHOLE ARCHIVE — and the phrase "green and brown
+overlap" OVERSTATES IT.** ⛔ Corrected 2026-08-29, in the same session that first wrote it. The corridor is a
+min-versus-max statistic, so **one run sets it**:
+
+```
+lowest greens    39.5 (20270729B/002)   54.1   54.7   58.1
+highest browns   51.0 (20260727C)       50.1   46.6   46.4
+corridor = 39.5 - 51.0 = -11.5
+WITHOUT 20270729B/002:  54.1 - 51.0 = +3.1     and greens below the top brown: 1 of 82
+```
+
+⇒ **`Rv` has ONE run in the overlap, not a mixed zone.** It is `20270729B/002`, already named in ROADMAP
+item 1's phase P1 as *"the one archive run `Rv` misclassifies"*. The corridor column below is still the right
+statistic to compare candidates on — it is what a threshold has to clear — but it must not be read as
+"the classes are interleaved". They are not.
+
+**Per solvent, each cut fitted on that solvent** (diagnostic only — a per-solvent best cut is not a threshold):
+
+| solvent | n | `Rv` | `RvTest` | `RvLin` | `RvCont` | `R` |
+|---|--:|--:|--:|--:|--:|--:|
+| isopropanol · errors | 88 | 1 | 0 | 0 | **0** | 0 |
+| isopropanol · corridor | | −11.5 | +4.8 | +6.5 | **+18.0** | +6.2 |
+| sunflower · errors | 32 | 0 | 0 | 0 | 0 | 0 |
+| sunflower · corridor | | +27.7 | +20.1 | +21.0 | **+25.7** | +26.5 |
+| sunflower · d | | 4.31 | 6.21 | 5.35 | **6.27** | 5.47 |
+
+⭐ **`RvCont` has the widest isopropanol corridor by a factor of three** (+18.0 against the next best +6.5),
+on the 88-run corpus M9 would be pre-registered against.
+
+⭐ **It also fixes the one run `Rv` misclassifies** — `20270729B/002`, labelled green, `Rv` **39.5** against a
+cut of 52.5. ROADMAP item 1's phase P1 exists to pull that run's raw frames. Under a corrected baseline the
+whole overlap zone separates: the three lowest greens go 39.5 / 54.1 / 54.7 → 65.5 / 69.4 / 50.7 while the
+three highest browns go 51.0 / 50.1 / 46.6 → **34.5 / 34.4 / 40.5** — the browns fall much further.
+
+### ⛔⛔ 16.3a THE HOLD-OUT TEST — and it REVERSES §16.3
+
+Every cut in §16.3 is fitted on the runs it is then scored against. The cheap way to ask whether that
+matters is to fit the threshold on one solvent and apply it, untouched, to solvents the fit never saw.
+
+| metric | fit isopropanol (88) → test the other 36 | fit sunflower+spirit (36) → test 88 |
+|---|--:|--:|
+| **`Rv`** *(shipped)* | cut 52.5 → **0 / 36** ✅ | cut 59.3 → **5 / 88** |
+| **`R`** | cut 51.0 → **0 / 36** ✅ | cut 61.5 → **5 / 88** |
+| `RvCont` | cut 58.6 → 1 / 36 | cut 75.3 → 8 / 88 |
+| `RvLin` | cut 45.5 → 6 / 36 | cut 64.5 → 21 / 88 |
+| `RvTest` | cut 44.4 → 6 / 36 | cut 65.5 → **24 / 88** |
+
+⛔⛔ **OUT OF SAMPLE, `Rv` AND `R` WIN AND `RvCont` DOES NOT.** Its 0-errors-on-124 in §16.3 was bought by
+fitting the threshold on all 124. Fit it honestly and it is consistently, if narrowly, worse than the
+shipped metric in **both** directions.
+
+⭐ **The mechanism is visible in §16.3's own per-solvent cuts.** `RvCont`'s optimum moves 58.6 → 75.3 between
+isopropanol and sunflower (**spread 16.7**) against `Rv`'s 52.5 → 59.3 (**6.8**) and `R`'s 10.5. A wide
+corridor lets one *globally fitted* cut absorb that drift; a cut carried across from another solvent cannot.
+
+⚠ **A candidate explanation, offered as one:** affine invariance removes level and slope, but **a solvent
+change is not an affine perturbation** — §16.12.7h and the 2026-08-28 MCT arm both measured the 624 band
+changing *shape*, not just its baseline. Subtracting a fitted continuum removes a nuisance that is itself
+partly solvent-dependent, so the metric's SCALE moves even though its discrimination improves. ⛔ Not
+established; it predicts that `RvCont` should transfer worse the more the solvents differ optically, which
+the two directions above are consistent with and do not prove.
+
+### ⛔ 16.3b AND THE BROWN END, WHERE THE THRESHOLD ACTUALLY LIVES
+
+Within-session scatter over **every brown session with ≥ 2 runs** (11 sessions):
+
+| | `Rv` | `RvTest` | `RvLin` | `RvCont` | `R` |
+|---|--:|--:|--:|--:|--:|
+| pooled within-session sd | **4.23** | 4.57 | 4.62 | 5.02 | 5.35 |
+
+⭐ **`Rv` is the steadiest of the five on brown oils** — the class whose upper edge the threshold sits
+against. `20260824SparPremium` is the clearest single case: `Rv` reads 44.0 / 45.5 / 44.7 across its three
+runs while `RvCont` reads 58.3 / 53.5 / 62.4. ⚠ And it is not a bad read — run 003's `A_valley` is **0.163**
+against 0.086 and 0.108, i.e. genuinely the most turbid of the three. **The corrected forms track that
+turbidity where `Rv` does not**, which is the opposite of what a baseline correction is supposed to buy.
+
+### ⭐⭐ 16.3c THE SUNFLOWER-ONLY FRAMING — Edwin's, and it reverses §16.3a again
+
+> Edwin, 2026-08-29: *"under the assumption that we have found now a fine lab recipe (sunflower, vortex
+> mixer, ultrasonic bath) and concentrate only on today's runs, I would prefer `RvCont`."*
+
+⭐ **That framing is legitimate and it changes the answer**, because BOTH of §16.3a/b's objections turn out
+to be **isopropanol** effects.
+
+**Restricted to the 32 sunflower runs** — the solvent chosen on 2026-08-25:
+
+| metric | errors | corridor | Cohen's d |
+|---|--:|--:|--:|
+| `Rv` | 0 | **+27.7** | 4.31 |
+| `RvCont` | 0 | +25.7 | **6.27** |
+| `R` | 0 | +26.5 | 5.47 |
+| `RvTest` | 0 | +20.1 | 6.21 |
+
+**And the brown-end objection disappears.** Sunflower browns only, pooled within-session sd: `Rv` 3.30,
+`RvLin` 3.25, `RvCont` 3.50, `R` 3.03 — a tie. §16.3b's `Rv` advantage came from the isopropanol sessions.
+
+⛔⛔ **A TEMPORAL HOLD-OUT INSIDE SUNFLOWER REVERSES §16.3a.** Fit the cut on 08-22 + 08-24 (12 runs, both
+classes), apply it to 08-26 + 08-28 (20 runs):
+
+| | `Rv` | `RvTest` | `RvLin` | `RvCont` | `R` |
+|---|--:|--:|--:|--:|--:|
+| errors on the later sessions | **4 / 20** ⛔ | **0 / 20** | 2 / 20 | 2 / 20 | **0 / 20** |
+
+⇒ **`Rv` transfers best across SOLVENTS and worst across TIME.** Its threshold, fitted on the early sunflower
+sessions, calls **4 of 20** later green runs brown — which is §0a's day-to-day drift arriving as
+misclassifications rather than as a wobble.
+
+⚠ **The test is one-sided and must not be over-read: the later block is ALL GREEN**, so it measures false
+browns only, and a metric that simply reads high scores 0 by construction. n = 12 for the fit.
+
+⇒ **Under the sunflower-only framing the case for `Rv` is genuinely weak** — and the evidence picks `R` at
+least as readily as `RvCont` (better corridor, 0/20 on the temporal hold-out, tied browns; `RvCont` wins on
+Cohen's d alone).
+
+⛔⛔ **WHAT BLOCKS THE DECISION IS THE CORPUS, NOT THE ARITHMETIC. There are THREE brown fills in sunflower**
+(`20260822BillaClever`, `20260824SparPremium`, `20260824SparSBudget`), and every corridor and every threshold
+in the table above sits on their upper edge. ⇒ **Two to three fills each of the Spars and Billa Clever under
+the settled recipe — one evening — is what decides this**, and no further desk work can substitute for it.
+
+### 16.4 ⛔⛔ THE FINDING THAT MATTERS MOST — σ_fill and the corridor pull in OPPOSITE directions
+
+Sunflower fill-to-fill scatter, per oil:
+
+| oil | fills | `Rv` | `RvTest` | `RvLin` | `RvCont` | `R` |
+|---|--:|--:|--:|--:|--:|--:|
+| Esterer | 6 | 5.67 | 5.81 | 5.46 | 5.87 | 5.29 |
+| Lugitsch | 5 | 8.86 | **4.77** | 5.79 | 6.52 | 8.31 |
+| **pooled** | | 6.57 | **4.86** | 5.08 | 5.58 | 6.15 |
+
+Four continuum-window sets, ordered by how local the fit is:
+
+| windows | errors | corridor | σ_fill |
+|---|--:|--:|--:|
+| 472–500 + 505–555 + 588–604 *(`RvCont`)* | **0** | **+5.1** | 5.58 |
+| + the trough 611–616 | 0 | +4.1 | 5.58 |
+| 505–555 + 588–604 *(no blue)* | 2 | −6.1 | 5.23 |
+| **valley + trough only** | **5** | **−13.5** | **4.75** |
+
+⛔⛔ **THE VARIANTS WITH THE LOWEST σ_fill HAVE THE WORST CORRIDORS.** Valley+trough alone gives the best
+fill repeatability of anything tested — **4.75** — and the worst discrimination in the whole comparison.
+`RvTest` sits in the same corner (4.86, −8.6).
+
+⇒ **A locally fitted baseline lowers fill scatter partly by absorbing the class signal into the baseline.**
+The 600–620 nm region is **not pure background** — it carries oil information. This is the reason σ_fill must
+never be quoted on its own when a metric is being chosen, and it retro-explains `RvTest`'s split result
+rather than merely describing it.
+
+⭐ **And the blue window is load-bearing**: dropping 472–500 takes the corridor from +5.1 to −6.1. A
+continuum needs a long lever to be a continuum; two anchors are not one, which is `RvLin`'s ceiling as well.
+
+### 16.5 ⚠ What this does NOT establish
+
+1. ⛔ **Every cut here is FITTED on this corpus**, and the anchors were chosen after seeing the effect. That
+   is the exact shape of the mistake §7's M9 gate exists to stop. Adopting any of these needs the threshold
+   re-derived and the pre-registration re-run — the cost the ROADMAP already prices for a metric change.
+2. ⚠ **The isopropanol result IS out of sample** relative to where the idea came from (two sunflower fills),
+   which is the strongest single point in the family's favour and the reason this section exists at all.
+3. ⚠ **n = 4 for white spirit.** Its corridors (+36 … +70) are wide enough that the "best cut" is arbitrary
+   inside them. It must not drive any conclusion.
+4. ⛔ **The 588–604 and 612–615 windows sit near the 609 nm Bayer crossover**, which reads 1.6–2.2× the
+   613 nm value in every run on disk (`peak_ratio_archive`, `DOC_lamp_rebuild.md` §6). Every member of this
+   family except `Rv` is therefore MORE exposed to the lamp rebuild than the shipped metric is.
+5. ⛔ **The diffuser failure is untouched.** §6.7 of `SPEC_red_ratio_metric.md`: two of five blurred runs of
+   a green oil read brown with both guards passing. That is a property of any 624-band metric and none of
+   these fixes it.
+6. ⚠ **`EstererD` splits the family**, and the exclusion decision is therefore NOT baseline-independent:
+   `Rv` 107.4 and `RvCont` 113.2 both call it the highest Esterer fill; `RvTest` 80.2 and `RvLin` 88.9 call
+   it the **lowest**. Worth knowing before §12.8.4's set-aside is revisited.
+7. ⚠ **The browns are where any of this would break.** `20260824SparPremium`'s within-fill spread is 1.4
+   under `Rv` and **8.1–9.6** under all three corrections, driven by run 003: at a brown oil's low band
+   heights the baseline's own noise is a large fraction of a small numerator.
+
+### 16.6 Where it leaves the decision
+
+⛔⛔ **NOTHING IN THIS FAMILY BEATS `Rv` OUT OF SAMPLE — corrected 2026-08-29 after §16.3a.** An earlier
+draft of this section read *"`RvCont` and `R` are within noise of each other and both beat the shipped
+metric"*, on the strength of §16.3's fitted-cut table. **That conclusion does not survive the hold-out.**
+`Rv` and `R` both carry a threshold across solvents with **0 / 36** errors; `RvCont` gives 1 / 36 and 8 / 88,
+and it is also the *worst* of the three at the brown end (§16.3b). The paragraph is left visible rather than
+deleted, because reaching it was the whole point of doing the hold-out.
+
+⭐ **What survives is narrower and still worth having.** `RvCont` has the best STRUCTURAL argument in the
+family — affine-invariant by construction, a standard spectroscopic baseline correction, and built on windows
+§14.2 defined for an unrelated purpose. It has the widest isopropanol corridor by a factor of three, and it
+classifies `20270729B/002` correctly. **A good structural argument and good transfer are not the same
+property, and here they point at different metrics.** That is the durable lesson of this section.
+
+⛔ **`RvTest` is not recommended** — it is dominated by both, it is the incoherent corner, and it loses the
+cross-solvent portability that carried the 2026-08-25 decision. ⭐ **But `RvTest − Rv` is worth keeping as a
+DIAGNOSTIC**, because the identity in §16.2 makes it exactly the trough depth: it flags `20260826EstererD`
+(−29.6), `20260824Lugitsch` (−20.1) and `20260826Stekko/004` (−16.0) — the three fills already suspected on
+other grounds.
+
+⇒ ⛔ **Nothing is adopted here, and after §16.3a nothing is even recommended.** `Rv` keeps the verdict.
+⭐ `R` matches it on every test in this section and beats it on the whole-corpus corridor (+5.9 against
+−11.5), so §12's candidate is still live and was set aside on ergonomics rather than numbers — but it does
+not *beat* `Rv` where it counts, and swapping for a tie is not worth an M9 re-registration.
+
+⭐⭐ **The one thing this section changes about the programme.** `Rv`'s whole-archive corridor is **negative**
+(§16.3) and no baseline correction fixes that without costing transfer (§16.3a). ⇒ the overlap is **not a
+baseline artefact**, which is what four separate constructions were needed to establish. Whatever closes it
+is somewhere else — the diffuser (§6.7), the browns (§16.3b), or the labels.
+
+**Reproduce:**
+
+```
+PYTHONPATH="./diagnostics:.:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracs-plugins" \
+    ./venv/bin/python diagnostics/red_anchor_ab.py
+```

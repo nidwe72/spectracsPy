@@ -93,7 +93,24 @@ TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spa
          # arm-swing. It is the TEST of the dissolution story, and it REFUTED it: dissolution measurably
          # improved (A_Soret +10.2 %, A_valley -6.9 % against fill B) while Rv moved -1.7, i.e. one run's
          # noise. ⇒ a real preparation gain that Rv is blind to, because BOTH of its bands held still.
-         "20260826EstererE": ("Esterer", "green")}
+         "20260826EstererE": ("Esterer", "green"),
+         # ⛔⛔ NOT SUNFLOWER — MCT OIL. Present in this dict ONLY so that both of its runs pass through
+         # `take` and are ANNOUNCED as excluded; every run of it is in EXCLUDED below and it scores
+         # nothing. The label here is never read. See EXCLUDED for why it cannot be plotted beside the
+         # sunflower fills, and ⛔ note the report header WRONGLY records `solvent: SUNFLOWER_OIL`.
+         "20260828EstererA": ("Esterer", "green"),
+         # ⭐⭐ THE MATCHED CONTROL for the MCT fill above: same oil, same evening, same 6 ml volume,
+         # `c` matched to 1.3 %. It is the fill that made the MCT comparison interpretable at all.
+         # ⚠ Its preparation is NOT the MCT fill's — 180 s in the sonic bath and a 60 s stand in the
+         # jar, against 90 s and no stand. See PREP_PROTOCOL; the difference is why the FLOOR comparison
+         # between the two is confounded while the `Rv` comparison is not (a flat pedestal cancels in
+         # `Rv` by construction; adding this fill's measured MCT excess to it moves `Rv` by 0.0).
+         "20260828EstererB": ("Esterer", "green"),
+         # ⭐⭐ A SECOND INDEPENDENT FILL of B, same evening, same recipe, same volume — i.e. a σ_fill
+         # replicate under the NEW preparation, which is the first one the archive has. Both fills
+         # repeat to 1.1 `Rv` WITHIN themselves (the best on record) and differ by 8.8 BETWEEN
+         # themselves. ⇒ the vortex improved the measurement and left σ_fill alone.
+         "20260828EstererC": ("Esterer", "green")}
 
 # ⚠⚠ FILLS NOT MADE BY THE RECIPE THE REPORT HEADER CLAIMS. The plugin writes a hardcoded
 # `prepProtocol` string into every report, so a recipe change is INVISIBLE in the record until the
@@ -104,7 +121,16 @@ PREP_PROTOCOL = {
     "20260826EstererE": "two-stage: 1 ml + capillary, which EMPTIES ITSELF in the solvent \u2014 no "
                         "arm-swing;\n     then ~45 s of FAST rotation at the bottom while still "
                         "concentrated, then to 4 ml and ~60 s more.\n     The 40 slow inversions are "
-                        "gone. (header still records invert-40-after-capillaries-clear)"}
+                        "gone. (header still records invert-40-after-capillaries-clear)",
+    # ⭐ THE VORTEX RECIPE. The hand rotation of EstererE becomes a fixed-duration machine step, and
+    # the volume moves 4 ml -> 6 ml (SPEC_capture_quality.md §16.23.2b's volume rule, which puts the
+    # DN guard at ~48 instead of EstererE's 19.4).
+    "20260828EstererB": "1 ml + 1 capillary, 40 s VORTEX, up to 6 ml, 60 s vortex,\n"
+                        "     180 s ultrasonic bath, then 60 s standing in the jar.\n"
+                        "     (header still records invert-40-after-capillaries-clear)",
+    # ⚠ IDENTICAL TO B, deliberately — this is the replicate that measures σ_fill under that recipe.
+    "20260828EstererC": "identical to 20260828EstererB — the σ_fill replicate.\n"
+                        "     (header still records invert-40-after-capillaries-clear)"}
 
 # ⛔⛔ ATTRIBUTION UNCERTAIN — PLOTTED, LABELLED, BUT EXCLUDED FROM EVERY STATISTIC.
 # ⭐⭐ THE TRAP THIS EXISTS TO STOP. This fill was measured as Lugitsch, read Rv 86.8 — below Esterer's
@@ -144,7 +170,11 @@ SCORED = ("green", "brown")                    # the classes a cut may be judged
 # with n = 1 and no within-fill scatter at all. A save failure must not cost a measurement.
 # ⛔ It is a POLICY, not a filter buried in a loop: it changes what every number on these pages means, so
 # it is named here, shared with `reference_band_scan`, and announced on every run.
-LATE_RUN_SESSIONS = "20260826"
+# ⚠ A TUPLE, and deliberately not the prefix "202608": widening it that far would also catch the
+# 08-22 and 08-24 sessions, which keep all three of their reads, and silently shrink the corpus.
+# ⭐ Adding "20260828" changes NOTHING today — both 08-28 fills carry exactly two reads — but without
+# it a third read added later would be kept while 08-26's third read is dropped, i.e. two rules at once.
+LATE_RUN_SESSIONS = ("20260826", "20260828")
 KEPT_RUN_COUNT = 2
 
 # ⛔ HAND-EXCLUDED RUNS. Not deleted, not silently skipped: named here with a reason, announced on
@@ -166,7 +196,26 @@ EXCLUDED = {"20260826Lugitsch/004.pdf": "reads strange on the day — set aside 
             "20260826EstererD/001.pdf": "hard arm-swing extrusion, a retired procedure — set aside "
                                         "2026-08-27 pending a replicate",
             "20260826EstererD/002.pdf": "hard arm-swing extrusion, a retired procedure — set aside "
-                                        "2026-08-27 pending a replicate"}
+                                        "2026-08-27 pending a replicate",
+            # ⛔⛔ A DIFFERENT SOLVENT, not a different fill. `20260828EstererA` is pumpkin oil in
+            # **MCT** (medium-chain triglyceride), the only such fill in the archive. Edwin's call
+            # 2026-08-29: it must not appear on pages whose whole question is what the metric does
+            # within one solvent, and it cannot join the "sunflower" column without making that column
+            # a mixture.
+            # ⚠ THE HEADER DOES NOT SAY SO — `solvent` reads `SUNFLOWER_OIL` on both runs, because the
+            # plugin writes a hardcoded constant. The solvent was identified from the REFERENCE leg,
+            # which IS the pure solvent: normalised at 600 nm the two 08-28 references differ by
+            # RMS 0.054 over 440-630 nm (MCT is water-clear, sunflower is yellow and reads 1.10 at
+            # 440 nm against MCT's 1.25), while B and C agree to RMS 0.0086.
+            # ⭐ It is not being buried: `Rv` 70.1 / 64.1, fill mean 67.1, against 86.7 ± 6.6 for the
+            # six sunflower Esterer fills — -2.95 σ. That belongs in SPEC_red_ratio_metric, not here.
+            "20260828EstererA/001.pdf": "pumpkin oil in MCT, not sunflower — a different solvent",
+            "20260828EstererA/002.pdf": "pumpkin oil in MCT, not sunflower — a different solvent"}
+# ⛔ EXCLUDED FOR A REASON THAT IS NOT ABOUT THE FILL. These sessions are in `EXCLUDED` because they
+# are a DIFFERENT SOLVENT, so they are not candidate members of any sunflower σ_fill and must never be
+# priced as one (see `excludedCost`). They are still announced on every run like any other exclusion.
+OTHER_SOLVENT = {"20260828EstererA": "MCT"}
+
 SOLVENTMARK = {"isopropanol": "o", "sunflower": "s", "spirit": "^"}
 
 
@@ -281,12 +330,16 @@ def collect():
     for relative, original in duplicates:
         print("  [!] DUPLICATE dropped: %s is byte-identical to %s" % (relative, original))
     for relative in excluded:
-        print("  [!] EXCLUDED BY HAND: %s -- %s" % (relative, EXCLUDED[relative]))
+        session = relative.split("/")[0]
+        print("  [!] EXCLUDED BY HAND: %s -- %s%s"
+              % (relative, EXCLUDED[relative],
+                 "  [priced separately: %s, not a sunflower fill]" % OTHER_SOLVENT[session]
+                 if session in OTHER_SOLVENT else ""))
     for relative in sorted(set(EXCLUDED) - set(excluded)):
         print("  [!] EXCLUDED entry never matched a file: %s" % relative)
     if lateRuns:
-        print("  [!] NOT USED (%s policy: first %d DISTINCT reads per fill):" % (LATE_RUN_SESSIONS,
-                                                                                 KEPT_RUN_COUNT))
+        print("  [!] NOT USED (%s policy: first %d DISTINCT reads per fill):"
+              % ("/".join(LATE_RUN_SESSIONS), KEPT_RUN_COUNT))
         for entry in sorted(lateRuns):
             print("        %s" % entry)
     for session, note in sorted(PREP_PROTOCOL.items()):
@@ -511,6 +564,12 @@ def setAsideNote():
         return ""
     line = "\nSET ASIDE BY HAND, not plotted: " + "; ".join(
         sorted({relative.split("/")[0] for relative in EXCLUDED}))
+    # ⭐ A session set aside for its SOLVENT gets its OWN LINE. On a page whose whole question is what
+    # the metric does within one solvent, "excluded" and "excluded because it is a different solvent"
+    # are not the same statement — and ⛔ this cannot ride on the line above, which is already long
+    # enough to be clipped at the figure edge.
+    for session, solvent in sorted(OTHER_SOLVENT.items()):
+        line += "\n     %s is %s, a DIFFERENT SOLVENT \u2014 not a \u03c3_fill term." % (session, solvent)
     for oil, (n1, s1, n2, s2) in sorted(EXCLUSION_COST.items()):
         line += ("\n     COST: %s \u03c3_fill %.1f over the %d fills kept \u2014 %.1f over %d with "
                  "the set-aside fill back in." % (oil, s1, n1, s2, n2))
@@ -673,15 +732,27 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
     span = ceiling - floor
     figure = pyplot.figure(figsize=(8.27, 11.69))
     figure.suptitle(title, fontsize=13, fontweight="bold", y=0.975)
-    figure.text(0.5, 0.934,
+    # ⚠ `va="top"` so the block HANGS from a fixed line instead of growing upward into the title —
+    # a three-line blurb (RvTest carries one) overlapped the heading when the anchor was a baseline.
+    figure.text(0.5, 0.952,
                 blurb or
                 "The comparison with the day divided out. Same vertical scale in every row, so the rows\n"
                 "read against each other. Dotted = that day's Lugitsch mean, the one oil measured on all days.",
-                ha="center", fontsize=8.2, style="italic", linespacing=1.5)
+                ha="center", va="top", fontsize=8.2, style="italic", linespacing=1.5)
 
-    height = 0.195
+    # ⛔⛔ THE ROW GEOMETRY IS DERIVED, NOT TYPED. It used to be `0.700 - index * 0.245` with a fixed
+    # height, which fitted exactly three measurement days; the fourth (2026-08-28) put its row at
+    # y = -0.035 — half of it off the bottom of the page and the rest underneath the two footnote
+    # blocks, which are drawn at fixed figure coordinates. ⚠ This page is rendered for the shipped
+    # metric AND for every candidate, so one more day of measurements silently corrupted several pages
+    # at once. Rows now share whatever band is left between the blurb and the footnotes.
+    TOP, BOTTOM = 0.895, 0.215
+    pitch = (TOP - BOTTOM) / len(days)
+    # ⚠ 0.72, not 0.80: the gap between rows has to clear the x tick labels, which are two lines tall
+    # for any oil with a space in its name ("Billa\nClever"), plus the next row's title.
+    height = pitch * 0.72
     for index, day in enumerate(days):
-        axes = figure.add_axes([0.105, 0.700 - index * 0.245, 0.865, height])
+        axes = figure.add_axes([0.105, TOP - pitch * index - height, 0.865, height])
         today = [r for r in rows if dateTag(sessionOf(r)) == day]
         oils = sorted({r["oil"] for r in today})
         reference = [r[key] for r in today if r["oil"] == "Lugitsch"]
@@ -711,17 +782,23 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
                                                 if r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == day])
                            for day in days
                            if any(r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == day for r in rows))
-    figure.text(0.105, 0.160,
+    # ⚠ Anchored to BOTTOM, so the footnotes follow the rows instead of being overrun by them.
+    figure.text(0.105, BOTTOM - 0.025,
                 "[*]  Read ACROSS a row, not down the page: inside one day the rig is common to every oil,\n"
                 "so the gaps within a row are the ones that mean something.",
                 fontsize=8.2, va="top", linespacing=1.5)
-    figure.text(0.105, 0.108,
+    figure.text(0.105, BOTTOM - 0.075,
                 "[!]  08-22 carries only two oils and 08-24 never saw Esterer or Stekko, so no single row\n"
                 "ranks all six. Lugitsch's own line moves %s across the rows: the reference itself\n"
                 "is not fixed, which is why an oil measured on one day only cannot be placed against one\n"
                 "measured on another.%s%s"
+                # ⛔ SESSIONS, NOT FULL PATHS. Joining the six excluded FILENAMES ran off the right
+                # edge of the figure and was clipped mid-word, so the last exclusion in the list was
+                # invisible on the very page whose policy is that an exclusion must stay visible.
+                # The per-file reasons are announced on the console and live in `EXCLUDED`.
                 % (walk, caveat, "" if not EXCLUDED else
-                   "\nSET ASIDE BY HAND, not plotted: " + "; ".join(sorted(EXCLUDED))),
+                   "\nSET ASIDE BY HAND, not plotted: "
+                   + "; ".join(sorted({relative.split("/")[0] for relative in EXCLUDED}))),
                 fontsize=8.2, color="#a03000", va="top", linespacing=1.5)
     pdf.savefig(figure)
     pyplot.close(figure)
@@ -824,6 +901,18 @@ def rvCorpus():
         qBand = float(row["a"][(row["nm"] >= 565.0) & (row["nm"] <= 580.0)].mean())
         row["qPct"] = 100.0 * (qBand - valley) / (soret - valley)
         row["rvMinusQ"] = row["rvOld"] - row["qPct"]
+        # ⭐⭐ `RvTest` (Edwin, 2026-08-29, from the screenshot of two 08-28 fills): the 500-560 valley
+        # is 70 nm from the band it is being asked to baseline, and over 37 sunflower runs the depth of
+        # the 600-620 trough BELOW that valley tracks Rv at r = -0.89/-0.84/-0.94 (Esterer/Lugitsch/
+        # Stekko) — the same sign in every oil. So give the red band its own local anchor and keep the
+        # Q band on the valley. ⚠ 612-615 is the archive's own P2 anchor and the earliest usable one:
+        # the 609 nm Bayer crossover reads 1.6-2.2x the 613 nm value in every run on disk.
+        # ⛔ CHOSEN AFTER SEEING THE EFFECT, so it is a candidate and nothing more —
+        # `diagnostics/red_anchor_ab.py` scores it over all three solvents and finds the trade: it fixes
+        # isopropanol (corridor -11.5 -> +4.8, errors 1 -> 0) and loses the property Rv was chosen for
+        # (one shared cut across solvents: 1 error becomes 4).
+        localAnchor = float(row["a"][(row["nm"] >= 612.0) & (row["nm"] <= 615.0)].mean())
+        row["rvTest"] = 100.0 * (red - localAnchor) / (qBand - valley)
         # ⛔ `reference_band_scan` builds its own rows and does not carry this flag, so without it the
         # unconfirmed fill silently counts as a fourth Esterer fill on the Rv pages while being excluded
         # everywhere else. One corpus, one rule.
@@ -1088,14 +1177,20 @@ def exclusionCost(rv):
 
     ⛔ A fill removed after its value was seen is the most dangerous edit in this whole pipeline, and the
     only defence is that its price stays visible. This re-reads the excluded reports -- they are two
-    files, so it is cheap -- and prints each affected oil's σ_fill both ways."""
+    files, so it is cheap -- and prints each affected oil's σ_fill both ways.
+
+    ⛔⛔ ONLY EXCLUSIONS THAT ARE CANDIDATE MEMBERS OF THE SAME POPULATION MAY BE PRICED HERE. σ_fill is
+    the scatter of one oil in ONE SOLVENT; a fill set aside because it is a DIFFERENT SOLVENT is not a
+    σ_fill contributor, and folding it in would report a solvent difference as fill noise -- inflating the
+    "cost" of every other exclusion on the same line. `OTHER_SOLVENT` names those, and they are announced
+    separately so the exclusion still stays visible."""
     import tempfile
     import peak_ratio_archive as archive
     extra = {}
     with tempfile.TemporaryDirectory() as scratch:
         for relative in sorted(EXCLUDED):
             session = relative.split("/")[0]
-            if session not in TODAY:
+            if session not in TODAY or session in OTHER_SOLVENT:
                 continue
             workflow = archive.workflowOf(os.path.join(archive.ARCHIVE, relative), scratch)
             if workflow is None:
@@ -1171,6 +1266,23 @@ def main():
         pageByDay(pdf, rows)
         # ⭐ ORDER IS EDITORIAL: the LIVE metric first, every SHELVED candidate behind it. A rejected
         # candidate sitting between the pages that get read is how a refuted number gets quoted.
+        # ⚠ `RvTest` sits at the FRONT of the candidates because it is the only OPEN one — the two
+        # behind it are shelved and rejected respectively. It is still behind the shipped metric.
+        pageByDay(pdf, rv, key="rvTest", cut=bestCut(rv, "rvTest")[1],
+                  label="RvTest",
+                  title="OPEN CANDIDATE · RvTest in sunflower, one row per measurement day",
+                  blurb="RvTest = 100·(A622-627 − A612-615) / (A_Q − Av)  —  Rv with the RED band on "
+                        "its OWN local anchor\ninstead of a valley 70 nm away. Same layout as the Rv "
+                        "page, so the two read against each other.\n"
+                        "Red dashed = the cut FITTED on this archive, not a pre-registered constant.",
+                  caveat="\nWHAT IT BUYS AND WHAT IT COSTS (diagnostics/red_anchor_ab.py, 124 labelled "
+                         "runs, three solvents):\nISOPROPANOL, the 88-run corpus M9 would be registered "
+                         "on — corridor -11.5 (overlapping) becomes +4.8,\nerrors 1 -> 0, and the one "
+                         "run Rv misclassifies (20270729B/002, green, Rv 39.5) reads 65.5. Cohen's d "
+                         "2.54 -> 4.07.\nBUT ONE SHARED CUT ACROSS ALL THREE SOLVENTS gives 4 errors "
+                         "against Rv's 1: the per-solvent cuts run\n44.4 / 65.5 (IPA / sunflower) "
+                         "against Rv's 52.5 / 59.3. Rv's threshold transfers; RvTest's does not, and "
+                         "that\nportability is the property Rv was chosen for on 2026-08-25.")
         pageDifferenceMetric(pdf, rv)
         # ⭐ the candidate gets the SAME per-day view as the shipped metric, on its own fitted cut --
         # the plot that divides the day out is where a fill-scatter claim has to hold up.

@@ -34,7 +34,12 @@ from solvent_colour_separation import SUNFLOWER as INDEX_MATCHED
 from d2r_all_runs import (SERIESOIL, TODAY, EXCLUDED, KEPT_RUN_COUNT, LATE_RUN_SESSIONS,
                           firstDistinctRuns)
 
-CACHE = "/tmp/claude-1000/-home-nidwe72-development-spectracs-spectracsPy/105990a7-14f7-4f84-a40b-cf4d764597f2/scratchpad/refscan_traces.pkl"
+# ⛔ WAS AN ABSOLUTE PATH INTO ONE SESSION'S SCRATCHPAD, which stopped existing and took the script
+# down with it (2026-08-29). A cache is a convenience and must never be able to fail a run: it lives in
+# the system temp directory under a stable name, and both halves are wrapped so that a missing,
+# unreadable or unwritable cache costs time and nothing else. `SPECTRACS_REFSCAN_CACHE` overrides it.
+CACHE = os.environ.get("SPECTRACS_REFSCAN_CACHE",
+                       os.path.join(tempfile.gettempdir(), "spectracs_refscan_traces.pkl"))
 RED = (622.0, 627.0)
 VALLEY = (500.0, 560.0)
 ARTEFACTS = ((579.0, 584.0, "581 reference minimum"), (605.0, 613.0, "609 Bayer crossover"))
@@ -74,12 +79,16 @@ def archiveStamp():
 def collect():
     """Every labelled run that covers 500-627 nm. Cached: the PDF extraction is the slow part."""
     stamp = archiveStamp()
-    if os.path.exists(CACHE):
+    try:
         with open(CACHE, "rb") as handle:
             cached = pickle.load(handle)
         if isinstance(cached, dict) and cached.get("stamp") == stamp:
             return cached["rows"]
         print("  [!] archive changed since the cache was written -- re-extracting")
+    except FileNotFoundError:
+        pass
+    except Exception as error:                      # a corrupt or unreadable cache is not a failure
+        print("  [!] cache unusable (%s) -- re-extracting" % error)
     rows = []
     indexed = {relative for _, relative in INDEX_MATCHED}
     with tempfile.TemporaryDirectory() as scratch:
@@ -118,8 +127,11 @@ def collect():
             # bands on a corpus the pages do not show is answering a different question than it claims.
             for relative in firstDistinctRuns(series)[0]:
                 take(relative, label, oil, "sunflower")
-    with open(CACHE, "wb") as handle:
-        pickle.dump({"stamp": stamp, "rows": rows}, handle)
+    try:
+        with open(CACHE, "wb") as handle:
+            pickle.dump({"stamp": stamp, "rows": rows}, handle)
+    except Exception as error:                      # read-only /tmp, full disk: costs time, not the run
+        print("  [!] cache not written (%s)" % error)
     return rows
 
 

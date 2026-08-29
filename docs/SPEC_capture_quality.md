@@ -9911,6 +9911,10 @@ vessel proposal was not.
 
 ### 16.23.2 The protocol
 
+> ⛔⛔ **SUPERSEDED BY §16.23.2b** *(2026-08-28)*. The inversions below are two recipe generations old — the
+> mixing step is now a two-stage vortex and the solvent is sunflower. This section is kept because §16.23.2a's
+> dose arithmetic and the four errors of §16.23.0 are still derived from it. **Do not prepare a fill from it.**
+
 1. **Fill one capillary with oil.** Hold it **horizontal** — oil's vertical capillary rise limit is ~13 mm
    against the tube's 75 mm, which is why haematocrit tubes are filled horizontally in the first place. It
    fills in tens of seconds, not instantly: oil is ~12× blood's viscosity.
@@ -9962,6 +9966,95 @@ dose should have its `A_Q` and its 448–460 DN logged and checked against this 
 
 ⇒ **Two standing bench rules govern this recipe — §16.23.9. Read them before changing the strength or
 deciding whether to filter.**
+
+### ⭐⭐ 16.23.2b THE SUCCESSOR RECIPE — one capillary, a vortex mixer, and a cold ultrasonic bath  *(Edwin 2026-08-28, on new hardware; the volume rule is DESIGN, the mixer is ADOPTED)*
+
+§16.23.2's *"cap and invert to mix"* has been superseded twice without either change reaching this page, which
+is exactly the failure `prepProtocol` exists to prevent:
+
+| date | recipe | how it is recorded |
+|---|---|---|
+| 2026-08-03 | 2 capillaries / 10 mL isopropanol, **40 slow inversions** | §16.23.2 |
+| 2026-08-26 | 40 inversions **after the capillaries clear**, sunflower | `prepProtocol` string, and nothing else |
+| **2026-08-27** | ⭐ **two-stage**: 1 mL sunflower + the capillaries, ~45 s **fast rotation while still concentrated**, then to volume and ~60 s more. No arm-swing | `SPEC_red_ratio_metric.md` §12.8.3 |
+| **2026-08-28** | this section — the rotation becomes a **vortex mixer** | here |
+
+⭐ **The 08-27 change is the one with evidence behind it.** `EstererE` against its own sibling fill: `A_Soret`
+**+10.2 %**, `A_valley` **−6.9 %** — more pigment in solution *and* less scatter, with the Soret rise confined
+to the band rather than the broad blue shoulder, so it is carotenoid dissolving and not turbidity. ⛔ And
+**`Rv` moved 1.7**, one run's noise, on a preparation change that moved the spectrum around it by 10 %.
+
+#### The protocol
+
+Working strength **1.5 % v/v**, unchanged: **one 60 µL capillary in 4 mL** is the same loading as 2 in 8 mL,
+so `A_Q` and the whole archive stay comparable (§16.23.2a).
+
+1. **Fill one capillary** (Hirschmann 9100160) **horizontal**, as §16.23.2.
+2. **Drop it into 1 mL of solvent** in the capped tube.
+3. ⭐ **Vortex 30 s at a fixed setting.** The concentrated stage is where the shear does the work and where
+   §12.8.3's gain came from. ⛔ *Fixed*, and written down — a mixer whose duration is "until it looks mixed"
+   throws away the only thing it was bought for.
+4. **Withdraw the capillary**, drained against the tube wall. ⚠ This is a change: §16.23.2 keeps it in and
+   holds it back at the decant. Two reasons — a 75 mm glass capillary in a hard vortex is the breakage §16.23.2
+   already warns about, and step 3 has rinsed its outside. ⭐ The dose it carries out is far below the ×2.21
+   loading step that moved `Q%` by **0.45** (`SPEC_metric_research.md` §14.3) and the ±45 % swing that moves
+   `Rv` by **< 0.8 %** (`SPEC_red_ratio_metric.md` §6.6).
+5. **Top to volume** (§below), **vortex 60 s**, same setting.
+6. ⚠ **Ultrasonic bath 60 s — heater OFF, room-temperature water, bath lid CLOSED.** Its job is **de-gassing
+   the air the vortex entrains**, not dissolution. See the two cautions below.
+7. **Stand 2 min capped and dark**, two slow inversions, pour, brim-fill, dry the jar, insert. ⚠ 2 min is
+   short against the ~2 h stratification of §6.6, so it does not reopen it.
+8. **One reference on pure solvent per fill** — `ROADMAP.md` §0a, non-negotiable.
+
+#### ⭐ THE VOLUME RULE — keyed to `A_Soret`, and it is a `Q%` rescue, not an `Rv` improvement
+
+§16.23.10j audits where every archived run lands against the 20–50 DN guard window. **The dense fills miss it
+low** — `20260826EstererE` at 19.4 DN, `20260822Lugitsch/003` at 13.8 — and both are fills whose `A_Soret`
+exceeds ~1.1.
+
+| `A_Soret` on the first run | volume for a remake | expected guard |
+|---|---|---|
+| ≤ 0.85 | **4 mL** — the default. Lugitsch reads 0.73 → **40.7 DN**, mid-window | ✅ 30–50 DN |
+| > 0.85 | **5 mL** (dose ×0.8). Esterer 1.17 → **29.8 DN** | ✅ in window |
+
+⛔ **And it is priced.** §16.23.10j's projection: ×0.8 buys the Soret its window at **+17 % noise on `Rv`**,
+because the red band's DN rises more slowly than `Rv`'s numerator shrinks. ⇒ **Apply it when `Q%` is the
+metric being read** — it is the shipping metric until `Rv` lands — and understand that it is a trade, not a
+correction. ⛔ **Never change the volume mid-session**, and never inside the σ_fill run.
+
+⭐ **The σ_fill run needs none of this.** Its oil is Lugitsch, which lands at 40.7 DN on the 4 mL default.
+
+#### ⚠ The two cautions on the bath, both measured elsewhere
+
+| | |
+|---|---|
+| **heat** | §16.36: heat **clears reversibly**, and a warm jar cooling toward a cooler holder is the confound that made a warm bath a *preparation fault* in `SPEC_settled_measurement.md` §34. Heater off; if the tube warms more than ~2 °C, shorten the burst |
+| **light** | `SPEC_settled_measurement.md` §39 measured **+1.34 `Rv`** from light on a waiting aliquot. A bath tank sits open under room light — lid on, and the aliquot stays dark from the moment it is drawn (`P6′`) |
+
+⛔ **Do not expect the bath to dissolve anything.** `SPEC_metric_research.md` §14.2: the scatter floor
+**survived 300 s of ultrasound** on 2026-08-23. Sonication disperses; it cannot dissolve.
+
+#### What is adopted and what is on trial
+
+| | |
+|---|---|
+| ✅ **adopted** | the vortex, as a reproducible implementation of a step that is already in the recipe and already evidenced (§12.8.3) |
+| ⏸ **on trial** | the **sonication step**. It has never run on a sunflower fill and nobody has checked whether it costs pigment. It is already scoped as one of the four arms of `ROADMAP.md` item 5 |
+| ⛔ **gate** | **two fills vortex-only against two fills vortex+sonic, one evening**, then freeze — *before* the σ_fill run, never inside it |
+
+#### ⛔ The cost of the single-capillary form, stated so it is a choice and not an accident
+
+`ROADMAP.md` §0's σ_fill run wants **8 mL** so the other half goes into a second jar, which is what partitions
+σ_fill into preparation-and-dilution against jar-and-beam. **One capillary yields 4 mL, one jar, and that
+diagnostic is gone.** Halving to reach 8 mL puts `A_Q` at ~0.16, under §16.23.6a's 0.19 floor.
+
+⇒ **One capillary / 4 mL as the routine standard; 2 capillaries / 8 mL for the σ_fill evening only.**
+
+#### ⏸ OWED — `prepProtocol` is a hardcoded constant and is now two recipes stale
+
+`20260826EstererE` was made two-stage and its header still reads `invert-40-after-capillaries-clear`.
+⇒ un-hardcode it and stamp the recipe actually used, e.g. `1cap-1ml-vortex30-to4ml-vortex60-sonic60-cold`.
+`ROADMAP.md` §0b carries this as a blocker on the σ_fill run.
 
 ### 16.23.3 The numbers — why 60 µL and 15 mL
 
@@ -10496,6 +10589,107 @@ bin needs *more* solvent. Corrected while implementing.
 
 ⇒ 20–50 **survives this run** (all three inside), but on evidence weaker than intended, and §16.23.10e's
 7-of-8 archive cost is unchanged. It remains provisional.
+
+#### ⭐⭐ 16.23.10j THE ARCHIVE-WIDE DN AUDIT — 233 runs, and it corrects three things  *(Edwin 2026-08-28: "the last measurement gave DN about 20?")*
+
+Every claim in §16.23.10 was drawn on the isopropanol archive. Edwin asked what the last sunflower fill
+actually read, and the honest answer needed the whole corpus rather than one report. `diagnostics/dn_guard_audit.py`
+recomputes the **shipped** statistic — `encode(min(S) over 448–460 nm)`, §16.23.10f — over every report on
+disk. ⭐ Every count below is **computed by that script, never typed**; a new session changes them.
+
+##### ⛔⛔ First, the units trap — and both halves of it were walked into while writing the script
+
+| mistake | what it does |
+|---|---|
+| **reading the stored spectrum as DN** | ⛔ the report carries the **LINEAR** 0–255 spectrum. The guard takes the minimum there and **encodes once**, `DN = 255·(linear/255)^(1/2.2)`. Linear **0.577 is 16 DN** (§16.23.10b's own landmark). `20260826EstererE`'s Soret minimum reads linear 0.885 — which is **19.4 DN**, not 0.9 |
+| **`A` as a ratio of band means** | ⛔ absorbance must be averaged **pointwise**. On `20260826EstererE/001` the two disagree by 16 % at the Soret (1.004 against the shipped 1.165) because the flank is steep and −log₁₀ is convex. Valley, `A_Q` and the red band agree to three decimals — so the error is invisible everywhere except the one band this section is about |
+
+⭐ The script **asserts** `encode(0.577) = 16.0 DN` on every run, and re-derives each report's reference band
+means against the `monitorRecord` diagnostics the settling monitor latched (**34 ok, 0 mismatched**). Those two
+checks are what make the rest of this section quotable.
+
+##### The corpus, by solvent era
+
+The era is derived from the session date, ⛔ **after remapping two folders whose year is mistyped** —
+`20270729` is the 2026-07-29 rebuild and `20280819` is the 2026-08-19 triad, 16 runs that a naive date sort
+files as sunflower and that move every count here.
+
+| era | n | **< 16 DN** | in 20–50 | > 50 | median guard | median red |
+|---|--:|--:|--:|--:|--:|--:|
+| isopropanol | 129 | **1** | 53 | 75 | 54.3 | 88.4 |
+| white spirit | 4 | 0 | 3 | 1 | 41.8 | 84.4 |
+| **sunflower** | **37** | **1** | **30** | 5 | **32.4** | 86.3 |
+| undated one-offs | 63 | 0 | 0 | 62 | 112.6 | 157.4 |
+
+##### ⛔ What this FALSIFIES — §16.23.10f's reason for taking the 16 DN line off the plot
+
+> *"the 16 DN line is **off the plot** — it is never approached (minimum observed across 34 runs: **37.6 DN**)"*
+
+**Across 233 runs the minimum is 4.0 DN, and 2 runs breach the floor** — `20280819BillaClever/003` (4.0, the
+opaque fill §51 gives no answer at all) and `20260822Lugitsch/003` (13.8). ⚠ The **conclusion** survives: two
+breaches in 233, both on fills that were wrong for other reasons, is still not worth permanent ink. But the
+**sentence** does not, and it is quoted verbatim in two `CapturePanel.py` comments as the justification.
+⇒ ⏸ **OWED:** correct both comments and this section's own claim to *"2 of 233, both diagnosable another way"*.
+
+##### ⭐⭐ Second correction — the answer to Edwin's question, and it is not the red band
+
+| `20260826EstererE/001` | value | verdict |
+|---|--:|---|
+| **guard, min 448–460** | **19.4 DN** at 448.0 nm | ⚠ `too-concentrated` — **0.6 DN under the window**, and 3.4 DN **above** the floor |
+| min 622–627 — `Rv`'s numerator | **72.9 DN** | ✅ nowhere near anything |
+| `A_Soret` | 1.165 | the densest fill of the sunflower era bar one |
+
+⭐⭐ **The red band is never the problem.** Its median across the sunflower era is **86.3 DN** and its worst
+run **71.4**. Every "the red is on the floor" worry — including the one that opened this investigation — was
+a linear value read as DN. ⇒ **`Rv` is measured in the healthiest part of the frame and `Q%` in the
+sickest**, which is an argument for the 2026-08-25 metric decision that nobody had made yet: the **two**
+sunflower runs that miss the guard window low are the two densest fills in the era (`A_Soret` 1.41 and 1.17),
+and **both read 76.5 and 72.9 DN in the red** — their Soret is compromised and their 624 band is untouched.
+
+##### The dilution projection — thinning is not free, even where the guard asks for it
+
+⚠ **Arithmetic on Beer-Lambert at the two argmin wavelengths, not a measurement.** `σ_A ≈ 0.434·σ_DN/DN` for
+one DN of quantisation, taken relative to `Rv`'s numerator `A(624) − A_valley`:
+
+| dose | `A_Soret` | guard DN | red DN | `Rv` numerator | relative noise |
+|--:|--:|--:|--:|--:|--:|
+| ×1.00 | 1.165 | **19.4** ⚠ | 72.9 | 0.1418 | 1.00× |
+| ×0.80 | 0.932 | **29.8** ✅ | 77.7 | 0.1134 | **1.17×** |
+| ×0.64 | 0.746 | 42.0 ✅ | 81.7 | 0.0908 | 1.39× |
+| ×0.50 | 0.583 | 56.7 ✅ | 85.4 | 0.0709 | 1.71× |
+
+⇒ **DN rises with dilution and the band shrinks faster.** One step of thinning buys the Soret its window at
+**17 % more noise on `Rv`**; halving costs 71 %. ⛔ There is no dose that improves both, which is §16.23.6a
+restated in the units that decide it. **The dose belongs where it is; §16.23.2b's volume rule is a `Q%`
+rescue, priced honestly.**
+
+##### ⛔⛔ Third correction — THE EXPOSURE HEADROOM IS ~7 %, NOT 28 %, AND THE RECOMMENDED STEP WOULD CLIP
+
+`ROADMAP.md` §0b item 3 reads *"`20260826EstererE` peaks at 199.4 of 255, so ~28 % of the range is currently
+unused for free"* and recommends **exposure ×1.15**. **199.4 is the LINEAR peak.** Encoded:
+
+```
+sunflower reference peak   228.0 - 243.7 DN     median 237.2
+the AE target                     245 DN
+the clip                          255 DN
+```
+
+⛔ **A ×1.15 step puts 37 of 37 sunflower references at or past 255.** The lamp is already within ~7 % of the
+AE target and ~4 % of the clip. ⇒ **There is no free exposure headroom, the σ_fill run needs no exposure
+change before it, and §0b's item 3 is withdrawn.** ⭐ Its items 1, 2 and 4 are untouched — the A/B bound
+(`Rv` moves 0.09 across ×1.156) and the 473 nm rule still stand; what is gone is the *room* to use them.
+
+⭐ **And this strengthens §0b's own headline.** The section's argument was that instrument state must travel
+in the report because nobody can reconstruct it. The retrospective handle it proposed — the stored reference
+peak — was then read in the wrong units by the person proposing it. **`referencePeakDn` must be recorded
+already encoded**, and the field named so it cannot be confused with the linear trace it comes from.
+
+##### Reproduce
+
+```
+PYTHONPATH="./diagnostics:.:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracs-plugins" \
+    ./venv/bin/python diagnostics/dn_guard_audit.py
+```
 
 ---
 

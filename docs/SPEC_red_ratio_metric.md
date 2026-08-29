@@ -962,3 +962,53 @@ D's own method reopens it.**
 | **`d2R` as a second witness** | not fill-invariant: 1.41–1.51 on one fill and 1.94 on another of the same oil, one evening — 76 % of the session step it was supposed to corroborate. `Rv` agreed to 0.6 across the same pair |
 | **SNV shape as independent evidence** | `SNV(624) − SNV(569)` tracks `Rv` at **r = 0.993** over 19 runs. Agreement there is the same measurement re-expressed, not corroboration. Its binary "which band is taller" also flipped for Lugitsch between two sessions |
 | **`A_Soret` brought into `Rv`** | one form of six survives (`Rv − Q%′`) and improves the pooled σ_fill by ~20 % scale-free — but leaves the day-to-day drift and the Esterer/Lugitsch single-fill overlap **unchanged**. Tested and shelved, ⇒ §12.7 |
+
+---
+
+## ⛔⛔ 13 · THE BASELINE IS NOT SETTLED — `Rv`'s corridor over the whole archive is NEGATIVE  *(2026-08-29)*
+
+`SPEC_metric_research.md` **§16** is the full write-up; this section exists so the finding cannot be missed
+by anyone reading only `Rv`'s own spec.
+
+Scored over **124 labelled runs, three solvents, both sides of the rebuild** — one shared threshold, which is
+the property `Rv` was chosen for on 2026-08-25:
+
+| metric | cut | errors | corridor | Cohen's d |
+|---|--:|--:|--:|--:|
+| **`Rv`** *(shipped)* | 52.5 | **1** | **−11.5** ⛔ green and brown OVERLAP | 2.86 |
+| `RvCont` — both bands above one fitted continuum | 65.0 | **0** | **+5.1** | 3.51 |
+| `R` — `SPEC_metric_research.md` §12 | 51.2 | **0** | **+5.9** | 3.53 |
+
+⛔ **`Rv` green and brown overlap by 11.5 units across the archive, and two independent coherent
+constructions both turn that positive.** On the isopropanol corpus alone — the 88 runs M9 would be
+pre-registered against — `Rv`'s corridor is −11.5 with 1 error, `RvCont`'s is **+18.0** with none, and the
+run `Rv` gets wrong is `20270729B/002`, the same one ROADMAP item 1's phase **P1** already exists to pull the
+raw frames of.
+
+⛔⛔ **AND IT IS NOT A PROPOSAL TO SWAP — the hold-out kills it.** Every cut above is fitted on the runs it
+is scored against. Fit the threshold on isopropanol alone and apply it untouched to the other 36 runs:
+**`Rv` 0/36, `R` 0/36, `RvCont` 1/36, `RvLin` 6/36, `RvTest` 6/36**; in the other direction `Rv` and `R` give
+5/88 against `RvCont`'s 8/88. ⇒ **`Rv` transfers best, and `RvCont`'s 0-errors-on-124 was bought by fitting
+the cut on all 124.** `SPEC_metric_research.md` §16.3a.
+
+⭐⭐ **What survives is the finding, not a replacement.** `Rv`'s whole-archive corridor really is negative,
+and **four independent baseline constructions fail to close it without costing transfer** — so the overlap
+is **not a baseline artefact**. That is worth more than a candidate: it says the 11.5-unit overlap has to be
+explained somewhere else (§6.7's diffuser, the brown end, or the labels), and rules out a whole family of
+fixes at the desk instead of at the bench.
+
+⭐ **Two things from §16 that apply to `Rv` as it stands today.**
+
+1. **A flat pedestal cancels EXACTLY in `Rv`** (measured: +0.10 A leaves it unmoved to three figures), so no
+   amount of scatter, bubbles or particulate can move it. ⛔ **A TILT can, and by a lot**: `Rv` moves **+5.1**
+   per 0.01 A per 100 nm of baseline slope, because its numerator carries a 94.5 nm lever arm. Every "`Rv`
+   rides turbidity" argument in §12.3 should be re-read as being about *tilt*, not level.
+2. ⭐ **`RvTest − Rv` is exactly the trough depth**, by the identity
+   `RvTest − Rv = 100·(A_valley − A[612–615])/(A_Q − A_valley)`, and it flags the fills already suspected on
+   other grounds: `20260826EstererD` **−29.6**, `20260824Lugitsch` **−20.1**, `20260826Stekko/004` **−16.0**.
+   Worth carrying as a fill-quality diagnostic whichever metric ships.
+
+⚠ **And it reopens §12.8.4.** `EstererD` was set aside on the METHOD, with the standing note that its removal
+is also convenient. The family disagrees about it: `Rv` 107.4 and `RvCont` 113.2 call it Esterer's **highest**
+fill, `RvTest` 80.2 and `RvLin` 88.9 call it the **lowest**. ⇒ **the exclusion is not baseline-independent**,
+and that has to be on the table when the replicate fill is finally run.
