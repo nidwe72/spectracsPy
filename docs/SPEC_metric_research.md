@@ -3991,9 +3991,100 @@ against `RvTest` 6.33, `RvCont` 3.53 and `Rv` 1.56 — and the only one with no 
 ⇒ ⭐ **A working choice that can be argued for beats an open question that cannot be acted on**, and
 §16.10's pre-registration is exactly what makes this revisable without embarrassment.
 
+⭐ **§16.12 is the self-contained CARD** — formula, the one-sentence case, the structural table, the
+measured results and the three things that would overturn it, readable without the rest of §16.
+
 #### 16.11.3 What is NOT decided
 
 ⛔ **`RvLin` is not adopted, implemented or thresholded in shipping code.** Its `T` = 58.0 is fitted on
 four fills of one night; the pre-registration is unrun; the history tracker is still blocked on §0-JAR.
 This records **which candidate the programme is building toward**, in the same sense §15 recorded `Rv` —
 *chosen, not built*.
+
+---
+
+### ⭐⭐⭐ 16.12 `RvLin` — THE CARD  *(self-contained; read this if you read nothing else in §16)*
+
+#### The formula
+
+```
+Av   = A[500-560]     the valley           window centre 530.0 nm
+Aloc = A[612-615]     the local shoulder                 613.5 nm
+A_Q  = A[565-580]     the Q band                         572.5 nm
+red  = A[622-627]     the red band                       624.5 nm
+
+B(l) = Av + m * (l - 530.0),        m = (Aloc - Av) / 83.5
+
+RvLin = 100 * ( red - B(624.5) ) / ( A_Q - B(572.5) )
+```
+
+Equivalently, with `D = Aloc - Av`:
+
+```
+RvLin = 100 * (red - Av - 1.131737*D) / (A_Q - Av - 0.508982*D)
+                          ^^^^^^^^              ^^^^^^^^
+                          94.5/83.5             42.5/83.5
+```
+
+⚠ Absorbance is band-averaged **POINTWISE** (`mean(-log10(S/R))`), never as a ratio of band means — the two
+differ by 16 % on the steep Soret flank and agree elsewhere, so the error hides (§16.23.10j of
+`SPEC_capture_quality.md`).
+
+#### In one sentence
+
+**`Rv` with the baseline's slope MEASURED instead of assumed.** `Rv` subtracts a valley 70 nm away from
+the band it references; `RvLin` draws a straight line through **two** measured points — the valley and the
+shoulder 11 nm below the band — and subtracts that.
+
+⭐ **With `D` = 0 it is `Rv` exactly.** Not a rival metric: the same metric with one assumption removed.
+That is also the sentence to lead with in front of an outside reader — it makes the change small,
+explainable and drawable on the existing plot.
+
+#### Why it beats the alternatives — structurally, before any data
+
+| | affine-invariant? | baseline carried over |
+|---|---|---|
+| `Rv` | ⛔ a tilt moves it ±5.1 per 0.01 A/100 nm | 94.5 nm |
+| `RvTest` | ⛔ ∓1.5, opposite sign | 11.0 nm |
+| `RvCont` | ✅ | 20.5 nm past its fit's edge |
+| **`RvLin`** | ✅ | **11.0 nm** |
+
+**The only one that is both.** `RvCont` buys invariance with a long extrapolation; `RvTest` buys a short
+lever without invariance. ⭐ All four cancel a FLAT pedestal exactly — the difference between them is
+entirely about *tilt*, never about level (§16.2's measured table).
+
+#### What that bought, measured
+
+- **Never within 16.3 of a sign change** over 132 runs, where `Rv` went negative twice and `RvCont`
+  reached **1.0** with a numerator of 0.0014 A (§16.7c).
+- **Best on gap ÷ worst-case replicate scatter: 7.17**, against `RvTest` 6.33, `RvCont` 3.53, `Rv` 1.56.
+- **The only one with no bad pair** — 3.60 / 6.28 / 4.02 across three replicate pairs, where `Rv` and
+  `RvCont` both blow up on the BROWN pair (36.3 and 22.8) (§16.9a).
+- Within-oil spread **4.0–6.3 everywhere**, against `Rv`'s **5.7–36.3**. ⭐ **Consistency, not peak
+  performance** — it is barely better than `Rv` in the best case and six times better in the worst, which
+  is the more useful property for a number a tracker reads.
+
+⚠ **It is NOT drift-proof.** Across the three same-jar Esterer fills of 2026-08-29 the ranges were
+`RvCont` 4.3, `Rv` 5.7, `RvLin` 5.9, `RvTest` 10.6 — mid-field. ⛔ And `RvCont` bought that with the worst
+brown replicate: a baseline flexible enough to swallow the drift swallows part of the signal with it,
+which is §16.4 arriving again.
+
+#### Status
+
+⭐ **Chosen for the CONTINUOUS number** — `SPEC_history_tracker.md` — on 2026-08-29 (§16.11).
+**`Rv` keeps the VERDICT**, which it has never failed: all seven fills of 2026-08-28/29 classified
+correctly with nothing within 25 units of the line.
+
+⛔ **CHOSEN, NOT BUILT.** Nothing implemented, nothing thresholded in shipping code.
+
+#### What would overturn it — three things, all cheap
+
+1. **It loses the archive-wide hold-out** — a threshold fitted on isopropanol and carried across gives
+   **6/36** against `Rv`'s **0/36** (§16.3a). Acceptable if sunflower is final; not otherwise.
+2. **Its ranking comes entirely from same-jar fills**, whose blank is still in question (§16.8c).
+3. `T` = **58.0** was fitted on **four fills of one night** under the bedsheet settling step — which has
+   since become the insulated box (§16.23.2b step 7), so it is now **re-derivable rather than testable**.
+
+⚠ **And everything separating it from `RvCont` and `Rv` rests on ONE brown replicate pair.**
+
+**Reproduce:** `diagnostics/red_anchor_ab.py` · per-day page in `20260825_d2r_all_runs.pdf`
