@@ -3852,11 +3852,37 @@ being one candidate among four.
 | 1 | **Lugitsch · same-jar** | the new oil, against §16.10.2's thresholds |
 | 2 | ⭐⭐ **Lugitsch · TWO-JAR** | **same oil, same evening, only the reference method differs.** Nothing in the archive provides this, and it is what decides which blank shape is correct |
 | 3 | **Billa Clever · same-jar** | holds the brown end, so the corridor is measured and not assumed |
-| 4 | **Lugitsch · same-jar again** | ⭐ the **bracket** — separates the session drift from the oil, and supplies §16.10.3's replicate pair |
+| 4 | **Lugitsch · same-jar again** | a second fill of the same oil — supplies §16.10.3's replicate pair. ⛔ **NOT a drift measurement**, see §16.10.4a |
+| **4a** | ⭐ **RE-READ fill 1**, kept dark and capped all evening | the step that makes the drift separable at all. Two minutes, no new fill |
 | **5** | **Two-reference run again** | does the blank drift across an evening? §16.8a says something does |
 
 ⚠ **Two reads per fill**, times logged, and the order above kept and written down. With a drift of this
 size **the order is data**, not bookkeeping.
+
+#### ⛔ 16.10.4a THE BRACKET DOES NOT MEASURE THE DRIFT — corrected before the session ran
+
+An earlier draft of the table above said step 4 *"separates the session drift from the oil"*. ⛔ **It does
+not.** Steps 1 and 4 are two **different fills**, so their difference is `drift + fill scatter` — and that
+same difference is already §16.10.3's σ_fill estimate, so using it for both would be circular.
+
+⭐ **What each comparison actually contains**, and why step 4a is the one that makes the set solvable:
+
+| comparison | terms |
+|---|---|
+| step 0 vs step 5 — the two reference runs | **instrument + blank**. No oil, nothing to confound it |
+| **step 1 vs step 4a — fill 1 read twice** | instrument + blank + **sample ageing** |
+| step 1 vs step 4 — two fills of one oil | instrument + blank + ageing + **fill scatter** |
+
+Three comparisons, three unknowns, each recovered by subtracting the row above it. ⭐ **The only addition
+is one extra READ — about two minutes — not another fill.** That is what turns §16.9a's `RvLin` σ_fill of
+4.44 from *"fill scatter plus an unknown amount of something else"* into an actual σ_fill.
+
+⚠ **Two limits on even this.** *"Ageing"* is not one physical thing: a jar standing three hours
+accumulates settling **and** light dose — `SPEC_settled_measurement.md` §39 measured **+1.34 `Rv`** from
+light on a waiting aliquot — so the middle row is really *"everything that happens to a fill while it
+waits"*. Keep it **dark and capped**, which shrinks that term without removing it. And the same-jar method
+makes the re-read awkward: fill 1's jar **is** the measurement jar and has to survive the evening
+untouched while four other fills are made.
 
 ⭐ **If the evening runs short, protect step 2.** Every other fill can be repeated another night; a
 matched same-jar / two-jar pair on ONE oil in ONE evening is the only thing that resolves §16.8, and
