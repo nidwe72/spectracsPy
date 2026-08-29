@@ -3867,15 +3867,50 @@ same difference is already §16.10.3's σ_fill estimate, so using it for both wo
 
 ⭐ **What each comparison actually contains**, and why step 4a is the one that makes the set solvable:
 
-| comparison | terms |
-|---|---|
-| step 0 vs step 5 — the two reference runs | **instrument + blank**. No oil, nothing to confound it |
-| **step 1 vs step 4a — fill 1 read twice** | instrument + blank + **sample ageing** |
-| step 1 vs step 4 — two fills of one oil | instrument + blank + ageing + **fill scatter** |
+| | what is compared | what is allowed to differ |
+|---|---|---|
+| **X** | step 0 vs step 5 — the two reference runs | the clock only — **no oil anywhere** |
+| **Y** | step 1 vs step 4a — fill 1 read twice | the clock **+ the sample sitting there** |
+| **Z** | step 1 vs step 4 — two fills of one oil | the clock + sitting + **the fill being made again** |
 
-Three comparisons, three unknowns, each recovered by subtracting the row above it. ⭐ **The only addition
-is one extra READ — about two minutes — not another fill.** That is what turns §16.9a's `RvLin` σ_fill of
-4.44 from *"fill scatter plus an unknown amount of something else"* into an actual σ_fill.
+Each contains everything above it plus one new source. ⭐ **The only addition is one extra READ — about
+two minutes — not another fill.**
+
+⇒ **§16.9a's `RvLin` σ_fill of 4.44 is a `Z`.** It came from two *separately prepared* fills, so it
+contains the drift and the ageing as well as the preparation. σ_fill is only the **last** of the three
+ingredients, and it has never been isolated.
+
+⛔⛔ **AND THE SUBTRACTION IS IN QUADRATURE, NOT LINEAR — corrected 2026-08-29.** An earlier draft said the
+terms are *"recovered by subtracting the row above"*. For independent random errors that is wrong:
+
+```
+sigma_fill = sqrt(Z^2 - Y^2)        NOT   Z - Y
+```
+
+With `Z` = 4.44 and a hypothetical `Y` = 3.0 the two forms give **1.44** and **3.27** — more than a factor
+of two apart, on the number the whole history-tracker case rests on.
+
+⚠ **And which form applies is itself a finding of the session.** A MONOTONE trend — which is what
+`A_valley` looked like on 2026-08-29, climbing steadily across ten runs and two oils — subtracts more
+nearly linearly; RANDOM scatter subtracts in quadrature. The shape of the two reference runs is what says
+which.
+
+#### ⭐⭐ 16.10.4b WHY `Y` IS THE INTERESTING NUMBER — nobody has ever measured it
+
+No run in this archive has read **one jar at the start of an evening and again at the end**. The possible
+answers span the whole range, and they are not equally boring:
+
+| if `Y` comes back at | then σ_fill is | meaning |
+|---|--:|---|
+| ≈ 0 | ≈ 4.44 | the drift is negligible; 4.44 is real fill scatter, as assumed all along |
+| ≈ 3 | ≈ 3.3 | most of it is still the fill |
+| ≈ 4.4 | **≈ 0** | ⭐⭐ **the fills are essentially perfect**, and everything called σ_fill for weeks is the session drifting |
+
+⛔ That last row is not a silly hypothesis. `20260828EstererF/002` repeated to **four decimals** on `F` and
+`A_valley`, so the measurement is capable of far better than 4.44; and `A_valley` climbed **monotonically**
+across ten runs and two oils on the same night. Both point the same way.
+
+⇒ **One extra read, two minutes, decides which of those three worlds the programme is in.**
 
 ⚠ **Two limits on even this.** *"Ageing"* is not one physical thing: a jar standing three hours
 accumulates settling **and** light dose — `SPEC_settled_measurement.md` §39 measured **+1.34 `Rv`** from
