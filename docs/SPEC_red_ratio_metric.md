@@ -1012,3 +1012,73 @@ fixes at the desk instead of at the bench.
 is also convenient. The family disagrees about it: `Rv` 107.4 and `RvCont` 113.2 call it Esterer's **highest**
 fill, `RvTest` 80.2 and `RvLin` 88.9 call it the **lowest**. ⇒ **the exclusion is not baseline-independent**,
 and that has to be on the table when the replicate fill is finally run.
+
+---
+
+## ⭐⭐ 14 · THE FIRST NEGATIVE `Rv` — and what it does and does not mean  *(2026-08-29, `20260828BillaCleverA`)*
+
+The first brown fill made under the settled sunflower recipe reads **`Rv` = −10.0** (runs −7.1 and −13.0),
+against **31.0 – 46.4** for the same oil across five archived fills. `SPEC_metric_research.md` §16.7 is the
+write-up; this section carries it in `Rv`'s own spec because it is a property of the shipped metric.
+
+**The mechanism.** The band is still there; the region it sits in has fallen below the valley:
+
+```
+A[622-627]  0.0662     the red band
+A[500-560]  0.0768     the valley Rv baselines it against  ->  numerator NEGATIVE
+A[612-615]  0.0213     but the band is +0.0449 above its OWN shoulder
+```
+
+⇒ §16.1's inverted trough, at the opposite extreme and on a brown oil. On the same capture `RvTest` reads
+29.9 and `RvLin` 29.3 — both firmly positive, because their baseline is 11 nm away instead of 70.
+
+#### ⛔ 14.1 NOT A GAUGE PROBLEM, AND NOT A SENSITIVITY PROBLEM — both claims withdrawn
+
+| claim | verdict |
+|---|---|
+| *"a negative value is off the gauge's scale"* | ⛔ **wrong.** `SPEC_roast_ampel.md`'s `bandLeft` / `bandRight` / `gradientAnchors` are configuration; a thermometer shows negatives. Covering −13 … +130 is a config change |
+| *"the metric is hypersensitive near zero"* | ⛔ **wrong, measurably.** `Rv = 100·num/den`, so an absolute numerator error `δ` moves it by `100·δ/den` — **constant**, not amplified. ⭐ The six most error-sensitive runs in the archive are all **GREEN** (`20260826Stekko`, `den` = 0.081, where 0.01 A moves `Rv` by 12.3 against 4.3 on a thick fill). Billa's negative reading sits at `den` = 0.098, *less* sensitive than several green fills |
+
+#### ⭐ 14.2 What survives
+
+**1 · The verdict is untouched.** `T` = 52, higher = greener. 34.2 and −10.0 are both emphatically brown;
+nothing misclassifies, and the margin is enormous.
+
+**2 · A 44-unit swing on one oil disqualifies `Rv` as a CONTINUOUS quantity** — which is what
+`SPEC_history_tracker.md` needs it to be — regardless of the sign. ⚠ Part of that 44 may be method rather
+than oil: this fill uses the same-jar reference (§16.8) and the archive is two-jar. Unresolved.
+
+**3 · A sign change means the PREMISE failed, not that the value is low.** `Rv`'s numerator is defined as
+*how far the 624 band sits above its baseline*; when it is negative the number reports the baseline's
+position rather than the band's. Still plottable, no longer the same measurement.
+
+#### 14.3 Sign robustness across 132 runs, and it orders by extrapolation distance
+
+| metric | min | negatives | its numerator's baseline is carried |
+|---|--:|--:|---|
+| **`Rv`** | **−13.0** | **2** | 94.5 nm, from a different part of the spectrum |
+| `RvCont` | **1.0** | 0 | 20.5 nm past the continuum fit's edge |
+| `RvLin` | 16.3 | 0 | 11.0 nm past the far anchor |
+| `RvTest` | 17.0 | 0 | 11.0 nm — the band's own shoulder |
+
+⭐ `RvTest` is the only one that structurally cannot go negative: a band that is not taller than its own
+shoulder is not a band. ⛔ `RvCont` came within **1.0** — its numerator on `BillaCleverA/002` is 0.0014 A,
+a coincidence rather than a margin. **Sign robustness and §16.2's structural argument pick different
+metrics; both are true and neither settles the choice.**
+
+⚠ **One brown fill is one brown fill.** Everything here at the brown end rests on this fill plus the three
+archived brown sunflower fills — the corpus gap §16.3c already names as the blocker.
+
+#### ⭐⭐⭐ 14.4 THE REPLICATE ARRIVED, AND IT IS WORSE — `Rv` scatters 36 units on one brown oil
+
+`20260828BillaCleverB`, same recipe, 32 minutes after A: **`Rv` A −10.0 → B 26.2, a 36.3-unit swing on
+two fills of one oil.** Four times `Rv`'s worst green-pair scatter of the same night. On the same pair
+`RvLin` moves 6.3 and `RvTest` 6.1.
+
+⭐ **The verdict is untouched and that is the point.** All seven fills of 2026-08-28/29 classify correctly
+against `T` = 52 — greens 83–94, browns −10 and 26 — and **nothing came near the line.** A 36-unit scatter
+cost `Rv` nothing as a threshold.
+
+⇒ ⭐⭐ **The threshold and the number are two different products.** `Rv` keeps the verdict job it has never
+failed; `SPEC_metric_research.md` §16.9 makes `RvLin` the leading candidate for the CONTINUOUS job
+(`SPEC_history_tracker.md`), which `Rv` demonstrably cannot do. ⛔ Neither is adopted — see §16.9c.

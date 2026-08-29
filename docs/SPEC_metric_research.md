@@ -3529,3 +3529,402 @@ is somewhere else — the diffuser (§6.7), the browns (§16.3b), or the labels.
 PYTHONPATH="./diagnostics:.:../spectracsPy-core:../spectracsPy-model:../spectracsPy-base:../spectracs-plugins" \
     ./venv/bin/python diagnostics/red_anchor_ab.py
 ```
+
+### ⭐⭐ 16.7 THE FIRST NEGATIVE `Rv` — and a claim about gauges that did not survive checking  *(2026-08-29, `20260828BillaCleverA`)*
+
+The first brown fill made under the settled sunflower recipe, and the first negative `Rv` in the archive.
+
+| `20260828BillaCleverA` | `Rv` | `RvTest` | `RvLin` | `RvCont` | `Q%` |
+|---|--:|--:|--:|--:|--:|
+| 001 | **−7.1** | 30.0 | 29.3 | 3.4 | 18.61 |
+| 002 | **−13.0** | 29.9 | 29.2 | 1.0 | 18.03 |
+| mean *(spread)* | **−10.0** *(5.9)* | 29.9 *(0.1)* | 29.3 *(0.2)* | 2.2 *(2.5)* | 18.32 |
+
+**Why it went negative** — the band is still there; the region it sits in has fallen below the valley:
+
+```
+A[622-627]  0.0662     the red band
+A[500-560]  0.0768     the valley Rv baselines it against  ->  numerator NEGATIVE
+A[612-615]  0.0213     but the band is +0.0449 above its OWN shoulder
+```
+
+⇒ §16.1's inverted trough, at the opposite extreme and on a brown oil. The 08-22 Billa fill has
+`A₆₂₄` = 0.2237 sitting *above* `A_valley` = 0.1653 and reads `Rv` +34.2.
+
+#### ⛔ 16.7a TWO ARGUMENTS I MADE AGAINST IT, BOTH WITHDRAWN
+
+**1 · "A negative value is off a gauge's scale."** ⛔ **Wrong.** A gauge is drawn over whatever range is
+declared — `SPEC_roast_ampel.md`'s `bandLeft` / `bandRight` / `gradientAnchors` are configuration. A
+thermometer shows negatives. Covering −13 … +130 is a config change, not a redesign.
+
+**2 · "The metric is hypersensitive near zero."** ⛔ **Also wrong, and measurably so.** `Rv = 100·num/den`,
+so an absolute error `δ` in the numerator moves it by `100·δ/den` — **constant, not amplified as the
+numerator approaches zero.** The amplifier would be a small DENOMINATOR, and that is unrelated to where
+the numerator sits:
+
+```
+A_Q - A_valley over 128 runs:   min 0.081   median 0.134   max 0.234
+green min 0.081        brown min 0.098
+```
+
+⭐⭐ **The six most error-sensitive runs in the archive are all GREEN** — `20260826Stekko` at
+`den` = 0.081, where 0.01 A of numerator error moves `Rv` by **12.3** against 4.3 on a thick fill. Billa's
+negative reading sits at `den` = 0.098, *less* sensitive than several green fills. ⇒ **Crossing zero has
+nothing to do with measurement sensitivity**, and any future argument of that shape should be checked
+against this table before it is made.
+
+#### ⭐ 16.7b WHAT SURVIVES — two things, neither about the sign
+
+**1 · A 44-unit swing on one oil.** Billa Clever reads 31.0–46.4 across five archived fills and −10.0
+here. That disqualifies `Rv` as a CONTINUOUS quantity — which is what `SPEC_history_tracker.md` needs it
+to be — whether the value is −10 or +150. ⚠ Part of that 44 may be method rather than oil: this fill is
+same-jar (§16.8) and the archive is two-jar. Unresolved.
+
+**2 · A sign change means the PREMISE failed, not that the value is low.** `Rv`'s numerator is defined as
+*how far the 624 band sits above its baseline*. When it goes negative the band is below that baseline, and
+the number is reporting the baseline's position rather than the band's. Still plottable; no longer the
+same measurement. ⭐ That is §16's whole baseline argument, arriving from the brown end.
+
+#### 16.7c SIGN ROBUSTNESS IS A REAL PROPERTY, AND IT ORDERS BY EXTRAPOLATION DISTANCE
+
+Over **132 labelled runs** (the archive plus 2026-08-29):
+
+| metric | min value | closest four to zero | negatives | its numerator's baseline is carried |
+|---|--:|---|--:|---|
+| `Rv` | **−13.0** | −13.0 · −7.1 · 21.9 · 28.1 | **2** | 94.5 nm, from a different part of the spectrum |
+| `RvCont` | **1.0** | **1.0 · 3.4** · 6.3 · 9.3 | 0 | 20.5 nm past the continuum fit's edge at 604 |
+| `RvLin` | **16.3** | 16.3 · 16.5 · 18.2 · 20.0 | 0 | 11.0 nm past the far anchor, extrapolated |
+| `RvTest` | **17.0** | 17.0 · 17.0 · 19.0 · 20.3 | 0 | 11.0 nm, the band's own shoulder |
+
+⭐ **`RvTest` is the only one that structurally CANNOT go negative**: its numerator asks whether the band
+is taller than the shoulder 11 nm below it, and a band that is not taller than its own shoulder is not a
+band. `RvLin` inherits most of that (same 11 nm) but extrapolates, so a steep valley-to-shoulder slope can
+overshoot; it has not in 132 runs.
+
+⛔⛔ **`RvCont` IS THE WEAKEST OF THE THREE CORRECTED FORMS ON THIS PROPERTY, and that is a genuine
+surprise.** Its continuum stops at 604 nm and is carried **20.5 nm** to the red band, while the fit is
+dominated by the 505–555 window 90 nm away, so any curvature between 604 and 624 goes straight into the
+numerator. On `BillaCleverA/002` its numerator is **0.0014 A** — not a margin, a coincidence — where
+`RvLin` on the same capture sat at 29.2.
+
+⇒ **§16.2's structural case for `RvCont` (affine-invariant, a proper continuum, no mismatched lever arms)
+is untouched and remains the best in the family. Sign robustness is a DIFFERENT property and it picks a
+different metric.** Both are true; they are not the same argument, and neither settles the choice.
+
+⚠ **One brown fill is one brown fill.** Every number in this section at the brown end rests on
+`20260828BillaCleverA` plus the three archived brown fills of §16.3c — which is exactly the corpus gap
+§16.3c already names as the blocker.
+
+### ⭐⭐ 16.8 THE SAME-JAR REFERENCE — a new method, and two systematic effects it made visible  *(Edwin's session, 2026-08-28/29; six fills, one oil plus one brown)*
+
+Edwin's method, from `20260828EstererD` onward: **4 mL of solvent goes into the MEASUREMENT jar, the
+reference is captured, and only then is the oil dosed in** with a capillary, vortexed and read in the same
+jar. It removes the jar-to-jar term every other run in this archive carries — `SPEC_capture_quality.md`
+§16.9.3d puts the jar at **~7× the camera-alignment error**, and §16.9.3h prices two jar operations at
+**8.4 %** against one operation's 5.9 %.
+
+⚠ It does **not** remove re-seating: the jar leaves the holder to be dosed and mixed. And it introduces a
+new asymmetry — **the reference is captured before the agitation, the sample after.**
+
+⛔⛔ **NOTHING ON DISK RECORDS WHICH METHOD A FILL USED.** All six fills carry
+`solvent: SUNFLOWER_OIL` and `prepProtocol: invert-40-after-capillaries-clear`. They are distinguishable
+only by the **reference fingerprint** — normalised at 600 nm, two same-method captures agree to ~0.96 %
+RMS where a cross-method pair sits at 2.7–2.9 %. `diagnostics/d2r_all_runs.py`'s `OTHER_REFERENCE` names
+them; §0b's header items are now blocking rather than cosmetic.
+
+#### ⭐⭐ 16.8a TWO EFFECTS, SEPARATED — and the separation is the result
+
+The same-jar fills read `pq` = (A_Q − Av)/(A_Soret − Av) **below** the two-jar fills, and the value
+**climbs through the session**. Those are two different things, and one cross-reference table splits them:
+
+| sample | own ref | D's ref | F's ref | B's ref *(two-jar)* |
+|---|--:|--:|--:|--:|
+| D 03:32 | 0.1267 | 0.1267 | 0.1320 | 0.0713 |
+| E 04:14 | 0.1385 | 0.1437 | 0.1487 | 0.0902 |
+| F 04:50 | 0.1536 | 0.1486 | 0.1536 | 0.0943 |
+| Billa 05:24 | 0.2057 | 0.2349 | 0.2402 | 0.1695 |
+
+**1 · READ DOWN A COLUMN — the drift is in the SAMPLES.** With the reference held fixed, D → E → F still
+climbs **+0.022**, against +0.027 with each fill's own reference. ⇒ **~80 % of the session drift is in the
+fills**, three independent fills of one oil made progressively later in one night. ⛔ `pq` is dose-free AND
+floor-free — an oil property — so it must not move at all. It does, and nothing known explains it.
+⚠ The references themselves barely moved: peak 243.6 → 241.4 → 241.2 → 243.3 DN across four hours.
+
+**2 · READ ACROSS A ROW — the method offset is in the REFERENCE SHAPE.** The two blanks differ
+systematically:
+
+| reference band ratios, normalised at the valley | 448/valley | 565/valley | 624/valley |
+|---|--:|--:|--:|
+| same-jar (D, E, F) | 0.883 – 0.900 | **0.457 – 0.466** | 0.289 – 0.298 |
+| two-jar (B, C) | 0.920 – 0.927 | **0.419 – 0.420** | 0.264 – 0.268 |
+
+~11 % at the Q band, and recomputing the same-jar samples against a two-jar blank moves `pq` by
+**−0.055 … −0.065**. ⇒ **The method offset is three times the drift and ten times `pq`'s fill-to-fill
+scatter within a method.** One of those two blank shapes is wrong. Possibly both.
+
+⭐ **An earlier reading of these fills — "the deficit went away when F landed on the archive at 0.1536" —
+is WITHDRAWN.** That agreement is two effects partly cancelling: the samples drifting up while the
+same-jar blank holds them up. Against a two-jar blank the same fills read 0.071–0.094, far below anything
+in the archive.
+
+⭐⭐ **And `20260828BillaCleverA` carries the same signature on a DIFFERENT OIL** — 0.206 own, 0.235–0.240
+under D's or F's, 0.170 under B's. That rules out anything specific to Esterer.
+
+#### 16.8b What the method appears to buy, stated as an appearance
+
+| | fills | `Rv` fill-to-fill | best `RvCont` agreement | within-fill |
+|---|--:|--:|--:|---|
+| two-jar (B, C) | 2 | 8.72 | 4.80 | 1.1 / 1.3 |
+| same-jar (E, F) | 2 | **4.06** | **0.76** | 1.8 / 1.3 |
+
+⭐ `RvCont` agreeing to **0.76** between two independent fills is the closest this archive contains, and
+`F/002` drifts at **0.003 %/min** with `F` and `A_valley` repeating to four decimals. ⛔ But two fills
+each, one night, and §16.8a's drift runs straight through the comparison — this is **not** a claim that
+the method halves σ_fill.
+
+#### ⛔⛔ 16.8c THE EXPERIMENT THAT SETTLES IT — three captures, no oil
+
+The two methods differ only in their blank, and **the sample cancels**:
+
+```
+A1 - A2 = -log10(S/R1) + log10(S/R2) = log10(R1/R2)      <- no S anywhere
+```
+
+So the jar term is measurable from **two reference captures alone**:
+
+1. Jar #1, 4 mL pure sunflower, seat, capture → **R₁ₐ**
+2. Lift jar #1, replace it, capture → **R₁ᵦ**  ⇒ `log10(R₁ₐ/R₁ᵦ)` = **re-seating alone**
+3. Jar #2, 4 mL pure sunflower, seat, capture → **R₂**  ⇒ `log10(R₁ₐ/R₂)` = **jar-to-jar + re-seating**
+
+Difference = **jar-to-jar**, which §16.9.3h never measured (its 2.81 % was one jar re-seated).
+
+⭐ **Run it at the START of a session and again at the END** — that answers §16.8a's drift and §16.8a's
+offset in one go, with no sample and no oil.
+
+| `log10(R₁ₐ/R₂)` | reading |
+|---|---|
+| flat and ≈ 0 | the jars are interchangeable; the offset is elsewhere |
+| a LEVEL offset | the archive carries a constant absorbance bias — cancels in `Rv`, but `F`, `A_Q` and the DN guard are all wrong by it |
+| **structured in λ** | ⛔ the big one. It cancels in NO metric in this family, and it would explain both the offset and why σ_fill has never come down |
+
+⚠ **Controls:** exposure untouched across all three, and the same fill level in both jars — §16.9.3h
+prices jar *level* separately at 1.68 % per operation, additive and non-cancelling.
+
+⇒ ⛔ **Until it runs, the same-jar fills cannot be placed against the archive in EITHER direction**,
+including §16.7's `Rv` = −10.0. They are excluded from `d2r_all_runs.py` by name for exactly this reason.
+
+### ⭐⭐⭐ 16.9 THE BROWN REPLICATE PAIR — and it splits the family in two  *(Edwin's call, 2026-08-29: "RvLin is the best for the measurements today")*
+
+`20260828BillaCleverA` and `B`, two fills of one brown oil, same recipe, 32 minutes apart — the brown
+replicate §16.3c named as the blocker. It is the most decisive pair in this archive.
+
+| | A | B | difference |
+|---|--:|--:|--:|
+| **`Rv`** | −10.0 | 26.2 | **+36.3** |
+| **`RvCont`** | 2.2 | 25.0 | **+22.8** |
+| `RvLin` | 29.3 | 35.5 | **+6.3** |
+| `RvTest` | 29.9 | 36.0 | **+6.1** |
+| `Q%` | 18.32 | 22.52 | +4.20 |
+
+⛔⛔ **`Rv` scatters 36 units between two fills of one oil** — four times its worst green-pair scatter of
+the same night. ⇒ §16.3b's finding that `Rv` was *steadiest* on browns came from the isopropanol sessions
+and **does not survive a brown replicate**.
+
+#### ⭐⭐ 16.9a THE FIGURE OF MERIT — gap divided by worst-case replicate scatter
+
+Three replicate pairs from 2026-08-28/29, and the class separation over the same seven fills:
+
+```
+                             Rv    RvTest    RvLin   RvCont
+E vs F   green, same-jar    4.06     6.54     3.60     0.76
+A vs B   BROWN, same-jar   36.26     6.07     6.28    22.75
+B vs C   green, two-jar     8.72     1.70     4.02     4.80
+WORST CASE                 36.26     6.54     6.28    22.75
+class gap                  +56.7    +41.4    +45.0    +80.2
+
+gap / worst-case            1.56     6.33     7.17     3.53
+```
+
+⭐ **`RvLin` wins on both halves**: the lowest worst-case scatter *and* a wider gap than `RvTest`. It is
+also the only one of the four with **no bad pair** — 3.60 / 6.28 / 4.02 — where `Rv` and `RvCont` each
+blow up on the brown pair.
+
+⛔ **And `RvCont`'s +80.2 gap, the widest in the table, is worth the LEAST**: bought at 22.75 of brown
+scatter it is 3.5 σ, where `RvLin`'s narrower gap is 7.2 σ. That is §16.4's warning arriving from the
+other direction — a headline separation that does not survive division by its own noise.
+
+#### 16.9b Why `RvLin` and not the others, structurally
+
+| | affine-invariant? | lever the baseline is carried over |
+|---|---|---|
+| `Rv` | ⛔ no — a tilt moves it ±5.1 per 0.01 A/100 nm | 94.5 nm |
+| `RvTest` | ⛔ no — ∓1.5, opposite sign | 11.0 nm |
+| `RvCont` | ✅ yes | 20.5 nm past the fit's edge at 604 |
+| **`RvLin`** | ✅ **yes** | **11.0 nm** |
+
+⭐ **`RvLin` is the only member that is both.** `RvCont` buys affine-invariance with a long extrapolation;
+`RvTest` buys a short lever without invariance. That is also why `RvLin` never came within **16.3** of a
+sign change over 132 runs where `RvCont` reached 1.0 and `Rv` went negative (§16.7c).
+
+#### ⛔ 16.9c WHAT THIS DOES NOT SETTLE
+
+1. **`RvLin` loses the archive-wide hold-out** — a cut fitted on isopropanol and carried across gives
+   **6/36** against `Rv`'s **0/36** (§16.3a). Tonight is 7 fills, two oils, one night; the hold-out is 124
+   runs and three solvents. `RvLin` wins one question and loses the other, and they are different questions.
+2. ⚠ **The session drift runs through every number above** — `A_valley` climbed 0.037 → 0.093 across the
+   ten same-jar runs of §16.8. So part of the A-vs-B 36 is drift rather than fill scatter, and tonight's
+   ranking is partly a ranking of **drift tolerance**. That is a real virtue, but it is not the same as
+   metric quality and must not be quoted as if it were.
+3. ⚠ **One brown pair.** Everything separating `RvLin` from `RvCont` and `Rv` comes from Billa A vs B.
+
+#### ⭐⭐⭐ 16.9d THE READING THAT SURVIVES — the threshold and the number are two different products
+
+`Rv` classified **all seven fills of 2026-08-28/29 correctly**, greens at 83–94 and browns at −10 and 26,
+against `T` = 52. **Nothing came near the line all night.** Its 36-unit brown scatter cost it nothing at
+all as a verdict.
+
+⇒ **`Rv` keeps the threshold job it has never failed. `RvLin` is the leading candidate for the CONTINUOUS
+job — `SPEC_history_tracker.md` — which `Rv` demonstrably cannot do.** They may simply be two metrics,
+and this pair is the first evidence that says so plainly.
+
+⛔ **Neither is adopted here.** `RvLin`'s threshold is fitted on this corpus, the pre-registration is
+unrun, and §16.8's blank question is open — until the two-reference run (§16.8c) says which blank shape is
+correct, the same-jar fills that produced this ranking cannot be placed against the archive.
+
+`diagnostics/d2r_all_runs.py` carries `RvLin` on its own per-day page, beside `Rv`, `RvTest` and `RvCont`.
+
+### ⭐⭐⭐ 16.10 PRE-REGISTRATION — `RvLin` on the same-jar recipe, thresholds FIXED 2026-08-29 before any new data exists
+
+> ⛔ **This is not §7's M9.** M9 is the shipped `Rv`'s pre-registration against the isopropanol archive and
+> it remains unrun. This is a **narrower, recipe-specific** registration: does `RvLin` hold up on the
+> same-jar / no-bath / 6-minute recipe, on an oil it has never seen? It costs one evening and it can be
+> written down today, which is the only reason it exists.
+
+#### 16.10.1 The corpus these thresholds come from — and nothing else may be added to it
+
+**Four fills, one night (2026-08-28/29), same-jar reference, no ultrasonic bath, 6 minutes standing dark:**
+`20260828EstererE`, `20260828EstererF` (green) and `20260828BillaCleverA`, `20260828BillaCleverB` (brown).
+
+⛔ `20260828EstererD` is **excluded** — bath and 60 s stand, a different preparation.
+⛔ `20260828EstererB` / `C` are **excluded** — two-jar reference, a different measurement.
+
+#### ⭐⭐ 16.10.2 THE THRESHOLDS. Fixed. Written before the data.
+
+| metric | min green | max brown | corridor | **T (midpoint)** |
+|---|--:|--:|--:|--:|
+| `Rv` | 84.6 | 26.2 | 58.4 | **55.4** |
+| `RvTest` | 77.4 | 36.0 | 41.4 | **56.7** |
+| **`RvLin`** | **80.5** | **35.5** | **45.0** | **58.0** |
+| `RvCont` | 108.8 | 25.0 | 83.8 | **66.9** |
+
+⛔⛔ **NONE OF THESE MAY MOVE AFTER THE NEXT SESSION'S NUMBERS ARE SEEN.** A threshold re-fitted on the
+data it is then scored against measures nothing, and §16.3a already showed what that costs — every
+candidate's fitted score reversed under a hold-out. If a threshold turns out to be wrong, the honest
+outcome is *"the metric failed its registration"*, followed by a NEW registration on the enlarged corpus.
+
+#### 16.10.3 What the next session tests, and what each outcome means
+
+**The prediction:** Lugitsch is the archive's **greenest** oil (five sunflower fills, `Rv` 93.7–119.8),
+so it should read **well clear of every T above** — not marginally.
+
+| outcome | reading |
+|---|---|
+| Lugitsch **> T** on all four metrics, Billa **< T** | ✅ the registration passes; `RvLin` survives its first out-of-sample oil |
+| Lugitsch **< 58.0** on `RvLin` | ⛔ **`RvLin` FAILS.** Its §16.9 win came from one brown pair and did not generalise |
+| `RvLin` passes but `Rv` fails | ⭐ the strongest possible result — the two metrics separate on a real oil, not on an argument |
+| all four pass | ⚠ **expected, and it settles nothing about which is better.** The discriminating measurement is then the REPLICATE SCATTER below, not the classification |
+
+⭐⭐ **THE SHARPER TEST, and the one this session is really for.** Classification is easy at these margins
+— tonight nothing came within 25 units of any threshold. What separates the family is repeatability:
+
+> **PREDICTED, and recorded before the run: on the Lugitsch bracket pair (fills 1 and 4 of §16.10.4),
+> `RvLin`'s scatter will be BELOW `Rv`'s.** Tonight the same comparison gave `RvLin` 6.28 against `Rv`
+> 36.26 on the brown pair, and 3.60 against 4.06 on the green pair.
+
+⛔ **If `Rv` scatters less than `RvLin` on that pair, §16.9's ranking is refuted** and `RvLin` goes back to
+being one candidate among four.
+
+#### ⭐ 16.10.4 THE SESSION PLAN — four fills, two reference runs, one evening
+
+| # | what | why it is there |
+|---|---|---|
+| **0** | ⭐ **Two-reference run** — `R₁ₐ`, `R₁ᵦ` (same jar re-seated), `R₂` (second jar); 4 mL pure sunflower each, **no oil**, exposure untouched | §16.8c. Ten minutes. Records the jar term AND the session's starting state |
+| 1 | **Lugitsch · same-jar** | the new oil, against §16.10.2's thresholds |
+| 2 | ⭐⭐ **Lugitsch · TWO-JAR** | **same oil, same evening, only the reference method differs.** Nothing in the archive provides this, and it is what decides which blank shape is correct |
+| 3 | **Billa Clever · same-jar** | holds the brown end, so the corridor is measured and not assumed |
+| 4 | **Lugitsch · same-jar again** | ⭐ the **bracket** — separates the session drift from the oil, and supplies §16.10.3's replicate pair |
+| **5** | **Two-reference run again** | does the blank drift across an evening? §16.8a says something does |
+
+⚠ **Two reads per fill**, times logged, and the order above kept and written down. With a drift of this
+size **the order is data**, not bookkeeping.
+
+⭐ **If the evening runs short, protect step 2.** Every other fill can be repeated another night; a
+matched same-jar / two-jar pair on ONE oil in ONE evening is the only thing that resolves §16.8, and
+without it every number from the new recipe stays unplaceable against the archive.
+
+#### ⛔ 16.10.5 What this session does NOT decide
+
+1. **The shipped verdict.** `Rv` classified all seven fills of 2026-08-28/29 correctly with nothing near
+   the line (§16.9d). Nothing here proposes changing that, and a `RvLin` pass would not.
+2. **Whether the same-jar recipe is adopted.** That waits on step 0/5's jar term. ⚠ The session drift is
+   present in the same-jar series (`A_valley` 0.037 → 0.093) and **absent from the two-jar pair** — but
+   method and clock are confounded, since every two-jar fill was early. Step 2 breaks that confound.
+3. **Anything about a third oil, a second solvent or the lamp.** One evening, one question each.
+
+### ⭐⭐⭐ 16.11 EDWIN'S DECISION — `RvLin` is the working choice for the CONTINUOUS number  *(2026-08-29)*
+
+> *"I think we will stick with `RvLin` as it seems the best for now and one can argue for it some way."*
+
+⭐⭐ **AND THE BOUNDARY IS THE DECISION, not just the metric.** `Rv` keeps the **verdict**; `RvLin` becomes
+the working candidate for the **continuous** number — `SPEC_history_tracker.md`, and anything that reads
+`Rv` as a quantity rather than as a side of a threshold.
+
+⛔ **Nothing about the shipped classification changes.** `Rv` got all seven fills of 2026-08-28/29 right
+with nothing within 25 units of the line (§16.9d), and swapping the verdict metric would cost a full M9
+re-registration for no gain. ⚠ Keeping this boundary written down is what stops *"`RvLin` is better"*
+quietly becoming *"`RvLin` replaces `Rv`"* in three weeks.
+
+#### 16.11.1 The argument, in the order it should be made
+
+**1 · It is the only member that is both invariant and short-lever.**
+
+| | affine-invariant? | baseline carried over |
+|---|---|---|
+| `Rv` | ⛔ no — a tilt moves it ±5.1 per 0.01 A/100 nm | 94.5 nm |
+| `RvTest` | ⛔ no — ∓1.5, opposite sign | 11.0 nm |
+| `RvCont` | ✅ yes | 20.5 nm past its fit's edge |
+| **`RvLin`** | ✅ **yes** | **11.0 nm** |
+
+Every other candidate gives up one of the two. ⭐ This is a **structural** argument and holds before any
+data is seen — which is what makes the empirical result in point 4 believable rather than a coincidence
+of seven fills.
+
+**2 · Sign robustness follows from it.** Never within **16.3** of zero over 132 runs, where `Rv` went
+negative twice and `RvCont` reached **1.0** with a numerator of 0.0014 A (§16.7c).
+
+**3 · ⭐ It reduces to `Rv` when nothing is wrong.** With `Δ = A[612–615] − A_valley` = 0,
+**`RvLin` ≡ `Rv` exactly.** It is not a rival metric; it is `Rv` with the baseline's slope *measured*
+instead of assumed. That is the sentence to lead with: it makes the change small, explainable and drawable
+on the existing plot — the same ground `ROADMAP.md` used to keep `Rv` over `dQ100`.
+
+**4 · And only then the numbers.** Best of the four on gap ÷ worst-case replicate scatter — **7.17**
+against `RvTest` 6.33, `RvCont` 3.53 and `Rv` 1.56 — and the only one with no bad pair (§16.9a).
+
+#### ⛔ 16.11.2 Three things that would overturn it, all cheap, none a reason to wait
+
+1. **The pre-registered test fails** — Lugitsch below `T` = 58.0, or `Rv` scattering *less* than `RvLin`
+   on the bracket pair. §16.10.3 says that refutes §16.9's ranking, and this decision holds to that.
+2. **The archive-wide hold-out stays lost.** `RvLin` gives **6/36** where `Rv` gives **0/36** when a
+   threshold is carried across solvents (§16.3a). Acceptable if sunflower is final; not otherwise.
+3. **The blank question resolves against the same-jar method.** The whole `RvLin` ranking comes from
+   same-jar fills. If §16.8c's reference run says that blank is wrong, the ranking goes with it.
+
+⇒ ⭐ **A working choice that can be argued for beats an open question that cannot be acted on**, and
+§16.10's pre-registration is exactly what makes this revisable without embarrassment.
+
+#### 16.11.3 What is NOT decided
+
+⛔ **`RvLin` is not adopted, implemented or thresholded in shipping code.** Its `T` = 58.0 is fitted on
+four fills of one night; the pre-registration is unrun; the history tracker is still blocked on §0-JAR.
+This records **which candidate the programme is building toward**, in the same sense §15 recorded `Rv` —
+*chosen, not built*.

@@ -24,6 +24,7 @@ import os
 import sys
 import hashlib
 import tempfile
+import textwrap
 
 import numpy
 import matplotlib
@@ -110,7 +111,17 @@ TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spa
          # replicate under the NEW preparation, which is the first one the archive has. Both fills
          # repeat to 1.1 `Rv` WITHIN themselves (the best on record) and differ by 8.8 BETWEEN
          # themselves. ⇒ the vortex improved the measurement and left σ_fill alone.
-         "20260828EstererC": ("Esterer", "green")}
+         "20260828EstererC": ("Esterer", "green"),
+         # ⛔ D, E and F are here ONLY so their runs pass through `take` and are ANNOUNCED as excluded.
+         # Every run of each is in EXCLUDED below; see OTHER_REFERENCE for why. The label is never read.
+         "20260828EstererD": ("Esterer", "green"),
+         "20260828EstererE": ("Esterer", "green"),
+         "20260828EstererF": ("Esterer", "green"),
+         # ⭐ The first BROWN fills made under the settled recipe, and a replicate PAIR of them --
+         # `SPEC_metric_research.md` §16.9 is built on this pair. Excluded here for their reference
+         # method, not for their quality.
+         "20260828BillaCleverA": ("Billa Clever", "brown"),
+         "20260828BillaCleverB": ("Billa Clever", "brown")}
 
 # ⚠⚠ FILLS NOT MADE BY THE RECIPE THE REPORT HEADER CLAIMS. The plugin writes a hardcoded
 # `prepProtocol` string into every report, so a recipe change is INVISIBLE in the record until the
@@ -210,11 +221,49 @@ EXCLUDED = {"20260826Lugitsch/004.pdf": "reads strange on the day — set aside 
             # ⭐ It is not being buried: `Rv` 70.1 / 64.1, fill mean 67.1, against 86.7 ± 6.6 for the
             # six sunflower Esterer fills — -2.95 σ. That belongs in SPEC_red_ratio_metric, not here.
             "20260828EstererA/001.pdf": "pumpkin oil in MCT, not sunflower — a different solvent",
-            "20260828EstererA/002.pdf": "pumpkin oil in MCT, not sunflower — a different solvent"}
+            "20260828EstererA/002.pdf": "pumpkin oil in MCT, not sunflower — a different solvent",
+            # ⛔⛔ SAME-JAR REFERENCE — a different measurement, not a different fill. See OTHER_REFERENCE
+            # for the method and for the `pq` drift that makes even their internal comparison unsafe.
+            "20260828EstererD/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828EstererD/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828EstererE/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828EstererE/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828EstererF/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828EstererF/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828BillaCleverA/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828BillaCleverA/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828BillaCleverB/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828BillaCleverB/002.pdf": "same-jar reference — not on the archive's footing"}
 # ⛔ EXCLUDED FOR A REASON THAT IS NOT ABOUT THE FILL. These sessions are in `EXCLUDED` because they
 # are a DIFFERENT SOLVENT, so they are not candidate members of any sunflower σ_fill and must never be
 # priced as one (see `excludedCost`). They are still announced on every run like any other exclusion.
 OTHER_SOLVENT = {"20260828EstererA": "MCT"}
+
+# ⭐ `SPEC_metric_research.md` §14.2's pigment-free windows, shared with `diagnostics/red_anchor_ab.py`.
+# ⛔ The blue one is load-bearing: dropping 472-500 turns RvCont's corridor from +5.1 to -6.1.
+CONTINUUM_WINDOWS = [(472.0, 500.0), (505.0, 555.0), (588.0, 604.0)]
+
+# ⛔⛔ A DIFFERENT REFERENCE METHOD, not a different fill. `20260828EstererD/E/F` were measured with the
+# reference and the sample in the SAME JAR: 4 ml of solvent goes into the measurement jar, the reference
+# is captured, and only then is the oil dosed in. That removes the jar-to-jar term every other run in
+# this archive carries, so their absorbances are not on the same footing as anything else here.
+# ⚠ AND THEY CARRY A TIME TERM. Across the six same-jar runs of 2026-08-29, 03:32 -> 04:53, `A_valley`
+# climbs 0.0371 -> 0.0738, the floor 0.0563 -> 0.0949 and `pq` = (A_Q-Av)/(A_Soret-Av) 0.1267 -> 0.1537,
+# monotonically. ⛔ `pq` is dose-free AND floor-free -- an oil property -- so it must not drift, and it
+# does. Until that is explained the three fills cannot be scored against each other, let alone against
+# the two-jar corpus.
+# ⭐ They are NOT priced as a σ_fill cost, for the same reason `OTHER_SOLVENT` is not: a fill set aside
+# because it was MEASURED differently is not a member of the population whose scatter is being reported.
+OTHER_REFERENCE = {"20260828EstererD": "same-jar reference",
+                   "20260828EstererE": "same-jar reference",
+                   "20260828EstererF": "same-jar reference",
+                   # ⚠ THE TWO BROWN FILLS OF THAT NIGHT, and the ones whose absence is most visible:
+                   # without them the 08-28 row reads "1 oils" on a night that measured two. They are
+                   # same-jar like D/E/F (A confirmed by Edwin, B by its reference fingerprint), so they
+                   # go out by the same rule -- but they are NAMED here and in the caption, because
+                   # 2026-08-29 they were simply absent from every page with nothing saying why.
+                   "20260828BillaCleverA": "same-jar reference",
+                   "20260828BillaCleverB": "same-jar reference"}
 
 SOLVENTMARK = {"isopropanol": "o", "sunflower": "s", "spirit": "^"}
 
@@ -334,7 +383,9 @@ def collect():
         print("  [!] EXCLUDED BY HAND: %s -- %s%s"
               % (relative, EXCLUDED[relative],
                  "  [priced separately: %s, not a sunflower fill]" % OTHER_SOLVENT[session]
-                 if session in OTHER_SOLVENT else ""))
+                 if session in OTHER_SOLVENT else
+                 "  [priced separately: %s, not the archive's method]" % OTHER_REFERENCE[session]
+                 if session in OTHER_REFERENCE else ""))
     for relative in sorted(set(EXCLUDED) - set(excluded)):
         print("  [!] EXCLUDED entry never matched a file: %s" % relative)
     if lateRuns:
@@ -562,14 +613,20 @@ def setAsideNote():
     is what stops it being a quiet one."""
     if not EXCLUDED:
         return ""
-    line = "\nSET ASIDE BY HAND, not plotted: " + "; ".join(
-        sorted({relative.split("/")[0] for relative in EXCLUDED}))
+    # ⛔ WRAPPED, not joined into one line. Seven excluded sessions ran off the right edge and the last
+    # ones were clipped mid-word -- on the page whose stated policy is that an exclusion stays visible.
+    sessions = "; ".join(sorted({relative.split("/")[0] for relative in EXCLUDED}))
+    line = "\nSET ASIDE BY HAND, not plotted: " + "\n     ".join(
+        textwrap.wrap(sessions, width=88))
     # ⭐ A session set aside for its SOLVENT gets its OWN LINE. On a page whose whole question is what
     # the metric does within one solvent, "excluded" and "excluded because it is a different solvent"
     # are not the same statement — and ⛔ this cannot ride on the line above, which is already long
     # enough to be clipped at the figure edge.
     for session, solvent in sorted(OTHER_SOLVENT.items()):
         line += "\n     %s is %s, a DIFFERENT SOLVENT \u2014 not a \u03c3_fill term." % (session, solvent)
+    if OTHER_REFERENCE:
+        line += ("\n     %s use a SAME-JAR REFERENCE \u2014 a different measurement, not a \u03c3_fill term."
+                 % ", ".join(sorted(OTHER_REFERENCE)))
     for oil, (n1, s1, n2, s2) in sorted(EXCLUSION_COST.items()):
         line += ("\n     COST: %s \u03c3_fill %.1f over the %d fills kept \u2014 %.1f over %d with "
                  "the set-aside fill back in." % (oil, s1, n1, s2, n2))
@@ -705,7 +762,8 @@ def pageSunflower(pdf, rows):
 
 
 def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
-              title="Rv in sunflower — one row per measurement day", blurb=None, caveat=""):
+              title="Rv in sunflower — one row per measurement day", blurb=None, caveat="",
+              extraRows=None):
     """Sunflower, ONE ROW PER MEASUREMENT DAY, stacked down an A4 portrait.
 
     ⭐ WHY PER DAY IS THE FAIR COMPARISON. Within a single day the lamp, the reference and the rig are
@@ -722,7 +780,14 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
     out, because between-day drift is exactly what a fill-scatter claim can otherwise borrow its win from.
     ⚠ `key` may go negative, so the y-window is taken from the data instead of pinned at zero."""
     rows = [r for r in rows if r["solvent"] == "sunflower"]
-    days = sorted({dateTag(sessionOf(r)) for r in rows})
+    # ⭐ A row may declare its own group instead of taking the folder's date. That is how the settled
+    # SAME-JAR fills get a row of their own beside the two-jar fills of the same night: the page's whole
+    # premise is "inside one row the rig is common to every oil", and it is TRUE within each method and
+    # FALSE across them. Overridden groups sort last, after every real date.
+    if extraRows:
+        rows = rows + [r for r in extraRows if r["solvent"] == "sunflower"]
+    groupOf = lambda row: row.get("dayOverride") or dateTag(sessionOf(row))
+    days = sorted({groupOf(r) for r in rows}, key=lambda d: (1, d) if "·" in d else (0, d))
     values = [r[key] for r in rows]
     if min(values) >= 0.0:                    # Rv and friends: keep the zero datum, the bar is meaningful
         floor, ceiling = 0.0, max(values) * 1.12
@@ -753,7 +818,7 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
     height = pitch * 0.72
     for index, day in enumerate(days):
         axes = figure.add_axes([0.105, TOP - pitch * index - height, 0.865, height])
-        today = [r for r in rows if dateTag(sessionOf(r)) == day]
+        today = [r for r in rows if groupOf(r) == day]
         oils = sorted({r["oil"] for r in today})
         reference = [r[key] for r in today if r["oil"] == "Lugitsch"]
         for position, oil in enumerate(oils):
@@ -779,9 +844,9 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
                        fontsize=10.5, fontweight="bold", loc="left")
 
     walk = " → ".join("%.1f" % numpy.mean([r[key] for r in rows
-                                                if r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == day])
+                                                if r["oil"] == "Lugitsch" and groupOf(r) == day])
                            for day in days
-                           if any(r["oil"] == "Lugitsch" and dateTag(sessionOf(r)) == day for r in rows))
+                           if any(r["oil"] == "Lugitsch" and groupOf(r) == day for r in rows))
     # ⚠ Anchored to BOTTOM, so the footnotes follow the rows instead of being overrun by them.
     figure.text(0.105, BOTTOM - 0.025,
                 "[*]  Read ACROSS a row, not down the page: inside one day the rig is common to every oil,\n"
@@ -796,9 +861,23 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
                 # edge of the figure and was clipped mid-word, so the last exclusion in the list was
                 # invisible on the very page whose policy is that an exclusion must stay visible.
                 # The per-file reasons are announced on the console and live in `EXCLUDED`.
+                # ⛔ WRAPPED. Sessions, not full paths (they ran off the edge), and now wrapped too:
+                # at seven excluded sessions even the short names clip mid-word, on the page whose
+                # stated policy is that an exclusion has to stay visible.
+                # ⛔ "not plotted" HAS TO MEAN not plotted ON THIS PAGE. The settled same-jar fills are
+                # in EXCLUDED — correctly, they touch no statistic — but they DO appear here, in their
+                # own row. Listing them as absent while they are drawn above is worse than listing
+                # nothing: it teaches the reader that the caption cannot be trusted.
                 % (walk, caveat, "" if not EXCLUDED else
                    "\nSET ASIDE BY HAND, not plotted: "
-                   + "; ".join(sorted({relative.split("/")[0] for relative in EXCLUDED}))),
+                   + "\n     ".join(textwrap.wrap(
+                       "; ".join(sorted({relative.split("/")[0] for relative in EXCLUDED}
+                                        - {sessionOf(r) for r in (extraRows or [])})),
+                       width=88))
+                   + ("" if not extraRows else
+                      "\n%s is drawn in its own row: same jar for reference AND sample, so it may be "
+                      "read\n     ACROSS that row but NOT against the two-jar rows above."
+                      % SAME_JAR_ROW)),
                 fontsize=8.2, color="#a03000", va="top", linespacing=1.5)
     pdf.savefig(figure)
     pyplot.close(figure)
@@ -879,13 +958,11 @@ RV_T_OLD = 52.0
 RV_T_NEW = 119.6
 
 
-def rvCorpus():
-    """The Rv-capable corpus, which is BIGGER than this file's d2R corpus: Rv needs only 500-627 nm,
-    where a 2nd derivative at 624 needs the far flank past 632. Imported lazily because
-    `reference_band_scan` imports names from this module -- at module level it would be a cycle."""
-    import reference_band_scan as scan
-    rows = scan.collect()
-    for row in rows:
+def addMetrics(row):
+    """Every metric this file plots, computed onto one row. ⛔ SHARED, not duplicated: the same-jar
+    corpus (`sameJarCorpus`) needs identical arithmetic, and two copies of a metric definition is how
+    two pages of the same PDF end up disagreeing about what `RvLin` means."""
+    if True:
         for tag, (low, high) in (("rvOld", RV_REF_OLD), ("rvNew", RV_REF_NEW)):
             valley = float(row["a"][(row["nm"] >= 500.0) & (row["nm"] <= 560.0)].mean())
             red = float(row["a"][(row["nm"] >= 622.0) & (row["nm"] <= 627.0)].mean())
@@ -913,10 +990,88 @@ def rvCorpus():
         # (one shared cut across solvents: 1 error becomes 4).
         localAnchor = float(row["a"][(row["nm"] >= 612.0) & (row["nm"] <= 615.0)].mean())
         row["rvTest"] = 100.0 * (red - localAnchor) / (qBand - valley)
+        # ⭐⭐ `RvCont` (Edwin, 2026-08-29: "something more advanced" than swapping one anchor for
+        # another). ONE least-squares line over EVERY pigment-free window -- §14.2's own 472-500 +
+        # 505-555 + 588-604 -- subtracted from the whole spectrum, then both bands measured above it.
+        # `A_valley` does not appear as a term because 505-555 is INSIDE the fit: after subtraction the
+        # valley sits at ~0 by construction. ⭐ It is the only member of the family with no mismatched
+        # lever arms, and it is exactly invariant to level AND tilt (§16.2's measured table).
+        # ⛔ IT DOES NOT BEAT `Rv`. Fitted on all 124 labelled runs it scores 0 errors with a +5.1
+        # corridor against Rv's 1 and -11.5 -- but §16.3a's HOLD-OUT reverses that: a cut fitted on
+        # isopropanol and carried across gives Rv 0/36 and RvCont 1/36, the other way 5/88 against 8/88.
+        # Its per-solvent cut spread is 16.7 against Rv's 6.8. ⚠ §16.3c then reverses it back INSIDE
+        # sunflower. Nothing is adopted; this page exists so the candidate is visible, not preferred.
+        # ⭐⭐ `RvLin` — the TWO-POINT line through (530, Av) and (613.5, Aloc), applied to BOTH bands.
+        # It is the only member that is affine-invariant AND short-lever: it removes a baseline tilt
+        # without RvCont's 20.5 nm extrapolation past its fit. ⇒ it never came within 16.3 of a sign
+        # change over 132 runs where RvCont reached 1.0 (SPEC_metric_research.md §16.7c).
+        # ⭐ On the 2026-08-29 fills it is the best of the four on gap-divided-by-worst-replicate-scatter
+        # (7.17 against RvTest 6.33, RvCont 3.53, Rv 1.56) — §16.9. ⛔ It LOSES the archive-wide hold-out
+        # (6/36 against Rv's 0/36, §16.3a), so it is a tracker candidate, not a verdict candidate.
+        slope = (localAnchor - valley) / (613.5 - 530.0)
+        baselineAt = lambda nanometer: valley + slope * (nanometer - 530.0)
+        linDenominator = qBand - baselineAt(572.5)
+        row["rvLin"] = (100.0 * (red - baselineAt(624.5)) / linDenominator
+                        if linDenominator > 0 else float("nan"))
+        mask = numpy.zeros_like(row["nm"], dtype=bool)
+        for low, high in CONTINUUM_WINDOWS:
+            mask |= (row["nm"] >= low) & (row["nm"] <= high)
+        gradient, intercept = numpy.polyfit(row["nm"][mask], row["a"][mask], 1)
+        corrected = row["a"] - (gradient * row["nm"] + intercept)
+        correctedQ = float(corrected[(row["nm"] >= 565.0) & (row["nm"] <= 580.0)].mean())
+        row["rvCont"] = (100.0 * float(corrected[(row["nm"] >= 622.0) & (row["nm"] <= 627.0)].mean())
+                         / correctedQ) if correctedQ > 0 else float("nan")
         # ⛔ `reference_band_scan` builds its own rows and does not carry this flag, so without it the
         # unconfirmed fill silently counts as a fourth Esterer fill on the Rv pages while being excluded
         # everywhere else. One corpus, one rule.
-        row["provisionalOil"] = row["session"] in PROVISIONAL_ATTRIBUTION
+        row["provisionalOil"] = row.get("session") in PROVISIONAL_ATTRIBUTION
+    return row
+
+
+def rvCorpus():
+    """The Rv-capable corpus, which is BIGGER than this file's d2R corpus: Rv needs only 500-627 nm,
+    where a 2nd derivative at 624 needs the far flank past 632. Imported lazily because
+    `reference_band_scan` imports names from this module -- at module level it would be a cycle."""
+    import reference_band_scan as scan
+    return paint([addMetrics(row) for row in scan.collect()])
+
+
+# ⭐⭐ THE SETTLED SAME-JAR RECIPE — same jar for reference and sample, NO ultrasonic bath, 6 minutes
+# standing in the dark. `20260828EstererD` is NOT here: it had the bath and only 60 s, so it is a
+# different preparation and would put two recipes on one row.
+# ⛔ These fills stay in EXCLUDED, so they touch NO statistic, NO σ_fill figure and none of the by-oil,
+# by-solvent or strip pages. They are read separately, ONLY for their own row on the per-day pages,
+# where the premise of the page — "inside one row the rig is common to every oil" — actually holds for
+# them: all four share one method, so green-vs-brown WITHIN the row is exactly the comparison the page
+# is for. ⚠ What would be wrong is putting them on the two-jar row, and that is what this prevents.
+SAME_JAR_ROW = "08-28 · same-jar"
+SAME_JAR_6MIN = {"20260828EstererE": ("Esterer", "green"),
+                 "20260828EstererF": ("Esterer", "green"),
+                 "20260828BillaCleverA": ("Billa Clever", "brown"),
+                 "20260828BillaCleverB": ("Billa Clever", "brown")}
+
+
+def sameJarCorpus():
+    """The four settled same-jar fills, read straight from disk because EXCLUDED (correctly) hides them
+    from every other consumer. Same `addMetrics`, same run policy, and every row carries `dayOverride`
+    so `pageByDay` can give them a row of their own."""
+    import tempfile
+    rows = []
+    with tempfile.TemporaryDirectory() as scratch:
+        for session, (oil, label) in sorted(SAME_JAR_6MIN.items()):
+            names = sorted(f for f in os.listdir(os.path.join(archive.ARCHIVE, session))
+                           if f.endswith(".pdf"))
+            for relative in ["%s/%s" % (session, name) for name in names]:
+                workflow = archive.workflowOf(os.path.join(archive.ARCHIVE, relative), scratch)
+                if workflow is None:
+                    continue
+                trace = archive.despikedTrace(workflow)
+                if trace is None or trace[0][0] > 500.0 or trace[0][-1] < 627.5:
+                    continue
+                rows.append(addMetrics({"run": relative, "session": session, "oil": oil,
+                                        "class": label, "solvent": "sunflower",
+                                        "nm": trace[0], "a": trace[1],
+                                        "dayOverride": SAME_JAR_ROW}))
     return paint(rows)
 
 
@@ -1190,7 +1345,7 @@ def exclusionCost(rv):
     with tempfile.TemporaryDirectory() as scratch:
         for relative in sorted(EXCLUDED):
             session = relative.split("/")[0]
-            if session not in TODAY or session in OTHER_SOLVENT:
+            if session not in TODAY or session in OTHER_SOLVENT or session in OTHER_REFERENCE:
                 continue
             workflow = archive.workflowOf(os.path.join(archive.ARCHIVE, relative), scratch)
             if workflow is None:
@@ -1257,6 +1412,10 @@ def main():
     # ⛔ the corpus and the cost of the hand exclusions are computed BEFORE anything is drawn: the
     # sunflower page prints that cost, so it has to exist by the time the page is rendered.
     rv = rvCorpus()
+    # ⛔ Read SEPARATELY and never merged into `rows` or `rv`: the same-jar fills must reach the per-day
+    # pages and NOTHING else. Every statistic on every other page is computed from corpora that cannot
+    # see them, which is what `EXCLUDED` is for and why they stay in it.
+    sameJar = sameJarCorpus()
     exclusionCost(rv)
     with PdfPages(OUT) as pdf:
         pageStrip(pdf, rows)
@@ -1268,7 +1427,7 @@ def main():
         # candidate sitting between the pages that get read is how a refuted number gets quoted.
         # ⚠ `RvTest` sits at the FRONT of the candidates because it is the only OPEN one — the two
         # behind it are shelved and rejected respectively. It is still behind the shipped metric.
-        pageByDay(pdf, rv, key="rvTest", cut=bestCut(rv, "rvTest")[1],
+        pageByDay(pdf, rv, key="rvTest", cut=bestCut(rv, "rvTest")[1], extraRows=sameJar,
                   label="RvTest",
                   title="OPEN CANDIDATE · RvTest in sunflower, one row per measurement day",
                   blurb="RvTest = 100·(A622-627 − A612-615) / (A_Q − Av)  —  Rv with the RED band on "
@@ -1283,6 +1442,38 @@ def main():
                          "against Rv's 1: the per-solvent cuts run\n44.4 / 65.5 (IPA / sunflower) "
                          "against Rv's 52.5 / 59.3. Rv's threshold transfers; RvTest's does not, and "
                          "that\nportability is the property Rv was chosen for on 2026-08-25.")
+        # ⭐ RvCont gets the SAME per-day view. It is the only candidate measured entirely above ONE
+        # fitted line, so its page is the one to read against the Rv page when asking whether a
+        # difference between two fills is the oil or the baseline.
+        pageByDay(pdf, rv, key="rvCont", cut=bestCut(rv, "rvCont")[1], extraRows=sameJar,
+                  label="RvCont",
+                  title="OPEN CANDIDATE · RvCont in sunflower, one row per measurement day",
+                  blurb="RvCont = 100 · A′(622-627) / A′(565-580),  where A′ is the spectrum MINUS a "
+                        "least-squares line\nfitted over the pigment-free windows 472-500 + 505-555 + "
+                        "588-604 nm. Both bands above ONE continuum.\n"
+                        "Red dashed = the cut FITTED on this archive, not a pre-registered constant.",
+                  caveat="\nEXACTLY INVARIANT TO LEVEL AND TILT (measured): +0.10 A flat, or a tilt of "
+                         "±0.02 A/100 nm, leaves it\nunmoved to three figures where Rv moves ±5.1 and "
+                         "RvTest ∓1.5. No mismatched lever arms.\n"
+                         "AND IT STILL DOES NOT BEAT Rv: fitted on all 124 runs it scores 0 errors / "
+                         "+5.1 corridor against\nRv's 1 / −11.5, but a HOLD-OUT reverses it — a cut "
+                         "carried from isopropanol gives Rv 0/36, RvCont 1/36.\nNothing is adopted. "
+                         "SPEC_metric_research §16; diagnostics/red_anchor_ab.py reproduces every number.")
+        # ⭐ RvLin last of the three open candidates, and NOT because it is least: on the 2026-08-29
+        # fills it is the best of the four (§16.9). It is ordered here because it is the newest.
+        pageByDay(pdf, rv, key="rvLin", cut=bestCut(rv, "rvLin")[1], extraRows=sameJar,
+                  label="RvLin",
+                  title="OPEN CANDIDATE · RvLin in sunflower, one row per measurement day",
+                  blurb="RvLin = 100 · (A624 − B(624.5)) / (A_Q − B(572.5)),  B = the straight line "
+                        "through (530, Av) and (613.5, A612-615).\nBoth bands above the SAME two-point "
+                        "line — affine-invariant like RvCont, but with an 11 nm lever instead of 20.5.\n"
+                        "Red dashed = the cut FITTED on this archive, not a pre-registered constant.",
+                  caveat="\nBEST OF THE FOUR ON THE 2026-08-29 FILLS, on gap ÷ worst-case replicate "
+                         "scatter: 7.17 against RvTest 6.33,\nRvCont 3.53, Rv 1.56 — and the only one "
+                         "with no bad pair (3.60 / 6.28 / 4.02), where Rv and RvCont\nboth blow up on "
+                         "the BROWN pair (36.3 and 22.8). Never within 16.3 of a sign change over 132 "
+                         "runs.\nBUT IT LOSES THE ARCHIVE-WIDE HOLD-OUT, 6/36 against Rv's 0/36 ⇒ a "
+                         "HISTORY TRACKER candidate, not a verdict one. §16.9.")
         pageDifferenceMetric(pdf, rv)
         # ⭐ the candidate gets the SAME per-day view as the shipped metric, on its own fitted cut --
         # the plot that divides the day out is where a fill-scatter claim has to hold up.

@@ -1234,6 +1234,16 @@ Same instrument, same jar handling.
 **⇒ the jar is ~98 % of the variance.** The cone joint, which has a defined seat, is *more* repeatable than a
 1 mm nudge of the camera — **the fix is a keyed seat for the jar, not more careful handling.**
 
+> ⛔⛔ **AND ONE TERM IS MISSING FROM THIS TABLE — noticed 2026-08-29.** Every figure above was measured by
+> **re-seating ONE jar**, so "jar seating + its own optics" is a *seating* number. It does not contain the
+> **jar-to-jar** difference — jar #1's own glass, scratches and ring pattern against jar #2's — and a real
+> measurement uses two different jars, the blank and the sample. ⇒ the 8.4 % below is a floor, not a total.
+> ⭐ `SPEC_metric_research.md` §16.8c gives the experiment that measures it, and it costs **three captures
+> and no oil**: two references in one jar (re-seated between) and one in a second jar. The sample cancels
+> algebraically — `A₁ − A₂ = log10(R₁/R₂)` — so the jar term is readable from the blanks alone.
+> ⚠ Edwin's same-jar method (§16.8) removes this term by construction and reads systematically differently
+> from the archive; which of the two blanks is correct is **unresolved**.
+
 #### What the tilt budget costs the PEAK RATIO
 
 The tilt figures only matter once converted: `ratio error = 0.434 × tilt / A_Q`. At the current recipe
