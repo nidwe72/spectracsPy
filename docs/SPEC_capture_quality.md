@@ -10012,9 +10012,31 @@ so `A_Q` and the whole archive stay comparable (§16.23.2a).
 5. **Top to volume** (§below), **vortex 60 s**, same setting.
 6. ⚠ **Ultrasonic bath 60 s — heater OFF, room-temperature water, bath lid CLOSED.** Its job is **de-gassing
    the air the vortex entrains**, not dissolution. See the two cautions below.
-7. **Stand 2 min capped and dark**, two slow inversions, pour, brim-fill, dry the jar, insert. ⚠ 2 min is
-   short against the ~2 h stratification of §6.6, so it does not reopen it.
-8. **One reference on pure solvent per fill** — `ROADMAP.md` §0a, non-negotiable.
+7. ⭐ **Settle 6 min in an INSULATED BOX** — dark, dry, no power, nothing to plug in — then dry the jar,
+   seat it and capture. *(Was "stand 2 min capped and dark", then 60 s, then 6 min under a bedsheet.)*
+   ⚠ 6 min is short against the ~2 h stratification of §6.6, so it does not reopen it.
+
+   ⭐⭐ **THE BOX IS FOR TEMPERATURE, NOT ONLY DARKNESS.** §16.38 measured the scatter floor per unit
+   pigment **more than doubling across one 2½-hour session, linear against the clock**, with the
+   instrument exonerated by its own reference — and the leading candidate is the room cooling, whose
+   mechanism §16.36 already measured (heat clears the fill, cooling re-clouds it). A bedsheet is dark but
+   **insulating in an unknown way**; a polystyrene box is dark *and* thermally slow.
+
+   ⭐ **Keep the solvent bottle and the clean jars IN the box.** Then everything that touches the fill is
+   already at the box's temperature and nothing has to equilibrate — which matters because ⛔ **six
+   minutes in still air will not equilibrate a jar**: air conducts ~25× worse than water and the still-air
+   time constant for a 4 mL fill is roughly 8 minutes. Conditioning the *inputs* removes the lag instead
+   of fighting it.
+
+   ⚠ **No heater, no thermostat, no set point.** The box does not *hold* a temperature — it slows the
+   room's change from hours to most of a night, and the solvent bottle's own mass does the work. If a set
+   point is ever added, keep it below **32 °C**: §16.36 puts the cloud point at 35–40 and a fill that
+   arrives clear and re-clouds in the holder is §14.5's confound, which is worse than the problem.
+
+8. ⭐ **LOG THE TEMPERATURE** — one number per fill, box and room, with the clock time. §16.38: the largest
+   systematic in the 2026-08-29 data is a variable recorded nowhere in this archive. A €5 thermometer.
+   ⛔ **This one ships**, because §16.38.5 makes it a product requirement and not only a bench habit.
+9. **One reference on pure solvent per fill** — `ROADMAP.md` §0a, non-negotiable.
 
 #### ⭐ THE VOLUME RULE — keyed to `A_Soret`, and it is a `Q%` rescue, not an `Rv` improvement
 
@@ -15446,3 +15468,33 @@ is right, and it is the only candidate that predicts a flat blank alongside a fa
 
 ⇒ Until it is logged, **`F`, `A_valley` and every σ_fill derived from a multi-hour session carry an unknown
 temperature term.**
+
+### ⭐⭐ 16.38.5 IT IS A LABORATORY PROBLEM FOR THE VERDICT AND A PRODUCT PROBLEM FOR THE TRACKER  *(Edwin, 2026-08-29)*
+
+> *"the drift will also not concern the miller who just makes 1, 2, 3 measurements a day"*
+
+⭐ **Correct, and the arithmetic agrees.** `RvLin` moved ~5.9 units across **81 minutes** of back-to-back
+fills. Over a single 20-minute measurement that is about **1.5 units**, against a green/brown corridor of
+**45**. ⇒ **invisible.** A miller never runs the session that produces the drift.
+
+⛔ **But it reaches the field by two indirect routes, and they are not the same size.**
+
+**1 · The thresholds come from drifting sessions.** `RvLin`'s `T` = 58.0 was fitted on four fills spread
+across 2½ hours of an uncontrolled ramp. The miller's single measurement is clean — but it is judged
+against a constant derived from dirty ones. ⇒ **the lab-side fix matters even though the field side does
+not need it.**
+
+**2 · ⛔⛔ THE TRACKER COMPARES ACROSS MONTHS, AND THAT IS WHERE AMBIENT REALLY MOVES.** One measurement in
+a cold mill in January against one in July is not a 2½-hour drift — it is a **15 °C** difference. For the
+**verdict** that is irrelevant: the margins are 25+ units. For `SPEC_history_tracker.md`, which needs
+4–6 unit precision, it is the whole problem.
+
+⇒ ⭐ **If the temperature hypothesis holds, the SHIPPED instrument must record temperature with every
+measurement** — not to control it, but so the tracker can refuse or correct a comparison made across a
+large one. That is a product requirement, it is cheap designed in now and expensive retrofitted, and it
+belongs beside `solvent`, `prepProtocol` and `referencePeakDn` in `ROADMAP.md` §0b's header list.
+
+⚠ **And the distinction is worth keeping straight in the documents**: the *recipe* (capillary, volume,
+vortex, box, 6 min) is what the miller does and ships; the *session protocol* (alternating oils, the
+bracket, the reference runs, the running order) exists only to stop OUR comparisons being confounded and
+never ships. They had been muddled together.
