@@ -789,11 +789,13 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
     groupOf = lambda row: row.get("dayOverride") or dateTag(sessionOf(row))
     days = sorted({groupOf(r) for r in rows}, key=lambda d: (1, d) if "·" in d else (0, d))
     values = [r[key] for r in rows]
+    # ⚠ The headroom is for the mean ± sd LABELS, which sit above the highest marker in each cluster.
+    # Applied uniformly, so "same vertical scale in every row" survives.
     if min(values) >= 0.0:                    # Rv and friends: keep the zero datum, the bar is meaningful
-        floor, ceiling = 0.0, max(values) * 1.12
+        floor, ceiling = 0.0, max(values) * 1.20
     else:
         pad = (max(values) - min(values)) * 0.10
-        floor, ceiling = min(values) - pad, max(values) + pad
+        floor, ceiling = min(values) - pad, max(values) + pad * 1.8
     span = ceiling - floor
     figure = pyplot.figure(figsize=(8.27, 11.69))
     figure.suptitle(title, fontsize=13, fontweight="bold", y=0.975)
@@ -802,7 +804,8 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
     figure.text(0.5, 0.952,
                 blurb or
                 "The comparison with the day divided out. Same vertical scale in every row, so the rows\n"
-                "read against each other. Dotted = that day's Lugitsch mean, the one oil measured on all days.",
+                "read against each other. Bar = that oil's mean for the row; dotted = that day's Lugitsch\n"
+                "mean, the one oil measured on all days.",
                 ha="center", va="top", fontsize=8.2, style="italic", linespacing=1.5)
 
     # ⛔⛔ THE ROW GEOMETRY IS DERIVED, NOT TYPED. It used to be `0.700 - index * 0.245` with a fixed
@@ -827,6 +830,30 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
             for offset, row in zip(offsets, group):
                 axes.plot(position + offset, row[key], "s", color=row["color"], ms=7,
                           markeredgecolor="black", markeredgewidth=0.4)
+            # ⭐ THE OIL'S MEAN FOR THIS ROW, drawn as a bar over its own cluster. The page exists to be
+            # read ACROSS a row, and comparing two clusters of scattered squares by eye is exactly the
+            # judgement the bar removes. ⚠ Drawn UNDER the markers (zorder) and in the flat class hue,
+            # not a session shade, so it reads as an annotation rather than as another run.
+            values = [r[key] for r in group]
+            if len(group) > 1:
+                # ⚠ 0.28 against the markers' ±0.22 spread: wide enough to read as a bar, narrow enough
+                # that it still belongs to its own cluster on a two-oil row, where the x-axis is short.
+                axes.plot([position - 0.28, position + 0.28], [numpy.mean(values)] * 2,
+                          color=CLASSCOLOR[group[0]["class"]], lw=1.8, zorder=1,
+                          solid_capstyle="butt", alpha=0.85)
+            # ⭐ THE NUMBER, not only the bar. A reader comparing two clusters by eye is doing arithmetic
+            # the plot can do for them, and the sd is what says whether the gap between two bars means
+            # anything. ⚠ Anchored above the group's HIGHEST marker, not above the bar: on a bimodal
+            # cluster the mean sits between the runs and a label there lands on top of them.
+            caption = ("%.1f" % values[0] if len(values) == 1
+                       else "%.1f ± %.1f" % (numpy.mean(values), numpy.std(values, ddof=1)))
+            # ⚠ On a white PATCH: the label has to survive landing on the crimson threshold line, on the
+            # dotted Lugitsch reference and on its own caption, all of which it does on some row.
+            axes.text(position, min(max(values) + span * 0.04, ceiling - span * 0.06), caption,
+                      fontsize=7, color=CLASSCOLOR[group[0]["class"]], ha="center", va="bottom",
+                      fontweight="bold", zorder=5,
+                      bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
+                                edgecolor="none", alpha=0.78))
         if reference:
             axes.axhline(numpy.mean(reference), color="#2e7d32", lw=1.0, ls=":", alpha=0.85)
             axes.text(len(oils) - 0.45, numpy.mean(reference) + span * 0.015,
@@ -968,6 +995,11 @@ def addMetrics(row):
             red = float(row["a"][(row["nm"] >= 622.0) & (row["nm"] <= 627.0)].mean())
             reference = float(row["a"][(row["nm"] >= low) & (row["nm"] <= high)].mean())
             row[tag] = 100.0 * (red - valley) / (reference - valley)
+        # ⭐ `RV_REF_OLD` is (565, 580), so `rvOld` IS the shipped `Rv` -- give it that name too, because
+        # the d2R corpus builds `Rv` in `take()` and the same-jar corpus does not go through `take()`.
+        # ⛔ Without this the shipped per-day page silently drops the same-jar row while every candidate
+        # page shows it, which is exactly the inconsistency it took a rendered page to notice.
+        row["Rv"] = row["rvOld"]
         # ⭐⭐ THE DIFFERENCE METRIC (Edwin's question, 2026-08-27): should A_Soret be used as well?
         # ⛔ NOT as the reference — that is Q%'s anchor and it is the WORST of every candidate tried
         # (11 errors against Rv's 1; the Soret is carotenoid-contaminated, so it mixes pigment families).
@@ -1422,7 +1454,7 @@ def main():
         pageCurves(pdf, rows)
         pageBySolvent(pdf, rows)
         pageSunflower(pdf, rows)
-        pageByDay(pdf, rows)
+        pageByDay(pdf, rows, extraRows=sameJar)
         # ⭐ ORDER IS EDITORIAL: the LIVE metric first, every SHELVED candidate behind it. A rejected
         # candidate sitting between the pages that get read is how a refuted number gets quoted.
         # ⚠ `RvTest` sits at the FRONT of the candidates because it is the only OPEN one — the two
@@ -1433,7 +1465,8 @@ def main():
                   blurb="RvTest = 100·(A622-627 − A612-615) / (A_Q − Av)  —  Rv with the RED band on "
                         "its OWN local anchor\ninstead of a valley 70 nm away. Same layout as the Rv "
                         "page, so the two read against each other.\n"
-                        "Red dashed = the cut FITTED on this archive, not a pre-registered constant.",
+                        "Bar = that oil's mean for the row.   Red dashed = the cut FITTED on this "
+                        "archive, not a pre-registered constant.",
                   caveat="\nWHAT IT BUYS AND WHAT IT COSTS (diagnostics/red_anchor_ab.py, 124 labelled "
                          "runs, three solvents):\nISOPROPANOL, the 88-run corpus M9 would be registered "
                          "on — corridor -11.5 (overlapping) becomes +4.8,\nerrors 1 -> 0, and the one "
@@ -1451,7 +1484,8 @@ def main():
                   blurb="RvCont = 100 · A′(622-627) / A′(565-580),  where A′ is the spectrum MINUS a "
                         "least-squares line\nfitted over the pigment-free windows 472-500 + 505-555 + "
                         "588-604 nm. Both bands above ONE continuum.\n"
-                        "Red dashed = the cut FITTED on this archive, not a pre-registered constant.",
+                        "Bar = that oil's mean for the row.   Red dashed = the cut FITTED on this "
+                        "archive, not a pre-registered constant.",
                   caveat="\nEXACTLY INVARIANT TO LEVEL AND TILT (measured): +0.10 A flat, or a tilt of "
                          "±0.02 A/100 nm, leaves it\nunmoved to three figures where Rv moves ±5.1 and "
                          "RvTest ∓1.5. No mismatched lever arms.\n"
@@ -1467,7 +1501,8 @@ def main():
                   blurb="RvLin = 100 · (A624 − B(624.5)) / (A_Q − B(572.5)),  B = the straight line "
                         "through (530, Av) and (613.5, A612-615).\nBoth bands above the SAME two-point "
                         "line — affine-invariant like RvCont, but with an 11 nm lever instead of 20.5.\n"
-                        "Red dashed = the cut FITTED on this archive, not a pre-registered constant.",
+                        "Bar = that oil's mean for the row.   Red dashed = the cut FITTED on this "
+                        "archive, not a pre-registered constant.",
                   caveat="\nBEST OF THE FOUR ON THE 2026-08-29 FILLS, on gap ÷ worst-case replicate "
                          "scatter: 7.17 against RvTest 6.33,\nRvCont 3.53, Rv 1.56 — and the only one "
                          "with no bad pair (3.60 / 6.28 / 4.02), where Rv and RvCont\nboth blow up on "
