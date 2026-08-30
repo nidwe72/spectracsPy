@@ -1,3 +1,5 @@
+import datetime
+
 from PySide6.QtGui import qGray
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
@@ -6,6 +8,7 @@ from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModule import ImageSpectrumAcquisitionLogicModule
 from sciens.spectracs.logic.spectral.acquisition.ImageSpectrumAcquisitionLogicModuleParameters import ImageSpectrumAcquisitionLogicModuleParameters
 from sciens.spectracs.logic.spectral.acquisition.CaptureDiagnosticsLogger import CaptureDiagnosticsLogger
+from sciens.spectracs.logic.spectral.workflow.PrepProtocolResolver import PrepProtocolResolver
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
@@ -54,7 +57,16 @@ class SpectralWorkflowEngine:
         # ⭐ The PLUGIN declares what it is measuring in; the workflow only carries it to the report.
         solvent = getattr(self.plugin, "solvent", None)
         workflow.solvent = getattr(solvent, "value", None) or "UNKNOWN"
-        workflow.prepProtocol = getattr(self.plugin, "prepProtocol", None)
+        # ⛔ RESOLVED PER RUN, not read off the class. See PrepProtocolResolver: the compiled-in constant
+        # went stale twice and cost the archive its whole pre-vortex population (§16.15).
+        workflow.prepProtocol = PrepProtocolResolver.resolve(getattr(self.plugin, "prepProtocol", None))
+        # ⭐⭐ THE CLOCK IS STAMPED HERE, AT THE START OF THE MEASUREMENT — not at Save.
+        # ⛔ It used to be set only in `AbstractPluginExecutionView._persistNewRun`, so a run that was
+        # exported to PDF without being saved carried `timestampIso: null` — which is EVERY report in the
+        # archive. Runs could not be put in time order at all, and §16.23.2b step 8's "log the temperature
+        # WITH THE CLOCK TIME" had no clock to log against.
+        # ⚠ It is also the more honest quantity: the measurement time, not the filing time.
+        workflow.timestampIso = datetime.datetime.now().isoformat(timespec="seconds")
         for phaseType in self.PHASE_ORDER:
             phase = SpectralWorkflowPhase()
             phase.setType(phaseType)

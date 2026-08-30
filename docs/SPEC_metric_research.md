@@ -4077,14 +4077,397 @@ correctly with nothing within 25 units of the line.
 
 ⛔ **CHOSEN, NOT BUILT.** Nothing implemented, nothing thresholded in shipping code.
 
-#### What would overturn it — three things, all cheap
+#### What would overturn it — four things, all cheap
 
 1. **It loses the archive-wide hold-out** — a threshold fitted on isopropanol and carried across gives
    **6/36** against `Rv`'s **0/36** (§16.3a). Acceptable if sunflower is final; not otherwise.
 2. **Its ranking comes entirely from same-jar fills**, whose blank is still in question (§16.8c).
 3. `T` = **58.0** was fitted on **four fills of one night** under the bedsheet settling step — which has
    since become the insulated box (§16.23.2b step 7), so it is now **re-derivable rather than testable**.
+4. ⭐⭐ **The one pair it cannot split may be a pair that is not there.** `RvLin` reads Esterer and
+   Steirerkraft as indistinguishable (2.24 apart against 5.14 of fill scatter) where `RvCont` splits them by
+   12.04. **§16.13 was the pre-registered test of which is right** — ✅ **RUN 2026-08-30, and it tied**
+   (§16.14). `RvLin` is confirmed and `RvCont` is out as a verdict candidate; the one pair `RvLin` cannot
+   split is a pair the eye cannot split either.
 
 ⚠ **And everything separating it from `RvCont` and `Rv` rests on ONE brown replicate pair.**
 
 **Reproduce:** `diagnostics/red_anchor_ab.py` · per-day page in `20260825_d2r_all_runs.pdf`
+
+### ⭐⭐⭐ 16.13 📌 PRE-REGISTRATION — THE BLINDED TRIAD: do Esterer and Steirerkraft differ at all?  *(2026-08-30, written BEFORE any ranking is collected)*
+
+> ✅ **ANSWERED 2026-08-30 — see §16.14.** The `tied` row fired: the eye reads Esterer and Steirerkraft
+> as the same. ⚠ The inspection deviated from the protocol below in three named ways (§16.14.3); the
+> registration is kept verbatim because a rule is only worth what it was worth before the answer arrived.
+
+> ⛔ **This is not §16.10.** That registration asks whether `RvLin` holds its thresholds on a new oil, and
+> the 08-28/29 session answered it. This one asks something the archive cannot answer at all: **is there a
+> difference between two oils for the family to resolve?** Every metric here is validated against the eye,
+> and for this one pair the eye has never been asked.
+
+#### 16.13.0 Why this is the deciding measurement, and the only one that is not circular
+
+On the `08-28 · same-jar` row the four baseline forms agree on five of the six oil pairs. They disagree on
+exactly one, and they disagree completely:
+
+| | Esterer | Steirerkraft | gap | worst fill gap | resolved? |
+|---|--:|--:|--:|--:|:--|
+| `RvLin` | 82.33 ± 2.14 | 80.09 ± 3.38 | **2.24** | 5.14 | ⛔ no |
+| `Rv` | 86.66 ± 2.51 | 83.47 ± 3.98 | 3.18 | 4.06 | ⛔ no |
+| `RvTest` | 80.65 ± 3.79 | 78.86 ± 4.55 | 1.79 | 7.70 | ⛔ no |
+| **`RvCont`** | **109.14 ± 0.61** | **97.11 ± 2.15** | **12.04** | **0.94** | ✅ **at 12.8× its own fill scatter** |
+
+⭐ **Both readings are self-consistent and they cannot both be right.** Either the two oils are the same and
+`RvCont` is inventing a 12-unit difference, or they differ and the other three are blind to it. **Which one
+is true is not decidable from spectra**, because every candidate metric is itself under test.
+
+⛔ **And the archive cannot supply the label.** Its eye-ranking (2026-08-27) records *Lugitsch greenest,
+Esterer and Stekko a little browner but green*. **Steirerkraft's position among the greens was never set by
+eye** — its GREEN label comes from the isopropanol fills of 2026-07-29 and is a class, not a rank.
+
+⚠ **A false split is the worse failure.** `RvCont` agrees with itself to 0.76 and 0.94 between fills, so if
+it is wrong it is wrong *reproducibly* — both Esterer fills read 109.5 / 108.8 and both Steirerkraft fills
+97.6 / 96.6. A metric that confidently separates two oils a miller cannot tell apart will eventually reject
+a good batch, and its tightness is exactly what would make the number get trusted.
+
+#### ⛔ 16.13.1 THE DOSE ARM IS NOT FREE — 41 % of the disputed gap could be loading
+
+The two oils are **not** spectrally identical, and part of the difference is concentration:
+
+| | Esterer | Steirerkraft | |
+|---|--:|--:|--:|
+| `A_Soret` | 0.905 | 0.648 | **−28.4 %** |
+| `pq` = (A_Q − Av)/(A_Soret − Av) | 0.1455 | 0.2058 | +41 % |
+| (A624 − Av)/A_Soret | 0.1169 | 0.1550 | +33 % |
+
+`RvCont`'s continuum is fitted over `472–500 ∪ 505–555 ∪ 588–604`, and §16.3 records that the blue window is
+**load-bearing** — dropping it turns its corridor from +5.1 to −6.1. That window sits on the Soret flank, so
+a 28 % Soret difference can tilt the fitted line. Among the six green fills, `r(A_Soret, RvCont) = +0.517`
+against `RvLin`'s `+0.085`.
+
+**Measured from disk, on the within-oil fill pairs** (`diagnostics/red_anchor_ab.py`):
+
+```
+oil            dSoret %   dRvCont   dRvCont per 1% dose
+Esterer            0.14     -0.76   n/a (dose too small)
+Lugitsch           5.37      1.55   0.289
+Steirerkraft      15.43      0.94   0.061
+                                    median 0.175
+Esterer -> Steirerkraft: dose -28.4 %  =>  predicted RvCont shift 5.0
+observed gap 12.04                     =>  dose explains 41 %
+```
+
+⛔ **So the dose hypothesis is neither refuted nor sufficient**, and the slope is known only to a **factor of
+five** (0.061 against 0.289 on two usable pairs). ⇒ **the dilution arm below is part of the experiment, not
+an optional extra.** Without it a tie in the eye test would be ambiguous between *"the oils are the same"*
+and *"`RvCont` is reading the loading"*.
+
+#### ⭐⭐ 16.13.2 THE DECISION RULE. Fixed. Written before the ranking exists.
+
+Convention: on every form here **higher = greener**, so `RvCont` claims **Esterer is greener than
+Steirerkraft** (109.1 against 97.1).
+
+| eye outcome | what it means | consequence |
+|---|---|---|
+| **tied** — no reliable ordering | `RvCont`'s 12.04 is a **false discrimination**, reproducible and therefore dangerous | ⛔ `RvCont` is **out as a verdict candidate**. `RvLin`'s §16.11 choice is confirmed on this row, and its "failure" to split the pair is reclassified as **correct behaviour** |
+| **apart, Esterer greener** | `RvCont` resolves a real difference the other three miss | ⭐ `RvCont` returns as the leading candidate for the continuous number; `RvLin`'s insensitivity becomes its defect, and §16.11 must be re-opened |
+| **apart, Steirerkraft greener** | `RvCont` is **confidently wrong in the direction** | ⛔⛔ the worst outcome for it — worse than a tie, because a sign error cannot be excused as over-resolution |
+| ⚠ **the duplicate jars get split** (§16.13.3) | the ranking has no resolution at this level | ⛔ **the session is VOID.** It decides nothing and no outcome above may be read from it |
+
+⛔⛔ **NO OUTCOME MAY BE RE-READ AFTER THE SPECTRA ARE CONSULTED.** The ranking is collected first, written
+down, and only then compared. §16.3a is the standing lesson: every candidate's fitted score reversed under a
+hold-out.
+
+#### 16.13.3 The protocol — and the duplicate jar is the load-bearing part
+
+1. ⭐ **NEAT OIL, not the fills.** The archive's eye labels are of the oils as a miller sees them, and the
+   fills differ in loading by 28 % — ranking the jars would rank the dilution. What licenses comparing a
+   neat-oil ranking against a diluted-fill metric is the family's claimed **dilution-invariance**; §16.13.4
+   is what tests that claim rather than assuming it.
+2. ⭐⭐ **A DUPLICATE.** Four jars, not three: Esterer, Steirerkraft, Lugitsch, **and a second jar of
+   Esterer**. ⛔ Without it the test cannot tell *resolving* from *guessing* — a judge asked to order three
+   jars will produce an order whether or not one exists. **If the two Esterer jars are ranked apart, the
+   session is void** (§16.13.2, row 4).
+3. ⭐ **Lugitsch is the positive control.** The archive already says it is greenest. If the ranking does not
+   place Lugitsch first, the viewing setup is not resolving what it is known to resolve and nothing else
+   from that session counts.
+4. ⛔⛔ **ONE FIXED VIEWING GEOMETRY, stated in the record.** `DOC_sample_physics.md` §3.7: this oil is
+   **dichromatic** — green in a film, red in the bottle. *"Look the same"* is not a well-posed question until
+   the layer thickness is fixed. Identical jars, identical fill height, one background, one light source,
+   recorded.
+5. **Blinding.** Jars identical and unlabelled; a second person assigns the letters and holds the key.
+   ⚠ If nobody else is available, letter them, leave them a day, and rank before consulting the key — weaker,
+   and it must be recorded as weaker.
+6. **Repeat at least twice with the order reshuffled between passes.** A ranking that does not survive a
+   reshuffle is a coin toss with extra steps.
+
+#### 16.13.4 The dilution arm — one oil, three loadings, no eye required
+
+Prepare **one** oil (Esterer, the denser one) at three loadings spanning the disputed range: nominal,
+×0.72 (matching Steirerkraft's `A_Soret`) and ×1.3. Read all four forms.
+
+| result | reading |
+|---|---|
+| `RvCont` moves ≥ 8 across the ×0.72 step | ⛔ the Esterer/Steirerkraft split is **mostly loading**, and the eye test is not even needed to disqualify it |
+| `RvCont` moves ≤ 3 | ⭐ the split is a property of the oils; the eye test becomes decisive |
+| between | ⚠ inconclusive on its own — read it together with the triad, and say so |
+
+⭐ **This arm is worth running FIRST.** It is cheaper than the triad, needs no second person, and one of its
+three outcomes ends the question without any subjective judgement at all.
+
+#### ⛔ 16.13.5 What this does NOT decide
+
+- **Nothing about the VERDICT.** All four forms classify all eight fills of that row correctly, brown against
+  green, with margins of 12.9 to 39.3. This is about the **continuous number** (§16.11) and about resolution
+  within green, not about green-versus-brown.
+- **Nothing about `Rv`'s M9** (§7), which remains unrun on the isopropanol archive.
+- **Nothing general about `RvCont`.** One oil pair on one row of eight fills, all same-jar, all one evening.
+  A tie disqualifies it *for this pair* and removes the only evidence that it resolves more than `RvLin`; it
+  does not retire the metric.
+- ⚠ **It cannot separate "the oils are the same" from "the eye cannot see the difference."** Those are
+  different claims, and for a product validated against the eye only the second one matters — but the spec
+  should not pretend it has established the first.
+
+### ✅⭐⭐⭐ 16.14 THE EYE ANSWERED — `RvCont` is OUT, `RvLin` is CONFIRMED, and `Q%` inverts the ranking  *(Edwin's visual inspection, 2026-08-30)*
+
+> **The observation, in Edwin's words:** *"Lugitsch is noticeably greener than Esterer and Steirerkraft.
+> Esterer and Steirerkraft look about the same yellowish."*
+> Viewed through the eprouvette tubes, **2 capillaries in 8 mL sunflower** — i.e. 1.5 % v/v, the same
+> working strength as the measured fills.
+
+⭐ **§16.13.2's `tied` row fires.** This is the outcome the pre-registration was written against, and it was
+written before the answer existed.
+
+#### 16.14.1 Every metric scored against it
+
+Higher = greener on all forms except `Q%`, where **lower** = greener. "Worst fill scatter" is the largest
+between-fill gap over the three oils — the yardstick a difference has to clear to mean anything.
+
+| metric | Lugitsch | Esterer | Steirerkraft | L vs nearest | E vs S | worst fill scatter | verdict |
+|---|--:|--:|--:|--:|--:|--:|:--|
+| **`RvLin`** | 105.11 | 82.33 | 80.09 | **22.78** | **2.24** | 5.14 | ✅ **matches** |
+| **`Rv`** | 106.90 | 86.66 | 83.47 | **20.25** | **3.18** | 9.64 | ✅ **matches** |
+| **`RvTest`** | 103.92 | 80.65 | 78.86 | **23.27** | **1.79** | 7.70 | ✅ **matches** |
+| ⛔ `RvCont` | 119.23 | 109.14 | 97.11 | 10.09 | **12.04** | 1.55 | ⛔ **splits E/S** |
+| ⛔⛔ `Q%` | 17.94 | **13.48** | 18.58 | 0.64 | 5.10 | 2.55 | ⛔⛔ **Esterer reads greenest** |
+
+⛔ **`RvCont` fails, and the shape of the failure is the damning part.** It separates Esterer from
+Steirerkraft by **12.04 against a fill scatter of 1.55 — 7.8×** — so it is not a marginal call: it states a
+large difference, reproducibly (Esterer's two fills read 109.5 / 108.8, Steirerkraft's 97.6 / 96.6), between
+two oils the eye cannot tell apart. ⚠ And it separates that **wrong** pair (12.04) more strongly than it
+separates the pair the eye *can* see (10.09). A metric whose largest confident statement is its wrong one is
+worse than a noisy metric. §16.13.0 said tight-and-wrong beats loose-and-right for danger; here it is.
+
+⛔⛔ **`Q%` does not merely mis-rank — it inverts.** It makes **Esterer the greenest oil** (13.48) and puts
+Lugitsch (17.94) level with Steirerkraft (18.58), 0.64 apart on a fill scatter of 2.55. The eye says Lugitsch
+is *noticeably* greener than both. This is `SPEC_red_ratio_metric.md` §12.1's inversion again, now on three
+green oils in one solvent on one night, and it is the sharpest instance on record.
+
+⭐⭐ **`RvLin` is the only form that gets BOTH halves right by a margin.** Lugitsch clears the other two by
+4.4× the fill scatter while Esterer and Steirerkraft sit inside it. `Rv` and `RvTest` do the same with less
+headroom (2.1× and 3.0×).
+
+#### ⚠ 16.14.2 THE APP'S OWN COLOUR CHIP FAILS THIS TOO — and it is the one that should not have
+
+`EvaluationColorUtil.spectrumToLab(path=3)` is the *"as seen"* chip (`SPEC_color_retrieval.md` §7.12 C3) —
+the rendering whose whole purpose is to be perceptual. Its hues on these same spectra:
+
+```
+Lugitsch 113.51    Steirerkraft 111.76    Esterer 109.30
+```
+
+⛔ It has the gaps **backwards**: Lugitsch sits only **1.75** above Steirerkraft where the eye says
+*noticeably*, and Esterer sits **2.46** below Steirerkraft where the eye says *the same*. ⇒ **a band-ratio
+metric reproduces this eye judgement and the colorimetric rendering does not.** That is worth its own
+investigation before the chip is offered to an end user as a comparison aid — it is not evidence against the
+chip's colour maths, but it is evidence that a chip and a verdict are different products.
+
+#### ⛔ 16.14.3 HOW THIS DEVIATED FROM §16.13's PROTOCOL — three ways, named
+
+1. ⛔ **Not blinded.** Edwin knew which tube was which. §16.13.3 §5 asks for a withheld key; this is an
+   expert unblinded judgement. ⚠ It is, however, exactly the standard the archive's existing labels were set
+   by (the 2026-08-27 eye-ranking), so it is not a lower standard than the corpus it is being applied to.
+2. ⛔ **No duplicate jar.** §16.13.3 §2 makes it the load-bearing control, and without it *"resolves"* cannot
+   be told from *"guesses"*. ⚠ Mitigated here by the shape of the answer: the report is **one clear
+   difference and one clear non-difference**, which is not the output of a judge inventing an order.
+3. ⭐ **Fills, not neat oil — and this is BETTER than the spec asked.** §16.13.3 §1 called for neat oil to
+   match the archive's labels, which then required the family's *claimed* dilution-invariance to bridge to a
+   diluted-fill metric. Reading the tubes at **the same 1.5 % v/v as the spectra** removes that assumption
+   entirely. ⇒ amend §16.13.3 §1: the fill at working strength is the better comparison, not the fallback.
+
+#### 16.14.4 What follows
+
+| | |
+|---|---|
+| ⛔ **`RvCont`** | **out as a verdict candidate.** §16.3's fitted-cut win and §16.6's "best structural argument" both stand as written — and neither survives contact with an oil pair the eye calls equal |
+| ✅ **`RvLin`** | §16.11's choice for the continuous number is **confirmed**, and its inability to split E/S is reclassified from a limitation to **correct behaviour** (§16.13.2 row 1) |
+| ✅ **`Rv`** | keeps the verdict; it also matches the eye here |
+| ⛔ **`Q%`** | this is the strongest single argument yet for the `Rv` migration, and it owes nothing to classification scores: on three GREEN oils `Q%` names the wrong greenest |
+| ⏸ **still owed** | §16.13.4's dilution arm. It is cheap, needs no eye, and would say whether `RvCont`'s split tracks loading — which is *why* it failed, not just *that* it failed |
+| ⏸ **and first** | §16.16's σ_fill run. §16.14's grain claim rests on a σ_fill measured across retired recipes (§16.15), so it is quoted on a number that no longer describes the bench |
+
+⛔ **What this does NOT decide.** Three oils, one solvent, one night, one observer, unblinded. It does not
+touch `Rv`'s M9 (§7), it does not rank Esterer against Steirerkraft (it establishes only that the eye cannot),
+and it does not retire `RvCont` as a diagnostic — only as a candidate for the number a user reads.
+
+### ⛔⭐⭐ 16.15 THE PRE-VORTEX ARCHIVE IS A SEPARATE POPULATION — the precision baseline restarts here  *(Edwin's decision, 2026-08-30)*
+
+> **The decision, in Edwin's words:** *"hunting preparation history does not make much sense, especially if
+> things were not clearly specified. Now we have a lab recipe that seems to work and is easy to use."*
+
+#### 16.15.1 What forced it — the between-day walk was never drift
+
+`RvLin` on Lugitsch, every sunflower fill in the archive:
+
+```
+fill                  recipe               mean     runs
+20260822Lugitsch      pre-08-26          111.23    105.6 116.8
+20260824Lugitsch      pre-08-26          103.07    102.0 102.9 104.4
+20260826Lugitsch      40 inversions       95.48     94.2  96.7
+20260826LugitschB     40 inversions      100.58     99.9 101.3
+20260826LugitschC     40 inversions      105.00    104.4 105.6
+20260828LugitschA     vortex + same-jar  105.43    105.3 105.5
+20260828LugitschB     vortex + same-jar  104.79    104.8 104.8
+```
+
+⭐⭐ **Three fills on ONE evening under ONE recipe span 9.53 against a four-day range of 10.87 — 88 %.**
+So the "between-day walk" that §16.14 and the per-day pages have been showing needs **no ageing and no rig
+drift to explain it**. ⛔ An earlier draft of this analysis framed it as *bottle versus rig* and left out the
+term that dominates; that framing is withdrawn.
+
+⚠ **And the recipe generation does not separate from the noise either**: generation means run 107.15 /
+100.36 / 105.11, a spread of **6.8**, which is *smaller* than the 9.53 inside the 08-26 generation alone.
+With 2–3 fills per generation the test has almost no power, so a recipe effect is **not refuted — merely
+invisible**. That is the whole argument for not mining it.
+
+#### 16.15.2 What the decision keeps, and what it retires
+
+| | |
+|---|---|
+| ⛔ **retired** | every **σ_fill and drift** figure computed on pre-vortex fills. Esterer's 6.32, the 08-26 Lugitsch 9.53, the four-day walk — these are upper bounds on a procedure that no longer exists, not estimates of the current one |
+| ✅ **kept** | **classification.** Green-versus-brown survived every generation, which is itself evidence the metrics are robust to the preparation. §16.3's 124-run scoring stands as written |
+| ⚠ **carried with a caveat** | the **fitted cuts** (`Rv` 54.1, `RvLin` 48.8, `RvCont` 67.6) were fitted across the mixture. Still the best available; they carry that mixture inside them and should be re-derived once the current-recipe corpus is large enough |
+
+⇒ **The clean baseline is 8 fills, 4 oils, 16 runs — all of 2026-08-28/29.** That is the entire current-recipe
+corpus. Its `RvLin` between-fill gaps are Lugitsch **0.64**, Esterer **3.60**, Steirerkraft **5.14**,
+Billa Clever **6.28**; pooled σ_fill **3.15** on 4 degrees of freedom.
+
+⚠ **Even those 8 are two sub-variants.** `20260828EstererE/F` are the settled same-jar form — *no ultrasonic
+bath, 6 minutes standing* — while the Lugitsch and Steirerkraft fills are §16.23.2b, whose sonic step **is
+not recorded either way**. Nothing in the files distinguishes them.
+
+#### ⛔⛔ 16.15.3 THE CONDITION — without it the line does not hold
+
+A line drawn here is only permanent if the record from here on says what was done. It currently does not:
+
+- `prepProtocol` is a **hardcoded constant** reading `invert-40-after-capillaries-clear` on every fill made
+  this week, two recipe generations stale (`SPEC_capture_quality.md` §16.23.2b, ROADMAP §0b);
+- whether the **sonic step** ran is written nowhere;
+- `timestampIso` is **null in every report in the archive**, so runs cannot even be ordered in time.
+
+⇒ ⛔ **Un-hardcode `prepProtocol` and stamp the clock before the σ_fill evening.** It is roughly half an hour.
+Without it, the September archive regenerates exactly the problem this section exists to stop, and the same
+argument gets made again in six weeks about fills nobody can characterise.
+
+#### ✅ 16.15.4 BUILT — 2026-08-30  *(595 tests green: 525 app + 70 plugins)*
+
+| | |
+|---|---|
+| ⭐ **the clock** | `SpectralWorkflowEngine.__buildWorkflow` now stamps `timestampIso` **at the start of the measurement**. ⛔ It had been set only in `AbstractPluginExecutionView._persistNewRun`, i.e. at *Save* — so a run exported to PDF without being saved carried `timestampIso: null`, which is **every report in the archive**. The Save path now keeps an existing stamp instead of overwriting it, so the recorded time is when the fill was measured, not when it was filed |
+| ⭐⭐ **the recipe** | new `PrepProtocolResolver`. The recipe is resolved **per run** from `$SPECTRACS_PREP_PROTOCOL`, else the first non-comment line of **`prepProtocol.txt` in the app data directory**, else the plugin's declaration. ⇒ a bench change reaches the record without a code edit or a release, which is the actual failure mode — a constant needs both, so it goes stale on a Friday evening |
+| ⚠ **the default** | `DevSpectralPlugin.prepProtocol` brought up to date to `1cap-1ml-vortex30-tovolume-vortex60-sonic60-cold-box6min`. It had been stale since 2026-08-27 |
+| ✅ **seeded** | `~/.spectracsPy/prepProtocol.txt` written with that recipe and a comment header. ⛔ **Edit it between fills whenever the bench changes** — including the sonic step, which §16.15.2 records as unknown for every fill made so far |
+| ⛔ **not fixed** | the resolver cannot recover what was already lost. The 8 current-recipe fills of 08-28/29 keep the stale stamp and their sonic step stays unrecorded; §16.15's line is drawn *before* them, not after |
+
+⚠ **Provenance must never break a capture**: the resolver swallows every `OSError` and falls through to the
+plugin's declaration, and there is a test that says so.
+
+---
+
+### 📌⭐⭐ 16.16 PRE-REGISTRATION — σ_fill of the current recipe: Lugitsch, SIX fills, one evening  *(written 2026-08-30, BEFORE the run; six chosen by Edwin over the four first proposed)*
+
+#### 16.16.1 The question, and why Lugitsch
+
+Under the current recipe Lugitsch's two fills agree to **0.64** where the retired recipes gave 8.15 and 9.53
+— a 13× improvement on n = 2. **Is that the recipe, or was it luck?** Everything downstream depends on the
+answer: §16.14's five-bin grain claim, the history-tracker threshold, and whether an across-day comparison is
+possible at all.
+
+⭐ **Lugitsch, not Steirerkraft.** It is the archive's running reference — the only oil on every measurement
+day — it is the oil whose four-day walk prompted this, and its 0.64 is the anomaly under test. ⚠ Steirerkraft
+(gap 5.14) would give a safer upper bound but would not answer this question.
+
+#### 16.16.2 The design
+
+| | |
+|---|---|
+| oil | **Lugitsch**, one bottle, one evening |
+| fills | ⭐ **SIX**, prepared independently, current §16.23.2b recipe throughout. ⛔ Six is the registered number: see §16.16.5 for why it is not four, and why it may not be shortened once started |
+| reference | same-jar, matching the current corpus |
+| reads | **two per fill**, so read noise and fill noise stay separable |
+| recorded per fill | the recipe actually used *(including whether the sonic step ran)*, the clock, box and room temperature |
+| ⛔ forbidden | changing volume, solvent bottle, exposure or holder mid-evening; §16.23.2b's volume rule stays fixed at whatever the first fill used |
+
+#### ⭐⭐ 16.16.3 THE READ RULE AND THE CUT. Fixed. Written before the data.
+
+**σ̂_fill = the sample sd of the SIX FILL MEANS** on `RvLin` (each fill mean = the mean of its two reads).
+Five degrees of freedom. `Rv`, `RvTest`, `RvCont` and `Q%` are recorded on the same fills and reported, but
+**`RvLin` is the registered quantity** — it is §16.11's choice and §16.14's winner.
+
+| σ̂_fill | reading |
+|---|---|
+| **< 2.0** | ⭐ the vortex recipe **fixed the preparation**. 0.64 was not luck; the four-day walk is not fill noise, and something else — ageing, rig, or the recipe change itself — is real and worth hunting. §16.14's grain claim gets *stronger* than five bins |
+| **≥ 2.0** | 0.64 was luck. The four-day walk is **fully explained as fill scatter**, there is nothing else to chase, and the five-bin grain holds only *within a session with replicate fills* |
+
+⛔⛔ **THE CUT DOES NOT MOVE AFTER THE NUMBERS ARE SEEN.** 2.0 is the geometric midpoint of the two competing
+priors (0.64 and 5.14). §16.3a is the standing lesson on what a re-fitted threshold is worth.
+
+⭐ **The error rates, also fixed in advance** (χ² on 5 df):
+
+```
+if the truth is sigma = 0.64   P(sigma_hat >= 2.0) = 0.000   -> a false "not fixed" is ~impossible
+if the truth is sigma = 5.14   P(sigma_hat >= 2.0) = 0.980   -> 98 % power to catch "not fixed"
+if the truth is sigma = 3.15   P(sigma_hat >= 2.0) = 0.847
+if the truth is sigma = 2.50   P(sigma_hat >= 2.0) = 0.669   <- the honest weak spot
+if the truth is sigma = 1.50   P(sigma_hat >= 2.0) = 0.114
+```
+
+⇒ the design is **strong for the binary question and still weak against an intermediate truth**: at a true
+σ of 2.5 it calls "not fixed" only two times in three. ⛔ If σ̂ lands between **1.5 and 2.5** the registered
+outcome is **"inconclusive"**, not a story picked to fit — and the remedy is more fills, not a moved cut.
+
+#### ⚠ 16.16.4 WHAT SIX FILLS CAN AND CANNOT DO — say it before, not after
+
+Six fills give **5 df** and a 95 % confidence interval on σ of **[0.62, 2.45] × σ̂ — a factor of 3.9**.
+
+```
+n =  4 fills (df=3):  95% CI = [0.57, 3.73] x sigma_hat   factor 6.6   <- no better than the archive has
+n =  6 fills (df=5):  95% CI = [0.62, 2.45] x sigma_hat   factor 3.9   <- REGISTERED
+n =  8 fills (df=7):  95% CI = [0.66, 2.04] x sigma_hat   factor 3.1
+n = 10 fills (df=9):  95% CI = [0.69, 1.83] x sigma_hat   factor 2.7
+```
+
+⭐ **Six is where the curve stops being cheap.** Going 4 → 6 buys a factor of 1.7 for two capillaries; 6 → 10
+buys only a further 1.4 for four more, on an evening that is already ~12 runs long. ⇒ six is the registered
+number and the right stopping point.
+
+⛔ **It is still not a precise σ.** A σ̂ of 1.0 means the truth is somewhere in 0.6–2.5. No downstream figure —
+§16.14's grain claim, a tracker threshold — may be quoted to a precision this interval does not support.
+
+#### ⛔ 16.16.5 SIX IS FIXED, IN BOTH DIRECTIONS
+
+**Do not stop at four because the first numbers look tight**, and do not extend past six because they do not.
+Optional stopping is how a σ that was never measured becomes a σ that gets quoted: a run halted early on a
+tight-looking start is biased low by exactly the amount that made it look tight. ⚠ If the evening runs out,
+the honest record is *"n = 4, registered for 6, underpowered"* — not a result.
+
+⭐ **The cost, so it can be planned rather than discovered**: six fills × two reads = **twelve runs**, each
+~160 s of acquisition on the current settling rule, plus preparation and the 6-minute box stand per fill.
+
+#### ⛔ 16.16.6 What this does NOT decide
+
+- **Nothing about the verdict.** `Rv` keeps it; this is about the continuous number.
+- **Nothing about across-day.** A σ_fill of the current recipe is a *precondition* for that question, not an
+  answer to it — and §16.15.1 has just shown the standard cannot help until σ_fill is known to be small.
+- **Nothing about other oils.** Lugitsch's σ_fill is Lugitsch's. Esterer 3.60 and Steirerkraft 5.14 under the
+  same recipe say the term is oil-dependent, and one oil cannot settle that.

@@ -121,7 +121,27 @@ TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spa
          # `SPEC_metric_research.md` §16.9 is built on this pair. Excluded here for their reference
          # method, not for their quality.
          "20260828BillaCleverA": ("Billa Clever", "brown"),
-         "20260828BillaCleverB": ("Billa Clever", "brown")}
+         "20260828BillaCleverB": ("Billa Clever", "brown"),
+         # ⛔ SAME-JAR, confirmed by Edwin 2026-08-30. Here ONLY so its runs pass through `take` and are
+         # ANNOUNCED as excluded; the label is never read from this dict. Its real entry, and the row it
+         # is drawn on, are `SAME_JAR_6MIN` below.
+         # ⚠ THE FIRST DRAFT OF THIS FILE PUT IT ON THE TWO-JAR ROW, on the reasoning that it fell 18 h
+         # outside the same-jar block of 03:32-05:59. That reasoning was wrong, and it is left recorded
+         # here because the same inference will be available the next time a fill arrives without a
+         # method in its header: ⛔ THE CLOCK DOES NOT IDENTIFY THE REFERENCE METHOD. Only the bench does,
+         # and nothing in the report records it.
+         "20260828LugitschA": ("Lugitsch", "green"),
+         # ⭐⭐ THE SECOND LUGITSCH FILL OF THAT EVENING, 37 min after A, same-jar (Edwin, 2026-08-30).
+         # Announce-only, like A; its real entry is in SAME_JAR_6MIN.
+         "20260828LugitschB": ("Lugitsch", "green"),
+         # ⭐⭐ A FOURTH OIL ON THE SAME-JAR ROW, and the archive's most loaded one -- see SAME_JAR_6MIN.
+         # Announce-only; same-jar and same bottle, both confirmed by Edwin 2026-08-30.
+         "20260828SteirerkraftA": ("Steirerkraft", "green"),
+         # ⚠ SAME-JAR PRESUMED, not stated: 41 min after fill A, inside the unbroken same-jar series of
+         # that evening. ⛔ Unlike the LugitschA case -- where a same-jar guess from an 18 h clock gap
+         # ACROSS a method boundary was wrong -- this one is a continuation of a confirmed series. If it
+         # is not same-jar it moves back into the two-jar corpus, which is the reverse of this edit.
+         "20260828SteirerkraftB": ("Steirerkraft", "green")}
 
 # ⚠⚠ FILLS NOT MADE BY THE RECIPE THE REPORT HEADER CLAIMS. The plugin writes a hardcoded
 # `prepProtocol` string into every report, so a recipe change is INVISIBLE in the record until the
@@ -129,6 +149,24 @@ TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spa
 # ⛔ Mixing preparations inside one oil's fill set without saying so is how a protocol change turns
 # into unexplained σ_fill six weeks later.
 PREP_PROTOCOL = {
+    # ⭐ CONFIRMED AT THE BENCH (Edwin, 2026-08-30): this fill was made by the CURRENT lab recipe --
+    # §16.23.2b's two-stage vortex, cold sonic bath and the insulated box -- while the header still
+    # records the two-generations-old `invert-40-after-capillaries-clear`. ⛔ The fill is NOT unknown;
+    # only its STAMP is wrong, and that distinction decides whether the pair is usable (it is).
+    "20260828LugitschA": "the CURRENT lab recipe of §16.23.2b (Edwin, 2026-08-30) \u2014 two-stage\n"
+                         "     vortex, and the SAME-JAR reference. \u26a0 Whether the sonic step ran is NOT recorded,\n"
+                         "     and it is what tells this fill apart from the rest of the same-jar row.\n"
+                         "     (header still records invert-40-after-capillaries-clear)",
+    "20260828LugitschB": "as 20260828LugitschA \u2014 the CURRENT lab recipe of \u00a716.23.2b, SAME-JAR\n"
+                         "     reference, 37 min later (Edwin, 2026-08-30). \u26a0 The sonic step is\n"
+                         "     unrecorded for this fill too.\n"
+                         "     (header still records invert-40-after-capillaries-clear)",
+    "20260828SteirerkraftA": "as the two Lugitsch fills \u2014 the CURRENT lab recipe of \u00a716.23.2b,\n"
+                             "     SAME-JAR reference, same evening (Edwin, 2026-08-30). \u26a0 Sonic step unrecorded.\n"
+                             "     (header still records invert-40-after-capillaries-clear)",
+    "20260828SteirerkraftB": "as fill A \u2014 the CURRENT lab recipe of \u00a716.23.2b, same evening,\n"
+                             "     41 min later. \u26a0 Same-jar PRESUMED from the series, not confirmed at the bench.\n"
+                             "     (header still records invert-40-after-capillaries-clear)",
     "20260826EstererE": "two-stage: 1 ml + capillary, which EMPTIES ITSELF in the solvent \u2014 no "
                         "arm-swing;\n     then ~45 s of FAST rotation at the bottom while still "
                         "concentrated, then to 4 ml and ~60 s more.\n     The 40 slow inversions are "
@@ -233,7 +271,15 @@ EXCLUDED = {"20260826Lugitsch/004.pdf": "reads strange on the day — set aside 
             "20260828BillaCleverA/001.pdf": "same-jar reference — not on the archive's footing",
             "20260828BillaCleverA/002.pdf": "same-jar reference — not on the archive's footing",
             "20260828BillaCleverB/001.pdf": "same-jar reference — not on the archive's footing",
-            "20260828BillaCleverB/002.pdf": "same-jar reference — not on the archive's footing"}
+            "20260828BillaCleverB/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschA/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschA/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschB/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschB/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828SteirerkraftA/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828SteirerkraftA/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828SteirerkraftB/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828SteirerkraftB/002.pdf": "same-jar reference — not on the archive's footing"}
 # ⛔ EXCLUDED FOR A REASON THAT IS NOT ABOUT THE FILL. These sessions are in `EXCLUDED` because they
 # are a DIFFERENT SOLVENT, so they are not candidate members of any sunflower σ_fill and must never be
 # priced as one (see `excludedCost`). They are still announced on every run like any other exclusion.
@@ -263,7 +309,13 @@ OTHER_REFERENCE = {"20260828EstererD": "same-jar reference",
                    # go out by the same rule -- but they are NAMED here and in the caption, because
                    # 2026-08-29 they were simply absent from every page with nothing saying why.
                    "20260828BillaCleverA": "same-jar reference",
-                   "20260828BillaCleverB": "same-jar reference"}
+                   "20260828BillaCleverB": "same-jar reference",
+                   # ⭐ ADDED 2026-08-30. The only GREEN-oil same-jar fill that is not Esterer,
+                   # which is what gives that row a third oil and a real green-vs-brown spread.
+                   "20260828LugitschA": "same-jar reference",
+                   "20260828LugitschB": "same-jar reference",
+                   "20260828SteirerkraftA": "same-jar reference",
+                   "20260828SteirerkraftB": "same-jar reference"}
 
 SOLVENTMARK = {"isopropanol": "o", "sunflower": "s", "spirit": "^"}
 
@@ -396,6 +448,11 @@ def collect():
     for session, note in sorted(PREP_PROTOCOL.items()):
         if any(sessionOf(r) == session for r in rows):
             print("  [!] DIFFERENT PREPARATION: %s -- %s" % (session, note))
+        elif session in SAME_JAR_6MIN:
+            # ⛔ NOT an unmatched entry. A same-jar fill is excluded from THIS corpus on purpose and is
+            # read by `sameJarCorpus`; warning "never matched" would train the reader to ignore a
+            # warning that does mean something for every other session.
+            print("  [!] DIFFERENT PREPARATION (same-jar row): %s -- %s" % (session, note))
         else:
             print("  [!] PREP_PROTOCOL entry never matched a run: %s" % session)
     return rows
@@ -633,6 +690,35 @@ def setAsideNote():
     return line
 
 
+# ⚠⚠ FILLS WHOSE FOLDER DATE IS NOT THEIR MEASUREMENT EVENING. `dateTag` reads the folder name, which
+# is the only date this archive carries -- so a fill measured a day later under the same session prefix
+# lands silently on a row it did not share a rig with. Named here, printed on every per-day page.
+# ⛔ This is NOT a reason to exclude anything: the fill is sound. It is a reason not to read the row as
+# one sitting, which is exactly what the page's premise would otherwise claim for it.
+DELAYED_FILL = {"20260828LugitschA": ("2026-08-29 23:52",
+                                      "18 h after the rest of the 08-28 fills, same-jar row included"),
+                "20260828LugitschB": ("2026-08-30 00:32",
+                                      "the same late evening as fill A, 37 min after it"),
+                "20260828SteirerkraftA": ("2026-08-30 01:01",
+                                          "the same late evening, 26 min after LugitschB"),
+                "20260828SteirerkraftB": ("2026-08-30 01:42",
+                                          "the same late evening, 41 min after Steirerkraft fill A")}
+
+
+def dayDelayNote(rows):
+    """Name any fill on the page whose measurement evening is not its folder's date."""
+    named = sorted(s for s in DELAYED_FILL if any(sessionOf(r) == s for r in rows))
+    if not named:
+        return ""
+    # ⛔ WRAPPED at 88, like every other note on this figure. The unwrapped form ran off the right edge
+    # and lost "DIFFERENT sitting" -- the two words the note exists to say.
+    return "\nMEASURED OFF ITS FOLDER DATE, plotted and scored:\n" + "\n".join(
+        "\n".join("     " + part for part in textwrap.wrap(
+            "%s \u2014 %s, i.e. %s. Same row, DIFFERENT sitting."
+            % (s, DELAYED_FILL[s][0], DELAYED_FILL[s][1]), width=88))
+        for s in named)
+
+
 def prepNote(rows):
     """⚠ Name any fill on the page whose PREPARATION differs from the header's claim.
 
@@ -644,6 +730,22 @@ def prepNote(rows):
         return ""
     return "\nDIFFERENT PREPARATION, plotted and scored:\n" + "\n".join(
         "     %s \u2014 %s" % (s, PREP_PROTOCOL[s].split(" (header")[0]) for s in named)
+
+
+def prepNamesNote(rows):
+    """The same warning as `prepNote`, compressed to names for pages that cannot afford four lines.
+
+    ⛔ WHY A SECOND FORM AND NOT A REUSE. `prepNote` renders on the sunflower page only, and the fill
+    that most needs the warning -- `20260828LugitschA` -- is EXCLUDED from that page's corpus and drawn
+    only on the per-day same-jar row. A caveat printed on a page the number does not appear on is worse
+    than none: it reads as coverage. This puts the names where the markers are, wrapped, and points at
+    the full text rather than repeating it into a footer that has already been clipped twice."""
+    named = sorted(s for s in PREP_PROTOCOL if any(sessionOf(r) == s for r in rows))
+    if not named:
+        return ""
+    return ("\nMIXED PREPARATIONS on this page \u2014 the header's recipe string is stale for:\n     "
+            + "\n     ".join(textwrap.wrap("; ".join(named), width=88))
+            + "\n     Full text on the sunflower page and in PREP_PROTOCOL.")
 
 
 def pageSunflower(pdf, rows):
@@ -814,16 +916,68 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
     # blocks, which are drawn at fixed figure coordinates. ⚠ This page is rendered for the shipped
     # metric AND for every candidate, so one more day of measurements silently corrupted several pages
     # at once. Rows now share whatever band is left between the blurb and the footnotes.
-    TOP, BOTTOM = 0.895, 0.215
+    # ⛔⛔ THE FOOTNOTES ARE BUILT BEFORE THE ROWS ARE PLACED, and `BOTTOM` is DERIVED FROM THEIR
+    # HEIGHT. The row geometry above already learned this lesson once -- a fourth measurement day put a
+    # row half off the page -- and the footnote block had the mirror-image bug: it is anchored at
+    # `BOTTOM` with va="top", so it grows DOWNWARD off the sheet and every line added to it disappears
+    # silently. ⚠ It bit on 2026-08-30, when two notes were added and the last four lines of the
+    # caption went off the bottom edge on the very page whose policy is that a caveat stays visible.
+    # ⇒ count the lines, reserve the space, and let the rows have whatever is left.
+    walk = " → ".join("%.1f" % numpy.mean([r[key] for r in rows
+                                                if r["oil"] == "Lugitsch" and groupOf(r) == day])
+                           for day in days
+                           if any(r["oil"] == "Lugitsch" and groupOf(r) == day for r in rows))
+    readAcross = ("[*]  Read ACROSS a row, not down the page: inside one day the rig is common to every oil,\n"
+                  "so the gaps within a row are the ones that mean something.")
+    # ⛔ SESSIONS, NOT FULL PATHS, and WRAPPED. Joining the excluded FILENAMES ran off the right edge and
+    # was clipped mid-word, so the last exclusion in the list was invisible on the very page whose policy
+    # is that an exclusion must stay visible.
+    # ⛔ "not plotted" HAS TO MEAN not plotted ON THIS PAGE. The settled same-jar fills are in EXCLUDED --
+    # correctly, they touch no statistic -- but they DO appear here, in their own row. Listing them as
+    # absent while they are drawn above is worse than listing nothing: it teaches the reader that the
+    # caption cannot be trusted.
+    # ⛔ NOT `caption`: that name is taken by the per-cluster mean label inside the row loop below, and
+    # binding it here meant the footer rendered as the LAST cluster's "105.4 ± 0.2" -- a whole caption
+    # replaced by four characters, on the page whose policy is that the caveats stay visible.
+    footnote = ("[!]  08-22 carries only two oils and 08-24 never saw Esterer or Stekko, so no single row\n"
+               "ranks all six. Lugitsch's own line moves %s across the rows: the reference itself\n"
+               "is not fixed, which is why an oil measured on one day only cannot be placed against one\n"
+               "measured on another.%s%s%s"
+               % (walk, caveat, "" if not EXCLUDED else
+                  "\nSET ASIDE BY HAND, not plotted: "
+                  + "\n     ".join(textwrap.wrap(
+                      "; ".join(sorted({relative.split("/")[0] for relative in EXCLUDED}
+                                       - {sessionOf(r) for r in (extraRows or [])})),
+                      width=88))
+                  + ("" if not extraRows else
+                     "\n%s is drawn in its own row: same jar for reference AND sample, so it may be "
+                     "read\n     ACROSS that row but NOT against the two-jar rows above."
+                     % SAME_JAR_ROW),
+                  # ⚠ A fill whose folder date is not its measurement evening sits on a row it did not
+                  # share a rig with, and a fill whose recipe the header misreports sits beside fills
+                  # whose recipe it reports correctly. Both belong where the markers are.
+                  dayDelayNote(rows) + prepNamesNote(rows)))
+    # ⚠ 8.2 pt at linespacing 1.5 on an 11.69 in sheet: one line is 8.2*1.5/(11.69*72) of the figure.
+    LINE = 8.2 * 1.5 / (11.69 * 72.0)
+    lines = readAcross.count("\n") + footnote.count("\n") + 2
+    # ⛔ FLOORED. A caption long enough to eat the rows is a caption that has to be shortened, not a page
+    # that silently squashes five rows into nothing -- 0.46 leaves each row of a five-row page readable.
+    BOTTOM = min(0.46, 0.045 + lines * LINE + 0.035)
+    TOP = 0.895
     pitch = (TOP - BOTTOM) / len(days)
-    # ⚠ 0.72, not 0.80: the gap between rows has to clear the x tick labels, which are two lines tall
-    # for any oil with a space in its name ("Billa\nClever"), plus the next row's title.
-    height = pitch * 0.72
+    # ⚠ A FIXED gap, not a fraction of the pitch. It has to clear the x tick labels -- two lines tall
+    # for any oil with a space in its name ("Billa\nClever") -- plus the next row's title, and those are
+    # a fixed number of POINTS. ⛔ As `pitch * 0.72` the gap shrank whenever the footnote block grew or a
+    # day was added, and the tick labels ran into the title of the row below. 0.038 is what the old
+    # 0.72 produced at the geometry that was known to render correctly.
+    GAP = 0.038
+    height = max(pitch - GAP, pitch * 0.5)
     for index, day in enumerate(days):
         axes = figure.add_axes([0.105, TOP - pitch * index - height, 0.865, height])
         today = [r for r in rows if groupOf(r) == day]
         oils = sorted({r["oil"] for r in today})
         reference = [r[key] for r in today if r["oil"] == "Lugitsch"]
+        labelTops = {}
         for position, oil in enumerate(oils):
             group = sorted((r for r in today if r["oil"] == oil), key=lambda r: r["run"])
             offsets = numpy.linspace(-0.22, 0.22, len(group)) if len(group) > 1 else [0.0]
@@ -849,16 +1003,31 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
                        else "%.1f ± %.1f" % (numpy.mean(values), numpy.std(values, ddof=1)))
             # ⚠ On a white PATCH: the label has to survive landing on the crimson threshold line, on the
             # dotted Lugitsch reference and on its own caption, all of which it does on some row.
-            axes.text(position, min(max(values) + span * 0.04, ceiling - span * 0.06), caption,
+            labelTop = min(max(values) + span * 0.04, ceiling - span * 0.06)
+            labelTops[position] = labelTop
+            axes.text(position, labelTop, caption,
                       fontsize=7, color=CLASSCOLOR[group[0]["class"]], ha="center", va="bottom",
                       fontweight="bold", zorder=5,
                       bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
                                 edgecolor="none", alpha=0.78))
         if reference:
             axes.axhline(numpy.mean(reference), color="#2e7d32", lw=1.0, ls=":", alpha=0.85)
-            axes.text(len(oils) - 0.45, numpy.mean(reference) + span * 0.015,
-                      "Lugitsch %.1f" % numpy.mean(reference), fontsize=7, color="#2e7d32",
-                      ha="right", va="bottom", fontweight="bold")
+            # ⛔ THE END IT SITS AT IS CHOSEN, NOT FIXED. Right-aligned at the last cluster it collided
+            # with that cluster's own "mean ± sd" the moment a FOURTH oil arrived (Steirerkraft, 08-30):
+            # the label spans roughly one x unit inward from the edge, so it lies directly over the last
+            # cluster whenever their heights are close. ⚠ Nothing about "right" was load-bearing -- it
+            # was simply the only end there was when the page had two oils.
+            # ⇒ put it at whichever end's cluster label is FURTHER AWAY IN Y, and give it the same white
+            # patch the cluster labels carry so that a residual overlap stays readable either way.
+            referenceMean = numpy.mean(reference)
+            ends = [(len(oils) - 0.45, "right", labelTops.get(len(oils) - 1, referenceMean)),
+                    (-0.55, "left", labelTops.get(0, referenceMean))]
+            x, alignment, _ = max(ends, key=lambda end: abs(end[2] - referenceMean))
+            axes.text(x, referenceMean + span * 0.015,
+                      "Lugitsch %.1f" % referenceMean, fontsize=7, color="#2e7d32",
+                      ha=alignment, va="bottom", fontweight="bold", zorder=4,
+                      bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
+                                edgecolor="none", alpha=0.78))
         axes.axhline(cut, color="crimson", lw=1.3, ls="--")
         axes.set_xticks(range(len(oils)))
         axes.set_xticklabels([o.replace(" ", "\n") for o in oils], fontsize=8)
@@ -870,41 +1039,10 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
         axes.set_title("%s   ·   %d runs, %d oils" % (day, len(today), len(oils)),
                        fontsize=10.5, fontweight="bold", loc="left")
 
-    walk = " → ".join("%.1f" % numpy.mean([r[key] for r in rows
-                                                if r["oil"] == "Lugitsch" and groupOf(r) == day])
-                           for day in days
-                           if any(r["oil"] == "Lugitsch" and groupOf(r) == day for r in rows))
     # ⚠ Anchored to BOTTOM, so the footnotes follow the rows instead of being overrun by them.
-    figure.text(0.105, BOTTOM - 0.025,
-                "[*]  Read ACROSS a row, not down the page: inside one day the rig is common to every oil,\n"
-                "so the gaps within a row are the ones that mean something.",
+    figure.text(0.105, BOTTOM - 0.025, readAcross,
                 fontsize=8.2, va="top", linespacing=1.5)
-    figure.text(0.105, BOTTOM - 0.075,
-                "[!]  08-22 carries only two oils and 08-24 never saw Esterer or Stekko, so no single row\n"
-                "ranks all six. Lugitsch's own line moves %s across the rows: the reference itself\n"
-                "is not fixed, which is why an oil measured on one day only cannot be placed against one\n"
-                "measured on another.%s%s"
-                # ⛔ SESSIONS, NOT FULL PATHS. Joining the six excluded FILENAMES ran off the right
-                # edge of the figure and was clipped mid-word, so the last exclusion in the list was
-                # invisible on the very page whose policy is that an exclusion must stay visible.
-                # The per-file reasons are announced on the console and live in `EXCLUDED`.
-                # ⛔ WRAPPED. Sessions, not full paths (they ran off the edge), and now wrapped too:
-                # at seven excluded sessions even the short names clip mid-word, on the page whose
-                # stated policy is that an exclusion has to stay visible.
-                # ⛔ "not plotted" HAS TO MEAN not plotted ON THIS PAGE. The settled same-jar fills are
-                # in EXCLUDED — correctly, they touch no statistic — but they DO appear here, in their
-                # own row. Listing them as absent while they are drawn above is worse than listing
-                # nothing: it teaches the reader that the caption cannot be trusted.
-                % (walk, caveat, "" if not EXCLUDED else
-                   "\nSET ASIDE BY HAND, not plotted: "
-                   + "\n     ".join(textwrap.wrap(
-                       "; ".join(sorted({relative.split("/")[0] for relative in EXCLUDED}
-                                        - {sessionOf(r) for r in (extraRows or [])})),
-                       width=88))
-                   + ("" if not extraRows else
-                      "\n%s is drawn in its own row: same jar for reference AND sample, so it may be "
-                      "read\n     ACROSS that row but NOT against the two-jar rows above."
-                      % SAME_JAR_ROW)),
+    figure.text(0.105, BOTTOM - 0.025 - (readAcross.count("\n") + 1.6) * LINE, footnote,
                 fontsize=8.2, color="#a03000", va="top", linespacing=1.5)
     pdf.savefig(figure)
     pyplot.close(figure)
@@ -1071,6 +1209,13 @@ def rvCorpus():
 # ⭐⭐ THE SETTLED SAME-JAR RECIPE — same jar for reference and sample, NO ultrasonic bath, 6 minutes
 # standing in the dark. `20260828EstererD` is NOT here: it had the bath and only 60 s, so it is a
 # different preparation and would put two recipes on one row.
+# ⚠⚠ AND THAT INVARIANT IS NOW WEAKER THAN IT WAS. `20260828LugitschA` joins this row on Edwin's word
+# that it is same-jar, but its PREPARATION detail is not recorded anywhere — the header carries the
+# usual stale constant, and whether the sonic step of §16.23.2b ran on it is unknown. ⛔ So the claim
+# "all four share one method" no longer holds unqualified for all five; what holds is that all five
+# share the REFERENCE method, which is what the row is separated for. `prepNote` names the fill on the
+# figure. If the bath did run, this row has two preparations on it and `EstererD`'s exclusion becomes
+# inconsistent — resolve it by asking the bench, not by inferring from the numbers.
 # ⛔ These fills stay in EXCLUDED, so they touch NO statistic, NO σ_fill figure and none of the by-oil,
 # by-solvent or strip pages. They are read separately, ONLY for their own row on the per-day pages,
 # where the premise of the page — "inside one row the rig is common to every oil" — actually holds for
@@ -1080,7 +1225,45 @@ SAME_JAR_ROW = "08-28 · same-jar"
 SAME_JAR_6MIN = {"20260828EstererE": ("Esterer", "green"),
                  "20260828EstererF": ("Esterer", "green"),
                  "20260828BillaCleverA": ("Billa Clever", "brown"),
-                 "20260828BillaCleverB": ("Billa Clever", "brown")}
+                 "20260828BillaCleverB": ("Billa Clever", "brown"),
+                 # ⭐ The archive's running-reference oil, finally on this row. Until it arrived the
+                 # same-jar row could be read only as Esterer-vs-Billa Clever; Lugitsch is the one oil
+                 # measured on every other row, so it is the only fill that lets the same-jar row be
+                 # placed against the two-jar rows at all — as an ANCHOR, not as a shared statistic.
+                 "20260828LugitschA": ("Lugitsch", "green"),
+                 # ⭐⭐ A SECOND INDEPENDENT FILL of A, 37 min later, with its OWN reference capture and
+                 # its own reference band means -- a true σ_fill replicate, not a re-read. It is the only
+                 # WITHIN-OIL fill pair on this row, which is what lets the row tell fill scatter apart
+                 # from oil difference at all.
+                 # ⛔⛔ AND IT REPRODUCES THE 08-24/08-26 "SESSION STEP" INSIDE ONE EVENING: B sits on the
+                 # 08-24 fill (Rv 111.7 vs 114.2, Q% 19.22 vs 18.99, A_valley 0.085 vs 0.086) and A on the
+                 # 08-26 fill (Rv 102.1 vs 98.9, Q% 16.66 vs 16.53, A_valley both 0.049). ⇒ the step is a
+                 # FILL term, not the bottle ageing and not the day. Do not read the between-day walk on
+                 # these pages as an oil changing: one evening spans the whole of it.
+                 "20260828LugitschB": ("Lugitsch", "green"),
+                 # ⭐⭐⭐ THE OIL THAT HOSTS `Rv`'s ONLY ARCHIVE-WIDE ERROR. `20270729B/002` is Steirerkraft,
+                 # and it is the 39.5 that sets the corridor to −11.5 (`SPEC_metric_research.md` §16.3).
+                 # ⭐ THE LABEL IS PRIOR TRUTH, NOT A READING OF THE METRIC. Steirerkraft is GREEN in the
+                 # archive's own set (`peak_ratio_archive.GREEN`), from the isopropanol fills of 2026-07-29,
+                 # and Edwin confirmed 2026-08-30 that this is the SAME BOTTLE. Reusing it is the same move
+                 # the comment on `20260826Lugitsch` licenses; inventing one would not be.
+                 # ⭐⭐ WHY IT MATTERS ON THIS ROW: within fill `20270729B`, run 002 is z = −7.52 on `Rv`
+                 # and z = −0.14 on `RvTest` -- dead centre of its own fill. Its `D` is −0.0257, the most
+                 # negative of the twelve, and r(Rv, D) over those twelve runs is +0.945. ⇒ the one error
+                 # is a BASELINE-TILT excursion, not a strange oil and not a bad fill.
+                 # ⚠ The new fill repeats it inside ONE seating: between its two reads `Rv` moves 7.41
+                 # while `RvTest` moves 0.096, with `D` moving −0.0088.
+                 "20260828SteirerkraftA": ("Steirerkraft", "green"),
+                 # ⛔⛔ THE FILL THAT REVERSES THE RANKING, and it must not be quietly dropped from the
+                 # story the entry above tells. Between the two Steirerkraft fills the between-fill gap is
+                 # `Rv` 2.0 and `RvCont` 0.9 -- the two BEST -- while `RvLin` is 5.1 and `RvTest` 7.7, the
+                 # two WORST. On the two Lugitsch fills the order is exactly inverted (`RvLin` 0.6 against
+                 # `Rv` 9.6). ⇒ ⛔ NO MEMBER OF THE FAMILY IS UNIFORMLY BEST ON σ_fill; the lever arms are
+                 # fixed constants, so a form cancels the tilt at one band relationship and not at another.
+                 # ⚠ Read the WORST CASE over oils, which `sameJarPairNote` computes, never one oil's pair.
+                 # ⭐ Its reference is 15 % away from fill A's (refSoret 111.2 against 130.2) and `Rv` still
+                 # agrees to 2.0 across that -- the reference term is not what moves these fills.
+                 "20260828SteirerkraftB": ("Steirerkraft", "green")}
 
 
 def sameJarCorpus():
@@ -1105,6 +1288,36 @@ def sameJarCorpus():
                                         "nm": trace[0], "a": trace[1],
                                         "dayOverride": SAME_JAR_ROW}))
     return paint(rows)
+
+
+def sameJarPairNote(sameJar):
+    """Worst-case BETWEEN-FILL gap per metric, on the same-jar row, recomputed every run.
+
+    ⛔⛔ THE SENTENCE THIS SITS UNDER IS TYPED, AND IT WENT STALE THE DAY LUGITSCH JOINED THE ROW IT
+    DESCRIBES. This file's own rule is that a count or a spread is COMPUTED, never typed, because a new
+    session changes it -- and the four-way comparison on the `RvLin` page was the one place that rule was
+    not followed. ⚠ The typed sentence is KEPT: its numbers were right for the corpus it was written on
+    (the brown pair's 36.3 and 22.8 still reproduce exactly), and deleting a claim is not the same as
+    dating it. This line is what the same row says NOW.
+    ⭐ THE STATISTIC IS THE PAIR GAP, not an sd: an oil on this row has TWO fills, and |fillA - fillB| is
+    the whole of what a two-point sd would report anyway, without implying a distribution behind it.
+    """
+    oils = sorted({r["oil"] for r in sameJar})
+    parts = []
+    for key, name in (("rvLin", "RvLin"), ("rvTest", "RvTest"), ("rvCont", "RvCont"), ("rvOld", "Rv")):
+        worst = 0.0
+        for oil in oils:
+            fills = {}
+            for row in (r for r in sameJar if r["oil"] == oil):
+                fills.setdefault(sessionOf(row), []).append(row[key])
+            means = [numpy.mean(v) for v in fills.values()]
+            if len(means) > 1:
+                worst = max(worst, max(means) - min(means))
+        parts.append("%s %.1f" % (name, worst))
+    return ("\nRECOMPUTED on the same-jar row as it stands now (%d oils, %d fills): worst-case gap between\n"
+            "two fills of ONE oil \u2014 %s. The typed figures above predate Lugitsch joining that row."
+            % (len(oils), sum(len({sessionOf(r) for r in sameJar if r["oil"] == o}) for o in oils),
+               ", ".join(parts)))
 
 
 def bestCut(rows, key):
@@ -1508,7 +1721,8 @@ def main():
                          "with no bad pair (3.60 / 6.28 / 4.02), where Rv and RvCont\nboth blow up on "
                          "the BROWN pair (36.3 and 22.8). Never within 16.3 of a sign change over 132 "
                          "runs.\nBUT IT LOSES THE ARCHIVE-WIDE HOLD-OUT, 6/36 against Rv's 0/36 ⇒ a "
-                         "HISTORY TRACKER candidate, not a verdict one. §16.9.")
+                         "HISTORY TRACKER candidate, not a verdict one. §16.9."
+                         + sameJarPairNote(sameJar))
         pageDifferenceMetric(pdf, rv)
         # ⭐ the candidate gets the SAME per-day view as the shipped metric, on its own fitted cut --
         # the plot that divides the day out is where a fill-scatter claim has to hold up.

@@ -649,6 +649,104 @@ nucleation, [ACS Cent. Sci. 2023](https://pubs.acs.org/doi/full/10.1021/acscents
 pigment methods, [Chem. Papers](https://link.springer.com/article/10.2478/s11696-013-0502-x) · FEP optical and
 chemical data, [AdTech transmission tables](https://adtech.co.uk/technical-data/fep-uv-transmission-data/).
 
+## ⭐⭐ 9. Standard photometric pigment methods — and the three reasons ours is not one  *(2026-08-29)*
+
+Every textbook route to "how much chlorophyll is in this oil" is a **two- or three-wavelength photometric
+formula** with a published extinction coefficient. They are worth knowing precisely, because §16.23's
+protocol keeps drifting toward them and because one of them contains the idea our own metrics are built on.
+
+### 9.1 The two formulas, stated correctly
+
+**Chlorophyll pigments** — AOCS Cc 13d-55, and the form quoted almost everywhere:
+
+```
+C_chloro [mg/kg] = [ A670 − (A630 + A710)/2 ] / (a · d)  ×  DF
+```
+
+**Carotenoids** — the Mínguez-Mosquera convention, as β-carotene / lutein equivalent:
+
+```
+C_carot [mg/kg] = A470 · 10^6 / (2000 · 100 · d)  ×  DF   =   5 · A470 / d  ×  DF
+```
+
+with `d` the path length in cm and `DF = m_total / m_sample` the **gravimetric** dilution factor, applied as
+a multiplier.
+
+| symbol | value | note |
+|---|---|---|
+| carotenoid wavelength | ⭐ **470 nm** | the `E¹%₁cm = 2000` coefficient is *tied to 470*. **460 nm is wrong** and is a common misquote |
+| carotenoid factor | **5** | `10⁶/(2000·100)`; arithmetic is exact |
+| chlorophyll `a`, Mínguez | `10⁶/(613·100)` = **16.31** mg/kg per unit A | pheophytin *a*, `E = 613` |
+| chlorophyll `a`, AOCS | ⚠ **0.1086** ⇒ **9.21** mg/kg per unit A | ⛔ **this constant is NOT independently confirmed here.** A figure of `0.1016` also circulates and looks like a transposition of it. Verify against the method before any number is published |
+
+⛔ **The two conventions disagree by ~1.8×** (9.21 against 16.31) because they report different reference
+pigments on different bases. ⇒ **an absolute ppm from either is only comparable to other numbers computed
+the same way.** This is the same lesson as `T = 18.6 / 30.0 / 52` — a photometric threshold is
+convention-bound, not a property of the oil.
+
+⚠ **And the unit is mg/L, not mg/kg.** The `10⁶` conversion is per litre; calling the result mg/kg skips a
+density divide (ρ ≈ 0.92) and runs **+8.7 %** high on a mass basis. The field does this universally and
+calls it ppm, so it is a convention rather than an error — but it is not ours to inherit silently.
+
+### ⭐⭐ 9.2 The one idea worth stealing — and the fallback that throws it away
+
+The chlorophyll formula's real content is not the coefficient. It is `A670 − (A630 + A710)/2`: **a band
+height read against the mean of two flanking anchors.** That is exactly `§16.20`'s pedestal subtraction and
+exactly what `Rv` does at 622–627 against marker (3). The standard method reached the same construction from
+turbidity in oil that we reached from the pedestal — independent arrival at the same answer.
+
+⛔ **Which is why the "610 nm workaround" for a red-clamped instrument must be refused.** Told that a
+spectrometer stops at 630 nm, the standard advice is to abandon 670 and compare bare `A610` between oils —
+"0.4 is twice 0.2 at equal `DF`". That is Beer–Lambert-correct and **instrumentally worthless here**: it
+silently drops the two anchors that made the 670 formula work, and `SPEC_capture_quality.md` §16.24 measures
+the baseline at **62 % of raw Q**. A bare band absorbance on this instrument is mostly pedestal.
+
+⇒ **A red-clamped instrument does not need a different wavelength. It needs the anchors kept.** That is the
+whole design of `V` / `Q%` / `Rv`.
+
+### 9.3 The three reasons the formulas do not transfer
+
+| | |
+|---|---|
+| ⛔ **670 nm is outside the window** | §7.2: the delivered range ends ~636 nm at the ROI. The dominant chlorophyll band, *and* its 710 nm anchor, are both unreachable. The formula cannot be evaluated at all |
+| ⛔ **They assume a MATRIX blank, we use a LAMP reference** | the standard method zeroes on **pure solvent from the same bottle**, so the matrix cancels and `DF` scales cleanly. We compute `T = S/R` against the lamp (§2), so the solvent's own absorbance rides through and does **not** scale with `DF`. The `DF` algebra is invalid on our spectra as recorded |
+| ⚠ **The blue peak is not one pigment** | at 460–470 nm the carotenoids sit **on top of** the porphyrin Soret. The method's own literature says so plainly, and §4.2 says it for our lamp. A single absorbance there is a two-family mixture |
+
+⭐ The second row is actionable, not merely a caveat. Now that sunflower is the solvent (`DOC_sample_physics.md`
+§4A), a **same-batch matrix blank** is available for the first time — and it would remove the
+sunflower-*bottle* variable measured on 2026-08-24 (`Q%` +2.4 between bottles, `hR` flat). ⏸ Not proposed
+here as a change; recorded as the one place the standard convention is better than ours. `ROADMAP.md` §0a's
+"one reference on pure solvent per fill" is already halfway to it.
+
+### ⚠ 9.4 A band-assignment datapoint, and it disagrees with us
+
+The literature fallback for a red-clamped instrument names pheophytin *a*'s minor bands at **~535 nm** and
+**~608–610 nm**. Those are the free-base solution-phase positions and they are not what we measure: our
+bands sit at **568** and **624** (`§4.1a`, `SPEC_red_ratio_metric.md` §2.5), and 2026-08-24's second-derivative
+work explains the gap — aggregation in the lipid matrix **broadens and red-shifts** the long band, which is
+whole only in an index-matched solvent (sunflower 623–625; isopropanol drifts to 629–630).
+
+⇒ this **strengthens** §4.1a's standing warning rather than contradicting it: the assignment is literature,
+the positions are ours, and 608–610 is one more reason not to quote a solution-phase number at a dispersion.
+⛔ It is **not** evidence for moving any window.
+
+### Sources for §9
+
+- **Mínguez-Mosquera pigment method** (470 nm / `E=2000` lutein; 670 nm / `E=613` pheophytin *a*; `/100/d`,
+  ×10⁶ → mg/kg): [*Use of chlorophyll and carotenoid pigment composition to determine authenticity of virgin
+  olive oil*, JAOCS](https://link.springer.com/article/10.1007/s11746-000-0136-z) ·
+  [Gandul-Rojas & Mínguez-Mosquera, *J. Sci. Food Agric.* **72**:31 (1996)](https://scijournals.onlinelibrary.wiley.com/doi/abs/10.1002/(SICI)1097-0010(199609)72:1%3C31::AID-JSFA619%3E3.0.CO;2-5).
+- **AOCS Cc 13d-55** (the 630/670/710 three-wavelength form): referenced in
+  [IUPAC, *Determination of chlorophyll pigments in oils*](http://publications.iupac.org/pac/1995/pdf/6710x1781.pdf).
+  ⛔ The `0.1086` coefficient is quoted from secondary sources and **was not verified against the method text**.
+- **Provenance of this section.** A 2026-08-29 Gemini transcript on mixing pumpkin oil into sunflower oil for
+  VIS spectroscopy, reviewed at the bench:
+  `spectracs-references/notes/20260829_gemini_oil_mixing_and_pigment_photometry.txt`. Its formulas carry the
+  460-nm and constant errors corrected above; its preparation advice is folded into
+  `SPEC_capture_quality.md` §16.23.2c. ⛔ It also recommends a **30–35 °C warm bath** to thin the oil, which
+  `SPEC_settled_measurement.md` §34.2 measured as a **preparation fault** (+0.680 `Q%`). Do not follow it.
+
+
 ## Sources
 - `KB_led_and_oil_spectra.md` (LED + oil sources). Fruhwirth & Hermetter (2007), *Seeds and oil of the
   Styrian oil pumpkin*, Eur. J. Lipid Sci. Technol. **109**(11):1128–1140, DOI

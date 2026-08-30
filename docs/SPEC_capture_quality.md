@@ -10088,6 +10088,62 @@ diagnostic is gone.** Halving to reach 8 mL puts `A_Q` at ~0.16, under §16.23.6
 ⇒ un-hardcode it and stamp the recipe actually used, e.g. `1cap-1ml-vortex30-to4ml-vortex60-sonic60-cold`.
 `ROADMAP.md` §0b carries this as a blocker on the σ_fill run.
 
+### ⭐ 16.23.2c THREE TECHNIQUE DETAILS THE VORTEX STEP DOES NOT YET SPECIFY — and an instrument-independent homogeneity check  *(2026-08-29, from an external protocol review; DESIGN, none of it run)*
+
+§16.23.2b step 3 says *"vortex 30 s at a fixed setting"* and step 5 *"vortex 60 s, same setting"*. It fixes the
+**duration** — which was the point — but a vortex mixer has three other operating variables, and standard
+laboratory practice pins all of them. None is currently written down, so all three are free to drift between
+fills exactly the way the mixing step drifted three times before §16.23.2b caught it.
+
+| | the rule | why it matters here |
+|---|---|---|
+| **fill level** | ⭐ vessel **≤ 50–60 % full** | above that the liquid rotates as a block and no vortex forms — the shear that does the work never happens. ✅ **We already comply and should say so**: 4 mL in a 10 mL tube is 40 %. But the σ_fill evening's **8 mL** form is at 80 % and would mix *worse than the routine fill it is supposed to characterise* |
+| **angle** | ⭐ hold the tube at **30–45°** on the head, not upright | an upright tube gets a shallow symmetric swirl; the tilt is what makes the vortex deep and the shear high |
+| **cadence** | ⭐ **pulse**, do not press continuously — 5 s on, lift, 5 s on, ×4–5 | a continuously driven vortex settles into a **laminar** profile and stops mixing. Collapsing and re-forming it is where the turbulence comes from. ⛔ This is the one that changes what "30 s" means: 30 s continuous and 6 × 5 s are not the same operation |
+
+⛔ **The 8 mL row is the finding here.** `ROADMAP.md` §0's σ_fill run doubles the volume so the second half can
+go into a second jar. In a 10 mL tube that is an **80 % fill**, which is on the wrong side of the rule — so the
+one run whose whole purpose is to measure preparation noise would be prepared by the least reproducible mixing
+in the archive. ⇒ **for the σ_fill evening, mix in a larger tube** (8 mL wants ≥ 15 mL) or mix 2 × 4 mL
+independently and accept that the split-jar diagnostic changes meaning. **Decide before the evening, not during.**
+
+#### ⭐ The ultrasonic step is doing a different job than the one we tested — and that is why §14.2 does not refute it
+
+`SPEC_metric_research.md` §14.2 measured the scatter floor **surviving 300 s of ultrasound** (2026-08-23), and
+§16.23.2b already draws the right conclusion — *"sonication disperses; it cannot dissolve"*. ⭐ The external
+protocol assigns the bath **exactly the job §16.23.2b assigns it**: coalescing the **air** a vortex entrains,
+which in a viscous oil-bearing matrix will not rise on its own. Entrained air scatters (Rayleigh) and reads as
+absorbance the same way turbidity does, but it is a *different* population from the pigment dispersion.
+
+⇒ ⚠ **Do not let §14.2's null be quoted against step 6.** The 300 s test showed ultrasound does not dissolve
+the dispersion. It says nothing about whether it removes bubbles, because nobody looked for bubbles. The ⏸ gate
+in §16.23.2b (two fills vortex-only against two vortex+sonic) is still the right test — and its readout should
+include `A_valley`, since air and pigment scatter land in the same place.
+
+#### ⭐⭐ The homogeneity check, with an acceptance number — and one form of it does not use the spectrometer
+
+`SPEC_red_ratio_metric.md` §6.6 is the open wound: the **second 4 mL of a preparation is +15–45 % more
+concentrated than the first**, which is a stratified tube, not a measurement problem. We found it by accident,
+from two pours. The standard method has a deliberate version of the same test:
+
+| test | what it does | cost | verdict |
+|---|---|---|---|
+| **Schlieren check** | tube against a point source (phone torch), swirled; visible oily striations ⇒ not mixed | free, 5 s | ⭐ **adopt as a step-5 exit condition.** It is a *necessary* check, not a sufficient one — it catches gross failure only |
+| **three-depth aliquots, RSD < 2 %** | draw from top / middle / bottom, measure all three, compute relative sd | 3 jars, 3 runs, one evening | ⭐ the deliberate form of §6.6. ⛔ But it runs **through the instrument under test**, so it cannot separate preparation scatter from σ_fill's other terms — which is the very thing §6.6 could not separate either |
+| ⭐⭐ **refractive index, three depths** | Abbe or digital refractometer; identical `n_D` to the **4th decimal** ⇒ homogeneous | needs a ±0.0001 instrument (a handheld Brix unit will **not** do) | ⭐⭐ **the only homogeneity check we have that does not go through the spectrometer.** `n_D` responds to composition directly, so it separates *"the tube is stratified"* from *"the measurement is noisy"* — a distinction every test in this document has so far had to argue around |
+
+⭐ **The third row is worth its price.** Every fill-noise result in this spec — σ_fill, the pour term, §6.6,
+§12.2's *"the fill, not the oil, is the dominant term"* — is measured with the same instrument whose noise is
+being partitioned. A refractometer is an **independent axis on the composition**, and it would settle whether
+the pour term is stratification (composition really differs) or something optical (composition identical, the
+jar or the beam differs). ⏸ Not proposed as a purchase here; recorded because nothing else in the equipment
+list can do it.
+
+⛔ **What is NOT adopted from the same source: the 30–35 °C warm bath** to thin the oil before mixing, and the
+"no ultrasonic bath" fallback of standing the tube in a **35 °C** bath for 20–30 min. `SPEC_settled_measurement.md`
+§34.2 measured the warm bath at **+0.680 `Q%`** and made it a **preparation fault**; §16.36 is the mechanism
+(heat clears reversibly, and the cooling jar re-clouds in the holder). **P5 stands. No warm bath, at any step.**
+
 ### 16.23.3 The numbers — why 60 µL and 15 mL
 
 **60 µL / 15 mL = 1:250**, against today's estimated working point of **~1:243**. A 3 % difference, i.e.

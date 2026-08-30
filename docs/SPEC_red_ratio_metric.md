@@ -130,6 +130,32 @@ and three solvents (§6.2, §6.6) where `Q%` moved 6.5 units on one oil.
 ⭐ `Rv` is the **ratio form** of `DOC_metric_algebra.md` §5.8's see-saw at 568/624; `dQ100` is the
 difference form.
 
+### ⭐⭐ 2.5a EXTERNAL CORROBORATION — the analytical literature says the Soret is contaminated, from its own evidence  *(2026-08-29)*
+
+The argument above is ours, built from our own corpus, and that is a weakness when the conclusion is
+*"replace the shipping metric's denominator"*. It is worth recording that the **standard photometric methods
+for pigments in edible oils reach the same statement independently**, from oil chemistry rather than from any
+of our runs.
+
+`KB_spectroscopy_physics.md` §9 records the methods in full. The relevant part:
+
+> the carotenoid absorption at 460–470 nm and the porphyrin **Soret** band **overlap**, and the standard
+> method says so explicitly — a single absorbance there is a two-pigment-family mixture, and separating them
+> needs chromatography, not photometry.
+
+⇒ **three independent arrivals at the same place**: `DOC_lamp_410_680.md` Fig. 5 (our lamp), §2.5 above (our
+spectra), and the AOCS / Mínguez-Mosquera method literature (neither). ⭐ This is the strongest form the
+argument has had, because the third one has no stake in `Rv`.
+
+⭐ **And the standard chlorophyll formula is `Rv`'s construction.** AOCS Cc 13d-55 reads
+`A670 − (A630 + A710)/2` — a band height against the **mean of two flanking anchors**. That is §2.2's pedestal
+subtraction, arrived at from turbidity in oil rather than from our pedestal work. The methods and this spec
+agree on *how to read a band*; they differ only on which band the clamp leaves us.
+
+⚠ **What this does NOT do.** It does not touch §7's pre-registration gate, it is not evidence for `Rv` over
+`dQ100` (both are anchored the same way), and it says nothing about the diffuser failure of §6.7. It removes
+one objection — *"the Soret complaint is a story fitted to our own corpus"* — and nothing else.
+
 ⚠ **Three caveats travel with this argument and must not be dropped when it is quoted:**
 
 1. ⛔ **Q-manifold conservation is untested, not shown** — total Q per unit Soret reads 7.85 / 5.56 / 6.71
@@ -137,6 +163,13 @@ difference form.
    though the denominator is the same contaminated Soret, so this is not a clean test either way.
 2. ⛔ **The band assignment is literature, not this instrument.** The KB's own 2026-08-04 warning:
    *"OUR OWN INSTRUMENT DOES NOT CONFIRM THE Qy POSITION, and cannot at this range."*
+   ⚠ **And the literature does not agree with itself across phases** *(2026-08-29)*: the standard
+   red-clamped fallback names pheophytin *a*'s minor bands at **535** and **608–610 nm** — free-base
+   *solution* positions — against our **568** and **624**. `KB_spectroscopy_physics.md` §9.4 holds the
+   reconciliation (aggregation in the lipid matrix broadens and red-shifts the long band; it is whole only
+   in an index-matched solvent). ⛔ It is **not** a reason to move a window, and this spec does not move one
+   — but a reader who checks the band positions against a textbook will find a 15 nm discrepancy, and it
+   should not surprise them.
 3. ⛔ **Consistency is not mechanism.** Two different pigments in differing proportions would produce the
    same crossover. Separating them needs the red extension or a deliberate demetallation.
 

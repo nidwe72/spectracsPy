@@ -798,6 +798,50 @@ Fig. 3A, methanol against a hydrocarbon, our own wavelength calibration — are 
 > **interferent**, as here, the standard practice is neither — it is **to clarify: filter or
 > centrifuge before measuring**, then fit a baseline for whatever residual remains.
 
+### 4.7a What those methods actually compute — and the one thing they do better than we do  *(2026-08-29)*
+
+It is worth being concrete about what the standard methods *do* with the spectra they record, because two of
+their choices bear directly on this instrument and one of them is better than ours.
+
+They read pigments through two- or three-wavelength photometric formulas with published extinction
+coefficients: carotenoids as a lutein equivalent at **470 nm**, chlorophylls as pheophytin *a* at **670 nm**,
+each divided by a coefficient and the path length and multiplied by a gravimetric dilution factor. The
+chlorophyll form is the interesting one, because it does not read the peak bare — it reads
+
+```
+A(670) − ½ · [ A(630) + A(710) ]
+```
+
+a band height against the **mean of two flanking anchors**, and the anchors are there for exactly the reason
+chapter 5 gives: oil scatters, and the scatter is a smooth pedestal under everything. ⭐ **That is the same
+construction the metrics in this project use** — arrived at from turbidity in edible oil rather than from the
+pedestal work of chapter 5, which is a pleasant kind of agreement.
+
+Three things follow for us, and they are not all comfortable.
+
+**The formula itself is unreachable.** Both the 670 nm band and its 710 nm anchor lie outside our window.
+There is a widely offered workaround for a red-clamped instrument — abandon 670 and compare the bare
+absorbance at ~610 nm between oils — and it must be refused, because it silently drops the anchors that made
+the original formula work. On this instrument the pedestal is the majority of a raw band height. A
+red-clamped spectrometer does not need a different wavelength; it needs the anchors kept.
+
+**The absolute numbers are convention-bound.** Two published bases for the same chlorophyll measurement
+differ by nearly a factor of two, because they report different reference pigments. A concentration in mg/kg
+from photometry is comparable only to other numbers computed the same way — which is the same caution this
+project has already learned about its own thresholds.
+
+⭐ **And the blank is better than ours.** The standard method zeroes the instrument on **pure solvent from
+the same bottle used to dilute**, so the matrix — its own faint absorbance, its own scattering, its own
+refractive index — cancels out of every sample. We reference against the *lamp*, so the solvent rides
+through. That mattered little when the solvent was isopropanol and nearly transparent. It matters more now
+that the solvent is sunflower oil (§4A), a pigmented material with batch-to-batch variation we have already
+measured. The apparatus for it mostly exists: a reference on pure solvent is already taken with every fill.
+⏸ Turning that into a true matrix blank is a change to the measurement convention and is not proposed here —
+it is recorded as the one place where the older, slower, laboratory practice is simply right and we are not.
+
+`KB_spectroscopy_physics.md` §9 carries the formulas, the coefficients, and the two constants worth checking
+before anyone quotes them.
+
 ### 4.8 The hydrocarbon route, reconsidered  *(2026-08-19)*
 
 §4.7 ends by admitting that the analytical field converged on hydrocarbons because they give a true

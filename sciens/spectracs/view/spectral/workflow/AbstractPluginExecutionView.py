@@ -342,7 +342,11 @@ class AbstractPluginExecutionView(PageWidget):
         workflow.userId = session.userId
         workflow.pluginCodeRef = codeRef
         workflow.pluginVersion = version
-        workflow.timestampIso = datetime.datetime.now().isoformat()
+        # ⚠ KEEP the measurement time if the engine already stamped it (it does, at __buildWorkflow).
+        # Overwriting here would replace "when it was measured" with "when it was filed", and those differ
+        # by however long the operator spent looking at the result.
+        if not workflow.timestampIso:
+            workflow.timestampIso = datetime.datetime.now().isoformat(timespec="seconds")
         specsByName = {spec.name: spec for spec in self._plugin.metadata(workflow)}
         for name, value in self._readMetadata().items():
             spec = specsByName.get(name)
