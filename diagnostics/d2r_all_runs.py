@@ -134,6 +134,30 @@ TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spa
          # ⭐⭐ THE SECOND LUGITSCH FILL OF THAT EVENING, 37 min after A, same-jar (Edwin, 2026-08-30).
          # Announce-only, like A; its real entry is in SAME_JAR_6MIN.
          "20260828LugitschB": ("Lugitsch", "green"),
+         # ⭐⭐⭐ A THIRD LUGITSCH FILL, and THE FIRST RUN IN THE ARCHIVE THAT CARRIES ITS OWN RECIPE AND
+         # ITS OWN CLOCK. `header.prepProtocol` reads `1cap-1ml-vortex30-tovolume-vortex60-sonic60-cold-
+         # box6min` -- resolved per run from `~/.spectracsPy/prepProtocol.txt` by `PrepProtocolResolver`,
+         # not compiled in -- and `header.timestampIso` reads 2026-08-30T17:28:03. Edwin confirms the
+         # method: SAME-JAR, 60 s stand. Announce-only here; its real entry is `SAME_JAR_6MIN`.
+         # ⚠ ITS FOLDER DATE IS STILL A FICTION -- it was measured on 08-30, 16 h after fill B. The
+         # header now CONFIRMS the day, but see `DELAYED_FILL`: it does not give a per-fill time.
+         "20260828LugitschC": ("Lugitsch", "green"),
+         # ⭐⭐ A FOURTH LUGITSCH FILL, 42 min after C in the SAME afternoon sitting, same recipe string.
+         # ⚠ SAME-JAR PRESUMED, not stated — the `SteirerkraftB` case, not the `LugitschA` one: it is a
+         # continuation of a sitting whose method Edwin confirmed, 42 min on, with no boundary crossed.
+         # ⛔ If it is not same-jar it moves to the two-jar corpus, which is the reverse of this edit.
+         # Announce-only; its real entry is `SAME_JAR_6MIN`.
+         # ⛔ ITS HEADER STAMPS THE SAME 17:28:03 AS FILL C -- see `DELAYED_FILL` for why that is a
+         # property of the engine's clock and not a coincidence.
+         "20260828LugitschD": ("Lugitsch", "green"),
+         # ⭐⭐ A FIFTH LUGITSCH FILL, 31 min after D, same sitting and same recipe string; same-jar
+         # PRESUMED on the same continuation argument as D. Announce-only — and see `SAME_JAR_6MIN`,
+         # where it is the fill that BREAKS the four-fill `RvLin` result instead of extending it.
+         "20260828LugitschE": ("Lugitsch", "green"),
+         # ⭐⭐ A SIXTH LUGITSCH FILL, 38 min after E, same sitting, same recipe string, same-jar
+         # PRESUMED. Announce-only. ⭐ It reads BACK on the A-D cluster, which is what turns `E` from
+         # "the metric drifted" into "the metric produced one outlier" — see `SAME_JAR_6MIN`.
+         "20260828LugitschF": ("Lugitsch", "green"),
          # ⭐⭐ A FOURTH OIL ON THE SAME-JAR ROW, and the archive's most loaded one -- see SAME_JAR_6MIN.
          # Announce-only; same-jar and same bottle, both confirmed by Edwin 2026-08-30.
          "20260828SteirerkraftA": ("Steirerkraft", "green"),
@@ -276,6 +300,14 @@ EXCLUDED = {"20260826Lugitsch/004.pdf": "reads strange on the day — set aside 
             "20260828LugitschA/002.pdf": "same-jar reference — not on the archive's footing",
             "20260828LugitschB/001.pdf": "same-jar reference — not on the archive's footing",
             "20260828LugitschB/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschC/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschC/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschD/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschD/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschE/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschE/002.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschF/001.pdf": "same-jar reference — not on the archive's footing",
+            "20260828LugitschF/002.pdf": "same-jar reference — not on the archive's footing",
             "20260828SteirerkraftA/001.pdf": "same-jar reference — not on the archive's footing",
             "20260828SteirerkraftA/002.pdf": "same-jar reference — not on the archive's footing",
             "20260828SteirerkraftB/001.pdf": "same-jar reference — not on the archive's footing",
@@ -314,6 +346,12 @@ OTHER_REFERENCE = {"20260828EstererD": "same-jar reference",
                    # which is what gives that row a third oil and a real green-vs-brown spread.
                    "20260828LugitschA": "same-jar reference",
                    "20260828LugitschB": "same-jar reference",
+                   # ⭐ ADDED 2026-08-30, and the ONLY one of these that is not an inference: Edwin
+                   # stated the method for this fill in the same breath as handing it over.
+                   "20260828LugitschC": "same-jar reference",
+                   "20260828LugitschD": "same-jar reference",
+                   "20260828LugitschE": "same-jar reference",
+                   "20260828LugitschF": "same-jar reference",
                    "20260828SteirerkraftA": "same-jar reference",
                    "20260828SteirerkraftB": "same-jar reference"}
 
@@ -702,7 +740,30 @@ DELAYED_FILL = {"20260828LugitschA": ("2026-08-29 23:52",
                 "20260828SteirerkraftA": ("2026-08-30 01:01",
                                           "the same late evening, 26 min after LugitschB"),
                 "20260828SteirerkraftB": ("2026-08-30 01:42",
-                                          "the same late evening, 41 min after Steirerkraft fill A")}
+                                          "the same late evening, 41 min after Steirerkraft fill A"),
+                # ⭐ THE FIRST TWO ENTRIES THAT A HEADER CAN CORROBORATE AT ALL: `timestampIso` is no
+                # longer null, so "which evening was this?" stops being a question about file mtimes.
+                # ⛔⛔ BUT IT IS NOT A PER-FILL CLOCK, AND THESE TWO FILLS ARE THE PROOF. `LugitschC` and
+                # `LugitschD` are separate fills 42 min apart and BOTH stamp `2026-08-30T17:28:03`,
+                # because `SpectralWorkflowEngine.__buildWorkflow` stamps once when the workflow object
+                # is created and the bench then re-captures inside it. The stamp is the SITTING's start,
+                # so it dates C correctly and puts D ~70 min early — and it cannot order two reads of one
+                # fill either. ⇒ the times below are still the PDF mtimes, which are per report; the
+                # header is used only to confirm the DAY. §16.38's "log the temperature with the clock
+                # time" does not yet have a clock it can use per fill.
+                # ⛔ AND C IS THE BIGGEST DISPLACEMENT ON THE ROW: not "late on the same evening" like
+                # A/B/Steirerkraft, but a SEPARATE SITTING 16 h after fill B, with the rig switched off
+                # in between. The same-jar row is now two evenings wide.
+                "20260828LugitschC": ("2026-08-30 17:59",
+                                      "a SEPARATE afternoon sitting, 16 h after fill B — the same-jar "
+                                      "row spans two evenings, not one"),
+                "20260828LugitschD": ("2026-08-30 18:41",
+                                      "the same afternoon sitting as fill C, 42 min after it"),
+                "20260828LugitschE": ("2026-08-30 19:12",
+                                      "the same afternoon sitting, 31 min after fill D"),
+                "20260828LugitschF": ("2026-08-30 19:50",
+                                      "the same afternoon sitting, 38 min after fill E — the fourth "
+                                      "fill of the 08-30 block, and 19 h after fill B")}
 
 
 def dayDelayNote(rows):
@@ -1216,6 +1277,21 @@ def rvCorpus():
 # share the REFERENCE method, which is what the row is separated for. `prepNote` names the fill on the
 # figure. If the bath did run, this row has two preparations on it and `EstererD`'s exclusion becomes
 # inconsistent — resolve it by asking the bench, not by inferring from the numbers.
+#
+# ⭐⭐⭐ AND `20260828LugitschC` IS THE FILL THAT PUTS A RECIPE IN THE RECORD AT LAST (2026-08-30). It is
+# the first run in the archive whose `header.prepProtocol` was RESOLVED PER RUN rather than compiled in:
+#     1cap-1ml-vortex30-tovolume-vortex60-sonic60-cold-box6min
+# ⛔⛔ WHICH MEANS THE HEADING ABOVE IS WRONG AS A DESCRIPTION OF THE CURRENT RECIPE. §16.23.2b step 6
+# ADOPTED a 60 s cold ultrasonic bath — "NO ultrasonic bath" was true of the row when it was written and
+# is not true of this fill. ⇒ what still separates `EstererD` from this row is its STAND (60 s against
+# 6 min) and its bath DURATION, not the presence of a bath. The heading is left standing and corrected
+# here rather than quietly rewritten, because it is what the other five fills were admitted under.
+# ⛔ AND THE ROW'S OWN OPEN QUESTION IS STILL OPEN. Knowing C's recipe says nothing about A's or B's —
+# their headers carry the stale constant either way. What C changes is that from now on the question
+# cannot recur; it does not answer it retrospectively.
+# ⚠ EDWIN'S WORDS FOR THIS FILL WERE "the same-jar-60s-stand lab recipe", and the header says the stand
+# was 6 min in the box with a 60 s bath. Recorded as the discrepancy it is: if "60 s stand" is literal
+# then C is an `EstererD`-style preparation and does not belong on this row at all.
 # ⛔ These fills stay in EXCLUDED, so they touch NO statistic, NO σ_fill figure and none of the by-oil,
 # by-solvent or strip pages. They are read separately, ONLY for their own row on the per-day pages,
 # where the premise of the page — "inside one row the rig is common to every oil" — actually holds for
@@ -1241,6 +1317,93 @@ SAME_JAR_6MIN = {"20260828EstererE": ("Esterer", "green"),
                  # FILL term, not the bottle ageing and not the day. Do not read the between-day walk on
                  # these pages as an oil changing: one evening spans the whole of it.
                  "20260828LugitschB": ("Lugitsch", "green"),
+                 # ⭐⭐⭐ A THIRD FILL OF THE SAME OIL, and the one that turns this row's Lugitsch pair
+                 # into a triple — the only oil in the archive with three same-method fills.
+                 # ⛔⛔ IT IS NOT A THIRD POINT OF ONE SITTING. Fills A and B are 37 min apart on one
+                 # evening; C is 16 h later, a separate afternoon with the rig switched off in between
+                 # (`DELAYED_FILL`). So a spread over the three is `σ_fill + a between-session term`,
+                 # and it must never be quoted as σ_fill alone. `sameJarPairNote` reports the WORST-CASE
+                 # gap, which is the honest statistic here for exactly that reason.
+                 # ⭐⭐ WHAT IT SHOWS ANYWAY, and it is the sharpest version of §16.11's case yet: over
+                 # the three fills `RvLin` spans 2.31 (105.43 / 104.79 / 103.11) where `Rv` spans 9.64
+                 # (102.08 / 111.72 / 104.11) — 4.2x tighter, ACROSS a session boundary rather than
+                 # within one. And the gap is the Δ term the form was built to remove: Δ = A612-615 −
+                 # A_valley runs −0.006 / +0.017 / +0.003 and `Rv − RvLin` runs −3.3 / +6.9 / +1.0,
+                 # monotone. ⚠ `RvCont` moved 6.43 across the same boundary, its worst on the row.
+                 # ⛔ ONE OIL, THREE FILLS. §16.10.3's registered comparison is the BRACKET PAIR of a
+                 # single planned evening; this is not that measurement and does not discharge it.
+                 "20260828LugitschC": ("Lugitsch", "green"),
+                 # ⭐⭐⭐ A FOURTH FILL, 42 min after C in the SAME sitting — and it is the cleanest
+                 # single piece of evidence on this row. C and D are INDEPENDENT fills that agree to
+                 #     RvLin 0.03   where   Rv 4.66,  RvCont 4.65,  RvTest 3.06
+                 # ⇒ the four-fill picture: `RvLin` 105.43 / 104.79 / 103.11 / 103.08, range 2.34,
+                 # sd 1.19; `Rv` 102.08 / 111.72 / 104.11 / 108.77, range 9.64, sd 4.38.
+                 # ⭐⭐ AND D IS WHAT MAKES THE MECHANISM TESTABLE INSTEAD OF ILLUSTRATED. Δ = A612-615 −
+                 # A_valley runs −0.0070 / +0.0176 / +0.0025 / +0.0143 across A-D, and
+                 #     r(Rv, Δ) = +0.976   against   r(RvLin, Δ) = −0.353          (n = 4 fills)
+                 # ⇒ on this oil essentially ALL of `Rv`'s fill-to-fill scatter is the baseline tilt at
+                 # 612-615, which `RvLin` measures instead of assuming. ⛔ Note D and B carry nearly the
+                 # same Δ (+0.014 / +0.018) and both read `Rv` HIGH, while C — the most turbid fill of
+                 # the four — carries the smallest Δ. So Δ is NOT turbidity: r(Δ, A_valley) is only
+                 # +0.59, and reading this as a turbidity story is the trap §16.12.2B already refuted.
+                 # ⚠ r(Rv − RvLin, Δ) = +0.9994 is NOT independent evidence — Δ is a term in `RvLin`'s
+                 # own formula, so that correlation is very nearly algebraic. The claim that is NOT
+                 # algebraic is the first one: `Rv` alone tracks a band it does not contain.
+                 # ⛔ n = 4 FILLS, ONE OIL, TWO SITTINGS. r = 0.976 on four points is p ≈ 0.02; this
+                 # motivates §16.10.3's registered test, it does not stand in for it.
+                 # ⛔⛔⛔ AND FILL `E`, 31 MIN LATER, REFUTED THE PARAGRAPH ABOVE. Read them together;
+                 # the four-fill numbers are LEFT STANDING because they were right for the corpus they
+                 # were computed on, and because a claim that is deleted cannot be learned from.
+                 "20260828LugitschD": ("Lugitsch", "green"),
+                 # ⛔⛔⛔ NOT ON THIS ROW ANY MORE — `20260828LugitschE` REMOVED 2026-08-30, Edwin's call.
+                 # ⭐ THE GROUND, stated exactly, because it is weaker than the first draft claimed. The
+                 # `CAPTURE-SETTINGS` log (`SPEC_capture_quality.md` §16.39.2) shows E ran at **exposure
+                 # 104** where C, D and F ran at 90 — so it is the one fill of the six whose CAPTURE STATE
+                 # did not match the others, and `ROADMAP.md` §0's rule for that run was "⛔ VARY NOTHING
+                 # ELSE." That is a DESIGN-OF-EXPERIMENT exclusion.
+                 # ⛔⛔ IT IS **NOT** A MECHANISM. §16.39.3a retracts the claim that the exposure step moved
+                 # `RvLin`: the 609 nm feature shifts +2.1 nm with exposure, but at 612-615 the anchor moves
+                 # only 0.0013 A, and Δ does not split by exposure at all. E being both the one exp-104 fill
+                 # AND the one `RvLin` outlier is, on the evidence, one fill's coincidence.
+                 # ⚠ WHAT THE EXCLUSION COSTS, so it can never be quiet — over the six fills `RvLin` read
+                 # 105.43 / 104.79 / 103.11 / 103.08 / 97.70 / 104.00, sd 2.76; without E, sd 1.03. ⇒ this
+                 # single decision is the whole of `RvLin`'s measured σ_fill on this oil, and every number
+                 # that rests on it (`SPEC_history_tracker.md` §9.1's 0.82 and its ±1.04 band) now rests on
+                 # FOUR fills and 3 df. ⛔ Revisit the moment §16.39.7's 90/104/90 re-seat runs.
+                 # ⭐⭐⭐ THE SIXTH FILL, AND IT SHARPENED `E` FROM "THE METRIC DRIFTED" TO "THE METRIC
+                 # PRODUCED ONE OUTLIER". F reads `RvLin` 104.00 — back inside A-D's 103.08-105.43 —
+                 # so E was a lone excursion, not the start of a trend.
+                 # ⚠ E IS NO LONGER DRAWN (see the note where its entry used to be), so this row now shows
+                 # five fills. The argument is kept because it is why E could be set aside at all: had F
+                 # continued E's direction, the fill would have been evidence about the METRIC and removing
+                 # it would have been removing the finding.
+                 # ⭐⭐ LEAVE-ONE-FILL-OUT is what makes the distinction visible, and it separates the
+                 # family better than any sd on this row (sd of the six fill means, then the sd with
+                 # the single worst fill dropped):
+                 #     Rv      3.74 -> 2.97 (-A)     scatter is SPREAD; no fill dominates
+                 #     RvTest  5.06 -> 3.48 (-E)
+                 #     RvLin   2.76 -> 1.03 (-E)     one fill IS the scatter
+                 #     RvCont  2.56 -> 0.98 (-C)     one fill IS the scatter — a DIFFERENT one
+                 # ⇒ `RvLin` and `RvCont` are both ~1.0 on five of six and each miss a different fill;
+                 # `Rv` is honestly mediocre on all six. Three metrics, three answers to "which fill was
+                 # odd tonight", and no external evidence yet says which is right.
+                 # ⭐⭐⭐ AND B-vs-F IS THE BEST CONTROL THE ARCHIVE HAS EVER HAD. Two independent fills
+                 # 19 h apart, in different sittings, whose Δ matches to 0.2 % (+0.0176 / +0.0173):
+                 #     Rv 1.10   RvTest 0.52   RvLin 0.79   RvCont 0.72
+                 # ⛔⛔ ALL FOUR AGREE ACROSS THE SESSION BOUNDARY WHEN Δ IS HELD. That is a direct
+                 # challenge to reading these numbers as a clock effect: §16.38's ramp is measured on
+                 # sessions where Δ was free to move, and here it is pinned by accident and the
+                 # between-session term goes to ~1 unit on every member of the family.
+                 # ⚠ ONE MATCHED PAIR, found after the fact, not designed. It is a hypothesis for the
+                 # §16.10.4 evening — match Δ deliberately, or at least log it — not a refutation.
+                 # ⭐⭐ AND F IS WHY Δ IS NOT A PREPARATION PROPERTY. It carries the widest within-fill
+                 # `Rv` spread of the six (112.3 -> 108.9 across two reads of ONE seating) and its Δ
+                 # falls 0.0203 -> 0.0143 in the same two reads. Over the six fills the WITHIN-fill
+                 # changes give r(ΔΔ, ΔA_valley) = +0.916 — Δ tracks the valley as the fill clears —
+                 # while BETWEEN fills the same correlation is only ~+0.4. ⇒ within a seating Δ is a
+                 # clearing artefact and belongs to `SPEC_settled_measurement.md`'s endpoint question;
+                 # between fills it is something else. Do not treat the two as one term.
+                 "20260828LugitschF": ("Lugitsch", "green"),
                  # ⭐⭐⭐ THE OIL THAT HOSTS `Rv`'s ONLY ARCHIVE-WIDE ERROR. `20270729B/002` is Steirerkraft,
                  # and it is the 39.5 that sets the corridor to −11.5 (`SPEC_metric_research.md` §16.3).
                  # ⭐ THE LABEL IS PRIOR TRUTH, NOT A READING OF THE METRIC. Steirerkraft is GREEN in the

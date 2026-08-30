@@ -411,6 +411,126 @@ blackening. Steps hold ⇒ the reduction's channel handling.
 
 ⛔ **No lamp fixes this**, and this build's `480nm-485` only mitigates the 476 nm one by lifting the level.
 
+> ⛔⛔ **ONE OF THE FOUR IS NOT A CHANNEL SWITCH — measured per channel 2026-08-30**
+> (`DOC_lamp_rebuild.md` §6.0a, `diagnostics/channel_replay.py`). **~581 nm is a real `G → R` handover, at
+> 580.0 nm.** ⛔ **~609–614 nm is not:** red carries **96–99 %** of the light from 596 to 620 nm and green
+> is dead by 604, so nothing hands over. It is a ~40 % step in the **red channel's own response**, `sum`
+> reproduces it within 0.1 nm of `max`, and it **moves +2.1 nm with the EXPOSURE alone** — which no fixed
+> spectral feature can do. ⇒ that one belongs to `SPEC_capture_quality.md` §17's gamma work, not to this
+> document and not to the lamp. The 480/485 nm pair, where `B → G` really does hand over, is untouched.
+
+### ⭐ 12.5 A MONOCHROME SENSOR — the "make it act like a BW camera" option  *(Edwin, 2026-08-30; DESIGN, not costed, not ordered)*
+
+**The question:** can the Bayer camera be made to behave like a monochrome one? Three routes, and only one
+is worth anything.
+
+⛔⛔ **FIRST, THE MEASUREMENT THAT CLOSES THE SOFTWARE ROUTE ON THIS CAMERA — not in general, on THIS one.**
+The usual advice for making a colour camera behave monochromatically is *shoot RAW, skip the demosaic
+(`dcraw -D` / LibRaw), take the green photosites, bin 2×2 RGGB*. Enumerating what the ELP actually offers
+over V4L2 (`32e4:8830`, 2026-08-30):
+
+```
+   0: MJPG   Motion-JPEG    flags=0x1 (COMPRESSED)
+   1: YUYV   YUYV 4:2:2     flags=0x0
+```
+
+**That is the complete list.** No `GREY`/`Y8`, no Bayer (`BA81`/`GRBG`/`RGGB`), no `Y16`.
+
+| the standard advice | on this camera |
+|---|---|
+| shoot uncompressed RAW | ⛔ there is no RAW. The ISP is on-chip and two cooked formats come out |
+| skip the demosaic (`dcraw`, LibRaw) | ⛔ those read camera RAW *files*; the UVC equivalent is a Bayer FOURCC and it is not offered. **The demosaic has already happened before any byte reaches us** |
+| isolate the green photosites (50 % of RGGB) | ⛔ the "G" we read is not green photosites — it is Bayer→RGB in the camera → YCbCr 4:2:2 → back to BGR by cv2. Two conversions and a demosaic deep |
+| bin 2×2 RGGB into a super-pixel | ⛔ we never see the mosaic to bin |
+
+⇒ **there is no software back door on a UVC webcam**, which is what makes the hardware option below the only
+one rather than merely the best one.
+
+#### ⭐⭐ 12.5a A SECOND CAMERA, MEASURED — and it does not change the conclusion  *(Edwin plugged one in, 2026-08-30)*
+
+A second USB camera was characterised with the same probe (`diagnostics/channel_replay.py --probe-only`,
+which runs on any node and needs no rig): **`2bc5:0529`, an unbranded 2K board on Orbbec's vendor ID**
+(firmware strings `webcamvendor` / `webcamproduct`, null serial, USB 2.0).
+
+| | **ELP** `32e4:8830` *(current)* | **`2bc5:0529`** |
+|---|---|---|
+| formats | MJPG, YUYV | MJPG, YUYV, **NV12**, **H264** |
+| anything RAW / mono | ⛔ none | ⛔ **none** |
+| best **uncompressed** | **2592×1944 YUYV** | 1920×1080 YUYV |
+| its 2K modes | — | ⛔ MJPG and H.264 **only** — lossy, and H.264 is *inter-frame* |
+| manual exposure | ✅ | ✅ `Exposure Time, Absolute` 0–6500 |
+| manual white balance | ✅ in **Kelvin** | ⚠ 0–255 — ⛔ **NOT Kelvin** |
+| frame rate at its best uncompressed mode | ~3.3 fps (10.1 MB/frame) | ~8 fps (4.15 MB/frame) |
+
+⭐⭐ **THE FINDING THAT MATTERS: two different UVC webcams, neither offering a raw or mono format.** That is
+now a measurement across two vendors rather than one camera's quirk, and it is what turns §12.5's conclusion
+from an inference into a result: **a mono MODULE is the only route, and no amount of software gets there.**
+
+⛔ **It is not a replacement.** It cannot make 2592×1944 in *any* format, so it is a full recalibration plus
+every item in §9; its uncompressed mode has **56 % of the rows**, costing ~**1.34×** on the noise of the
+robust per-column reduction; and NV12 is 4:2:0, i.e. chroma subsampled in *both* axes — strictly worse than
+the ELP's 4:2:2. ⚠ The 26 % it loses in *columns* costs nothing — `SPEC_capture_quality.md` §15.2a's
+companion measurement puts the spectrum at ~**47× oversampled** (0.145 nm/column against a 6.9 nm narrowest
+feature), so resolution is nowhere near the constraint.
+
+⭐ **One genuine upside, and it is not about the lamp:** ~**2.7× the frame rate**. `SPEC_settled_measurement.md`
+§49 records `maxFrames = 4000` as *"a ~20-min cap in disguise"* at 3.23–3.34 fps; at ~8 fps the same wall
+clock buys 2.7× the averaging, or the same answer sooner.
+
+> ⭐⭐⭐ **WHAT TO ACTUALLY DO WITH IT — a free, decisive test of the 609 nm question.** `DOC_lamp_rebuild.md`
+> §6.0a leaves the ~608 nm step *identified but unexplained*: sensor, lamp or spectrograph. Mount this camera
+> on the same lamp and take one reference capture on pure solvent.
+>
+> | outcome | conclusion |
+> |---|---|
+> | **no step near 608 nm** | it is the ELP's own red response ⇒ a **camera** defect, `RvLin`'s 612–615 anchor is compromised by a replaceable part |
+> | **a step at the same wavelength** | it is the lamp or the optics ⇒ no sensor change helps, and `SPEC_capture_quality.md` §17's nonlinearity is the only remaining story |
+>
+> ⭐ **It needs no recalibration.** The lamp's own landmarks — the 473 nm pump peak and the 581 nm minimum —
+> give a two-point mapping good to a nanometre or two, which is all this question requires. One mounting,
+> one capture, and it settles the largest unexplained feature in the capture chain.
+
+⚠ **AND IT MAKES §16.39.5's PIN PER-CAMERA.** Exposure 90 is an ELP unit on a 1–500 slider; this camera's
+range is 0–6500 and 90 means something entirely different. ⇒ the pinned exposure belongs in
+`SpectrometerSensorUtil` beside the VID/PID, **not** as one global constant. The white-balance row is the
+same lesson with teeth: `CaptureBackend` writes `6500` and this camera would clamp it to `255` — the
+existing readback print would *say so* (*"white balance fixed = 255K (requested 6500K)"*), which is that
+line earning its keep, but nothing would stop.
+
+
+| route | verdict |
+|---|---|
+| **in software** — `ΣRGB`, a gated sum, or one channel | ⛔ **CLOSED BY MEASUREMENT.** `SPEC_capture_quality.md` §16.8.2 scored all three over 32 runs: `sum` is a wash (`d` 10.34 against `max`'s 10.41), a gated sum is actively harmful (`d` 3.33, and it breaks the reference cancellation because the gate fires at different wavelengths for blank and sample). §6.0a adds that it does not remove the 609 nm step either |
+| **strip the CFA chemically** | ⛔ **NO.** Destructive, one-shot, takes the microlenses with it — so it spends the sensitivity it was bought to gain — on a module that costs less than an evening of bench time |
+| ⭐ **buy a monochrome module** | **the only real option.** ELP ships mono variants of the same bodies. It removes the colour-filter array, the demosaic, and the YUYV 4:2:2 chroma subsampling — which halves R and B resolution **horizontally, i.e. along the dispersion axis** (~0.2 nm here: small, but it is a smear on precisely the steep edges §12.3 is about) |
+
+⭐ **THE ONE PIECE OF THE SOFTWARE ROUTE THAT DOES SURVIVE, AND IT WAS TESTED.** YUYV carries **Y at full
+resolution** — only chroma is subsampled — so the luma plane *is* this camera's monochrome view, and
+`CAP_PROP_CONVERT_RGB = 0` would hand it over directly, skipping a colour round-trip. Replayed on three fills
+(`SPEC_capture_quality.md` §15.2a): it places the 609 nm step at the **same position** with the **same 2.1 nm
+exposure shift**, and it costs **0.37×** at the Soret — 32–44 DN becomes 11.9–16.4 DN, **at or below the 16 DN
+quantization guard.** ⇒ closed too, and for the reason §15.3 chose max-channel in the first place.
+
+⛔ **It does NOT obviously fix the 609 nm step**, and that must not be the reason to buy it. §6.0a's
+evidence says the edge is stationary and its apparent motion is a level-dependent nonlinearity; a mono
+sensor removes the dye but not the nonlinearity. **If** the edge turns out to live in the red dye's own
+transmission then a mono sensor deletes it outright — and nothing on record separates those two.
+
+⭐⭐ **What it does buy** is the thing this whole document is short of: **one response curve instead of
+three.** Every "channel handover" argument in §12.3, §6 and §6.1 — including `A_Q`'s window ending one
+nanometre before the 581 nm minimum — simply stops existing. That is a class of defect removed, not
+reduced.
+
+⛔⛔ **AND IT IS A FULL RECALIBRATION.** The ROI and the px→nm cubic were authored at 2592×1944 on *this*
+sensor; a different module invalidates both, plus every item in §9. ⇒ **§9's rule applies with full
+force: if it is bought at all, it is bought and fitted in the SAME rig change as the lamp.** Two
+recalibrations is the mistake this document exists to avoid.
+
+⚠ **Sequencing.** The `Rv` re-validation of §6.7 is already budgeted against the lamp swap. Adding the
+sensor does not add a second validation — it widens the same one. What it does add is a **mono variant of
+§4.1's blue runs**, because the reduction question (`max` vs anything) becomes vacuous and every threshold
+derived through `max` has to be re-derived through the new single curve.
+
 ### 12.4 ⚠ The dose — corrected
 
 An earlier draft said *"dilute to ≈ ×2.75 below the capillary dose"*. **That number was picked to clear

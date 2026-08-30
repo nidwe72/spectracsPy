@@ -25,8 +25,13 @@ every labelled run on disk -- three solvents, both sides of the 2026-07-29 rebui
 splits separately. A gain that lives only in the sunflower column is a corpus artefact.
 
 ⚠ THE ANCHOR IS 3 nm FROM A KNOWN ARTEFACT. `peak_ratio_archive`'s docstring records that the 608-610 nm
-lamp line (a Bayer channel crossover, `DOC_lamp_rebuild.md` §6) reads 1.6-2.2x the 613 nm value in every
-run on disk. 612-615 was placed to dodge it and is the earliest usable left anchor; ⛔ any optical change
+feature reads 1.6-2.2x the 613 nm value in every run on disk.
+⛔ IT IS NOT A BAYER CHANNEL CROSSOVER -- measured per channel 2026-08-30 (`DOC_lamp_rebuild.md` §6.0a,
+`diagnostics/channel_replay.py`): red carries 96-99 % of the light from 596 to 620 nm and green is dead by
+604, so nothing hands over. It is a step in the RED CHANNEL'S OWN response, it survives a `sum` reduction
+unchanged, and it moves +2.1 nm with the EXPOSURE alone. The window named below is right; the mechanism
+this file used to assert was not, and believing it produced the retracted `SPEC_capture_quality.md`
+§16.39.3a. 612-615 was placed to dodge it and is the earliest usable left anchor; ⛔ any optical change
 moves that line, so a win here does not survive the lamp rebuild un-revalidated.
 
 The corpus, the labels, the exclusions and the first-two-distinct-reads policy are `reference_band_scan`'s

@@ -937,6 +937,45 @@ both equally. ⇒ **the reduction does not change `T`, `A`, or any colour value*
 ⇒ **Not a correctness fix — a fidelity/headroom fix.** But it is a **prerequisite** because it eases the dilution
 constraint the whole Capability-Proof series (V) depends on.
 
+#### ⭐⭐ 15.2a THE NUMBER §15.2 NEVER HAD — a luminance reduction costs **0.37×** at the Soret  *(measured 2026-08-30, `diagnostics/channel_replay.py`)*
+
+§15.2 argued the case qualitatively — *"keeps only 5/32 of the blue signal"*, *"blue drowns in noise"* — and
+§15.3 decided on it. The archive can now price it, because every report embeds both full-resolution capture
+frames. Replayed on the four Lugitsch fills of the 2026-08-30 sitting, sample leg, **minimum of the 448–460 nm
+guard band in camera DN**:
+
+```
+fill                exp   max-channel      luma       ratio
+20260828LugitschC    90     38.0 DN      14.2 DN      0.37x   <- under the guard
+20260828LugitschD    90     38.0 DN      14.2 DN      0.37x   <- under the guard
+20260828LugitschE   104     44.0 DN      16.4 DN      0.37x
+20260828LugitschF    90     32.0 DN      11.9 DN      0.37x   <- under the guard
+                                         ^^^^^^^ the 16 DN quantization guard is §16.23.10b
+```
+
+⛔⛔ **A luminance reduction puts the Soret at or below the 16 DN guard on every fill** — three of the four
+under it outright, and the fourth only clears it because the auto-exposure happened to draw 104. §15.3's decision
+was right and this is what it was worth: not a small fidelity gain, but the difference between a measurable
+Soret and a quantized one.
+
+⭐ **And §15.2's "mostly doesn't BIAS" is confirmed to three figures.** On the same fill, absorbance computed
+through both reductions:
+
+```
+             A_valley   A_Q      A624      Rv
+  max         0.0998   0.2582   0.2717   108.48
+  luma        0.1007   0.2621   0.2717   105.97
+```
+
+⇒ **the metric barely notices; the Soret just goes dark.** Exactly the level-not-bias distinction §15.2 makes,
+now with a factor attached to it.
+
+> ⚠ **THIS IS ALSO THE ANSWER TO "CAN THE BAYER CAMERA ACT LIKE A MONO ONE?"** (Edwin, 2026-08-30). The YUYV
+> stream carries **Y at full resolution** — only chroma is subsampled — so the luma plane is the closest thing
+> to a monochrome image this camera can produce, and taking it would skip a colour round-trip. It costs the
+> 0.37× above, and ⛔ it does **not** remove the 609 nm step either (same position, same 2.1 nm exposure
+> shift). `SPEC_lamp_rebuild.md` §12.5 carries the full option table.
+
 ### 15.3 Decision — max-channel, in a `ColorGrayUtil` (Edwin)
 
 - **Reduction = `max(r, g, b)`** — reads the channel that actually saw that wavelength: largest blue, no
@@ -12468,6 +12507,17 @@ at this size, and it is not flat. ⇒ raising exposure toward a reference peak o
 `20260826EstererE`'s 199.4) is **inside** the tested range; letting the 473 nm spike clip is not, and carries
 the blooming argument of `ROADMAP.md` §0b besides.
 
+> ⚠ **A METRIC THAT READS A FOURTH BAND IS OUTSIDE THIS TEST — §16.39, 2026-08-30.** The invariance above is
+> a claim about **`Rv`'s three bands**, and the argument for it is that all three sit in the co-scaling half
+> of the spectrum. **`RvLin`** (`SPEC_metric_research.md` §16.12, defined 2026-08-29 — two days after this
+> section was written) measures its baseline slope from **`A[612–615] − A_valley`**, 3 nm from the
+> 608–610 nm Bayer crossover, which the exposure state demonstrably moves by 2 nm. ⇒ **this section's
+> licence does not cover `RvLin`.**
+> ⛔⛔ **BUT NEITHER DOES ANYTHING ELSE — §16.39.3a.** A first draft claimed the moved line corrupts
+> `RvLin`'s anchor; measured, the anchor moves by **0.0013 A** across the step and `Δ` does not split by
+> exposure at all. **`Rv` is confirmed invariant here; `RvLin` is simply UNTESTED.** §16.39.7's ten-minute
+> 90 / 104 / 90 re-seat is what would settle it.
+
 ⛔ **AND THE SETTING IS STILL NOT PERSISTED.** Both this section and §16.27.0 had to reconstruct the exposure
 from the reference level because `exposure_applied` is absent from `workflow.json` — the third session in a
 row to need that archaeology. `ROADMAP.md` **§0b** carries it as a blocker on the σ_fill run.
@@ -15603,3 +15653,281 @@ working hours in a heated office, where day-to-day variation is far smaller than
 in this thread that makes the tracker look easier rather than harder. ⚠ It does not make it go away: the
 tracker's precision requirement is 4–6 units and the estimated sensitivity is 1.5–3 units per °C, so even
 a 2 °C office swing is inside the budget it needs.
+
+---
+
+## ⭐⭐⭐ 16.39 THE EXPOSURE IS THE LAST FREE VARIABLE — and it walks a lamp line into `RvLin`'s anchor  *(Edwin's bench note 2026-08-30, log + analysis same evening; DESIGN, not implemented)*
+
+> ⭐ **The bench observation came first.** Asked why one of six otherwise identical Lugitsch fills came out
+> wrong, Edwin's only note was *"there was some wobble at the red end of the transmission spectrum of the
+> sample, the E run I mean here."* That sentence is the whole of this section; everything below is the
+> arithmetic behind it.
+
+### 16.39.0 The fill that started it
+
+`20260828LugitschC/D/E/F` are four fills of one oil, one sitting, one recipe, 17:59–19:53 on 2026-08-30.
+On `RvLin` — `SPEC_metric_research.md` §16.12 — three of them agree and the fourth does not:
+
+```
+fill      C        D        E        F          RvLin over the other five fills of the oil: 104.08 +/- 1.03
+RvLin  103.11   103.08    97.70   104.00        E is  -6.19 sigma
+Rv     104.11   108.77   107.42   110.62        E is  -0.01 sigma      <-- Rv does not see it at all
+```
+
+### 16.39.1 What moved — not the wavelength axis, not the sample, not the lamp
+
+Three candidates were eliminated before the log was read, on the archive alone:
+
+| candidate | test | result |
+|---|---|---|
+| the **wavelength calibration** or the ROI drifted | compare the travel of two fixed features across all 30 runs of the series | ⛔ the 581 nm lamp minimum moves **0.60 nm**; the 609 nm crossover moves **3.40 nm**. A calibration shift moves both equally. It is not the axis |
+| the **sample** | measure the crossover in the `Reference` leg — pure solvent, no oil in the beam | ⛔ it moves there too, and the two legs track at **r = +0.933** |
+| the **lamp** ageing | the effect appears and disappears between consecutive fills 30 min apart, and comes back | ⛔ not a monotone degradation |
+
+⭐ **What it correlates with is the reference leg's own brightness**, and bimodally:
+
+```
+reference level at 560 nm      609 nm crossover      n
+      86.0 - 96.8                607 - 609           8
+     106.8 - 116.9               610 - 612           7
+     ^^^^ an EMPTY GAP 96.8 -> 106.8
+
+r(crossover position, reference level)      = +0.970
+r(crossover position, reference blue/green) = -0.922
+```
+
+### 16.39.2 ⭐⭐ The log settles it: the AE bisection, not the camera
+
+`CAPTURE-SETTINGS` for the 2026-08-30 sitting, matched to the reports by `clearing=` (each value unique):
+
+```
+REFERENCE exposure_applied=90    SAMPLE 159.305 / 160.680   -> fill C   DN 35.1 / 35.4
+REFERENCE exposure_applied=90    SAMPLE 229.880 / 161.879   -> fill D   DN 37.0 / 38.0
+REFERENCE exposure_applied=104   SAMPLE 162.822 / 197.481   -> fill E   DN 42.3 / 42.7
+REFERENCE exposure_applied=90    SAMPLE 180.517 / 162.709   -> fill F   DN 34.4 / 35.1
+```
+
+Every DN figure reproduces from the stored spectra independently, so the log and the archive agree.
+
+⛔ **`autoExposure=1.0` IS V4L2 MANUAL MODE** (`V4L2_EXPOSURE_MANUAL = 1`), which is what `CaptureBackend`
+sets deliberately. It does **not** mean the camera is choosing. Misreading that line costs an evening; it is
+written here so the next reader does not.
+
+⭐ **The variable is the application's own AE bisection**, `CapturePanel.__runAutoExposure` →
+`requestAutoExpose(1, 500, 8 probes)`, which runs **before every REFERENCE capture**. After the reference,
+`__lockedExposure` pins the sample to it. ⇒ **exposure is already locked WITHIN a fill and re-rolled BETWEEN
+fills** — exactly the pattern in the log.
+
+### 16.39.3 ⭐⭐ Invisible to `Rv`, fatal to `RvLin` — and §16.27.1a predicted precisely this
+
+⭐ **§16.27.1a is not overturned; it is confirmed and then extended.** That section measured `Rv` across the
+same 104/90 step and found it moved **0.09**, an order of magnitude below the re-seat noise, and gave the
+structural reason: *"`Rv` never touches the Soret. Its three bands — 500–560, 565–580, 622–627 — all sit in
+the half of the spectrum §16.27.2 shows scaling nearly together."* Tonight's six fills reproduce that
+exactly: `Rv` at exposure 104 lands at **107.42** against the five exp-90 fills' mean of **107.46**.
+
+⛔ **`RvLin` adds a FOURTH band that section never had to consider.** It was defined 2026-08-29, two days
+after §16.27.1a was written, and its baseline slope is measured from **`A[612–615] − A_valley`**. That window:
+
+- sits **3 nm** from the 608–610 nm feature (`DOC_lamp_rebuild.md` §6), which
+  `diagnostics/red_anchor_ab.py`'s docstring already flags — *"612–615 was placed to dodge it… ⛔ any optical
+  change moves that line"*. ⛔ **It is NOT a Bayer channel crossover, measured 2026-08-30** — red carries
+  96–99 % of the light from 596 to 620 nm and nothing hands over; it is a step in the red channel's own
+  response. `DOC_lamp_rebuild.md` **§6.0a** and `diagnostics/channel_replay.py`;
+- is where §16.27.2 measured the per-band mismatch running **highest and least flat** (3.60 % at 625 nm,
+  the dim red bands gaining ~9 % more than the bright green one across the same step).
+
+#### ⛔⛔ 16.39.3a THE CAUSAL LINK IS NOT DEMONSTRATED — retracted 2026-08-30, same evening  *(Edwin: "you said that at the two different exposures the 'skirt' of the red peak differs. what you meant by this?")*
+
+⛔ **The first draft of this section claimed the crossover's skirt reaches into 612–615, lifts `Δ`, and makes
+`RvLin` over-correct. Edwin asked what "skirt" meant. Measuring it refuted it.** The claim is retracted here
+rather than edited away, because the shape of the error is the lesson: a chain of four plausible links was
+written down after three of them had been checked.
+
+**The trace through the crossover, fill `E` at 104 against fill `F` at 90, absorbance above `A_valley`:**
+
+```
+   nm   |  F @90   E @104  |  the line sits at 607.0 (F) and 609.6 (E)
+  607.0 |  0.1445  -0.0002    <- F's line
+  610.0 |  0.0099   0.1370    <- E's line
+  612.0 |  0.0116   0.0150  |  RvLin's anchor starts here
+  613.0 |  0.0158   0.0194  |
+  614.0 |  0.0221   0.0235  |
+  615.0 |  0.0370   0.0323  |
+  ---------------------------
+  A[612-615] - A_valley:  F +0.0203   E +0.0216      a difference of 0.0013
+```
+
+⭐ **The line is too narrow to reach.** Even centred at 609.6 it has fallen from 0.137 to 0.015 by 612 nm.
+The anchor barely notices it.
+
+**And across all fifteen 08-28 fills, `Δ` does not split by exposure at all:**
+
+```
+delta = A[612-615] - A_valley
+  exp  90:  -0.0100  -0.0070  -0.0039  -0.0003  +0.0025  +0.0143  +0.0173  +0.0176
+  exp 104:  -0.0587  -0.0169  -0.0053  +0.0008  +0.0108  +0.0144  +0.0212
+  complete overlap, and the group means run the WRONG WAY (+0.0038 at 90 vs -0.0048 at 104)
+```
+
+⚠ **That comparison is confounded anyway** — the exp-104 group holds both brown Billa Clever fills, whose
+`Δ` is hugely negative, so the split is reading oil, not exposure. The only clean within-oil view is the
+Lugitsch six, and there **E's `Δ` (+0.0212) sits barely above `B` (+0.0176) and `F` (+0.0173), both at
+exposure 90.**
+
+⇒ **What actually makes `E`'s trim the largest is `Δ` near the top of its ordinary range DIVIDED BY the
+second-smallest 624 band of the six** (`A624 − A_valley` = 0.1486 against `F`'s 0.1738) — i.e. `RvLin`'s
+correction is a fraction of the band, and `E` is a thinner fill. **That is a property of `RvLin`, not of the
+exposure.**
+
+### ⛔ 16.39.3b What survives, and what does not
+
+| claim | status |
+|---|---|
+| the exposure state is real, bimodal (90 / 104), and re-rolled before **every reference capture** | ✅ from the log |
+| it is recorded **nowhere** in the travelling record | ✅ `ROADMAP.md` §0b |
+| it moves the 609 nm crossover 2 nm, cleanly — 608.1–609.1 at 90, 609.8–611.8 at 104, **no overlap over 15 fills** | ✅ measured |
+| `Rv` is unaffected — 107.42 at 104 against 107.46 for five fills at 90 | ✅ and it confirms §16.27.1a |
+| `RvLin` reads `20260828LugitschE` at −6.19 σ | ✅ measured |
+| ⛔ **the exposure CAUSED that** | ⛔ **NOT DEMONSTRATED.** The proposed path fails at the anchor, and no other path has been shown. `E` being the one exp-104 fill *and* the one `RvLin` outlier is, on this evidence, **a coincidence of one fill** |
+
+⛔⛔ **THEREFORE `20260828LugitschE` MAY NOT BE SET ASIDE ON A CAUSAL INSTRUMENT GROUND.** What it may be set
+aside on is weaker and must be named as such: **it is the one fill of the σ_fill six whose capture state did
+not match the others**, and `ROADMAP.md` §0's rule for that run was *"⛔ VARY NOTHING ELSE."* That is a
+design-of-experiment exclusion, not a mechanism. Every number computed with `E` removed —
+`SPEC_history_tracker.md`'s `RvLin` σ_fill of 1.03 and 0.82 — inherits that weaker footing and rests on
+**five and four fills, 4 and 3 df**.
+
+> ⭐⭐ **EDWIN'S CALL, 2026-08-30 — `E` IS OFF THE PAGE, AND ON A BETTER ARGUMENT THAN THE ONE ABOVE.**
+> `diagnostics/d2r_all_runs.py` no longer draws it (it stays in `TODAY` and `EXCLUDED`, so it is still
+> announced and still named in the figure's *"set aside by hand"* line). ⭐ The reasoning is not that the
+> exposure broke the fill — it is that **the exposure will be PINNED at 90, so a reference set built at 90 is
+> homogeneous by construction and the mechanism never has to be known.** Control the variable, do not explain
+> it.
+> ⚠ **The retrospective half of that is still circular** — `E` was removed after `RvLin` flagged it — so the
+> five existing fills are **provisional**. What earns the number is the *forward* set: a rule fixed before the
+> data, nothing excluded, homogeneous because the instrument is.
+> ⛔ **And the honest risk stays on the record:** if `E` was an ordinary fill, `RvLin` throws 5.4-unit
+> outliers on its own and removing it deleted the only evidence of that. §16.39.7's 90 / 104 / 90 re-seat is
+> what separates the two, and it is **cheapest before the pin ships**, because afterwards running at 104 takes
+> deliberate effort.
+
+> ⭐ **§16.27.1a is still confirmed, and its caveat is still the open door** — *"a larger step, or one that
+> drives any band into clipping, is not covered"*. `RvLin` does read a fourth band that section never
+> considered, 3 nm from a feature the exposure demonstrably moves. **That remains a reason to suspect the
+> metric is exposure-sensitive where `Rv` is not. It is not a measurement that it is.** §16.39.7 says what
+> would settle it.
+
+### 16.39.4 The AE only ever lands on two values — and the archive can be re-labelled
+
+Across everything on record — `probe_20260804A` (104·90·104·104·104·104), the four-oil session of §16.27,
+and 2026-08-30 — the sweep has produced **90 or 104 and nothing else.** It is a coin flip between two
+adjacent probe outcomes, not a continuous adaptation.
+
+⭐ `diagnostics/spar_three_oils.py` already carries the back-out rule (`R530 > 140 ⇒ 104`). Checked against
+the 2026-08-30 log it is **8 / 8 correct**, and it separates the whole 08-28 series with no overlap:
+
+```
+exposure  90   ->  R530 124 - 134   ->  crossover 608.1 - 609.1   OK, clear of the anchor
+exposure 104   ->  R530 147 - 155   ->  crossover 609.8 - 611.8   the skirt is inside it
+                                                                  7 of the 15 fills
+```
+
+⇒ **every archived run can be labelled by exposure state retrospectively**, without the logs. That is worth
+doing before any `RvLin` number is quoted from the archive.
+
+### 16.39.5 ⭐⭐⭐ THE DESIGN — the plugin declares the exposure  *(Edwin, 2026-08-30: "what about setting the exposure to 90 from within the plugin?")*
+
+**90, declared by the plugin, resolved per run.** Three parts, and they ship together:
+
+| part | what | why this shape |
+|---|---|---|
+| **1** | the plugin declares an **exposure**, beside `frameCount`, `solvent` and `prepProtocol` | the burst size is already plugin-declared through the same seam; exposure is the same kind of fact and needs no new plumbing |
+| **2** | it is **resolver-backed**, not a bare constant — the `PrepProtocolResolver` pattern, env then file then the plugin's declaration | ⛔ a hardcoded constant is the identical trap one layer down. `prepProtocol` went stale **twice** and cost the archive its whole pre-vortex population (`SPEC_metric_research.md` §16.15) |
+| **3** | `exposure_applied` goes into the **report header** | `ROADMAP.md` §0b's headline ask, unfixed through three sessions of archaeology. Without it the R530 back-out is load-bearing forever, and the next stale value is invisible again |
+
+**In `CapturePanel`:** when an exposure is declared, skip `__runAutoExposure` and seed `__lockedExposure`
+from it, so both legs use the declared value. Clamp to `[__EXPOSURE_MIN, __EXPOSURE_MAX]`
+**transparently** — mutate the value in place and say so, rather than plumbing a validated parameter
+through the capture path.
+
+**Why 90 and not 104.** It is the state that keeps the crossover at 608.1–609.1, i.e. clear of the anchor;
+it is what C, D and F used, whose DN guards came out 34.4–38.0, mid-window against the 20–50 target of
+§16.23.10e; and it is the value the sweep already picks more often than not.
+
+#### ⭐⭐ 16.39.5a AND PIN THE PIXEL FORMAT WHILE THE HAND IS IN THERE — the MJPG risk  *(2026-08-30)*
+
+Enumerating the ELP's formats over V4L2 (`32e4:8830`, `/dev/video0`) returns **exactly two**:
+
+```
+   0: MJPG   Motion-JPEG    flags=0x1 (COMPRESSED)     <-- index 0, the driver's first
+   1: YUYV   YUYV 4:2:2     flags=0x0
+```
+
+`DesktopCv2CaptureBackend`'s docstring says *"Do NOT force MJPG… let the driver default (YUYV) negotiate —
+cv2 returns BGR either way, so nothing downstream changes."*
+
+⛔⛔ **"Nothing downstream changes" reasons about the API surface, not the data.** MJPG is lossy — 4:2:0
+chroma *and* DCT quantization — and `cv2` would hand back BGR that looks identical. **We would be doing
+spectroscopy on JPEG artefacts and it would present as unexplained noise, never as an error.** And MJPG is
+**index 0**: the arrangement relies on OpenCV's V4L2 backend preferring uncompressed, which is its current
+behaviour and not a contract.
+
+⇒ **Set the FOURCC to `YUYV` explicitly.** One line, same file and same rig test as the exposure pin.
+
+⚠ **With the caution that produced the original rule.** *Forcing* a FOURCC once wedged the UVC stream on
+warm-up buffers (`SPEC_real_camera_capture.md` §0), which is why the docstring says not to. Forcing the
+**uncompressed** one may or may not reintroduce that. ⇒ **one rig try, not an assumption**, and it is cheap
+to revert — the fallback is exactly today's behaviour.
+
+⭐ **Why it belongs here and not in its own item:** both are `CaptureBackend` capture-state changes, both are
+one line, both need the same single rig verification, and both exist for the same reason — *the instrument
+state must be chosen and recorded, not negotiated.*
+
+### ⚠ 16.39.6 Four cautions, and one of them is a real cost
+
+1. ⛔ **DO NOT DELETE THE AE SWEEP.** It is the tool that *finds* the value when the lamp, the camera or the
+   geometry changes, and `SPEC_lamp_rebuild.md` will need it. The plugin's value is the **default**; the
+   sweep stays available on the dev view and the checkbox. The **calibration** path keeps auto, exactly as
+   white balance is already mode-split in `CaptureBackend`.
+2. ⛔⛔ **A FIXED EXPOSURE MAKES DOSE THE ONLY LEVER — AND ONE FILL ALREADY OVERFLOWS.** At exposure 90 the
+   08-28 DN guards run 34.4–48.4, ✅ **except `20260828EstererC` at 50.4–51.2, above the 20–50 window.**
+   That is §16.23.2b's volume rule's job — a thin fill is answered with volume, not with exposure — but it
+   means pinning 90 will start producing out-of-window guards on the thinnest fills. **Decide that
+   deliberately rather than discover it**, and keep the guard's `warn, never block` shape.
+3. ⚠ **It re-founds the archive a third time** — pre-vortex / post-vortex / fixed-exposure. That is an
+   improvement, and it is only legible if part 3 above ships in the same change.
+4. ⚠ **It does not make the exposure question go away, it makes it answerable.** §16.27.2's finding that the
+   reference scales **×1.2526 for a ×1.1556 exposure step** — 8.4 % more than proportional — is untouched.
+   Pinning the exposure means that nonlinearity stops *varying*; §17's gamma work still owns it.
+
+### ⛔ 16.39.7 What this does NOT settle
+
+- **Why a kink survives the ratio.** Fill E's reference and sample ran at the *same* exposure, so
+  `A = log10(S/R)` should cancel a pure scale change. It did not, which is the signature of a **non-linear,
+  per-channel** effect — consistent with §16.27.2's non-flat per-band scaling, but not demonstrated. ⇒ the
+  mechanism is *identified* (the exposure state) and *not explained* (why the ratio fails to cancel it).
+- **`20260828LugitschA`'s crossover is anomalous in the other direction** — 3× **weaker** than every other
+  fill (height 0.0486 against ~0.14) at exposure 90, and A is `RvLin`'s *high* extreme. One fill, unexplained,
+  and it is not the exposure state.
+- **Whether pinning changes any shipped verdict.** `Q%` reads the Soret and `Rv` is invariant at this step
+  (§16.27.1a); the change is expected to be invisible to both. **Expected, not measured** — a same-jar pair
+  at 90 and 104 under the current recipe would close it, and costs ten minutes.
+- ⭐⭐ **WHAT THE FEATURE ACTUALLY IS — answered 2026-08-30, and it moves the question out of this file.**
+  `DOC_lamp_rebuild.md` §6.0a: it is a step in the **red channel's own response**, not a channel crossover;
+  `sum` reproduces it within 0.1 nm of `max`, so it is not a reduction artefact; and **no fixed spectral
+  feature can move 2 nm with exposure.** ⇒ the edge is stationary and its *apparent* position moves, which
+  is a level-dependent nonlinearity on a steep edge — **§17's gamma question**, where §16.24.1a has already
+  ruled three sensor models out. ⚠ That makes the exposure link to `RvLin` *more* plausible in mechanism and
+  no better evidenced; the experiment below is still what settles it.
+- ⭐⭐⭐ **AND THE SAME TEN MINUTES SETTLES §16.39.3a, WHICH IS NOW THE OPEN QUESTION OF THIS SECTION.** One
+  fill, one seating, read at **90 and then 104 and then 90 again** — the §16.27.1a design, scored on `RvLin`
+  instead of `M448`. If `RvLin` moves across the step and returns, the exposure link is real and the pin is
+  urgent. If it does not, then `20260828LugitschE` is an ordinary thin fill, **`RvLin` has a dose sensitivity
+  its §16.11 case does not account for**, and the history tracker's blocker is the metric rather than the
+  camera. ⛔ **Those two conclusions point at opposite work, and nothing on record separates them.** This is
+  the cheapest unrun experiment in the file.
+- **Nothing here is built.** No code has changed. `SPEC_history_tracker.md` §9.1's σ_fill result rests on
+  this section: with fill E set aside on the instrument ground above, `RvLin` reads σ_fill **0.82** and a
+  band of **±1.04** against a ±20 tolerance — but that is a claim about four fills, and it is stated there,
+  not here.

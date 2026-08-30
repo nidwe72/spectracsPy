@@ -935,3 +935,90 @@ the evening has to be repeated.
 ⚠ **Two fills is a hint, not a result.** The strongest evidence that the recipe change helps is `EstererB`
 against `EstererE` — 1.73 apart, with within-fill run scatter of 1.8 and 2.9, i.e. **indistinguishable**. That
 is two fills. σ_fill with 5 df is what turns it into a number.
+
+---
+
+## ⭐⭐⭐ THE 2026-08-30 POSITION — the σ_fill run RAN, and the answer depends on which fills you believe
+
+`ROADMAP.md` §0's six-fill σ_fill run is on disk: **`20260828LugitschA…F`**, one oil, one recipe family,
+two reads each. `SPEC_capture_quality.md` §16.39 is the instrument write-up; this is what it does to *this*
+document. ⛔ **Still nothing built** — no reference table, no chart, no alarm, no threshold.
+
+### ⭐⭐ The number, three ways — and the disagreement is entirely about which fills count
+
+`RvLin` (`SPEC_metric_research.md` §16.12), chosen for the continuous number on 2026-08-29:
+
+```
+set                             n    mean      sd    df    95 % CI for sigma
+all six Lugitsch fills          6  103.02    2.76     5    [1.73, 6.78]
+exposure-90 only (E dropped)    5  104.08    1.03     4    [0.62, 2.97]
+clean 609 line only (BCDF)      4  103.75    0.82     3    [0.46, 3.05]
+```
+
+⚠ **The CI column is the point, not the sd.** At 3–5 df a standard deviation is itself uncertain by a factor
+of ~3, which is why every row below is quoted twice — nominally and at the 95 % upper bound.
+
+| | σ_fill | 3σ on ONE new fill | ±20 band | at the 95 % upper bound |
+|---|--:|--:|--:|---|
+| all six | 2.76 | **8.96** | 7.2 σ | 2.9 σ — ⛔ **NOT DEMONSTRATED** |
+| exposure-90 only | 1.03 | **3.40** | 19.3 σ | 6.7 σ — ✅ passes |
+| clean 609 line | 0.82 | **2.74** | 24.5 σ | 6.6 σ — ✅ passes |
+
+⇒ **On all six fills there is no tracker** — 8.96 units is worse than the 4–6 this document needs, and a 3σ
+chart false-alarms on its own unchanged oil at 6.19 σ. **On the homogeneous sets there is a good one.**
+
+### ⭐⭐⭐ The optimistic case, stated plainly so it can be argued with
+
+If the exposure pin holds and a forward-defined set reproduces σ ≈ 0.8:
+
+```
+3-sigma detection limit on a SINGLE fill        2.74  RvLin units
+this document's stated requirement              4 - 6      => beaten by 1.5-2x
+the +/-20 tolerance it was designed around        20        => 7x tighter than needed
+green -> brown, the whole verdict corridor      58.4        => 2.74 is 1/21 of it
+Lugitsch -> Esterer, two DIFFERENT green oils   16.6        => 2.74 is 1/6 of it
+an oil's mean, 3 fills +/-0.59   5 fills +/-0.46
+```
+
+⭐ **In one sentence: it would detect a change one-sixth of the way from this oil to a visibly different
+pumpkin oil, from a single 20-minute measurement.** That is better than this document dared to specify.
+
+⛔ **It is plausible, not established.** Both filters that produce it were chosen *after* seeing which fill
+they remove — the exact circularity `SPEC_metric_research.md` §7's M9 gate exists to stop. ⇒ the existing
+fills are **provisional**; a forward set measured at a pinned exposure is what would earn the number.
+
+> ⭐⭐ **THE DISTINCTION THAT RESCUES IT** (Edwin, 2026-08-30). Dropping `E` retrospectively is circular.
+> **Pinning the exposure and measuring forward is not** — the rule is fixed before the data, nothing is
+> excluded, and the set is homogeneous because the *instrument* is. ⇒ do not defend the 1.03; re-earn it.
+
+### ⛔⛔ THE BLOCKER NOBODY HAD LOOKED FOR — the reference set is one oil deep, and it has no brown end
+
+`diagnostics/spar_three_oils.py`'s `R530 > 140` rule recovers the AE-landed exposure for every archived run
+(8/8 against the 2026-08-30 log, `SPEC_capture_quality.md` §16.39.4). Applied to the same-jar fills:
+
+```
+                at exposure 90    at 104
+Lugitsch              5              1
+Steirerkraft          1              1
+Esterer               0              3
+Billa Clever          0              2
+```
+
+⛔ **Under a pin-at-90 rule, Esterer and Billa Clever have ZERO usable fills and Steirerkraft has one.**
+"Then measure the other oils" is not topping up — it is starting three oils from scratch.
+
+⛔⛔ **AND BOTH BROWN FILLS ARE AT 104.** There is no brown fill at exposure 90 anywhere, so **the
+green/brown corridor cannot be measured on the homogeneous set at all.** Every corridor figure quoted in this
+document and in `SPEC_metric_research.md` §16.10.2 comes from a mixed-exposure corpus.
+
+⇒ **A brown oil is the FIRST thing to re-measure, not the last.** It is a larger hole than the σ_fill
+question, and it was invisible until the exposure could be recovered per run.
+
+### What is still missing in every scenario, optimistic included
+
+| | |
+|---|---|
+| ⛔ **nothing is built** | no reference table, no control chart, no alarm, no per-oil thresholds |
+| ⛔ **the spike test (§9.2) has never run** | without it, "2.74 units" has no sentence attached. It is what turns the number into *"detects a change of X % against your own reference"* — the claim a lab and a miller actually buy |
+| ⛔ **one oil only** | per-oil thresholds (§8.3, and "THRESHOLD: PER-OIL, NOT SHARED" above) need ≥3 fills each, and only Lugitsch has them |
+| ⚠ **σ_read is not the limit** | within-fill repeatability is **0.56** on `RvLin`. The measurement is fine; the *fill* is the term, exactly as §9.1 assumed |

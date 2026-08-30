@@ -315,6 +315,53 @@ is baffling and blackening. Steps hold ⇒ the reduction's channel handling.
 ⚠ **Fix this before the lamp.** It costs no hardware and it is the largest defect in the stored
 spectra. §9.5 and Figure 8 are how.
 
+### ⭐⭐ 6.0a ⛔ ONE OF THESE FOUR IS NOT A CHANNEL SWITCH — measured per channel 2026-08-30  *(Edwin: "isn't there a way to make a Bayer-sensor camera act more like a BW sensor?")*
+
+The sentence opening §6 — *"exactly where the reduction switches Bayer channel"* — names a **mechanism**,
+and it had never been checked against the per-channel data. Every archived run embeds both
+full-resolution capture frames, so it can be: `diagnostics/channel_replay.py`.
+
+**The dominant channel through 556–640 nm, reference leg, linear light:**
+
+```
+   nm     R       G       B     dominant
+  576   0.023   0.170   0.000      G
+  580   0.117   0.117   0.000      R     <-- G->R HANDOVER, exactly here
+  584   0.239   0.072   0.000      R
+  600   0.316   0.011   0.000      R
+  608   0.239   0.002   0.000      R     <-- the "614 nm" step. STILL RED. No handover.
+  620   0.157   0.000   0.000      R
+```
+
+| feature | is it a channel crossover? |
+|---|---|
+| **~581 nm** | ✅ **YES.** `G → R` at **580.0 nm**, and §6.1's minimum sits one nanometre later. The name is right, and everything §6.1 concludes stands |
+| **~609–614 nm** | ⛔ **NO.** Red carries **96–99 %** of the light from 596 to 620 nm and green is dead by 604. There is no handover anywhere in the window. It is a **~40 % step in the RED CHANNEL'S OWN RESPONSE** between 604 and 612 nm, which then flattens |
+
+⛔ **And it is not a `max()` artefact either.** Replayed under three reductions on the four fills of the
+2026-08-30 sitting, `max` and `sum` place it within **0.1 nm of each other** and shift it by the **same
+amount** — consistent with `SPEC_capture_quality.md` §16.8.2, which found the notch is mostly a real dip in
+the sensor's total response and rejected `ΣRGB` as a wash.
+
+⭐⭐ **THE PART THAT MATTERS MOST, and it points somewhere else entirely.** Across those four fills the
+feature's apparent position is **608.1 / 607.7 / 608.1 nm at exposure 90 and 610.1 nm at exposure 104** —
+it moves **+2.1 nm with the exposure alone**, oil and preparation held constant.
+
+> ⛔⛔ **A lamp line, a filter-dye edge and an IR-cut are all functions of WAVELENGTH ALONE. None of them
+> can move.** So the edge is stationary and only its *apparent* position moves — which is what a
+> level-dependent nonlinearity does to a steep edge. ⇒ **this is `SPEC_capture_quality.md` §17's gamma
+> question wearing a Bayer costume**, and §16.24.1a has already ruled three sensor models out of it.
+
+⚠ **The name is NOT mass-renamed across the documentation.** "608–610 nm Bayer crossover" appears in
+`SPEC_metric_research.md`, `SPEC_red_ratio_metric.md`, `DOC_sample_physics.md`, `peak_ratio_archive.py`,
+`red_anchor_ab.py` and elsewhere, and in every one of those places the *window* it names is correct and the
+*conclusion* is unaffected — only the mechanism is wrong. Corrected here, where they all point.
+⛔ It is worth one caution: calling it a crossover is what produced, and briefly sustained, the retracted
+"skirt" mechanism of `SPEC_capture_quality.md` §16.39.3a.
+
+⚠ **What §6's own stray-light hypothesis still owns.** The 480/485 nm steps in the table above sit where
+`B → G` really does hand over, and the recapture test proposed below is untouched by any of this.
+
 ### ⭐⭐ 6.1 What the ~583 nm step COSTS — it is inside the shipped `A_Q` window  *(2026-08-21)*
 
 ⛔⛔ **The step is not merely a cosmetic level shift; the shipped metric averages across it.** `V`'s

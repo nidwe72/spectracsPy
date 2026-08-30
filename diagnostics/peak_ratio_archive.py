@@ -21,9 +21,11 @@ claim can be re-run rather than believed. `SPEC_metric_research.md` section 12 i
   * ⛔ THE RIGHT-HAND ANCHOR IS 612-615, NOT ANYTHING PAST 630. The capture clamp is 440-630
     (137 of the archive's reports carry exactly that span), so 632-636 is extrapolation. An earlier
     variant anchored there scored BETTER and is rejected for reading outside the clamp.
-  * ⚠ 612 IS THE EARLIEST USABLE LEFT ANCHOR. The 608-610 nm lamp line (section 6 of
-    `DOC_lamp_rebuild.md` calls it a Bayer channel crossover) reads 1.6-2.2x the 613 nm value in every
-    run on disk, and it already contaminates the 612 nm bin of `20260817LigitschA/007`. Five anchor
+  * ⚠ 612 IS THE EARLIEST USABLE LEFT ANCHOR. The 608-610 nm feature (`DOC_lamp_rebuild.md` section 6
+    called it a Bayer channel crossover; section 6.0a measured it per channel on 2026-08-30 and it is
+    NOT one -- red carries 96-99 % of the light through 596-620 nm and nothing hands over. It is a step
+    in the RED CHANNEL'S OWN response, and its apparent position moves +2.1 nm with the EXPOSURE, which
+    no fixed spectral feature can do) reads 1.6-2.2x the 613 nm value in every run on disk, and it already contaminates the 612 nm bin of `20260817LigitschA/007`. Five anchor
     windows were tried (612-615, 613-616, 614-617, 612-616, 613-617); all keep the corridor, the
     worst at +0.317. 612-615 is the widest margin.
 
