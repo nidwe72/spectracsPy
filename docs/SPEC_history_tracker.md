@@ -179,6 +179,19 @@ different thing to defend in front of a lab.
 
 ## 4 · How it relates to the scalar tracker of §16.34
 
+> ⭐⭐ **THE SCALAR IS NOW `RvLin`, NOT `M448`/`B_Q`** *(2026-08-30)*. This chapter was written when the
+> scalar half of the tracker was still undecided and `M448` was the placeholder. `SPEC_metric_research.md`
+> **§16.11** chose `RvLin` for the continuous number on 2026-08-29, and **§16.14** confirmed it against
+> Edwin's eye the next day: on three GREEN oils `RvLin` put Lugitsch 22.8 above the other two while calling
+> Esterer and Steirerkraft equal — which is exactly what the eye reported. `RvCont` split that equal pair by
+> 12.04 and is out; `Q%` named Esterer the greenest and inverts.
+> ⇒ **read every `M448` in the table below as `RvLin`.** The *argument* of this chapter is unaffected —
+> `D` and a scalar have complementary blind spots whichever scalar it is — but the column heading is stale.
+> ⛔ **And the gate has moved with it**: §9's σ_fill is now `SPEC_metric_research.md` §16.16's registered
+> run (Lugitsch, six fills, cut at 2.0), because §16.15 retired every σ_fill figure measured under the
+> pre-vortex recipes. ⚠ Until that evening runs, this document's tolerance has no floor to stand on.
+
+
 They are complementary, and neither replaces the other:
 
 | | §16.34 scalar (`M448` / `B_Q`) | this document (`D`) |

@@ -1000,6 +1000,15 @@ D's own method reopens it.**
 
 ## ⛔⛔ 13 · THE BASELINE IS NOT SETTLED — `Rv`'s corridor over the whole archive is NEGATIVE  *(2026-08-29)*
 
+> ⭐⭐ **AND ONE OF THE TWO ALTERNATIVES IS NOW OUT** *(2026-08-30)*. The table below credits `RvCont` with
+> **0 errors and a +5.1 corridor** — still true as scored. But `SPEC_metric_research.md` **§16.14** put the
+> family to Edwin's eye on three green oils, and `RvCont` **failed**: it separates Esterer from Steirerkraft
+> by **12.04 against 1.55 of fill scatter — 7.8×**, reproducibly, on a pair the eye reports as *the same
+> yellowish*. ⛔ Worse, it separates that wrong pair more strongly than the pair the eye can see (10.09).
+> ⇒ **`RvCont` is out as a verdict candidate**; `RvLin` and `Rv` both matched the eye. ⚠ The corridor
+> numbers below stand — the lesson is that a corridor scored on green-versus-brown says nothing about
+> whether a metric invents differences *inside* green.
+
 `SPEC_metric_research.md` **§16** is the full write-up; this section exists so the finding cannot be missed
 by anyone reading only `Rv`'s own spec.
 

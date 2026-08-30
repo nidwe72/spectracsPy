@@ -10082,7 +10082,20 @@ diagnostic is gone.** Halving to reach 8 mL puts `A_Q` at ~0.16, under §16.23.6
 
 ⇒ **One capillary / 4 mL as the routine standard; 2 capillaries / 8 mL for the σ_fill evening only.**
 
-#### ⏸ OWED — `prepProtocol` is a hardcoded constant and is now two recipes stale
+#### ✅ DONE 2026-08-30 — `prepProtocol` is no longer a constant  *(was: OWED, two recipes stale)*
+
+⭐ **Resolved per run**, not compiled in: `PrepProtocolResolver` reads `$SPECTRACS_PREP_PROTOCOL`, else the
+first non-comment line of **`prepProtocol.txt` in the app data directory**, else the plugin's declaration.
+⇒ a bench change reaches the record **without a code edit and a release**, which is the failure mode that
+made this section necessary. `~/.spectracsPy/prepProtocol.txt` is seeded with the recipe above; ⛔ **edit it
+between fills whenever the bench changes, and name the sonic step** — it is unrecorded for every fill made
+so far. `DevSpectralPlugin.prepProtocol` is now only the fallback default.
+⭐ `timestampIso` is fixed in the same commit: stamped at the measurement rather than at Save, where it had
+been `null` in every report in the archive. `SPEC_metric_research.md` §16.15.4 is the full record.
+⛔ **Still open**: the **exposure** is not in the header (`ROADMAP.md` §0b), and it is the one instrument
+setting known to move the verdict — §16.24.1 measured −13.5 % from a single exposure change.
+
+#### ⏸ THE ORIGINAL NOTE, kept because it is why the resolver exists
 
 `20260826EstererE` was made two-stage and its header still reads `invert-40-after-capillaries-clear`.
 ⇒ un-hardcode it and stamp the recipe actually used, e.g. `1cap-1ml-vortex30-to4ml-vortex60-sonic60-cold`.

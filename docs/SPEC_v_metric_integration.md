@@ -1,5 +1,24 @@
 # SPEC — `V` / `Q%` in the DEV plugin
 
+
+> ⛔⛔ **`Q%` INVERTS THE ORDER ON GREEN OILS — measured against the eye, 2026-08-30.**
+> `SPEC_metric_research.md` **§16.14**: three green oils, one solvent, one night, read at working strength.
+> Edwin's eye — *"Lugitsch is noticeably greener than Esterer and Steirerkraft; Esterer and Steirerkraft look
+> about the same yellowish"*. What `Q%` says (**lower = greener**, `T` = 18.6):
+>
+> | | Lugitsch | Esterer | Steirerkraft | worst fill scatter |
+> |---|--:|--:|--:|--:|
+> | `Q%` | 17.94 | **13.48** | 18.58 | 2.55 |
+> | `RvLin` | **105.11** | 82.33 | 80.09 | 5.14 |
+>
+> ⛔ `Q%` names **Esterer the greenest** and puts Lugitsch level with Steirerkraft — 0.64 apart on a fill
+> scatter of 2.55. `RvLin` puts Lugitsch 22.8 clear and calls Esterer and Steirerkraft equal, which is the
+> eye's answer. ⚠ **This does not touch the shipped VERDICT**: all three oils are green on `Q%` too, and
+> §4's classification evidence is unaffected. What it kills is any use of `Q%` as a *continuous* number or
+> a within-green ranking — it is the sharpest instance yet of the inversion `SPEC_red_ratio_metric.md`
+> §12.1 first recorded, and the strongest argument for the `Rv` migration that owes nothing to
+> classification scores.
+
 > ⛔⛔ **SUPERSEDED AS THE INTENDED VERDICT, 2026-08-25 — but STILL SHIPPING.** `Rv` is now the verdict
 > metric (`SPEC_red_ratio_metric.md`, `ROADMAP.md` item 1). `Q%` keeps the gauge and the pill until `Rv`
 > is implemented and clears M9, so **everything below remains live and correct** — it is the account of
