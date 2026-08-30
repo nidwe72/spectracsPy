@@ -101,6 +101,7 @@ class CapturePanel(QWidget):
         self.__cancelRequested = False
         self.__coachLabel = None
         self.__lockedExposure = None
+        self.__reportedExposureRange = False
         self.__savedRoiX = None
         self.__captureTotal = 1
         self.__previewRoiWidth = None
@@ -342,14 +343,83 @@ class CapturePanel(QWidget):
         if self.__exposureLabel is not None:
             self.__exposureLabel.setText(str(self.__exposureSlider.value()))
 
+    def __pinnedExposure(self):
+        """The exposure the PLUGIN pins, or None to keep today's auto-exposure behaviour.
+
+        ⭐⭐ `SPEC_capture_quality.md` §16.39.5. The plugin declares one number (`DevSpectralPlugin.exposure`)
+        and that is the whole of the pin: `__syncExposureToSensor` seeds the slider from it and clears the
+        auto-exposure checkbox, after which the EXISTING capture path skips the sweep by itself and
+        `__lockedExposure` carries the same value to the sample leg. ⛔ No change to the capture flow, and
+        none to the GUI — the dev bench never showed these controls (`showExposureControls` defaults False),
+        which is exactly why an AE checkbox that is `setChecked(True)` at construction has been choosing the
+        instrument state unseen since the bench was built.
+        ⚠ A plugin that declares nothing gets today's behaviour unchanged — the pin is strictly additive."""
+        plugin = getattr(self.__engine, "plugin", None)
+        declared = getattr(plugin, "exposure", None) if plugin is not None else None
+        try:
+            return int(declared) if declared is not None else None
+        except (TypeError, ValueError):               # a malformed declaration must not break capture
+            print("EXPOSURE: plugin declared %r, which is not a number — falling back to auto-exposure"
+                  % (declared,))
+            return None
+
+    def __reportExposureRange(self, settings):
+        """State the camera's own exposure range beside the pinned value. A FACT, not a heuristic.
+
+        ⛔⛔ THE FIRST VERSION OF THIS WARNED WHEN THE PINNED VALUE SAT IN THE BOTTOM 2 % OF THE RANGE, on
+        the theory that a value measured for one camera would look wrong on another. It fired on the very
+        first rig run, on the CORRECT value — because the ELP accepts **0–5000**, not the 1–500 I had taken
+        from `__EXPOSURE_MIN/MAX`, which is the SLIDER's range and not the camera's. 90 is 1.8 % of 5000 and
+        entirely right. ⚠ A warning that cries on the good case trains the operator to ignore it, which is
+        worse than no warning.
+        ⛔ AND THE HEURISTIC COULD NOT HAVE WORKED ANYWAY: the Orbbec board probed on 2026-08-30 runs 0–6500,
+        which also contains 90, so the camera swap it was written for would have passed silently.
+        ⇒ print the range, warn ONLY when the value cannot be applied at all, and let a human notice a
+        number that changed. `diagnostics/channel_replay.py --probe-only` characterises a camera properly.
+
+        ⭐ AND THE RANGE IS ITSELF A FINDING: the slider spans 1–500, ONE TENTH of what the camera accepts,
+        so the auto-exposure sweep has only ever searched the bottom 10 %. It is not binding at 90, but
+        "the AE only ever landed on 90 or 104" is partly a property of the sweep's bounds."""
+        pinned = self.__pinnedExposure()
+        high = (settings or {}).get("exposureMax")
+        if pinned is None or not high or high <= 0:
+            return
+        if pinned > high:
+            print("⛔ EXPOSURE: the plugin pins %d, which is OUTSIDE this camera's range 0..%d — the camera "
+                  "cannot apply it (SPEC_capture_quality.md §16.39.5)" % (pinned, int(high)))
+        elif not self.__reportedExposureRange:
+            self.__reportedExposureRange = True
+            print("EXPOSURE: pinned %d, camera range 0..%d (the slider offers only %d..%d)"
+                  % (pinned, int(high), self.__EXPOSURE_MIN, self.__EXPOSURE_MAX))
+
     def __syncExposureToSensor(self):
+        # ⛔⛔ THIS USED TO SEED FROM `calibrationExposure` — 150 on the ELP, defined as "the highest value
+        # that keeps the mercury line UNCLIPPED" on a CFL LINE SOURCE. The measurement runs on an LED
+        # BROADBAND source, so that was the wrong regime's number as a starting point; only the AE sweep
+        # overwriting it kept the mistake invisible. With the sweep off, the seed is what ships.
+        pinned = self.__pinnedExposure()
         settings = SpectrometerSensorUtil().getSensorSettings(self.__sensor) if self.__sensor is not None else None
-        value = settings.calibrationExposure if settings is not None and settings.calibrationExposure is not None \
-            else self.__EXPOSURE_FALLBACK
-        value = max(self.__EXPOSURE_MIN, min(self.__EXPOSURE_MAX, value))
+        value = pinned if pinned is not None else (
+            settings.calibrationExposure if settings is not None and settings.calibrationExposure is not None
+            else self.__EXPOSURE_FALLBACK)
+        # ⭐ CLAMPED TRANSPARENTLY, and said out loud when it bites — a silently clamped instrument setting
+        # is the same class of defect as a silently negotiated one.
+        clamped = max(self.__EXPOSURE_MIN, min(self.__EXPOSURE_MAX, value))
+        if pinned is not None and clamped != value:
+            print("EXPOSURE: plugin pinned %d, clamped to %d by the slider range %d..%d"
+                  % (value, clamped, self.__EXPOSURE_MIN, self.__EXPOSURE_MAX))
         self.__exposureSlider.blockSignals(True)
-        self.__exposureSlider.setValue(value)
+        self.__exposureSlider.setValue(clamped)
         self.__exposureSlider.blockSignals(False)
+        if pinned is not None:
+            # ⭐ THE PIN, in one line: with the box clear, `__capture`'s existing
+            # `if role == REFERENCE and self.__autoExposureCheckBox.isChecked()` skips the sweep, and the
+            # reference capture then locks this same value onto the sample leg as it always has.
+            self.__autoExposureCheckBox.blockSignals(True)
+            self.__autoExposureCheckBox.setChecked(False)
+            self.__autoExposureCheckBox.blockSignals(False)
+            print("EXPOSURE: pinned at %d by the plugin — auto-exposure sweep disabled "
+                  "(SPEC_capture_quality.md §16.39.5)" % clamped)
         self.__updateExposureLabel()
 
     def __updateControls(self):
@@ -549,6 +619,37 @@ class CapturePanel(QWidget):
                  settings.get("autoExposure"), settings.get("wbTemperature"), settings.get("autoWb"),
                  settings.get("gain"), settings.get("backlight"),
                  settings.get("whiteBalanceKelvinRequested")))
+        self.__reportExposureRange(settings)
+        self.__recordAppliedExposure(role, settings)
+
+    def __recordAppliedExposure(self, role, settings):
+        """⭐ `exposureApplied` — the READ-BACK, onto the workflow, so the travelling record carries the
+        instrument state instead of the intention (`ROADMAP.md` §0b, `SPEC_capture_quality.md` §16.39.5).
+
+        ⛔⛔ WHY IT IS WRITTEN HERE AND NOT IN `SpectralWorkflowEngine.__buildWorkflow`, where `solvent` and
+        `prepProtocol` are set. Those are DECLARATIONS and are true at construction. This is what the camera
+        actually applied, which is only known after a capture — and stamping an intention as if it were a
+        measurement is precisely the defect §16.39 exists to describe. ⚠ `timestampIso` is the cautionary
+        case: one value per workflow, so four fills of one sitting all carry `17:28:03`.
+
+        ⭐ ONE FIELD, not one per leg (Edwin, 2026-08-30): the reference capture locks `__lockedExposure`
+        onto the sample, so the two legs cannot differ by construction. ⛔ But "cannot" is a CLAIM, and an
+        unchecked claim is how the last one got past us — so the legs are compared and a disagreement is
+        announced. Three lines that keep the assumption falsifiable."""
+        applied = settings.get("appliedExposure")
+        if applied is None:
+            applied = settings.get("exposure")
+        if applied is None:
+            return
+        workflow = self.__engine.getWorkflow() if self.__engine is not None else None
+        if workflow is None:
+            return
+        previous = getattr(workflow, "exposureApplied", None)
+        if previous is not None and int(previous) != int(applied):
+            print("⛔ EXPOSURE MISMATCH between the capture legs: %s applied %d, an earlier leg applied %d. "
+                  "T = S/R does not cancel this (SPEC_capture_quality.md §16.24.1) — the run is not on one "
+                  "instrument state." % (role, int(applied), int(previous)))
+        workflow.exposureApplied = int(applied)
 
     def __guardReading(self, view, spectrum):
         """`min(S)` over the plugin's declared guard window, in ENCODED DN — SPEC_capture_quality.md §16.23.10f.

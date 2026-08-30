@@ -276,6 +276,15 @@ threshold corpus deliberately excludes the boundary products. A pill drawn on a 
 
 ## 5 · The Metrics tab — placement and rows
 
+> ⚠ **THE `V` ROWS ARE NO LONGER FIRST — 2026-08-30.** `ROADMAP.md` item 1 P2 put **`RvLin`, `Rv` and
+> `RvCont`** above them, `RvLin` at the very head (Edwin). This section's "at the head of the metric block"
+> is now read as *"above the older ladder"*, not *"first on the tab"*.
+> ⛔ **NOTHING ABOUT THE VERDICT MOVED.** `Q%` still holds the pill, still owns `V_THRESHOLD` and still draws
+> the only gauge; the three new rows carry no threshold at all. ⭐ The ordering is a statement about where
+> the programme is going (`SPEC_metric_research.md` §16.11 chose `RvLin` for the continuous number), not
+> about what decides green and brown today — and each of the three tooltips says so on its own, because a
+> reader who sees one row must not be able to mistake it for the verdict.
+
 ```
  ①  RoastQPercentGaugeView                    NEW — above both existing gauges
  ②  RoastPedestalGaugeView                    unchanged

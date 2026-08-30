@@ -9,8 +9,11 @@
 > Rv = 100 · (A[622–627] − A_valley) / (A[565–580] − A_valley)     T = 52,  higher = greener
 > ```
 >
-> ⛔ **STATUS: CHOSEN, NOT YET BUILT.** `Q%` is what the code ships today and it keeps the verdict pill
-> until `Rv` lands **and** clears §7. Do not read "winner" as "shipped" — nothing below is implemented.
+> ⚠ **STATUS: ON SCREEN AS A NUMBER, NOT AS THE VERDICT** *(updated 2026-08-30)*. `ROADMAP.md` item 1 **P2**
+> shipped `Rv` — with `RvLin` and `RvCont` beside it — as three rows in the dev bench's metric block, plus
+> the 622–627 nm band on the `A(λ)` plot. ⛔ **`Q%` still holds the verdict pill**, and there is no gauge and
+> no `RV_THRESHOLD`: P6 waits on §7's M9 because §16.3's green/brown **overlap of 11.5 units** is unresolved.
+> ⇒ do not read "winner" as "shipped", and do not read "on screen" as "decides anything".
 >
 > ⛔ **§7 still stands and is not waived by the decision.** Every constant here is fitted on the corpus it
 > is scored on, exactly as `dQ100`'s were when `SPEC_capture_quality.md` §16.31.3a refused it. The
@@ -49,6 +52,15 @@ crossing, no robust statistic. `bandMean` is the only primitive required.
 as a **number beside it**, which is the same discipline `dQ100` was held to on 2026-08-21.
 
 ---
+
+
+> ✅ **DONE 2026-08-30 — and it closes this document's own opening observation.** The origin note above is
+> that *"the 624 nm peak is the only feature on that page with no band marker"*. It has one now: P2 drew
+> 622–627 on `A(λ) — V bands` alongside `RvLin`, `Rv` and `RvCont` at the head of the metric block, `RvLin`
+> first (Edwin).
+> ⚠ Verified against `diagnostics/red_anchor_ab.py` on seven archived fills — **`Rv` and `RvLin` reproduce
+> exactly**; `RvCont` agrees to ≤ 0.6 % on greens and diverges 11 units on the extreme brown, where its
+> numerator crosses zero. `tests/test_red_ratio_rows.py` pins the arithmetic and the guards.
 
 ## 2 · The metric
 

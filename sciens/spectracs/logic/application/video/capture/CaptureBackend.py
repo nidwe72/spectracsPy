@@ -52,6 +52,7 @@ class DesktopCv2CaptureBackend(CaptureBackend):
 
     def __init__(self):
         self._cap = None
+        self._deviceId = None
         self._width = None
         self._height = None
 
@@ -60,6 +61,7 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         from sys import platform
         # V4L2 is the reference backend on Linux (verified in the probe); CAP_ANY elsewhere.
         apiPreference = cv2.CAP_V4L2 if platform == 'linux' else cv2.CAP_ANY
+        self._deviceId = deviceId
         self._cap = cv2.VideoCapture(deviceId, apiPreference)
 
         # Minimize driver frame buffering so read() returns the LATEST frame, not a stale queued one. At high
@@ -84,8 +86,29 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         # readback confirms the driver honoured it; the extractor (ImageSpectrumAcquisitionLogicModule) also warns if
         # the ROI ever exceeds the frame, as a drift tripwire.
         # TODO: make this per-sensor (seed alongside the VID/PID in SpectrometerSensorUtil) when a second camera lands.
+        # ⭐⭐ PIN THE PIXEL FORMAT — SPEC_capture_quality.md §16.39.5a.
+        # ⛔⛔ The docstring above says "cv2 returns BGR either way, so nothing downstream changes." That
+        # reasons about the API SURFACE, not the data: MJPG is lossy in both chroma and DCT, and a
+        # JPEG-compressed spectrum would present as unexplained noise, never as an error. Enumerating the ELP
+        # returns exactly two formats and **MJPG is index 0** — the driver's first — so today we rely on
+        # OpenCV's V4L2 backend preferring uncompressed, which is its behaviour and not a contract.
+        # ⚠ ORDER MATTERS: FOURCC goes BEFORE width/height, or V4L2 renegotiates and can snap the size — and
+        # 2592x1944 exists in only one format on this camera.
+        # ⚠ AND THE ORIGINAL RULE IS RESPECTED. "Do NOT force MJPG" exists because forcing a FOURCC once
+        # wedged the stream on warm-up buffers; what is forced here is the UNCOMPRESSED one, the read-back
+        # is checked, and `__yuyvOrFallback` reopens without forcing if the stream does not come up. The
+        # fallback IS today's behaviour, so the worst case is what we already have.
+        self.__forceUncompressed(cv2)
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
+        # ⭐ The guard on the pinned format: a few grabs to prove the stream came up. §16.39.5a's whole
+        # risk is that FORCING a format wedges the UVC stream on warm-up buffers, and that failure is silent
+        # — read() simply never returns a frame. Proving it here, at open, is what makes the pin safe to
+        # ship: if the stream is dead we reopen exactly as the code did before, and the operator sees why.
+        # ⚠ SEVERAL grabs, not one: the first frames after open are routinely empty even on a healthy
+        # stream (§3.5), so a single failure would condemn a working camera.
+        if not any(self._cap.grab() for _ in range(8)):
+            self.__reopenUnforced(cv2, deviceId, apiPreference)
         self._width = int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self._height = int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         print("CaptureBackend: capture resolution = %dx%d" % (self._width, self._height))
@@ -122,6 +145,66 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             self._cap.set(cv2.CAP_PROP_BACKLIGHT, 0)
             actualWb = int(self._cap.get(cv2.CAP_PROP_WB_TEMPERATURE))
             print("CaptureBackend: white balance fixed = %dK (requested %dK)" % (actualWb, int(whiteBalanceKelvin)))
+
+    def __forceUncompressed(self, cv2):
+        """Ask for YUYV and say what was actually granted. Never raises; never leaves the cap unusable."""
+        try:
+            granted = self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"YUYV"))
+            code = int(self._cap.get(cv2.CAP_PROP_FOURCC))
+            fourcc = "".join(chr((code >> (8 * i)) & 0xFF) for i in range(4))
+        except Exception as error:                    # a pixel format is not worth a failed capture
+            print("CaptureBackend: pixel format unchanged (%s)" % error)
+            return
+        # ⛔ `set()` returns True on V4L2 even when it did nothing — the read-back is the only evidence,
+        # which is the lesson the white-balance path already learned three lines of print ago.
+        print("CaptureBackend: pixel format = %s (requested YUYV, set()=%s)" % (fourcc, granted))
+        if fourcc != "YUYV":
+            print("CaptureBackend: ⚠ the driver kept %s — if that is a COMPRESSED format the spectrum is "
+                  "reading JPEG artefacts (SPEC_capture_quality.md §16.39.5a)" % fourcc)
+
+    def __reopenUnforced(self, cv2, deviceId, apiPreference):
+        """The guarded fallback: if forcing the format left a stream that will not deliver, reopen exactly
+        as the code did before §16.39.5a. ⭐ The worst case of this change is therefore today's behaviour."""
+        print("CaptureBackend: ⚠ no frame after pinning the pixel format — reopening unforced")
+        try:
+            self._cap.release()
+        except Exception:
+            pass
+        self._cap = cv2.VideoCapture(deviceId, apiPreference)
+        self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
+        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
+
+    def __exposureRange(self):
+        """(min, max) of the camera's manual exposure control, from V4L2 — or (None, None).
+
+        ⚠ WHY AN IOCTL AND NOT `cap.get()`: OpenCV exposes control VALUES but not their RANGES, and the range
+        is the whole point — 90 is an ELP number on a 1-500 scale, and the Orbbec board probed on 2026-08-30
+        runs 0-6500 where the same 90 is a far darker frame (SPEC_capture_quality.md §16.39.5, D21).
+        ⛔ READ-ONLY and fully guarded: querying a control neither opens a stream nor disturbs a capture, and
+        any failure at all returns (None, None). A camera that will not answer simply says nothing."""
+        import fcntl, os, struct
+        node = "/dev/video%d" % self._deviceId if isinstance(self._deviceId, int) else None
+        if node is None or not os.path.exists(node):
+            return None, None
+        size = 68                                     # sizeof(struct v4l2_queryctrl)
+        request = 0xC0000000 | (size << 16) | (ord("V") << 8) | 36        # _IOWR('V', 36, v4l2_queryctrl)
+        try:
+            descriptor = os.open(node, os.O_RDONLY | os.O_NONBLOCK)
+        except OSError:
+            return None, None
+        try:
+            for control in (0x009A0902, 0x00980911):  # EXPOSURE_ABSOLUTE, then the legacy EXPOSURE
+                buffer = bytearray(struct.pack("I", control) + bytes(size - 4))
+                try:
+                    fcntl.ioctl(descriptor, request, buffer, True)
+                except OSError:
+                    continue
+                low, high = struct.unpack_from("ii", buffer, 40)
+                return low, high
+        finally:
+            os.close(descriptor)
+        return None, None
 
     def read(self) -> QImage:
         import cv2
@@ -166,7 +249,10 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             except cv2.error:
                 return None
 
+        low, high = self.__exposureRange()
         return {
+            "exposureMin": low,
+            "exposureMax": high,
             "exposure": get(cv2.CAP_PROP_EXPOSURE),
             "autoExposure": get(cv2.CAP_PROP_AUTO_EXPOSURE),
             "wbTemperature": get(cv2.CAP_PROP_WB_TEMPERATURE),

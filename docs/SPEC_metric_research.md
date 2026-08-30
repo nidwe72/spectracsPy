@@ -4005,6 +4005,17 @@ This records **which candidate the programme is building toward**, in the same s
 
 ### ⭐⭐⭐ 16.12 `RvLin` — THE CARD  *(self-contained; read this if you read nothing else in §16)*
 
+> ✅ **SHIPPED AS A NUMBER, 2026-08-30** — `ROADMAP.md` item 1 **P2**. `RvLin`, `Rv` and `RvCont` are now three
+> rows at the **head** of the dev bench's metric block, `RvLin` first (Edwin), computed by one private
+> `__rvTerms` so a window cannot drift out of sync with what the report prints; and the 624 nm band is drawn
+> on `A(λ) — V bands`. ⛔ **NO gauge, NO threshold, NO verdict: `Q%` still holds the pill.** P6 stays gated on
+> M9 (§7), because a threshold is a claim about a baseline and §16.3's overlap is unresolved.
+> ⚠ Verified against `diagnostics/red_anchor_ab.py` on seven archived fills: `Rv` and `RvLin` reproduce
+> **exactly**; `RvCont` agrees to ≤ 0.6 % on greens and **diverges by 11 units on the extreme brown**, where
+> its numerator crosses zero (`20260828BillaCleverA`: numerator −0.010 against a healthy denominator 0.135) —
+> so near zero that row is a sign, not a precision figure. `tests/test_red_ratio_rows.py` pins the arithmetic,
+> the `Δ = 0 ⇒ RvLin ≡ Rv` identity, and the None-not-clamped guards.
+
 #### The formula
 
 ```

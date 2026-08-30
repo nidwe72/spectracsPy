@@ -15656,7 +15656,7 @@ a 2 °C office swing is inside the budget it needs.
 
 ---
 
-## ⭐⭐⭐ 16.39 THE EXPOSURE IS THE LAST FREE VARIABLE — and it walks a lamp line into `RvLin`'s anchor  *(Edwin's bench note 2026-08-30, log + analysis same evening; DESIGN, not implemented)*
+## ⭐⭐⭐ 16.39 THE EXPOSURE IS THE LAST FREE VARIABLE — and it walks a lamp line into `RvLin`'s anchor  *(Edwin's bench note 2026-08-30, log + analysis same evening; ✅ **BUILT and rig-verified 2026-08-30** — §16.39.5b)*
 
 > ⭐ **The bench observation came first.** Asked why one of six otherwise identical Lugitsch fills came out
 > wrong, Edwin's only note was *"there was some wobble at the red end of the transmission spectrum of the
@@ -15836,14 +15836,14 @@ exposure 104   ->  R530 147 - 155   ->  crossover 609.8 - 611.8   the skirt is i
 ⇒ **every archived run can be labelled by exposure state retrospectively**, without the logs. That is worth
 doing before any `RvLin` number is quoted from the archive.
 
-### 16.39.5 ⭐⭐⭐ THE DESIGN — the plugin declares the exposure  *(Edwin, 2026-08-30: "what about setting the exposure to 90 from within the plugin?")*
+### 16.39.5 ⭐⭐⭐ THE DESIGN — the plugin declares the exposure  *(Edwin, 2026-08-30: "what about setting the exposure to 90 from within the plugin?"; ✅ **AS BUILT** — §16.39.5b)*
 
 **90, declared by the plugin, resolved per run.** Three parts, and they ship together:
 
 | part | what | why this shape |
 |---|---|---|
 | **1** | the plugin declares an **exposure**, beside `frameCount`, `solvent` and `prepProtocol` | the burst size is already plugin-declared through the same seam; exposure is the same kind of fact and needs no new plumbing |
-| **2** | it is **resolver-backed**, not a bare constant — the `PrepProtocolResolver` pattern, env then file then the plugin's declaration | ⛔ a hardcoded constant is the identical trap one layer down. `prepProtocol` went stale **twice** and cost the archive its whole pre-vortex population (`SPEC_metric_research.md` §16.15) |
+| **2** | ⛔ **NOT resolver-backed — changed before building, Edwin's call (D21).** The plugin's declaration is the ONE source; `SpectrometerSensorSettings.measurementExposure` — the per-camera slot that existed for this since 2026-07-07 and was never filled — is **retired with a comment rather than filled**, because two homes for one number is the `prepProtocol` staleness trap one field over. ⚠ The cost is that a camera swap means editing the plugin; §16.39.5b records what replaced the per-camera table |
 | **3** | `exposure_applied` goes into the **report header** | `ROADMAP.md` §0b's headline ask, unfixed through three sessions of archaeology. Without it the R530 back-out is load-bearing forever, and the next stale value is invisible again |
 
 **In `CapturePanel`:** when an exposure is declared, skip `__runAutoExposure` and seed `__lockedExposure`
@@ -15883,6 +15883,46 @@ to revert — the fallback is exactly today's behaviour.
 ⭐ **Why it belongs here and not in its own item:** both are `CaptureBackend` capture-state changes, both are
 one line, both need the same single rig verification, and both exist for the same reason — *the instrument
 state must be chosen and recorded, not negotiated.*
+
+#### ✅ 16.39.5b AS BUILT, AND RIG-VERIFIED THE SAME EVENING  *(2026-08-30)*
+
+```
+CaptureBackend: pixel format = YUYV (requested YUYV, set()=True)
+CaptureBackend: capture resolution = 2592x1944
+EXPOSURE: pinned at 90 by the plugin — auto-exposure sweep disabled
+CAPTURE-SETTINGS role=REFERENCE frames=60 exposure_applied=90 exposure_cv2=90.0 autoExposure=1.0
+```
+
+Both risks came up clean on the first run: the FOURCC pin **took**, the resolution **survived it** (the
+order — format before width/height — is what protects that), the 8-grab probe passed so the guarded reopen
+never fired, and **no auto-exposure sweep ran before the reference**, where there had always been one.
+
+⭐ **The pin is five lines and touches neither the capture flow nor the GUI.** `DevSpectralPlugin.exposure`
+seeds the slider and clears the auto-exposure checkbox; the existing
+`if role == REFERENCE and self.__autoExposureCheckBox.isChecked()` then skips the sweep by itself, and
+`__lockedExposure` carries the same value to the sample leg as it always has.
+
+⛔ **`SpectrometerSensorSettings.measurementExposure` is RETIRED, not filled** (Edwin's call): one number in
+one place. Two homes for one number is the `prepProtocol` staleness trap one field over.
+
+##### ⭐⭐ And the first run found something the pin was not looking for
+
+The camera's own exposure control accepts **0–5000**. `CapturePanel.__EXPOSURE_MIN/MAX` is **1–500** — and
+that is the **slider's** range, which this section's first draft mistook for the camera's.
+
+⇒ **the auto-exposure sweep has only ever searched the bottom tenth of what the camera can do.** It is not
+binding at 90, which sits comfortably inside — but *"the AE only ever landed on 90 or 104"* (§16.39.4) is
+now partly a statement about the sweep's own bounds and not only about the optimum. ⚠ Anyone re-opening the
+exposure question after a lamp change must widen the slider first, or the sweep will confirm its own limits.
+
+⛔ **A heuristic warning was written and then withdrawn, same evening.** It flagged a pinned value sitting in
+the bottom 2 % of the camera's range, on the theory that a number measured for one camera would look wrong on
+another. It fired on the first rig run, **on the correct value** — 90 is 1.8 % of 5000. And it could not have
+worked regardless: the Orbbec board of §12.5a runs 0–6500, which also contains 90, so the camera swap it
+existed for would have passed silently. ⇒ the code now **states the range as a fact** and warns only when the
+value cannot be applied at all. ⭐ A warning that cries on the good case trains the operator to ignore it,
+which is worse than no warning — and camera identity, not range, is what `diagnostics/channel_replay.py
+--probe-only` is for.
 
 ### ⚠ 16.39.6 Four cautions, and one of them is a real cost
 
