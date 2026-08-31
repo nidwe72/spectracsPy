@@ -59,6 +59,29 @@ validation sees any oil.
 ⛔ **If it comes back at *d* ≈ 2, the milestone does not happen** — you are back in research, and the parked
 range-extension track (§6) stops being optional.
 
+> ⭐⭐⭐ **THE OPEN HALF NOW HAS STRONG EVIDENCE — 2026-09-01, and it did not come from this plan.** The
+> `20280831_suite` (`SPEC_metric_research.md` §16.15.7) is every fill confirmed same-jar AND 6-min cold-box —
+> one method, one recipe, no protocol term left in the comparison. Scored on **`Rv`**, using the conservative
+> **pooled σ_fill of 3.91** rather than each pair's own tiny-sample sd:
+>
+> | green vs green | gap | *d* at σ_fill 3.91 | *d* on the pair's own sd |
+> |---|---|---|---|
+> | Ja Natuerlich vs Lugitsch | 15.40 | **3.94** | 4.51 |
+> | Lugitsch vs Steirerkraft | 23.98 | **6.13** | 6.92 |
+> | Ja Natuerlich vs Steirerkraft | 39.38 | **10.07** | 38.97 |
+>
+> **All three clear *d* ≥ 3**, and green-vs-brown in the same corpus runs *d* 14–24. ⇒ on this evidence the
+> GO/NO-GO is expected to pass, and the parked range-extension track (§6) stays optional.
+>
+> ⛔⛔ **THIS IS NOT THE STEP-5 VALIDATION AND MUST NOT BE COUNTED AS IT.** Step 5 is a run against **frozen
+> thresholds** on a corpus the freeze has not seen; this is a different metric (`Rv`, not the one the 1.34
+> was measured on) scored on data already in hand. It says the gate is *likely* to pass — it does not pass it.
+> ⚠ And two of the four oils carry **2 fills**, so their σ has 1 df; the 3.91 column is there because the
+> pair's-own-sd column cannot be trusted at that n.
+> ⚠ Every instrument caveat of `SPEC_capture_quality.md` §16.40 applies underneath: the fill-to-fill
+> differences are 1–3 camera counts, ~5 Rv of the scatter may be the lamp's red tilt, and the `pow2.2` decode
+> the DN framing rests on is unverified.
+
 **⭐ THRESHOLDS FROZEN — after step 6.** Derived on the capillary corpus, from the **oils already held**
 (Kiendler, Steirerkraft, S-Budget). ⛔ **Written down with a date, and never re-fitted afterwards.** Re-fitting
 them once P3a has seen an oil converts a validation into a demonstration, retroactively.
@@ -119,6 +142,7 @@ sample, at the optimal cut:
 | **green vs brown**, measured | 7.50 | **0.01 %** — effectively deterministic |
 | green vs green, projected | 3.50–5.00 | 0.6 – 4.0 % |
 | green vs green, today | 1.34 | 25.1 % |
+| ⭐ green vs green, `Rv` on the `20280831_suite`, 2026-09-01 | **3.94 – 10.07** | **0.6 % – ~0** |
 
 ⇒ ⭐ **The brown verdict may stay a BADGE; a within-green result must be a RANKING WITH A CONFIDENCE.**
 Presenting them identically overclaims the weaker one by three orders of magnitude. ▶ And report any

@@ -382,6 +382,56 @@ Lugitsch fill are indistinguishable by the shipped metric once the solvent is al
 
 ⚠ Not a portability *proof*: two oils, and n=1 in three of the six cells.
 
+### ⭐⭐⭐ 6.2a THE EVIDENCE THIS SPEC DID NOT HAVE — the case made in CAMERA COUNTS  *(2026-08-31)*
+
+Every argument above scores `Rv` on a **corpus**. The first exposure-pinned session
+(`SPEC_capture_quality.md` §16.40) lets the same question be asked in **DN**, which depends on no threshold,
+no window fit and no class labelling — ⇒ **it sits outside §7 / M9's circularity concern entirely.**
+
+⛔ **On raw counts, no single band separates the oils.** Sample DN, green (2 fills) against brown (4):
+
+| window | green | brown | between | within-oil | ratio |
+|---|---|---|---|---|---|
+| Soret 448–460 | 95.6 ± 0.79 | 91.3 ± 2.76 | 4.25 DN | 2.03 | 2.1× |
+| valley 500–560 | 191.1 ± 1.01 | 184.5 ± 2.89 | 6.59 DN | 2.16 | 3.0× |
+| Q 565–580 | 121.3 ± 1.17 | 108.6 ± 3.64 | 12.67 DN | 2.71 | 4.7× |
+| **624 622–627** | 96.5 ± 1.18 | 99.9 ± 2.83 | **3.31 DN** | 2.17 | **1.5×** |
+
+The 624 window — the one carrying the signal — separates them by **1.5 σ**. ⭐ **`Rv` separates them 33.4 σ**,
+and the gain is structural:
+
+- **the NOISE is common-mode** — within the four brown fills `r(Q deviation, 624 deviation) = +0.943`: a fill
+  is uniformly a few counts brighter or darker across the whole spectrum, and **a ratio divides that out**;
+- **the SIGNAL is anti-correlated** — between the oils the Q window moves **+12.7 DN** and the 624 window
+  **−3.3 DN**, in *opposite* directions, so **a ratio multiplies what a difference would cancel**.
+
+⇒ **`Rv` is immune to the dominant error term of this instrument and maximally sensitive to the one thing
+that distinguishes the oils.** ⭐ That is the same see-saw §2.5's Gouterman argument predicts, arrived at from
+counts rather than from photophysics — the two now agree from opposite directions.
+
+#### ⭐⭐ 6.2b And on ONE controlled protocol, the corridor comes out clean
+
+The `20280831_suite` (`SPEC_metric_research.md` §16.15.7) holds every fill confirmed **same-jar AND 6-min
+cold-box** — method and recipe held constant, so no protocol term is left in the comparison:
+
+| | fills | `Rv` | σ_fill |
+|---|---|---|---|
+| Ja Natuerlich | 2 | 122.9 | 0.15 |
+| Lugitsch | 6 | 107.5 | 3.74 |
+| Steirerkraft | 2 | 83.5 | 1.42 |
+| Spar S-Budget | 4 | 27.9 | 4.17 |
+
+⭐⭐ **THE SESSION TERM IS NOT THERE.** Lugitsch's six fills split into two sittings **16 h apart** and the step
+between them is **+0.83 — 0.2× the within-sitting scatter**; Ja Natuerlich reads 123.26 / 122.75 / 122.96
+across **19 days, two solvent eras and the exposure pin** (spread 0.52). ⛔ The 25.9-unit Lugitsch spread
+elsewhere in the archive comes from sessions with *different methods and recipes* — hold those and `Rv`
+stops wandering.
+
+⚠ **The honest limit is in the same numbers**: the brown's 624 band is **5.0 DN** against the green's 12.8,
+which is why brown σ_fill is 4.17 and green 0.15. ⇒ **the next real gain is counts on the brown band, not a
+different metric** (§16.40.6), and the `pow2.2` decode this whole framing rests on is **still unverified
+against a raw frame**.
+
 ### 6.3 ⛔ The margin is thinner than the noise
 
 **Pooled within-series sd of `Rv` = 5.74** across 18 repeat-fill series. The green–brown gap at its
