@@ -4769,107 +4769,103 @@ the honest record is *"n = 4, registered for 6, underpowered"* — not a result.
 
 ---
 
-### 📌⭐⭐⭐ 16.17 PRE-REGISTRATION — the green-vs-green order: Lugitsch against Ja Natuerlich, ONE session  *(written 2026-08-31, BEFORE the run; the eye label was given BEFORE the numbers were looked at)*
+### ⛔⛔ 16.17 RETRACTED AND REWRITTEN — the green-vs-green run was redundant, and the suite had already answered it  *(written 2026-08-31, retracted 2026-09-01 the next morning, on Edwin's question: "in the suite most measurements are Lugitsch ones, why other Lugitsch measurements?")*
 
-#### 16.17.1 The question, and why this pair
+#### ⛔ 16.17.0 WHAT WAS REGISTERED, AND WHY IT WAS WRONG
 
-Edwin prepared two matched dilutions in the eprouvette — **8 ml sunflower + 2 capillaries** each — and read
-them by eye before any measurement:
+Registered on 2026-08-31: a fresh session — **two fills each of Lugitsch and Ja Natuerlich**, alternating
+order, 8 ml sunflower + 2 capillaries, with a pass rule of *"greener on all four fills AND a between-oil gap
+≥ 3× the within-oil pair gap"*. Predictions were fixed: `Rv` passes, `RvLin` fails the margin, `Q%` right
+but unresolved.
 
-> *"Lugitsch is yellowischer/brwoner than the BillaJaNtürlich oil"* — and, separately, *"i now also tend to Rv"*.
+⛔ **It should never have been registered, and Edwin caught it in one sentence.** The `20280831_suite` already
+holds **six Lugitsch fills and two Ja Natuerlich fills under one method and one recipe** — which is the
+comparison, already collected. The registered run would not have added to it; it would have **weakened** it:
 
-⭐⭐ **THAT ORDER IS THE PRE-REGISTRATION.** It is a class label fixed by the eye, on two oils, stated before
-the instrument was pointed at them — which is the one thing §7 / M9 says the archive has never had for a
-green-vs-green comparison. Every previous ranking was either read off the metric under test or recorded after
-the numbers existed.
-
-⛔ **AND IT UNSEATS THE ARCHIVE'S REFERENCE OIL.** Lugitsch is the oil measured on every row of every by-day
-page and the dotted reference line on all of them; the 2026-08-27 eye ranking made it the greenest thing in
-the corpus. Ja Natuerlich was never in that ranking. If the eye is right, **Lugitsch is not the green
-benchmark** — it is only the most-measured oil, and the dotted line has to be read that way.
-
-**What the archive already says** (cross-session, cross-method — not a controlled comparison):
-
-| metric | Lugitsch, 10 fills | Ja Natuerlich, 3 fills | overlap |
-|---|---|---|---|
-| **`Rv`** | 104.19, sd 8.21 | **122.99, sd 0.26** | ⭐ **NONE** — JN's lowest fill is 8.47 above Lugitsch's highest |
-| `RvLin` | 101.78 (92.5–105.4) | 107.92 (97.4–121.1) | heavy — two JN fills sit *inside* the Lugitsch range |
-| `Q%` | 17.67 (14.2–19.2) | 14.18 (12.3–16.5) | partial — JN's 16.46 is above three Lugitsch fills |
-
-⭐ **The internal control that makes it worth running.** Ja Natuerlich reads `Rv` **123.26 / 122.75 / 122.96**
-across three fills spanning **19 days, the solvent era, and the exposure pin** — a spread of 0.51. So the
-cross-session confound that would normally void this comparison is answered by the data: that oil's `Rv` does
-not move across the boundary, while all ten Lugitsch fills sit below it. ⚠ The 08-12 fill carries **no
-recorded solvent** (the field did not exist); the archive classifies that era as isopropanol.
-
-#### 16.17.2 The design
-
-| | |
-|---|---|
-| oils | **Lugitsch** and **Ja Natuerlich**, one bottle each |
-| fills | ⭐ **TWO PER OIL**, four in all, prepared independently. ⛔ Two is the registered minimum and the reason is §16.17.4: with one fill per oil there is no within-session yardstick and the result cannot be scored at all |
-| recipe | **8 ml sunflower + 2 capillaries**, identical for all four. ⛔ This is NOT the corpus recipe (`1cap-1ml-…-cold-box6min`, 1 capillary into 6 ml) — roughly 1.5× the concentration. ⚠ **Edit `~/.spectracsPy/prepProtocol.txt` BEFORE the first capture** so the record says what was made; that is what `PrepProtocolResolver` exists for |
-| order | ⭐ **ALTERNATE — L, JN, L, JN** — so any drift across the evening is common to both oils instead of aliased onto one |
-| aliquots | ⛔ **DARK until measured** (§39: light on the waiting aliquot is a real +0.7…+1.3 term) |
-| reads | **two per fill**, so read noise and fill noise stay separable |
-| exposure | pinned at 90 throughout; reference method the same for all four and **written down** |
-| ⛔ forbidden | changing volume, bottle, exposure, holder or reference method mid-evening |
-
-#### ⭐⭐ 16.17.3 THE READ RULE AND THE CUT. Fixed. Written before the data.
-
-Per metric, with `fillMean` = the mean of a fill's two reads:
-
-    betweenOil = | mean(JN fills) − mean(Lugitsch fills) |
-    withinOil  = max( |JN fill1 − JN fill2| , |Lug fill1 − Lug fill2| )        ← the pair gap, not an sd
-
-A metric **PASSES** only if **both** hold:
-
-| | |
-|---|---|
-| **(a) direction** | it puts Ja Natuerlich greener than Lugitsch on **every one of the four fills**, i.e. the two oils do not interleave |
-| **(b) margin** | `betweenOil ≥ 3 × withinOil` |
-
-⛔⛔ **THE CUT DOES NOT MOVE AFTER THE NUMBERS ARE SEEN.** 3× is chosen because a two-fill comparison whose
-between-oil gap is smaller than that is not distinguishable from the fill scatter measured on the same
-evening — §16.3a is the standing lesson on a re-fitted threshold. ⛔ A metric that passes (a) and fails (b)
-is recorded as **"right but not resolved"**, which is a real and different outcome from passing.
-
-⭐ **The predictions, fixed in advance:**
-
-| metric | prediction | basis |
+| | standard error on the gap | t |
 |---|---|---|
-| **`Rv`** | **PASSES.** Gap 8–20 units; within-oil pair gap ≤ 3 | archive gap 18.80 = 5.0× Lugitsch's within-session sd (3.74); JN repeats to 0.26 over 19 days |
-| `RvLin` | **FAILS (b), and may fail (a).** Gap inside its own fill scatter | archive ranges overlap; §16.15.6a — its Δ term swings 15.7 between two fills of ONE oil |
-| `Q%` | **PASSES (a), (b) UNCERTAIN.** | archive direction is right; margin is comparable to its fill noise, and it already inverts the eye on Spar Premium (§16.12.7h) |
+| **the suite as it stands (6 + 2)** | **2.79** | **5.52** |
+| the registered fresh run (2 + 2) | 3.42 | 4.5 |
 
-⇒ the outcome that would **most** change the file is `Rv` failing (a). That would mean the one metric whose
-case is structural (§16.15.6b) cannot reproduce a ranking the eye finds obvious, and ROADMAP item 1 would
-have to stop.
+⚠ And its recipe put it outside the suite anyway: **8 ml + 2 capillaries is not the corpus recipe** (1 cap
+into 6 ml), so a run under it could not have joined the corpus it was meant to inform. That was recorded at
+the time as "a free extra test of dilution-invariance"; it is more honestly described as **comparing at a
+concentration nothing else uses**.
 
-#### ⚠ 16.17.4 WHAT TWO FILLS PER OIL CAN AND CANNOT DO — said before, not after
+⭐ **The lesson, and it is the reusable part:** *before registering a run, ask what is already on disk.*
+The archive had grown a controlled corpus that same evening, and the design was written against the archive
+as it stood a day earlier.
 
-**It is a categorical test with weak power, and its value is the label, not the statistics.** `withinOil` is
-a single difference on 1 df; a pair gap can under-state true fill scatter by a factor of two without being
-unusual. The 3× margin is therefore a *screen*, not a confidence statement.
+#### ⭐⭐⭐ 16.17.1 THE ANSWER, SCORED ON THE SUITE
 
-⛔ **One fill per oil would not do.** Lugitsch's `Rv` moves 3.74 sd between fills within one session (9.64
-range over the 08-28/30 same-jar block) — comparable to the gap being tested. A 1 + 1 design could not tell
-"Ja Natuerlich is greener" from "these two fills happened to differ", and the registered answer would be
-*inconclusive by construction*. ⚠ The two dilutions already standing on the bench are **fill 1 of each**;
-two more are needed, and they must be made to the same recipe on the same evening.
+One method (same-jar), one recipe (6-min cold box), no protocol term in the comparison:
 
-⭐ Four fills is also where this stops being cheap: it is 8 runs, ~40 minutes of monitor time, and it uses
-four capillaries.
+| | fills | mean `Rv` | sd | fills |
+|---|---|---|---|---|
+| Lugitsch | 6 | **107.45** | 3.74 | 102.1 · 111.7 · 104.1 · 108.8 · 107.4 · 110.6 |
+| Ja Natuerlich | 2 | **122.85** | 0.15 | 122.75 · 122.96 |
 
-#### ⛔ 16.17.5 What this does NOT settle
+**Gap +15.40 Rv, pooled sd 3.42, standard error 2.79 ⇒ t = 5.52 on 6 df.** ⭐ And the raw fills do not
+overlap at all: Lugitsch's highest is **111.72**, Ja Natuerlich's lowest is **122.75** — **11.03 apart**.
 
-- **Not a threshold.** `T` = 52 is untouched; both oils are green and neither is near it. P6 still gates on M9.
-- **Not M9.** M9 is a pre-registered run over the *corpus*, not one pair. This discharges the green-vs-green
-  ordering only, and it is one session.
-- **Not other oils.** Esterer, Stekko and Steirerkraft are not in it, and the 2026-08-27 ranking that placed
-  them under Lugitsch is untouched — Ja Natuerlich was never part of it.
-- ⛔ **Not the corpus recipe.** 2 capillaries in 8 ml is off-corpus, so a `betweenOil` gap here is not
-  transferable to archive numbers. ⭐ It is however a free extra test of dilution-invariance at ~1.5× the
-  usual concentration, and `Rv` predicts *no* shift from that alone (§16.15.6b).
-- ⛔ **Not the DN question.** `SPEC_capture_quality.md` §16.40 stands: this session's fill-to-fill differences
-  will again be 1–3 camera counts, and the decode round-trip that framing rests on is still unverified.
+⇒ **`Rv` reproduces Edwin's eye order — Ja Natuerlich greener than Lugitsch — with no overlap and without a
+new measurement.** ⛔ `RvLin` does not: over the same corpus its ranges overlap heavily, and §16.15.6a shows
+why (its Δ term swings 15.7 between two fills of ONE oil). `Q%` gets the direction right with the margin in
+doubt on individual fills.
+
+#### ⚠ 16.17.2 HOW STRONG THE EYE LABEL ACTUALLY IS — stated down, not up
+
+Edwin ranked the two oils by eye — *"Lugitsch is yellowischer/brwoner than the BillaJaNtürlich oil"* — from
+two matched dilutions in the eprouvette, **before any number was computed or shown**.
+
+⛔ **That is weaker than a true pre-registration and this section must not claim otherwise.** The data
+already existed on disk: what was fixed in advance was **Edwin's knowledge of it**, not the data's existence.
+A label given before *seeing* a number, on data already collected, cannot exclude the possibility that the
+corpus was assembled to suit it — only a label fixed before the runs *exist* can do that.
+⭐ It is still worth having: it is the first green-vs-green ordering in this archive that was not read off the
+metric under test, and §7 / M9's concern is exactly that circularity. ⇒ **recorded as an eye label with its
+provenance and its limits, not as a discharged pre-registration.**
+
+#### 📌⭐⭐ 16.17.3 WHAT REPLACES IT — six fills of JA NATUERLICH, and nothing of Lugitsch
+
+The comparison's precision is set by the oil with **fewer** fills, and Lugitsch's six are already banked:
+
+| Ja Natuerlich fills | standard error | t |
+|---|---|---|
+| 2 (today) | 2.79 | 5.5 |
+| 4 | 2.21 | 7.0 |
+| **6** | **1.97** | **7.8** |
+
+⇒ **six fills of Ja Natuerlich alone reaches exactly what a 6 + 6 session would, for half the work.** Adding
+Lugitsch buys nothing.
+
+| | |
+|---|---|
+| oil | **Ja Natuerlich**, one bottle, one evening |
+| fills | **SIX**, prepared independently, current recipe (1 cap into 6 ml), same-jar reference |
+| reads | two per fill, so read noise and fill noise stay separable |
+| ⛔ forbidden | changing volume, bottle, exposure, holder or reference method mid-evening |
+| aliquots | **dark** until measured (§39: light on the waiting aliquot is a real term) |
+
+⭐ **It answers two questions with one evening**, which is why it is the right replacement:
+
+1. **σ_fill for Ja Natuerlich.** Its 0.15 today rests on **1 df** and cannot be banked — the 95 % CI on a
+   two-fill σ spans a factor of ~12. Six fills bring that to 3.9. ⛔ If it holds near 0.15 it is the best
+   number in the project and every alarm level in `SPEC_history_tracker.md` moves; if it returns near the
+   pooled 3.91, the pooled figure stands and nothing downstream changes.
+2. **The green-vs-green gap**, to t = 7.8.
+
+⛔ **NO CUT IS REGISTERED FOR σ_fill**, deliberately: §16.16's registered cut exists because that run was
+testing a binary claim. This one is an *estimate*, and inventing a threshold for it after the fact is what
+§16.3a warns against. The reported outcome is σ̂ with its interval, whatever it is.
+
+#### ⛔ 16.17.4 What this does NOT settle
+
+- **Not a threshold.** `T` = 52 is untouched; both oils are green and neither is near it.
+- **Not M9.** M9 is a pre-registered run over the *corpus*. This discharges the green-vs-green ordering only.
+- **Not other oils.** The 2026-08-27 ranking (Lugitsch > Esterer > Stekko) is untouched — Ja Natuerlich was
+  never in it. ⚠ But it does mean **Lugitsch is no longer the greenest oil in the archive**: it is the
+  most-measured one, and the dotted reference line on every by-day row has to be read that way.
+- ⛔ **Not the DN question.** `SPEC_capture_quality.md` §16.40 stands: these fill-to-fill differences are
+  1–3 camera counts, and the decode round-trip they rest on is still unverified.
+
