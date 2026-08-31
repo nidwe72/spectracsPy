@@ -4654,8 +4654,20 @@ apply to an `RvLin` suite, and this note is what stops that being forgotten.
 #### ⭐ 16.15.8 THE INSPECTION COLOUR — scheme `K` chosen  *(Edwin, 2026-08-31: "think that K is the winner")*
 
 ⛔ **NOT a verdict and not a metric** — a rough visual aid, Edwin's framing throughout.
-`diagnostics/rv_colour_candidates.py` → `20260831_rv_colour_candidates.pdf`, eight schemes scored as
-ΔE between the oils ÷ worst ΔE between two fills of one oil.
+`diagnostics/rv_colour_candidates.py` → `20260831_rv_colour_candidates.pdf`, **nine** schemes scored as
+ΔE between the oils ÷ worst ΔE between two fills of one oil:
+
+| scheme | ratio | |
+|---|---|---|
+| `A` the real measured absorbance, path 3 | **1.6×** | ⛔ **what ships today** |
+| `B` only `Rv`'s windows vary | 1.8× | Edwin's first form |
+| `C` two bands = `Rv`'s two terms | 2.6× | |
+| `D` the 624 band alone | 4.2× | |
+| `E` a Planck radiator in place of the flat baseline | 4.1–4.2× | ⛔ **at EVERY temperature, 1800–10000 K** |
+| `F` `D` with L\* pinned | 4.2× | |
+| **`K` `D` on the MEASURED blue's shape, small peak, flat L\*** | **3.3×** | ⭐ **CHOSEN** |
+| `L` `C` on the measured blue | 2.1× | ⛔ inverts the order — see below |
+| `G` the RATIO as the band depth, flat L\* | 10.2× | a picture of the number, not the band |
 
 **`K` = the 624 band alone, on the MEASURED blue's own shape scaled to a fixed small peak (A 0.10 at
 448–460, clamped at A 1.2), lightness pinned.** Ratio **3.3×**, and it keeps a real blue channel (38–58)
@@ -4671,6 +4683,21 @@ fill-to-fill variation of the blue.
 
 ⛔ A Planck radiator in place of the flat baseline was tested (Edwin's idea) and **swept 1800–10000 K the
 score never leaves 4.1–4.2×**: the illuminant is a display choice, not an information channel.
+
+⛔⛔ **`L` — `C` + the measured blue — WAS TESTED AND IS DISQUALIFIED** *(Edwin, 2026-09-01: "what about
+'C and measured blue'?")*. It has the **largest** between-oil ΔE of any scheme (16.00, beating even the real
+spectrum) and still scores worst-but-one at **2.1×**, for two reasons that stack: adding the Q band back
+**partially cancels** the 624 band in colour space — the same reason `C` (2.6×) loses to `D` (4.2×), because
+between the oils the two bands move in OPPOSITE directions, which is what makes their *ratio* powerful and
+their *sum* weak — and the measured blue brings fill noise on top of a second varying band (within-oil ΔE
+7.70). ⇒ **a colour ADDS where `Rv` DIVIDES.**
+⛔ **And it inverts the order visibly**: Lugitsch (`Rv` 108.8) renders `0,197,107`, a more saturated green
+than Ja Natuerlich (`Rv` 123.6) at `43,195,103`. The higher-`Rv` oil looks *less* green — which for an
+inspection aid is disqualifying, and is the phone-picture failure mode in a prettier form.
+
+⭐ **THE PATTERN ACROSS ALL NINE, and it is the reusable finding:** every step that removes **DOSE** buys
+discrimination (A → D → G: 1.6 → 4.2 → 10.2×), every step that adds a **second varying band** costs it
+(D → C, K → L), and changing the **ILLUMINANT** buys nothing at all.
 
 ⚠ **`K`'s blue is measured but carries about a twentieth of the weight it appears to**, and its amplitude is
 a display constant. Edwin's answer to that: *"the plugin has descriptions of metric values so things can be
