@@ -3,6 +3,13 @@
 **Status: DESIGN. Nothing here is implemented.** Every number below is measured on archived reports
 and reproducible with the scripts in §10; nothing is projected.
 
+> ⛔⛔ **READ THE 2026-09-01 POSITION FIRST — it changes this document's standing.** Edwin set the tiers:
+> a fully-provenanced **single measurement is the product**; a filterable **graph** is high priority and not
+> essential (*"the user could also put things in an Excel table"*); and **the tracker is optional on top of
+> the graph and must never be part of a single oil's measurement.** ⇒ nothing in this file may become a
+> precondition for shipping a measurement. It also sizes the epoch (the **seed lot**, 28–280 pressings),
+> rules out the rolling reference, and shows why an alarm has to run on a mean rather than single readings.
+
 > ⭐⭐ **SUPERSEDED IN PART, 2026-08-14 — the tracker's statistic is now `V`, not the shape distance
 > `D`.** `SPEC_metric_research.md` **§10** defines it: `V = (A_valley − A_Q)/A_Soret` on raw
 > absorbance, no baseline. It beats `D` on every property this document cares about — refill
@@ -1022,3 +1029,246 @@ question, and it was invisible until the exposure could be recovered per run.
 | ⛔ **the spike test (§9.2) has never run** | without it, "2.74 units" has no sentence attached. It is what turns the number into *"detects a change of X % against your own reference"* — the claim a lab and a miller actually buy |
 | ⛔ **one oil only** | per-oil thresholds (§8.3, and "THRESHOLD: PER-OIL, NOT SHARED" above) need ≥3 fills each, and only Lugitsch has them |
 | ⚠ **σ_read is not the limit** | within-fill repeatability is **0.56** on `RvLin`. The measurement is fine; the *fill* is the term, exactly as §9.1 assumed |
+
+---
+
+## ⭐⭐⭐ THE 2026-08-31 POSITION — the first σ_fill for `Rv` under ONE controlled protocol, and what an alarm level actually buys
+
+`SPEC_metric_research.md` §16.15.7 (the `20280831_suite`) · `SPEC_capture_quality.md` §16.40 (the DN budget)
+
+⭐ **EVERY NUMBER BELOW IS COMPUTED BY `diagnostics/tracker_rv_fidelity.py`**, on this spec's own rule that a
+figure is computed and never typed — a σ moves the moment another fill is measured, and a typed one goes
+stale in silence. Re-run it after any session and this section can be checked line by line.
+
+Everything below is measured on the **suite** — every fill confirmed same-jar AND 6-min cold-box, so the
+method and the recipe are held constant and what is left is the fill and the instrument. That is the first
+corpus in this archive on which a tracker question can be asked without a protocol term in the answer.
+
+### ⭐ 1 · The measurement is not the problem, and the SESSION term is not there either
+
+| oil | fills | `Rv` | σ_fill | 624 band | 1 fill detects | 3 fills detect |
+|---|---|---|---|---|---|---|
+| Ja Natuerlich | 2 | 122.9 | **0.15** | 13 DN | 0.4 (0.3 %) | 0.2 (0.2 %) |
+| Lugitsch | 6 | 107.5 | 3.74 | 16 DN | 10.4 (9.6 %) | 6.0 (5.6 %) |
+| Steirerkraft | 2 | 83.5 | 1.42 | 10 DN | 3.9 (4.7 %) | 2.3 (2.7 %) |
+| Spar S-Budget | 4 | 27.9 | **4.17** | **5 DN** | 11.6 (**41 %**) | 6.7 (24 %) |
+
+⭐⭐ **THE BETWEEN-SESSION STEP THIS SPEC HAS FEARED THROUGHOUT IS NOT IN THE SUITE.** Lugitsch's six fills
+split into two sittings **16 h apart**, and the step between them is **+0.83 — 0.2× the within-sitting
+scatter.** And `Ja Natuerlich` reads **123.26 / 122.75 / 122.96 across 19 days, two solvent eras and the
+exposure pin**: a spread of **0.52**.
+⛔ The 25.9-unit Lugitsch spread quoted elsewhere in this file is real but lives OUTSIDE the suite — it comes
+from the 08-24 and 08-26 sessions, which used different methods and recipes. ⇒ **hold the method and the
+recipe and `Rv` stops wandering**, which is exactly the condition a tracker runs under.
+
+### ⚠ 2 · The honest σ, and what "confidence interval" is doing here
+
+Only Lugitsch (5 df) and Spar S-Budget (3 df) carry real weight. Pooled: **σ_fill = 3.91 Rv on 8 df**, and
+its 95 % confidence interval is **[2.64, 7.49]** (χ² on 8 df) — i.e. *"somewhere between 2.6 and 7.5, most
+likely near 3.9"*. ⛔ Estimating a SPREAD needs far more data than estimating an average; two fills give 1 df and a CI
+spanning a factor of ~30, which is why `Ja Natuerlich`'s 0.15 cannot be banked (§16.16.4 makes the same point).
+
+⇒ **the wobble on one check against an established baseline is ±4.51 Rv** (`σ√(1+1/3)`, baseline = 3 fills).
+Everything in §3 follows from that single number.
+
+### ⭐⭐⭐ 3 · THE DIAL — one choice sets BOTH error rates, and they move together
+
+⛔⛔ **THIS IS THE TABLE THAT WAS MISSING, and its absence caused a real misreading** (Edwin, 2026-08-31:
+*"isn't that a contradiction?"*). A detection rate and a false-alarm rate quoted for two DIFFERENT alarm
+levels, in adjacent sentences, read as a contradiction and are not one. They belong in one table:
+
+| alarm at | cries wolf (oil unchanged) | catches a **real** change of 10 / 20 / 30 Rv |
+|---|---|---|
+| 8 Rv | 1 in 13 | 67 % · 100 % · 100 % |
+| 10 Rv | 1 in 38 | 50 % · 99 % · 100 % |
+| **12 Rv** | **1 in 128** | 33 % · **96 %** · 100 % |
+| 15 Rv | 1 in 1,135 | 13 % · 87 % · 100 % |
+| **20 Rv** | **1 in 108,000** | 1 % · **50 %** · 99 % |
+| 25 Rv | 1 in 34 million | 0 % · 13 % · 87 % |
+
+**Read it across:** lowering the alarm raises BOTH columns — more real changes caught *and* more false
+alarms. That is the only trade there is.
+**Read it down:** at any setting, a change **equal to that setting** is caught about **half** the time,
+because the reading lands on the line and the wobble tips it either way. That is arithmetic, not a defect.
+⇒ **an alarm level must be roughly two-thirds of the smallest change you want reliably caught.**
+
+⚠ **The tracker compares ONE oil to its OWN earlier baseline.** Two different oils 20 apart are just two
+different oils; the question is only ever "has *this* oil moved since last time?"
+
+### 4 · What it looks like in service — 24 monthly checks, 4000 simulated histories
+
+One oil that does not change, one falling 2 Rv a month:
+
+| alarm at | false alarms in 24 months | the drifting oil first trips in | its REAL drift by then |
+|---|---|---|---|
+| 10 Rv | 0.6 | month 4 | 8 Rv |
+| **12 Rv** | **0.19** | **month 5** | **10 Rv** |
+| 15 Rv | 0.02 | month 7 | 14 Rv |
+| 20 Rv | ~0 | month 9 | 18 Rv |
+
+### ⭐⭐ 5 · THE RECOMMENDATION — `±12`, not `±20`, and the condition is σ_fill
+
+`±20` is **safe but slow**: it never cries wolf and it lets an oil fall **18 Rv — a fifth of the way from
+green to brown** — before it speaks. It is a smoke detector, not a thermometer. ⚠ For scale, the whole
+corridor is **95 Rv** (Ja Natuerlich 122.9 → Spar S-Budget 27.9), and the Lugitsch walk of
+119.8 → 114.3 → 99.3 is **20.5 Rv** — sitting exactly on `±20`'s 50 % line.
+
+⇒ **`±12` is the better setting**: about one false alarm per ten years of monthly checks, and it catches the
+drifting oil at 10 Rv instead of 18.
+
+⛔ **THE ONE REASON TO START AT `±20` ANYWAY.** At the pessimistic end of the CI (σ = 7.49) the wobble is
+±8.6 rather than ±4.5, and `±12` would cry wolf about **1 in 6** checks — unusable, while `±20` still
+false-alarms only about 1 in 25. `±20` is safe across the WHOLE interval; `±12` is safe only if σ is near its
+estimate. ⇒ **ship `±20`, then earn `±12`** by measuring σ_fill properly: six fills of one oil in one
+evening shrinks the interval to about ±40 %, and if σ lands near 2.6 the alarm can go to `±8` and see an oil
+turning at 6 Rv — a fifteenth of the corridor.
+
+### ⛔ 6 · Two limits that are NOT properties of the metric
+
+**Brown oils need their own threshold** *(Edwin, 2026-08-31: "think that the tracker is primarily made for
+green oils in practice ... concerning the brown oils maybe another threshold should be used")* — and the
+reason is physical, not statistical: σ_fill tracks the **624 band's height in counts**, and a brown oil's
+band is **5 DN** against a green's 13–16 (§16.40.3). A brown cannot support a green's sensitivity, and
+demanding it would produce only false alarms. ⇒ the tracker is a green-oil instrument; the brown end gets a
+wider band, and `SPEC_capture_quality.md` §16.40.6 is the only route to improving it.
+
+⛔⛔ **AND ABOUT 5 Rv OF THE ±4.5 WOBBLE MAY BE THE LAMP.** The reference's own red/Q ratio,
+`R(622–627)/R(565–580)`, has sd **1.17 %** within the suite's sessions and a spread of **4.12 %** across
+three — which propagates to **≈5.0 Rv** and **≈17.4 Rv** on an IDENTICAL sample
+(`SPEC_settled_measurement.md` §53.5). Against a measured σ_fill of 3.74, **the instrument's red tilt is the
+same size as everything this file has been calling fill scatter.**
+⭐ The data is not missing, the LOGGING is: the reference leg rides in every workflow, so a tracker can
+compute this channel retrospectively today. `monitorRecord` cannot, so the live gate stays blind.
+⇒ **until that column exists and there is a physical standard to check the instrument against, an alarm
+cannot say whether it caught the oil or the lamp.** That is this spec's first-order blocker, and none of
+the numbers above retire it.
+
+---
+
+## ⭐⭐⭐ THE 2026-09-01 POSITION — the tracker is a LENS, not a feature of a measurement  *(Edwin)*
+
+### ⛔⛔ 1 · THE ARCHITECTURAL BOUNDARY, and it is Edwin's
+
+> *"We provide more or less correct measurements and these are the base for a potential history-tracker
+> applied."* — and, on priority: *"there are a lot of devices out there that are pure measurement devices.
+> So only things like exposure, lab recipe etc., that are bound to the device and the measurement itself
+> are essential!"*
+
+⇒ three tiers, and this file lives in the third:
+
+| tier | what | status |
+|---|---|---|
+| ⭐⭐⭐ **ESSENTIAL** | a correct, fully-provenanced **single measurement** — exposure, recipe, solvent, reference method, clock, calibration | the product |
+| ⭐ **high priority, not essential** | a filterable **graph** of Rv over time, with the miller selecting the range and doing the interpreting | *"the user could also put things in an Excel table"* |
+| ⏸ **optional, on top of the graph** | the **tracker** — a baseline, a deviation, an alarm | ⛔ **may be applied, must not be required** |
+
+⛔⛔ **THE TRACKER MUST NOT BE PART OF A SINGLE OIL'S MEASUREMENT** (Edwin, explicit). Six reasons it is
+the right boundary:
+
+1. **It ships only what is earned.** One `Rv` reading is defensible today; a tracker threshold is not — σ_fill
+   carries a 3× confidence interval and ~5 Rv of the wobble may be the lamp's red tilt.
+2. **A measurement must stand alone.** If a verdict depended on history the same fill would read differently
+   on two devices, and the report would stop being a record of one fill — which is what makes it usable in a
+   LIMS, in a dispute, or years later.
+3. **It keeps M9's discipline**: no threshold fitted on the user's own data enters the measurement.
+4. **It preserves what the business case rests on.** `SPEC_wirtschaftliches.md` §7: the value is the
+   *agreement of two INDEPENDENT judgements*, the miller's and the device's. A device that pre-interprets
+   the history is no longer independent of it.
+5. **It defers every blocker** — the physical standard, the red reference channel, per-oil thresholds. None
+   of them gate a graph, and none of them gate a measurement.
+6. **It matches the batch structure** (§2): pressings months apart, different seed lots, irregular cadence.
+   An automatic alarm would constantly compare things that must not be compared; a human choosing a time
+   range does that correctly without being told.
+
+### ⭐⭐ 2 · THE EPOCH IS THE SEED LOT — with a size on it at last
+
+§11 named the unit a *product-line epoch* and could not size it. `SPEC_wirtschaftliches.md` §3 can:
+
+| | |
+|---|---|
+| 1 L oil | **2.5 kg seed** (≈30–35 oil pumpkins) |
+| one pressing | **~10 L = ~25 kg seed** |
+| a small mill's day | 8 pressings = **80 L** |
+| ⚠ derived, order-of-magnitude | 2.73 M L ÷ 9,901 ha ⇒ ~276 L/ha ⇒ **~690 kg seed/ha**. ⛔ This divides national bottled volume by national area, so it silently includes imported seed and excludes exported — check it against an agronomic source before quoting it |
+
+⇒ **a grower's lot of 1–10 ha becomes 28 to ~280 pressings, spread over months** — up to ~3,000 L, about
+6,000 × 500 ml or 12,000 × 250 ml bottles.
+
+⭐⭐ **Comparison WITHIN a seed lot is the comparison the miller wants** (Edwin), and lot-against-lot is the
+second. Not the day, not the bottle. ⇒ Edwin's own scenario — *"some presses of seed A, and two months later
+other presses of the same seed A"* — is **one epoch with a two-month gap**, and the tracker's whole job is to
+say whether the second block reads like the first.
+
+⭐⭐ **AND THE UNIT IS A DOMAIN OBJECT, NOT FREE TEXT** *(decided 2026-09-01)*. A lot is the thing a
+measurement is compared *within*, and it has to keep its identity across a two-month gap between pressings —
+free text cannot do that, and a graph cannot filter on it. ⛔ **Named for the CONCEPT, not the crop**, because
+Edwin's point is that *"even other oils have the same concepts/usages"*: `RawMaterialLot` (the comparison
+unit) → `ProductionBatch` (one pressing) → `ProductLine` (what the miller sells), with the pumpkin seed lot
+as one instantiation of the first. A measurement references the **batch** and reaches the lot and the line
+through it. ⚠ Entity shape and home (app DB vs server) are still design; `ROADMAP.md` §0c item 2 carries it.
+
+⭐ **6–8 baseline measurements is the right number, and it is one morning's work** (one pressing each). It is
+also where the σ estimate stops being cheap:
+
+| baseline fills | 95 % CI on σ |
+|---|---|
+| 3 | factor **12** |
+| **6** | factor **3.9** |
+| **8** | factor **3.1** |
+| 12 | factor 2.4 |
+
+### ⛔⛔ 3 · THE ROLLING REFERENCE IS A TRAP — quantified, so nobody builds the obvious thing
+
+A reference that continuously absorbs new measurements **follows the oil**, and the deviation it reports
+**plateaus and never grows**. With reference = mean of the last `N` and a drift of `d` per check, the
+steady-state deviation is `d·(N+1)/2` — a constant, whatever happens afterwards:
+
+| reference depth | drift | deviation actually seen | does ±20 ever fire? |
+|---|---|---|---|
+| last 50 | 0.2 Rv/check | **2.6 Rv, forever** | **no, never** |
+| last 50 | 0.4 Rv/check | 10.2 Rv, forever | no |
+| last 100 | 0.1 Rv/check | 5.1 Rv, forever | no |
+
+At 0.4 Rv/check the oil has fallen **24 Rv after a month, 72 after three, 144 after six** — and a 50-deep
+rolling reference still calmly reports 10.2. ⇒ **the slower the drift, the more completely it is hidden**,
+which is the exact failure a drift tracker exists to prevent. ⛔ Ruled out.
+
+⇒ **the reference is a FROZEN SET, established by an explicit act**: the master selects the runs, the system
+stores mean, σ and *which runs*, with who and when. It never updates itself. Re-baselining is explicit and
+logged, so the history becomes a series of epochs rather than one drifting line. ⚠ Hand entry is allowed for
+bootstrapping a new line or importing a lab value, but a typed number carries no σ — the tracker must fall
+back on a pooled σ and **say so on screen**.
+
+### ⭐⭐ 4 · AN ALARM MUST RUN ON A MEAN, NOT ON SINGLE READINGS
+
+⛔ **A single-excursion rule fires on ANY persistent shift, given enough checks** — which silently breaks a
+threshold chosen as policy. Edwin's `±20` is a deliberate statement (*"I do not want Lugitsch to trigger the
+alarm, as Lugitsch is not so brown as Steirerkraft seen relative from BillaJaNatuerlich"*), and a Lugitsch-
+level shift crosses ±20 on **12 %** of single readings — so at 2 readings a day it is **99 % certain to have
+fired within ~18 days**. The policy leaks.
+
+| readings averaged | noise | chance of crossing ±20 on a true 15.4 shift |
+|---|---|---|
+| 1 | 3.95 | 12.2 % |
+| 2 | 2.82 | 5.1 % |
+| 5 | 1.83 | 0.61 % |
+| **10** | **1.35** | **0.034 %** |
+
+⇒ averaged over ~10 readings the mean converges on 15.4 and **stops short of 20 permanently**, while
+Steirerkraft's 39.4 still fires on the first reading. **`k` is the knob that makes a policy threshold
+actually hold**, and it must be stated wherever a threshold is.
+
+### ⚠ 5 · IF THE GRAPH IS THE PRODUCT, THE X-AXIS MUST BE TRUSTWORTHY
+
+A graph *invites* comparison across time, so every field that makes two points comparable has to be right
+**and visible on the plot**.
+
+⇒ **draw the provenance breaks as vertical marks** — lamp change, recipe change, solvent change,
+calibration change, rebuild. ⛔ Without them a miller reads an instrument step as an oil change, and that is
+not hypothetical: **Lugitsch "drifted" 25.9 Rv across the archive, and inside the `20280831_suite` — method
+and recipe held constant — the same oil moves 0.83 over 16 hours.** The whole drift was a protocol change
+wearing an oil's clothes.
+
+⇒ and it promotes the missing field: **the reference method (same-jar vs two-jar) is recorded nowhere** and
+had to be supplied by hand three times on 2026-08-31 to interpret one evening. `ROADMAP.md` §0c carries it
+as high priority, in the ESSENTIAL tier — because it is bound to the measurement, not to the graph.

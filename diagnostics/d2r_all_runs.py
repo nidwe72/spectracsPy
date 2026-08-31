@@ -61,6 +61,69 @@ SERIESOIL = {"20260812BillJaNatuerlich": "Ja Natuerlich",
 # (SPEC_metric_research §7 / M9). The label now comes from the eye, which is what makes them scorable.
 # ⭐ THE INTERESTING TEST IS NO LONGER GREEN-VS-BROWN — all three pass that easily. It is whether the
 # metric REPRODUCES THE EYE'S ORDER WITHIN green: Lugitsch greenest, then Esterer and Stekko.
+# ⛔⛔ DISCOVERED, NOT LISTED — and this file already knows why. `walkReports`' docstring and the 08-26
+# run policy both say a corpus that is typed out goes stale the moment the bench produces one more folder.
+# The 08-31 session arrived ONE FOLDER AT A TIME (A, then B, then C, then D within two hours), and each
+# needed the same session named in FOUR hand-maintained places — `TODAY`, `EXCLUDED`, `OTHER_INSTRUMENT`,
+# `PINNED_EXPOSURE`. ⛔ Twice that went wrong in a way a reader would not have caught: the key
+# `"…SparSBudgetB": ("Spar S-Budget", "brown")}` exists in two dicts, so one edit silently put the first
+# pair on the SAME-JAR row — a row it does not belong to and whose stated statistics it then changed.
+# ⇒ the session is one oil, one evening, one instrument state: the folder set is a QUERY, not a list.
+# ⚠ THE PREFIX IS THE SESSION, NOT THE OIL. It read `20260831SparSBudget` for the first four folders and
+# would have dropped `20260831BillaJaNatuerlichA` — the session's first GREEN oil, and the one run that can
+# answer what the four brown fills could not — in exactly the silence this query was written to end.
+PINNED_PREFIX = "20260831"
+# ⭐ THE CLASS COMES FROM THE ARCHIVE'S OWN PRIOR LABEL, never from a number measured on this evening.
+# `Ja Natuerlich` is in `peak_ratio_archive.GREEN` (as `20260812BillJaNatuerlich`) and Spar S-Budget has
+# been brown since 08-24. ⛔ That is the §7 / M9 rule: reading a label off the metric under test is the
+# circularity `PROVISIONAL_ATTRIBUTION` exists to stop, arriving from a new direction.
+# ⚠ The NAME must match `SERIESOIL`'s so the same oil lines up across sessions — the 08-12 folder spells
+# it `BillJaNatuerlich` and this one `BillaJaNatuerlich`, and only the oil name joins them.
+PINNED_OILS = {"SparSBudget": ("Spar S-Budget", "brown"),
+               "BillaJaNatuerlich": ("Ja Natuerlich", "green")}
+# ⭐ SAME-JAR, 6-MIN STAND — CONFIRMED AT THE BENCH (Edwin, 2026-08-31: "todays measurements were
+# same-jar-6mins-stand"). ⛔ THE HOLD-OUT REASON IS NOW HALF WHAT IT WAS: the method is recorded, and what
+# is left is the INSTRUMENT — the exposure pin and a reference blank unlike any other in the archive
+# (R(440)/R(600) = 1.277 against 1.056-1.122, `SPEC_capture_quality.md` §16.40). That is still a real reason
+# to keep these runs off the shared corridors, and it is a different reason from the one first written here.
+PINNED_WHY = "exposure-pinned capture, reference blank unlike the archive's (method: same-jar, confirmed)"
+
+
+def pinnedOilOf(session):
+    """`(oil, class)` for a folder of the pinned session, or None if the oil is not registered."""
+    stem = session[len(PINNED_PREFIX):]
+    for key in sorted(PINNED_OILS, key=len, reverse=True):     # longest first: no prefix can shadow another
+        if stem.startswith(key):
+            return PINNED_OILS[key]
+    return None
+
+
+def pinnedFolders():
+    """Every `20260831*` folder on disk, registered or not."""
+    return sorted(name for name in os.listdir(archive.ARCHIVE)
+                  if name.startswith(PINNED_PREFIX)
+                  and os.path.isdir(os.path.join(archive.ARCHIVE, name)))
+
+
+def pinnedSessions():
+    """The folders whose OIL is registered. ⚠ Sorted, so A/B/C/D keep their order."""
+    return [name for name in pinnedFolders() if pinnedOilOf(name) is not None]
+
+
+def pinnedUnregistered():
+    """⛔ Folders of this session with no entry in `PINNED_OILS`. They are ANNOUNCED, never guessed at: a
+    folder whose oil nobody has stated cannot be labelled from its spectrum without deciding the very
+    thing the figure is for. Printed by `collect`."""
+    return [name for name in pinnedFolders() if pinnedOilOf(name) is None]
+
+
+def pinnedRuns():
+    """Every report in the registered folders, as archive-relative paths."""
+    return ["%s/%s" % (session, name) for session in pinnedSessions()
+            for name in sorted(f for f in os.listdir(os.path.join(archive.ARCHIVE, session))
+                               if f.endswith(".pdf"))]
+
+
 TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spar Premium", "brown"),
          "20260824SparSBudget": ("Spar S-Budget", "brown"),
          "20260826Esterer": ("Esterer", "green"),
@@ -165,7 +228,14 @@ TODAY = {"20260824Lugitsch": ("Lugitsch", "green"), "20260824SparPremium": ("Spa
          # that evening. ⛔ Unlike the LugitschA case -- where a same-jar guess from an 18 h clock gap
          # ACROSS a method boundary was wrong -- this one is a continuation of a confirmed series. If it
          # is not same-jar it moves back into the two-jar corpus, which is the reverse of this edit.
-         "20260828SteirerkraftB": ("Steirerkraft", "green")}
+         "20260828SteirerkraftB": ("Steirerkraft", "green"),
+         }
+# ⭐⭐⭐ THE EXPOSURE-PINNED SESSION (2026-08-31), added by query. Announce-only: every run is also in
+# EXCLUDED and it scores nothing — see OTHER_INSTRUMENT for the measured reason. ⛔ It is in `TODAY` at all
+# so that it passes through `take` and is ANNOUNCED. Left out it would be dropped in SILENCE, because the
+# sunflower corpus is built from this dict and nothing else: an unregistered sunflower session simply does
+# not exist to this figure, which is the failure mode a folder arriving on a Sunday evening produces.
+TODAY.update({session: pinnedOilOf(session) for session in pinnedSessions()})
 
 # ⚠⚠ FILLS NOT MADE BY THE RECIPE THE REPORT HEADER CLAIMS. The plugin writes a hardcoded
 # `prepProtocol` string into every report, so a recipe change is INVISIBLE in the record until the
@@ -312,6 +382,11 @@ EXCLUDED = {"20260826Lugitsch/004.pdf": "reads strange on the day — set aside 
             "20260828SteirerkraftA/002.pdf": "same-jar reference — not on the archive's footing",
             "20260828SteirerkraftB/001.pdf": "same-jar reference — not on the archive's footing",
             "20260828SteirerkraftB/002.pdf": "same-jar reference — not on the archive's footing"}
+# ⛔ THE EXPOSURE-PINNED RUNS, by query — see `pinnedSessions`. They are EXCLUDED (no corridor, no cut, no
+# σ_fill) and still DRAWN, on `PINNED_ROW`; the two are different decisions and this file's policy is that
+# a set-aside run stays visible. ⚠ A folder gaining a third read reaches this automatically.
+EXCLUDED.update({relative: "exposure-pinned capture — a different instrument state (the method is "
+                           "same-jar, confirmed 2026-08-31)" for relative in pinnedRuns()})
 # ⛔ EXCLUDED FOR A REASON THAT IS NOT ABOUT THE FILL. These sessions are in `EXCLUDED` because they
 # are a DIFFERENT SOLVENT, so they are not candidate members of any sunflower σ_fill and must never be
 # priced as one (see `excludedCost`). They are still announced on every run like any other exclusion.
@@ -354,6 +429,39 @@ OTHER_REFERENCE = {"20260828EstererD": "same-jar reference",
                    "20260828LugitschF": "same-jar reference",
                    "20260828SteirerkraftA": "same-jar reference",
                    "20260828SteirerkraftB": "same-jar reference"}
+
+# ⛔⛔ A DIFFERENT INSTRUMENT STATE — not a different fill, not a different solvent, not a different
+# reference method. `20260831SparSBudgetA` is the first session captured with the EXPOSURE PINNED
+# (`header.exposureApplied` = 90, the field's first appearance in the archive). Until it, every reference
+# leg was preceded by an auto-exposure sweep that chose the instrument state per capture — the 90/104 coin
+# flip of `SPEC_capture_quality.md` §16.39.
+# ⭐⭐ AND IT IS MEASURABLE, which is what makes this an exclusion rather than a worry. Normalised at
+# 600 nm over 440-630 nm, its reference blank is unlike EVERY other blank in the archive:
+#     R(440)/R(600) = 1.277   against   1.056 (08-24, both oils) .. 1.122 (08-28 LugitschA)
+# and its RMS distance to each of the 08-24 and 08-28 reference shapes is 0.069-0.076, larger than the
+# largest distance among those shapes themselves (0.059). The blank the absorbances are divided by is not
+# the archive's blank.
+# ⚠ AND ITS REFERENCE METHOD IS UNRECORDED. Its `prepProtocol` is byte-identical to the CONFIRMED same-jar
+# block of 08-30 (`20260828LugitschC`-`F`), which is suggestive and is NOT evidence: the recipe string
+# describes the DILUTION, not the jar. ⛔ The reference FINGERPRINT cannot settle it either — that was
+# tested, not assumed: the two same-jar 08-28 blanks differ from each other by RMS 0.051 while a same-jar
+# blank and a two-jar blank differ by 0.009, so the fingerprint separates SESSIONS, not METHODS. It could
+# identify MCT (a water-clear solvent against a yellow one) and it cannot identify a jar.
+# ⇒ held out under the safer of the two readings. Scoring it into the two-jar corpus on a guess would put
+# an unknown method AND a changed instrument inside the corridors and cuts every other page reports;
+# holding it out costs those pages nothing and leaves it visible, named and announced. ⛔ Edwin's to
+# promote: the method and whether the two runs are two FILLS or two READS are bench facts, and nothing in
+# the report records either.
+OTHER_INSTRUMENT = {session: PINNED_WHY for session in pinnedSessions()}
+
+# ⭐⭐ AND THEY ARE DRAWN, in a row of their own — `PINNED_ROW`. ⛔ THE FIRST VERSION OF THIS EDIT ONLY
+# EXCLUDED THEM, and Edwin's answer was that he could not see the new oils on the figure. He was right:
+# "held out of every statistic" and "absent from the page" are different decisions, and this file's own
+# policy is the first one. The same-jar fills have been drawn on their own row since 08-30 for exactly
+# this reason; a session with a changed instrument earns the same treatment and not a stronger one.
+# ⛔ ITS OWN ROW, not a share of 08-31 with anything else: the row's premise is that the rig is common
+# to everything on it, which is true within this session and false across the pinned/unpinned boundary.
+PINNED_EXPOSURE = {session: pinnedOilOf(session) for session in pinnedSessions()}
 
 SOLVENTMARK = {"isopropanol": "o", "sunflower": "s", "spirit": "^"}
 
@@ -475,9 +583,18 @@ def collect():
                  "  [priced separately: %s, not a sunflower fill]" % OTHER_SOLVENT[session]
                  if session in OTHER_SOLVENT else
                  "  [priced separately: %s, not the archive's method]" % OTHER_REFERENCE[session]
-                 if session in OTHER_REFERENCE else ""))
+                 if session in OTHER_REFERENCE else
+                 "  [priced separately: %s, not the archive's instrument]" % OTHER_INSTRUMENT[session]
+                 if session in OTHER_INSTRUMENT else ""))
     for relative in sorted(set(EXCLUDED) - set(excluded)):
         print("  [!] EXCLUDED entry never matched a file: %s" % relative)
+    # ⛔⛔ A FOLDER OF THE PINNED SESSION WHOSE OIL IS NOT REGISTERED. It reaches NOTHING -- not `TODAY`,
+    # not the row, not a statistic -- so without this line it would be absent in silence, which is the
+    # failure this whole query was written to end. ⇒ add it to `PINNED_OILS` with a label that comes from
+    # the bench or the archive, never from its own spectrum.
+    for session in pinnedUnregistered():
+        print("  [!!] PINNED-SESSION FOLDER WITH NO OIL REGISTERED: %s -- add it to PINNED_OILS "
+              "(oil name + class); it is on the page NOWHERE until you do" % session)
     if lateRuns:
         print("  [!] NOT USED (%s policy: first %d DISTINCT reads per fill):"
               % ("/".join(LATE_RUN_SESSIONS), KEPT_RUN_COUNT))
@@ -719,9 +836,25 @@ def setAsideNote():
     # enough to be clipped at the figure edge.
     for session, solvent in sorted(OTHER_SOLVENT.items()):
         line += "\n     %s is %s, a DIFFERENT SOLVENT \u2014 not a \u03c3_fill term." % (session, solvent)
+    # ⛔ COUNTED, NOT RE-LISTED. This line used to name all thirteen same-jar sessions on ONE unwrapped
+    # line -- roughly 290 characters, so it ran clean off the right edge and was never read. Every one of
+    # those names is already in the wrapped list directly above; repeating them bought nothing and cost
+    # the four lines that pushed the COST line off the bottom of the page.
     if OTHER_REFERENCE:
-        line += ("\n     %s use a SAME-JAR REFERENCE \u2014 a different measurement, not a \u03c3_fill term."
-                 % ", ".join(sorted(OTHER_REFERENCE)))
+        line += ("\n     %d of them use a SAME-JAR REFERENCE (named above) \u2014 a different "
+                 "measurement, not a \u03c3_fill term." % len(OTHER_REFERENCE))
+    # ⭐ ITS OWN LINE too, for the same reason the solvent gets one: "excluded" and "excluded because the
+    # instrument was in a state no other run shares" are not the same statement, and this one is the only
+    # exclusion on the page that a FUTURE session is expected to undo rather than inherit.
+    # ⛔ COUNTED, NOT ONE BLOCK PER FOLDER — the `OTHER_REFERENCE` lesson, relearned the hard way. Written
+    # as a loop it printed the same sentence once per folder: two lines each, and the session grew from
+    # one folder to SIX in an evening, so twelve lines appeared where two had been and pushed the σ_fill
+    # COST line straight off the bottom of the sheet again. The folders are named in the list above and
+    # the reason is identical for every one of them.
+    if OTHER_INSTRUMENT:
+        line += "\n" + "\n".join("     " + part for part in textwrap.wrap(
+            "%d of them are %s (named above) \u2014 a different INSTRUMENT STATE, not a \u03c3_fill term."
+            % (len(OTHER_INSTRUMENT), sorted(set(OTHER_INSTRUMENT.values()))[0]), width=88))
     for oil, (n1, s1, n2, s2) in sorted(EXCLUSION_COST.items()):
         line += ("\n     COST: %s \u03c3_fill %.1f over the %d fills kept \u2014 %.1f over %d with "
                  "the set-aside fill back in." % (oil, s1, n1, s2, n2))
@@ -748,7 +881,13 @@ DELAYED_FILL = {"20260828LugitschA": ("2026-08-29 23:52",
                 # because `SpectralWorkflowEngine.__buildWorkflow` stamps once when the workflow object
                 # is created and the bench then re-captures inside it. The stamp is the SITTING's start,
                 # so it dates C correctly and puts D ~70 min early — and it cannot order two reads of one
-                # fill either. ⇒ the times below are still the PDF mtimes, which are per report; the
+                # fill either. ⛔ It is all four of the 08-30 fills, not two: C, D, E and F carry ONE
+                # stamp between them, and `20260831SparSBudgetA`'s two runs carry one between them too.
+                # ✅ FIXED IN THE ENGINE 2026-08-31 (`SPEC_metric_research.md` §16.15.5): the clock is now
+                # read per capture, at the start of the measurement, by both capture paths. ⛔ NOT
+                # RETROACTIVE — every fill named here predates it and keeps its shared stamp, so the
+                # times below stay the PDF mtimes. The next session's headers can be trusted; these
+                # cannot. ⇒ the times below are still the PDF mtimes, which are per report; the
                 # header is used only to confirm the DAY. §16.38's "log the temperature with the clock
                 # time" does not yet have a clock it can use per fill.
                 # ⛔ AND C IS THE BIGGEST DISPLACEMENT ON THE ROW: not "late on the same evening" like
@@ -773,11 +912,14 @@ def dayDelayNote(rows):
         return ""
     # ⛔ WRAPPED at 88, like every other note on this figure. The unwrapped form ran off the right edge
     # and lost "DIFFERENT sitting" -- the two words the note exists to say.
-    return "\nMEASURED OFF ITS FOLDER DATE, plotted and scored:\n" + "\n".join(
-        "\n".join("     " + part for part in textwrap.wrap(
-            "%s \u2014 %s, i.e. %s. Same row, DIFFERENT sitting."
-            % (s, DELAYED_FILL[s][0], DELAYED_FILL[s][1]), width=88))
-        for s in named)
+    # ⛔ THE CLAUSE IS SAID ONCE, IN THE HEADING. It used to end every entry -- "Same row, DIFFERENT
+    # sitting." eight times over -- which wrapped almost every fill onto a second line and cost the block
+    # eight lines of pure repetition, on a page that was already running off the bottom of the sheet.
+    return ("\nMEASURED OFF ITS FOLDER DATE \u2014 same row, DIFFERENT sitting \u2014 plotted and "
+            "scored:\n" + "\n".join(
+                "\n".join("     " + part for part in textwrap.wrap(
+                    "%s \u2014 %s, %s" % (s, DELAYED_FILL[s][0], DELAYED_FILL[s][1]), width=88))
+                for s in named))
 
 
 def prepNote(rows):
@@ -828,7 +970,11 @@ def pageSunflower(pdf, rows):
                 ha="center", fontsize=8.2, style="italic", linespacing=1.5)
 
     # ---- row 1: by oil, folders as contiguous sub-clusters
-    axes = figure.add_axes([0.105, 0.585, 0.865, 0.305])
+    # ⛔ SHORTER THAN IT WAS (0.305 -> 0.235), and the same for row 2, to give the note block below them
+    # the height it actually needs. See the comment on that block: its last four lines — including the
+    # σ_fill COST line, which this page's own policy says must sit beside the number it improves — were
+    # being drawn off the bottom edge of the A4 and had never appeared on the figure at all.
+    axes = figure.add_axes([0.105, 0.655, 0.865, 0.235])
     for index, oil in enumerate(oils):
         sessions = sorted({sessionOf(r) for r in rows if r["oil"] == oil})
         spans = numpy.linspace(-0.30, 0.30, len(sessions) + 1)
@@ -860,7 +1006,7 @@ def pageSunflower(pdf, rows):
     axes.tick_params(labelsize=8)
 
     # ---- row 2: the same numbers against the calendar
-    axes = figure.add_axes([0.105, 0.290, 0.865, 0.230])
+    axes = figure.add_axes([0.105, 0.400, 0.865, 0.190])
     dates = sorted({dateTag(sessionOf(r)) for r in rows})
     slot = {date: index for index, date in enumerate(dates)}
     tags = []
@@ -906,11 +1052,32 @@ def pageSunflower(pdf, rows):
     axes.grid(axis="y", alpha=0.3)
     axes.tick_params(labelsize=8)
 
-    figure.text(0.105, 0.245,
+    figure.text(0.105, 0.360,
                 "[*]  Only Lugitsch has been measured in sunflower on more than one date, so it is the only\n"
                 "oil that can show a trend at all. Every other line in row 2 is a single folder.",
                 fontsize=8.2, va="top", linespacing=1.5)
-    figure.text(0.105, 0.208,
+    # ⛔⛔ THIS BLOCK RAN OFF THE BOTTOM OF THE PAGE. At 0.208 and 8.2 pt it needed ~22 lines of room and
+    # had ~14, so the set-aside list was clipped mid-list and the DIFFERENT SOLVENT, SAME-JAR, INSTRUMENT
+    # and COST lines were never on the figure — on the one page whose stated policy is that an exclusion
+    # carries its price beside the number it improves. Found 2026-08-31 while adding the fourth of them.
+    # ⚠ Fixed by GIVING IT ROOM (both axes above are shorter) and by compressing the same-jar line, NOT by
+    # shrinking the text until it fits: a note nobody can read is the same defect in a smaller font.
+    # ⭐ SIZED TO FIT, not assumed to. This block has run off the bottom of the sheet TWICE — once when a
+    # fourth own-row note was added and once when `OTHER_INSTRUMENT` grew from one folder to six — and both
+    # times the line that vanished was the σ_fill COST, on the page whose stated policy is that an
+    # exclusion carries its price beside the number it improves. ⛔ If it reaches the 5.6 pt floor the note
+    # must be SHORTENED, not shrunk further; that is the signal, not the fix.
+    sunflowerNote = ("[*]  %s\n"
+                     "[!]  A fill's own scatter is the yardstick for any step between fills: WITHIN a fill "
+                     "Rv repeats to sd ~1.2, but\n"
+                     "     INDEPENDENT FILLS of one oil sit 7\u201313 Rv apart \u2014 the preparation now "
+                     "dominates the measurement by about ten to one.%s"
+                     % (eyeOrderNote(rows), prepNote(rows)
+                        + ("" if not EXCLUDED else setAsideNote())))
+    noteSize = 7.4
+    while noteSize > 5.6 and (sunflowerNote.count("\n") + 1) * noteSize * 1.5 / (11.69 * 72.0) > 0.320 - 0.030:
+        noteSize -= 0.2
+    figure.text(0.105, 0.320,
                 "[*]  %s\n"
                 "[!]  A fill's own scatter is the yardstick for any step between fills: WITHIN a fill Rv "
                 "repeats to sd ~1.2, but\n"
@@ -919,7 +1086,7 @@ def pageSunflower(pdf, rows):
                 % (eyeOrderNote(rows), prepNote(rows) +
                    ("" if not EXCLUDED else
                     setAsideNote())),
-                fontsize=8.2, color="#a03000", va="top", linespacing=1.5)
+                fontsize=noteSize, color="#a03000", va="top", linespacing=1.4)
     pdf.savefig(figure)
     pyplot.close(figure)
 
@@ -960,17 +1127,6 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
         pad = (max(values) - min(values)) * 0.10
         floor, ceiling = min(values) - pad, max(values) + pad * 1.8
     span = ceiling - floor
-    figure = pyplot.figure(figsize=(8.27, 11.69))
-    figure.suptitle(title, fontsize=13, fontweight="bold", y=0.975)
-    # ⚠ `va="top"` so the block HANGS from a fixed line instead of growing upward into the title —
-    # a three-line blurb (RvTest carries one) overlapped the heading when the anchor was a baseline.
-    figure.text(0.5, 0.952,
-                blurb or
-                "The comparison with the day divided out. Same vertical scale in every row, so the rows\n"
-                "read against each other. Bar = that oil's mean for the row; dotted = that day's Lugitsch\n"
-                "mean, the one oil measured on all days.",
-                ha="center", va="top", fontsize=8.2, style="italic", linespacing=1.5)
-
     # ⛔⛔ THE ROW GEOMETRY IS DERIVED, NOT TYPED. It used to be `0.700 - index * 0.245` with a fixed
     # height, which fitted exactly three measurement days; the fourth (2026-08-28) put its row at
     # y = -0.035 — half of it off the bottom of the page and the rest underneath the two footnote
@@ -1010,29 +1166,55 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
                       "; ".join(sorted({relative.split("/")[0] for relative in EXCLUDED}
                                        - {sessionOf(r) for r in (extraRows or [])})),
                       width=88))
-                  + ("" if not extraRows else
-                     "\n%s is drawn in its own row: same jar for reference AND sample, so it may be "
-                     "read\n     ACROSS that row but NOT against the two-jar rows above."
-                     % SAME_JAR_ROW),
+                  + extraRowNotes(extraRows, key),
                   # ⚠ A fill whose folder date is not its measurement evening sits on a row it did not
                   # share a rig with, and a fill whose recipe the header misreports sits beside fills
                   # whose recipe it reports correctly. Both belong where the markers are.
                   dayDelayNote(rows) + prepNamesNote(rows)))
-    # ⚠ 8.2 pt at linespacing 1.5 on an 11.69 in sheet: one line is 8.2*1.5/(11.69*72) of the figure.
-    LINE = 8.2 * 1.5 / (11.69 * 72.0)
     lines = readAcross.count("\n") + footnote.count("\n") + 2
-    # ⛔ FLOORED. A caption long enough to eat the rows is a caption that has to be shortened, not a page
-    # that silently squashes five rows into nothing -- 0.46 leaves each row of a five-row page readable.
-    BOTTOM = min(0.46, 0.045 + lines * LINE + 0.035)
-    TOP = 0.895
-    pitch = (TOP - BOTTOM) / len(days)
-    # ⚠ A FIXED gap, not a fraction of the pitch. It has to clear the x tick labels -- two lines tall
-    # for any oil with a space in its name ("Billa\nClever") -- plus the next row's title, and those are
-    # a fixed number of POINTS. ⛔ As `pitch * 0.72` the gap shrank whenever the footnote block grew or a
-    # day was added, and the tick labels ran into the title of the row below. 0.038 is what the old
-    # 0.72 produced at the geometry that was known to render correctly.
-    GAP = 0.038
-    height = max(pitch - GAP, pitch * 0.5)
+
+    # ⭐⭐⭐ THE SHEET IS SIZED FROM THE ROWS, not the rows squeezed into a sheet (Edwin, 2026-08-31: "make
+    # the single graphs larger (more height) in order to better view wobbling"). Everything below is in
+    # INCHES and the figure height is the SUM; only the last step converts to figure fractions.
+    # ⛔ WHY IT HAD TO CHANGE. On a fixed A4 with seven rows and a thirty-line caption each row got 0.35 in
+    # for a ~150-unit scale — 0.17 pt per unit, so a fill's own scatter (`Rv` sd ~1.2) drew as a QUARTER OF
+    # A POINT and every cluster rendered as a flat line of markers. The page's whole purpose is reading
+    # scatter, and it could not show any.
+    # ⚠ THE PAGE IS NO LONGER A4. It is 8.27 in wide and as tall as its content needs, which is what a
+    # figure read on screen should be; the other pages of this PDF are unchanged.
+    ROW_INCHES = 1.25       # ⭐ THE KNOB. Plot height per row — raise it to see finer wobble, at the cost
+                            # of a longer sheet. 1.25 in is ~3.5x what the A4 layout could give.
+    # ⚠ A FIXED gap. It has to clear the x tick labels -- two lines tall for any oil with a space in its
+    # name ("Billa\nClever"), 8 pt each -- plus the next row's 10.5 pt bold title, plus both pads: ~42 pt.
+    # ⛔ IT WAS 32 pt AS A FRACTION and, worse, a `max(pitch - GAP, pitch * 0.5)` floor quietly gave it
+    # back whenever a row was added, so "Clever" ran straight through the title under it.
+    GAP_INCHES = 42.0 / 72.0
+    HEAD_INCHES = 1.30      # suptitle + the italic blurb under it
+    NOTE_INCHES = lines * 8.2 * 1.5 / 72.0 + 0.30
+    FOOT_INCHES = 0.35      # bottom margin, so the last caption line is not on the trim edge
+    figureHeight = (HEAD_INCHES + len(days) * (ROW_INCHES + GAP_INCHES)
+                    + NOTE_INCHES + FOOT_INCHES)
+
+    figure = pyplot.figure(figsize=(8.27, figureHeight))
+    # ⚠ Title and blurb are placed from the TOP IN INCHES, not at fixed fractions: on a sheet that is now
+    # twice as tall, y = 0.975 would have dropped the heading half an inch down the page.
+    figure.suptitle(title, fontsize=13, fontweight="bold", y=1.0 - 0.42 / figureHeight)
+    # ⚠ `va="top"` so the block HANGS from a fixed line instead of growing upward into the title —
+    # a three-line blurb (RvTest carries one) overlapped the heading when the anchor was a baseline.
+    figure.text(0.5, 1.0 - 0.72 / figureHeight,
+                blurb or
+                "The comparison with the day divided out. Same vertical scale in every row, so the rows\n"
+                "read against each other. Bar = that oil's mean for the row; dotted = that day's Lugitsch\n"
+                "mean, the one oil measured on all days.",
+                ha="center", va="top", fontsize=8.2, style="italic", linespacing=1.5)
+
+    TOP = 1.0 - HEAD_INCHES / figureHeight
+    pitch = (ROW_INCHES + GAP_INCHES) / figureHeight
+    height = ROW_INCHES / figureHeight
+    BOTTOM = TOP - len(days) * pitch
+    # ⭐ The note keeps its size now — the sheet grew to fit it, so there is nothing to shrink it into.
+    noteSize = 8.2
+    LINE = noteSize * 1.5 / (figureHeight * 72.0)
     for index, day in enumerate(days):
         axes = figure.add_axes([0.105, TOP - pitch * index - height, 0.865, height])
         today = [r for r in rows if groupOf(r) == day]
@@ -1072,23 +1254,17 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
                       bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
                                 edgecolor="none", alpha=0.78))
         if reference:
+            # ⛔ THE LINE STAYS, THE LABEL IS GONE (Edwin, 2026-08-31, pointing at it on the suite row:
+            # "why is there the Lugitsch label ... i would remove it"). The line is only ever drawn on a row
+            # that HAS a Lugitsch cluster — `reference` is that cluster — so the label restated a number
+            # already printed two inches away as that cluster's own "mean ± sd", and printed it ON TOP of a
+            # neighbouring oil's markers whenever the two heights were close. A four-oil row made that
+            # collision permanent: the suite row put "Lugitsch 107.5" straight through Ja Natuerlich's data.
+            # ⚠ Two rounds of moving it — right end, then whichever end was further away in y — treated the
+            # symptom. The label carried no information on any row that could show it.
+            # ⭐ What the dotted line is FOR survives untouched: it runs the full width so every other oil on
+            # the row can be read against Lugitsch at a glance, and the page's own blurb still names it.
             axes.axhline(numpy.mean(reference), color="#2e7d32", lw=1.0, ls=":", alpha=0.85)
-            # ⛔ THE END IT SITS AT IS CHOSEN, NOT FIXED. Right-aligned at the last cluster it collided
-            # with that cluster's own "mean ± sd" the moment a FOURTH oil arrived (Steirerkraft, 08-30):
-            # the label spans roughly one x unit inward from the edge, so it lies directly over the last
-            # cluster whenever their heights are close. ⚠ Nothing about "right" was load-bearing -- it
-            # was simply the only end there was when the page had two oils.
-            # ⇒ put it at whichever end's cluster label is FURTHER AWAY IN Y, and give it the same white
-            # patch the cluster labels carry so that a residual overlap stays readable either way.
-            referenceMean = numpy.mean(reference)
-            ends = [(len(oils) - 0.45, "right", labelTops.get(len(oils) - 1, referenceMean)),
-                    (-0.55, "left", labelTops.get(0, referenceMean))]
-            x, alignment, _ = max(ends, key=lambda end: abs(end[2] - referenceMean))
-            axes.text(x, referenceMean + span * 0.015,
-                      "Lugitsch %.1f" % referenceMean, fontsize=7, color="#2e7d32",
-                      ha=alignment, va="bottom", fontweight="bold", zorder=4,
-                      bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
-                                edgecolor="none", alpha=0.78))
         axes.axhline(cut, color="crimson", lw=1.3, ls="--")
         axes.set_xticks(range(len(oils)))
         axes.set_xticklabels([o.replace(" ", "\n") for o in oils], fontsize=8)
@@ -1101,10 +1277,11 @@ def pageByDay(pdf, rows, key="Rv", cut=RV_CUT, label="Rv",
                        fontsize=10.5, fontweight="bold", loc="left")
 
     # ⚠ Anchored to BOTTOM, so the footnotes follow the rows instead of being overrun by them.
-    figure.text(0.105, BOTTOM - 0.025, readAcross,
-                fontsize=8.2, va="top", linespacing=1.5)
-    figure.text(0.105, BOTTOM - 0.025 - (readAcross.count("\n") + 1.6) * LINE, footnote,
-                fontsize=8.2, color="#a03000", va="top", linespacing=1.5)
+    # ⚠ 0.29 in below the last row, not "0.025 of the figure": on a taller sheet a fraction is a bigger gap.
+    noteTop = BOTTOM - 0.29 / figureHeight
+    figure.text(0.105, noteTop, readAcross, fontsize=noteSize, va="top", linespacing=1.5)
+    figure.text(0.105, noteTop - (readAcross.count("\n") + 1.6) * LINE, footnote,
+                fontsize=noteSize, color="#a03000", va="top", linespacing=1.5)
     pdf.savefig(figure)
     pyplot.close(figure)
 
@@ -1298,6 +1475,65 @@ def rvCorpus():
 # them: all four share one method, so green-vs-brown WITHIN the row is exactly the comparison the page
 # is for. ⚠ What would be wrong is putting them on the two-jar row, and that is what this prevents.
 SAME_JAR_ROW = "08-28 · same-jar"
+# ⚠ NAMED FOR THE INSTRUMENT, not the oil or the date. Both folders are one oil on one evening, but what
+# separates the row from every row above it is that the exposure was PINNED — see OTHER_INSTRUMENT.
+PINNED_ROW = "08-31 · exposure-pinned"
+
+# ⛔ WHY EACH OWN-ROW BLOCK IS DRAWN AND WHAT IT MAY BE READ AGAINST. Every entry here is a row that is in
+# EXCLUDED — it touches no corridor, no cut and no σ_fill — and is on the page anyway, so the caption has
+# to say what it is doing there. ⚠ ONE SENTENCE PER ROW, keyed by the row label: the first version of this
+# note was written for the same-jar row alone and hardcoded its text, so a second own-row block would have
+# been drawn under a caption describing a different one.
+EXTRA_ROW_WHY = {
+    SAME_JAR_ROW: "same jar for reference AND sample",
+    PINNED_ROW: "the exposure is PINNED (exposureApplied 90) and its reference blank is unlike "
+                "the archive's — the METHOD is same-jar, confirmed, so only the instrument sets it apart",
+}
+
+
+def whyRow(label):
+    """The one-sentence reason a row is drawn apart. ⛔ A suite is NOT a new measurement — say so, or the
+    figure implies eight fills that do not exist."""
+    if label.endswith("(suite)"):
+        return ("a CURATED CUT of runs already drawn above — every fill confirmed same-jar AND 6-min "
+                "cold-box, across BOTH instrument states — re-cut, NOT re-measured")
+    return EXTRA_ROW_WHY.get(label, "a different measurement")
+
+
+def extraRowNotes(extraRows, key=None):
+    """One caption line per own-row block actually on this page, in the order the rows are drawn.
+
+    ⭐ AND THE ONE STATISTIC THE ROW MAY CARRY: the worst-case gap between two FILLS of one oil, on this
+    page's own metric. It is what a row of held-out fills is FOR — read across, never up — and this file's
+    rule is that such a number is computed on every run, never typed (`sameJarPairNote`'s docstring).
+    ⛔ A GAP, not an sd: the sd printed above each cluster pools within-fill scatter with between-fill
+    scatter, and on the 08-31 row those differ by an order of magnitude."""
+    if not extraRows:
+        return ""
+    labels = sorted({r["dayOverride"] for r in extraRows if r.get("dayOverride")})
+    note = ""
+    for label in labels:
+        here = [r for r in extraRows if r.get("dayOverride") == label]
+        gap = ""
+        if key is not None:
+            worst = None
+            for oil in sorted({r["oil"] for r in here}):
+                fills = {}
+                for row in (r for r in here if r["oil"] == oil):
+                    fills.setdefault(sessionOf(row), []).append(row[key])
+                means = [numpy.mean(v) for v in fills.values()]
+                if len(means) > 1:
+                    span = max(means) - min(means)
+                    if worst is None or span > worst[1]:
+                        worst = (oil, span, len(means))
+            if worst is not None:
+                gap = ("  Worst gap between two FILLS of one oil on it: %.1f (%s, %d fills)."
+                       % (worst[1], worst[0], worst[2]))
+        note += "\n" + "\n".join("     " + part for part in textwrap.wrap(
+            "%s is drawn in its own row: %s, so it may be read ACROSS that row but NOT against the "
+            "rows above it.%s" % (label, whyRow(label), gap),
+            width=88))
+    return note
 SAME_JAR_6MIN = {"20260828EstererE": ("Esterer", "green"),
                  "20260828EstererF": ("Esterer", "green"),
                  "20260828BillaCleverA": ("Billa Clever", "brown"),
@@ -1429,17 +1665,26 @@ SAME_JAR_6MIN = {"20260828EstererE": ("Esterer", "green"),
                  "20260828SteirerkraftB": ("Steirerkraft", "green")}
 
 
-def sameJarCorpus():
-    """The four settled same-jar fills, read straight from disk because EXCLUDED (correctly) hides them
-    from every other consumer. Same `addMetrics`, same run policy, and every row carries `dayOverride`
-    so `pageByDay` can give them a row of their own."""
+def heldOutCorpus(table, rowLabel, root=""):
+    """Fills that are in EXCLUDED — so they touch no statistic — but that still get DRAWN, on a row of
+    their own named `rowLabel`.
+
+    ⛔⛔ EXCLUDED HIDES THEM FROM EVERY OTHER CONSUMER, WHICH IS THE POINT, so they are read straight from
+    disk here. Same `addMetrics` as the corpus, and every row carries `dayOverride` so `pageByDay` gives
+    them their own row instead of merging them into a date they do not share a rig with.
+    ⭐ ONE BUILDER, TWO TABLES (`SAME_JAR_6MIN`, `PINNED_EXPOSURE`). It was written for the same-jar fills
+    and copied for the pinned-exposure ones would have been two places to fix the trace guard below."""
     import tempfile
     rows = []
     with tempfile.TemporaryDirectory() as scratch:
-        for session, (oil, label) in sorted(SAME_JAR_6MIN.items()):
-            names = sorted(f for f in os.listdir(os.path.join(archive.ARCHIVE, session))
+        for session, (oil, label) in sorted(table.items()):
+            # ⚠ `root` is the suite folder when there is one, so the COPIES are read and the row's run ids
+            # say which folder they came from — otherwise a suite row and its source row would be
+            # indistinguishable in every listing that prints a path.
+            inside = os.path.join(root, session) if root else session
+            names = sorted(f for f in os.listdir(os.path.join(archive.ARCHIVE, inside))
                            if f.endswith(".pdf"))
-            for relative in ["%s/%s" % (session, name) for name in names]:
+            for relative in ["%s/%s" % (inside, name) for name in names]:
                 workflow = archive.workflowOf(os.path.join(archive.ARCHIVE, relative), scratch)
                 if workflow is None:
                     continue
@@ -1449,8 +1694,62 @@ def sameJarCorpus():
                 rows.append(addMetrics({"run": relative, "session": session, "oil": oil,
                                         "class": label, "solvent": "sunflower",
                                         "nm": trace[0], "a": trace[1],
-                                        "dayOverride": SAME_JAR_ROW}))
+                                        "dayOverride": rowLabel}))
     return paint(rows)
+
+
+def sameJarCorpus():
+    return heldOutCorpus(SAME_JAR_6MIN, SAME_JAR_ROW)
+
+
+def suiteFolders():
+    """Every `*_suite` folder in the archive — a CURATED CORPUS, not a session.
+
+    ⭐ THE SHAPE IS `<name>_suite/<session>/*.pdf` (Edwin, 2026-08-31): a main folder whose SUBFOLDERS are
+    the sessions, holding copies of runs that share a property worth comparing under. The first one,
+    `20280831_suite`, is the eight fills whose same-jar **6-min cold-box** recipe is confirmed — four by
+    their own header and four by `PREP_PROTOCOL` — out of the thirteen on the same-jar row.
+    ⛔ `peak_ratio_archive.walkReports` PRUNES these, because they are byte-identical COPIES and a generic
+    walk would count every run twice. A suite reaches a figure only by being asked for, here."""
+    return sorted(name for name in os.listdir(archive.ARCHIVE)
+                  if name.endswith(archive.SUITE_SUFFIX)
+                  and os.path.isdir(os.path.join(archive.ARCHIVE, name)))
+
+
+def suiteMembers(suite):
+    """`{session: (oil, class)}` for one suite. ⛔ The oil comes from the session's EXISTING entry — a copy
+    may not invent a label its original does not have."""
+    base = os.path.join(archive.ARCHIVE, suite)
+    members = {}
+    for session in sorted(os.listdir(base)):
+        if not os.path.isdir(os.path.join(base, session)):
+            continue
+        known = SAME_JAR_6MIN.get(session) or PINNED_EXPOSURE.get(session) or TODAY.get(session)
+        if known is None:
+            print("  [!!] SUITE MEMBER WITH NO OIL ON RECORD: %s/%s -- it is drawn NOWHERE until its "
+                  "original session carries a label" % (suite, session))
+            continue
+        members[session] = known
+    return members
+
+
+def suiteCorpus():
+    """Every suite, as own-row blocks. Read from disk like `heldOutCorpus`, for the same reason."""
+    rows = []
+    for suite in suiteFolders():
+        members = suiteMembers(suite)
+        if not members:
+            continue
+        rows += heldOutCorpus(members, suiteRowLabel(suite), root=suite)
+    return rows
+
+
+def suiteRowLabel(suite):
+    return "%s (suite)" % suite
+
+
+def pinnedCorpus():
+    return heldOutCorpus(PINNED_EXPOSURE, PINNED_ROW)
 
 
 def sameJarPairNote(sameJar):
@@ -1753,7 +2052,8 @@ def exclusionCost(rv):
     with tempfile.TemporaryDirectory() as scratch:
         for relative in sorted(EXCLUDED):
             session = relative.split("/")[0]
-            if session not in TODAY or session in OTHER_SOLVENT or session in OTHER_REFERENCE:
+            if (session not in TODAY or session in OTHER_SOLVENT or session in OTHER_REFERENCE
+                    or session in OTHER_INSTRUMENT):
                 continue
             workflow = archive.workflowOf(os.path.join(archive.ARCHIVE, relative), scratch)
             if workflow is None:
@@ -1823,19 +2123,31 @@ def main():
     # ⛔ Read SEPARATELY and never merged into `rows` or `rv`: the same-jar fills must reach the per-day
     # pages and NOTHING else. Every statistic on every other page is computed from corpora that cannot
     # see them, which is what `EXCLUDED` is for and why they stay in it.
+    # ⛔ Read SEPARATELY from `rows`/`rv` for the same reason the same-jar fills are: they must reach the
+    # per-day pages and nothing else. `extraRows` is the concatenation, so a page shows both blocks.
     sameJar = sameJarCorpus()
+    # ⛔⛔ KEPT SEPARATE FROM `sameJar`, and this is not tidiness. `sameJarPairNote` takes a corpus and
+    # states "N oils, M fills" and a worst-case pair gap ABOUT THE SAME-JAR ROW; handing it the union made
+    # it read "5 oils, 13 fills" and quote the 08-31 pair's RvLin gap as the same-jar row's own. A row
+    # drawn beside another is not a member of it. `extraRows` gets the union, every statistic does not.
+    pinned = pinnedCorpus()
+    # ⛔ A SUITE HOLDS COPIES, so its rows are the SAME MEASUREMENTS as rows already on the page. They are
+    # drawn (that is what a curated corpus is for) and they enter NO statistic: `sameJarPairNote` gets
+    # `sameJar` alone, and the main corpus cannot see any of this.
+    suites = suiteCorpus()
+    extra = sameJar + pinned + suites
     exclusionCost(rv)
     with PdfPages(OUT) as pdf:
         pageStrip(pdf, rows)
         pageCurves(pdf, rows)
         pageBySolvent(pdf, rows)
         pageSunflower(pdf, rows)
-        pageByDay(pdf, rows, extraRows=sameJar)
+        pageByDay(pdf, rows, extraRows=extra)
         # ⭐ ORDER IS EDITORIAL: the LIVE metric first, every SHELVED candidate behind it. A rejected
         # candidate sitting between the pages that get read is how a refuted number gets quoted.
         # ⚠ `RvTest` sits at the FRONT of the candidates because it is the only OPEN one — the two
         # behind it are shelved and rejected respectively. It is still behind the shipped metric.
-        pageByDay(pdf, rv, key="rvTest", cut=bestCut(rv, "rvTest")[1], extraRows=sameJar,
+        pageByDay(pdf, rv, key="rvTest", cut=bestCut(rv, "rvTest")[1], extraRows=extra,
                   label="RvTest",
                   title="OPEN CANDIDATE · RvTest in sunflower, one row per measurement day",
                   blurb="RvTest = 100·(A622-627 − A612-615) / (A_Q − Av)  —  Rv with the RED band on "
@@ -1854,7 +2166,7 @@ def main():
         # ⭐ RvCont gets the SAME per-day view. It is the only candidate measured entirely above ONE
         # fitted line, so its page is the one to read against the Rv page when asking whether a
         # difference between two fills is the oil or the baseline.
-        pageByDay(pdf, rv, key="rvCont", cut=bestCut(rv, "rvCont")[1], extraRows=sameJar,
+        pageByDay(pdf, rv, key="rvCont", cut=bestCut(rv, "rvCont")[1], extraRows=extra,
                   label="RvCont",
                   title="OPEN CANDIDATE · RvCont in sunflower, one row per measurement day",
                   blurb="RvCont = 100 · A′(622-627) / A′(565-580),  where A′ is the spectrum MINUS a "
@@ -1871,7 +2183,7 @@ def main():
                          "SPEC_metric_research §16; diagnostics/red_anchor_ab.py reproduces every number.")
         # ⭐ RvLin last of the three open candidates, and NOT because it is least: on the 2026-08-29
         # fills it is the best of the four (§16.9). It is ordered here because it is the newest.
-        pageByDay(pdf, rv, key="rvLin", cut=bestCut(rv, "rvLin")[1], extraRows=sameJar,
+        pageByDay(pdf, rv, key="rvLin", cut=bestCut(rv, "rvLin")[1], extraRows=extra,
                   label="RvLin",
                   title="OPEN CANDIDATE · RvLin in sunflower, one row per measurement day",
                   blurb="RvLin = 100 · (A624 − B(624.5)) / (A_Q − B(572.5)),  B = the straight line "

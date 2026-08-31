@@ -8573,7 +8573,29 @@ which is the failure this branch was written for, caught in the wild.
 
 * **an ISOPROPANOL run at the rig.** The replay proves the branch does not leak on archived rows; only a
   live run proves it on the current bench. This is the one part of the gate no replay can close.
-* **a reference channel at 622–627.** `monitorRecord` logs `referenceSoret`, `referenceValley` and
-  `referenceQ` and **nothing in the red** — so a lamp tilt between 568 and 624, the one instrumental
-  fault that can move `Rv` without moving the sample, is invisible by construction.
+* **a reference channel at 622–627 — IN `monitorRecord`, and only there** *(narrowed 2026-08-31; Edwin:
+  "so we need the reference channel only for the monitor-values i guess")*. `monitorRecord` logs
+  `referenceSoret`, `referenceValley` and `referenceQ` and **nothing in the red** — so a lamp tilt between
+  568 and 624, the one instrumental fault that can move `Rv` without moving the sample, is invisible to the
+  live gate by construction.
+  ⭐ **THE DATA IS NOT MISSING, THE LOGGING IS.** The whole REFERENCE leg rides in every workflow
+  (`PROCESSING` / `Spectra`), so anything working *after* a run — the history tracker, any diagnostic — can
+  compute this channel today. What cannot see it is the monitor, row by row, while the run is happening.
+  ⇒ the owed work is one more logged column, not a capture change.
+  ⛔⛔ **AND IT IS THE SAME SIZE AS σ_fill, WHICH WAS NOT KNOWN WHEN THIS LINE WAS WRITTEN.** Computed from
+  the archive's own reference legs, `R(622–627) / R(565–580)`:
+
+  | | reference red/Q | sd | spread |
+  |---|---|---|---|
+  | 08-28/30 suite, 8 fills | 63.55 % | 1.17 | 3.53 |
+  | 08-31 pinned, 6 fills | 62.30 % | 0.83 | 2.08 |
+  | all three sessions | — | **1.31** | **4.12** |
+
+  Propagated through `Rv = 100·(A624 − Av)/(A_Q − Av)` with `A = log10(R/S)`, a shift `δ` in the
+  reference's red/Q moves `Rv` by `100·log10(1+δ)/(A_Q − Av)` **on an identical sample**:
+  a **1.17 %** shift moves a green oil **≈5.0 Rv**; the full **4.12 %** spread moves it **≈17.4**.
+  ⇒ against a measured σ_fill of **3.74** on Lugitsch (`SPEC_metric_research.md` §16.15.7's suite),
+  **the instrument's own red tilt is the same size as everything we have been calling fill scatter.**
+  ⚠ Part of that 1.17 % is jar re-seating rather than the lamp (§16.26's ±3 % reference wander); both are
+  instrument-side and both move `Rv`, so the size stands even though the cause is not separated.
 

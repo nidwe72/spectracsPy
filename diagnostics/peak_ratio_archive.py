@@ -82,6 +82,10 @@ ARCHIVE = os.path.expanduser("~/development/spectracs/spectracs-references/tmp")
 # regenerate_reports / report_reconstruct / pedestal_slope_era. Earlier backups (tmp_backup_*) were placed
 # OUTSIDE tmp/ precisely to avoid this.
 EXCLUDED_DIRS = {"oldPdfs", "discussion"}
+# ⭐ A CURATED CORPUS, not a session: `<name>_suite/<session>/*.pdf`, holding COPIES of runs that share a
+# property worth comparing under (the first one is the same-jar 6-min-cold-box recipe). Pruned from the
+# generic walk — see `walkReports`.
+SUITE_SUFFIX = "_suite"
 OUT_CSV = os.path.join(ARCHIVE, "peak_ratio_archive.csv")
 
 
@@ -100,7 +104,13 @@ def walkReports(root=None):
     directories it did visit, so no caller's output is reordered.
     """
     for folder, subfolders, names in os.walk(root if root is not None else ARCHIVE):
-        subfolders[:] = sorted(d for d in subfolders if d not in EXCLUDED_DIRS)
+        # ⛔⛔ `*_suite` IS PRUNED FOR THE SAME REASON `oldPdfs` IS: it holds COPIES. A suite folder is a
+        # curated corpus — `<suite>/<session>/*.pdf`, byte-identical to the originals still sitting in the
+        # archive root (Edwin, 2026-08-31) — so a walk that descends into it counts every run TWICE and
+        # silently doubles whole-corpus statistics. Consumers that WANT a suite ask for it by name; see
+        # `d2r_all_runs.suiteCorpus`, which reads it straight from disk exactly as `heldOutCorpus` does.
+        subfolders[:] = sorted(d for d in subfolders
+                               if d not in EXCLUDED_DIRS and not d.endswith(SUITE_SUFFIX))
         for name in sorted(names):
             if name.endswith(".pdf"):
                 yield folder, name

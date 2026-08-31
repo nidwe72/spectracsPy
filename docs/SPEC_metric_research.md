@@ -4393,6 +4393,290 @@ argument gets made again in six weeks about fills nobody can characterise.
 ⚠ **Provenance must never break a capture**: the resolver swallows every `OSError` and falls through to the
 plugin's declaration, and there is a test that says so.
 
+#### ⛔⛔ 16.15.5 THE CLOCK WAS STILL WRONG — and the FIRST session under it proved it  *(2026-08-31)*
+
+`20260831SparSBudgetA/001.pdf` and `/002.pdf` both carry **`timestampIso: 2026-08-31T16:36:53`** — identical to
+the second, though the two PDFs were written 5 minutes apart and their monitors ran 173 s and 230 s. §16.15.4's
+line "runs cannot even be ordered in time" was still true for the two runs of the very first session that had a
+clock at all.
+
+⭐ **The cause is not the stamp, it is where it is read.** §16.15.4 put it in `__buildWorkflow`, which runs at
+**engine construction** — and the bench builds an engine only in `DevMeasurementBenchViewModule.__enterRun`,
+which fires on `showEvent` and on a plugin change, *nothing else*. Going back to ACQUISITION and measuring
+again reuses the same workflow object. So the field was never "the start of the measurement": it was **the
+time the bench view was opened**, minutes before the fill existed, and every further run of that session
+inherited it unchanged.
+
+| | |
+|---|---|
+| ⭐ **the rule** | a capture begins a **new** measurement when it REPEATS a step already captured under the current stamp, or when nothing has been captured at all. Reference-then-sample stamps once, on the reference — a two-leg run is one measurement, so the field keeps the meaning §16.15.4 gave it. A re-measure re-stamps; a fresh sample on a standing reference re-stamps, because it is a new read |
+| ⭐⭐ **both paths** | `captureAcquisitionStep` **and** `captureMonitoredStep` share one `__openMeasurementClock` pair. The monitored sibling is the path the rig's SAMPLE leg actually takes, and a rule applied to only the burst would have dated the reference and left the measurement itself unaccounted for |
+| ⭐ **read before, commit after** | the clock is read **before** the burst — the monitor's policy allows 1500 s, so an after-stamp could date a measurement 25 minutes late — and written only once data has landed. A capture that delivers no frame, and a monitored run that answers nothing (`NEVER_SETTLED` / `MEASUREMENT_BROKEN` / `STALLED`, whose container `CapturePanel` takes straight back off), leave the clock on the data still in the workflow |
+| ⚠ **the fallback stays** | `__buildWorkflow` keeps stamping. It is now explicitly the value for a workflow that never captured — better than the `timestampIso: null` §16.15.4 was written to remove |
+| ⚠ **known gap** | a cancelled capture is a host concept the engine is not told about, so a cancelled re-read of the sample alone leaves the clock on the abandoned attempt. It cannot reach a report: the step has no container and the run cannot advance out of ACQUISITION |
+| ⛔ **not retroactive** | the two 08-31 runs keep their shared stamp. Their order is recoverable only from file mtimes (17:08 / 17:13) |
+
+*9 tests, `tests/test_measurement_clock.py`; all nine fail against the 16.15.4 engine. 540 app tests green.*
+
+#### ⭐⭐⭐ 16.15.6 THE 08-31 PINNED-EXPOSURE SESSION — σ_fill on a brown, a green beside it, and the red ratios win on the number that counts  *(2026-08-31)*
+
+The **first session in the archive captured with the exposure pinned** (`header.exposureApplied` = 90, the
+field's first appearance): **four** independently prepared fills of Spar S-Budget (brown) and **one** of
+Ja Natuerlich (green), two reads each, over about three hours. Each folder's two runs are two reads of one
+fill (`A_Soret` agreeing to 0.4 % within a folder). ⇒ the archive's **first σ_fill set on a brown oil**, with a
+green measured on the same rig the same evening.
+
+⭐ The green's class is the archive's OWN prior label (`peak_ratio_archive.GREEN`, as
+`20260812BillJaNatuerlich`) and the brown's has stood since 08-24. Neither comes from a number measured this
+evening — that is §7 / M9, and it is what makes the row scorable at all.
+
+##### The σ_fill set, brown, four fills
+
+| | A | B | C | D | between-fill sd | pooled within-fill sd | all 8 sd |
+|---|---|---|---|---|---|---|---|
+| `Q%` | 22.07 | 23.85 | 22.46 | 21.70 | **0.94** | 0.36 | **0.91** |
+| `RvLin` | 41.17 | 34.56 | 39.44 | 35.12 | 3.24 | 0.38 | 3.01 |
+| `Rv` | 28.14 | 29.85 | 31.69 | 22.07 | **4.17** | 1.30 | 3.98 |
+
+⛔⛔ **STOP READING THE `Rv`-vs-`RvLin` ORDERING OFF THIS SET — IT FLIPPED TWICE AS FILLS ARRIVED.** At n = 2
+fills `RvLin` looked 3.9× *looser* than `Rv`; at n = 3, 1.9× looser; at n = 4 it is **tighter** (span 6.61
+against 9.61). Each reading was stated before the next fill existed. On four fills of one oil that ordering is
+not established, and neither this set nor the 08-30 Lugitsch four-fill result settles it.
+
+##### ⭐⭐⭐ THE NUMBER THAT COUNTS: separation ÷ σ_fill
+
+`Q%`'s absolute stability is not an advantage until it is divided by the separation it has to resolve.
+
+| | green (1 fill) | brown (4 fills) | separation | **÷ brown σ_fill** | threshold margins |
+|---|---|---|---|---|---|
+| `Rv` | 122.75 | 27.94 | 94.81 | **22.7×** | T = 52 → green +70.8 (17.0 σ), worst brown −20.3 (4.9 σ) |
+| `RvLin` | 105.32 | 37.57 | 67.75 | **20.9×** | no threshold yet |
+| `Q%` | 16.46 | 22.52 | 6.06 | **6.4×** | T = 18.6 → green −2.1 (**2.3 σ**), worst brown +3.1 (3.3 σ) |
+
+⇒ **both red-ratio forms separate these two oils about 3.4× better than `Q%` relative to fill noise**, and `Q%`
+puts the green only **2.3 σ_fill** from its own threshold where `Rv` puts it 17 σ. ⚠ This CORRECTS the emphasis
+of the four-fill reading recorded a few hours earlier, which noted that `Q%` was 3–4× the more fill-stable
+metric in absolute units. It is — and it does not matter, for exactly the reason §12.5 gives.
+
+##### The mechanism: the 624 band is both the loose part and the whole of the signal
+
+| feature | brown, CV over 4 fills | brown mean | green |
+|---|---|---|---|
+| `A_Soret` (448–460) | 3.7 % | 0.744 | 0.714 |
+| `A_valley` (500–560) | 12.2 % | 0.089 | 0.052 |
+| `A_Q − A_valley` | 6.4 % | 0.168 | 0.118 |
+| **`A624 − A_valley`** | **17.8 %** | **0.047** | **0.144** |
+
+The 624 nm band above the valley is the **least reproducible** feature between fills of one oil — 3× the Q
+band's scatter, 5× the Soret's — and it is also the feature that carries essentially all the green/brown
+difference (**3.1×**, while the Q band moves the *wrong way*, 0.118 green against 0.168 brown). `Rv` and
+`RvLin` put it in the numerator; `Q%` never touches it. ⇒ the 17.8 % fill scatter is the price of the 3.1×
+signal, and on this evidence the trade is strongly worth making.
+
+⭐ **Fill D is worth a bench question.** Its `A624` reads **0.1119** against 0.133 / 0.156 / 0.143 for A / B / C
+— 16–28 % down — while its `A_Q` sits on fill A's and its `A_Soret` is the *highest* of the four. Not a dose
+effect. ⚠ And it is the CLEAREST fill (`A_valley` 0.0753, lowest of the four), so not turbidity either.
+⏸ **What was different about fill D?** A selectively weakened 624 band is the signature §16.12.7h's diffuser
+test produces, and that test is a standing blocker on `Rv`.
+
+⏸ **STILL OWED: σ_fill on a GREEN oil.** The green here is ONE fill — its two reads agree to sd 1.23 `Rv`, which
+is read noise, not fill noise — so every `÷ σ_fill` above uses the BROWN's. Four green fills under the pinned
+exposure is the run that finishes this, and it is now a cheap evening: the rig is pinned and the row exists.
+
+⭐ **Registration is a query, not a list.** `pinnedFolders()` / `pinnedOilOf()` / `pinnedSessions()` /
+`pinnedRuns()` find every `20260831*` folder on disk and fill `TODAY`, `EXCLUDED`, `OTHER_INSTRUMENT` and
+`PINNED_EXPOSURE` from it. ⛔ Written after the same session had to be named in four hand-maintained places
+three times running, and after the key `"…SparSBudgetB": ("Spar S-Budget", "brown")}` — which exists in **two**
+dicts — let one edit silently move the first pair onto the SAME-JAR row and change that row's statistics.
+⚠ The prefix is the SESSION (`20260831`), not the oil: as `20260831SparSBudget` it would have dropped the
+green folder in exactly the silence the query exists to end. ⛔ A folder whose oil is not in `PINNED_OILS`
+is **announced loudly** (`[!!] PINNED-SESSION FOLDER WITH NO OIL REGISTERED`) and reaches nothing — a label
+must come from the bench or the archive, never from the spectrum being judged.
+
+#### ⭐⭐⭐ 16.15.6a WHY `RvLin` DISAGREES WITH ITSELF ACROSS TWO FILLS AND `Rv` DOES NOT  *(Edwin, 2026-08-31: "do you have an explanation why RvLin differs between the two runs … so much? Rv looks rather the same!")*
+
+The two Ja Natuerlich fills read `Rv` **122.75 / 122.96** — a gap of **0.21, smaller than `Rv`'s own read
+noise** — and `RvLin` **105.32 / 121.06**, a gap of **15.73**. Same oil, same evening, same recipe, same
+pinned exposure. The whole of that difference is one term.
+
+##### It is Δ, and nothing else
+
+`RvLin` is `Rv` with the flat datum `A_valley` replaced by a line through (530, Av) and (613.5, A612-615).
+That line is set by a single number, and when it is zero the two forms are **identical**:
+
+    Δ = A(612–615) − A_valley          slope = Δ / 83.5 nm       B(λ) = Av + slope·(λ − 530)
+
+| | `A624 − Av` | `A_Q − Av` | **Δ** |
+|---|---|---|---|
+| fill A | 0.1442 | 0.1175 | **+0.0344** |
+| fill B | 0.1073 | 0.0873 | **+0.0032** |
+| change | −25.6 % | −25.7 % | **−91 %** |
+
+`Rv`'s two bands moved by the same *factor*, so the ratio is untouched. Δ moved by an order of magnitude.
+
+⭐⭐ **THE COUNTERFACTUAL SETTLES IT.** Give both fills one common Δ and `RvLin`'s gap collapses from
+**15.73 to 0.29** (using fill B's Δ) — at Δ = 0 it is 0.21, i.e. `Rv`. ⇒ **100 % of the disagreement is Δ.
+None of it is the 624 band and none of it is the Q band.** And Δ is amplified: `dRvLin/dΔ = −602` `RvLin`
+units per unit absorbance, so Δ's own swing of 0.031 A accounts for 23 units on its own.
+
+##### ⛔ It is NOT the anchor's position — moving the window does not rescue it
+
+| anchor window | green fill gap |
+|---|---|
+| 612–615 (shipped) | 15.73 |
+| 602–608 (before the 609 nm step) | 14.09 |
+| 586–600 (Q tail) | 17.46 |
+| 616–619 (after) | 14.52 |
+| **`Rv` — no anchor at all** | **0.21** |
+
+⚠ The 609 nm detector step is real and startling — **89–90 % of the 624 band's height on the greens and
+223–315 % on the browns** — and it sits 1 nm from the shipped window. But it is not the cause: every
+candidate window in 586–619 gives the same ~15-unit gap, because the problem is the whole region.
+
+##### ⭐⭐ What actually differs: the same two bands, a different floor between them
+
+Normalise each fill to its own band heights and the two curves agree to **≤0.015 at both band tops** while
+differing by **+0.13 … +0.26 across 584–620 nm**. The trough between the bands sits at **+9.3 %** of mean
+peak height in fill A and **−12.4 %** in fill B — a 22 %-of-a-band swing — with the bands' own widths barely
+moved (Q 20.5 vs 19.5 nm, 624 12.0 vs 10.2 nm).
+
+⇒ **`Rv` reads only the two band tops against one shared datum, so a change confined to the floor between
+them cancels. Every `RvLin` variant measures that floor on purpose and subtracts it, importing the least
+reproducible part of the trace.** The design intent — measure the tilt instead of assuming it — is right;
+what it measures is not stable enough to be worth measuring. Being *consistently* wrong costs a ratio
+nothing.
+
+##### ⛔⛔ AND THE FLOOR IS 3.5 CAMERA COUNTS — retracting "34 % more concentrated"
+
+`SPEC_capture_quality.md` §16.40 has the DN budget. In counts the two fills are the **same measurement**:
+Soret −1.12, valley +1.43, Q −1.65, 624 −1.66, anchor −1.41 DN — nowhere more than **1.7 counts apart** out
+of 95–203. Those 1–2 counts produce −1.0 % on `A_Soret`, +26 % on both band heights and **+90 % on Δ**,
+because a count is worth 0.0050 A at the 192 DN valley and 0.0079–0.0101 A at the 96–121 DN band windows,
+and in `band − valley` the two errors add rather than cancel.
+
+⚠ **RETRACTED, same evening.** The two green fills were described here as differing by "34 % concentration"
+(the ratio of their band heights, 1.344×) and, hours earlier, as "a ~26 % dose change" — the same ratio from
+the two ends, which should not have been written both ways. Neither is a measurement: `A_Soret` is flat to
+**0.3 %** across that supposed 34 %, and the underlying difference is 1.5 counts. **Two fills that agree to
+1.5 DN in every window are not demonstrably different fills.** The aggregation reading offered alongside it
+is withdrawn with its premise. ⇒ What survives is only what was measured: the same two band tops, a floor
+between them that moves, and Δ carrying all of it.
+
+⭐ **This also answers the flat Soret** without any pigment-chemistry story: `A_Soret` is 0.63, a *large*
+absorbance, so one count is 1.6 % of it; the band heights are 0.09–0.15 formed by *subtracting two windows*,
+so the same count is a quarter of them. Same counts, different denominators.
+
+#### ⭐⭐⭐ 16.15.6b THE STRUCTURAL CASE FOR `Rv`, MADE OF COUNTS  *(Edwin, 2026-08-31: "i now also tend to Rv")*
+
+On raw DN **no single window separates the two oils**: 1.5 σ on the 624 window, at best 4.7 σ on the Q band
+(§16.40.4). `Rv` separates them **33.4 σ**. The gain is structural, and it is the reason to prefer a ratio of
+these two bands over any baseline-corrected form:
+
+- **the noise is common-mode** — within the four brown fills `r(Q deviation, 624 deviation) = +0.943`, i.e.
+  a fill is uniformly a few counts brighter or darker across the whole spectrum, and a ratio divides that out;
+- **the signal is anti-correlated** — between the oils the Q window moves **+12.7 DN** and the 624 window
+  **−3.3 DN**, in opposite directions, so a ratio multiplies what a difference would cancel.
+
+⇒ **`Rv` is immune to the dominant error term of this instrument and maximally sensitive to the one thing
+that distinguishes the oils.** ⭐ Corroborates ROADMAP 2026-08-25 (`Rv` is the verdict metric) on evidence of
+a kind the archive did not previously have — counts rather than corpus scores — and it does not depend on any
+threshold, window fit or class labelling, so it is **outside M9's circularity concern**.
+
+⛔ **What it does NOT do.** It does not waive M9, it does not set `T`, and it is two oils on one evening.
+And the honest limit is in the same numbers: the brown's 624 band is **5.0 DN tall** (§16.40.3), which is why
+brown σ_fill is 4.11 `Rv` against the green's 0.19. ⇒ **the next real gain is counts on the brown 624 band,
+not another metric** — §16.40.6 has the ordered follow-ups, and the first of them is verifying the decode
+this whole analysis rests on.
+
+⛔ **Held out of every statistic for a measured reason, not a cautious one.** Normalised at 600 nm over 440–630 nm its reference
+blank is unlike every other blank in the archive — `R(440)/R(600)` = **1.277** against 1.056 (08-24) … 1.122
+(08-28 LugitschA) — and its RMS distance to each 08-24/08-28 reference shape is 0.069–0.076, larger than the
+largest distance among those shapes themselves (0.059). The blank its absorbances are divided by is not the
+archive's blank.
+
+⏸ **Two bench facts were owed before it could be promoted, and BOTH are now answered** — neither was in the report, and neither could be got from the data:
+
+1. ~~Same-jar or two-jar reference?~~ ✅ **ANSWERED AT THE BENCH** — Edwin, 2026-08-31: *"todays
+   measurements were same-jar-6mins-stand"*. ⭐ Only the bench could answer it, and that was the point: the
+   `prepProtocol` string describes the DILUTION, not the jar, and the reference *fingerprint* was tested and
+   cannot separate methods either — two same-jar 08-28 blanks differ from each other by RMS 0.051 while a
+   same-jar and a two-jar blank differ by 0.009, so the fingerprint separates **sessions**, not **methods**.
+   ⇒ **the hold-out reason for this session is now HALF what it was**: the method is recorded, and what
+   remains is the INSTRUMENT — the exposure pin and a reference blank unlike any other in the archive
+   (§16.40). That is still a reason to keep the runs off the shared corridors, and it is a different reason.
+2. ~~Two fills or two reads?~~ **Answered by the B and C folders**: each folder's two runs are two reads of
+   one fill (`A_Soret` agreeing to 0.4 % within a folder), and A / B / C are three genuine fills (up to 8 %
+   apart). The row is drawn as 6 runs of 1 oil across 3 fills. ⚠ What is still owed is whether all three
+   references were captured the same way, and which way.
+
+⚠ **What the pair shows meanwhile**, at the guard rather than at the metric: 001 read `inside 12 22` and
+printed **PROBABLY TOO BROWN**; 002 read 22.22, fell **outside** the domain, and printed **no verdict at all**.
+Two back-to-back reads of one brown oil straddle §3.1a's upper edge on a 0.30 `Q%` difference — inside fill
+noise. `Rv` sits ~24 units clear of T = 52 on both.
+
+✅ **Fixed while regenerating**: the sunflower page's exclusion block ran off the bottom of the A4 — the
+set-aside list was clipped mid-list and the DIFFERENT SOLVENT, SAME-JAR and **σ_fill COST** lines were never
+on the figure, on the one page whose stated policy is that an exclusion carries its price beside the number it
+improves. Both axes shortened to give it room; the same-jar line counts its thirteen sessions instead of
+re-listing names that sit three lines above it.
+
+---
+
+#### ⭐⭐ 16.15.7 THE `*_suite` CONVENTION — a curated corpus as a FOLDER  *(Edwin, 2026-08-31)*
+
+⭐ **A suite is a main folder whose SUBFOLDERS are sessions**, holding copies of runs that share a property
+worth comparing under: `<name>_suite/<session>/*.pdf`. The first one, `20280831_suite`, is **every fill
+confirmed same-jar AND 6-min cold-box** — the eight of 08-28/30 plus the six of 08-31, once the bench
+confirmed the method. It draws as its own row: **28 runs, 4 oils**, Ja Natuerlich 122.9 ± 1.6 · Lugitsch
+107.5 ± 3.7 · Steirerkraft 83.5 ± 4.0 · Spar S-Budget 27.9 ± 4.0.
+
+⭐⭐ **That is the most controlled row the archive has** — one reference method, one recipe, green and brown
+together, the corridor read end to end without a method or a recipe term in it. ⚠ It still spans two
+instrument states (08-28/30 unpinned, 08-31 pinned), and the row says so.
+
+⛔⛔ **A SUITE HOLDS COPIES, SO THE WALK MUST PRUNE IT.** `peak_ratio_archive.walkReports` now skips
+`*_suite` for exactly the reason it skips `oldPdfs`: a generic walk that descends into one counts every run
+TWICE and silently doubles whole-corpus statistics. A suite reaches a figure only by being asked for
+(`d2r_all_runs.suiteCorpus`), it scores nothing, and its caption says it is re-cut and not re-measured.
+⛔ A member's oil label comes from its ORIGINAL session's entry — a copy may not invent a label its original
+does not have — and a member with no label is announced loudly rather than guessed.
+
+⚠⚠ **`20260828LugitschE` IS READMITTED, DELIBERATELY, AND IT WAS AN ACCIDENT FIRST.** `SAME_JAR_6MIN`
+excludes it (§16.39.7 set it aside as the exposure-104 fill with the anomalous `RvLin`); the first copy into
+the suite put it back without anyone deciding to, which is precisely the exclusion-discipline failure this
+archive is built to prevent — caught by Edwin from the figure, because the suite's Lugitsch read 12 runs
+against the same-jar row's 10.
+⭐ It **stays**, on a reason measured the same evening: E was set aside for its EXPOSURE, and exposure moves
+`Rv` by **0.04** — five Lugitsch fills at 90 read 107.46 (sd 4.18) and the one at 104 read 107.42, on one
+evening, one oil, one recipe. ⇒ for an `Rv` suite E's exclusion reason does not apply. ⛔ It would still
+apply to an `RvLin` suite, and this note is what stops that being forgotten.
+
+#### ⭐ 16.15.8 THE INSPECTION COLOUR — scheme `K` chosen  *(Edwin, 2026-08-31: "think that K is the winner")*
+
+⛔ **NOT a verdict and not a metric** — a rough visual aid, Edwin's framing throughout.
+`diagnostics/rv_colour_candidates.py` → `20260831_rv_colour_candidates.pdf`, eight schemes scored as
+ΔE between the oils ÷ worst ΔE between two fills of one oil.
+
+**`K` = the 624 band alone, on the MEASURED blue's own shape scaled to a fixed small peak (A 0.10 at
+448–460, clamped at A 1.2), lightness pinned.** Ratio **3.3×**, and it keeps a real blue channel (38–58)
+where the constant-Gaussian `H` clips it to 0 — a three-channel colour instead of a two-channel ramp.
+
+⛔⛔ **THE MEASURED BLUE AT ITS OWN SIZE IS THE PROBLEM, NOT THE SOLUTION**: 1.9×, and Soret-normalised
+1.7×. `A_Soret` above the valley is 0.68 with a **CV of 6.4 % across six fills of four oils** while `Rv`
+spans 130 units. ⇒ **the real blue is the thing that makes every oil look alike** — it is why the true
+colour (scheme `A`) reaches only **1.6×**, and it is why a photograph through the eprouvette cannot separate
+these oils. Ja Natuerlich (`Rv` 123.6) renders `179,211,96` and Billa Clever A (`Rv` −7.1) renders
+`211,191,103`. ⇒ the blue must be SMALL to be useful, and `K`'s 0.8× cost against `H` **is** the
+fill-to-fill variation of the blue.
+
+⛔ A Planck radiator in place of the flat baseline was tested (Edwin's idea) and **swept 1800–10000 K the
+score never leaves 4.1–4.2×**: the illuminant is a display choice, not an information channel.
+
+⚠ **`K`'s blue is measured but carries about a twentieth of the weight it appears to**, and its amplitude is
+a display constant. Edwin's answer to that: *"the plugin has descriptions of metric values so things can be
+explained there"* — ⇒ the caveat ships with the swatch, in the plugin's own description text. **Nothing is
+built.**
+
 ---
 
 ### 📌⭐⭐ 16.16 PRE-REGISTRATION — σ_fill of the current recipe: Lugitsch, SIX fills, one evening  *(written 2026-08-30, BEFORE the run; six chosen by Edwin over the four first proposed)*
@@ -4482,3 +4766,110 @@ the honest record is *"n = 4, registered for 6, underpowered"* — not a result.
   answer to it — and §16.15.1 has just shown the standard cannot help until σ_fill is known to be small.
 - **Nothing about other oils.** Lugitsch's σ_fill is Lugitsch's. Esterer 3.60 and Steirerkraft 5.14 under the
   same recipe say the term is oil-dependent, and one oil cannot settle that.
+
+---
+
+### 📌⭐⭐⭐ 16.17 PRE-REGISTRATION — the green-vs-green order: Lugitsch against Ja Natuerlich, ONE session  *(written 2026-08-31, BEFORE the run; the eye label was given BEFORE the numbers were looked at)*
+
+#### 16.17.1 The question, and why this pair
+
+Edwin prepared two matched dilutions in the eprouvette — **8 ml sunflower + 2 capillaries** each — and read
+them by eye before any measurement:
+
+> *"Lugitsch is yellowischer/brwoner than the BillaJaNtürlich oil"* — and, separately, *"i now also tend to Rv"*.
+
+⭐⭐ **THAT ORDER IS THE PRE-REGISTRATION.** It is a class label fixed by the eye, on two oils, stated before
+the instrument was pointed at them — which is the one thing §7 / M9 says the archive has never had for a
+green-vs-green comparison. Every previous ranking was either read off the metric under test or recorded after
+the numbers existed.
+
+⛔ **AND IT UNSEATS THE ARCHIVE'S REFERENCE OIL.** Lugitsch is the oil measured on every row of every by-day
+page and the dotted reference line on all of them; the 2026-08-27 eye ranking made it the greenest thing in
+the corpus. Ja Natuerlich was never in that ranking. If the eye is right, **Lugitsch is not the green
+benchmark** — it is only the most-measured oil, and the dotted line has to be read that way.
+
+**What the archive already says** (cross-session, cross-method — not a controlled comparison):
+
+| metric | Lugitsch, 10 fills | Ja Natuerlich, 3 fills | overlap |
+|---|---|---|---|
+| **`Rv`** | 104.19, sd 8.21 | **122.99, sd 0.26** | ⭐ **NONE** — JN's lowest fill is 8.47 above Lugitsch's highest |
+| `RvLin` | 101.78 (92.5–105.4) | 107.92 (97.4–121.1) | heavy — two JN fills sit *inside* the Lugitsch range |
+| `Q%` | 17.67 (14.2–19.2) | 14.18 (12.3–16.5) | partial — JN's 16.46 is above three Lugitsch fills |
+
+⭐ **The internal control that makes it worth running.** Ja Natuerlich reads `Rv` **123.26 / 122.75 / 122.96**
+across three fills spanning **19 days, the solvent era, and the exposure pin** — a spread of 0.51. So the
+cross-session confound that would normally void this comparison is answered by the data: that oil's `Rv` does
+not move across the boundary, while all ten Lugitsch fills sit below it. ⚠ The 08-12 fill carries **no
+recorded solvent** (the field did not exist); the archive classifies that era as isopropanol.
+
+#### 16.17.2 The design
+
+| | |
+|---|---|
+| oils | **Lugitsch** and **Ja Natuerlich**, one bottle each |
+| fills | ⭐ **TWO PER OIL**, four in all, prepared independently. ⛔ Two is the registered minimum and the reason is §16.17.4: with one fill per oil there is no within-session yardstick and the result cannot be scored at all |
+| recipe | **8 ml sunflower + 2 capillaries**, identical for all four. ⛔ This is NOT the corpus recipe (`1cap-1ml-…-cold-box6min`, 1 capillary into 6 ml) — roughly 1.5× the concentration. ⚠ **Edit `~/.spectracsPy/prepProtocol.txt` BEFORE the first capture** so the record says what was made; that is what `PrepProtocolResolver` exists for |
+| order | ⭐ **ALTERNATE — L, JN, L, JN** — so any drift across the evening is common to both oils instead of aliased onto one |
+| aliquots | ⛔ **DARK until measured** (§39: light on the waiting aliquot is a real +0.7…+1.3 term) |
+| reads | **two per fill**, so read noise and fill noise stay separable |
+| exposure | pinned at 90 throughout; reference method the same for all four and **written down** |
+| ⛔ forbidden | changing volume, bottle, exposure, holder or reference method mid-evening |
+
+#### ⭐⭐ 16.17.3 THE READ RULE AND THE CUT. Fixed. Written before the data.
+
+Per metric, with `fillMean` = the mean of a fill's two reads:
+
+    betweenOil = | mean(JN fills) − mean(Lugitsch fills) |
+    withinOil  = max( |JN fill1 − JN fill2| , |Lug fill1 − Lug fill2| )        ← the pair gap, not an sd
+
+A metric **PASSES** only if **both** hold:
+
+| | |
+|---|---|
+| **(a) direction** | it puts Ja Natuerlich greener than Lugitsch on **every one of the four fills**, i.e. the two oils do not interleave |
+| **(b) margin** | `betweenOil ≥ 3 × withinOil` |
+
+⛔⛔ **THE CUT DOES NOT MOVE AFTER THE NUMBERS ARE SEEN.** 3× is chosen because a two-fill comparison whose
+between-oil gap is smaller than that is not distinguishable from the fill scatter measured on the same
+evening — §16.3a is the standing lesson on a re-fitted threshold. ⛔ A metric that passes (a) and fails (b)
+is recorded as **"right but not resolved"**, which is a real and different outcome from passing.
+
+⭐ **The predictions, fixed in advance:**
+
+| metric | prediction | basis |
+|---|---|---|
+| **`Rv`** | **PASSES.** Gap 8–20 units; within-oil pair gap ≤ 3 | archive gap 18.80 = 5.0× Lugitsch's within-session sd (3.74); JN repeats to 0.26 over 19 days |
+| `RvLin` | **FAILS (b), and may fail (a).** Gap inside its own fill scatter | archive ranges overlap; §16.15.6a — its Δ term swings 15.7 between two fills of ONE oil |
+| `Q%` | **PASSES (a), (b) UNCERTAIN.** | archive direction is right; margin is comparable to its fill noise, and it already inverts the eye on Spar Premium (§16.12.7h) |
+
+⇒ the outcome that would **most** change the file is `Rv` failing (a). That would mean the one metric whose
+case is structural (§16.15.6b) cannot reproduce a ranking the eye finds obvious, and ROADMAP item 1 would
+have to stop.
+
+#### ⚠ 16.17.4 WHAT TWO FILLS PER OIL CAN AND CANNOT DO — said before, not after
+
+**It is a categorical test with weak power, and its value is the label, not the statistics.** `withinOil` is
+a single difference on 1 df; a pair gap can under-state true fill scatter by a factor of two without being
+unusual. The 3× margin is therefore a *screen*, not a confidence statement.
+
+⛔ **One fill per oil would not do.** Lugitsch's `Rv` moves 3.74 sd between fills within one session (9.64
+range over the 08-28/30 same-jar block) — comparable to the gap being tested. A 1 + 1 design could not tell
+"Ja Natuerlich is greener" from "these two fills happened to differ", and the registered answer would be
+*inconclusive by construction*. ⚠ The two dilutions already standing on the bench are **fill 1 of each**;
+two more are needed, and they must be made to the same recipe on the same evening.
+
+⭐ Four fills is also where this stops being cheap: it is 8 runs, ~40 minutes of monitor time, and it uses
+four capillaries.
+
+#### ⛔ 16.17.5 What this does NOT settle
+
+- **Not a threshold.** `T` = 52 is untouched; both oils are green and neither is near it. P6 still gates on M9.
+- **Not M9.** M9 is a pre-registered run over the *corpus*, not one pair. This discharges the green-vs-green
+  ordering only, and it is one session.
+- **Not other oils.** Esterer, Stekko and Steirerkraft are not in it, and the 2026-08-27 ranking that placed
+  them under Lugitsch is untouched — Ja Natuerlich was never part of it.
+- ⛔ **Not the corpus recipe.** 2 capillaries in 8 ml is off-corpus, so a `betweenOil` gap here is not
+  transferable to archive numbers. ⭐ It is however a free extra test of dilution-invariance at ~1.5× the
+  usual concentration, and `Rv` predicts *no* shift from that alone (§16.15.6b).
+- ⛔ **Not the DN question.** `SPEC_capture_quality.md` §16.40 stands: this session's fill-to-fill differences
+  will again be 1–3 camera counts, and the decode round-trip that framing rests on is still unverified.

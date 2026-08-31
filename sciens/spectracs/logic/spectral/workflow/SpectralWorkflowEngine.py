@@ -36,6 +36,9 @@ class SpectralWorkflowEngine:
 
     def __init__(self, plugin):
         self.plugin = plugin
+        # Step ids captured since the clock was last stamped — the ONLY state the measurement clock needs.
+        # See `__beginsNewMeasurement`.
+        self.__capturedSinceStamp = set()
         self.workflow = self.__buildWorkflow()
 
     @staticmethod
@@ -60,12 +63,13 @@ class SpectralWorkflowEngine:
         # ⛔ RESOLVED PER RUN, not read off the class. See PrepProtocolResolver: the compiled-in constant
         # went stale twice and cost the archive its whole pre-vortex population (§16.15).
         workflow.prepProtocol = PrepProtocolResolver.resolve(getattr(self.plugin, "prepProtocol", None))
-        # ⭐⭐ THE CLOCK IS STAMPED HERE, AT THE START OF THE MEASUREMENT — not at Save.
-        # ⛔ It used to be set only in `AbstractPluginExecutionView._persistNewRun`, so a run that was
-        # exported to PDF without being saved carried `timestampIso: null` — which is EVERY report in the
-        # archive. Runs could not be put in time order at all, and §16.23.2b step 8's "log the temperature
-        # WITH THE CLOCK TIME" had no clock to log against.
-        # ⚠ It is also the more honest quantity: the measurement time, not the filing time.
+        # ⛔ THIS IS THE FALLBACK, NOT THE MEASUREMENT CLOCK. It runs at ENGINE CONSTRUCTION, which the
+        # bench does on `showEvent` — i.e. when the view is opened, before the operator has filled anything.
+        # `captureAcquisitionStep` overwrites it with the time capture actually began; this value survives only
+        # for a workflow that never captured, where a stamp is still better than the `timestampIso: null` that
+        # §16.23.2b step 8 ("log the temperature WITH THE CLOCK TIME") had no clock to log against.
+        # ⚠ Kept for the same reason it was introduced: a run exported to PDF without being saved must not
+        # reach the archive undated. `AbstractPluginExecutionView._persistNewRun` stamps only if this is unset.
         workflow.timestampIso = datetime.datetime.now().isoformat(timespec="seconds")
         for phaseType in self.PHASE_ORDER:
             phase = SpectralWorkflowPhase()
@@ -123,11 +127,13 @@ class SpectralWorkflowEngine:
         role = step.getRole()
         if role is None:
             return None
+        commitClock = self.__openMeasurementClock(step)
         frameCount = frames if frames is not None else (step.getFrames() or 1)
         provider = frameProvider if frameProvider is not None else self.__virtualFrameProvider(role)
         spectrum = self.__runBurst(frameCount, provider, onFrame)
         if spectrum is None:
             return None
+        commitClock()
         # Env-gated diagnostic (SPEC_capability_proof.md §7.0.1): dump per-frame spectra + the C1 rejection mask +
         # brightness for the reference gray-outlier investigation. No-op unless SPECTRACS_LOG_SPECTRA is set.
         CaptureDiagnosticsLogger().log(role, spectrum)
@@ -135,6 +141,67 @@ class SpectralWorkflowEngine:
         container.addToSpectra(spectrum, role)
         step.setContainer(container)
         return spectrum
+
+    def __openMeasurementClock(self, step):
+        """Read the measurement clock BEFORE a capture; returns the `commit` that writes it AFTER.
+
+        ⭐⭐ BEFORE, because the sample leg carries the settling monitor: it ran 173 s and 230 s on the two
+        2026-08-31 runs and its policy allows 1500 s, so a stamp taken afterwards would date the measurement
+        by up to 25 minutes late — which is the same class of error this whole rule exists to remove.
+
+        ⛔ COMMITTED ONLY WHEN THE CAPTURE DELIVERED. Both capture paths can return without putting a
+        container on the step (no frame from the provider; a monitor that produced no spectrum). Nothing
+        entered the workflow, so the clock must stay on the data that is still in it.
+
+        ⛔ Both paths share this ONE pair. `captureMonitoredStep` is not a variant of the burst — it is the
+        path the rig's SAMPLE leg actually takes — and a rule applied to only one of them would date the
+        reference and leave the measurement itself unaccounted for.
+
+        ⚠ KNOWN GAP, deliberately not closed here: a host CAN discard a container after the engine set it.
+        `CapturePanel` does exactly that on a cancelled capture (§12.1) — a host-side concept the engine is
+        not told about — so a cancelled re-read of the sample alone leaves the clock on the abandoned
+        attempt. It cannot reach a report: the step has no container, `__acquisitionComplete()` is false,
+        and the run cannot advance out of ACQUISITION. Closing it properly means the host discarding
+        THROUGH the engine rather than through `setContainer(None)`, which is a wider change than dating
+        a run is worth.
+        """
+        beganAt = datetime.datetime.now().isoformat(timespec="seconds")
+        newMeasurement = self.__beginsNewMeasurement(step)
+
+        def commit():
+            if newMeasurement:
+                self.workflow.timestampIso = beganAt
+                self.__capturedSinceStamp = set()
+            self.__capturedSinceStamp.add(step.getId())
+        return commit
+
+    def __beginsNewMeasurement(self, step) -> bool:
+        """Whether capturing `step` starts a NEW measurement, and so re-stamps `workflow.timestampIso`.
+
+        ⛔⛔ THE BENCH RESTARTS NOTHING BETWEEN RUNS. `DevMeasurementBenchViewModule.__enterRun` — the only
+        caller of `_startNewRun`, and so the only thing that builds a fresh engine — fires on `showEvent` and
+        on a plugin change, nothing else. Going back to ACQUISITION and measuring again reuses this workflow,
+        so before this rule the archive's 20260831SparSBudgetA/001.pdf and /002.pdf both read
+        `timestampIso: 2026-08-31T16:36:53` — identical to the second, though the two PDFs were written 5
+        minutes apart and their monitors ran 173 s and 230 s. Two runs of one session could not be ordered.
+
+        The rule is that a capture begins a new measurement when it REPEATS a step already captured under the
+        current stamp, or when nothing has been captured at all:
+
+          * reference then sample, first time  -> stamps on the reference, holds through the sample, so the
+            field keeps the meaning it was introduced with: when the measurement STARTED, not when it ended
+            and not when it was filed;
+          * reference again (a re-measure)     -> re-stamps, and the sample that follows holds that stamp;
+          * sample alone, reference kept       -> re-stamps, which is right: it is a new read.
+
+        ⚠ The "nothing captured" test reads the CONTAINERS, not `__capturedSinceStamp`. A re-run phase hook
+        rebuilds the steps with new uuids and drops their containers; that is genuinely a fresh measurement,
+        and a set of now-unreachable ids would have said otherwise.
+        """
+        phase = self.workflow.getPhase(SpectralWorkflowPhaseType.ACQUISITION)
+        captured = any(candidate.getContainer() is not None
+                       for candidate in phase.getSteps().values() if candidate.getRole() is not None)
+        return (not captured) or step.getId() in self.__capturedSinceStamp
 
     def __fillAcquisitionSteps(self, phase):
         for step in phase.getSteps().values():
@@ -250,6 +317,7 @@ class SpectralWorkflowEngine:
         """
         import time
         self.__ensureCalibration()
+        commitClock = self.__openMeasurementClock(step)
         clock = clock or time.monotonic
         attempts = 0
         maxAttempts = monitor.policy.maxFrames * 2
@@ -288,6 +356,12 @@ class SpectralWorkflowEngine:
             container = SpectraContainer()
             container.addToSpectra(spectrum, step.getRole())
             step.setContainer(container)
+            # ⚠ `hasValue`, not just a spectrum. A monitored run can carry frames and still answer nothing
+            # (NEVER_SETTLED / MEASUREMENT_BROKEN / STALLED), and `CapturePanel.__onMonitorFinished` then
+            # takes the container straight back off — so committing on the spectrum alone would leave the
+            # clock on an attempt that put no data in the workflow.
+            if result.hasValue():
+                commitClock()
         self.__attachMonitorViews(step, result)
         return result
 

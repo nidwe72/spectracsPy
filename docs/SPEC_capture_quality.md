@@ -15971,3 +15971,130 @@ which is worse than no warning — and camera identity, not range, is what `diag
   this section: with fill E set aside on the instrument ground above, `RvLin` reads σ_fill **0.82** and a
   band of **±1.04** against a ±20 tolerance — but that is a claim about four fills, and it is stated there,
   not here.
+
+---
+
+## ⭐⭐⭐ 16.40 THE DN BUDGET — the whole metric lives in 5 to 13 camera counts  *(2026-08-31)*
+
+§16.39 pinned the exposure. The first session captured under the pin (`20260831*`, six fills of two oils —
+`SPEC_metric_research.md` §16.15.6) makes it possible to ask a question this file has never asked directly:
+**how many camera counts is the signal actually made of?**
+
+### 16.40.1 Method, and its one unverified step
+
+The report's embedded spectra are **linear**, not DN — `header.captureDecode` reads `pow2.2` and the values
+are already gamma-decoded. Re-encoding recovers what the sensor delivered:
+
+    DN = 255 · (linear / 255) ^ (1/2.2)
+
+and the sensitivity of an absorbance to one count follows from `A = log10(R_lin / S_lin)`:
+
+    dA / dDN = −(2.2 / ln 10) / DN = −0.9554 / DN
+
+⚠⚠ **THE ROUND-TRIP IS NOT VERIFIED AGAINST A RAW FRAME.** The header declares the decode and the relation
+is the one recorded when this bit twice on 2026-08-28, but nothing here has been checked against a frame
+straight off the camera. Every number in §16.40 inherits that. ⇒ **one raw grab with the DN printed beside
+the report's own value settles it, and it should be run before any of this is acted on.**
+
+### 16.40.2 What a count is worth, per window
+
+| window | sample DN | 1 DN = |
+|---|---|---|
+| `A_valley` 500–560 | ~192 | **0.0050 A** |
+| `A_Q` 565–580 | ~121 | 0.0079 A |
+| `RvLin` anchor 612–615 | ~121 | 0.0079 A |
+| `A_Soret` 448–460 | ~95 | 0.0101 A |
+| `A624` 622–627 | ~96 | **0.0100 A** |
+
+⛔ **The datum is worth half what the bands are.** `A_valley` sits at twice the DN of every band window, so a
+count there is worth 0.0050 A and a count in a band 0.0100 A. In `band − A_valley` the two quantisation
+errors therefore do **not** cancel — they add, unevenly.
+
+### ⭐⭐ 16.40.3 The band heights, in counts
+
+| | `A624 − A_valley` | in DN | `Rv` sd over fills |
+|---|---|---|---|
+| green (Ja Natuerlich, 2 fills) | 0.1266 | **12.8 DN** | **0.19** |
+| brown (Spar S-Budget, 4 fills) | 0.0480 | **5.0 DN** | **4.11** |
+
+**The brown's 624 band is five counts tall.** That single number explains the whole asymmetry of the
+evening: `Rv`'s fill-to-fill scatter is 22× larger on the brown than on the green, because a 2–3 DN fill
+wobble is a fifth of a 5 DN band and a fiftieth of nothing on the green side.
+
+⇒ ⛔⛔ **EVERY σ_fill FIGURE IN THIS ARCHIVE IS A 1–3 DN EFFECT.** The brown σ_fill of 4.17 `Rv`, the
+`RvLin` fill gaps of 6–16, the "34 % dose difference" between the two green fills — all of them are
+one to three counts on an 8-bit sensor. They may be measuring the sensor rather than the oil, and no
+result that rests on a fill-to-fill difference of this size is safe until §16.40.1's check is run.
+
+### ⛔ 16.40.4 No single window separates the oils
+
+Sample DN, mean ± sd over fills, on the pinned session:
+
+| window | green (2 fills) | brown (4 fills) | between | within-oil | ratio |
+|---|---|---|---|---|---|
+| Soret 448–460 | 95.6 ± 0.79 | 91.3 ± 2.76 | 4.25 DN | 2.03 | 2.1× |
+| valley 500–560 | 191.1 ± 1.01 | 184.5 ± 2.89 | 6.59 DN | 2.16 | 3.0× |
+| Q 565–580 | 121.3 ± 1.17 | 108.6 ± 3.64 | 12.67 DN | 2.71 | 4.7× |
+| **624 622–627** | 96.5 ± 1.18 | 99.9 ± 2.83 | **3.31 DN** | 2.17 | **1.5×** |
+
+**On raw counts the two oils are 3–13 DN apart against a 2–3 DN fill wobble**, and the 624 window — the one
+carrying the signal — separates them by 1.5 σ. ⇒ **no single band can classify an oil.**
+
+### ⭐⭐⭐ 16.40.5 And yet `Rv` separates them 33×, for a structural reason
+
+`Rv` separates green from brown by **97.0 units against a pooled within-oil sd of 2.90 — 33.4 σ.** The gain
+over any of its own inputs comes from two facts that point in opposite directions:
+
+**The NOISE is common-mode.** Within the four brown fills, the per-window DN deviations move together:
+
+| fill | Soret | valley | Q | 624 |
+|---|---|---|---|---|
+| A | +3.96 | +4.02 | +4.99 | +3.35 |
+| B | −0.99 | −2.78 | −3.76 | −3.14 |
+| C | −0.54 | −1.01 | −0.86 | −1.32 |
+| D | −2.43 | −0.23 | −0.37 | +1.12 |
+
+`r(Q deviation, 624 deviation) = +0.943`; `r(valley, 624) = +0.949`. These are whole-spectrum brightness
+shifts — a fill that is uniformly 4 counts brighter than its siblings. **A ratio divides them out.**
+
+**The SIGNAL is anti-correlated.** Between the oils the same two windows move in *opposite* directions:
+
+| window | green | brown | |
+|---|---|---|---|
+| Q 565–580 | 121.3 DN | 108.6 DN | green transmits MORE ⇒ absorbs **less** |
+| 624 622–627 | 96.5 DN | 99.9 DN | green transmits LESS ⇒ absorbs **more** |
+
+⇒ **the ratio multiplies what a difference would cancel, and cancels what a difference would multiply.**
+That is the structural case for `Rv` being a ratio of *these two* bands, and it is made of counts — no
+fitting, no threshold, no corpus. ⭐ It is also the see-saw the Gouterman argument predicts (band I against
+the Q band under D₄ₕ→D₂ₕ), which `spectracs-rv-gouterman-owed` still owes as a write-up.
+
+### ⭐⭐ 16.40.6 What this makes the binding constraint
+
+⛔ **The brown 624 band at 5 DN.** The verdict's headroom is carried entirely by the green side; the brown
+side runs on five counts. That is an **exposure / bit-depth / integration** problem and not a metric one, and
+it is the first constraint in this file that no choice of windows or baseline can improve.
+
+⇒ the follow-ups, in order:
+
+1. **Verify the decode** (§16.40.1). Everything above depends on it and it costs one grab.
+2. **Is 90 the right pinned value?** §16.39.5b records that the camera accepts 0–5000 where the slider offers
+   1–500, so the AE sweep only ever searched the bottom tenth. The question is no longer *whether* the
+   exposure is pinned but whether the pin sits where the brown 624 band gets the most counts.
+3. **More counts per read.** Frame integration raises the effective bit depth without touching the optics;
+   `FRAMES 60` is already the setting and whether it is being averaged in linear or encoded space decides
+   whether it buys any depth at all — ⚠ related to §17's gamma question, which has been open since.
+4. ⛔ **Do not spend more effort on baseline forms until 1–3 are answered.** §16.39.3's open experiment and
+   the whole `Rv`/`RvLin` question below are being decided at 1–3 counts.
+
+### 16.40.7 What it says about `RvLin` — and it closes §16.39.7's open branch
+
+§16.39.7 left two conclusions that "point at opposite work": either the 609 nm step moves `RvLin` with
+exposure, or `RvLin` has a dose sensitivity its §16.11 case does not account for. **The green pair answers
+it, at a fixed exposure**: the whole of `RvLin`'s 15.7-unit disagreement between two fills of one oil is its
+Δ term (`A612-615 − A_valley`, +0.0344 against +0.0032), which is **3.5 counts wide** and which subtracts two
+windows sitting at 121 and 192 DN, where a count is worth 0.0079 and 0.0050 A respectively. ⇒ **`RvLin`
+measures the baseline in the one place where the quantisation errors are least alike, and multiplies the
+result by ~600** (`dRvLin/dΔ = −602` per unit absorbance). The full derivation is in
+`SPEC_metric_research.md` §16.15.6a. ⛔ This does not depend on the exposure at all, so §16.39.3's
+experiment is no longer the thing that decides the metric — though it is still owed for the 609 nm step.
