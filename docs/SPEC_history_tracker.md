@@ -1592,3 +1592,36 @@ cannot freeze his SO₂.**
 
 ⇒ ⭐⭐ **This belongs before §8.1 in any future screening: a labile quantity cannot carry an identity
 check at all, however good the level term is.**
+
+### ⛔⛔ 8.5 THE EPOCH'S OWN WORKED EXAMPLE HAS THE DEFECT IN IT  *(2026-09-02)*
+
+§11.2 names an epoch `SparSBudget_Autumn2026` and §11.3 calls the epoch the comparability scope. **The
+example is a RETAIL BRAND, and a retail brand is not a producer.**
+
+**How this surfaced.** The archive carries an oil as *"Spar Premium g.g.A."*. It has been measured
+repeatedly, placed in the rankings of three specs, and used as a green reference. **Nothing in the record
+says who pressed it** — the producer became known only because Edwin said so.
+
+> ⛔⛔ **A retailer can change supplier between seasons without changing the label.** An epoch keyed to
+> the brand would then span **two different producers' oils** and call the step between them drift.
+> **That is the exact failure the tracker exists to prevent, arriving through its own identifier.**
+
+| what the epoch must pin | today |
+|---|---|
+| ⭐ the **producer** | ⛔ **absent — not even a free-text field** |
+| the product line | ⭐ present, as the brand |
+| the season / lot | ⭐ present |
+| ⚠ protocol, solvent, lamp state | ⭐ required already by the 2026-09-01 position §5 |
+
+⇒ ⭐⭐ **The epoch identifier needs the producer as a first-class part, not the brand alone**, and a
+change of producer must **close** an epoch the way a solvent change does (§8's `tracker_d_solvent`
+result: a preparation change does not degrade a history, it **deletes** it — a producer change is at
+least as severe, because it changes the oil itself).
+
+⚠ **This is the same object `ROADMAP.md` item 2 already specifies** (`RawMaterialLot` / `ProductionBatch`
+/ product line, decided 2026-09-01 as domain objects rather than free text). **What this section adds is
+that the producer belongs in that set, and that the tracker cannot be trusted without it** — not as a
+convenience, but because a silent supplier switch is indistinguishable from oil drift.
+
+⇒ **8-Q2:** rename the worked example away from a retail brand, and state explicitly what closes an
+epoch: **protocol change · solvent change · lamp change · ⭐ producer change.**
