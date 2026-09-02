@@ -610,3 +610,61 @@ Data used, all with `workflow.json` embedded and readable via
 ⚠ **The selection search itself is not yet a committed script.** It enumerates every 7-slot allocation of
 5 white × 10 colour Avonec parts (≤ 4 colour kinds), scores each per §3, and ranks minimax. It should
 become `diagnostics/lamp_rebuild_search.py` before any of §6's numbers are quoted elsewhere.
+
+---
+
+## ⭐⭐⭐ 13 · THE ARGUMENTS FOR THE RED EXTENSION, CONSOLIDATED — and the count was wrong  *(Edwin, 2026-09-02)*
+
+The case for reaching past 630 nm accumulated over five weeks in six different documents, each adding
+"another argument" and each counting from a different base. **`SPEC_metric_research.md` §13.6 says four,
+`SPEC_red_ratio_metric.md` §3.1 says fifth, `SPEC_color_retrieval.md` §7 says another, and the market
+notes reached eight and then nine.** ⛔ **Those counts do not add up, because none of them saw the others.**
+
+Here is the list once, deduplicated, with the one column that actually matters for the build decision.
+
+### 13.1 The list
+
+| # | argument | ⭐ **satisfied by 410–680?** | source |
+|---|---|---|---|
+| **1** | The red **centroid integrates to 626 nm** — a centroid truncated at 630 is biased by wherever you truncate | ⭐ **yes** | `SPEC_metric_research.md` §13.6 |
+| **2** | The **chlorophyll→pheophytin isosbestic** lives near **660–680 nm**, outside the window | ⭐ **yes**, barely | §13.6 |
+| **3** | **Only one real valley is inside** the window (500–560); the second sits at **~640–660** — so every valley-to-valley baseline is one-sided | ⭐ **yes** | §13.6 |
+| **4** | **Qy is read as a shoulder, never as a band** — which is why the parabola fit is unconstrained | ⭐ **yes** | §13.6 |
+| **5** | **The red flank is still cut.** At 633 nm the 624 band is still at **0.075–0.127 A** — `Rv` reads the peak, not the band | ⭐ **yes** | `SPEC_red_ratio_metric.md` §3.1 |
+| **6** | **The un-measured red decides the retrieved hue.** "Hold" predicts 115.1°, "transparent" 86.4°, the photograph gave **90.1° ± 3.5** — 26° wrong against 4° right | ⚠ **partly** — the visible red runs to ~700 | `SPEC_color_retrieval.md` §7.13 |
+| **7** | ⭐⭐ **Chlorophyll a and pheophytin a — the pigment pair of every green oil that is NOT pumpkin** — sit at **431/663** and **409/664–667**, both ends outside | ⭐⭐ **yes** | `DOC_lamp_410_680.md` §11.1 |
+| **8** | **The deep red transmission window is the DEFINING property of the material** (dichromatism), and it lies beyond 630 | ⛔ **no — runs past 700** | `DOC_sample_physics.md` §3.7 |
+| **9** | A **literature-comparable Kreft dichromaticity index** needs the full red; x̄ runs past 700 nm | ⛔ **no** | `SPEC_metric_research.md` §16.19 |
+| **10** | **Measurement through the bottle** is possible only in the deep red window | ⛔ **no** *(commercial case in `SPEC_oelmuehlen_verzeichnis.md`)* | — |
+| **11** | **AOCS Cc 13i-96** — a published norm in this instrument's own algebraic form — needs **630 / 670 / 710** | ⛔ **no — needs 710** | `DOC_lamp_410_680.md` §11.2 |
+
+### 13.2 ⭐⭐⭐ What the split says, and it is the useful part
+
+> **Eleven arguments, not eight and not nine. And they fall into two groups that want two different
+> instruments.**
+
+| group | # | what it wants |
+|---|---|---|
+| ⭐⭐⭐ **Instrument-side** — the metric cannot see its own band properly | **1–5, 7** | ⭐ **410–680 satisfies all six** |
+| ⛔ **Reach-side** — a new capability, not a better reading | **6, 8, 9, 10, 11** | **past 700 nm** |
+
+⇒ **Two conclusions, and they are independent:**
+
+1. ⭐⭐⭐ **The R2 build at 410–680 is fully justified by group one alone.** Six arguments, all internal,
+   all about the pumpkin metric reading its own band. **It does not need any of the reach arguments and
+   must not wait for them** (§7.3's sequencing stands unchanged).
+2. ⚠ **Every argument that would open something NEW sits past 700 nm** — the material's defining
+   property, a comparable DI, a through-the-bottle reading, and an executable norm. **That is a second
+   project with its own budget**, and its gate is a single measurement: **does the sensor path pass
+   710 nm at all?** (`DOC_lamp_410_680.md` 11-Q1, ROADMAP 9d.)
+
+### 13.3 ⚠ Two honest deductions from the list
+
+- ⛔ **Arguments are not evidence, and eleven weak ones do not make a strong one.** Items 1–5 are
+  measured; **7 is literature**; 8 and 9 are literature plus one corrected figure; **10 and 11 are
+  unmeasured on this instrument**. The list shows *convergence*, not proof.
+- ⚠ **Nothing here re-opens §8's choice** (`630nm-640` vs `660nm`) or §12.2's Eu³⁺ test. Those are about
+  which emitter, on measured noise. **This section is about how far, and why.**
+
+⇒ **Wherever a document says "another argument for the red extension", it should now add a row here
+instead of restarting a count.**
