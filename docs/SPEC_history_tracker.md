@@ -1449,3 +1449,62 @@ identity work, and it would say so about `D` itself rather than about any partic
 ⚠ **Two things this does not settle:** whether `D` separates *naturally occurring* batches of the same
 oil (adulteration is a coarser difference than batch variation), and anything at all about hemp, whose
 Qx pair is a separate question.
+
+### ⛔⛔ 8 · A STRUCTURAL BLIND SPOT — `D` cannot see a spectrally FLAT adulterant, and neither can `Rv`
+
+Prompted by a figure on olive-oil / hazelnut-oil discrimination (Edwin, 2026-09-02). Two things came out
+of it, and the second is a limit of this whole document.
+
+**First, a modality correction.** The well-known olive-vs-hazelnut discrimination figures are
+**synchronous FLUORESCENCE**, not transmission. Their diagnostic regions are **300–400 nm** (tocopherols
+and pigments) and **500–600 nm** (vitamin E in emission). ⛔ **Neither is available to us:** the first is
+UV, and the second is an *emission* band under UV excitation — a different instrument, with the detector
+at right angles to an excitation source. **Nothing in that literature transfers to a transmission
+spectrometer**, however encouraging the figures look.
+
+⭐ *(Virgin olive and virgin hazelnut oil do differ in plain VIS transmission — olive carries
+chlorophyll/pheophytin, hazelnut is pale — but that is a different observation from the figure.)*
+
+**Second, and this is the one that matters here.** The hard olive fraud is adulteration with **REFINED**
+hazelnut oil, and refining strips the pigments. **A refined oil is close to featureless in 440–630 nm.**
+
+> ⛔⛔ **Adding a spectrally flat oil is arithmetically a DILUTION. And this project has spent a year
+> making its metrics dilution-invariant.**
+>
+> `Rv`, `V`, `Q%`, `dQ100` are band **ratios** — invariant by construction (`DOC_metric_algebra.md`).
+> `D` runs on **SNV**, which divides out mean and standard deviation — invariant by construction too.
+> ⇒ **If the adulterant contributes no structure, every one of them returns the same number for pure
+> oil and for a 30 % blend.** The property we engineered for is exactly the property that blinds us.
+
+**What follows, precisely — the boundary is sharp and worth stating on a datasheet:**
+
+| adulterant | what it does to the spectrum | ⇒ can `D` see it? |
+|---|---|---|
+| **refined / bleached oil** (pigments stripped) | scales the host spectrum down | ⛔ **no — pure dilution** |
+| oil with **its own pigments** (rapeseed: chlorophyll; sunflower: carotenoids) | ⭐ **adds and shifts structure** | ⭐⭐ **yes — this is the walnut case** |
+| an oil with **different turbidity or scatter** | changes the baseline slope | ⚠ partly, and confounded |
+
+⇒ ⭐ **The published walnut-adulteration result (§7) is not a counter-example.** Sunflower and rapeseed
+oil are **virgin, pigmented** oils; they bring their own 420–500 nm absorption. That is why the
+discrimination works there, and it says nothing about a refined diluent.
+
+### ⭐⭐⭐ 8.1 The design consequence: for IDENTITY, amplitude is not a nuisance — it is signal
+
+§3.1 treats amplitude as part of the nuisance group and quotients it out. **That is right for the drift
+alarm** — a re-fill changes level without changing the oil. ⛔ **It is wrong for the conformity check.**
+
+> **A dilution is invisible in shape and obvious in level.** A conformity check must therefore carry
+> **two** numbers: `D` for *shape has changed* and an **amplitude/level term** for *there is less of it*.
+
+⭐ **And the evidence for the amplitude term is already in this document.** §5.1 measured amplitude CV at
+**1.9 · 3.6 · 2.4 · 4.7 %** on four of six oils — *more stable than the shape* on those four. **The
+quantity we discarded is the stabler one, and for this use it is also the diagnostic one.**
+
+⚠ **But it is only usable under the conditions §6 sets out:** amplitude carries the fill, the path length
+and the re-seating (§6.2: one drop moves the shape 18 %; the level moves at least as much). ⇒ **An
+amplitude term needs a tighter protocol than `D` does** — same jar, same fill volume, `k` on means — and
+its floor has never been measured for this purpose.
+
+⇒ **8-Q1:** measure the level term's within-fill floor on the archive, the way §5.1 measured the shape
+floor. Until then, ⛔ **no claim about detecting refined-oil adulteration may be made** — and the
+walnut series of §7 should record **both** `D` and the level, so the two can be compared on one dataset.
