@@ -588,6 +588,16 @@ statement — never *"authentic pumpkin, not adulterated."* The wording above ("
 deliberately probabilistic, not a purity claim. **Preprocess with SNV before PCA** (§3/§4) so the cloud is about
 spectral *shape*, not dilution.
 
+> ⚠ **And a note for whoever reads "olive carries them too" as a market opportunity — it is not one.**
+> The physics does invite the thought: the same pigment family sits in olive oil, so a colour instrument
+> looks transferable. **The standard of that market forbids it.** The IOC method for the organoleptic
+> assessment of olive oil **mandates dark blue tasting glasses** *"to prevent the taster from perceiving
+> the colour of the oil, thus eliminating any prejudices"*, plus red or neutral lighting — because in
+> olive oil **colour is explicitly not a quality indicator** (it varies with cultivar, harvest timing and
+> filtration). Their instrumental screening work goes through **volatiles** (HS-GC-IMS, e-nose), not
+> colour. ⇒ **Shared pigments, incompatible grading culture.** Commercial reasoning:
+> `spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` §84.B (outside git).
+
 ### 2.4 The three-oil separation itself — a simple metric-space distance judge
 
 **No LDA / no supervised classifier (Edwin: "forget LDA — many have tried this and all failed";** the 2021
