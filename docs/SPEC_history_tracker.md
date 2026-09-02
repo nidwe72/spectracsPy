@@ -1508,3 +1508,33 @@ its floor has never been measured for this purpose.
 ⇒ **8-Q1:** measure the level term's within-fill floor on the archive, the way §5.1 measured the shape
 floor. Until then, ⛔ **no claim about detecting refined-oil adulteration may be made** — and the
 walnut series of §7 should record **both** `D` and the level, so the two can be compared on one dataset.
+
+### ⛔ 8.2 CORRECTION, same day — §7's walnut series is superseded before it was run
+
+§7 argued that walnut oil beats hemp as the first subject, because with walnut the difference can be
+**created** rather than hoped for. **That reasoning was right, and applied honestly it points somewhere
+nearer.**
+
+> ⛔ **The same argument lands on pumpkin oil itself.**
+>
+> Pumpkin seed oil diluted with **sunflower oil** is a made difference too — and unlike walnut it arrives
+> with a validated metric (`Rv`, `T = 52`), a **98-run archive**, a sunflower arm that already exists
+> (`SPEC_metric_research.md` §14), **both materials already in the house** (sunflower *is* the solvent),
+> and a fraud it imitates that is **documented in the trade**: sunflower oil coloured with a little
+> pumpkin seed oil.
+
+**And it tests something walnut cannot.** The walnut series asks whether `D` separates an unfamiliar oil —
+an open question with no prediction. The dilution ladder asks one this document can already answer, which
+is exactly why a wrong result would mean something:
+
+| quantity | prediction | ⛔ what a failure would mean |
+|---|---|---|
+| **`Rv`** | ⭐ **flat across the ladder** — scale-invariant by construction | **the invariance claim of `DOC_metric_algebra.md` §5.7 is wrong** — a finding about the metric, not about adulteration |
+| **the level term** | ⭐⭐ **falls linearly with dilution** | the level term has no usable floor ⇒ **8-Q1 answered in the negative and §8.1's proposal collapses** |
+
+⇒ ⭐⭐ **It is also the cheapest way to measure 8-Q1**, because a dilution ladder *is* a controlled level
+series. **The floor and the diagnostic fall out of one evening.**
+
+⇒ **`ROADMAP.md` 9c is now the dilution ladder; the walnut series becomes 9e and runs only if 9c succeeds
+and a second oil is actually wanted.** ⚠ **§7 is not withdrawn** — its published expectation stays the
+right reference for a second-oil experiment.
