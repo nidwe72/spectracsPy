@@ -867,3 +867,73 @@ widens), §16.25.4b (this study's summary) · `KB_spectroscopy_physics.md` §4.1
 §4.1a (the three band centres), §7.2 (the delivered range) · `KB_led_and_oil_spectra.md` (the Avonec
 catalogue and the harvest method) · `SPEC_metric_research.md` §9.1 item 5 (extend the red, light the
 blue) · `diagnostics/led_combination_search.py` (the 430–670 nm study).
+
+---
+
+## ⭐⭐⭐ 11 · 680 OR 710? — the question that decides whether the rebuild is a product improvement or a market  *(Edwin, 2026-09-02)*
+
+§7.3 settles the **670 nm** reach on this project's own terms: the quiet window is the baseline anchor
+the metric never had. A separate question surfaced from the other-oils analysis, and it is about **what
+lies just past the top of this study's range**.
+
+### 11.1 What 410–680 nm opens that 440–630 does not
+
+| pigment | Soret | Qx | Qy | in **440–630**? | in **410–680**? |
+|---|---|---|---|---|---|
+| **protochlorophyll** *(pumpkin — our case)* | 432 | — | **625** | ⭐ yes | yes |
+| **chlorophyll a** | **431** | **618** | **663** | ⛔ Soret and Qy both outside | ⭐⭐⭐ **all three inside** |
+| **pheophytin a** | **409** | **609** | **664–667** | ⛔ | ⭐⭐ Qx and Qy inside, Soret at the very edge |
+
+⭐⭐ **Chlorophyll a and its pheophytin are the pigment pair of every cold-pressed green oil that is not
+pumpkin** — hemp above all. **410–680 puts that pair fully in range**, and that is the single largest
+capability the rebuild adds beyond the pumpkin metric itself.
+
+⛔ **But the Qy pair is useless as a discriminator: 663 against 664–667 is 1–4 nm.** The demetallation has
+to be read on **Qx (618 vs 609, a 9 nm split)** — and ⭐ **that pair is already inside the present
+440–630 window**, weak though the Qx bands are. ⇒ **The rebuild is not what makes a chlorophyll:pheophytin
+ratio possible; it is what makes the pigment AMOUNT measurable.**
+
+### 11.2 ⭐⭐⭐ What lies between 680 and 710, and why it is a different kind of thing
+
+> **AOCS Cc 13i-96** — *total chlorophyll pigments in crude vegetable oils, expressed as pheophytin a*:
+>
+> **Tchl [mg/kg] = (A₆₇₀ − 0.5·A₆₃₀ − 0.5·A₇₁₀) / (345.3 · L)**
+
+This is a **three-point, baseline-corrected absorbance in the VIS** — structurally identical to what this
+instrument already computes. **630 and 670 are inside a 410–680 build. 710 is not.**
+
+⚠ *(Note in passing what the norm's own title concedes: it says* expressed as pheophytin a *because at
+670 nm chlorophyll and pheophytin cannot be told apart — §11.1's 1–4 nm. The norm sums them.)*
+
+| range | what it buys |
+|---|---|
+| **440–630** *(today)* | the pumpkin metric; ⚠ a chlorophyll:pheophytin *state* ratio on the weak Qx pair, untested |
+| **410–680** | ⭐⭐ the pumpkin metric improved (the eight arguments of §8.5 and `SPEC_lamp_rebuild.md`); chlorophyll a fully resolved; wine's 420 nm; beer's 430 nm |
+| ⭐⭐⭐ **…to 710** | **AOCS Cc 13i-96 becomes executable** — a *published norm*, not a metric of our own |
+
+> ⭐⭐⭐ **That is a qualitative change, not a quantitative one.** Everything this project measures today it
+> had to invent and must therefore validate against a corpus of its own. **A norm arrives with its own
+> authority.** Reaching 710 would mean the instrument could produce a number an oil chemist already
+> accepts — at a fraction of a laboratory spectrophotometer's price.
+
+### 11.3 ⛔ Why this is not a recommendation to extend to 710
+
+1. ⛔ **The quiet window is IR-cut-gated.** §2.2 and §5 establish that the usable top end is bounded by
+   the camera's IR-cut filter, not by the emitters. **680 → 710 may be a change to the sensor path, not
+   one more star**, and this document has no measurement at 710 to say either way.
+2. ⛔ **The norm is written for CRUDE oil before refining** — chlorophyll there is a catalyst poison and a
+   photo-oxidation starter. Whether its absorptivity holds for a native cold-pressed oil is unestablished.
+3. ⚠ **Nothing in the pumpkin case needs it.** The eight arguments for the red extension are all satisfied
+   at or below 680.
+4. ⚠ **And it would be a second rig change.** §7.3's closing warning applies with full force: every move
+   invalidates the thresholds, and the recalibration is the expensive part.
+
+⇒ **11-Q1:** does the present sensor path pass **710 nm** at all, and at what cost in exposure? ⭐ **This is
+a measurement, not an argument** — point the existing camera at a 710 nm source, or at a broadband source
+through a 710 filter, and read the counts. **It should be answered before any emitter order**, because it
+decides whether the rebuild is *a better pumpkin instrument* or *an instrument that can execute a
+published norm*.
+
+⚠ **And it must not delay the order.** If 710 turns out to need a sensor change, that is a separate
+project with its own budget — **R2 at 410–680 stands on its own eight arguments** and should not wait for
+an answer about a different one.

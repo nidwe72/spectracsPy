@@ -852,6 +852,35 @@ construction** — the algebra is the same as Appendix E.6's and is not repeated
 change moves it **0.12** units. ⚠ **Halving** the concentration moves it **2.19** — the invariance is
 first-order, not exact, and a 2× dilution error is not absorbed.
 
+### ⛔⛔ 5.7a The other face of invariance — it is also a BLINDNESS  *(2026-09-02)*
+
+Every section above treats dilution invariance as a virtue, and for the job these metrics were built for
+it is one: the operator's pipetting must not become the oil's verdict.
+
+> ⛔⛔ **But invariance under scaling is invariance under *any* scaling — including one the operator did
+> not intend.**
+>
+> Blending a **spectrally featureless** oil into a pigmented one multiplies the host spectrum by a
+> constant. That is arithmetically a dilution. ⇒ **`Rv`, `V`, `Q%` and `dQ100` — every band ratio in this
+> document — return the same number for the pure oil and for a 30 % blend.** So does the SNV shape
+> distance `D` of `SPEC_history_tracker.md`, which divides out mean and standard deviation.
+
+**The case is not hypothetical.** The hardest adulteration in edible oils — virgin olive oil cut with
+**refined** hazelnut oil — is exactly this shape: refining strips the pigments, so the adulterant carries
+no structure in 440–630 nm.
+
+⚠ **The boundary is sharp, and it should be stated wherever these metrics are offered for identity work:**
+
+| adulterant | effect on the spectrum | seen by a ratio or by `D`? |
+|---|---|---|
+| **refined / bleached** oil | scales the host down | ⛔ **no — indistinguishable from a dilution** |
+| **virgin, pigmented** oil (rapeseed, sunflower) | ⭐ adds its own bands | ⭐ **yes** |
+| oil of different turbidity | tilts the baseline | ⚠ partly, and confounded with §9.1's pedestal |
+
+⇒ ⭐⭐ **For a verdict this is harmless** — nobody grades a blend. **For an identity or conformity check it
+is disqualifying on its own**, and the fix is not a better ratio but a **second, non-invariant number**:
+the level. `SPEC_history_tracker.md` §8.1 carries that consequence and the open measurement (8-Q1).
+
 ### 5.8 ⭐⭐ The see-saw, and why a DIFFERENCE is worth twice a level  *(2026-08-21)*
 
 > ⭐ **Why this closes the chapter.** Everything above defines `Q%` and measures it. This section says what

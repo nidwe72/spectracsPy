@@ -5008,3 +5008,73 @@ unsound for comparing with the literature. **It must be named accordingly** in a
 metric-family ones, the fact that the deep red window is the material's defining feature, and that olive
 oil's chlorophyll bands sit at 665–670 nm. See `SPEC_lamp_rebuild.md`.
 
+
+---
+
+## ⛔⛔ 16.20 THE METRIC FAMILY IS BLIND TO A FEATURELESS DILUENT — and what the other-oils survey found  *(2026-09-02)*
+
+A day spent on oils other than pumpkin (recorded commercially in
+`SPEC_oelmuehlen_verzeichnis.md` §95–§107) produced three things that belong here rather than there.
+
+### 16.20.1 ⛔⛔ The blind spot, and it is structural
+
+§12, §15 and `DOC_metric_algebra.md` §5.7 all treat **dilution invariance** as the property that makes
+`Rv` trustworthy. It is — for a verdict.
+
+> ⛔⛔ **Invariance under scaling is invariance under any scaling.** Blending a **spectrally featureless**
+> oil into a pigmented one multiplies the host spectrum by a constant, which is arithmetically a dilution.
+> ⇒ **`Rv`, `V`, `Q%`, `dQ100` and the SNV shape distance `D` all return the same number for the pure oil
+> and for a 30 % blend.**
+
+The hardest real case has exactly this shape: virgin olive oil cut with **refined** hazelnut oil —
+refining strips the pigments. ⭐ **A virgin, pigmented adulterant (rapeseed, sunflower) is a different
+matter: it brings its own bands and is visible.** The boundary is sharp and belongs on any datasheet:
+**we can see an adulterant that ADDS structure, never one that only dilutes.**
+
+⇒ The consequence for identity work — a second, **non-invariant** level term — is carried in
+`SPEC_history_tracker.md` §8.1, with the open measurement as 8-Q1.
+
+⚠ **Nothing here weakens `Rv` for its own job.** Nobody grades a blend, and §15's decision stands.
+
+### 16.20.2 The pigment maxima, for the record
+
+Repeatedly needed and never written down here:
+
+| | Soret | Qx | Qy |
+|---|---|---|---|
+| **protochlorophyll** *(our pigment)* | 432 | — | **625** |
+| **chlorophyll a** | 431 | **618** | 663 |
+| **pheophytin a** | 409 | **609** | 664–667 |
+
+⭐⭐ **The demetallation that `Rv` reads in the red at 625 is, for true chlorophyll, only 1–4 nm at Qy —
+unreadable.** It has to be read on **Qx, 618 against 609**. ⭐ **That pair is inside the present window**;
+it is weak (Gouterman ordering), and whether it survives a baseline that is already 62 % of the raw Q
+signal (§16.24 of `SPEC_capture_quality.md`) is untested.
+
+⚠ This also explains a wording in the literature: **AOCS Cc 13i-96 reports "total chlorophyll pigments,
+expressed as pheophytin a"** — the norm sums the two because at 670 nm it cannot separate them.
+
+### 16.20.3 A norm in this project's own algebraic form
+
+> **AOCS Cc 13i-96:  Tchl [mg/kg] = (A₆₇₀ − 0.5·A₆₃₀ − 0.5·A₇₁₀) / (345.3 · L)**
+
+⭐⭐ **A three-point baseline-corrected VIS absorbance** — §16's baseline family in someone else's
+notation, with an absolute calibration this project has never had. ⛔ **630 and 670 fall inside a
+410–680 build; 710 does not**, and the top of the range is IR-cut-gated. `DOC_lamp_410_680.md` §11
+carries the question as 11-Q1.
+
+⚠ **And a caution against over-claiming it:** the norm is written for **crude oil before refining**.
+Its absorptivity has not been shown to hold for a native cold-pressed oil.
+
+### 16.20.4 What did NOT survive, so nobody re-runs it
+
+| oil | why it fails |
+|---|---|
+| ⛔ **walnut, roast degree** | roasting moves chlorophyll **39.10 → 36.54 mg/kg (−6.5 %)** and carotenoids not at all — the colour is Maillard, there is nothing to ratio |
+| ⛔ **olive, by fluorescence** | the published discrimination is **synchronous fluorescence** at 300–400 and 500–600 nm *in emission* — a different instrument; nothing transfers to transmission |
+| ⛔ **palm DOBI** | ISO 17932's denominator is **268 nm**, in the UV |
+| ⛔ **maple, beer, honey** | single-wavelength norms, all served by €15–500 one-LED photometers |
+
+⭐ **What did survive is one line:** a **verdict** metric needs a process that moves the bands, and only
+pumpkin has one that we have measured. **Everything else is identity work** — which needs no verdict
+direction, and which §16.20.1 has just shown needs a level term as well as `D`.
