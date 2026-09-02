@@ -4898,7 +4898,7 @@ testing a binary claim. This one is an *estimate*, and inventing a threshold for
 
 ---
 
-## ⭐⭐⭐ 16.16 AN EXTERNAL, BLINDED RANKING THAT INCLUDES FOUR ARCHIVE OILS  *(2026-09-02)*
+## ⭐⭐⭐ 16.18 AN EXTERNAL, BLINDED RANKING THAT INCLUDES FOUR ARCHIVE OILS  *(2026-09-02)*
 
 Found while researching the market, not the metric — which is the point of it.
 
@@ -4948,4 +4948,63 @@ score**. Then **pre-register in writing** — which oils, which metric, which di
 confirmation and what as refutation — and compute it **once**. ⛔ Do not recompute, do not retune.
 Sources: qualitaetstest.at (ÖGVS) and gusto.at, 2024-12-18. Recorded commercially in
 `spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` §45.
+
+---
+
+## ⭐⭐ 16.19 KREFT'S DICHROMATICITY INDEX — computable on the existing corpus, and it carries a foreign name  *(2026-09-02)*
+
+### The idea
+
+Pumpkin seed oil is the **textbook example** of dichromatism, and the effect has a **published,
+peer-reviewed index**: Kreft, S. & Kreft, M., *Quantification of dichromatism: a characteristic of color in
+transparent materials*, **J. Opt. Soc. Am. A 26(7) (2009) 1576–1581**; the physics in *Physicochemical and
+physiological basis of dichromatic colour*, **Naturwissenschaften 94 (2007) 935–939**.
+
+**DI** = the **CIELAB hue-angle difference** between the colour at maximum chroma and the colour of a
+**fourfold diluted (DI_L) or concentrated (DI_D)** sample. Published values for pumpkin seed oil:
+**DI_L = −9.0°, DI_D = −44.1°**, maximum chroma **59.8**, hue angle at maximum chroma **102.2°** — about
+44 degrees of hue between ~0.5 mm and ~2 mm of layer.
+
+### ⭐⭐⭐ Why it is nearly free for us
+
+**A fourfold path length is, by Beer–Lambert, simply `A × 4`.** So both colours come out of **one measured
+absorbance spectrum** — no second fill, no dilution series, no lab work. The colour path already exists
+(`SPEC_color_retrieval.md`, `DOC_colour_geometry.md`), and the **×3-path colour chips already perform
+exactly this operation**, with factor 3 and without the name.
+
+⇒ **The whole thing is computable retrospectively on the archived corpus** — the guarded labelled runs
+across three solvents, at a desk, in an afternoon.
+
+⚠ **A tristimulus colorimeter cannot do this**: three numbers at one path length carry no spectrum to
+re-scale. That is a real, if soft, differentiator.
+
+### The question it answers
+
+**Does DI separate green from brown?**
+- **If yes** — a **second metric with a published, foreign name** beside `Rv`, and one that is
+  **dilution-normalised by construction**, being a *difference between two path lengths*. In the M9
+  discussion (§16.31.3a) an index defined by someone else, before our question existed, is worth more than
+  another metric of our own.
+- **If no** — cheaply learned, and DI stays what §57.4 of the market file suspects: a **descriptor of the
+  substance class**, not a quality measure.
+
+⛔ **Pre-register before computing** — which runs, which direction, what counts as confirmation and what as
+refutation. Same discipline as the external-ranking comparison in §16.18. Do not compute, look, and then
+decide what it meant.
+
+### ⛔⛔ The caveat that must travel with the number
+
+A CIELAB hue angle integrates the spectrum against the colour-matching functions over roughly 380–780 nm,
+and **x̄ has a second lobe peaking near 600 nm and running past 700**. **Our window ends at 630 nm.**
+
+For an ordinary sample that is a modest truncation. **For a material whose defining feature is a deep
+transmission window in the RED, it cuts exactly where the effect lives.**
+
+⇒ **A DI computed from 440–630 nm is NOT comparable with Kreft's published values.** What is available
+today is an **internally consistent, DI-like quantity** — sound for comparing oils *with each other*,
+unsound for comparing with the literature. **It must be named accordingly** in any output or report.
+
+⭐ And that makes this **one more argument for extending the red end** — alongside the existing
+metric-family ones, the fact that the deep red window is the material's defining feature, and that olive
+oil's chlorophyll bands sit at 665–670 nm. See `SPEC_lamp_rebuild.md`.
 
