@@ -1272,3 +1272,131 @@ wearing an oil's clothes.
 ⇒ and it promotes the missing field: **the reference method (same-jar vs two-jar) is recorded nowhere** and
 had to be supplied by hand three times on 2026-08-31 to interpret one evening. `ROADMAP.md` §0c carries it
 as high priority, in the ESSENTIAL tier — because it is bound to the measurement, not to the graph.
+
+---
+
+## ⭐⭐⭐ THE 2026-09-02 POSITION — `D` answers a SECOND question, and that one needs no verdict at all  *(Edwin)*
+
+Everything above develops `D` as a **drift alarm**: one miller, one product line, one epoch, watching an
+oil move away from where it started. That is a *longitudinal* instrument and it is the harder of the two
+things `D` can do.
+
+> ⭐⭐⭐ **The same quantity answers a second, categorically different question — and that one is easier:**
+>
+> **not "has this oil changed?" but "is this delivery the SAME OIL as the one we approved?"**
+
+### 1 · Why the second question is worth a section of its own
+
+Every verdict metric in this project — `Rv`, `Q%`, `dQ100` — carries a debt: **somebody has to establish
+which direction is good.** That debt is paid for pumpkin oil (roast degree, threshold `T = 52`), and it is
+unpaid for every other oil. It is the single reason the other-oils analysis in
+`SPEC_oelmuehlen_verzeichnis.md` keeps stalling: the physics is often there, the *verdict direction* is not.
+
+**A conformity check has no such debt.**
+
+| | verdict metric | ⭐ **conformity check** |
+|---|---|---|
+| needs a direction ("greener is better") | ⭐ yes | ⛔ **no** |
+| needs a published threshold | yes | ⛔ **no — the customer names the reference** |
+| needs a pigment model | yes | ⛔ **no** |
+| needs a validation corpus | ⭐⭐ yes | ⚠ **no corpus — one reference set per product** |
+| what it outputs | a grade | **a distance and a pass/fail** |
+
+⇒ ⭐⭐ **It is the only thing in this project that can ship for an oil we have never studied.**
+
+### 2 · ⭐⭐ Therefore it is OIL-AGNOSTIC — and that changes who the customer is
+
+`D` is a shape distance on an SNV-normalised spectrum. **It contains no chemistry.** Nothing in it knows
+about protochlorophyll, demetallation, or the 568/624 pair. Feed it rapeseed, linseed, sunflower, walnut,
+camelina or hemp and it computes the same number.
+
+This matters because of a structural fact recorded in `SPEC_oelmuehlen_verzeichnis.md`: **the mills that
+press these oils are the same mills.** One press, eight seeds. A verdict plugin serves one product on that
+press; **a conformity check serves the whole range.**
+
+⭐ **And the object it needs already exists in this document.** §11.2 defines the *product-line epoch*: a
+reference that accumulates over many measurements, against which each new one is judged. A conformity
+check is **the same epoch with a different owner** — opened by the *buyer* of the oil rather than its
+producer, and closed when the supplier or the product line changes.
+
+| | drift alarm (§11.2) | ⭐ **conformity check** |
+|---|---|---|
+| who opens the epoch | the presser | ⭐ **the buyer** |
+| what the reference is | the product line's own history | ⭐ **the approved delivery** |
+| what firing means | "your oil is moving" | ⭐ **"this delivery is not that oil"** |
+| horizon | seasons | ⭐ **one delivery** |
+| ⭐ decision it feeds | recipe, roast, storage | ⭐⭐ **accept / reject / escalate** |
+
+### 3 · ⛔ The evidence, stated honestly — including where an earlier summary was too clean
+
+**The optimistic number, and its scope.** On the 2026-08-19 clean set, `D` separated oils with
+**within-oil ≤ 0.198** against **between-oil ≥ 0.338** across **45 pairs, no overlap**.
+
+⛔ **That is a clean-set result and it must not be quoted as unconditional.** The broader analysis of
+2026-08-21 (`diagnostics/tracker_d_solvent.py`), over the archive's labelled sessions, gives:
+
+| | 460–630 nm | 550–600 nm |
+|---|---|---|
+| within one oil, one solvent | 0.047 – **0.274** | 0.012 – 0.258 |
+| between two different oils | **0.066** – 0.505 | 0.049 – 0.373 |
+
+⇒ ⛔ **The ranges overlap.** A single reading of an unfamiliar oil at `D = 0.2` is not decidable. The
+separation is real *in the mean* and *within one protocol*, and §4 of the 2026-09-01 position already
+says why: **an alarm must run on a mean, not on single readings.** That applies here unchanged — a
+conformity decision on **one** fill is not supported by this evidence, and `k` must be stated wherever a
+threshold is.
+
+**Two results that are load-bearing for this use and must travel with it:**
+
+1. ⛔⛔ **A solvent change is larger than an oil change** (2026-08-21): the same oil in isopropanol
+   vs. white spirit lands at **0.326–0.466** on 460–630 and **0.430–0.572** on 550–600 — on the narrow
+   window **larger than any oil difference in the archive**. ⇒ **A conformity check is valid only under a
+   frozen protocol.** For a buyer this is easier than for a presser (one lab, one recipe, one solvent),
+   but it must be written on the tin: **change the preparation and every prior approval is void.**
+2. ⚠ **One drop moves the shape 18 %** (§6.2). The check is sensitive to preparation, not only to oil.
+
+**And the resolution limit, which is the right limit for this use:** `D ≈ 0.049·|ΔQ%| + 0.09`
+(r = 0.972) — `D` resolves roughly **3 Q% units**, where the scalar resolves 0.076. ⇒ ⭐ `D` is a
+**categorical** instrument, and the incoming-goods question **is** categorical. **Scalar for drift, `D`
+for identity** — the split already recorded on 2026-08-19, now with a use for each half.
+
+### 4 · ⛔⛔ The risk that decides it, and it is already named in §5.2
+
+§5.2 records the trap: **most of the between-oil correlation is the shared flank.** For pumpkin oil that
+is survivable because the diagnostic bands (568, 624) sit *inside* the window and contribute real
+structure.
+
+> ⛔⛔ **For an oil whose pigment bands lie OUTSIDE 440–630 nm, the flank may be all there is —
+> and then `D` degenerates into an amplitude echo.**
+
+That is not hypothetical. `SPEC_oelmuehlen_verzeichnis.md` §99.1 records that hemp's chlorophyll a
+maxima are **431 / 618 / 663** and pheophytin a's **409 / 609 / 664–667**: only the weak **Qx** pair falls
+inside the present window. **Whether `D` still separates under those conditions is unknown**, and it is
+not derivable from the pumpkin evidence.
+
+### 5 · ⭐⭐⭐ What must be measured — and it is cheap
+
+**One evening, existing rig, no rebuild, no lab.**
+
+| | |
+|---|---|
+| **Material** | 5–8 shop-bought oils of one type whose bands sit outside the window (hemp is the case of record: light to dark green, different pressers), **plus 2 bottles of the same brand** as a repeat |
+| **Rig** | ⭐ **unchanged, 440–630 nm, frozen protocol** |
+| **Q1** | Is there structure at **609 / 618 nm**, or does Qx drown? |
+| **Q2** | ⭐⭐⭐ **Does `D` separate brands the way it separates pumpkin oils — `D_within` clearly under `D_between`, on MEANS, not single fills?** |
+| **Q3** | Does the shape distance track what the eye sees (pale vs. dark green)? |
+| **decides** | ⭐ **Q2 yes ⇒ the conformity check is real and oil-agnostic, and it ships without any new physics.** ⛔ **Q2 no ⇒ `D` is a pumpkin-oil instrument, §5.2's trap is the reason, and every other-oil ambition moves behind the red extension.** |
+
+⇒ ⭐⭐ **This is the cheapest decisive experiment on the board.** It needs no mill, no customer, no
+funding and no hardware decision, and it settles a question that three sections of market analysis
+cannot.
+
+### 6 · ⛔ What this position does NOT claim
+
+- ⛔ **Not that a conformity check sells itself.** Where an audit regime is involved, an auditor checks
+  against a *specification*; a number that is not in the specification carries no obligation. The
+  commercial reading belongs in `SPEC_oelmuehlen_verzeichnis.md`, not here.
+- ⛔ **Not that `D` replaces a verdict.** It says "same" or "not same". It never says "good".
+- ⛔ **Not that the pumpkin thresholds transfer.** `D = 0.25` was derived on one corpus, one protocol,
+  one window. **Any new oil starts with its own reference set and its own threshold.**
+- ⚠ **Not that one fill is enough.** Everything the 2026-09-01 position says about `k` applies.
