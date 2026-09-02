@@ -124,6 +124,37 @@ valid root signature and is refused. This is TUF's / Debian's shape.
 cannot bootstrap itself, so replacing it will always need an app update. That is true of every PKI, including the
 browser's.
 
+### ⭐ 3d. Signing is INTEGRITY, not secrecy — and that is a selling point, not a compromise  *(2026-09-02)*
+
+A commercial question came up that this section already answers, but not in words a customer would hear:
+*should the plugin be **encrypted** so the metric cannot be copied?* **No — and the trust model above is
+the reason it does not need to be.**
+
+- **The metric is not protectable by hiding the code.** `Rv`'s windows sit at 625 and 568 nm, which are the
+  **published** protochlorophyll maxima for this oil (`KB_spectroscopy_physics.md` §4.1) — anyone forming a
+  ratio of two pigment bands lands there from the literature alone. And a device that emits one number per
+  spectrum is **reverse-engineerable from behaviour**: vary the input, watch what moves the output. Source
+  is not required. Obfuscation buys hours.
+- **A black box is unsellable where the number carries a decision.** The industrial buyer is QS management
+  under an annual **IFS** audit, and the main deliverable there is a **validation dossier** — a document
+  whose purpose is to *describe the method*. One cannot ship a dossier and hide the method.
+- ⭐ **What signing gives instead is exactly what such a customer needs:** the plugin that produced a
+  recorded value is **provably the authentic, unmodified one**, and an auditor can verify it against a key
+  shipped in the app. **That is an audit argument, and it is worth more than concealment.**
+
+**The commercially sensible split** — and it is the one the sector already accepts from its own instrument
+vendors (a moisture meter's maker publishes what it measures and keeps its per-product calibration curves):
+
+| | |
+|---|---|
+| ✅ disclose | *what* is measured, *why* (the photophysics is public), *how well*, and **where the method stops working** |
+| ⭐ keep, as **calibration** | the threshold `T`, the guard parameters, per-oil/per-solvent characteristics, capture-discipline parameters |
+| ⭐⭐ never shown | the **validated corpus** — the labelled runs across solvents, the light-dose pairs, the rig rebuild |
+| ⛔ do not | encrypt or obfuscate · conceal the window positions · claim the approach is novel |
+
+⇒ **Sign, do not encrypt.** Commercial reasoning in
+`spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` §83 (outside git).
+
 ### 3c. TLS — postponed, deliberately
 
 **Not a prerequisite.** Pyro is plaintext today, so a network attacker can inject plugin source — and the signature

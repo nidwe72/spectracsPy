@@ -189,6 +189,29 @@ one objection — *"the Soret complaint is a story fitted to our own corpus"* �
 currently buried in its sources list), `DOC_sample_physics.md`, and §5.8 — then regenerate
 `Spectracs_LightPigmentSolvent.pdf` and `Spectracs_MetricAlgebra.pdf`.
 
+### ⚠ 2.6 How this spec travels — the windows are literature, the corpus is not  *(2026-09-02)*
+
+Worth stating once, because this document contains both kinds of content and they must be handled
+differently outside the project.
+
+**The physics and the window positions are not ours to keep.** §2.5's argument rests on published
+photophysics, and 625/568 nm are the **published** protochlorophyll maxima in this oil (`KB_spectroscopy_
+physics.md` §4.1). Anyone who reads that literature and decides to ratio two bands of the same pigment
+system arrives at the same place. **Concealing the windows protects nothing and costs credibility** — and
+a number that carries a grading decision under an IFS audit has to be explicable.
+
+**What took a year is everything around them:** the threshold `T = 52` and its derivation, the guards
+(§3.2/§3.2a), the capture discipline the number depends on (`SPEC_capture_quality.md` §16), and above all
+**the corpus** — 98 guarded labelled runs across three solvents, the light-dose pairs, the rig rebuild,
+§6.7's diffuser failure. That is the asset, and it is not derivable from the formula.
+
+⇒ **In an external evaluation, deliver results and a method description; do not hand over the corpus or the
+calibration.** ⭐ Note that this bears on the retrospective-validation idea (evaluating our metric against a
+customer's own archived samples and their historical sensory record): the right approach, but an agreement
+belongs in front of it, because working the evaluation out together teaches **how a corpus is built** —
+which is the part that is worth something. Commercial reasoning: `spectracs-references/business/
+SPEC_oelmuehlen_verzeichnis.md` §82–§83 (outside git).
+
 ### 2.4 What was rejected, and why
 
 | form | why not |
