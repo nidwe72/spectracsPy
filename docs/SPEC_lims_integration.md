@@ -17,6 +17,24 @@ click-through green. 23 offline tests (`test_lims_gateway_mock`, `test_lims_subm
 `test_senaite_adapter_offline`). Live findings that shaped the adapter are in §5 "Live findings". Deferred items (§11)
 unchanged.
 
+## 0a. ⭐ Commercial note — this integration is the industrial segment's connection point *(2026-09-02)*
+
+> Market research (`spectracs-references/business/SPEC_wirtschaftliches.md` **§17**, resting on
+> `SPEC_oelmuehlen_verzeichnis.md` v7.1 §75–§79 — both **outside git**) split the customer base in two, and
+> it changes how this spec should be valued.
+>
+> For a **contract-pressing mill** (the farmer-facing hub) a LIMS path is a marginal feature — that customer
+> has no LIMS. For the **industrial mills** (Estyria ~1 Mio L with a **nine-person sensory panel every
+> Wednesday** and a **two-stage analytics-plus-sensory release**, Birnstingl, Kiendler) the release workflow
+> **is** the buying centre, and this integration is the seam a measurement has to arrive through.
+>
+> ⇒ **What L0–L7 already built is a segment-defining asset for the higher-value customer, not a nice-to-have.**
+> The industrial add-on that remains is mostly a **validation dossier** and a **numeric colour specification
+> per brand** to compare against — not new measurement technology.
+>
+> ⚠ Nothing in this spec changes as a result. This note exists so the next reader does not mistake the LIMS
+> path for a farmer feature and deprioritise it.
+
 ## 1. The vision (field-to-lab), and what is in this repo
 
 The DIY Spectracs unit measures **in the field**, produces the **M2 PDF** (visible report + embedded `workflow.json` +

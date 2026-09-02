@@ -599,11 +599,33 @@ ratio, and that is a question a spectrometer is genuinely better at than an eye.
 Hold Kürbiskernöl in a thin film and it is green. Look through the bottle and it is deep red. Nothing
 about the oil changed — **the path length did.**
 
-This is **dichromatism**, and pumpkin seed oil is its textbook example. The oil has a narrow
-transmission window in the green plus a broad one in the red. In a thin layer both get through and
-green dominates because the eye is most sensitive there; as the path lengthens, the narrow green
-window is extinguished exponentially faster than the wide red one, and red wins. Kreft and Kreft
-quantified the effect as a **dichromaticity index**.
+This is **dichromatism**, and pumpkin seed oil is its textbook example.
+
+⚠ **Corrected 2026-09-02 — the two windows were described the wrong way round here.** The condition for
+dichromatism, as Kreft and Kreft state it, is an absorbance spectrum with **one wide but shallow local
+minimum and one narrow but deep one**. For this oil the **wide, shallow** minimum is in the **green** and
+the **narrow, deep** one is in the **red** — not the other way about. In a thin layer a *broad band of
+greenish wavelengths* gets through, and green wins even though the absorption at any single green
+wavelength is higher than at the red minimum. As the path lengthens, Beer–Lambert punishes the
+higher-absorbance green band exponentially harder, the deep red minimum survives, and red wins. It is the
+**depth** of the red window that carries it through, not its width.
+
+**The quantities.** The colour flips at **0.7 mm** of layer thickness: below it the oil looks green to
+green-brown, above it red to red-brown. Kreft's **dichromaticity index** — the hue-angle change in CIELAB
+between the colour at maximum chroma and the colour of a fourfold diluted or concentrated sample — is
+**DI_L = −9.0°** and **DI_D = −44.1°** for pumpkin seed oil, at a maximum chroma of **59.8** and a hue
+angle of **102.2°**. Roughly **44 degrees of hue** between ~0.5 mm and ~2 mm. The oil is one of the most
+dichromatic substances described; the only other worked examples in that literature are bromophenol blue
+and resazurin.
+
+⭐ **And this is an argument about our own instrument.** The feature that optically *defines* this oil —
+the one the sector's own **Kernöltestgerät** exists to display — is the **narrow, deep transmission window
+in the red**, and it lies beyond the 625 nm band, hence **beyond our 630 nm capture cut-off**. The rig
+sees the band but not the window. That is a fifth, different-in-kind argument for extending the red end
+*(`SPEC_metric_research.md` §12; `SPEC_lamp_rebuild.md`)* — it says nothing about whether a red-window
+metric would beat `Rv`, only that the material's most characteristic region is currently out of reach.
+⚠ Kreft's numbers are for **undiluted** oil viewed in daylight-like illumination; the relation to our
+cuvette geometry is to be computed, not assumed.
 
 > **Why it matters practically.** Perceived colour depends on path length, so *"it looks green"* is
 > not a measurement. It also means our transmission-derived colour swatches are dilution-dependent by
@@ -1503,7 +1525,10 @@ any food-chemistry text. Pumpkin-specific composition: Fruhwirth & Hermetter (20
 of the Styrian oil pumpkin*, Eur. J. Lipid Sci. Technol. **109**(11) 1128–1140,
 [10.1002/ejlt.200700105](https://doi.org/10.1002/ejlt.200700105).
 
-**Dichromatism.** S. Kreft & M. Kreft, on the dichromaticity index and pumpkin seed oil as its
+**Dichromatism.** S. Kreft & M. Kreft, *Physicochemical and physiological basis of dichromatic colour*,
+**Naturwissenschaften 94 (2007) 935–939**, doi 10.1007/s00114-007-0272-9; and *Quantification of
+dichromatism: a characteristic of color in transparent materials*, **J. Opt. Soc. Am. A 26(7) (2009)
+1576–1581** — the dichromaticity index and pumpkin seed oil as its
 type example.
 
 **Oil–alcohol miscibility.** Rao & Arnold (1957), *Alcoholic extraction of vegetable oils IV —

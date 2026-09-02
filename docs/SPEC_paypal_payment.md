@@ -5,7 +5,12 @@
 > → approve in browser as the sandbox buyer → capture → `CAPTURED` transaction listed (Edwin confirmed).
 > Backend also live-verified via `verify_paypal_payment.py` (token/createOrder/capture) and offscreen
 > tests (entity CRUD, screen build, formatters, refresh). As-built in **§11** (backend) + **§12** (UI).
-> Later milestones: M2 recurring €200 subscription, M3 live go-live, M4 Android.
+> Later milestones: M2 recurring subscription, M3 live go-live, M4 Android.
+> ⛔ **2026-09-02 — M2's PRICING MODEL CHANGED.** The flat **€200/month** assumed below is a flat
+> per-mill subscription; the market analysis has since rejected that mechanism (it is 12.3 % of a small
+> mill's contract-pressing revenue and 0.9 % of a large one's — a factor-13 distortion). **§13 states what
+> M2 must actually be able to bill.** Sections written before that date still say "€200/month"; read them
+> as the historical assumption.
 >
 > Original status: **DESIGN ONLY — not implemented.** This spec covers the *first
 > sub-milestone*: a single, one-off €1 payment from a logged-in `AppUser` to a **dev PayPal
@@ -412,7 +417,9 @@ Granular per-phase steps with concrete files. `P0 ✓` done. Each phase leaves t
 ## 8. Milestone map (product view)
 
 1. **M1 (this spec)** — single €1 sandbox payment, end-to-end, recorded + listed. *Proves the pipe.*
-2. **M2** — recurring **€200/month** subscription (PayPal Subscriptions), pay-regardless-of-use.
+2. **M2** — recurring subscription (PayPal Subscriptions), pay-regardless-of-use.
+   ⛔ **The amount is no longer a flat €200/month — see §13.** M2 must bill a **quantity-based annual
+   licence** (basis: the mill's number of Lohn customers), and support a **one-off device sale** beside it.
 3. **M3** — **live** credentials + go-live; receipts/invoicing.
 4. **M4** — Android payment path.
 
@@ -554,3 +561,83 @@ transaction shown **CAPTURED**. Milestone 1 complete.
 ---
 *Milestone 1 DONE (implemented + click-through verified). Recurring billing (M2), live go-live (M3),
 and Android (M4) are later milestones.*
+
+---
+
+## 13. ⭐⭐ Billing mechanisms M2 must support *(added 2026-09-02 — DESIGN, not implemented)*
+
+> **Why this section exists.** M2 was specified as a flat **€200/month** subscription. Four rounds of
+> market research (`SPEC_wirtschaftliches.md` **§16**, itself resting on
+> `spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` v6.8 §67–§76 — both **outside git**)
+> have **rejected that mechanism**. This section records what must be billable instead. It is **design
+> only**; implement on explicit request (spec-first workflow).
+
+### 13.1 Why the flat subscription fails
+
+A contract-pressing mill's business scales with its number of **Lohn customers**, which spans a factor of
+13 across the addressable list (30 → 400). A flat fee is therefore wildly mis-scaled:
+
+| mill | Lohn customers | pressings/yr | contract-pressing revenue | flat €2,400/yr = |
+|---|---|---|---|---|
+| small | 30 | 390 | €19,500 | ⛔ **12.3 %** — unsellable |
+| medium | 100 | 1,300 | €65,000 | 3.7 % |
+| large (Höfler) | 200 | 2,600 | €130,000 | 1.8 % |
+| very large (Grabersdorf) | 400 | 5,200 | €260,000 | 0.9 % — given away |
+
+> ⭐ **And there is a second customer segment with its own logic.** The industrial mills (Estyria,
+> Birnstingl, Kiendler …) make **1,000–3,000 release-lot decisions a year in the whole segment**, not
+> 27,040 pressings — so a hub-level per-measurement price would yield **€3,000–9,000/yr for the entire
+> industry**. They are billed by **volume** instead (mechanism **E**). See `SPEC_wirtschaftliches.md` §17.
+
+### 13.2 The four mechanisms to support
+
+| | mechanism | billing shape | PayPal primitive |
+|---|---|---|---|
+| **A** | **one-off device sale**, €3,000–6,000 | a single large **Order**, possibly instalments | **Orders v2** — *already built in M1*, only the amount is not fixed |
+| **C** | ⭐ **annual licence per Lohn customer**, €12–20/customer/yr | recurring, **quantity × unit price**, quantity revised yearly | **Subscriptions API** with a *quantity* field, or a yearly invoice |
+| **D** | **measurement counting** | ⛔ **not a Spectracs price.** The mill resells each measurement to the farmer as a "Röstprotokoll" (~€5). We only need to **count and report** measurements so the mill can invoice its own customers | no PayPal involvement — a **report**, not a charge |
+| **E** | ⭐ **volume-based industrial licence**, **~€0.04 per litre of oil under contract** (equivalently ~€27–80 per release lot) | recurring, **quantity × unit price**, but the quantity is a **reported or metered volume per period**, not a headcount agreed once a year. Per customer this is **€5,600–40,000/yr** | Subscriptions with a periodically revised quantity, or an annual invoice against a reported volume |
+
+⛔ **D must not become Spectracs' billing unit.** Charging per measurement gives the mill a reason to
+measure less, which destroys the data the product depends on.
+
+### 13.3 What that means for the data model
+
+The M1 `Transaction` entity stays as-is. What is missing for M2:
+
+- **A billable subject that is not the `AppUser`.** Today a payment belongs to a user; a licence belongs to
+  an **organisation/mill**. Needs a tenant-like owner for the subscription.
+- **A quantity on the licence** — the number of Lohn customers — with an **effective date**, because it is
+  renegotiated yearly. ⚠ **Auditability of that number is an open commercial question** (`SPEC_
+  wirtschaftliches.md` §16.5): the mill declares it, and nothing today verifies it.
+- **A quantity that is a MEASURED VOLUME, not a declared headcount** (mechanism E). The Lohn licence's
+  quantity is agreed once a year; the industrial licence's quantity is **litres in the period**. Both are
+  "quantity × unit price", but only one of them can be verified by the system itself — which makes E the
+  *easier* of the two to run honestly, and is worth remembering when M2-Q2 is decided.
+- **A measurement counter per mill and period**, feeding a statement the mill can use towards its own
+  customers (mechanism D). This is a **reporting** requirement, and it is naturally satisfied by the
+  `PressingJob` / `PressRun` structure the domain work is heading for (ROADMAP item 2) — a measurement
+  hangs on a `PressRun`, and a mill's period total is the sum over its jobs.
+- **Amounts are no longer server-fixed constants.** D7 currently has the server compute a fixed €1;
+  `PAYPAL_AMOUNT_MINOR` in `.env` encodes it. A quantity-based licence needs the amount **derived** from
+  (quantity × unit price) server-side — the anti-tampering property of D7 must be preserved.
+
+### 13.4 Sequencing note
+
+⚠ **M2 is not the next thing to build.** The commercial path (`SPEC_wirtschaftliches.md` §16.7, scenario
+S3) starts with **unpaid pilots** at 1–3 mills for one season, precisely because the one number that
+parameterises the whole price model — **how many measurements a mill actually makes** — is unknown.
+⇒ Building a quantity-based subscription before that number exists would encode a guess.
+**What is worth building early is the counting (D), not the charging.**
+
+### 13.5 Open questions for M2
+
+| # | Question | Blocks |
+|---|---|---|
+| M2-Q1 | Is the licence subject the `AppUser` or a new organisation entity? | data model |
+| M2-Q2 | How is the declared Lohn-customer count verified — self-declaration, or derived from the measurements the system itself records? | contract + trust |
+| M2-Q3 | Yearly invoice or PayPal Subscriptions with quantity? | API choice |
+| M2-Q4 | Is the device sale (A) billed through this system at all, or invoiced conventionally outside it? | scope |
+| M2-Q5 | Does the mill need a per-customer statement (for its own "Röstprotokoll" invoicing), and in what format? | reporting scope |
+| M2-Q6 | ⭐ For mechanism **E**: is the billable volume **self-reported** by the industrial customer, or **derived** from the release lots the system itself recorded? | contract + trust, and it is the same question as M2-Q2 in a different segment |
+| M2-Q7 | Do the two segments share one subscription model with a different unit (customers vs litres), or are they two products? | data model + how far M2 has to stretch |

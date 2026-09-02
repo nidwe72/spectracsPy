@@ -4896,3 +4896,56 @@ testing a binary claim. This one is an *estimate*, and inventing a threshold for
 - ⛔ **Not the DN question.** `SPEC_capture_quality.md` §16.40 stands: these fill-to-fill differences are
   1–3 camera counts, and the decode round-trip they rest on is still unverified.
 
+---
+
+## ⭐⭐⭐ 16.16 AN EXTERNAL, BLINDED RANKING THAT INCLUDES FOUR ARCHIVE OILS  *(2026-09-02)*
+
+Found while researching the market, not the metric — which is the point of it.
+
+**ÖGVS (Gesellschaft für Verbraucherstudien) + GUSTO + the food-science institute of BOKU Vienna**,
+published **2024-12-18**: quantitative descriptive analysis by a **trained panel**, **38 product-specific
+attributes** across appearance, aroma, taste, texture and aftertaste, on eight retail pumpkin seed oils.
+
+| rank | product | points |
+|---|---|---|
+| 1 | Gutes aus der Region (Hofer) | 5.80 |
+| 2 | Vita D'Or (Lidl) | 5.73 |
+| 3 | Vita D'Or Steirisches (Lidl) | 5.68 |
+| **4** | ⭐ **Ja! Natürlich** | **5.63** |
+| **5** | ⭐ **Spar Natur\*pur Bio** | **4.81** |
+| 6 | Bellasan (Lidl) | 4.74 |
+| **7** | ⭐ **Clever** | **4.67** |
+| **8** | ⭐ **S-BUDGET** | **4.04** |
+
+**Four of these are oils this archive already measures.** The external order is
+`Ja! Natürlich > Spar Natur*pur > Clever > S-Budget`.
+
+⭐⭐⭐ **Why it matters for §16.31.3a / M9.** The test was published in 2024 by third parties who had never
+heard of `Rv`, `Q%` or `dQ100`. It therefore **cannot have been fitted to any corpus of ours** — which is
+precisely the circularity the pre-registration gate exists to rule out. It is a **ready-made external
+yardstick that was fixed before the question was asked.**
+
+⭐ **And a coincidence worth testing:** **Billa Clever ranks 7 of 8.** That is the same oil `ROADMAP.md`
+§0b·1 calls "the oil the archive cannot measure" — 624 band on the DN floor, `Rv` −10 to +42 across six
+fills. A trained panel also puts it near the bottom. ⇒ **Hypothesis: Clever is not unmeasurable, it is
+pigment-poor, and the measurement difficulty IS the finding.**
+
+### ⛔ Four limits, to be written into any use of it
+
+1. **Different batch and year.** The test is 12/2024; the archive oils are 2026 purchases. Retail private
+   labels are re-tendered — and the **CLEVER recall of 2025-04-09** names *Vom Kürbis Handels-GmbH* as the
+   supplier, so the filler behind a label demonstrably changes.
+2. **Different construct.** The ÖGVS score is overall sensory quality, dominated by taste, texture and
+   aftertaste; `Rv` is a pigment/roast measure. A correlation would be welcome; **its absence would not
+   refute `Rv`.**
+3. **n = 4.** Usable as a sign test, borderline for a rank correlation.
+4. **Appearance is one of five categories** and its weighting is not published.
+
+### The protocol, if it is used
+
+**Buy the four missing oils** (Gutes aus der Region, both Vita D'Or, Bellasan) → **n = 8 with an external
+score**. Then **pre-register in writing** — which oils, which metric, which direction, what counts as
+confirmation and what as refutation — and compute it **once**. ⛔ Do not recompute, do not retune.
+Sources: qualitaetstest.at (ÖGVS) and gusto.at, 2024-12-18. Recorded commercially in
+`spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` §45.
+

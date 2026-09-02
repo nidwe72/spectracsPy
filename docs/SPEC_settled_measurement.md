@@ -8599,3 +8599,65 @@ which is the failure this branch was written for, caught in the wild.
   ⚠ Part of that 1.17 % is jar re-seating rather than the lamp (§16.26's ±3 % reference wander); both are
   instrument-side and both move `Rv`, so the size stands even though the cause is not separated.
 
+---
+
+## ⭐⭐⭐ 54. THE TURBIDITY QUESTION IS NOW THE HINGE OF THE INDUSTRIAL CASE  *(2026-09-02)*
+
+Market research turned a side item of this spec into the question the industrial value proposition hangs
+on. Recorded here because the experiment that settles it is **ours, at our own rig, and costs an afternoon**.
+
+### 54.1 What the industry actually does
+
+**Steirerkraft/Estyria — Europe's largest producer, ~1 Mio L/yr —** states its own process:
+
+> *"Nach dem Pressen ruht das Öl rund **sieben Tage in Edelstahltanks**. In dieser Zeit setzen sich
+> Schwebstoffe und Faserrückstände auf natürliche Weise am Boden ab. **Gefiltert wird das Öl nicht** —
+> es klärt sich allein durch diese natürliche Sedimentation."*
+
+So the **Absetzphase holds at industrial scale** (~7 days against the g.g.A. guide's ~10 for a farmer), and
+**the market leader does not filter either** — turbidity is a regulated product property, not a defect.
+
+### 54.2 ⭐⭐ The hinge
+
+Their sensory release panel meets **weekly** and judges the oil **after** the seven days, i.e. on clarified
+oil. So:
+
+| Can `Rv` read **turbid**, unsettled oil? | What the measurement is worth to an industrial mill |
+|---|---|
+| ⭐ **YES** | a verdict on **day 0 instead of day 7** — **seven days of early warning**. A bad roast is known *before* it occupies a tank for a week |
+| ⛔ **NO** | the measurement happens when the panel could anyway; the benefit shrinks to the ~3 days the weekly panel adds on top of the unavoidable 7 |
+
+⇒ **This is no longer an open side item. It decides whether the industrial pitch is "seven days earlier"
+or "three days earlier".**
+
+### 54.3 The experiment — ours, one afternoon
+
+**Measure the same fill at minute 0 and at minute 20, across several oils**, and ask whether the answer
+(and the rank order between oils) survives the turbidity. §31–§33 of this spec did adjacent work: §32 found
+`Q%` non-monotone in turbidity and §33 withdrew κ, but **`Rv` on unsettled oil was never the question
+asked.** It is now.
+
+⚠ Note the asymmetry it would create: for the **Lohnpresser** the measurement wants to sit **at the press**,
+before settling — so a "no" here also costs the hub its most natural measuring point, and pushes the
+measurement to the customer's can days later.
+
+### 54.4 ⭐ A second observation, and an idea that follows from it
+
+Scaling this spec's ~20 minutes of cuvette settling linearly to tank height predicts clearing in
+**0.6–1.6 days**; industry waits **7**. Factor **4–12**. Three candidate explanations:
+**(a)** a safety margin, because nobody knows when it is finished; **(b)** bulk settling is genuinely
+slower (convection, thermal gradients, hindered settling); **(c)** ⭐⭐ **the Absetzphase is not only
+sedimentation** — the g.g.A. guide says the oil *develops its aroma* after it, and **too long on the Drosel
+gives dumpf/muffig notes**. A two-sided window that is not purely mechanical.
+
+⇒ If (a) contributes, the **drawdown rule** built here answers exactly the right question one scale up:
+*"has this stopped moving?"* — a tank-scale "this is clear" instead of "wait seven days". At 1 Mio L/yr,
+shortening dwell from 7 to 5/4/3 days frees 5,479 / 8,219 / 10,959 L of standing inventory
+(**66–219 k€** of working capital at 12–20 €/L), plus tank capacity.
+
+⛔ **But because of (c), shorter is not automatically better**, and we do not measure aroma. The honest
+framing is **not** "we shorten your settling time" but **"we tell you when the mechanical clearing is
+finished; what you do with the rest of the week stays your decision."**
+
+Commercial context: `spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` §81 (outside git).
+
