@@ -886,3 +886,46 @@ plugins render.
 3. A tampered/unsigned `DbPlugin.source` is **refused** by the client — as are a swapped `version`, a re-pointed
    `codeRef`, and an unknown `keyId`.
 4. A workflow run records the exact plugin `codeRef`+`version` (visible in M2's embedded metadata).
+
+---
+
+## ⭐⭐ 11 · IF A READING IS EVER PUBLISHED, THE SIGNATURE STOPS BEING OPTIONAL  *(2026-09-02)*
+
+§3d argues signing over encryption on the grounds that the metric is not protectable by hiding it. A
+second, stronger reason surfaced from the market side and it is a **product requirement**, not a
+commercial preference.
+
+**The scenario.** A miller — or an online retailer — publishes a per-batch reading on a product page.
+There is a precedent: **Olio Carli lets a buyer look up the analytical values of the exact batch by its
+batch number, from independent laboratories.** Doing the same with a reading of ours is the cheapest
+differentiator either party has, and it makes them measure every batch, which is the frequency this
+whole business rests on.
+
+> ⛔⛔ **But a published reading inverts the operator's interest.** In the plant the miller wants the
+> **truth**, because he steers by it. Published, he wants a **good number**, because he sells by it. And
+> a value that a customer can compare across producers becomes a ranking that nobody controls — readers
+> will take "higher is better" even where `Rv` has an optimum rather than a maximum.
+
+| | in the plant | ⛔ published |
+|---|---|---|
+| what the operator wants | ⭐ the truth | ⚠ a good number |
+| who compares | nobody | ⛔ everyone, instantly |
+| consequence of a bad reading | change the roast | ⛔ **blame the instrument** |
+
+⇒ ⭐⭐⭐ **This is exactly why the regional competition is judged by a third party rather than by the
+millers.** If a reading leaves the building, the same separation has to exist in the software:
+
+| requirement | |
+|---|---|
+| ⭐⭐⭐ **the number must come from the instrument, not from a keyboard** | a published value must be traceable to a **measurement record**, not a field a person can type |
+| ⭐⭐ **the record must be signed** | the sealed-plugin chain already exists for the *code*; the same signature must cover the *result* |
+| ⭐ **and it must carry its provenance** | epoch, protocol, solvent, lamp state — a value without them is not comparable, and §5 of the 2026-09-01 position already requires provenance marks on the graph |
+| ⚠ **the wording is bounded too** | a published reading may say *"measured at intake: Rv 57"*, never *"fresh"* or *"best"* — `Rv` reads roast degree, and ageing browns an oil the same way, so a single reading cannot separate the two |
+
+⛔ **What this does NOT require:** a new signing mechanism. **A2 and the sealed-row dispatch already
+carry one.** What is missing is that it currently seals **the plugin**, and a published-reading feature
+would need it to seal **the reading**.
+
+⇒ **11-Q1:** if a reading is ever exported for publication, does the export carry a signature and the
+provenance fields, or only the number? ⚠ **Today: only the number.** ⛔ **That is acceptable while
+readings stay inside the plant and unacceptable the day one appears on a web page.**
