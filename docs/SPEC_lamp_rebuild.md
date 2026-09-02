@@ -637,16 +637,17 @@ Here is the list once, deduplicated, with the one column that actually matters f
 | **9** | A **literature-comparable Kreft dichromaticity index** needs the full red; x̄ runs past 700 nm | ⛔ **no** | `SPEC_metric_research.md` §16.19 |
 | **10** | **Measurement through the bottle** is possible only in the deep red window | ⛔ **no** *(commercial case in `SPEC_oelmuehlen_verzeichnis.md`)* | — |
 | **11** | **AOCS Cc 13i-96** — a published norm in this instrument's own algebraic form — needs **630 / 670 / 710** | ⛔ **no — needs 710** | `DOC_lamp_410_680.md` §11.2 |
+| ⭐ **12** | ⭐⭐ **A catalogue of ~25 normed liquid-colour and pigment metrics was assembled, and EVERY line still open to us lies beyond 630 nm** — chlorophyll in vegetable oil (670/710), a comparable dichromaticity index (>700), the OIV wine pair's partner at 420 with its 620, walnut's photometric colour index (455/**640**), **avocado oil's proposed chlorophyll range 11–19 mg/kg at ~665**. Nothing in 440–630 remains unclaimed | ⚠ **partly** — 640 and 665 yes, 710 no | `SPEC_oelmuehlen_verzeichnis.md` §113, §130 |
 
 ### 13.2 ⭐⭐⭐ What the split says, and it is the useful part
 
-> **Eleven arguments, not eight and not nine. And they fall into two groups that want two different
+> **Twelve arguments, not eight and not nine. And they fall into two groups that want two different
 > instruments.**
 
 | group | # | what it wants |
 |---|---|---|
 | ⭐⭐⭐ **Instrument-side** — the metric cannot see its own band properly | **1–5, 7** | ⭐ **410–680 satisfies all six** |
-| ⛔ **Reach-side** — a new capability, not a better reading | **6, 8, 9, 10, 11** | **past 700 nm** |
+| ⛔ **Reach-side** — a new capability, not a better reading | **6, 8, 9, 10, 11, 12** | **past 700 nm** *(12 partly at 640–665)* |
 
 ⇒ **Two conclusions, and they are independent:**
 

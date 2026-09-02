@@ -5068,12 +5068,16 @@ Its absorptivity has not been shown to hold for a native cold-pressed oil.
 
 ### 16.20.4 What did NOT survive, so nobody re-runs it
 
-| oil | why it fails |
+| oil / application | why it fails |
 |---|---|
 | ⛔ **walnut, roast degree** | roasting moves chlorophyll **39.10 → 36.54 mg/kg (−6.5 %)** and carotenoids not at all — the colour is Maillard, there is nothing to ratio |
 | ⛔ **olive, by fluorescence** | the published discrimination is **synchronous fluorescence** at 300–400 and 500–600 nm *in emission* — a different instrument; nothing transfers to transmission |
 | ⛔ **palm DOBI** | ISO 17932's denominator is **268 nm**, in the UV |
-| ⛔ **maple, beer, honey** | single-wavelength norms, all served by €15–500 one-LED photometers |
+| ⛔ **maple, beer, honey, paprika ASTA, sugar ICUMSA** | single-wavelength norms, all served by €15–500 one-LED photometers; ICUMSA additionally needs **420 + 720 nm at 50 mm** |
+| ⛔ **red wine** | ⭐ **the quantity is LABILE** — anthocyanin colour is reversibly bleached by SO₂ and shifted by pH, so the same wine reads differently after every sulphur addition *(`SPEC_history_tracker.md` §8.4)* |
+| ⛔ **water / wastewater colour (ISO 7887, SAK 436/525/620)** | ⭐ three bands, a legal discharge parameter — ⛔ but **0.5–50 m⁻¹ is A = 0.0002–0.022 at our 1 mm path**, mostly under the noise floor. It needs a 50 mm cell, i.e. a different instrument |
+| ⛔ **the classical liquid-colour scales** (Lovibond, Gardner, APHA/Hazen, Saybolt, ASTM D1500) | ⭐ **Lovibond is DEFINED at 5.25 inches = 133 mm**, the others are for near-colourless liquids at 10–50 mm. **Our 1 mm cell is their exact opposite** — we cover only the dark end where they must dilute |
+| ⚠ **avocado oil** | ⭐⭐ the strongest of the lot on paper — **AOCS's proposed extra-virgin standard names chlorophyll 11–19 mg/kg and carotenoids 1.0–3.5** — ⛔ but chlorophyll sits at **~665 nm**, and Codex adopted avocado into **CXS 210 in 2024 with fatty acids, sterols and tocopherols only.** The adopted answer to its fraud problem is **GC** |
 
 ⭐ **What did survive is one line:** a **verdict** metric needs a process that moves the bands, and only
 pumpkin has one that we have measured. **Everything else is identity work** — which needs no verdict

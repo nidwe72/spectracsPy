@@ -1538,3 +1538,57 @@ series. **The floor and the diagnostic fall out of one evening.**
 ⇒ **`ROADMAP.md` 9c is now the dilution ladder; the walnut series becomes 9e and runs only if 9c succeeds
 and a second oil is actually wanted.** ⚠ **§7 is not withdrawn** — its published expectation stays the
 right reference for a second-oil experiment.
+
+### ⭐⭐⭐ 8.3 THE PIGMENT SPREAD ACROSS OILS — the number that decides whether a level term can work WITHOUT a reference
+
+8.1 says identity work needs a level term. It does not say whether that level can be **absolute** — a
+published range one measures against — or only **relative**, against a customer-held reference. The
+literature answers it per oil, and the answer differs by two orders of magnitude.
+
+| oil | reported chlorophyll in the OIL | spread | ⇒ absolute level usable? |
+|---|---|---|---|
+| ⛔ **walnut** | 0.13 – 39 mg/kg | ⛔⛔ **×300** | ⛔ **no — reference only** |
+| ⛔ **hemp** | 0.78 – 75.7 mg/kg | ⛔ **×97** | ⛔ no |
+| ⭐⭐ **avocado, extra virgin** | **11 – 19 mg/kg** *(AOCS proposed standard)* | ⭐ **×1.7** | ⭐⭐ **yes, with a stated floor** |
+
+⭐⭐ **Only where the published range is tight does an absolute level mean anything.** For avocado the
+arithmetic is: a batch starting at 19 mg/kg drops below the 11 mg/kg floor at **42 % dilution**; from
+15 mg/kg, at **27 %**. ⇒ **A referenceless level test resolves roughly 27–42 % — no better, and that is
+worth stating plainly rather than discovering later.**
+
+⚠ **Three cautions that travel with this table:**
+- ⛔ the avocado range is a **proposed** standard (AOCS, developed by New Zealand, Australian and
+  Californian groups), **not an adopted one** — Codex adopted avocado oil into CXS 210 in 2024 with
+  **fatty acids, sterols and tocopherols only, no pigments**;
+- ⚠ individual cultivars fall far below it (**Hass 1.04, Fuerte 1.63 mg/kg**), so the range holds for
+  cold-pressed extra virgin, not for everything;
+- ⛔ **and an earlier draft of this table used 40–60 mg/kg for avocado. That was TISSUE, not oil**
+  (skin 316, dark flesh 101 µg/g FW). Corrected here.
+
+⇒ ⭐ **For 8-Q1 this sharpens the question:** the level term's floor must be measured, but the *useful*
+resolution is already bounded from the other side by how wide the oil's own published range is.
+**A level term better than ±25 % buys nothing on walnut or hemp, because the oils themselves are not
+that reproducible.**
+
+### ⭐⭐ 8.4 A PRECONDITION THAT PRECEDES ALL OF THIS — is the measured quantity LABILE?
+
+Prompted by red wine, which fails it. **Anthocyanin colour is bleached by SO₂ reversibly**: as free SO₂
+falls, anthocyanins are released and regain colour, which is a documented source of variability in
+colour measurements **on the same wine over time**; pH and SO₂ are the two dominant influences. Sulphur
+is added at every racking and before bottling.
+
+> ⛔⛔ **A colour-based identity check on wine would fire on every sulphur addition.** That is chemistry,
+> not economics, and it disqualifies the material before any threshold is chosen.
+
+| material | quantity | labile? |
+|---|---|---|
+| ⛔ red wine | anthocyanin colour | ⛔⛔ **yes — pH and SO₂, reversibly** |
+| ⭐ pumpkin oil | protochlorophyll / protopheophytin | ⭐ **no** — no pH equilibrium, no additives |
+| ⭐ walnut, hemp, avocado oil | chlorophyll / carotenoids | ⭐ no |
+
+⚠ **And the honest qualifier for our own case:** heat and light do move our pigment
+(`SPEC_capture_quality.md` §16.36). **The difference is that we can freeze those by protocol; a winemaker
+cannot freeze his SO₂.**
+
+⇒ ⭐⭐ **This belongs before §8.1 in any future screening: a labile quantity cannot carry an identity
+check at all, however good the level term is.**
