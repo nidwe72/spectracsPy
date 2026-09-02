@@ -1400,3 +1400,52 @@ cannot.
 - ⛔ **Not that the pumpkin thresholds transfer.** `D = 0.25` was derived on one corpus, one protocol,
   one window. **Any new oil starts with its own reference set and its own threshold.**
 - ⚠ **Not that one fill is enough.** Everything the 2026-09-01 position says about `k` applies.
+
+### ⭐⭐⭐ 7 · ADDENDUM, same day — the literature already answers §4, and it hands us a BETTER experiment
+
+§4 above names the risk: for an oil whose pigment bands lie outside 440–630 nm, `D` may degenerate into
+an amplitude echo, because §5.2 showed most of the between-oil correlation is the shared flank. §5 then
+proposes shop-bought hemp oils as the test.
+
+⭐⭐ **There is a published result that speaks directly to this, on a different oil.** A Vis-NIR study of
+**cold-pressed walnut oil adulterated with sunflower, rapeseed and soybean oil** at 5, 10, 20, 30, 40 and
+50 %:
+
+| | |
+|---|---|
+| ⭐⭐⭐ most informative region | **420–500 nm**, described as the *pigment-related absorption band* |
+| named markers | **471 nm** (pigment differentiation), 652 nm (chlorophyll a) |
+| ⭐⭐⭐ preprocessing | **SNV** |
+| method | PCA / LDA / **PLS-DA** |
+| accuracy | soybean ~95 % · sunflower 80–91 % · rapeseed 70–77 % |
+
+> ⭐⭐ **On an oil that is not pumpkin, VIS shape after SNV carries the discrimination — and the region
+> that carries it is inside our window.** That is evidence against §4's failure mode, though not proof:
+> they recorded 350–1650 nm, so the NIR was available to the model, and **PLS-DA is supervised** where
+> `D` is a plain distance to a reference.
+
+⭐⭐⭐ **And it converts the experiment of §5 from exploration into calibration.** Walnut oil is the better
+subject than hemp for one reason:
+
+> **With hemp we buy bottles and hope a difference exists. With walnut we CREATE the difference
+> ourselves, in known steps, against a published expectation.**
+
+| | hemp (§5) | ⭐⭐ **walnut adulteration series** |
+|---|---|---|
+| is a difference known to be present? | ⛔ no | ⭐⭐⭐ **yes, and we set its size** |
+| expected answer | none | ⭐ 5–50 %, 70–95 % by supervised methods |
+| what a null result teaches | ambiguous — bad oils or bad metric? | ⭐⭐⭐ **unambiguous: `D` is too coarse** |
+| cost | shop bottles | ⭐ **two shop bottles and a pipette** |
+
+**The protocol:** walnut oil adulterated with sunflower oil at **0 / 5 / 10 / 20 / 30 / 50 %**, existing
+rig, frozen preparation, `k` fills per level so the comparison runs on means as §4 of the 2026-09-01
+position requires.
+
+⇒ ⭐⭐⭐ **The number it produces — the lowest adulteration level at which `D` leaves the within-level
+scatter — is a datasheet figure, and it would be the first this project has for any oil other than
+pumpkin.** ⛔ A null result is equally valuable: it would say the shape distance is too coarse for
+identity work, and it would say so about `D` itself rather than about any particular oil.
+
+⚠ **Two things this does not settle:** whether `D` separates *naturally occurring* batches of the same
+oil (adulteration is a coarser difference than batch variation), and anything at all about hemp, whose
+Qx pair is a separate question.
