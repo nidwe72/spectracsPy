@@ -5056,7 +5056,17 @@ expressed as pheophytin a"** — the norm sums the two because at 670 nm it cann
 
 ### 16.20.3 A norm in this project's own algebraic form
 
-> **AOCS Cc 13i-96:  Tchl [mg/kg] = (A₆₇₀ − 0.5·A₆₃₀ − 0.5·A₇₁₀) / (345.3 · L)**
+> **AOCS Cc 13i-96:  Tchl [mg/kg] = 345.3 · (A₆₇₀ − 0.5·A₆₃₀ − 0.5·A₇₁₀) / L**   *(L in **mm**)*
+
+⛔⛔ **Corrected 2026-09-04 — the first writing of this line put 345.3 in the DENOMINATOR.** It is a
+multiplier, and `L` is in millimetres. The error is not cosmetic: it would have produced values ~10⁶ too
+small, i.e. a number that looks like nothing rather than like a fault. Sanity anchor: a crude oil reading
+`A₆₇₀ = 0.1` in a 10 mm cell is **3.45 mg/kg**, which is the right order for a crude vegetable oil.
+
+⚠ **A sibling designation `AOCS Cc 13k-13` was noted in one secondary source and COULD NOT BE
+CONFIRMED** on a second look. It is not in the 2003 method index
+(`spectracs-references/standards/`, which runs `Cc 13a` … `Cc 13j` — a `-13` suffix means 2013, ten years
+after that snapshot). ⇒ **treat it as unverified**; it may exist, and nothing here depends on it.
 
 ⭐⭐ **A three-point baseline-corrected VIS absorbance** — §16's baseline family in someone else's
 notation, with an absolute calibration this project has never had. ⛔ **630 and 670 fall inside a
@@ -5082,3 +5092,132 @@ Its absorptivity has not been shown to hold for a native cold-pressed oil.
 ⭐ **What did survive is one line:** a **verdict** metric needs a process that moves the bands, and only
 pumpkin has one that we have measured. **Everything else is identity work** — which needs no verdict
 direction, and which §16.20.1 has just shown needs a level term as well as `D`.
+
+### ⭐⭐ 16.20.5 The criterion §16.20.4 was reaching for — a norm is portable iff it carries `L`  *(2026-09-04)*
+
+*(Edwin, exploring markets: "the AOCS PCI index might be of interest for walnut oil". It is — and
+working out why produced a filter that applies to every norm in §16.20.4's table at once.)*
+
+§16.20.4 already rejected the classical colour scales with the right observation — *"Lovibond is DEFINED
+at 5.25 inches = 133 mm … our 1 mm cell is their exact opposite"* — and used the same reasoning again for
+ISO 7887. **That observation generalises into a one-line test, and it sorts the norms better than the
+wavelength does:**
+
+> ⭐⭐ **A norm is portable to our geometry if and only if its formula contains an explicit path-length
+> term. If the path is baked into a specified cell instead, the norm is not a formula we can evaluate —
+> it is a formula *plus a cuvette we cannot use*.**
+
+| norm | form | portable? |
+|---|---|---|
+| ⭐ **AOCS Cc 13i-96** | `345.3 · (A₆₇₀ − 0.5A₆₃₀ − 0.5A₇₁₀) / L` | ⭐⭐ **YES — `/L` is explicit** ⇒ evaluable at *any* cell, including a thin one |
+| ⛔ **AOCS Cc 13c-50 (PCI)** | `1.29A₄₆₀ + 69.7A₅₅₀ + 41.2A₆₂₀ − 56.4A₆₇₀` | ⛔ **NO — no path term**; defined at its 1″/5¼″ cell |
+| ⛔ Lovibond / Gardner / APHA / Saybolt | visual match at a fixed cell | ⛔ no (§16.20.4) |
+| ⛔ ISO 7887 SAK | m⁻¹ at a specified 50 mm | ⚠ has a path term but a mandated cell (§16.20.4) |
+
+#### 16.20.5a ⛔ So PCI is the one we CANNOT evaluate — and pumpkin is why
+
+Scaling the archive's median `A₄₆₀ = 0.411` (diluted, 1.3 cm jar) back to neat oil
+(`diagnostics/aocs_pci_feasibility.py`, 225 runs):
+
+| dilution factor | A₄₆₀ neat @ 25.4 mm (the PCI cell) | path for A₄₆₀ = 1.0 |
+|--:|--:|--:|
+| 60 | **48** | 527 µm |
+| 100 | **80** | 316 µm |
+| 120 | **96** | 264 µm |
+
+⛔ **Neat pumpkin oil in the PCI cell reads A ≈ 48–96 — transmittance 10⁻⁴⁸. Inapplicable by roughly
+fifty orders of magnitude.** Measuring at a thinner path and scaling gives a number that is *not*
+Cc 13c-50, because there is nothing in the formula to scale.
+
+⭐ **This puts a number on §16.20.4's Lovibond row.** The path that suits an oil is the whole distance
+between the crops, and nothing else about them differs photometrically:
+
+| oil | cell that puts A₄₆₀ ≈ 1 | source |
+|---|---|---|
+| **pumpkin** | **~0.3 mm** | measured, above |
+| **walnut** | **~21 mm** | ⭐ **measured**: `A₄₆₀ = 0.469` in a 10 mm cell (Sandulachi & Tatarov 2014, in `articles/`) |
+
+⛔⛔ **Corrected — the first writing of this table said ~133 mm and ~420×.** That took Lovibond's 5¼″
+*visual-scale cell convention* as if it were the cell needed for `A ≈ 1`; the two are unrelated. The
+walnut paper measures the real number. ⭐ And ~21 mm is close to Cc 13c-50's own **25.4 mm** cell — which
+is the actual reason the norm fits walnut and cannot fit pumpkin.
+
+⇒ ⭐⭐ **≈70× of path length separates them, and at matched absorbance they are the identical
+measurement problem** — every relative-precision argument in this project depends on `A`, not on the
+crop. ⛔ **A light oil therefore needs a longer CELL, not a better detector** (`KB_cameras.md` §0 bounds
+what a detector could ever buy at 2.6 %). ⚠ A first guess that the detector argument *reverses* for light
+oils is wrong: at the right path there is nothing to reverse.
+
+⚠ **The product consequence, which the multi-oil plan has never faced:** one press, eight seeds, but
+**~70× of path length across them**. An all-oils instrument needs interchangeable cells or a variable
+path. ⚠ Less brutal than the ~400× first claimed, and 21 mm is an ordinary cuvette rather than a 13 cm
+column — but still not one cell, and still not the Kernöltestgerät's 0.7 mm.
+
+#### 16.20.5b What the archive says about PCI's three visible terms — and a failed prediction
+
+460, 550 and 620 nm are already inside the shipped window; only 670 is not. Tested on 225 runs:
+
+| question | answer |
+|---|---|
+| ⭐ dynamic range — one path for all four bands? | **Yes.** At a path giving `A₄₆₀ = 1.0` the bands span **A = 0.24 … 1.73** (T 58 % … 1.8 %). PCI reads 460 on the Soret **flank**, never the 432 peak, so neat oil does *not* imply the starved regime |
+| ⛔ is `1.29A₄₆₀ + 69.7A₅₅₀ + 41.2A₆₂₀` a new axis? | **77 % concentration** (r = +0.77 with `A_Soret`). Divided by `A_Soret`, uncorrelated with `Q%` (r = +0.07) |
+| ⛔ is that residual signal or noise? | **Noise.** Grouped by source (15 oils, ≥ 4 runs) its between/within is **0.74** against `Q%`'s **0.93** on the identical grouping — it discriminates oils *worse* than the shipped metric |
+
+⚠ **A prediction was recorded before the test** — that the three visible terms would land on §16's single
+axis (`spectracs-metric-family`, r 0.84–0.99). It **failed**: they land nowhere. That is a weaker result
+than either alternative, and it is recorded because a fitted-afterwards story would have claimed a
+discovery.
+
+⇒ **Everything in PCI rides on `−56.4·A₆₇₀`** — 40 % of the weight by coefficient, and the one wavelength
+the instrument cannot see.
+
+#### 16.20.5c ⛔ And walnut was already rejected, for a reason this does not repair
+
+§16.20.4's own row stands: **walnut roast moves chlorophyll only 39.10 → 36.54 mg/kg (−6.5 %)** — the
+colour is Maillard and there is nothing to ratio. PCI does not change that; it is not a verdict metric.
+
+**Three distinct things must not be blurred**, and §16.20's closing line already splits the first two:
+
+| | needs | walnut status |
+|---|---|---|
+| **verdict** (roast, quality) | a process that moves the bands | ⛔ dead — §16.20.4 |
+| **identity** (adulteration) | a level term beside `D` — §16.20.1 | ⭐ **alive, spec'd**: `SPEC_history_tracker.md` §7, ROADMAP **9e** (demoted 2026-09-02 behind 9c) |
+| **absolute colour grading** (PCI) | a normed formula + the right cell | ⭐ *executable* on walnut, ⛔ on pumpkin |
+
+#### ⚠⚠ 16.20.5d The cell Cc 13i-96 specifies — and it weakens §16.20.5's own conclusion  *(same day)*
+
+Chasing the unverified `Cc 13k-13` turned up the thing that actually mattered: **Cc 13i-96 specifies a
+5 mm or 10 mm cell and an instrument covering 630–710 nm.** Against the archive, neat pumpkin oil at the
+method's own three wavelengths (`A₆₃₀` estimated from the measured 615–625 band):
+
+| dilution factor | A/cm @ 630 | **A₆₃₀ in a 5 mm cell** | **A₆₃₀ in a 10 mm cell** |
+|--:|--:|--:|--:|
+| 60 | 6.2 | 3.1 | 6.2 |
+| 100 | 10.3 | 5.1 | 10.3 |
+| 120 | 12.3 | 6.2 | 12.3 |
+
+⚠ **A lab spectrophotometer tops out near A = 2–3.** ⇒ **neat pumpkin oil is out of range in the cells
+Cc 13i-96 specifies too** — by 3–6×, not PCI's fifty decades, but out of range nonetheless.
+
+⛔ **So "Cc 13i-96 survives" (§16.20.5) needs qualifying.** What survives is the *arithmetic*: `/L` makes
+the number correct at any path. **What does not automatically survive is the CLAIM** — a standard is a
+procedure, not only a formula, and whether a read at an unspecified cell may be reported *per Cc 13i-96*
+is a question for the method text (which we do not hold) or for a certifying body. ⚠ **Do not promise
+"we execute the AOCS method" on the strength of a portable formula alone.**
+
+⭐⭐ **But the geometry news is good, and it inverts the problem.** The path that puts `A₆₃₀` in range is
+**~2 mm for A = 2.0**, and at this project's **existing ~1 mm cell** (§16.20.4) neat pumpkin oil reads
+
+> **A₆₃₀ ≈ 0.6 – 1.2** — a textbook absorbance, dead centre of the usable window.
+
+⇒ **It is the laboratory's cells that are wrong for this oil, not ours.** Our 1 mm geometry — the one
+§16.20.4 called *"their exact opposite"* — is the correct one for reading a dark oil neat, and it is
+already the Kernöltestgerät's order of magnitude. That is the strongest form of the neat-oil argument in
+this section, and it arrived from a failed search for a method that may not exist.
+
+⇒ ⚠ **The honest market read: PCI-on-walnut is real and executable, and grades a quantity nobody trades.**
+Colour is a specification for *refined commodity* oils, where bleaching performance is priced; nobody
+buys 250 ml of cold-pressed walnut oil on a colour index. And a normed number has **no corpus moat** by
+construction — the moat on record is the validated corpus, not the formula. ⭐ **What survives is the
+finding underneath it: the instrument generalises across oils as soon as the cell adapts.** The
+commercial half of this is in `SPEC_oelmuehlen_verzeichnis.md` §141.

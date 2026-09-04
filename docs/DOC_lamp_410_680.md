@@ -471,6 +471,30 @@ calibration lamp — never markable before because the ROI ended blue of them. *
 passes 690 nm, §6's withdrawal stands, and the collapse belongs to the lamps. Lines absent ⇒ the IR-cut is the
 gate and §6 must be re-opened.** Queued, not concluded.
 
+#### ⭐⭐ 6.2b DECIDED 2026-09-04, by a halogen rather than by the europium lines — `KB_lamps.md`
+
+A **60 W halogen** answers §6.2a's question without resolving any line, because a tungsten filament's SPD is
+**analytic**: a Planck continuum that *rises* monotonically through 600–700 nm. Dividing a measured halogen
+frame by Planck therefore leaves the instrument response by itself — the division §7.2 says no single lamp
+permits, and the one thing a CFL's line spectrum could never support.
+
+| finding | `KB_lamps.md` |
+|---|---|
+| the response carries a **dielectric edge at λ₅₀ = 641.8 nm**, 10→90 % over 16.5 nm — ~50× steeper per nm than anything else in it | §4.1 |
+| ⇒ **the IR-cut is the gate.** At 650 nm ~82 %, at 660 nm ~87 % of the loss is that edge | §4.2 |
+| the collapse is measured between **190 DN and 17 DN** — not a quantisation artefact | §4.3 |
+| ⭐ **run `20260808B` (Yuji) is independently replicated** — same shape over 4000× of dynamic range | §5.3 |
+| ⛔ **reconciliation 1 above is dead**: 115 DN at 656 nm would need the lamp to *emit* ~30× more at 656 than at 620 nm. Reconciliations 2 and 3 survive | §5.4 |
+
+⇒ ⛔ **§6's withdrawal must be re-opened for everything past ~650 nm**, and §6.1's working assumption
+(*"the optics deliver to ~700 nm and the camera captures it"*) is refuted there. ⭐ What survives intact is
+§6.1's *criticism* — the CFL evidence really was worthless, for exactly the reason given. It is the
+conclusion drawn from it that was too strong.
+⛔ **And §5.4 / §7.3's deep-red reasoning loses its point**: 660–680 nm sits *behind* the edge, so no lamp
+purchase reaches the quiet window. Marking the Eu³⁺ far lines remains a worthwhile independent check —
+on these numbers they should be **invisible** — but it is no longer the blocker.
+⚠ Rewriting §6 itself is left to Edwin; this is a pointer, not the rewrite.
+
 ### ⭐⭐ 6.3 The argument that replaces it — the 619/624 nm red feature
 
 Withdrawing §6 does **not** leave the lamp choice unsupported at the red end. There is a real, measured

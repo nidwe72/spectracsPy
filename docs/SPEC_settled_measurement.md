@@ -8661,3 +8661,84 @@ finished; what you do with the rest of the week stays your decision."**
 
 Commercial context: `spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` §81 (outside git).
 
+
+---
+
+## ⭐⭐ 55. THE INDUSTRY DOES NOT WAIT — IT FILTERS. Why we should not copy that, and the one part we should  *(2026-09-04)*
+
+Edwin supplied **AOCS Official Method Cc 13j-97 "Color"** (PDF + note in
+`spectracs-references/articles/`). Buried in its Procedure 1 is the trade's answer to the problem this
+entire specification exists to manage:
+
+> **0.5 g diatomaceous earth per 300 g of oil, agitate 2.5 min at 250 rpm, filter** — because *"suspended
+> material, even if of colloidal size, will cause light scattering. If the test portion is not absolutely
+> clear, treat with diatomaceous earth (filter aid), and filter before proceeding."* Sample held at
+> **30 °C**.
+
+**Three minutes, against this document's twenty.** That deserved a serious look. The physics of all three
+available routes is in `KB_spectroscopy_physics.md` §8.3a; what follows is the decision.
+
+### 55.1 ⛔ It is NOT worth adopting for the sunflower route — and the reason is a compliment to §16.12.7g
+
+| route out of the pedestal | mechanism | what it costs |
+|---|---|---|
+| **wait** (isopropanol) | Stokes sedimentation | ~20 min, and every apparatus in this document |
+| ⭐⭐ **index-match** (sunflower) | scatter ∝ (n_particle − n_medium)²; **1.473 against 1.47** ⇒ particles present, optically invisible | ⭐ **nothing leaves the sample** |
+| **filter** (AOCS + DE) | rigid cake keeps soft haze filterable | ~3 min, but material leaves and silica may adsorb pigment |
+
+⭐⭐ **Sunflower is arguably the best of the three precisely because it removes nothing.** DE would attack a
+residue index matching has already taken, at the price of the one risk sunflower does not carry.
+⇒ ⛔ **Do not put a filter aid into the sunflower recipe.**
+
+⚠ **But the reduction is ~3×, not elimination.** Median final `A_valley` across the archive:
+
+| | median `A_valley` |
+|---|--:|
+| whole corpus (101 runs, 42 sessions) | **0.0867** |
+| lowest late-August sessions | **0.029 – 0.060** |
+| highest in the same period (Esterer) | 0.14 – 0.20 |
+
+⛔ **Oil identity and solvent are confounded** — Esterer reads high throughout the sunflower period — so
+this is not a controlled comparison, and §16.12.7g's **0.018** is a single best fill rather than a typical
+one. **A controlled solvent A/B on one oil has still never been run.**
+
+### ⭐ 55.2 The part that DOES apply: 30 °C
+
+This route's two live faults are **viscosity** (§16.12.7g: *"sunflower is viscous and a capillary will
+not"* deliver reproducibly) and **stratification** (*"the preparation stratifies — second half +15–45 %
+absorber"*).
+
+- ⛔ **DE fixes neither.** Stratification is a gradient of *dissolved* material, not particulate; it is a
+  mixing problem, and the protocol already answers it with 40 inversions.
+- ⭐ **The norm's 30 °C attacks viscosity head-on** — that is why the method specifies it — and it is free
+  to adopt. ⚠ With one confound to design around: **heat also clears reversibly**
+  (`SPEC_capture_quality.md` §16.36), so a heated protocol moves two things at once and a temperature
+  change must not be introduced in the same session as anything else.
+
+### ⭐⭐ 55.3 Where the filter aid does belong — the neat-oil route, and it is a prerequisite there
+
+**Index matching only exists if you dilute.** The moment the route is **neat oil at a short path** —
+what every AOCS spectrophotometric method assumes, and what `SPEC_metric_research.md` §16.20.5d showed our
+**~1 mm cell is already correct for** (neat pumpkin reads `A₆₃₀` ≈ 0.6–1.2 there) — there is no diluent to
+match with. All that remains is the oil's own native haze: press fines, phospholipid gums, waxes. **DE is
+the only answer, and it is the trade's.**
+
+⇒ ⭐ **The filter aid is a prerequisite for the NORMED-METHOD direction, not for this one.** Cc 13j-97
+makes clarity a **scope condition** — *"providing no turbidity is present"* — not a recommendation.
+
+### 55.4 What would have to be measured before any of this moves
+
+- ⭐⭐ **The first hurdle is already cleared:** the pigment does **not** leave with the haze.
+  `diagnostics/clearing_removes_pedestal_not_pigment.py` — over the 7 archived fills that cleared,
+  `d(Soret)/d(valley) = 1.158` and `d(Q)/d(valley) = 1.331` at r = +0.994/+0.990, where sedimenting
+  pigment would give ~4–5. ⛔ **But that tests gravity, not chemistry — adsorption is exactly what it
+  cannot see.**
+- ▶ **The bench test, if the neat-oil route is ever taken:** one portion split, half untreated, half at
+  the AOCS dose (0.167 % w/w, 2.5 min, filtered, 30 °C). ⭐ **The readout already exists:** scatter-only ⇒
+  band *shape* unchanged, `D` stays put, only the pedestal moves; adsorption ⇒ **the bands themselves
+  shrink** and `D` moves. Dose ladder 0.05 / 0.167 / 0.5 / 1 % to find where adsorption starts.
+  ⚠ 0.167 % of a 20 g portion is **33 mg**.
+- ⚠ **And decide what is filtered.** The norm filters **neat** oil. Our haze is largely *created by* the
+  dilution (`KB_spectroscopy_physics.md` §8.2's ouzo nanodroplets), so filtering neat oil may change
+  nothing — while filtering a dispersion is easy but removes droplets that could carry pigment by
+  partition. The measurement above covers the *sedimenting* population only.

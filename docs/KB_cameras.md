@@ -1,0 +1,490 @@
+# KB — Cameras
+
+*The detector is half the instrument. This note holds what each camera on the roster actually is, what
+its optical path does to the spectrum, and what changing camera would cost and buy. Written 2026-09-04,
+after the halogen measurement in `KB_lamps.md` §4 turned "the camera's red response" from an assumption
+into a number.*
+
+Companions: `KB_lamps.md` (the light source, and the measurement this note builds on),
+`KB_spectroscopy_physics.md` §7 (the physical instrument), `SPEC_real_camera_capture.md` (the capture
+wiring), `SPEC_capture_quality.md` §16 (the error budget), `SPEC_dev_capture_view.md` (the view every
+measurement here was taken in).
+
+<!--TOC-->
+
+---
+
+## 0 · ⭐⭐⭐ The answer up front: a better sensor does NOT fix the pumpkin measurement
+
+*(Edwin, 2026-09-04: "isn't it that the biggest problem we have is sample preparation and a noise
+floor?" — it is, and this section is the arithmetic that settles it. Recorded here so the camera
+question is never re-opened on the wrong grounds.)*
+
+**The whole instrument — camera, lamp, optics, quantisation, every electronic term — contributes 0.063
+Q% units.** That is `DevSpectralPlugin.SINGLE_WINDOW_SIGMA`: the standard deviation of `Q%` over ten
+repeats with the jar untouched (`SPEC_capture_quality.md` §16.36.6). Against it:
+
+| what is being measured | Q% units | × the instrument |
+|---|--:|--:|
+| **the entire instrument, jar untouched** | **0.063** | 1× |
+| second pour of the same dilution (§36) | 0.076 | 1.2× |
+| clean set, aliquots kept dark (§40) | 0.198 | 3.1× |
+| **σ_fill — five separate preparations** (§28) | **0.276** | **4.4×** |
+| archive within-fill scatter (§28) | 1.255 | 19.9× |
+
+⇒ ⭐⭐⭐ **A PERFECT detector — zero read noise, infinite bit depth, no Bayer array, no IR-cut — would
+improve σ_fill by 2.6 % and the archive scatter by 0.1 %.** Not "12-bit buys 2.6 %": *anything* confined
+to the instrument floor buys at most that, because √(0.276² − 0.063²) = 0.269 and no detector change can
+subtract more than the whole floor. **This is an upper bound on every camera upgrade ever proposed, and
+it needs no model of the new camera at all.**
+
+⛔ **So the monochrome/12-bit case must not be made on measurement quality.** §4.1a re-quantised 225
+archived runs to check the specific claim: quantisation contributes at most 0.063 and 12 bits shrinks it
+3.1×. Real, and irrelevant. Mono's ~3× photon gain is a better argument than the bits — photon noise is
+genuinely in the floor — but it is subject to the identical 2.6 % ceiling.
+
+⭐ **What a camera change IS for, then:** buying **spectral range** that does not exist today (§4.2–4.5),
+and unlocking **normed methods** — which §4.5b narrows to exactly ONE, needing **710 nm**. Those are capability arguments, not
+precision arguments. ⚠ Judge any camera proposal by which of the two it is making.
+
+⇒ **The measurement is gated on the fill, not the detector.** `SPEC_settled_measurement.md` is where the
+4.4× lives, and until its one-fill/capillary work lands, no detector purchase moves the verdict.
+
+## 1 · The roster, at a glance
+
+| | **ELP `32e4:8830`** | **Microdia/Sonix `0c45:6366`** | **ToupTek GPCMOS02000KMA** |
+|---|---|---|---|
+| role | bench / dev — **the archive camera** | intended **production** camera | ⚠ candidate only, not owned |
+| sensor | Sony IMX179 (inferred) | unrecorded | **Sony IMX290LLR mono** |
+| colour | Bayer RGB | Bayer RGB | ⭐ **monochrome** |
+| native | 3264 × 2448 (8 MP) | unrecorded | 1945 × 1097 (2.13 MP) |
+| captured at | **2592 × 1944** (pinned) | ⛔ not wired | 1920 × 1080 |
+| pixel pitch | 1.4 µm native | unrecorded | **2.9 µm** |
+| imaging width | 3.63–4.57 mm (§4.1) | unrecorded | **5.57 mm** |
+| bit depth | **8** | **8** | ⭐ **12** |
+| transfer curve | ⚠ gamma-encoded (`pow2.2`) | ⚠ gamma-encoded | ⭐ **linear raw** |
+| IR-cut filter | ⛔ **YES — measured, λ₅₀ = 641.8 nm** | ⭐ **NO** (remote test) | ⭐ **NO** — AR-coated clear window, IR-transmitting |
+| red reach | 62 DN @ 650, 17 DN @ 660 nm | ⚠ **unmeasured** | ⚠ **unmeasured** |
+| interface | UVC / V4L2 → `cv2` | UVC / V4L2 → `cv2` | ⛔ **proprietary `libtoupcam` SDK** |
+| mount | M12 (S-mount) | M12 | 1.25" barrel + C-mount adapter |
+| price class | ~€60 | ⭐ cheap — the reason it is the production part | ~€180–230 |
+
+⭐ **The single most important row is the IR-cut row**, and it is the one that was assumed rather than
+known until 2026-09-04.
+
+![**Figure 1** — what each camera can reach, and why the three limits are different kinds of limit. Solid = measured. Hatched = projected, never measured. The faded tail is signal present but below the 16 DN working floor. Only the silicon bandgap at ~1100 nm is a law of physics; the other two boundaries are purchasing decisions.](figures/camera_reach.svg)
+
+## 2 · ELP `32e4:8830` — the bench unit, and what the archive was captured through
+
+**Identity.** `CaptureBackend` records the sensor maximum as **3264 × 2448** and pins capture to
+**2592 × 1944**. 8 MP at 4:3 in that size is the **ELP-USB8MP02G** class, i.e. **Sony IMX179**, 1.4 µm
+pixels. ⚠ *Inferred from the resolution — there is no datasheet or invoice in the repo, and
+`KNOWLEDGE_BASE.md` §8 calls it "ELP 4K", which does not fit 3264 × 2448.* Worth confirming from the
+purchase record.
+
+**Why 2592 × 1944 is pinned, and must stay pinned.** `CaptureBackend.py` carries the full argument: the
+ROI corners and the px→nm cubic on `SpectrometerCalibrationProfile` were **authored at that size**, so any
+other capture size mis-maps every wavelength. Not the sensor maximum either — that would need a
+recalibration and is slower still (~1.5 fps at 2592 over USB 2). ⚠ The file's own
+`TODO: make this per-sensor ... when a second camera lands` is now due (§5).
+
+**⛔ It has an IR-cut filter, and the edge is measured.** `KB_lamps.md` §4: dividing a 60 W halogen frame
+by Planck leaves the instrument response, which carries a dielectric edge at **λ₅₀ = 641.8 nm, 10→90 %
+over 16.5 nm** — 641 ± 1 nm under every decode assumption and filament temperature. At 650 nm ~82 % and at
+660 nm ~87 % of the attenuation is that edge; everything else costs under 2× across 620–660 nm.
+
+**⚠ Two artefacts this camera imprints on every archived spectrum.** Both are the Bayer array, not the
+sample:
+
+| | |
+|---|---|
+| **max-channel notches** | The reduction takes the maximum of R, G, B, so where two channels hand over the maximum dips. Measured at **B=G 486.2 nm** and **G=R 581.0/581.5 nm** on two different lamps. The 581 one is why `KB_spectroscopy_physics.md` §4.1a reads the Q band at 568 nm rather than 574 |
+| ⭐ **and they are useful** | Being a property of the colour filters, they are a **free wavelength-scale check** — no calibration lamp needed. Two lamp families agreeing on both to 0.5 nm is what pins the scale in `KB_lamps.md` |
+
+**⛔ Do not modify this unit.** Removing an IR-cut filter shifts the focal plane by ≈ *t*(1−1/n) — about
+0.3 mm for 1 mm of glass — so the lens must be refocused, refocusing an M12 lens changes magnification,
+and changed magnification changes dispersion ⇒ **a full recalibration**, which breaks registration with
+the ~98-run archive that every fitted metric constant rests on.
+
+## 3 · Microdia/Sonix `0c45:6366` — the production camera, and the surprise
+
+`KB_spectroscopy_physics.md` §7 records this as *"the cheap Chinese cam intended for the production
+batch"*. Almost nothing else about it is written down: no resolution, no calibration profile (the second
+`spectrometer_calibration_profile` row is all NULL), and `CaptureBackend` has no branch for it.
+
+⭐⭐ **But it has no IR-cut filter.** Edwin ran the remote test on 2026-09-04: in the dark it shows **a
+white dot with a purple/violet halo**.
+
+> **The halo is the diagnostic, not the dot.** A silicon sensor's three Bayer dyes all become transparent
+> in the near infrared, so an unfiltered sensor renders an 850/940 nm source as white with a colour
+> fringe — every channel responding at once. A camera *with* an IR-cut returns nothing, or a dim dot with
+> no colour fringe.
+
+⇒ **The production camera does not share the ELP's 642 nm wall.** That re-opens the deep-red half of
+`DOC_lamp_410_680.md` §5.4/§7.3 for the shipped product, and it means the de-filtered camera that
+`KB_lamps.md` §7 wanted to buy is **already on the bench**.
+
+⚠ **What is not established:** "no IR-cut" ⇒ "good 660–690 nm response". Removing the *edge* leaves
+silicon QE and the red dye, which are near plateau there, so a good response is *expected* — expected is
+not measured. **The measurement is `KB_lamps.md` §7.1 and it is the cheapest open experiment in the
+project**: halogen → this camera → look at the raw red end for a cliff. A 16 nm collapse is scale-free,
+so step 1 needs no calibration at all.
+
+⚠ **And two risks appear only once the filter is gone**, neither of which the ELP data can speak to:
+**stray NIR scatter** raising the floor across the whole band, and **second-order diffraction** (§4.3).
+
+## 4 · ⭐ The candidate: ToupTek GPCMOS02000KMA (IMX290 mono)
+
+Sold as an astronomical **guiding** camera — which is exactly why it is interesting here, because guide
+cameras are built to keep near-infrared rather than throw it away.
+
+| item | value | source |
+|---|---|---|
+| sensor | Sony **IMX290LLR**, 1/2.8", back-illuminated (STARVIS), **monochrome** | Sony / vendor |
+| effective pixels | 1945 × 1097 (~2.13 MP); camera outputs 1920 × 1080 | Sony datasheet |
+| unit cell | **2.9 µm** square | Sony datasheet |
+| active area | **5.57 × 3.13 mm**, diagonal 6.39–6.46 mm | vendor / Sony |
+| ADC | **12 bit** | vendor |
+| peak QE | ~81 % | vendor |
+| read noise | 0.53–0.84 e⁻ | vendor |
+| full well | ~11 200 e⁻ | vendor |
+| exposure | **0.105 ms – 1000 s** | vendor |
+| frame rate | ~16–18 fps at full resolution (USB 2.0) | vendor |
+| window | ⭐⭐ **AR-coated clear glass, "also transparent in the infrared"** | vendor |
+| mount | 1.25" barrel; C-mount and CS-mount adapters | vendor |
+| back focus | 8.5 mm (1.25"), 17.5 mm (C), 12.5 mm (CS) | vendor |
+| interface | USB 2.0 + ST-4; ⛔ **`libtoupcam` SDK, not UVC** | vendor / SDK docs |
+| mass | 70 g | vendor |
+
+### 4.1 What it would buy — and what it would NOT
+
+⚠ **12-bit linear raw removes a whole class of complexity — but NOT a whole class of error.** The
+current chain is built around an 8-bit gamma-encoded frame: the quantisation window in
+`ImageSpectrumAcquisitionLogicModule`, the `__TIE_WINDOW_CODES` tie-breaker, the low-DN guard at 16 DN
+(§16.23.10f), the `pow2.2` decode and §17's "decode before you average" rule. A linear 12-bit sensor
+makes all of that unnecessary, and the MAD==0 collapse (`spectracs-mad-zero-collapse`) could not occur.
+
+⛔⛔ **What it would NOT do is make the verdict meaningfully more repeatable, and an earlier draft of this
+section wrongly implied it would.** `diagnostics/bit_depth_gain.py` re-quantises **225 archived runs**
+onto both grids and recomputes `Q%`. See §4.1a. The short version: **quantisation contributes at most
+0.063 Q% units — the entire jar-untouched floor — and removing it improves σ_fill by 2.6 %.**
+
+#### ⭐⭐ 4.1a How much is bit depth actually worth — measured on 225 archived runs
+
+*(Added 2026-09-04 after Edwin's challenge: "isn't it that the biggest problem we have is sample
+preparation and a noise floor?" — it is, and here is the arithmetic.)*
+
+`diagnostics/bit_depth_gain.py` takes each archived report's stored **linear** reference and sample,
+re-quantises **both** onto today's 8-bit gamma grid and onto a 12-bit linear grid, and recomputes
+`Q% = −100·(A_valley − A_Q)/A_Soret`. 225 runs, `Q%` spanning −14.9 to 39.9.
+
+| grid | mean \|shift\| | sd | 95th pct | max |
+|---|--:|--:|--:|--:|
+| 8-bit gamma | 0.0517 | **0.0668** | 0.1270 | 0.2360 |
+| 12-bit linear | 0.0055 | **0.0215** | 0.0094 | 0.2853 |
+
+⇒ 12 bits shrinks the quantisation term **3.1×**. ⚠ These are a **no-dither worst case**: archived values
+are the mean of 60 frames, so real capture dithers and the true term is smaller.
+
+⭐ **The simulation's own sanity check gives a better bound than the simulation does.** 0.0668 *exceeds*
+the measured jar-untouched floor of **0.063** (`DevSpectralPlugin.SINGLE_WINDOW_SIGMA`, §16.36.6) — and
+it cannot, because quantisation is one *component* of that floor. That over-shoot is positive evidence
+that capture dithers, and it hands us a model-free ceiling: **quantisation contributes at most 0.063 Q%
+units, because that is the entire spread of ten repeats with the jar untouched.**
+
+Granting 12-bit that entire ceiling — the most generous case it could ever claim:
+
+| what is being measured | today | with 12-bit | gain |
+|---|--:|--:|--:|
+| second pour of the same dilution (§36) | 0.076 | 0.043 | 44 % |
+| clean set, aliquots kept dark (§40) | 0.198 | 0.188 | **5.2 %** |
+| **σ_fill — five separate preparations** (§28) | **0.276** | 0.269 | **2.6 %** |
+| archive within-fill scatter (§28) | 1.255 | 1.253 | 0.1 % |
+
+⇒ ⭐⭐ **Edwin is right. The bit depth is not where the error is.** Preparation and re-seating dominate by
+4–20×, and `SPEC_capture_quality.md` §16.26 already measured that directly: instrument floor **0.42 %**
+against a jar re-seat of **median 1.7–3.0 %, max 14.4 %**. Buying 12 bits to improve the verdict would
+be **spending on the smallest term in the budget.**
+
+#### 4.1b ⚠ And gamma is not merely a nuisance — it spends codes where they are needed
+
+One code, as a percentage of the level, with the reference parked at 90 % of full scale:
+
+| A | sample level | 8-bit gamma | 12-bit linear | 12-bit is |
+|--:|--:|--:|--:|---|
+| 0.5 | 64.26 | 1.62 % | 0.10 % | 16.7× better |
+| 1.0 | 20.32 | 2.74 % | 0.31 % | 9.0× better |
+| 1.5 | 6.43 | 4.66 % | 0.97 % | 4.8× better |
+| 2.0 | 2.03 | 7.92 % | 3.06 % | 2.6× better |
+| 2.5 | 0.64 | 13.56 % | 9.69 % | 1.4× better |
+| 3.0 | 0.20 | 23.44 % | 30.64 % | ⛔ 0.8× **worse** |
+
+⭐ **This is why 8 bits has held up as well as it has**: `pow2.2` concentrates codes at the dark end,
+which is exactly where an absorbance measurement lives. A *linear* 12-bit grid is uniform, so it wins by
+3–10× through the working range but actually **loses past A ≈ 3.3** — where the bin is dead on any grid.
+
+⇒ **Where 12-bit genuinely earns its place is the STARVED regime**, not the verdict: bins at 2–7 DN,
+where one code is 8–23 %. That is the regime §7.13 measured as producing a *concentration-dependent
+compression* that corrupted `r_Q`, the regime that forced the dilution-protocol change, and the regime
+the **red extension would put us back into** (the halogen gives 62 DN at 650 nm but 17 DN at 660).
+⭐ So bit depth is an enabler for **new range**, not an improvement to the **existing verdict**.
+
+⭐ **Monochrome removes the Bayer array**, and with it: the two max-channel notches (§2), the ~3× light
+loss to the colour filters, the demosaic, and the red dye's own roll-off. ⚠ It also removes the free
+wavelength-scale check the crossovers provide — the CFL becomes the only scale reference.
+⚠ ⭐ The ~3× light gain is worth more than the bit depth: it is a **photon** gain, and photon noise is a
+real term in the floor, whereas quantisation demonstrably is not.
+
+⭐ **The 1.25" barrel is a filter thread.** An order-sorting long-pass filter (§4.3) screws straight in.
+That is a genuinely lucky mechanical fit for the one hard requirement of NIR work.
+
+### 4.2 Coverage arithmetic — how much spectrum fits on 5.57 mm
+
+With the optics unchanged, the span a sensor holds is its **imaging width × the dispersion in nm/mm**.
+The ELP ROI holds 290.8 nm across 2055 of 2592 columns, so the full ELP frame holds **~367 nm**:
+
+| if the 2592 mode is… | ELP frame width | dispersion | IMX290 span | starting at 400 nm |
+|---|---|---|---|---|
+| a **crop** (1.40 µm pitch) | 3.63 mm | 101.1 nm/mm | 563 nm | **400–963 nm** |
+| a **scale** (1.76 µm pitch) | 4.57 mm | 80.3 nm/mm | 447 nm | **400–847 nm** |
+
+⚠ **Which one is unresolved** — nobody has recorded whether the ELP's 2592 × 1944 mode crops or downscales
+the 3264 × 2448 array. It is one `v4l2-ctl --list-formats-ext` away.
+
+⇒ **One IMX290 frame covers roughly 400–850 … 400–960 nm at today's dispersion.** To *guarantee* 400–1000
+(a 600 nm span) needs 107.8 nm/mm — spreading the spectrum **7–34 % less tightly**, via a coarser grating
+or a shorter focal length.
+
+⭐ **That is affordable, because the instrument massively oversamples.** The optical resolution is ~2 nm
+(the Hg 576.96 / 579.07 doublet is *marginally* resolved at ~14 px), while sampling is 0.14 nm/px on the
+ELP and would be 0.23 nm/px on the IMX290 — roughly **10× finer than the optics deliver** in both cases.
+Fewer, larger pixels cost nothing here; the slit and the grating are the limit, not the detector.
+
+### 4.3 ⛔ The blockers, in the order they would bite
+
+**1. ⛔⛔ Order overlap — this is the real one, and it is not optional.** A grating sends 2nd order of
+400 nm to the same place as 1st order of 800 nm. Any instrument spanning 400→1000 nm therefore has the
+blue end **folded on top of** the infrared end. It must be fixed with an **order-sorting long-pass
+filter** (an OG/RG-type glass, e.g. ~695 nm) covering the red half, or by taking two exposures — one
+plain, one long-passed — and splicing. ⭐ The 1.25" filter thread makes this trivial mechanically.
+⛔ Ignore it and the NIR readings are pure artefact, silently.
+
+**2. ⛔ It is not a UVC camera.** ToupTek uses a proprietary **`libtoupcam`** SDK on Linux;
+`cv2.VideoCapture` will not see it. `CaptureBackend` is V4L2-only, so this needs a **second backend
+implementation**. Not fatal — the SDK ships Linux `.so` builds and there is a third-party GStreamer
+element — but it is real work, and ⚠ it is hostile to the **Android port** (`SPEC_android_port.md`),
+where a vendor `.so` plus USB permissions is a much worse story than a UVC device.
+
+**3. ⚠ NIR focus shift.** Camera lenses are corrected for the visible. At 900 nm the focal plane moves
+noticeably, so the infrared end of the spectrum would sit out of focus — which broadens lines exactly
+where the new range is being added. Either accept the blur (it degrades resolution, not position) or
+budget for an apochromatic or reflective collimator.
+
+**4. ⚠ A full mechanical and calibration rebuild.** New mount (C or 1.25", not M12), new back focus, a new
+grating holder, and a fresh ROI + px→nm calibration. ⛔ **Archive registration breaks** — every metric
+constant is fitted on 98 runs taken through the ELP.
+
+**5. ⚠ Silicon runs out at ~1100 nm** and is failing well before that (§4.4).
+
+### 4.4 So — can a NIR spectrometer to 1000 nm be built on this camera?
+
+**To ~850–900 nm: yes, and comfortably.** The window transmits IR, the sensor is back-illuminated STARVIS
+that Sony explicitly designed for 850 nm, it is mono, and 12-bit. Nothing in the way but the order-sorting
+filter and the rebuild.
+
+**To 1000 nm: physically possible, but do not promise it.** Silicon's bandgap is 1.12 eV ⇒ a hard cutoff
+near **1100 nm**, so 1000 nm is inside the sensor's range — but only just. The absorption depth in silicon
+grows from ~1 µm at 550 nm to well over 100 µm approaching 1000 nm, while a back-illuminated photodiode is
+only a few µm thick. ⇒ **QE at 1000 nm is single-digit percent** on any sensor of this class. Workable
+against a bright halogen with long exposures and frame averaging; hopeless for a dim source.
+
+⛔ **And Sony publishes no numeric QE beyond "improved sensitivity at 850 nm" and a graph.** No figure for
+900, 940 or 1000 nm exists in any source checked. ⚠ **Treat 900–1000 nm as unquantified until measured.**
+
+⭐ **The good news: we now own the method to measure it.** `KB_lamps.md` §4's halogen ÷ Planck division
+returns the instrument response of *whatever* camera it is pointed through. Applied to a new camera it
+answers "what is the QE at 950 nm on my actual optical stack" directly — no datasheet needed. That is the
+acceptance test to run on day one, before any redesign is committed.
+
+⚠ **A halogen is also the right source for it**, and increasingly so: a 2900 K blackbody's radiance keeps
+climbing to ~1000 nm, so the lamp is *strongest* exactly where the sensor is weakest. The two curves work
+against each other in the helpful direction.
+
+### 4.5 ⚠ And the question behind the question — what is at 700–1000 nm worth having?
+
+| target | wavelength | verdict |
+|---|---|---|
+| **AOCS Cc 13i-96** chlorophyll baseline | **710 nm** | ⭐ comfortably in range ⇒ a **normed** method becomes executable |
+| literature-comparable Kreft **DI** | > 700 nm | ⭐ in range |
+| chlorophyll *a* | 430 / 662 nm | ⭐ in range (hemp oil, §95.2 of the lamp memory) |
+| the **660–680 quiet window** | 660–680 nm | ⭐ in range — the pigment-free baseline anchor the metric has never had |
+| C–H 3rd overtone (fat) | ~900–930 nm | ⚠ weak overtone; needs long path + chemometrics |
+| **O–H 2nd overtone (water)** | **~970 nm** | ⚠ the classic NIR moisture band — see below |
+
+⭐ **The 970 nm water band is the one with a business story attached.** `spectracs-alwera-group` records
+that ALWERA/Estyria already use a **humimeter FSA** to check contract farmers' drying, and *return goods
+on it*. Moisture is measured in the NIR, and 970 nm is where. ⛔ **But do not read that as a product.**
+Moisture in seed is a **diffuse-reflectance** measurement with a chemometric calibration against oven
+reference values — a different instrument geometry from a transmission cuvette, a different corpus, and a
+validated incumbent already in the customer's hand. It is a reason to keep the door open at 1000 nm, not a
+reason to claim the door leads anywhere yet.
+
+### ⭐⭐ 4.5a The AOCS colour and chlorophyll methods — what each one actually needs *(2026-09-04)*
+
+The **AOCS Official Methods and Recommended Practices** carries a whole `Cc 13*` family for the colour of
+fats and oils. Read off the official 2003 method index (saved to
+`spectracs-references/standards/AOCS_2003_method_index.pdf`):
+
+| method | subject |
+|---|---|
+| Cc 13a-43 | Color — FAC method |
+| Cc 13b-45 | Color — Wesson method (AOCS Lovibond) |
+| ⭐⭐ **Cc 13c-50** | **Color — SPECTROPHOTOMETRIC method** |
+| Cc 13d-55 | Chlorophyll pigments (refined and bleached oils) |
+| Cc 13e-92 | Lovibond (per ISO standard) |
+| ⭐ **Cc 13i-96 (01)** | **Chlorophyll pigments (crude vegetable oils)** |
+| Cc 13j-97 | Automated method |
+| Ak 2-92 | Chlorophyll pigments (rapeseed) |
+
+**Cc 13i-96 — chlorophyll pigments in crude vegetable oils.** Absorbance of the **neat oil against air**
+at three wavelengths, reported as pheophytin *a*:
+
+```math
+c = \frac{345.3 \, (A_{670} - 0.5\,A_{630} - 0.5\,A_{710})}{L}
+  read: c is mg pheophytin a per kg of oil; L is the cell thickness in mm.
+  The 630 and 710 points are a two-point BASELINE under the 670 nm Qy peak — that is all they are for.
+```
+
+⚠ **This corrects the form carried in the project record**, which had the 345.3 as a *divisor*. It is a
+multiplier, and there is a path-length term. Stated detection limit: **> 1 mg/kg**.
+
+**Cc 13c-50 — the photometric colour index**, and ⭐⭐ **the more interesting one for Spectracs**:
+
+```math
+PCI = 1.29\,A_{460} + 69.7\,A_{550} + 41.2\,A_{620} - 56.4\,A_{670}
+```
+
+Three of its four wavelengths — 460, 550, 620 nm — are inside today's 400–630 nm window already; only
+**670 nm** is missing, which is precisely what the ELP's 641.8 nm IR-cut destroys.
+
+#### ⛔⛔ 4.5b The obvious reading of that is WRONG — PCI is the one we CANNOT execute
+
+*(`diagnostics/aocs_pci_feasibility.py`, 225 archived runs. A first draft of §4.5a called PCI "the
+nearest normed method, one wavelength away". It is the opposite, and the reason is scale, not
+wavelength.)*
+
+**Cc 13c-50 specifies a 1-inch (25.4 mm) cell** — the method was built to grade *light* refined oils
+against a Lovibond red. Scaling the archive's median `A460 = 0.411` (diluted, 1.3 cm jar) back to neat
+oil at that cell:
+
+| dilution factor | A₄₆₀ neat @ 25.4 mm | A₄₆₀ neat @ 0.7 mm | path for A₄₆₀ = 1.0 |
+|--:|--:|--:|--:|
+| 60 | **48** | 1.3 | 527 µm |
+| 100 | **80** | 2.2 | 316 µm |
+| 120 | **96** | 2.7 | 264 µm |
+
+⛔ **Neat pumpkin oil in the AOCS cell reads A ≈ 48–96 — transmittance 10⁻⁴⁸. The method is inapplicable
+by about fifty orders of magnitude.** PCI has no path-length term (unlike Cc 13i-96), so it is *defined*
+at its cell; measuring at a thinner path and scaling yields a number that is **not** the norm's PCI. You
+could publish a PCI-*like* index; you could not claim Cc 13c-50.
+
+⭐⭐ **Cc 13i-96 is the one that survives, and for a structural reason: it carries `/L` explicitly.** Being
+path-length-general by construction, its *arithmetic* applies at any cell — including a thin one. ⇒ **the
+wavelength that unlocks a normed method is 710 nm, not 670**, and the bar for a camera change is
+correspondingly higher.
+
+⚠⚠ **But only the arithmetic travels.** Cc 13i-96 specifies a **5 mm or 10 mm cell**, and neat pumpkin
+oil reads `A₆₃₀ ≈ 3–12` there — out of a spectrophotometer's range by 3–6×. A standard is a *procedure*,
+not only a formula, so whether a read at an unspecified path may be reported *per Cc 13i-96* is a
+question for the method text or a certifying body. ⛔ **Do not promise "we execute the AOCS method" on a
+portable formula alone.** ⭐ The geometry news is nonetheless good: at this project's existing **~1 mm**
+cell the same oil reads **A₆₃₀ ≈ 0.6–1.2**, dead centre of the usable window — it is the *lab's* cells
+that are wrong for a dark oil, not ours. Full working: `SPEC_metric_research.md` §16.20.5d.
+
+⭐ **And the thin cell is not exotic — it is the geometry the trade already uses.** 260–530 µm puts
+`A460` at 1.0, and the **Kernöltestgerät is a backlit 0.7 mm viewer** (`spectracs-oelmuehlen-verzeichnis`)
+where the same oil reads A ≈ 1.3–2.7. The gatekeeper's own instrument is already in the right regime.
+
+#### 4.5c What the archive says about the three terms we CAN see
+
+| question | answer |
+|---|---|
+| ⭐ **dynamic range** — can one path serve all four bands? | **Yes, easily.** At a path giving `A460 = 1.0` the bands span **A = 0.24 … 1.73** (T = 58 % … 1.8 %) — a factor of 7.3. ⛔ This **corrects** an earlier guess in this note that neat oil would put PCI back in the starved regime: it does not, because PCI reads 460 nm on the Soret **flank**, never the 432 nm peak |
+| ⛔ **is `1.29·A460 + 69.7·A550 + 41.2·A620` a new axis?** | It is **77 % concentration** (r = +0.77 with `A_Soret`). Divided by `A_Soret` it is uncorrelated with `Q%` (r = +0.07) — ⚠ but that is *not* evidence of a new axis |
+| ⛔ **is the residual signal or noise?** | **Noise.** Grouped by source (15 oils, ≥4 runs each) its between/within ratio is **0.74**, against `Q%`'s **0.93** on the identical grouping. The residual discriminates oils *worse* than the shipped metric |
+
+⇒ **Everything rides on the −56.4·A₆₇₀ term** — 40 % of PCI's weight by coefficient, and the one
+wavelength the instrument cannot see. ⚠ A prediction was recorded before the test (that the three visible
+terms would land on the metric family's single axis, per `spectracs-metric-family-2026-08-21`); it
+**failed** — they land nowhere, which is a weaker result than either alternative.
+
+⚠⚠ **But both methods measure NEAT OIL against air, not a solvent dilution** — and that is a bigger
+change than the wavelength. Consequences, none of them small:
+
+| | |
+|---|---|
+| ⛔ **no dilution** | the whole `SPEC_settled_measurement.md` protocol, σ_fill, the clearing gate and every fitted constant assume oil-in-isopropanol. A neat-oil method shares none of that corpus |
+| ⛔ **dynamic range** | neat pumpkin oil is near-opaque below ~550 nm at any normal path length. Cc 13c needs `A460` — ⚠ this is the starved regime again, and the one place §4.1b says bit depth genuinely helps |
+| ⭐ **path length is the lever** | AOCS specifies `L` explicitly. The **Kernöltestgerät is a backlit 0.7 mm viewer** (`spectracs-oelmuehlen-verzeichnis`) — that is the right order of magnitude for neat dark oil, and it is the geometry the gatekeeper already accepts |
+| ⭐ **simpler for the operator** | no capillaries, no solvent, no waiting for a fill to settle. ⚠ Which also removes the 4.4× error term §0 says dominates everything |
+
+⇒ ⭐ **A neat-oil, short-path mode is a genuinely different product shape from the diluted `Q%`
+workflow**, and §4.5b names the one that could carry a norm: **Cc 13i-96 at a thin cell, needing 710 nm.**
+It would answer §89's fourth condition (*"the absence of a normed alternative"*) in the opposite
+direction — by *executing* the norm instead of avoiding it.
+
+⚠⚠ **But count what that trades away.** The moat on record is *the validated corpus, not the formula*
+(`spectracs-alwera-group`). A normed number has **no corpus moat by construction** — anyone with a
+spectrophotometer computes the same figure. What would remain is form factor and price: ~€900 at the
+press against a lab instrument plus sample transport, which is `spectracs-international-market` §91's
+"only non-destructive / at-the-mill survives" argument, now with a normed number attached instead of a
+proprietary one. ⛔ Whether that trade is good is a business question this note cannot answer.
+
+⛔ **Nothing here is a plan.** It is the first time the norms have been read closely enough to see what
+they cost, and the headline is that one of the two is arithmetically impossible on this oil.
+
+⚠ **On the source.** AOCS Official Methods is a **copyrighted commercial publication** — there is no
+legitimate free full text, and none was obtained. What is on disk is the **2003 method INDEX** (22 pp,
+numbers and titles only). The two formulas above are quoted from the open literature, not from the
+standard. ⛔ **Before anything is certified against either method, buy the actual method text** (AOCS
+sells them individually) — an index cannot tell you the cell, the blanking or the tolerances.
+
+## 5 · What would have to change in the code
+
+⚠ None of this is proposed work — it is the cost side of §4, so the trade is visible.
+
+| change | where | why |
+|---|---|---|
+| capture resolution **per sensor** | `CaptureBackend.py` — its own `TODO: make this per-sensor when a second camera lands` | 2592 × 1944 is hardcoded and is the ELP's calibration size. Blocks *any* second camera, including the Microdia |
+| a **non-V4L2 backend** | new sibling of `CaptureBackend` | `libtoupcam` is not UVC (§4.3) |
+| **bit depth** through the chain | `ImageSpectrumAcquisitionLogicModule`, `SpectralColorUtil` | everything assumes 8-bit gamma-encoded: the decode, the tie window, the 16 DN guard |
+| **mono** path | the same | max-channel over three channels is meaningless with one channel |
+| a **second calibration profile** | already supported | per-`SpectrometerProfile`, so this is data, not code |
+
+⭐ The first row is required by the Microdia experiment too, so it is not specific to a camera purchase.
+
+## 6 · How to characterise any camera on this bench
+
+1. **Remote test in the dark** — white dot with a **violet halo** ⇒ no IR-cut; nothing or a dim dot ⇒ filter.
+2. **Halogen frame, then divide by Planck** (`KB_lamps.md` §4) ⇒ the instrument response of that whole
+   optical stack, with no datasheet and no reference detector.
+3. **Look for a cliff before doing any arithmetic** — a dielectric edge is a 15–25 nm collapse and is
+   scale-free, so it is visible before the camera is calibrated at all.
+4. **CFL frame for the scale** — Hg 435.83 / 546.07 for a two-point linear px→nm (`KB_spectroscopy_physics.md`
+   §7.2 did this at 0.5057 nm/px), then the full cubic once the ROI is authored.
+5. ⚠ **Never compare two cameras' absolute levels** — only their shapes. Exposure, aperture, gain and
+   transfer curve all differ.
+
+## 7 · What would change these conclusions
+
+- ⭐⭐ **The Microdia halogen frame (§3)** ⇒ decides whether the production camera already has the red
+  range. Cheapest open experiment in the project; needs no purchase and no calibration.
+- **A `v4l2-ctl --list-formats-ext` on the ELP** ⇒ settles crop-vs-scale and halves §4.2's uncertainty.
+- **The ELP purchase record** ⇒ confirms or refutes the IMX179 identification in §2.
+- **A halogen ÷ Planck run on an IMX290** ⇒ the only thing that would turn §4.4's 900–1000 nm from
+  unquantified into a number.
+- ⛔ **A measured NIR QE in the low single digits at 900 nm** ⇒ the 1000 nm ambition is dead and the
+  honest ceiling is ~850 nm.
+- ⭐⭐ **A repeat of §4.1a's arithmetic against a re-seat-free protocol** ⇒ the only thing that would make
+  bit depth matter is removing the term that dwarfs it. `SPEC_settled_measurement.md`'s capillary/one-fill
+  work is that; until it lands, no detector change moves the verdict.

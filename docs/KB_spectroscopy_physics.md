@@ -220,6 +220,26 @@ mis-describes what `M448` computes (`DOC_metric_algebra.md` §5.6a).
 | **turbidity / scatter** | broad, rising toward the blue | no |
 | **protochlorophyll Soret flank** | the red flank of a band at ~432 nm | ⭐ yes — but a **minority** of the window |
 
+> ⭐⭐ **PARTLY CLOSED 2026-09-04 — there is now an absolute number for the top tenant.** Hagos et al.
+> (2022), *Int. J. Anal. Chem.* 9363692 (open access; PDF + note in `spectracs-references/articles/`),
+> measures **β-carotene in pumpkin SEED at 12–17 µg/g** (a cited comparison study: 31), against peel
+> 340–445 — ⭐ **the oil-bearing part is the carotenoid-poor part**, by 20–30×. Its UV-VIS maximum is
+> **453 nm, inside this window**, and in seed the carotenoid was detectable **only** by UV-VIS; NIR
+> (1415 nm) and FTIR (1710 cm⁻¹) missed it entirely.
+>
+> **Order-of-magnitude propagation** — seed 12–31 µg/g ÷ ~0.45 oil fraction × 0.92 g/mL, at
+> `E(1 %, 1 cm) ≈ 2500`, gives **A ≈ 0.6–1.6 per mm** against neat oil's measured **1.9–3.8 per mm at
+> 460 nm** (`SPEC_metric_research.md` §16.20.5a) ⇒ **carotenoids plausibly own ~16–83 % of the blue
+> window.** ⚠ **Far too wide to quote**, but it rules out "trace" and is consistent with the table above.
+> ⛔ Four reasons it is a plausibility estimate and not a measurement — wrong species (*C. maxima*, not
+> *C. pepo* var. *styriaca*), seed powder rather than oil with complete transfer assumed, "β-carotene at
+> 453 nm" in a mixed extract really reporting **total carotenoids**, and a solvent-dependent `E`.
+>
+> ⭐ **The paper's real value is the METHOD, not the number**: acetone extraction, 453 nm, LOD
+> 0.034 µg/mL ⇒ **the carotenoid load of our own oils is directly measurable**, which would replace this
+> section's inference-from-behaviour with a measured carotenoid-to-tetrapyrrole ratio. ⚠ Needs a lab
+> spectrophotometer and solvent handling, not the rig.
+
 ⭐ **Composition, from the source paper.** Fruhwirth & Hermetter (2007) §3.2: *"The predominant carotene found
 in Styrian pumpkin seed oil was **lutein (71 %)** followed by **β-carotene (12 %)** and **cryptoxanthin β
 (5.3 %)"*. ⚠ The paper gives **no protopheophytin concentration** and no carotenoid-to-tetrapyrrole ratio —
@@ -435,6 +455,16 @@ not an extrapolation. Measurable response continues to ~680 nm.
 sensor QE + the source's own decline — one lamp cannot separate the three). So the 640–670 nm region
 arrives at roughly **7–13 %** of the level at 630 nm.
 
+> ⭐⭐ **"One lamp cannot separate the three" — a HALOGEN can, and 2026-09-04 it did.** `KB_lamps.md` §4
+> divides a measured 60 W halogen frame by Planck (a tungsten filament's SPD is analytic, and rises
+> monotonically through 600–700 nm) and recovers the instrument response on its own. It carries a
+> **dielectric edge at λ₅₀ = 641.8 nm, 10→90 % over 16.5 nm** — about **50× steeper per nm** than
+> anything else in the response, which no QE curve, dye or grating can produce. ⇒ **At 650 nm ~82 % and
+> at 660 nm ~87 % of the loss is the IR-cut filter**; everything else costs under 2× across 620–660.
+> ⚠ This **narrows the "7–13 %" figure above**: the halogen holds 62 DN at 650 nm but only 17 DN at 660,
+> so 640–655 is workable and 660–680 is not. ⛔ And it makes the last sentence of the next paragraph the
+> wrong hope — no lamp reaches the quiet window, because every lamp is multiplied by the same 0.0024.
+
 ⇒ **Two conclusions that must travel together.** (1) The **440–630 nm capture clamp is our software
 choice, not a hardware limit** — which moves `SPEC_metric_research.md` §9.1 item 5 ("extend the red range
 to ~660 nm", the structural fix for both-bands-are-flanks) from *hardware, cost unknown* toward a
@@ -511,6 +541,55 @@ exists at all.
 **Corollary, measured:** clearing the sample is worth roughly **6× in discriminating power** — oils that had
 three years to clarify in the bottle carried **half** the pedestal and separated **8× better**
 (`SPEC_capability_proof.md` §11.4e). **Sample clarity is a first-class instrument parameter, not housekeeping.**
+
+### ⭐⭐ 8.3a Three ways to stop scattered light — and only one of them removes anything  *(2026-09-04)*
+
+§8.3 says the pedestal is bigger than the signal standing on it. There are exactly **three** physical
+routes out, this project has now met all three, and they are not variations on one idea:
+
+| route | the physics | what it costs |
+|---|---|---|
+| **let it settle** | **Stokes' law** — droplets coarsen by Ostwald ripening and coalescence, and fall as `r²`. §8.2's "kinetically stable for a while, then faster and faster" | time. `SPEC_settled_measurement.md` exists to manage it |
+| ⭐⭐ **index-match it** | scattering intensity goes as **(n_particle − n_medium)²**. Match the two and the particles are **still present and optically invisible** | ⭐ **nothing leaves the sample** ⇒ no adsorption, no loss, no partition |
+| **filter it with an aid** | **body feed** — see below | material leaves, and the aid may take analyte with it |
+
+⭐ **The middle row is why sunflower works** (`SPEC_capture_quality.md` §16.12.7g): sunflower **n = 1.473**
+against pumpkin oil's **1.47**. Isopropanol's 1.377 is nowhere near, which is why the same suspension
+scatters violently in one and barely at all in the other. ⇒ **"clearing" in sunflower is not the same
+event as "clearing" in isopropanol** — the first is optical, the second is mechanical.
+
+#### How a filter aid works, since it is not what the name suggests
+
+Diatomaceous earth is fossil diatom skeleton — **amorphous hydrated silica**, ~85–90 % void, 10–30 m²/g,
+particles 5–50 µm with a rigid pore structure.
+
+- ⭐ **The wanted mechanism is mechanical.** Colloidal haze — phospholipid gums, nanodroplets, mucilage —
+  is **soft and compressible**; on bare filter paper it forms a gelatinous layer and blinds the filter in
+  seconds. DE is **rigid and incompressible**, so stirred in beforehand it co-deposits with the haze and
+  holds the cake **open**, a labyrinth of few-µm channels. ⇒ **it does not filter the haze, it makes the
+  haze filterable.** Without it, hazy oil cannot be filtered in any useful time.
+- ⛔ **The unwanted mechanism is adsorption**, from the same surface area. That is what **bleaching earth**
+  does deliberately — at 0.5–2 % w/w and 90–110 °C, against `AOCS Cc 13j-97`'s **0.167 % and 30 °C**.
+  ⚠ Chlorophylls adsorb on silica; that is how they are chromatographed. Low dose, not no dose.
+
+#### ⭐⭐ The pigment does not leave with the haze — measured, not assumed
+
+§8.2 asserts *"the pigment itself does dissolve … the suspended material is a separate population"*.
+**Sedimentation tests that for free**, because it removes the same droplets a filter would.
+`diagnostics/clearing_removes_pedestal_not_pigment.py`, over the 7 archived fills that actually cleared:
+
+> `d(Soret)/d(valley) = 1.158`, `d(Q)/d(valley) = 1.331`, r = **+0.994 / +0.990**
+
+⇒ every band loses the **same absolute amount**. ⭐ **If the pigment sedimented out, the drops would scale
+with each band's own pigment content and the ratio would be ~4–5** (Soret ≈ 1.0 against valley ≈ 0.22).
+It is ~1.2 ⇒ **an additive pedestal leaves; the pigment stays dissolved.** §8.2 and §8.3 confirmed on real
+fills.
+
+⚠ **n = 7** — most archived fills are read *after* settling, so few carry a clearing arc.
+⚠ The ratios sit slightly above 1 and are *higher at Q than at Soret*, which is backwards for scatter
+(stronger in the blue). Most likely the Soret's drop is understated because it starts near-opaque
+(A ≈ 1.5–1.9), inside §7.13's compression regime. Recorded, not claimed.
+⛔ **This tests gravity, not chemistry.** Adsorption onto a filter aid is precisely what it cannot see.
 
 ### 8.4 Choosing a solvent — polarity and solvency are different axes
 
