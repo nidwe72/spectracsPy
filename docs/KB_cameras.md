@@ -511,6 +511,46 @@ enhancement of it.** The commercial reading is
 `spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` **§142** (with §92/§93, which still
 conclude: feature yes, business no).
 
+### ⭐⭐⭐ 4.5e What a light-source spectrometer canNOT do — and why that is the position  *(Edwin, 2026-09-04)*
+
+*Edwin's question: could a Sekonic C-800 SpectroMaster measure the colour of a liquid?* ⛔ **No, not out
+of the box** — it is an **illuminance** spectrometer for light sources (380–780 nm, 1 nm output, CMOS
+linear sensor, ~€1,700). No sample compartment, no cuvette, no defined path length, no reference beam. To
+measure an oil with one you would have to build a cell, a holder and a stable geometry **around** it — i.e.
+build a spectrophotometer. **That is this instrument.**
+
+⇒ **The competitive map has two axes, not one, and price is the lesser of them:**
+
+| | defined liquid geometry | true spectrum | price |
+|---|---|---|---|
+| Sekonic C-800 (light-source meter) | ⛔ no | ⭐ yes, 380–780 nm | ~€1,700 |
+| RGB photo crop → Lab (§4.5d's "new approach") | ⛔ no | ⛔ no — 3 channels | ~€0 |
+| AS7341-class multispectral chip | ⛔ no | ⛔ no — 11 channels | ~€10 |
+| Lovibond PFX990 | ⭐ yes | ⭐ yes | €3,000–20,000 |
+| ⭐⭐ **Spectracs** | ⭐ **yes** | ⭐ **yes** | **~€900** |
+
+⇒ ⭐⭐⭐ **Only two rows carry both, and they differ by 3–22× in price.** The claim is therefore not
+"cheaper than a Lovibond" but **"the only instrument under €3,000 that measures a liquid with a defined
+path length AND a real spectrum."**
+
+⚠ **Two limits, before that sentence goes anywhere.**
+1. ⛔ **Cheap DIY spectrometers DO measure liquids** — Public Lab kits, DVD-webcam builds, exactly
+   `Bestari 2022`'s architecture. "Nothing under €3,000 can do it" is **too strong**. ⭐ The defensible
+   form: *nothing at that price does it with the geometry, calibration and repeatability that makes the
+   number trustworthy* — and the proof is already on the shelf, since the same hardware and the same
+   physics produced "smooth vs rough". **The difference is the corpus and the discipline, not the parts.**
+2. ⛔ **"Our device can measure colour" is not yet true.** At 632.6 nm **11 % of x̄ is missing** (§4.5d), so
+   a correct `L*a*b*` is not computable. It becomes true at **690.8 nm** (0.22 %). ⭐ That dates the claim
+   rather than defeating it: **one calibration change, on hardware already on the bench.**
+
+⭐⭐⭐ **And the chain closes on itself.** The C-800 cannot measure a liquid ⇒ we can. We cannot yet compute
+correct colour ⇒ the red extension fixes it. We cannot yet claim *accurate* colour ⇒ **a rented C-800
+characterises us** and closes §4.5d's remaining "photometric accuracy" gate (method in §6). **The
+instrument that cannot do the job is the one that certifies us to do it** — for a few days' rental, not a
+purchase. ⚠ Traceability against the PFX990 still has to be bought separately; that is Tintometer's
+business, not the measurement's. Commercial reading:
+`spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` **§143**.
+
 ## 5 · What would have to change in the code
 
 ⚠ None of this is proposed work — it is the cost side of §4, so the trade is visible.
@@ -530,6 +570,15 @@ conclude: feature yes, business no).
 1. **Remote test in the dark** — white dot with a **violet halo** ⇒ no IR-cut; nothing or a dim dot ⇒ filter.
 2. **Halogen frame, then divide by Planck** (`KB_lamps.md` §4) ⇒ the instrument response of that whole
    optical stack, with no datasheet and no reference detector.
+2a. ⭐⭐ **Better, if a reference spectrometer can be borrowed:** measure the *same lamp* with a
+   light-source spectrometer covering 380–780 nm (a Sekonic C-800 or similar, **rentable**), then
+   **our recorded lamp spectrum ÷ its measurement = the instrument response directly**, with **no Planck
+   assumption, no colour-temperature assumption, and reach BEYOND our own 690.8 nm raster edge.** ⇒ it
+   would verify the 641.8 nm IR-cut edge independently, answer §3's open Microdia question in one evening,
+   and supply the absolute response curve that §4.5d needs for colour work. ⚠ Its own calibration is
+   photographic (~±2 % illuminance, ~±2 nm) and its optical resolution is ~5–10 nm despite 1 nm output —
+   ample for lamps and colour, useless for narrow lines. ⚠ And it must sit where the sample sits, or a
+   different optical path is being measured.
 3. **Look for a cliff before doing any arithmetic** — a dielectric edge is a 15–25 nm collapse and is
    scale-free, so it is visible before the camera is calibrated at all.
 4. **CFL frame for the scale** — Hg 435.83 / 546.07 for a two-point linear px→nm (`KB_spectroscopy_physics.md`
