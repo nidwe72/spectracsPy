@@ -266,6 +266,48 @@ def report():
     return wavelengths, yuji, halogen, response, slow, edge, centre, width
 
 
+def violetEdge(wavelengths, yuji, halogen, response):
+    """⭐ The violet edge, and what it says about UV and about photodamage (§3.3 of the KB).
+
+    ⚠ The ROI starts at 400 nm and UV-A is 315-400, so **neither this frame nor the instrument can see
+    UV at all.** What is measurable is the violet edge 400-450 nm; the UV conclusion below is drawn from
+    physics (a semiconductor band edge versus a Planck continuum through quartz), not from data."""
+    print("\n=== 11. The violet edge — is the LED really the UV-heavy one?")
+    anchor = int(np.argmin(abs(wavelengths - 600.0)))
+    scale = yuji[anchor] / halogen[anchor]          # exposure-match at 600 nm
+    print("   both lamps normalised to equal height at 600 nm (LINEAR)")
+    print("     nm      Yuji    halogen    higher")
+    for target in (401, 405, 410, 415, 420, 430, 440, 450):
+        i = at(wavelengths, target)
+        matched = halogen[i] * scale
+        print("   %4.0f  %9.3f %9.3f    %s"
+              % (wavelengths[i], yuji[i], matched, "HALOGEN" if matched > yuji[i] else "Yuji"))
+
+    # ⭐ The Yuji's TRUE SPD: divide the measurement by the instrument response the halogen gave us.
+    spd = np.where(response > 1e-4, yuji / np.maximum(response, 1e-9), np.nan)
+    band = (wavelengths > 430) & (wavelengths < 700)
+    spd = spd / np.nanmax(spd[band])
+    print("\n   Yuji's TRUE SPD (measured / instrument response), normalised to its own maximum:")
+    for target in (401, 405, 410, 415, 420, 430, 440, 450):
+        i = at(wavelengths, target)
+        print("   %4.0f nm   %6.3f" % (wavelengths[i], spd[i]))
+    print("   ⇒ ⭐⭐ the Yuji is BLUE-pumped at ~440 nm and emits EXACTLY NOTHING below 405 nm —")
+    print("     an InGaN band edge, a hard limit rather than a roll-off. ⚠ A VIOLET-pumped high-CRI")
+    print("     LED (Yuji makes those too, ~405-415 nm) would have inverted this; this unit is not one.")
+    print("   ⇒ below 400 nm the halogen MUST be higher: a Planck continuum through quartz against an")
+    print("     LED that physically cannot emit there. ⛔ Not measured — the raster starts at 400 nm.")
+
+    soret = at(wavelengths, 440.0)
+    print("\n   ⭐⭐ BUT the photodamage question inverts. §16.36: light BROWNS, irreversibly — and")
+    print("     photodamage follows the ABSORBED dose, which peaks at the pigment's Soret band.")
+    print("     At 440 nm the Yuji delivers %.0fx the halogen (exposure-matched)."
+          % (yuji[soret] / (halogen[soret] * scale)))
+    print("   ⇒ for the SAMPLE the LED is plausibly the harsher lamp — not through UV but through the")
+    print("     blue pump landing straight on the absorption band. ⚠ NOT demonstrated: it follows from")
+    print("     §16.36 plus this measurement, not from an experiment. The test is §16.36's own —")
+    print("     band-fall ratio over a long exposure, per lamp. ⭐ A shutter fixes both.")
+
+
 def sensitivity():
     print("\n=== 10. Sensitivity of the edge to every assumption")
     path, *box = SHOTS["60 W halogen"]
@@ -382,6 +424,8 @@ def main():
     parser.add_argument("--figures", action="store_true", help="write the three SVGs to docs/figures/")
     arguments = parser.parse_args()
     computed = report()
+    wavelengths, yuji, halogen, response = computed[0], computed[1], computed[2], computed[3]
+    violetEdge(wavelengths, yuji, halogen, response)
     sensitivity()
     if arguments.figures:
         figures(*computed)

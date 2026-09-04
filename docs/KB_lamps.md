@@ -110,6 +110,67 @@ property of the sensor's colour filters; two lamps of entirely different familie
 
 ⚠ **Do not read a notch at 486 or 581 nm as a lamp feature or a pigment feature.** It is the reduction.
 
+### ⭐⭐ 3.3 The violet edge — which lamp is the UV-heavy one, and which is harder on the SAMPLE
+
+*(Edwin, 2026-09-04: "ich glaube die Yuji LED hat mehr UV als die Halogenlampe". Measurable, and the
+answer splits: **no on UV, probably yes on photodamage.**)*
+
+Both lamps normalised to equal height at 600 nm, in linear units:
+
+| nm | Yuji | halogen | higher |
+|---|--:|--:|---|
+| 401 | **0.000** | 0.010 | ⭐ halogen |
+| 405 | **0.000** | 0.035 | ⭐ halogen |
+| 410 | 0.027 | 0.092 | ⭐ halogen |
+| 415 | 0.184 | 0.142 | Yuji |
+| 430 | 15.1 | 0.667 | Yuji, 23× |
+| 440 | 96.9 | 1.41 | Yuji, **69×** |
+
+⭐ **The Yuji's true SPD** — its measurement divided by the instrument response §4 derives from the
+halogen — shows why: `0.000` at 401 and 405, `0.003` at 410, rising to a **maximum at 440 nm**.
+
+⇒ ⭐⭐ **The Yuji is BLUE-pumped at ~440 nm and emits exactly nothing below 405 nm.** That is an InGaN
+band edge — a hard limit, not a roll-off. ⚠ **The hypothesis was well-founded**: Yuji also builds
+*violet*-pumped high-CRI types (~405–415 nm), and one of those would have inverted this. This unit is not
+one.
+
+⛔ **What this cannot settle: UV itself.** The ROI starts at **400 nm** and UV-A is 315–400, so neither
+these frames nor the instrument can see it. But physics extends the trend: an LED **cannot** emit below
+its band edge, while a halogen's Planck continuum runs on and **quartz transmits to ~200 nm**. ⇒ **below
+400 nm the halogen must be the higher of the two**, and a bare single-envelope capsule wants a plain glass
+window in front of it.
+
+#### ⭐⭐ But the photodamage question inverts, and that is the one that matters
+
+`SPEC_capture_quality.md` §16.36: **light BROWNS, irreversibly.** Photodamage follows the **absorbed**
+dose, which peaks at the pigment's Soret band — and **at 440 nm the Yuji delivers 69× the halogen.**
+
+⇒ **For the sample the LED is plausibly the harsher lamp — not through UV, but through the blue pump
+landing straight on the absorption band.** The halogen puts its light where the pigment barely absorbs.
+
+⚠ **Not demonstrated.** It follows from §16.36 plus this measurement, not from an experiment. The test is
+§16.36's own: **band-fall ratio over a long exposure, per lamp.** ⭐ And §16.36's own fix — **a shutter** —
+answers both lamps at once. ⇒ **a cold lamp is not automatically the gentle one**; whichever lamp ships,
+the Soret-band photon dose belongs on the check list.
+
+### ⭐⭐⭐ 3.4 Consequence: the halogen is a STANDARD, not a product component
+
+⭐ **CE applies to *placing on the market*.** A bench rig is not placed on the market ⇒ **the 220 V lamp on
+the bench is regulatorily fine and may stay.** The question only ever concerned the shipped device.
+
+⇒ **Roles divide rather than compete:**
+
+| | bench (measurement standard) | product |
+|---|---|---|
+| **halogen** | ⭐ **required** — §4's `halogen ÷ Planck` and §6.2a's response measurement both rest on a Planck radiator | ⛔ heat perturbs the sample (§16.36), touch temperature in a metal enclosure, bulb changes move the filament |
+| **LED array** | ⛔ unusable as a reference — not a continuum | ⭐⭐ cold, SELV, no bulb changes, own constant-current drive, emitters where the bands are |
+
+⚠ **Two gates before that is a decision:** §7.1 (does the filterless Microdia's red suffice?) and the
+**crossover defect** `SPEC_lamp_rebuild.md` records as blocking an R2 order.
+⚠ And if a halogen does ship: **12 V G4** on an external certified supply, a socket with *defined* 4.0 mm
+holes rather than a universal slot, and a `D` check after every bulb change — the filament's position is
+an optical parameter, and §16.26.9 measured that re-aiming the beam changes the spectrum's *shape*.
+
 ## 4 · ⭐⭐ Dividing out the source: the ELP has a hard edge at 642 nm
 
 Divide the measured halogen by Planck and what is left is the instrument — grating, lens, IR-cut filter,
