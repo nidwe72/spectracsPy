@@ -44,8 +44,12 @@ archived runs to check the specific claim: quantisation contributes at most 0.06
 genuinely in the floor — but it is subject to the identical 2.6 % ceiling.
 
 ⭐ **What a camera change IS for, then:** buying **spectral range** that does not exist today (§4.2–4.5),
-and unlocking **normed methods** — which §4.5b narrows to exactly ONE, needing **710 nm**. Those are capability arguments, not
-precision arguments. ⚠ Judge any camera proposal by which of the two it is making.
+and unlocking two things the clamp forbids — **normed chlorophyll methods** (§4.5b narrows those to
+exactly one, needing **710 nm**) and ⭐⭐ **any COLOUR number at all** (§4.5d: `x̄` is **11 % truncated at
+632.6 nm and 0.2 % at 690.8**, so a tristimulus integral goes from impossible to essentially complete).
+Those are capability arguments, not precision arguments. ⚠ **Judge any camera proposal by which of the
+two it is making** — and note that both of the capability arguments are about the RED END, not the
+sensor.
 
 ⇒ **The measurement is gated on the fill, not the detector.** `SPEC_settled_measurement.md` is where the
 4.4× lives, and until its one-fill/capillary work lands, no detector purchase moves the verdict.
@@ -448,6 +452,54 @@ legitimate free full text, and none was obtained. What is on disk is the **2003 
 numbers and titles only). The two formulas above are quoted from the open literature, not from the
 standard. ⛔ **Before anything is certified against either method, buy the actual method text** (AOCS
 sells them individually) — an index cannot tell you the cell, the blanking or the tolerances.
+
+### ⭐⭐ 4.5d Could the device report LOVIBOND or AOCS colour? — the optics say yes at 690 nm  *(2026-09-04)*
+
+A **band metric** (`Q%`, `Rv`, PCI) needs a handful of wavelengths. A **colour** number — Lovibond,
+AOCS-Tintometer/Wesson, a literature Kreft dichromaticity index — is a **tristimulus integral** and needs
+the whole visible band. `spectracs-colorimeter-idea` records the objection in one line: *"with the
+440–630 nm window a literature-comparable DI is NOT computable (x̄ runs past 700)."*
+
+⭐⭐ **That is true of the CLAMP and false of the INSTRUMENT.** `diagnostics/cie_truncation_cost.py`
+measures the fraction of each D65-weighted CIE 1931 2° colour-matching function lying above each cutoff —
+once for a white source, once weighted by what an archived oil actually transmits:
+
+| cutoff | x̄ (red) | ȳ (luminance) | z̄ (blue) |
+|---|--:|--:|--:|
+| **632.6 nm** — the pipeline clamp | **9.9 %** / **11.1 %** | 3.6 % / 3.7 % | 0.0 % |
+| **690.8 nm** — the extended ROI | **0.22 %** / **0.25 %** | 0.08 % | 0.0 % |
+| 780.0 nm — the full visible | 0.00 % | 0.00 % | 0.0 % |
+
+*(illuminant-weighted / sample-weighted. ⚠ The sample figures hold the measured absorbance FLAT past
+632.6 nm at its 620–630 value; real transmittance rises into the red, so they are **lower bounds**.)*
+
+⇒ ⭐⭐ **`x̄` — the red primary — is the only one truncated, and the extended ROI closes it. 780 nm is not
+needed.** `z̄` is finished long before either cutoff and `ȳ` almost. **A colour number is not computable at
+632.6 nm and is computable at 690.8 nm** — on the filterless camera already on the bench, through the ROI
+the capture view already draws. ⭐ This is the sharpest single argument for the red extension yet
+produced: it turns a *categorical* "not computable" into a **0.2 %** residual.
+
+#### ⛔ But three gates remain, and two are worse than the optics
+
+| gate | |
+|---|---|
+| ⛔⛔ **the Lovibond scale is PROPRIETARY** | converting a spectrum to R/Y/B needs Tintometer's glass transmission data and their matching algorithm — licensed, not published. It is why a PFX990 can do it and a generic spectrophotometer cannot. An approximation is possible; **"approximate Lovibond" is not Lovibond.** ⚠ **This is the binding constraint, and it is contractual, not technical** |
+| ⛔ **scope** | `Cc 13j-97` is *"refined oils only … providing no turbidity is present"* (§4.5a) ⇒ cold-pressed is out whatever we compute |
+| ⚠ **path length** | Lovibond is defined at **133 mm**. We would measure at ~1 mm and scale by Beer–Lambert — valid arithmetic, but a 133× extrapolation, and neat pumpkin at 133 mm is `A₄₆₀ ≈ 250–500`, off-scale in principle. Plausible for a light oil |
+| ⚠ **photometric accuracy** | a ratio metric tolerates shape distortion that a tristimulus integral does not — stray light especially. ⭐ *Not* a problem: the 486/581 nm max-channel notches (§2) are common to reference and sample and **cancel in `T = S/R`** |
+
+#### ⭐ PCI is the exception, and it is the one within reach
+
+| | Lovibond / AOCS-Tintometer | **PCI (Cc 13c-50)** |
+|---|---|---|
+| needs the full visible band | ✅ yes — ⭐ solved at 690 nm | ⛔ no — four band means |
+| needs proprietary data | ⛔ **yes** | ✅ no |
+| computable by us | ⛔ only as an approximation | ⭐ **yes** |
+| reportable *as the norm* | ⛔ scope + cell | ⛔ cell — §4.5b's fifty decades on pumpkin |
+
+⇒ **The device could compute PCI on a light oil at the right cell, and a Lovibond-*like* number on
+anything — but could not legitimately report either as the AOCS value.** ⛔ The remaining obstacles are
+procedural and contractual; **the optical one closes at 690 nm.**
 
 ## 5 · What would have to change in the code
 
