@@ -501,6 +501,16 @@ produced: it turns a *categorical* "not computable" into a **0.2 %** residual.
 anything — but could not legitimately report either as the AOCS value.** ⛔ The remaining obstacles are
 procedural and contractual; **the optical one closes at 690 nm.**
 
+⭐⭐ **And there is a better target than approximating a licensed scale: `CIELAB` is ISO/CIE 11664 — open,
+and exactly what modern food colorimetry uses.** ⇒ emit a *fully standard, non-indicative* coordinate any
+lab reproduces exactly, and keep a declared-indicative Lovibond bridge as a separate courtesy. Two jobs;
+only one carries liability. ⭐⭐⭐ **The number that actually matters here is Kreft's dichromaticity index**,
+which §4.5d's 0.2 % makes *literature-comparable rather than a proxy* — and whose whole value is
+legitimacy, which a proxy cannot supply. ⇒ **the red extension is a precondition for that argument, not an
+enhancement of it.** The commercial reading is
+`spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` **§142** (with §92/§93, which still
+conclude: feature yes, business no).
+
 ## 5 · What would have to change in the code
 
 ⚠ None of this is proposed work — it is the cost side of §4, so the trade is visible.
