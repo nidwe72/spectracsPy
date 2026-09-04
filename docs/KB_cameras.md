@@ -551,6 +551,45 @@ purchase. ⚠ Traceability against the PFX990 still has to be bought separately;
 business, not the measurement's. Commercial reading:
 `spectracs-references/business/SPEC_oelmuehlen_verzeichnis.md` **§143**.
 
+### ⭐⭐⭐ 4.5f Where a FILTER PHOTOMETER wins — and the uncomfortable thing that says about `Q%`
+
+§4.5e's map says we are one of only two instruments with both liquid geometry and a real spectrum. ⚠ That
+only matters where the **shape** of the spectrum is the answer. Where it is not, a filter photometer wins
+on price and always will.
+
+The concrete instance: **Hanna HI96785 "Color of Honey"** — 420 and 525 nm, tungsten lamp + narrow-band
+interference filters + silicon photodiode, 0–150 mm Pfund, ±2 mm @ 80, 10 mm cuvette, **€531.92**
+(currently *nicht lieferbar*). ⭐ Exactly what §16.20.4 predicted: *"single-wavelength norms, all served by
+€15–500 one-LED photometers."*
+⭐ One borrowed idea: its reference is a **glycerin standard**, not air — refractive index near honey's, so
+cuvette-wall reflections cancel between blank and sample. **Index matching, the same trick as sunflower**
+(`SPEC_settled_measurement.md` §55.1).
+
+| task | does a filter photometer suffice? |
+|---|---|
+| Pfund honey colour (2 λ) | ⛔ yes — €532 |
+| EBC beer (1 λ, 430 nm) | ⛔ yes — €200–800 |
+| **AOCS PCI (4 λ)** | ⛔ **yes, in principle** |
+| ⭐ `D`, the SNV shape distance | ⭐ **no — needs the whole curve** |
+| ⭐ correct CIELAB / Kreft DI | ⭐ **no — a tristimulus integral** |
+| ⭐ peak POSITION (568 / 624, `R`) | ⭐ **no — needs resolution** |
+
+⛔⛔ **And `Q%` itself reduces to three filters.** `Q% = −100·(A_valley − A_Q)/A_Soret` is three band means;
+a three-filter photometer with a tungsten lamp could compute the shipped verdict. ⇒ **the spectrometer is
+not justified by the number it currently outputs.** Recorded here so it is not rediscovered later as though
+it were news.
+
+⭐⭐ **What does justify it: being able to change your mind — and this document's own session is the
+evidence.** The Soret band was retrimmed 440–460 → **448–460 in software**; with filters that would have
+been new hardware *and a worthless archive*. On 2026-09-04 alone: 225 runs re-quantised for bit depth
+(§4.1a), PCI's three visible terms (§4.5c), the CIE truncation (§4.5d), and the pedestal-vs-pigment test
+(`KB_spectroscopy_physics.md` §8.3a) — **every one of those questions would have been unanswerable against
+an archive of three numbers per run.**
+
+⇒ ⭐⭐⭐ **The spectrometer earns itself on the CORPUS it preserves, not on the number it emits** — the
+hardware-side statement of *"the moat is the validated corpus, not the formula"*. Commercial reading:
+`SPEC_oelmuehlen_verzeichnis.md` **§144**; the honey-as-a-plugin consequence is **§145**.
+
 ## 5 · What would have to change in the code
 
 ⚠ None of this is proposed work — it is the cost side of §4, so the trade is visible.
