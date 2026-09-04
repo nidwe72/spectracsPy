@@ -167,6 +167,17 @@ half of that loop.
   algorithm** (e.g. maximise high-frequency energy / line contrast on the CFL lines) to help focus the
   grating-on-lens stack **better than the eye alone**. The instrument is already correctly focused; this is
   a quality aid that matters mostly for calibration. Not scoped yet — logged so it isn't lost.
+- **Exposure ceiling — the CAMERA's, not the slider's (IMPLEMENTED 2026-09-04).** The slider and the AE
+  sweep were capped at 1–500 against a camera that accepts **0–5000** (the Orbbec board 0–6500), so the
+  sweep had only ever searched the bottom tenth of the axis. Both now take the ceiling from
+  `VideoThread.readCameraSettings()["exposureMax"]`, read **once per stream** on the first frame (where the
+  worker is parked in its render backpressure and the backend is idle), falling back to 5000 until the
+  device answers and guarded so a camera that will not answer keeps the fallback. ⭐ The AE probe budget
+  scales with the span — 8 probes for a ≤500 window, one more per doubling (12 at 5000) — because the coarse
+  ladder is geometric and widening the ceiling would otherwise have made it *sparser at the low end*, which
+  is where the answer lives. Full reasoning and the measurement that motivated it:
+  `SPEC_capture_quality.md` §16.41.8.
+
 - **Best-fit auto-exposure algorithm** (parent §9.3) — out of scope here; under discussion.
 - **Android** — out of scope (`CaptureBackend` Android branch raises; parent §2.1).
 - **Windows manual picker** — auto-resolve is the Linux-reference path; the Windows DirectShow

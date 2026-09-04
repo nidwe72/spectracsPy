@@ -16081,6 +16081,8 @@ it is the first constraint in this file that no choice of windows or baseline ca
 2. **Is 90 the right pinned value?** §16.39.5b records that the camera accepts 0–5000 where the slider offers
    1–500, so the AE sweep only ever searched the bottom tenth. The question is no longer *whether* the
    exposure is pinned but whether the pin sits where the brown 624 band gets the most counts.
+   ✅ **The bound half is done — §16.41.8**: both sliders and both AE sweeps now take the ceiling from the
+   camera. ⛔ The *value* half is still open, and it is the one that owns the brown 624 band.
 3. **More counts per read.** Frame integration raises the effective bit depth without touching the optics;
    `FRAMES 60` is already the setting and whether it is being averaged in linear or encoded space decides
    whether it buys any depth at all — ⚠ related to §17's gamma question, which has been open since.
@@ -16098,3 +16100,210 @@ measures the baseline in the one place where the quantisation errors are least a
 result by ~600** (`dRvLin/dΔ = −602` per unit absorbance). The full derivation is in
 `SPEC_metric_research.md` §16.15.6a. ⛔ This does not depend on the exposure at all, so §16.39.3's
 experiment is no longer the thing that decides the metric — though it is still owed for the 609 nm step.
+
+## ⭐⭐⭐ 16.41 THE TRANSFER CURVE, MEASURED — the exposure tilt is the LEVEL, not the hue, and `Rv` is limited by the BITS  *(Edwin 2026-09-04: "could it be that the BW camera is much better not due to quantization, but due to the fact that on a color camera exposure changes shift the color hues much and thus values?"; `diagnostics/transfer_curve.py`, `diagnostics/level_sensitivity.py`)*
+
+> ⭐ **The question was the right one and it had a testable shape**, which is why it could be answered in
+> an evening on data already in the archive. The answer is **no** — and the *reason* it is no turns out to
+> be more useful than a yes would have been, because it re-points the camera argument at a different
+> property (§16.41.6).
+
+### 16.41.1 The hypothesis, and the two things that would distinguish it
+
+The proposal: a colour camera's three channels are converted by three *different* non-linear functions, so
+a change in level changes the R:G:B ratio, i.e. the hue, i.e. the numbers. That is the textbook mechanism —
+`I(p) = (f_r(X_r), f_g(X_g), f_b(X_b))` with hue depending only on the ratio, so *"R, G and B components are
+independently converted by the non-linear functions. Thus, the ratio will be changed"* (Seo, Go, Kinoshita &
+Kiya, IEICE / arXiv:2007.10802). ⚠ Note the corollary: a **single shared** non-linearity does **not** do
+this, because a power law cancels in a ratio.
+
+⇒ across an exposure step, form the per-bin gain `g = DN_high / DN_low` per Bayer channel:
+
+| what is seen | what it means | would a mono sensor fix it? |
+|---|---|---|
+| `g` **constant** | one shared power law | nothing to fix |
+| `g` **varies with DN** | the curve is not a power law ⇒ a **LEVEL** effect | ⛔ no — mono reproduces it exactly |
+| `g` **differs by channel at equal DN** | three filter curves ⇒ a **HUE** effect | ⭐ yes |
+
+⭐ **The controls are the method.** `20260828LugitschC/D/F` are the same oil at the same exposure, so any
+structure they show is re-seating and read noise. `E` is the same oil at 104 (§16.39.2).
+
+⛔ **The per-channel straight-line fit is the WRONG test, and the first version of this section used it.**
+Each channel spans a *different DN range* of a curve that is not a line, so fitting a line per channel
+manufactures per-channel slopes even for one shared curve — the same-exposure controls "improved" by
+exactly as much (ΔBIC −143/−81/−29 against the step's −130/−468/−281). Channels are compared only INSIDE a
+DN band. Recorded rather than deleted: the shape of the error is that a model comparison was run before
+the null had been looked at.
+
+### ⭐⭐ 16.41.2 The answer: LEVEL
+
+**A. Gain against DN** — a shared power law would be a flat row:
+
+| pair | 30–45 | 45–70 | 70–100 | 100–140 | 140–190 | 190–245 | spread |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| E/C (104 over 90) | 1.2219 | 1.1569 | 1.1122 | 1.1121 | 1.0851 | 1.0775 | **13.4 %** |
+| E/D | 1.2645 | 1.1925 | 1.1414 | 1.1269 | 1.0848 | 1.0783 | **17.3 %** |
+| E/F | 1.2347 | 1.1800 | 1.1477 | 1.1215 | 1.0884 | 1.0758 | **14.8 %** |
+| *control D/C* | 0.9638 | 0.9654 | 0.9615 | 0.9906 | 0.9934 | 0.9971 | *3.7 %* |
+| *control F/C* | 0.9857 | 0.9841 | 0.9859 | 0.9833 | 0.9869 | 0.9994 | *1.6 %* |
+| *control F/D* | 1.0368 | 1.0162 | 1.0139 | 1.0072 | 0.9945 | 1.0019 | *4.3 %* |
+
+Monotone, 3–10× the control, and **the three independent pairs agree to ±0.1 in every band** — which is
+what says this is the camera and not the fill.
+
+**B. Channel spread, compared only inside a DN band** (median over bands):
+
+| exposure step | | control | |
+|---|--:|---|--:|
+| E/C | 3.16 % | D/C | 2.39 % |
+| E/D | 1.93 % | F/C | 3.11 % |
+| E/F | 1.25 % | F/D | 1.33 % |
+
+**The same distribution.** No channel effect above the control's own noise.
+
+**C. Per-column HSV hue shift (degrees):** step 0.72 / 0.94 / 1.00 median (p99 3.2–5.9, max 4.3–7.2)
+against control 0.23 / 0.36 / 0.46 (p99 1.2–5.6, max 1.4–8.1). Real at the median, ~2–3× the control, and
+the tails are indistinguishable.
+
+⇒ ⭐⭐⭐ **the exposure tilt is one shared transfer curve. A monochrome sensor reproduces it exactly.**
+
+### 16.41.3 The curve, and what it does to §17
+
+`e = dlnDN/dlnX`, measured on **both** legs of all three pairs, extended below DN 30 on the sample leg
+(`transfer_curve.py --low`) because that is where `Rv` and `RvLin` take their numbers:
+
+| DN | 20 | 30 | 42 | 62 | 92 | 135 | 190 | 235 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| **e** | 2.00 | 1.82 | 1.46 | 1.14 | 0.94 | 0.75 | 0.60 | 0.41 |
+
+⭐ **A raw-linear sensor is `e = 1` at every level.** This one runs from ~2.0 in the dark to 0.41 near the
+clip — as a local exponent `γ = ln k / ln g`, from **0.62–0.72** at DN 30–45 to **1.92–1.98** at DN 190–245,
+a factor **2.8**, with the three pairs agreeing to ±0.1 in every band.
+
+⛔ **`pow2.2` cannot represent this, and the problem is the SHAPE, not the number.** §17's decode assumes one
+exponent; the measured local exponent moves by 2.8× across the working range. Independently confirmed
+outside the project: Burggraaff et al.'s SPECTACLE calibration of seven consumer cameras (Optics Express
+27(14), arXiv:1906.04155) finds *"large inter-pixel, inter-filter, and inter-device differences in
+best-fitting γ … an sRGB gamma inversion with a single γ value is not possible"*, and prices the
+single-exponent assumption at RMS **> 7 % / > 13 % / > 19 %** on its three tested devices. ⇒ §17.5.2's
+finding that the "true sRGB" model made separation *worse* is not evidence that the encoding is fine; it
+is evidence that **both** candidate models are the wrong shape.
+
+⚠ **The absolute γ inherits an unverified assumption** — that the V4L2 exposure value is proportional to
+integration time. Its *variation across DN* does not: `k` is one scalar and a scalar cannot make the gain
+depend on DN.
+
+### ⭐⭐ 16.41.4 §16.27.2's confound resolves as DIM, not RED
+
+That section's headline was *"the dim red bands gain ~9 % more than the bright green one"* — in which *dim*
+and *red* vary together. Replaying its bands from the frames:
+
+| nm | DN@90 | gain (encoded) | ^2.2 → linear | §16.27.2 | diff |
+|--:|--:|--:|--:|--:|--:|
+| 450 (B) | 176 | 1.078 | 1.179 | 1.2035 | −2.0 % |
+| 490 | 181 | 1.094 | 1.218 | 1.2127 | +0.5 % |
+| 530 (G) | 187 | 1.086 | 1.198 | 1.2171 | −1.5 % |
+| 570 (G) | 135 | 1.111 | 1.261 | 1.3104 | −3.8 % |
+| 610 (R) | 121 | 1.183 | 1.447 | 1.2731 | **+13.6 %** |
+| 625 (R) | 102 | 1.141 | 1.337 | 1.2990 | +2.9 % |
+
+**The DN-level curve alone reproduces five of six published ratios within 0.5–3.8 %.** Blue at DN 176 and
+green at DN 187 gain the same (1.078, 1.086); dim green at 135 gains 1.111 and dim red at 102 gains 1.141.
+⇒ **colour does not predict the gain; DN does.** The single miss is 610 nm — §16.39's moving step, where a
+fixed-wavelength read is exactly what should fail, which is a consistency check rather than an exception.
+
+⭐ This also closes the mechanism question §16.39.3a left open. A steep edge in one channel's own response
+cannot move 2 nm with exposure, but the *apparent* turn-over of a steep edge does move when the level
+changes under a compressive curve — and here the curve is measured.
+
+### ⭐⭐⭐ 16.41.5 What a light change costs each metric — and `Rv` is limited by the BITS, not the encoding
+
+*(Edwin, same session: "i fear that with the camera with encoding change the light situation a little bit
+changes metrics. and the camera providing raw captures would be more stable against this.")*
+
+In **linear** DN a lamp change common to both legs cancels exactly in `T = S/R`, at every level. It does not
+survive a non-power-law encoding, because S and R sit at different DN in the same bin. `level_sensitivity.py`
+prices that, pushing every archived run's embedded frames through the measured curve. Three arms, so the
+terms separate — and arm 3 is a **null**: a linear camera decoded with a power law is exactly invariant, so
+whatever it shows is requantisation. It returns 0.003–0.05 on `Q%`, which is what validates the method.
+
+⭐ Median |shift| for a **10 % light change**, over the **72 runs where `Rv` is readable** (80–140):
+
+| metric | typical | encoding curve | 8-bit requantisation (null) | both |
+|---|--:|--:|--:|--:|
+| `Q%` | 17.47 | **0.204** (1.2 %) | 0.046 | 0.222 |
+| **`Rv`** | 102.43 | **0.182** (0.18 %) | **1.028** | 1.461 |
+| `RvLin` | 91.99 | 0.881 (0.96 %) | 1.488 | 3.637 |
+| Soret/Q raw | 3.75 | 0.008 (0.2 %) | 0.003 | 0.005 |
+
+**`Rv` is the STIFFEST of the four against the encoding** — 0.18 % for a 10 % light change, monotone. That
+reproduces §16.27.1a's 0.04 across the real exposure step from a completely different direction, and
+vindicates its structural reason: `Rv` never touches the Soret, and its three bands all sit in the half that
+scales together.
+
+⭐⭐ **What moves `Rv` is quantisation** — 1.03 units per 10 % light change, against `Rv`'s own read noise of
+~0.21 (`SPEC_metric_research.md` §16.15.6a's two fills at 122.75 / 122.96). Five times its read noise, on a
+*perfectly linear* camera. ⇒ **for `Rv` the camera argument is bit depth, not linearity**, and
+`KB_cameras.md` §4.1a's "12-bit is not the win" does not transfer to it: that was priced on `Q%`, whose
+denominator `A_Soret` is ~5× larger than `Rv`'s `A_Q − A_valley` (a typical `Q%` of 19 says the ratio is
+0.19), so the same code error is ~5× bigger in `Rv`. §4.1b records the amendment.
+
+⛔ **CONDITION ON A READABLE `Rv` OR THE ANSWER IS WRONG.** Over the whole 275-run corpus the same figures
+read **1.693** (`Rv`) and **2.730** (`RvLin`), because a brown oil drives `A_Q − A_valley` towards zero and
+every sensitivity explodes with it. That is the metric's own conditioning, not the camera's — and it is a
+third independent route to §16.40.7's conclusion about `RvLin`.
+
+⇒ **For `Q%`, the shipped verdict: 0.204 units per 10 % light change = ~0.74 σ_fill** (σ_fill = 0.276,
+§16.36.6). Real, the same order as re-preparing the sample, not dominant. ⭐ And it is exactly the term the
+§16.39.5 exposure pin removes for free, which is the case for keeping the pin.
+
+### 16.41.6 What this does to the camera decision
+
+| argument for a new camera | status after this section |
+|---|---|
+| mono removes the hue-vs-exposure term | ⛔ **dead** — there is no such term (§16.41.2) |
+| mono removes the CFA notches, the demosaic, the ~3× light loss | ⭐ untouched, and independent of all of this |
+| **raw-linear removes the level term** | ⭐ **new and correct** — `e = 1` is the whole fix, and it is a property of having **no ISP**, not of lacking a Bayer filter. A raw *colour* machine-vision camera would do it equally |
+| 12-bit is not the win | ⚠ **amended** — true for `Q%` (null 0.046), ⛔ false for `Rv` (null 1.028) |
+
+⚠ **Raw is not obtainable on the current cameras.** Raw Bayer output is not part of the UVC specification;
+the onboard ISP demosaics, gamma-corrects and white-balances before anything reaches the host. There is no
+linear data to recover on the ELP or the Microdia, which is why this is a purchase argument and not a
+software one.
+
+⛔ **None of this moves §0's ceiling.** σ_fill is 4.4× the whole instrument floor; the level term at a 10 %
+light change is 0.74 σ_fill on `Q%` and the pin removes it. The measurement is still gated on the fill.
+
+### 16.41.7 Caveats, and what would change the conclusions
+
+- ⚠ **Partly circular.** The curve was measured on the same C/D/F↔E contrast, so re-applying it to C partly
+  reconstructs E. **Not** circular: the null arm, and the *ordering across metrics* — one curve, four metrics.
+- ⚠ **n = 1 exposure step**, one camera, one evening. Three pairings, but one `E` run: `E`'s own
+  idiosyncrasies are not separable from the step.
+- ⚠ **The requantisation arm is an upper bound** — one stored frame rounded once, where a real capture
+  averages 60 frames and dithers (`KB_cameras.md` §4.1a's own point). The *ordering* survives that; the
+  absolute 1.028 on `Rv` does not.
+- ⚠ **Below 18 DN the exponent is not measurable** — the gains collapse onto small-integer fractions — and
+  is held flat at 2.0.
+- ⭐ **What would settle it: a proper exposure sweep over decades.** The slider and the AE sweep were capped
+  at 1–500 against a camera that accepts 0–5000; that cap was lifted the same day (§16.41.8), so the curve
+  can be measured over the whole axis instead of reconstructed from a single 90→104 step.
+- ⭐ **A halogen frame on a raw camera** would give `e = 1` as a control and turn every number here from a
+  difference into an absolute.
+
+### 16.41.8 The slider and the AE sweep now span the camera's own range  *(IMPLEMENTED 2026-09-04)*
+
+§16.40.6's follow-up 2 and §16.39.5b both recorded that the camera accepts 0–5000 (the Orbbec board 0–6500)
+while the slider offered 1–500, *"so the AE sweep only ever searched the bottom tenth"*. Both
+`CapturePanel` and `DevCaptureViewModule` now take the ceiling from the **camera**, via
+`readCameraSettings()["exposureMax"]` read once per stream, falling back to 5000 until the device answers;
+guarded so a camera that will not answer keeps the fallback.
+
+⭐ **The AE probe budget scales with the span** — 8 probes for a ≤500 window, one more per doubling (12 at
+5000/6500). ⛔ Without that, widening the ceiling would have made the geometric coarse ladder *sparser at
+the low end*, which is where the answer lives; with it the low end is sampled denser than before
+(2, 7, 25, 89, … against the old 2, 32, 500).
+
+⚠ **This changes no instrument state today**: `DevSpectralPlugin` pins the exposure at 90, so the sweep does
+not run for the dev bench. It widens the manual slider, and it widens the AE for any plugin that does not
+pin — and it is what makes §16.41.7's proper sweep possible.

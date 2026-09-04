@@ -38,6 +38,9 @@ to the instrument floor buys at most that, because √(0.276² − 0.063²) = 0.
 subtract more than the whole floor. **This is an upper bound on every camera upgrade ever proposed, and
 it needs no model of the new camera at all.**
 
+⚠ **AMENDED 2026-09-04 by §4.1b** — the sentence below holds for `Q%` and **not** for `Rv`, whose
+denominator is ~5× smaller and which is quantisation-limited. Read the two together.
+
 ⛔ **So the monochrome/12-bit case must not be made on measurement quality.** §4.1a re-quantised 225
 archived runs to check the specific claim: quantisation contributes at most 0.063 and 12 bits shrinks it
 3.1×. Real, and irrelevant. Mono's ~3× photon gain is a better argument than the bits — photon noise is
@@ -233,6 +236,12 @@ compression* that corrupted `r_Q`, the regime that forced the dilution-protocol 
 the **red extension would put us back into** (the halogen gives 62 DN at 650 nm but 17 DN at 660).
 ⭐ So bit depth is an enabler for **new range**, not an improvement to the **existing verdict**.
 
+⛔⛔ **AND IT DOES NOT REMOVE THE EXPOSURE TILT — measured 2026-09-04, §4.1b.** The obvious remaining
+argument for mono was that a colour camera's three channels carry three different curves, so a level change
+tilts the colour balance and moves the numbers. It does not: the tilt is ONE shared transfer curve, and a
+mono sensor reproduces it exactly. What removes it is **raw-linear output**, which is a property of having
+no ISP — not of lacking a Bayer filter.
+
 ⭐ **Monochrome removes the Bayer array**, and with it: the two max-channel notches (§2), the ~3× light
 loss to the colour filters, the demosaic, and the red dye's own roll-off. ⚠ It also removes the free
 wavelength-scale check the crossovers provide — the CFL becomes the only scale reference.
@@ -241,6 +250,48 @@ real term in the floor, whereas quantisation demonstrably is not.
 
 ⭐ **The 1.25" barrel is a filter thread.** An order-sorting long-pass filter (§4.3) screws straight in.
 That is a genuinely lucky mechanical fit for the one hard requirement of NIR work.
+
+#### ⭐⭐⭐ 4.1b What mono buys, what RAW buys, and what BITS buy — measured, and they are three different things
+
+*(Added 2026-09-04 after Edwin's question: "could it be that the BW camera is much better not due to
+quantization, but due to the fact that on a color camera exposure changes shift the color hues much and thus
+values?" The full derivation is `SPEC_capture_quality.md` §16.41; `diagnostics/transfer_curve.py` and
+`diagnostics/level_sensitivity.py` are the two probes.)*
+
+**The hypothesis is testable and the archive answers it.** Across an exposure step the per-bin gain
+`DN_high/DN_low` falls monotonically from ~1.24 at DN 30–45 to ~1.077 at DN 190–245 — **13–17 %**, against
+**1.6–4.3 %** for same-exposure controls — while the spread *between channels at equal DN* is **1.25–3.16 %**
+against the controls' **1.33–3.11 %**, i.e. the same distribution. Per-column hue shifts 0.72–1.00° against
+the controls' 0.23–0.46°.
+
+⇒ ⛔ **it is a LEVEL effect, not a hue effect.** The measured local exponent `e = dlnDN/dlnX` runs
+**2.00 → 0.41** from DN 20 to DN 235 (a raw-linear sensor is `e = 1` everywhere). A mono sensor sees exactly
+the same curve.
+
+**What each property is actually worth**, for a 10 % light change, on the 72 archived runs where `Rv` is
+readable — median |shift| in metric units:
+
+| metric | typical | the encoding curve | 8-bit requantisation | ⇒ which camera property helps |
+|---|--:|--:|--:|---|
+| `Q%` | 17.47 | **0.204** (0.74 σ_fill) | 0.046 | **raw-linear** |
+| `Rv` | 102.43 | 0.182 | **1.028** (~5× its read noise) | ⭐ **12-bit** |
+| `RvLin` | 91.99 | 0.881 | 1.488 | both, and it is worst on each |
+| Soret/Q raw | 3.75 | 0.008 | 0.003 | neither — near-immune |
+
+⭐⭐ **This is the one place §4.1a's conclusion does not transfer.** That section priced bit depth on `Q%`
+and found it irrelevant — correct, and the null arm here agrees (0.046). But `Rv`'s denominator
+`A_Q − A_valley` is ~19 % of `Q%`'s `A_Soret`, so the same code error is ~5× larger. **If `Rv` or `RvLin`
+are ever to carry a threshold, that is a bit-depth argument, and it is a different argument from the range
+one.**
+
+⛔ **Raw is not reachable in software.** Raw Bayer output is not part of the UVC specification — the onboard
+ISP demosaics, gamma-corrects and white-balances before the host sees anything — so there is no linear data
+to recover on the ELP or the Microdia. ⭐ The ToupTek gets there by not being UVC at all (§4.3 blocker 2 is
+the same fact, seen from the cost side), and so would a **raw colour** machine-vision camera.
+
+⚠ **What has NOT changed:** §0's ceiling. σ_fill is 4.4× the whole instrument floor, the level term on `Q%`
+is 0.74 σ_fill, and the §16.39.5 exposure pin already removes it for free. **This is still a capability
+argument, not a precision one** — it just now has a second capability (linearity) beside the range.
 
 ### 4.2 Coverage arithmetic — how much spectrum fits on 5.57 mm
 

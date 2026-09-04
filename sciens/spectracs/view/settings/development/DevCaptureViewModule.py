@@ -37,11 +37,19 @@ class DevCaptureViewModule(PageWidget):
         self.exposureLabel = None
         self.autoExposureCheckBox = None
         self.__autoExposing = False
+        self.__exposureMax = self.__EXPOSURE_MAX_FALLBACK
+        self.__exposureRangeRead = False   # camera range is queried once per stream, on the first frame
 
-    # V4L2 manual-exposure slider range for the DIY cameras (empirically the useful window is well inside
-    # this). Fallback default when a camera has no seeded calibration exposure.
+    # V4L2 manual-exposure range for the DIY cameras.
+    # ⛔ THE OLD 1-500 CEILING WAS THE SLIDER'S, NOT THE CAMERA'S: the ELP accepts 0-5000 and the Orbbec
+    # board probed on 2026-08-30 runs 0-6500 (SPEC_capture_quality.md §16.39.5), so both the manual slider
+    # and the auto-exposure sweep have only ever searched the bottom ~10 % of the axis. The ceiling now comes
+    # from the CAMERA (V4L2 queryctrl via readCameraSettings, read once per stream) and falls back to
+    # __EXPOSURE_MAX_FALLBACK until the device answers — a camera that will not answer simply keeps the
+    # fallback, which is already well past 500.
     __EXPOSURE_MIN = 1
-    __EXPOSURE_MAX = 500
+    __EXPOSURE_MAX_FALLBACK = 5000
+    __EXPOSURE_MAX_SANITY = 65535   # ignore an absurd queryctrl answer rather than build an unusable slider
     __EXPOSURE_FALLBACK = 150
 
     def _getPageTitle(self):
@@ -111,7 +119,11 @@ class DevCaptureViewModule(PageWidget):
         # calibration exposure. (Auto-expose button is the next increment — SPEC_dev_capture_view.md §6.)
         self.exposureSlider = QSlider(Qt.Orientation.Horizontal)
         self.exposureSlider.setMinimum(self.__EXPOSURE_MIN)
-        self.exposureSlider.setMaximum(self.__EXPOSURE_MAX)
+        self.exposureSlider.setMaximum(self.__exposureMax)
+        # A 1..5000 track is ~10 units per pixel when dragged, so keep the keyboard steps fine enough to
+        # trim a value the AE landed on (arrow = 1, PageUp = 1 % of the range).
+        self.exposureSlider.setSingleStep(1)
+        self.exposureSlider.setPageStep(max(1, self.__exposureMax // 100))
         # noinspection PyUnresolvedReferences
         self.exposureSlider.valueChanged.connect(self.__onExposureChanged)
         self.exposureLabel = QLabel('')
@@ -186,7 +198,7 @@ class DevCaptureViewModule(PageWidget):
             return
         settings = SpectrometerSensorUtil().getSensorSettings(self.__currentSensor())
         value = settings.calibrationExposure if settings.calibrationExposure is not None else self.__EXPOSURE_FALLBACK
-        value = max(self.__EXPOSURE_MIN, min(self.__EXPOSURE_MAX, value))
+        value = max(self.__EXPOSURE_MIN, min(self.__exposureMax, value))
         self.exposureSlider.blockSignals(True)
         self.exposureSlider.setValue(value)
         self.exposureSlider.blockSignals(False)
@@ -312,6 +324,7 @@ class DevCaptureViewModule(PageWidget):
         if self.__resolvedIndex is None or self.__videoThread is not None:
             return
         self.__latestImage = None
+        self.__exposureRangeRead = False   # a new stream may be a different camera → re-query its range
 
         thread = DevCaptureVideoThread()
         thread.setIsVirtual(False)
@@ -356,6 +369,7 @@ class DevCaptureViewModule(PageWidget):
     def handleVideoThreadSignal(self, event, videoSignal):
         self.__latestImage = videoSignal.image
         self.videoViewModule.handleVideoThreadSignal(videoSignal)
+        self.__refreshExposureRange()   # once per stream — the backend is open by the time a frame lands
         self.__updateButtons()  # enable Save once the first real frame lands
         # Redraw the ROI overlay once the frame width is known (extended 400–700 window needs it — §11.7),
         # and again only if the capture resolution changes.
@@ -365,13 +379,53 @@ class DevCaptureViewModule(PageWidget):
             self.__applyRoiOverlay()
         event.set()
 
+    def __refreshExposureRange(self):
+        """Widen (or narrow) the exposure ceiling to what THIS camera actually accepts.
+
+        Called from the frame signal, where the worker is parked in its render backpressure and the backend
+        is idle — the same read-back CapturePanel does between bursts. Read-only (a V4L2 control query, not a
+        stream operation) and fully best-effort: a camera that will not answer keeps the fallback ceiling, so
+        a diagnostic can never break the live view. Once per stream — the ioctl is cheap but not free, and
+        the range cannot change under an open device."""
+        if self.__exposureRangeRead or self.__videoThread is None:
+            return
+        self.__exposureRangeRead = True
+        try:
+            high = (self.__videoThread.readCameraSettings() or {}).get("exposureMax")
+        except Exception as error:                    # a read-back must never take the stream down
+            print("EXPOSURE: camera range unavailable (%s) — slider keeps %d..%d"
+                  % (error, self.__EXPOSURE_MIN, self.__exposureMax))
+            return
+        try:
+            high = int(high)
+        except (TypeError, ValueError):
+            high = 0
+        if high <= self.__EXPOSURE_MIN or high > self.__EXPOSURE_MAX_SANITY:
+            print("EXPOSURE: camera reports no usable range — slider keeps %d..%d"
+                  % (self.__EXPOSURE_MIN, self.__exposureMax))
+            return
+        if high == self.__exposureMax:
+            return
+        self.__exposureMax = high
+        print("EXPOSURE: camera range %d..%d — slider and auto-exposure now span it"
+              % (self.__EXPOSURE_MIN, high))
+        if self.exposureSlider is not None:
+            self.exposureSlider.setMaximum(high)      # clamps the current value if the camera is narrower
+            self.exposureSlider.setPageStep(max(1, high // 100))
+            self.__updateExposureLabel()
+
     def __onAutoExposureToggled(self):
         self.__updateButtons()  # lock/unlock the manual slider
         # Turning it on while streaming → run the search now.
         if self.autoExposureCheckBox.isChecked() and self.__videoThread is not None and not self.__autoExposing:
             self.__runAutoExposure()
 
+    # Probe budget for the ORIGINAL 1..500 window. A wider axis needs more probes to keep the same
+    # resolution: the coarse ladder is geometric, so one extra probe per doubling of the span holds the
+    # spacing (5000 → 12 probes). Without this, widening the ceiling would have made the sweep coarser at
+    # the low end — where the inverted ELP is bright and the answer actually lives.
     __AUTO_EXPOSE_MAX_PROBES = 8
+    __AUTO_EXPOSE_REFERENCE_SPAN = 500
 
     def __runAutoExposure(self):
         # Hand the sweep to the capture thread, which runs it SYNCHRONOUSLY on the backend (set exposure -> drain
@@ -383,7 +437,14 @@ class DevCaptureViewModule(PageWidget):
         self.__autoExposing = True
         self.__updateButtons()
         self.__videoThread.requestAutoExpose(
-            self.__EXPOSURE_MIN, self.__EXPOSURE_MAX, iterations=self.__AUTO_EXPOSE_MAX_PROBES)
+            self.__EXPOSURE_MIN, self.__exposureMax, iterations=self.__autoExposeProbes())
+
+    def __autoExposeProbes(self):
+        span = max(1, self.__exposureMax - self.__EXPOSURE_MIN)
+        extra = 0
+        while span > self.__AUTO_EXPOSE_REFERENCE_SPAN * (2 ** extra):
+            extra += 1
+        return self.__AUTO_EXPOSE_MAX_PROBES + extra
 
     def __onAutoExposeProgress(self, probeIndex, totalProbes):
         signal = ApplicationStatusSignal()

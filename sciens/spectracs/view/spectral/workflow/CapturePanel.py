@@ -67,10 +67,21 @@ class CapturePanel(QWidget):
     __LOW_DN_WARN = 16.0
     __GUARD_COLOR = (200, 120, 60)
     __TARGET_COLOR = (107, 127, 90)
+    # ⭐ THE CEILING IS THE CAMERA'S, NOT THE SLIDER'S (Edwin, 2026-09-04). `__reportExposureRange` below
+    # had already written the finding down: 1-500 is ONE TENTH of what the ELP accepts (0-5000; the Orbbec
+    # board 0-6500), so every AE sweep this panel has ever run searched the bottom 10 % of the axis, and
+    # "the AE only ever landed on 90 or 104" was partly a property of these bounds. The ceiling now comes
+    # from the camera (V4L2 queryctrl via readCameraSettings, read once per stream — `__refreshExposureRange`)
+    # and falls back to __EXPOSURE_MAX_FALLBACK until the device answers.
     __EXPOSURE_MIN = 1
-    __EXPOSURE_MAX = 500
+    __EXPOSURE_MAX_FALLBACK = 5000
+    __EXPOSURE_MAX_SANITY = 65535   # ignore an absurd queryctrl answer rather than build an unusable slider
     __EXPOSURE_FALLBACK = 150
+    # Probe budget for the ORIGINAL 1..500 window; the coarse ladder is geometric, so one extra probe per
+    # doubling of the span holds the spacing (5000 -> 12). ⛔ Without this, widening the ceiling would have
+    # made the sweep COARSER at the low end — where the inverted ELP is bright and the answer lives.
     __AUTO_EXPOSE_MAX_PROBES = 8
+    __AUTO_EXPOSE_REFERENCE_SPAN = 500
     __FRAME_CHOICES = ["10", "20", "50"]
     __DEFAULT_FRAMES = "20"
     __NM_MIN = 400.0
@@ -102,6 +113,8 @@ class CapturePanel(QWidget):
         self.__coachLabel = None
         self.__lockedExposure = None
         self.__reportedExposureRange = False
+        self.__exposureMax = self.__EXPOSURE_MAX_FALLBACK
+        self.__exposureRangeRead = False   # camera range is queried once per stream, on the first frame
         self.__savedRoiX = None
         self.__captureTotal = 1
         self.__previewRoiWidth = None
@@ -197,7 +210,9 @@ class CapturePanel(QWidget):
 
         self.__exposureSlider = QSlider(Qt.Orientation.Horizontal)
         self.__exposureSlider.setMinimum(self.__EXPOSURE_MIN)
-        self.__exposureSlider.setMaximum(self.__EXPOSURE_MAX)
+        self.__exposureSlider.setMaximum(self.__exposureMax)
+        self.__exposureSlider.setSingleStep(1)                            # arrow keys still trim by one unit
+        self.__exposureSlider.setPageStep(max(1, self.__exposureMax // 100))
         self.__exposureSlider.valueChanged.connect(self.__onExposureChanged)
         self.__exposureLabel = QLabel("")
         self.__autoExposureCheckBox = QCheckBox("auto-exposure")
@@ -377,9 +392,10 @@ class CapturePanel(QWidget):
         ⇒ print the range, warn ONLY when the value cannot be applied at all, and let a human notice a
         number that changed. `diagnostics/channel_replay.py --probe-only` characterises a camera properly.
 
-        ⭐ AND THE RANGE IS ITSELF A FINDING: the slider spans 1–500, ONE TENTH of what the camera accepts,
-        so the auto-exposure sweep has only ever searched the bottom 10 %. It is not binding at 90, but
-        "the AE only ever landed on 90 or 104" is partly a property of the sweep's bounds."""
+        ⭐ AND THE RANGE WAS ITSELF A FINDING — ✅ ACTED ON 2026-09-04 (`SPEC_capture_quality.md` §16.41.8).
+        The slider spanned 1–500, ONE TENTH of what the camera accepts, so the auto-exposure sweep had only
+        ever searched the bottom 10 %, and "the AE only ever landed on 90 or 104" was partly a property of
+        the sweep's bounds. Both now come from `__refreshExposureRange`, i.e. from the camera itself."""
         pinned = self.__pinnedExposure()
         high = (settings or {}).get("exposureMax")
         if pinned is None or not high or high <= 0:
@@ -389,8 +405,8 @@ class CapturePanel(QWidget):
                   "cannot apply it (SPEC_capture_quality.md §16.39.5)" % (pinned, int(high)))
         elif not self.__reportedExposureRange:
             self.__reportedExposureRange = True
-            print("EXPOSURE: pinned %d, camera range 0..%d (the slider offers only %d..%d)"
-                  % (pinned, int(high), self.__EXPOSURE_MIN, self.__EXPOSURE_MAX))
+            print("EXPOSURE: pinned %d, camera range 0..%d (the slider offers %d..%d)"
+                  % (pinned, int(high), self.__EXPOSURE_MIN, self.__exposureMax))
 
     def __syncExposureToSensor(self):
         # ⛔⛔ THIS USED TO SEED FROM `calibrationExposure` — 150 on the ELP, defined as "the highest value
@@ -404,10 +420,10 @@ class CapturePanel(QWidget):
             else self.__EXPOSURE_FALLBACK)
         # ⭐ CLAMPED TRANSPARENTLY, and said out loud when it bites — a silently clamped instrument setting
         # is the same class of defect as a silently negotiated one.
-        clamped = max(self.__EXPOSURE_MIN, min(self.__EXPOSURE_MAX, value))
+        clamped = max(self.__EXPOSURE_MIN, min(self.__exposureMax, value))
         if pinned is not None and clamped != value:
             print("EXPOSURE: plugin pinned %d, clamped to %d by the slider range %d..%d"
-                  % (value, clamped, self.__EXPOSURE_MIN, self.__EXPOSURE_MAX))
+                  % (value, clamped, self.__EXPOSURE_MIN, self.__exposureMax))
         self.__exposureSlider.blockSignals(True)
         self.__exposureSlider.setValue(clamped)
         self.__exposureSlider.blockSignals(False)
@@ -454,6 +470,7 @@ class CapturePanel(QWidget):
             self.__updateControls()
             return
         self.__latestImage = None
+        self.__exposureRangeRead = False   # a reopened stream may be a different camera → re-query its range
         thread = DevCaptureVideoThread()
         thread.setIsVirtual(False)
         thread.setDeviceId(self.__resolvedIndex)
@@ -508,6 +525,7 @@ class CapturePanel(QWidget):
         # preview frame did, the drop would consume it and the burst would start on the mid-ramp outlier.
         if not videoSignal.isPreview:
             self.__latestImage = videoSignal.image
+        self.__refreshExposureRange()   # once per stream — the backend is open by the time a frame lands
         if self.__videoViewModule is not None:
             self.__videoViewModule.handleVideoThreadSignal(videoSignal)
             width = videoSignal.image.width() if videoSignal.image is not None else None
@@ -529,6 +547,44 @@ class CapturePanel(QWidget):
             # Change A: the active step's CaptureView decides whether the live preview shows only the cropped ROI.
             self.__videoViewModule.setCropToRoi(self.__croppedPreview())
 
+    def __refreshExposureRange(self):
+        """Widen (or narrow) the exposure ceiling to what THIS camera actually accepts.
+
+        Read from the frame signal, where the worker is parked in its render backpressure and the backend is
+        idle — the same read-back `__logCameraSettings` does between bursts, and read-only (a V4L2 control
+        query, not a stream operation). Best-effort throughout: a camera that will not answer keeps the
+        fallback ceiling, because a diagnostic must never take the capture down. Once per stream — the range
+        cannot change under an open device."""
+        if self.__exposureRangeRead or self.__videoThread is None:
+            return
+        self.__exposureRangeRead = True
+        try:
+            high = (self.__videoThread.readCameraSettings() or {}).get("exposureMax")
+        except Exception as error:                    # a read-back must never take the capture down
+            print("EXPOSURE: camera range unavailable (%s) — slider keeps %d..%d"
+                  % (error, self.__EXPOSURE_MIN, self.__exposureMax))
+            return
+        try:
+            high = int(high)
+        except (TypeError, ValueError):
+            high = 0
+        if high <= self.__EXPOSURE_MIN or high > self.__EXPOSURE_MAX_SANITY or high == self.__exposureMax:
+            return
+        self.__exposureMax = high
+        print("EXPOSURE: camera range %d..%d — slider and auto-exposure now span it"
+              % (self.__EXPOSURE_MIN, high))
+        if self.__exposureSlider is not None:
+            self.__exposureSlider.setMaximum(high)    # clamps the current value if the camera is narrower
+            self.__exposureSlider.setPageStep(max(1, high // 100))
+            self.__updateExposureLabel()
+
+    def __autoExposeProbes(self):
+        span = max(1, self.__exposureMax - self.__EXPOSURE_MIN)
+        extra = 0
+        while span > self.__AUTO_EXPOSE_REFERENCE_SPAN * (2 ** extra):
+            extra += 1
+        return self.__AUTO_EXPOSE_MAX_PROBES + extra
+
     # --- auto-exposure ---
 
     def __runAutoExposure(self):
@@ -547,7 +603,7 @@ class CapturePanel(QWidget):
             self.__innerTabs.setCurrentIndex(self.__IMAGE_TAB)
         self.__updateControls()
         self.__videoThread.requestAutoExpose(
-            self.__EXPOSURE_MIN, self.__EXPOSURE_MAX, iterations=self.__AUTO_EXPOSE_MAX_PROBES)
+            self.__EXPOSURE_MIN, self.__exposureMax, iterations=self.__autoExposeProbes())
 
     def __onAutoExposeProgress(self, probeIndex, totalProbes):
         signal = ApplicationStatusSignal()
