@@ -574,13 +574,31 @@ cuvette-wall reflections cancel between blank and sample. **Index matching, the 
 | ⭐ correct CIELAB / Kreft DI | ⭐ **no — a tristimulus integral** |
 | ⭐ peak POSITION (568 / 624, `R`) | ⭐ **no — needs resolution** |
 
-⛔⛔ **And `Q%` itself reduces to three filters.** `Q% = −100·(A_valley − A_Q)/A_Soret` is three band means;
-a three-filter photometer with a tungsten lamp could compute the shipped verdict. ⇒ **the spectrometer is
-not justified by the number it currently outputs.** Recorded here so it is not rediscovered later as though
-it were news.
+⚠ **`Q%`'s FORMULA is three band means** — `Q% = −100·(A_valley − A_Q)/A_Soret`.
 
-⭐⭐ **What does justify it: being able to change your mind — and this document's own session is the
-evidence.** The Soret band was retrimmed 440–460 → **448–460 in software**; with filters that would have
+⛔⛔ **An earlier draft concluded from that "a three-filter photometer could compute the shipped verdict".
+That is wrong, and Edwin corrected it (2026-09-04): *„ein Photometer kann das nicht, nur ein Spektrometer
+und meine Metrik/Algorithmus — und das muss man mal umsetzen."*** Three reasons, and the first is
+decisive:
+
+1. ⭐⭐⭐ **The shipped measurement is not a snapshot.** It is the **settling read**: watch the clearing
+   curve, find the minimum by the **drawdown rule**, and read `Q%` *there*. That is the whole of
+   `SPEC_settled_measurement.md` — a time series plus a validated decision rule, not three numbers at one
+   instant. **A photometer that reads once cannot produce the shipped number at all.**
+2. ⭐ **A band mean is not a filter reading.** The valley window is **500–560 nm — 60 nm wide** — and the
+   spectrum is a rising flank across it. An interference filter gives a ~10 nm weighted bandpass, not a
+   flat mean. ⇒ a filter instrument returns a *different* quantity, and `T = 18.6` would not transfer;
+   it would need its own corpus to re-derive.
+3. ⭐ **Filters freeze the bands.** The Soret window was retrimmed 440–460 → **448–460 in software**; a
+   filter set is fixed at manufacture.
+
+⇒ ⭐⭐ **The corrected statement:** the *spectral information* `Q%` uses is concentrated in three bands, so
+a competitor with a **spectrometer** is not blocked by optics — but they would still have to build the
+settling apparatus and derive their own thresholds. **The barrier is the settling logic plus the corpus,
+not the hardware.** That is a **higher** barrier than the withdrawn claim, not a lower one.
+
+⭐⭐ **And the second justification, independent of the above: being able to change your mind — this
+document's own session is the evidence.** The Soret band was retrimmed 440–460 → **448–460 in software**; with filters that would have
 been new hardware *and a worthless archive*. On 2026-09-04 alone: 225 runs re-quantised for bit depth
 (§4.1a), PCI's three visible terms (§4.5c), the CIE truncation (§4.5d), and the pedestal-vs-pigment test
 (`KB_spectroscopy_physics.md` §8.3a) — **every one of those questions would have been unanswerable against
