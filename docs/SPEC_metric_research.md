@@ -5221,3 +5221,95 @@ buys 250 ml of cold-pressed walnut oil on a colour index. And a normed number ha
 construction — the moat on record is the validated corpus, not the formula. ⭐ **What survives is the
 finding underneath it: the instrument generalises across oils as soon as the cell adapts.** The
 commercial half of this is in `SPEC_oelmuehlen_verzeichnis.md` §141.
+
+---
+
+## ⭐⭐⭐ 16.21 THE IN-HOUSE COLOUR RANKING — multi-observer, blinded, and it measures its own ceiling  *(Edwin 2026-09-04)*
+
+**What it is for.** §16.18 found an external, pre-existing ranking (ÖGVS 2024) and is the stronger design
+on provenance — but its **limit 2** names the gap this section fills: *"the ÖGVS score is overall sensory
+quality, dominated by taste, texture and aftertaste; `Rv` is a pigment/roast measure."*
+
+> ⭐⭐⭐ **There is no colour-specific human ranking of this archive's oils, from more than one pair of eyes,
+> anywhere on record.** §16.17.2 has one — Edwin's, on two oils, and it states its own weakness. That is
+> the whole human-side evidence base for a metric whose verdict is about colour.
+
+⚠ It is also the evidence a customer will ask for first. `spectracs-references/business/…` §158 carries
+the commercial half.
+
+### 16.21.1 Design
+
+| | |
+|---|---|
+| **oils** | **8–12**, spread over the measured `Rv` range; ⭐ **close spacing is wanted** — the interesting region is where they are similar |
+| ⭐⭐ **dilution** | **all at 2 capillaries in 8 ml**, identical eprouvettes, identical volume |
+| **viewing** | **light table**, one condition, one session |
+| **blinding** | random codes; a helper records the mapping, sealed until every observer has finished |
+| **observers** | Edwin **blind**, plus **2–3 lay observers**, each alone, none seeing another's result |
+| **task** | *"order them green → brown. You may hold any two side by side and compare. If you see no difference between two, put them on the same place."* |
+| **record** | photograph each observer's row (codes are on the tubes) |
+| ⭐ **measure** | **the same eprouvettes the observers looked at** — this removes the dilution question from the comparison entirely |
+
+### ⭐⭐ 16.21.2 Why the dilution is not a confound
+
+Neat pumpkin seed oil is optically closed — at the light table the eye sees nothing, which is why the
+Kernöltestgerät (`SPEC_oelmuehlen_verzeichnis.md` §65) is a **backlit 0.7 mm viewer**. Diluting every
+sample identically puts the eye in its working range.
+
+⭐ **Beer–Lambert scales every wavelength by the same factor ⇒ the ORDER is preserved.** And `Rv` claims
+dilution invariance (`DOC_metric_algebra.md`), so ⭐⭐ **the test incidentally exercises that claim.**
+⚠ The perceived **hue** does shift with dilution — that is the dichromatism itself — which is why every
+tube must carry the same fill.
+
+### ⭐⭐⭐ 16.21.3 Ties are mandatory, and they are the most valuable output
+
+The observer may declare **"no difference visible"** and place two tubes on one position.
+
+| observer | metric | reading |
+|---|---|---|
+| sees a difference | orders it the same way | ✅ agreement |
+| **sees NO difference** | **separates them anyway** | ⭐⭐⭐ **not an error — this is the reason to own an instrument** |
+| sees a difference | reverses it | ⛔ a genuine hit against the metric |
+
+> ⭐⭐⭐ **The strongest reachable result is not "the metric agrees with the eye". It is: "the metric agrees
+> with the eye wherever the eye can see, and resolves further where it cannot."**
+
+⛔ **Without permitted ties that statement cannot be obtained** — forced guessing disguises it as random
+error.
+
+### 16.21.4 Analysis
+
+`scipy.stats.spearmanr` handles ties by mid-ranks, so no special handling is needed. Report:
+
+| | |
+|---|---|
+| ρ(metric, each observer) | how well the number follows the eye |
+| ⭐⭐ **ρ(observer, observer)** | **how much humans agree at all — the CEILING** |
+| ⛔ true reversals | count against the metric |
+| ⭐ pairs tied by the observer and separated by the metric | count in its favour |
+
+⭐ At n = 10–12, ρ > 0.8 is p < 0.01.
+
+> ⭐⭐⭐ **The comparison that matters: if ρ(metric, human) ≥ ρ(human, human), the metric is already as good
+> as a person.** ⭐ That is the small-scale form of what Estyria's nine-person panel would give at scale —
+> the panel's own spread is the upper bound on any achievable correlation.
+
+### ⚠ 16.21.5 What it is NOT
+
+- ⛔ **Not M9, and not a pre-registration.** The oils are ours, the observers are recruited by us, and the
+  archive already exists. It is a **plausibility test with a measured ceiling**, nothing more.
+- ⛔ **Not a validation.** 10–12 oils and three lay observers do not validate a method. The claim it
+  supports is *"first evidence, blind-tested"*, and the next step it names is the panel comparison.
+- ⚠ **Lay observers are not a trained panel.** That cuts both ways: they set a lower ceiling than a panel
+  would, which makes the metric look better. **Report the ceiling, always, beside the correlation.**
+
+### 16.21.6 Traps
+
+| | |
+|---|---|
+| ⛔ **unequal fill or changing light** | fatal — the oil is dichroic (thin = green, thick = red-brown). One condition, one session |
+| ⛔ **oils spread too far apart** | everyone agrees, ρ is trivially high, nothing is learned about resolution |
+| ⭐ **right** | evenly over the range — then the **transpositions show WHERE the metric is uncertain**, which is the most interesting output of the run |
+
+**Cost:** ~12 × 8 ml ≈ 100 ml of dilution, about an hour of preparation; each observer sorts in 15–20
+minutes.
