@@ -446,3 +446,79 @@ Reproduce everything here with:
   §6.2a. On these numbers they should be invisible: the response at 690 nm is ~1×10⁻⁴.
 - **A second halogen bulb of a different make** ⇒ rules out the IRC-coating objection (§4.3) by
   construction rather than by argument.
+
+---
+
+## ⭐⭐ 10 · Instrument line shape, and what to demand when buying  *(2026-09-06)*
+
+`ROADMAP.md` item **9g** wants the rig's **line shape** measured against a fluorescent tube's mercury lines
+at **405 / 436 / 546 / 611 nm**. Their width *is* this instrument's resolution. Two uses, both stated there:
+it is the **minimum slit width to demand when buying** a lab spectrometer, and it is the **kernel** needed to
+convolve a bought instrument down to this rig's bandpass — which is what lets `Rv`, `T = 52` and the band
+edges transfer **by construction** instead of being refitted. ⛔ High-res → coarse always works; coarse →
+high-res never does.
+
+### 10.1 ⭐ The first hard comparison number
+
+Until now 9g had no reference point — "what does a real lab instrument actually deliver, and at what price?"
+A market check on 2026-09-06 supplies one (details in the non-versioned
+`../../spectracs-references/business/SPEC_application_areas.md` §7.4):
+
+| | **Hanna iris HI801** |
+|---|---|
+| price | **4.026 €** *(Austrian list, incl. VAT)* |
+| range | 340–900 nm |
+| ⭐ **spectral bandpass** | **5 nm** |
+| wavelength accuracy | **±1.5 nm** |
+| wavelength step | 1 nm |
+| modes | %T, absorbance, concentration |
+| cuvettes | round 13 / 16 / 22 mm, **square 10 mm**, rectangular 50 mm |
+| user methods | 100, each up to **five wavelengths** |
+
+⇒ **5 nm is the number to beat, or to match knowingly.** Three consequences for 9g:
+
+1. **A purchase specification now exists.** Anything quoted with a bandpass materially worse than 5 nm at
+   this price class is not competitive; anything much better costs more and buys resolution we may not need.
+2. ⭐⭐ **The convolution kernel is buyable.** A 5 nm instrument can be folded down to this rig's (presumably
+   wider) bandpass once 9g has measured our line shape — so a reference measurement could transfer to our
+   metric constants **by construction**. Without 9g it cannot, at any price.
+3. ⚠ **It is a bandpass, not a resolving power.** 5 nm at 420 nm and 5 nm at 620 nm are different fractions
+   of the band; our own 624 / 568 structure (`SPEC_red_ratio_metric.md`) sits where that matters.
+
+⚠ **Verify before quoting outward.** These figures are from the vendor's Austrian product page, not from a
+measurement or a datasheet we hold, and "5 nm bandpass" is a specification, not a measured slit function.
+The whole point of 9g is that we measure ours rather than believe a number — the same standard applies here.
+
+### ⭐⭐⭐ 10.2 The 5 nm tension — the norm's minimum is the peer-reviewed worst case  *(2026-09-06)*
+
+Three independent sources meet at 5 nm and they do not agree:
+
+| source | what it says about 5 nm |
+|---|---|
+| **OIV-MA-AS2-11** (Type I reference method, CIELab) | the **minimum requirement**: *"resolution equal to or higher than 5 nm"*, and the spectrum is sampled **every 5 nm** from 380 to 780 |
+| **Hanna iris HI801**, 4,026 € | bandpass **exactly 5 nm** — sits precisely on that minimum |
+| ⛔ **Hensel et al. 2022** (*Processes* 10:2707), 112 wines | a **5 nm data interval gave the LOWEST reproducibility** in red wine ⇒ *"data intervals lower than 5 nm are recommended"* |
+
+And the other end is bounded too: a **0.5 nm** interval was worse again — *"an extremely low data interval
+could lead to increased noise"* ⇒ *"a data interval higher than 0.5 nm is recommended"*. Their conclusion:
+⭐ **1 nm, at the faster scan speed.**
+
+Their statistical structure is worth copying, because it is the distinction we keep needing:
+
+- **ANOVA / Tukey on the MEANS** of SSD(ΔE): H₀ **accepted** — interval and scan speed do **not** change the
+  ability to *distinguish* samples.
+- **Bartlett on the VARIANCES**: H₀ **rejected** — the settings **do** change **reproducibility**.
+
+⇒ ⭐⭐ **an instrument setting can leave the separation intact and still wreck the repeatability.** That is
+exactly the failure mode σ_fill hunts, and it is why a mean-based comparison cannot clear a setting.
+
+> ⭐⭐⭐ **The lesson for 9g and for any purchase: a device can be fully norm-compliant and sitting on the
+> worst tested setting for this class of sample.** The OIV minimum and the published optimum are a factor
+> of five apart. Believing a datasheet is not the same as measuring the slit function — which is the whole
+> reason 9g exists.
+
+⚠ **Two quantities, do not conflate them.** Hensel's "data interval" is the **sampling step** of a scanning
+double-beam photometer; the iris's 5 nm is a **bandpass**. They are different things. The connection is only
+this: a 5 nm bandpass cannot deliver an effective resolution better than ~5 nm, so an instrument specified
+that way cannot reach Hensel's recommended regime no matter how finely it samples. ⛔ Do not write that the
+paper tested the iris — it did not.

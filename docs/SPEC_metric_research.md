@@ -5011,6 +5011,30 @@ oil's chlorophyll bands sit at 665–670 nm. See `SPEC_lamp_rebuild.md`.
 
 ---
 
+### ⭐⭐ 16.19a The Beer-Lambert path conversion is NORM-MANDATED — and it has a published failure mode  *(2026-09-06)*
+
+16.19's `A x 4` step — computing a different path length from one measured spectrum — is not a trick we
+invented. **Both OIV colour methods require it:**
+
+- `OIV-MA-AS2-07B`: the measured absorbances are **divided by `b` (cm)** to give 1 cm values.
+- `OIV-MA-AS2-11`: *"If the optical thickness of the reading cuvette is under 10 mm, **the transmittance must
+  be transformed to 10 mm** before calculating L\*, a\*, b\*, C\* and H\*."* Red wine is measured at **1 mm**
+  precisely so that it can be converted up.
+
+⇒ the strongest available precedent for 16.19: a Type I intergovernmental reference method does exactly
+this, by construction, for a strongly absorbing pigmented liquid.
+
+> ⚠ **but Hensel et al. 2022 (Processes 10:2707) Fig. 9 is the boundary, and it is sharp.**
+> Interpolating a red wine spectrum recorded at **10 mm** produces a reconstruction that runs **below 0 %
+> transmission** around 540-560 nm - physically impossible. At 1 mm and 4 mm it behaves. Their conclusion:
+> *"the use of a cuvette with a **longer** pathlength leads to a **greater deviation** of the interpolated
+> spectra"*, and they recommend a **1 mm** adapter.
+
+⇒ the conversion is safe **upward** from a short path, and unsafe **downward** from a saturated one. What
+the long path destroyed in the absorbing region, no arithmetic returns. Relevant to 16.19 and to the walnut
+note's "light oils need a longer cell": a longer cell buys signal in the transparent region and can cost
+everything in the absorbing one.
+
 ## ⛔⛔ 16.20 THE METRIC FAMILY IS BLIND TO A FEATURELESS DILUENT — and what the other-oils survey found  *(2026-09-02)*
 
 A day spent on oils other than pumpkin (recorded commercially in
@@ -5223,6 +5247,51 @@ finding underneath it: the instrument generalises across oils as soon as the cel
 commercial half of this is in `SPEC_oelmuehlen_verzeichnis.md` §141.
 
 ---
+
+## ⚠⚠ 16.22 GRASSMANN COLLINEARITY - a peer-reviewed warning aimed straight at `Q%`, `R` and `Rv`  *(2026-09-06)*
+
+Hensel et al. 2022 (*Processes* **10**:2707) correlated the CIELab coordinates of 112 wines against the
+**Glories** absorbances `A420 / A520 / A620` - and Glories is **exactly our algebraic form**: fixed
+wavelengths, sums and ratios of absorbances.
+
+| wine class | CIELab vs Glories |
+|---|---|
+| dark red (L\* < 20, n = 34) | **strong**, -0.84 to -0.99 - interchangeable |
+| light red (L\* > 20, n = 22) | ⛔ **weak** - `a*` vs `A420` = **0.06**, `b*` vs `A420` = **0.29** |
+| white (n = 56) | `a*` weak; `A620` fell **below the photometric accuracy** and was unusable |
+
+⇒ the finding that matters is not the disagreement but its cause: **the three Glories absorbances correlate
+strongly with EACH OTHER in all three classes**, which the authors call *"a dependency between parameters in
+**violation of Grassmann's first law**"* - the law that three *independent* parameters are needed to describe
+a colour. Their verdict: **Glories carries less information than it appears to**, and CIELab is the better
+conditioned description.
+
+### 16.22.1 Why this is our problem too
+
+`Q%`, `R` and `Rv` are built from `A_Soret`, `A_valley`, `A_Q`, `A_568` and `A_624`. If those bands are
+themselves strongly collinear across the archive, then our three metrics carry **one** piece of information
+wearing three names - and every "second metric agrees with the first" argument we have made is circular.
+
+⚠ **This is not a refutation.** Different matrix, different bands, and our bands sit on a *structured*
+pigment system (non-versioned `../../spectracs-references/business/SPEC_application_areas.md` §6.3) rather than on wine's broad anthocyanin envelope, which is precisely the case where
+independence is more plausible. It is a **testable concern**, and it is cheap to test.
+
+### ⭐⭐ 16.22.2 The test - one afternoon, desk only, no rig time
+
+On the existing **98-run archive**: compute the **Spearman correlation matrix** among `A_Soret`, `A_valley`,
+`A_Q`, `A_568`, `A_624` and the derived `Q%`, `R`, `Rv`. Then:
+
+- **|ρ| ≥ ~0.9 among the raw bands** ⇒ the metrics are near-collinear; the "independent confirmation"
+  language must be withdrawn from every spec that uses it, and M9's pre-registration has to say so first.
+- **moderate ρ** ⇒ the bands carry separable information and our form survives a criticism that has
+  already been published against its nearest relative.
+- Either way it is **learned for nothing**, and it is far better learned by us than by a reviewer.
+
+⛔ **Pre-register the threshold before running it** - the same rule §16.31.3a imposes on every other
+metric decision. Writing the criterion after seeing the matrix is exactly the failure M9 exists to prevent.
+
+⭐ Side benefit: it also supports the standing preference for emitting **CIELab** over a house band-ratio
+index (`spectracs-colorimeter-idea` §142) with peer-reviewed rather than self-generated evidence.
 
 ## ⭐⭐⭐ 16.21 THE IN-HOUSE COLOUR RANKING — multi-observer, blinded, and it measures its own ceiling  *(Edwin 2026-09-04)*
 

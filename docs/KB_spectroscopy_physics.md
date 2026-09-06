@@ -74,6 +74,25 @@ Always judge from the **reference-normalised** spectrum, never from the raw oil 
   **red 600–660** (the protochlorophyll Qy sits at ~623–626, §4.1 — this said "630–670" until 2026-07-31),
   blue 430–480 — then the verdict barely moves when LEDs are swapped/aged.
 
+### ⚠ 3.1a The norms zero against DISTILLED WATER — ours does not  *(2026-09-06)*
+
+Both OIV colour methods, read in the original, specify the same blank: **distilled water in a cuvette of the
+same path length**. `OIV-MA-AS2-07B` uses it to zero at 420/520/620; `OIV-MA-AS2-11` uses it to establish the
+baseline across 380–780 nm. That is an **absolute** reference — the zero is *water*, not the matrix and not
+the lamp.
+
+⚠ **We do something else.** §3.1's `T = S/R` references the **lamp** (stability by cancellation), and §9.3
+contemplates a **same-batch matrix blank**. Neither is what the norms do.
+
+⛔ **This is not an error.** Our reference-normalisation exists for a reason §3.1 states, and both alternatives
+are defensible. But it is a **difference from international practice**, and anyone holding our numbers against
+a norm will start exactly there. It belongs on the record before that conversation, not after it.
+
+⇒ the practical consequence: if the wine-colour validation exercise is ever run
+(non-versioned `../../spectracs-references/business/SPEC_application_areas.md` §8) — reproducing
+`I` and `N` on a bought bottle — it must be run **the norm's way, against water**, or it proves nothing about
+comparability. Our own convention would be the thing under test, and it cannot be both.
+
 ## 4. Why pumpkin oil is green-or-brown (the QM)
 
 Styrian pumpkin-seed oil is **dichromatic**: green in a thin layer, red/brown in a thick one. Fruhwirth &
@@ -225,7 +244,10 @@ mis-describes what `M448` computes (`DOC_metric_algebra.md` §5.6a).
 > measures **β-carotene in pumpkin SEED at 12–17 µg/g** (a cited comparison study: 31), against peel
 > 340–445 — ⭐ **the oil-bearing part is the carotenoid-poor part**, by 20–30×. Its UV-VIS maximum is
 > **453 nm, inside this window**, and in seed the carotenoid was detectable **only** by UV-VIS; NIR
-> (1415 nm) and FTIR (1710 cm⁻¹) missed it entirely.
+> (1415 nm) and FTIR (1710 cm⁻¹) missed it entirely. ⭐ **Keep that last clause** — it is the cleanest
+> statement in this doc that the regions are blind to each other's analytes, and §10 is the same lesson
+> read from the other side: NIR sees the *fat* our window cannot, and cannot see the *pigment* our window
+> is built on.
 >
 > **Order-of-magnitude propagation** — seed 12–31 µg/g ÷ ~0.45 oil fraction × 0.92 g/mL, at
 > `E(1 %, 1 cm) ≈ 2500`, gives **A ≈ 0.6–1.6 per mm** against neat oil's measured **1.9–3.8 per mm at
@@ -824,6 +846,247 @@ the positions are ours, and 608–610 is one more reason not to quote a solution
   460-nm and constant errors corrected above; its preparation advice is folded into
   `SPEC_capture_quality.md` §16.23.2c. ⛔ It also recommends a **30–35 °C warm bath** to thin the oil, which
   `SPEC_settled_measurement.md` §34.2 measured as a **preparation fault** (+0.680 `Q%`). Do not follow it.
+
+
+## ⭐ 10. The other regions — what NIR, MIR and Raman could measure, and what they could not  *(2026-09-06)*
+
+Everything above §9 lives in **400–700 nm**, where only *pigments* absorb. The fat itself — the
+triglyceride that is 99 % of the sample by mass — is **completely transparent in our window**. That is not a
+limitation of our build; it is what visible light is. This section maps what the neighbouring regions would
+buy, prompted by the question *"with a NIR spectrometer, could we measure IV, AV, C18:3, MUFA, PUFA, SAFA?"*
+
+⛔ **Nothing in this section is built, owned, or planned.** It exists so that the answer is on file and so
+that §4.2's "NIR missed the carotenoid entirely" datapoint has its counterpart: each region is blind to what
+the other sees.
+
+### 10.1 The region map
+
+| Region | λ | ν̃ | What absorbs | Band strength vs. fundamental | Detector | Sample handling |
+|---|---|---|---|---|---|---|
+| **UV** | 200–400 nm | — | electronic transitions; **conjugated dienes / trienes** | very strong | Si | dilute in isooctane, quartz cell |
+| **VIS** | 400–700 nm | — | pigments only (protochlorophyll, carotenoids, browning) | strong | Si | ⭐ **our window** |
+| **SW-NIR** | 700–1100 nm | 14 300–9 100 cm⁻¹ | **3rd** overtones of C–H | ~10⁻⁴ | ⭐ Si — *still ours* | neat, cm path |
+| **NIR** | 1100–2500 nm | 9 100–4 000 cm⁻¹ | **1st/2nd** overtones + **combination** bands of C–H, O–H, N–H | 10⁻²–10⁻³ | InGaAs / PbS | neat, 1–10 mm path |
+| **MIR** | 2500–25 000 nm | 4 000–400 cm⁻¹ | **fundamentals** — C=O, C=C, =C–H, C–O | 1 (full) | DTGS / MCT | ATR only, path ≈ 2 µm |
+| **Raman** | (785 nm laser) | 200–3 200 cm⁻¹ shift | the same fundamentals, **scattered** not absorbed | — | Si | ⭐ neat, through glass |
+
+Two structural facts fall out of the table and they explain every verdict below:
+
+1. **NIR bands are weak on purpose.** An overtone is 100–1000× weaker than its fundamental. That weakness is
+   why NIR can look through **millimetres of neat oil** while MIR needs a 2 µm ATR film — but it is also why
+   NIR only ever sees bulk constituents.
+2. **NIR bands are not specific.** Overtones and combinations of C–H all pile up in the same few hundred
+   nanometres and overlap heavily. MIR and Raman fundamentals are sharp and assignable; NIR features are
+   broad and must be *unmixed statistically*. This is the whole reason NIR is a chemometric technique and
+   MIR/Raman are not, quite.
+
+### ⭐⭐ 10.2 The two rules that decide every answer
+
+> **Rule A — the concentration floor.** In a neat triglyceride matrix an NIR overtone band becomes usable at
+> roughly **0.1–1 % w/w** for a distinct functional group. An analyte present at **ppm** is invisible, no
+> matter how good the instrument or how large the calibration set. What is reported for such an analyte is
+> always a *correlation with something else that co-varied*.
+
+> **Rule B — NIR never measures the parameter.** It measures a spectrum; a **PLS regression model** predicts
+> the parameter, calibrated against the reference method on a large, representative sample set. The
+> instrument does not know what an Iodine Value is. Consequently every ★★★ below carries a hidden price of
+> **60–200 reference analyses** (Wijs titration, GC-FID) before it produces one number.
+>
+> ⭐⭐ Rule B is the **same structural fact as our own moat argument** (the value is the validated
+> corpus, not the formula). It transfers to NIR unchanged. A NIR instrument without
+> its calibration corpus is a lamp and a detector. This is worth stating out loud whenever someone proposes
+> "just buy a NIR spectrometer" as a shortcut — it is a shortcut past the optics, not past the corpus.
+
+### 10.3 The six parameters, one by one
+
+| Parameter | Verdict | Physical basis | Why |
+|---|---|---|---|
+| **Iodine Value (IV)** | ⭐⭐⭐ **yes — the textbook case** | cis `=C–H`: comb. **~2140 nm**, 1st ot. **~1670 nm**, 2nd ot. **~1160–1180 nm** | IV *is* the double-bond count; the band is proportional to what the titration consumes. A real measurement, not a proxy |
+| **PUFA** | ⭐⭐⭐ yes | same `=C–H`, **plus the bis-allylic CH₂** (the methylene *between* two double bonds) | the bis-allylic group is what physically distinguishes poly- from mono- |
+| **MUFA** | ⭐⭐ yes, weaker | by covariance + closure | no group of its own; carried by the IV/PUFA axis |
+| **SAFA** | ⭐⭐ yes, weaker | **closure** — the three sum to ~100 % | largely "what is left"; its error is correlated with the other two |
+| **Linolenic C18:3** | ⭐ **no — not in pumpkin oil** | none of its own | see below |
+| **Anisidine Value (AV)** | ⛔ **no** | none — the analyte is ppm *and* the value is reagent-defined | see below |
+
+**IV, and why it is the good one.** Of the six, IV is the only parameter whose definition and whose spectral
+feature are the *same physical thing*. Wijs titration adds halogen across C=C; the 1670/2140 nm bands are the
+C–H stretch on that same C=C. Reported PLS calibrations across edible oils routinely reach R² 0.95–0.99 with
+SEP under ~2 IV units. ⚠ Those figures are the commonly quoted range, **not verified here against primary
+sources** — see §10.7.
+
+**⚠ The group split has a range problem that the literature hides.** The R² 0.85–0.97 quoted for
+SAFA/MUFA/PUFA comes from calibration sets spanning **many oil types** — coconut at ~90 % SAFA against
+linseed at ~70 % PUFA. That is a 70-point range, and *any* method looks good across it. Within pumpkin seed
+oil alone the ranges are narrow:
+
+| group | pumpkin seed oil, typical | spread available to a model |
+|---|---|---|
+| SAFA (16:0 + 18:0) | ~15–25 % | ~10 points |
+| MUFA (18:1) | ~20–40 % | ~20 points |
+| PUFA (18:2) | ~40–60 % | ~20 points |
+| **C18:3** | ⛔ **~0.1–0.8 %** | **~0.7 points** |
+
+⇒ the honest question is never *"can NIR predict PUFA"* but **"does the NIR prediction beat quoting the
+pumpkin-oil mean"**. Across oil types, obviously yes. Within one oil type, frequently no — and a paper that
+reports only R² on a mixed-oil set will not tell you which. This is the same trap as a metric validated on a
+corpus wider than its deployment: cf. `SPEC_metric_research.md` §16.31.3a's bar, and `dQ100`'s M9
+pre-registration.
+
+**C18:3 — the range argument, not a physics argument.** NIR cannot separate C18:2 from C18:3 by *band
+identity*: they carry the same functional groups in different quantity, differing only in how much
+bis-allylic CH₂ is present. Individual-PUFA predictions succeed exactly where the analyte dominates the
+covariance — linseed at 45–60 %, rapeseed at 6–12 %. In pumpkin seed oil C18:3 sits **at Rule A's floor with
+essentially no range**. A model fitted there fits noise.
+
+**AV — three independent reasons, any one of them fatal.**
+
+1. **Concentration.** AV counts secondary oxidation products, chiefly α,β-unsaturated (2-alkenal) aldehydes,
+   at **ppm** levels. An order of magnitude below Rule A's floor.
+2. ⭐⭐ **The value does not exist in the oil.** AV is *defined* as the absorbance at **350 nm of the reaction
+   product of the oil with p-anisidine reagent** (ISO 6885 / AOCS Cd 18-90). There is no AV in an untreated
+   sample to measure — only its precursor aldehydes, see (1).
+3. **The published successes are set-local.** Papers reporting NIR "prediction" of AV are fitting whatever
+   bulk change happened to co-vary with oxidation *in that one sample set* (usually a heating series, where
+   everything moves together). They do not survive new material.
+
+⇒ ⭐⭐ **AV is the §91 pattern exactly** (`spectracs-international-market`): an oxidation parameter that
+already has a normed reagent method, competing against a spectral proxy that correlates with it at best.
+The proxy loses. If oxidation is wanted optically, the real answer is **not** NIR but **UV** — see §10.6.
+
+### ⛔ 10.4 The silicon wall — this is not an extension of our rig
+
+The single hard fact: **our detector dies at ~1000–1100 nm**, and the useful unsaturation bands are at
+**1670** and **2140 nm**. Between our red edge (measured 680 nm, §7.2) and the nearest useful NIR band there
+is a factor of 2.5 in wavelength and a change of detector material.
+
+| Path | Range | Reaches | Cost, order of magnitude | Note |
+|---|---|---|---|---|
+| **our Si camera, IR-cut removed** | →~1000 nm | **3rd** overtones only | ⭐ ~0 € | ⚠ the production Microdia has **no IR-cut filter** (`KB_cameras.md`) — so this is physically available to us today |
+| **InGaAs micro-spectrometer** | 900–1700 nm | ⭐ 1st overtone **1670 nm** ⇒ IV + group split | **~2–8 k€** | the realistic entry point |
+| **extended InGaAs / PbS** | →2500 nm | the strong **2140 nm** combination band + the diagnostic region | **~10–30 k€+**, often cooled | where the Foss/Perten seed analysers sit |
+
+⚠ The price figures are **order-of-magnitude estimates from memory, not quotes**. If this is ever costed,
+get real ones.
+
+⭐ **The one cheap experiment that exists.** 700–1100 nm is the **3rd** overtone region — roughly another
+100× weaker than the 1st, so expect it to be hard. But it is the only NIR our current hardware can touch, it
+needs no purchase, and it points in the *same direction* as the red-extension argument that already has eight
+independent reasons behind it (`spectracs-colorimeter-idea`). ⛔ Do not expect IV out of it. Recorded here as
+a possibility, not a proposal.
+
+### ⭐ 10.5 Two things NIR would do *better* than our window
+
+Both are consequences of wavelength, and both address problems we currently fight:
+
+- **It looks straight through the colour.** Protochlorophyll's longest band is at ~625 nm and carotenoids
+  stop by ~500. Above 1100 nm there is **no pigment absorption at all** — a nearly black oil and a pale one
+  give the same NIR baseline. Everything §4 and §9 wrestle with simply is not there.
+- **Scatter falls with wavelength.** Rayleigh-like scatter goes as λ⁻⁴ and even Mie scatter falls
+  monotonically; at 1670 nm against 450 nm that is a large reduction. ⭐⭐ **Turbidity — the hinge of the
+  industrial case** (a major producer rests its oil unfiltered for 7 days) — hurts an NIR
+  measurement far less than it hurts §8.3's pedestal.
+
+⇒ the irony worth recording: the region that cannot see our pigment is the region that would not care about
+our two worst confounds.
+
+### ⭐⭐ 10.6 The two alternatives that were not asked about
+
+**Raman at 785 nm — structurally the closest to what we already do.** The C=C stretch at **1655 cm⁻¹** is a
+sharp, strong **fundamental**, and the ratio **1655 / 1440** (C=C over the CH₂ scissor as internal standard)
+tracks unsaturation almost directly — a **peak ratio**, not a PLS black box. It is the same shape of metric
+as `R = 624/568` (`spectracs-metric-research`) and `V`/`Q%`: two bands, one internal reference, no fitted
+corpus constant to pre-register. It runs on neat oil through glass, and the detector is **silicon**.
+
+⛔ The catch is serious: **fluorescence**. Protochlorophyll fluoresces at 630–655 nm in the oil (§4.1
+sources) and a dark pumpkin oil under 785 nm excitation may drown the Raman signal entirely. That is a
+one-evening go/no-go test, and it must come before anything else about Raman is discussed.
+
+**UV, for the oxidation question AV cannot answer.** `K232` and `K270` — specific extinctions at 232 and 270
+nm for conjugated **dienes** and **trienes** — are **normed** oxidation indices (ISO 3656) and they measure a
+real absorption of the oxidised oil itself, no reagent. They need isooctane dilution and a quartz cell, so
+they are as destructive as titration; but unlike an NIR-AV proxy they are a **method**, not a correlation.
+
+⭐ And the precedent already in our notes: palm oil's **DOBI (ISO 17932)** is exactly this shape — a
+**ratio of two absorbances** (carotene band over an oxidation-product band) used as a normed quality index
+(`spectracs-international-market`). Our metrics are formally the same object. That parallel is stronger
+evidence for our approach than any NIR result would be.
+
+### 10.7 What this means for Spectracs
+
+| | |
+|---|---|
+| Would NIR let us measure IV / PUFA / MUFA / SAFA? | **Yes** — genuinely, IV excellently. |
+| C18:3 or AV? | **No**, for two different reasons (range vs. concentration + reagent definition). |
+| From our current hardware? | ⛔ **No.** Silicon stops at 1100 nm; the bands are at 1670 and 2140. |
+| Would it shortcut the corpus? | ⛔ **No — Rule B.** It relocates the corpus problem, it does not solve it. |
+| Is it a competitor to what we do? | **No, it is orthogonal.** NIR reads the *fat*; we read the *pigment*. §4.2's datapoint is the proof from the other side: NIR at 1415 nm and FTIR at 1710 cm⁻¹ **missed the carotenoid entirely** where UV-VIS saw it. |
+| Is there a cheap probe? | ⭐ two: **IR-cut-free Si to ~1000 nm** (3rd overtone, expect it to be hard) and a **785 nm Raman fluorescence test**. Neither is proposed here. |
+
+⭐⭐ The one sentence to keep: **the fatty-acid parameters and the pigment parameters are different
+instruments, and nothing about buying one gets you the other.** A customer asking for IV is asking for a
+different device, not a firmware update — and a customer asking whether the oil is over-roasted is asking for
+ours, which no NIR analyser answers.
+
+### ⭐⭐ 10.8 The reagent route — why it closes IV, and the rule that follows  *(2026-09-06)*
+
+§10.3 called IV the ★★★ NIR case. A look at **CDR FoodLab**'s published methods the same day showed the
+conclusion is true as physics and closed as opportunity: they measure IV **in 3 minutes with a vial**, and
+never go near 1670 nm.
+
+| Parameter | Reaction | λ | Time | Correlated to |
+|---|---|---|---|---|
+| Free Fatty Acids | FFA bleach a chromogenic compound at pH < 7 (colour *decreases*) | 630 nm | 1 min | AOCS Ca 5a-40 |
+| Peroxide Value | peroxides oxidise **Fe²⁺ → Fe³⁺**, forming a red complex | 505 nm | 3 min | AOCS Cd 8-53 |
+| p-Anisidine Value | 2-alkenals/2,4-dienals condense with **p-anisidine** | ⚠ **366 nm** (official: 350) | 1 min | AOCS Cd 18-90 |
+| Iodine Value | double bonds consume **iodine in alcoholic solution** | **446 nm** | 3 min | ISO 3961 / AOCS Cd 1c-85 |
+| Soaps | not published | — | immediate | — |
+
+⚠ *Inferred, not stated by CDR:* the red Fe³⁺ complex at 505 nm is almost certainly **thiocyanate** (the
+FOX/xylenol-orange alternative reads 560–590); the FFA chromogen is a **sulfonphthalein pH indicator** (a
+630 nm absorber bleached by acid). The formulations themselves are unpublished.
+
+> ⭐⭐ **The rule. A spectral method only has a market where no reagent reaches the analyte.**
+>
+> A reagent buys **specificity by chemistry** — it reacts with one thing and reports it as colour. An
+> overtone band buys specificity **by statistics**, and only after a corpus (Rule B). Wherever a reagent
+> can reach the analyte, chemistry wins on time, precision and traceability. IV, PV, FFA and AnV are all
+> reachable. **Pigment state is not** — there is no reagent for "how roasted is this oil".
+
+⇒ this is a sharper form of the fourth condition in `spectracs-international-market` §91, and it points at
+exactly the ground Spectracs already stands on.
+
+⭐ **Two footnotes worth keeping.** Their IV reagent reads at **446 nm** — ~2 nm from our own Soret anchor
+at 448–460 (§4.2, `SPEC_capture_quality.md`), and the two numbers have nothing to do with each other: theirs
+is the *reagent's* colour, ours is the *oil's* pigment. And they read p-anisidine at **366 nm** rather than
+the official 350 — the mercury line, i.e. the source they could buy. The normed wavelength is a convention,
+not a law, once the correlation is shown.
+
+⇒ **Branch II** — the possibility of running such assays on our own photometer, its five obstacles, and the
+reagents' hazard profile — is worked out in the non-versioned
+`../../spectracs-references/business/SPEC_application_areas.md` §3–§5. Three of CDR's four
+wavelengths (630, 505, 446) fall inside our delivered window; the limitation is consumable manufacturing,
+not optics.
+
+### Sources for §10
+
+⚠ **Provenance and confidence.** This section was written from working knowledge on 2026-09-06 in answer to a
+direct question, **without a literature pass**. The *physics* — overtone/combination assignments, band
+positions in nm and cm⁻¹, detector cut-offs, the reagent definition of AV, Rules A and B — is textbook and
+stated with confidence. ⛔ The following are **explicitly not verified here** and must be checked before any
+of them is quoted outward:
+
+- **Reported PLS performance figures** (R² 0.95–0.99 / SEP < 2 for IV; R² 0.85–0.97 for the group split).
+  These are the commonly cited ranges; no primary source was consulted.
+- **Instrument price bands** (2–8 k€ InGaAs, 10–30 k€ extended). Order-of-magnitude recall, not quotes.
+- **Pumpkin seed oil fatty-acid ranges** in §10.3. Consistent with Fruhwirth & Hermetter (2007) (local copy
+  in `spectracs-references/articles/`), but the specific percentages here were **not** read back off it.
+- **Method numbers** — ISO 6885 / AOCS Cd 18-90 (AV), ISO 3656 (K232/K270), ISO 3961 (IV, Wijs),
+  ISO 12966 / AOCS Ce 1h-05 (FAME by GC), ISO 17932 (DOBI), AOCS Cd 14e-09 (trans by ATR-FTIR). Cited from
+  memory; the *existence* and *purpose* of each is solid, the exact designations are not double-checked.
+
+Cross-references inside this repo: §4.2 (the NIR/FTIR-missed-the-carotenoid datapoint), §7.2 (our delivered
+400–680 nm), §8.3 (the turbidity pedestal §10.5 would escape), §9 (the normed photometric methods our own
+metrics sit beside).
 
 
 ## Sources
