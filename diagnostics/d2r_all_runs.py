@@ -1493,10 +1493,21 @@ EXTRA_ROW_WHY = {
 
 def whyRow(label):
     """The one-sentence reason a row is drawn apart. ⛔ A suite is NOT a new measurement — say so, or the
-    figure implies eight fills that do not exist."""
+    figure implies fills that do not exist.
+
+    ⛔⛔ AND IT MUST NOT CLAIM MORE THAN THE FOLDER KNOWS. Until 2026-09-06 this sentence read "every fill
+    confirmed same-jar AND 6-min cold-box", which was true of the eight fills the suite then held and
+    became false the moment a subfolder could join by PLACEMENT alone (`suiteMembership`). The split is
+    now COUNTED on every run, never typed — this file's own rule, and the one the sentence broke."""
     if label.endswith("(suite)"):
-        return ("a CURATED CUT of runs already drawn above — every fill confirmed same-jar AND 6-min "
-                "cold-box, across BOTH instrument states — re-cut, NOT re-measured")
+        suite = label[:-len(SUITE_ROW_TAIL)]
+        members, placed = suiteMembership(suite, quiet=True)
+        confirmed = len(members) - len(placed)
+        how = "%d confirmed same-jar AND 6-min cold-box" % confirmed
+        if placed:
+            how += ", %d admitted by PLACEMENT in the folder alone" % len(placed)
+        return ("a CURATED CUT of runs already drawn above (%s), across BOTH instrument states — "
+                "re-cut, NOT re-measured" % how)
     return EXTRA_ROW_WHY.get(label, "a different measurement")
 
 
@@ -1707,8 +1718,11 @@ def suiteFolders():
 
     ⭐ THE SHAPE IS `<name>_suite/<session>/*.pdf` (Edwin, 2026-08-31): a main folder whose SUBFOLDERS are
     the sessions, holding copies of runs that share a property worth comparing under. The first one,
-    `20280831_suite`, is the eight fills whose same-jar **6-min cold-box** recipe is confirmed — four by
-    their own header and four by `PREP_PROTOCOL` — out of the thirteen on the same-jar row.
+    `20280831_suite`, began as the fills whose same-jar **6-min cold-box** recipe is confirmed — some by
+    their own header, some by `PREP_PROTOCOL` — cut out of the same-jar row.
+    ⚠ ⛔ THE COUNT THAT USED TO STAND HERE ("the eight fills … out of the thirteen") IS GONE, and its going
+    is the point: it was typed, and `20260906SteirerkraftC` made it wrong the evening it was dropped in.
+    `whyRow` counts the members — and the confirmed/placed split — on every run instead.
     ⛔ `peak_ratio_archive.walkReports` PRUNES these, because they are byte-identical COPIES and a generic
     walk would count every run twice. A suite reaches a figure only by being asked for, here."""
     return sorted(name for name in os.listdir(archive.ARCHIVE)
@@ -1716,21 +1730,110 @@ def suiteFolders():
                   and os.path.isdir(os.path.join(archive.ARCHIVE, name)))
 
 
-def suiteMembers(suite):
-    """`{session: (oil, class)}` for one suite. ⛔ The oil comes from the session's EXISTING entry — a copy
-    may not invent a label its original does not have."""
+def normalisedOil(name):
+    """`"Spar S-Budget"` and a folder's `"SparSBudget"` are the same oil. Case, spaces and punctuation are
+    the only thing between them, so none of the three may decide a label."""
+    return "".join(character for character in name.lower() if character.isalnum())
+
+
+def oilClassIndex():
+    """`{normalised oil: (display name, class)}` over every table that labels a session.
+
+    ⛔ BUILT, NEVER TYPED. An oil reaches this index by having been labelled once, anywhere — which is the
+    same rule the session tables already follow, applied one level up. A hand-written second list of oils
+    is exactly the thing `PINNED_PREFIX`'s comment says goes stale the moment the bench produces a folder.
+    ⭐⭐ IT IS KEYED TWO WAYS, and the second one is what makes it work at all. An oil is reachable by its
+    DISPLAY name (`"Ja Natuerlich"`) and by the STEM OF EVERY SESSION already labelled with it
+    (`20260831BillaJaNatuerlichA` -> `"BillaJaNatuerlich"`). ⛔ The display name alone is not enough: the
+    folders carry the RETAILER (`Billa`) and the display name does not, so `20260906BillaJaNatuerlichC`
+    normalises to `billajanatuerlich` against a display key of `janatuerlich` and was refused — correctly,
+    but uselessly, on 2026-09-06. The archive already held the answer in the two 08-31 folders; it simply
+    was not being asked. ⇒ a new fill of an oil measured before is resolvable by FOLDER CONVENTION, which
+    is the convention the bench actually types.
+
+    ⛔⛔ A CONTRADICTION IS FATAL, not silently resolved: the collision the 08-31 session produced
+    (`SERIESOIL`'s note, and the "Lugitsch 107.5 through Ja Natuerlich's data" one) was survivable only
+    because it was noticed. Two tables disagreeing about an oil's CLASS is the same failure with a label
+    on it, so it stops the run."""
+    index = {}
+
+    def put(key, oil, label, why):
+        key = normalisedOil(key)
+        if not key:
+            return
+        if key in index and index[key][1] != label:
+            raise SystemExit("contradictory class for %r (via %s): %s vs %s — one of the session tables "
+                             "is wrong and no figure may be drawn until it is settled"
+                             % (oil, why, index[key][1], label))
+        index.setdefault(key, (oil, label))
+
+    for table in (TODAY, SAME_JAR_6MIN, PINNED_EXPOSURE):
+        for session, (oil, label) in table.items():
+            put(oil, oil, label, "display name")
+            put(oilOfSessionName(session), oil, label, "session %s" % session)
+    return index
+
+
+def oilOfSessionName(session):
+    """`"20260906SteirerkraftC"` -> `"Steirerkraft"`. The DATE prefix goes, and a trailing FILL LETTER goes.
+
+    ⚠ A GUESS, and it is only ever allowed to select from oils the archive ALREADY labels — never to
+    create one. `SERIESOIL` is consulted first because it is the hand-made answer where the folder name
+    and the oil name genuinely differ (`20260812BillJaNatuerlich`).
+    ⛔ THE FILL LETTER RULE IS NARROW ON PURPOSE: a trailing capital preceded by a lower-case letter, so
+    `SteirerkraftC` -> `Steirerkraft` and `SparSBudget` is left alone. Anything it gets wrong fails loudly
+    at the index lookup rather than quietly attaching the wrong oil's label."""
+    if session in SERIESOIL:
+        return SERIESOIL[session]
+    stem = session.lstrip("0123456789")
+    if len(stem) > 1 and stem[-1].isupper() and stem[-2].islower():
+        stem = stem[:-1]
+    return stem
+
+
+def suiteMembership(suite, quiet=False):
+    """`({session: (oil, class)}, {sessions admitted by placement alone})` for one suite.
+
+    ⭐⭐ PLACEMENT IS THE ASSERTION — Edwin, 2026-09-06, of `20260906SteirerkraftC`: *"it should enter the
+    20280831_suite as it is in a subfolder"*. A subfolder of a suite IS a member, and the folder is the
+    record of the claim; before this, a suite-native session was drawn NOWHERE and silently, because the
+    label lookup was keyed to an original session that need not exist. Two fills measured that evening
+    reached no figure for exactly that reason.
+
+    ⛔ WHAT PLACEMENT STILL MAY NOT DO IS INVENT A LABEL. The class comes from the archive's OWN entry for
+    that oil (`oilClassIndex`) — prior truth, never a number measured on the evening in question, which is
+    the §7 / M9 rule this file states in three other places. An oil the archive has never labelled is
+    still refused, and still says so loudly.
+    ⚠ AND THE COST IS REAL: a placed fill's METHOD is asserted by where its folder sits, not confirmed by
+    a header or by `PREP_PROTOCOL` as the first eight were. `whyRow` counts the two kinds separately so the
+    row's caption can never again claim confirmation the suite does not have."""
     base = os.path.join(archive.ARCHIVE, suite)
-    members = {}
+    members, placed = {}, set()
     for session in sorted(os.listdir(base)):
         if not os.path.isdir(os.path.join(base, session)):
             continue
         known = SAME_JAR_6MIN.get(session) or PINNED_EXPOSURE.get(session) or TODAY.get(session)
+        if known is not None:
+            members[session] = known
+            continue
+        oil = oilOfSessionName(session)
+        known = oilClassIndex().get(normalisedOil(oil))
         if known is None:
-            print("  [!!] SUITE MEMBER WITH NO OIL ON RECORD: %s/%s -- it is drawn NOWHERE until its "
-                  "original session carries a label" % (suite, session))
+            if not quiet:
+                print("  [!!] SUITE MEMBER WITH NO OIL ON RECORD: %s/%s -- read as %r, which the archive "
+                      "has never labelled. It is drawn NOWHERE until some session carries that oil"
+                      % (suite, session, oil))
             continue
         members[session] = known
-    return members
+        placed.add(session)
+        if not quiet:
+            print("  [+] SUITE MEMBER BY PLACEMENT: %s/%s -- no session entry of its own; read as %s (%s) "
+                  "from the archive's existing label for that oil" % ((suite, session) + known))
+    return members, placed
+
+
+def suiteMembers(suite):
+    return suiteMembership(suite)[0]
 
 
 def suiteCorpus():
@@ -1744,8 +1847,11 @@ def suiteCorpus():
     return rows
 
 
+SUITE_ROW_TAIL = " (suite)"
+
+
 def suiteRowLabel(suite):
-    return "%s (suite)" % suite
+    return "%s%s" % (suite, SUITE_ROW_TAIL)
 
 
 def pinnedCorpus():
