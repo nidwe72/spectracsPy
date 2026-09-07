@@ -4708,6 +4708,14 @@ built.**
 
 ### 📌⭐⭐ 16.16 PRE-REGISTRATION — σ_fill of the current recipe: Lugitsch, SIX fills, one evening  *(written 2026-08-30, BEFORE the run; six chosen by Edwin over the four first proposed)*
 
+> ⚠⚠ **SEE `SPEC_capture_quality.md` §16.44 BEFORE RUNNING THIS (added 2026-09-07).** Two things there bear
+> on this section and neither edits it: (a) the six Lugitsch fills that exist — `20260828LugitschA–F` — span
+> **two sittings**, which §16.16.2 forbade, and the registered statistic reads **σ̂ = 2.76 with all six but
+> 1.03 without `LugitschE`**, the fill that broke the exposure rule ⇒ **the run is not cleanly executed and
+> must not be scored as though it were**; and (b) `σ_fill` is the right quantity for THIS section's question
+> but only the smaller half of the **tracker's** error budget, whose between-session term measures ≈4.8 Rv
+> against σ_fill's 4.1. ⛔ Nothing in §16.44 licenses moving this design's cut or its read rule.
+
 #### 16.16.1 The question, and why Lugitsch
 
 Under the current recipe Lugitsch's two fills agree to **0.64** where the retired recipes gave 8.15 and 9.53

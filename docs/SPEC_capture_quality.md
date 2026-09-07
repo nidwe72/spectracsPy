@@ -2426,6 +2426,60 @@ standoff                  as close to the liquid surface as handling allows (a d
 spectrum the way a throughput change does. Print in black PETG/PLA, or line a printed ring with matte black
 paper. Make the hole a **separate insert** so 12 / 16 / 20 mm can be swapped without reprinting the holder.
 
+### ⛔⭐ 16.9.2b MEASURED 2026-09-07 — the STRAY-LIGHT case for the mask is dead; the CENTRING case is not
+
+§16.9.2 justifies the aperture mask on two grounds, and they have now come apart. **The distinction matters
+because §16.7's ordered list calls this part "the critical path"** — it must not be built for the wrong
+reason, and it must not be abandoned for the wrong one either.
+
+#### ⛔ Ground 1 — wall-guided ring light. RETIRED.
+
+| evidence | |
+|---|---|
+| the archive's one opaque fill, `20280819BillaClever/003` | the 2nd percentile of `S/R` over 442–634 nm is **0.018** ⇒ **stray + dark ≤ 1.8 %** of the incident, and at the darkest wavelengths the sample reads 2–4 DN, so it is an upper bound sitting on the quantisation floor |
+| Edwin's blocker test, 2026-09-07 | a **20 mm black sticker over the jar top**, exposure driven to **5000** (≈55× the working 90): only a barely-visible smear. Scaling against an unblocked reference at the same exposure puts **wall light at a few tenths of a percent** |
+
+⇒ The ring light §16.9.2 was drawn to block is **not a term on this rig**. An aperture would pay real counts —
+narrowing the accepted half-angle from ~15° to ~9° costs roughly **2.5× in solid angle**, straight out of a red
+band that carries only 15–23 counts (§16.43.3) — to remove almost nothing.
+
+⚠ **What the 1.8 % floor probably is instead: the dark offset.** The reference's own `CAPTURE-LOWDN` line
+reads `minDn 0.9–3.8 at 400.1 nm` where the lamp gives nothing — the same 1–4 counts. ⛔ **It does not cancel**,
+because it depresses small absorbances hardest (a true `A` of 0.06 reads 30 % low against 5 % for `A` = 0.60),
+so `Rv`'s four bands are each pulled down differently. Subtracting 2 DN from both legs across all twenty suite
+fills moves `Rv` by **+0.49 ± 0.07** — ⭐ a systematic bias worth removing before any absolute threshold is
+set, ⛔ but a **shift, not a scatter reduction**: σ_fill barely changes.
+⇒ **Next: the lamp-off dark frame** (§16's stray gate, capture (a)) — one capture at exposure 90 measures the
+offset directly instead of by inference, and the fix is then a subtraction in software, not a printed part.
+
+#### ⭐ Ground 2 — pinning the measured area against jar movement. STANDS, and is now the last untested candidate.
+
+§16.9.2's other claim is untouched by any of the above: *"A fixed aperture also pins the measured area, so
+centring errors stop mattering — the jar can sit a millimetre off and the same patch of liquid is measured."*
+
+⛔⛔ **A millimetre off is what the bench now has.** The suite uses a polystyrene jar **smaller than the holder
+was built for, with ~0.6 mm of play** (Edwin, 2026-09-07) — and the same-jar recipe **guarantees exactly one
+re-seat between the reference capture and the sample capture**, because the jar is lifted out to be vortexed
+and put back. §16.9.2 predicted the consequence before the wobble existed: *"its share changes every time the
+jar is re-seated."*
+
+⭐ **And the leverage is now measured.** §16.43.4: a **1 % error in the reference at 622–627 nm is worth
+5.7–9.2 Rv** — the size of every difference argued over on 2026-09-06, and `20260906BillaJaNatuerlichD`
+carried 0.6 % of exactly that.
+
+⚠ **The geometry is marginal, not comfortable.** With the jar 20 mm from the slit, an outer diameter of 20 mm,
+4 ml of liquid, and the acceptance half-angle Edwin measured by tilting a second hand spectrometer
+(**12.5–15°**), the accepted cone **grazes or clips the far end of the bore** at every wall thickness of
+1.5 mm or more, and the 0.6 mm of play consumes what margin a 1.0 mm wall would leave. ⭐ Note also that the
+**smaller jar is optically worse**: the same 4 ml stands deeper in a narrower bore, so the cone has further to
+open before it clears.
+
+⇒ **What is owed before anything is printed** is not a mask but a measurement: the **nested re-seat arm** —
+read, re-read without touching, then lift-and-re-seat and read again. Two extra reads per fill, three fills.
+It prices the seating term against the instrument's 1.0 Rv and the fill's 4.1 Rv (§16.44.1), and it is the one
+term two days of analysis could not exclude. If seating is 3 Rv of the 4.1, the **keyed seat** — §16.9.4, and
+the half of §16.7's "critical path" that survives this section — is the whole answer.
+
 ### 16.9.3 Part B — the diffuser mount
 
 **What it does.** Holds the frosted glass **at the spectrometer entrance, immediately before the slit**, rigidly
@@ -15974,6 +16028,63 @@ which is worse than no warning — and camera identity, not range, is what `diag
 
 ---
 
+### 16.39.8 ⛔ THE LOG SAID `autoExposure=1.0` AND THAT MEANS AUTO-EXPOSURE IS **OFF**  *(Edwin, 2026-09-06: "it seems that the camera does auto-exposure per log"; ✅ **FIXED**)*
+
+The pin of §16.39.5 was reverted to 90 and the run log read, on every capture:
+
+```
+EXPOSURE: pinned at 90 by the plugin — auto-exposure sweep disabled
+CAPTURE-SETTINGS role=REFERENCE frames=60 exposure_applied=90 exposure_cv2=90.0 autoExposure=1.0 ...
+```
+
+which reads as *the pin says off, the camera says on*. It does not. `CAP_PROP_AUTO_EXPOSURE` is not a
+boolean — it is V4L2's `V4L2_CID_EXPOSURE_AUTO`, a **menu**:
+
+| | |
+|---|---|
+| `0` | `V4L2_EXPOSURE_AUTO` |
+| **`1`** | **`V4L2_EXPOSURE_MANUAL`** |
+| `2` | `V4L2_EXPOSURE_SHUTTER_PRIORITY` |
+| `3` | `V4L2_EXPOSURE_APERTURE_PRIORITY` |
+
+⭐ **Asked of the device rather than of a table** (`VIDIOC_QUERYCTRL` + `VIDIOC_QUERYMENU` on `/dev/video0`,
+read-only, while the app held the stream):
+
+```
+Auto Exposure             type=menu     min=0 max=3 default=3  VALUE=1
+      1 = Manual Mode   <== CURRENT
+      3 = Aperture Priority Mode
+Exposure Time, Absolute   type=integer  min=1 max=5000 default=78  VALUE=90
+White Balance, Automatic  type=boolean  min=0 max=1 default=1  VALUE=0
+```
+
+⇒ the camera publishes only 1 and 3, **defaults to 3 (auto)**, and sits at 1. The pin is not decoration: without
+`set(CAP_PROP_AUTO_EXPOSURE, 1)` the device would be auto-exposing. `CaptureBackend.open()` has always set it and
+its own comment has always said so.
+
+### 16.39.8a Why it misreads, and the fix
+
+⛔⛔ **Two adjacent controls on one log line, opposite conventions.** `autoExposure` is a menu whose *off* value
+is **1**; `autoWb`, four fields later, is a genuine boolean whose *off* value is **0**. Printed raw and side by
+side, the two controls that are **both switched off** read `1.0` and `0.0`. That is the whole of the confusion,
+and it has now cost an evening twice.
+
+✅ **AS BUILT.** `CaptureBackend.readCameraSettings()` gains `autoExposureMode`, the driver's own word for the
+current index, fetched by `VIDIOC_QUERYMENU` (`__exposureModeName`) — and `CapturePanel.__logCameraSettings`
+appends it:
+
+```
+CAPTURE-SETTINGS role=REFERENCE frames=60 exposure_applied=90 exposure_cv2=90.0 autoExposure=1.0(Manual Mode) ...
+```
+
+⭐ **The name comes from the DEVICE, not from a constant here**, so the line cannot drift from what the driver
+reports, and a camera whose menu differs from the standard enum still prints truthfully.
+⛔ Read-only and fully guarded, like `__exposureRange` (which it now shares a `__queryControl` / `__videoNode`
+helper with): any failure returns `None` and the line prints the bare number as before. A non-V4L2 host — Windows,
+Android, a virtual device — loses nothing it had.
+⚠ **It does not change one bit of instrument state.** It is a label on a number that was always correct.
+
+
 ## ⭐⭐⭐ 16.40 THE DN BUDGET — the whole metric lives in 5 to 13 camera counts  *(2026-08-31)*
 
 §16.39 pinned the exposure. The first session captured under the pin (`20260831*`, six fills of two oils —
@@ -16307,3 +16418,253 @@ the low end*, which is where the answer lives; with it the low end is sampled de
 ⚠ **This changes no instrument state today**: `DevSpectralPlugin` pins the exposure at 90, so the sweep does
 not run for the dev bench. It widens the manual slider, and it widens the AE for any plugin that does not
 pin — and it is what makes §16.41.7's proper sweep possible.
+
+## ⭐ 16.42 THE EMPTY JAR IS GREY — a level change, not a shape change, and a clipped reference that hides inside it  *(Edwin 2026-09-06, 18:47/18:48: "the polystrol jar itself changes the spectrum"; `diagnostics/jar_transmission.py`)*
+
+Two `Reference` frames a minute apart — one through the empty jar in its holder, one straight down the
+Yuji lamp — and the reading offered with them was that the jar changes the spectrum. It does not. It
+changes the **level**.
+
+⚠ **The input is two ksnip screenshots, not two archived runs.** Both are preserved at
+`../spectracs-references/probe/jar_20260906/`; the curves are digitised from the rendered bench plot and
+committed as `diagnostics/data/jar_transmission_20260906.csv`. That is worth about ±1 DN, which is why
+nothing below is quoted past three digits.
+
+⭐⭐ **The whole account is in `DOC_jar_transmission.md` → `Spectracs_JarTransmission.pdf`** (three
+figures, ten pages). This section is the entry in the evidence base; the document is the argument.
+
+### 16.42.1 What was measured
+
+Over 432–636 nm, outside the three zones below, and with the direct frame held under 240 DN so both
+frames sit on the straight part of §16.41's transfer curve, the quotient is a **single constant, 0.859,
+sd 0.014, n = 91**, with a tilt across the whole window of **+0.008 — 0.9 % of the level**. Three sharp
+lamp features (452, 485, 593 nm) land on the **same nanometre** in both frames.
+
+Four surfaces of an untinted wall predict exactly this: `T = ((1−R)/(1+R))²` gives 0.856 at n = 1.49 and
+0.812 at polystyrene's 1.59. ⚠ Read that as an order-of-magnitude check, not as an assay of the plastic —
+the walls are curved and some of the loss is refraction out of the ROI.
+
+### 16.42.2 ⛔ The direct frame is clipped, and it is the reason the pair looks interesting
+
+**33 of 237 sampled wavelengths in the direct frame sit at or above 252 DN against a 255 ceiling**
+(472–525 nm). The jar frame has two. A quotient whose denominator has been truncated downward reads
+**high**, and the measured ratio across that run is **0.894** against the clean 0.859 — the entire
+apparent bulge in the middle of the spectrum.
+
+Two further departures sit where a clipped frame would be expected to do damage, and neither is claimed
+as a jar effect:
+
+| where | ratio | the reading offered |
+|---|---|---|
+| **580 nm valley** | 0.831 | the lamp's darkest point. Veiling glare off a 100 nm saturated plateau fills in the *direct* frame most where the true signal is least ⇒ its denominator reads high |
+| **615 nm step** | 0.806 | ⛔ **unexplained.** The same ~18 DN cliff is present in *both* frames, at **614 nm** in the jar frame and **618 nm** in the direct one. It cannot be a displacement of the spectrum (§16.42.1's three features did not move) and it cannot be a jar transmission feature (that would be a step in the ratio, not in both frames). A demosaic crossover whose switch-point depends on relative channel levels would do it — and clipping changes exactly those levels — but one screenshot pair cannot test it. Compare §16.31's 581 nm crossover |
+
+### 16.42.3 ⛔ And a flat ratio is also what a pure exposure difference looks like
+
+No `CAPTURE-SETTINGS` line was kept for either frame. Two frames alone cannot separate *the jar removed
+14 % of the light* from *the two captures ran at different exposure* — both give a wavelength-flat
+quotient. ⇒ **0.859 is an upper bound on the jar's loss**, and §16.39 is the record of why that is not a
+theoretical worry in this rig.
+
+### 16.42.4 What it costs, and why nothing changes today
+
+`T = S / R` cancels the factor exactly whenever the reference shares the sample's jar, which is the
+normal case. Where a reference does **not** share it, the sample gains a **constant +0.066 absorbance at
+every wavelength**, and the three metrics split on their construction:
+
+| metric | form | effect of a flat multiplier |
+|---|---|---|
+| `Rv` | a difference over a difference | **exactly zero** — the constant cancels in numerator and denominator separately |
+| `dQ100` | a difference over an sd | **exactly zero** — sd is unchanged by a constant offset |
+| `Q%` | a difference over a **level** | **5–10 % low**, set by `A_Soret` (5.4 % at the 1.17 of `DOC_metric_algebra.md`'s worked example) |
+
+⭐ That is direct evidence for **ROADMAP item 1**, the reference-method header field: two `Q%` values taken
+under different reference methods differ by the same order as the fill-to-fill spread the gauge is
+calibrated against, and there is no field in which to record which method either used.
+
+⛔ **No code change follows from this section.** The correction for a factor that already cancels is no
+correction.
+
+### 16.42.5 The re-capture that closes it — ten minutes
+
+1. **Exposure down until the direct frame peaks at 200–220 DN.** Nothing above 240 DN is usable.
+2. **Pin the exposure across both frames** (§16.39.5 already pins for the dev bench) and **keep the
+   `CAPTURE-SETTINGS` line for each**.
+3. **Four frames, not two** — direct, jar, jar re-seated, direct again. §16.26 established that reseating
+   is the dominant term in the archive's CV; a jar-transmission number with no reseat spread under it
+   compares to nothing.
+4. **Then read exactly two wavelengths: 580 nm and the 614/618 nm step.** Flat at their neighbours' value
+   ⇒ §16.42.2 closes as clipping artefacts. Either one surviving an unclipped, exposure-matched pair ⇒ it
+   is real, and the step in particular becomes a camera question rather than a jar question.
+
+## ⭐⭐ 16.43 THE RED BAND'S DN BUDGET — the instrument is 6 % of the variance, and a 1 % reference error is worth 8 Rv  *(Edwin 2026-09-06/07, from two fills that read low on the suite row; `diagnostics/red_band_budget.py`)*
+
+Edwin, of two markers on the `20280831_suite` row: *"think the two runs marked by the arrows differ from the
+according runs of the same day/session by something — check this and try to find the reason"*. The two are
+`20260831SparSBudgetD` and `20260906BillaJaNatuerlichD`, both reads of each.
+
+⭐⭐ **The whole account is in `DOC_red_band_budget.md` → `Spectracs_RedBandBudget.pdf`.** This section is the
+entry in the evidence base.
+
+### 16.43.1 Nothing in the metadata differs, and there was no reason to find
+
+Same prep string, same `exposureApplied=90`, same `SETTLED_AFTER_CLEARING` / `GATE_SETTLE_OUT`, 60/60 frames,
+same policy, own reference per fill. **No wavelength shift** — cross-correlation gives +0.0 nm and +0.1 nm, and
+the 624 peak, Q peak, 580 minimum and Soret half-height agree to a few tenths.
+
+⛔ **And neither is an outlier.** Against the pooled `σ_fill` of 4.10 Rv (13 df) they are **−1.9σ** and
+**−2.7σ**. Across thirteen fills one point near 2.5σ is expected. They look extreme only because each is
+compared against two or three siblings that happened to agree to sd 1.48 (2 df) and 1.35 (1 df) — which is what
+`ROADMAP.md` §0's banded history view exists to stop the eye doing.
+
+### 16.43.2 The variance split — measured, not modelled
+
+`001` and `002` share **one reference capture and one aliquot**, so their difference excludes the preparation
+entirely:
+
+| | |
+|---|---|
+| same aliquot, same reference, two reads | median \|ΔRv\| **1.42** ⇒ instrument ≈ **1.0 Rv** |
+| independent fills, same oil + sitting | pooled sd **4.10 Rv**, 13 df |
+| ⇒ | the instrument is about **6 %** of the variance |
+
+⚠ An over-estimate on purpose: the 08-28 Steirerkraft pair is included although its reads differ by 5–7 Rv,
+which is §16.36's browning, not the instrument.
+
+### 16.43.3 The counts, and what one is worth
+
+| oil | red gap (ref − sample) | 1 DN |
+|---|---|---|
+| Lugitsch | 23.1 | 8.0 Rv |
+| Ja Natuerlich | 20.9 | 9.6 Rv |
+| Steirerkraft | 17.9 | 8.4 Rv |
+| Spar S-Budget | **15.1** | 5.8 Rv |
+
+§16.40's *"5 to 13 camera counts"* reads 15–23 on this row, and the brown oil is poorest — ROADMAP item 7's
+permanent cap, measured.
+
+### 16.43.4 ⭐⭐⭐ A 1 % REFERENCE ERROR AT 622–627 IS WORTH 5.7–9.2 Rv — and one fill carried 0.6 % of it
+
+Substituting each flagged fill's reference with its session-mates' reference *shape*, rescaled to its own level:
+
+| fill | own reference | mates' reference shape | difference |
+|---|---|---|---|
+| Spar S-Budget D | 17.81 | 17.97 | +0.16 |
+| **Ja Natuerlich D** | 109.05 | 113.62 | **+4.57** |
+
+Spar D's reference is clean. **Ja Natuerlich D's is 0.6 % low in the red relative to its own valley**, where C
+and E agree to 0.02 % — and that accounts for ~40 % of its 10.9 Rv deviation.
+
+⇒ **This is a measured instance of ROADMAP item 3**, which asks for a red reference channel at 622–627 in
+`monitorRecord` and prices it at *"≈5 Rv, the size of σ_fill itself"*. ⛔ `monitorRecord`'s columns are
+`qPercent · soret · valley · qBand` — **no red channel** — so the leg that moved was invisible at the bench, in
+the report, and in every diagnostic, until it was reconstructed from the attached frames.
+
+### 16.43.5 The blue-attenuating filter — DESIGN, and it is fourth
+
+A colour-conversion (Wratten 85) filter in the beam lets the exposure rise ×1.57 and raises the red gap by
+×1.4–1.6. ⭐ It **cancels in `T = S/R`** — both legs see it — so it costs nothing in accuracy, exactly like the
+jar's 0.859 (`DOC_jar_transmission.md` §5.1). The reference currently peaks within **2–5 % of the 255 ceiling**,
+so there is no exposure headroom without it.
+
+⛔ **But `σ_fill` only goes 4.10 → 4.03, about 2 %**, because §16.43.2 says the instrument is 6 % of the
+variance. Three fills across three evenings is worth roughly twenty times more and costs nothing.
+
+⭐ Worth having anyway for two reasons that do not depend on σ: it lifts the **brown-oil floor** (15 → 22
+counts), and it moves the Soret sample level 44 → ≈28 DN, **into the DN guard's 20–50 target** — ending the
+standing `too-dilute` flag on every Steirerkraft fill.
+
+⚠ Mounted at the **camera** (the only option on this rig) it keeps the counts benefit but loses the blue-dose
+reduction §16.36 would have given. In front of the lens, never between lens and sensor. Measure its `T(λ)` on
+the rig rather than trusting a datasheet, check `≤ 1.00` everywhere for fluorescence, and cross-correlate the
+wavelength axis before and after. `DevSpectralPlugin` pins the exposure at 90 (§16.39.5); that constant changes
+with the filter.
+
+## ⭐⭐⭐ 16.44 THE VARIANCE DECOMPOSITION — instrument 1.0, fill 4.1, session 4.8, and σ_fill is not a constant  *(2026-09-07, from the 20-fill suite; `diagnostics/red_band_budget.py`, `diagnostics/d2r_all_runs.py`)*
+
+Two days of chasing single fills ended in a number that should have been measured first: **how the run-to-run
+scatter divides.** The `20280831_suite` corpus makes it separable because it holds two reads of every fill,
+and **those two reads share one reference capture and one aliquot** — so their difference contains the
+instrument and nothing of the preparation.
+
+### 16.44.1 The three terms
+
+| term | value | how it was got |
+|---|---|---|
+| **instrument** (quantisation, read noise, short-term drift) | **≈ 1.0 Rv** | median \|ΔRv\| between reads 001 and 002 of one fill = 1.42, ÷ √2 |
+| **fill** (instrument + preparation + seating) | **4.10 Rv**, 13 df | pooled sd of first reads within one oil and one sitting |
+| **session** (everything that changes between evenings) | **≈ 4.8 Rv** | √(6.30² − 4.10²), taking the archive's 6.30 as the across-session figure |
+
+⇒ **The instrument is about 6 % of the fill variance.** ⚠ And it is an over-estimate: the 08-28 Steirerkraft
+pair is included although its two reads differ by 5–7 Rv, which is §16.36's browning rather than the
+instrument. Over-stating the instrument is the safe direction for the conclusions below.
+
+⭐ This is why `DOC_red_band_budget.md` concludes that a blue-attenuating filter is worth **2 %** on σ_fill.
+It is also why no arithmetic — normaliser, anchor variant or covariate — moved the number: **3.7 Rv of the
+4.1 is made before the light reaches the sensor.**
+
+### ⛔⛔ 16.44.2 σ_fill IS NOT A CONSTANT, and that is the finding
+
+Per sitting, first reads, sd of `Rv`:
+
+| oil | sitting | n | sd |
+|---|---|---|---|
+| Ja Natuerlich | 08-31 | 2 | **0.79** |
+| Ja Natuerlich | 09-06 | 3 | **6.34** |
+| Lugitsch | night 08-29/30 | 2 | 7.20 |
+| Lugitsch | afternoon 08-30 | 4 | 3.17 |
+| Spar S-Budget | 08-31 | 4 | 3.95 |
+| Steirerkraft | night 08-29/30 | 2 | 2.04 |
+| Steirerkraft | 09-06 | 3 | 1.42 |
+
+**0.79 to 7.20 — a factor of nine — and 0.79 → 6.34 for the SAME OIL on two nights.** There is no such
+quantity as "σ_fill for this rig". There is a distribution, and any single evening returns a draw from it.
+
+⛔ The two-fill groups carry 1 df each and are individually worthless (a 1-df sd is routinely a third or
+three times the truth); the pooled 4.10 on 13 df is the only figure here worth quoting.
+
+### ⭐⭐ 16.44.3 What this does to `SPEC_metric_research.md` §16.16 and ROADMAP item 6
+
+⭐ **The §16.16 pre-registration is not wrong.** Its question is *"did the vortex recipe fix the
+preparation?"* — a within-evening question — and `σ_fill` is exactly the right quantity for it. Nothing here
+touches its design, its cut, or its registered read rule, and none of that may be edited after the fact.
+
+⛔ **What does not follow is ROADMAP item 6's justification for it**: *"σ_fill's CI is a factor of 3; it sets
+every alarm level and **the tracker's whole fidelity**"*. The tracker compares a reading taken today against
+a baseline recorded weeks ago. That comparison carries **σ_fill AND σ_session**, and §16.44.1 says the second
+is the larger of the two. ⇒ **A six-fill single evening measures the smaller half of the tracker's error
+budget.**
+
+| how the reading is taken | σ against a baseline weeks old |
+|---|---|
+| 1 fill, 1 day | 6.30 |
+| 3 fills, 1 evening | 5.33 — only 15 % better, because averaging cannot touch the session term |
+| **3 fills over 3 days** | **3.64 — 42 % better, same bench time** |
+
+⇒ **PROPOSED, for the tracker's number only: 3 fills × 3 evenings rather than 6 × 1.** It returns σ_fill and
+σ_session separately, it is the same twelve reads of bench time, and it is the only design on the page that
+produces the quantity the alarm band actually needs. ⚠ It does **not** replace §16.16: that run answers its
+own question and should still be run as registered if the recipe question is still live.
+
+### ⚠ 16.44.4 And the six Lugitsch fills already broke §16.16's own design
+
+`20260828LugitschA–F` are the six fills §16.16 asks for, and scoring the registered quantity — the sd of the
+six fill means on `RvLin`, 5 df — gives:
+
+| | |
+|---|---|
+| all six | **σ̂ = 2.76** ⇒ the registered reading is **≥ 2.0: "0.64 was luck"** |
+| without `LugitschE` | **σ̂ = 1.03** ⇒ **< 2.0: "the recipe fixed the preparation"** |
+
+⛔⛔ **The answer flips on one fill, and that fill is the protocol violation** — `E` ran at exposure 104 where
+C, D and F ran at 90, which §16.16.2 lists under *"⛔ forbidden: changing … exposure … mid-evening"*. Its
+removal is recorded in `diagnostics/d2r_all_runs.py` as a design-of-experiment exclusion, made 2026-08-30.
+
+⛔ **And the six fills span TWO sittings, not one**: A and B on the evening of 08-29/30, C–F on the afternoon
+of 08-30 with the rig switched off in between (`DELAYED_FILL`). §16.16.2 registered *"one evening"*. So the
+2.76 is `σ_fill + a between-session term` and the 1.03 is a within-sitting figure over four fills.
+
+⇒ **The pre-registered run has not been cleanly executed and must not be scored as though it had.** Either
+re-run it as registered — six fills, one sitting, exposure pinned — or record it as void with these two
+violations named. ⚠ What must NOT happen is quoting 1.03 as the answer: that is the registered statistic
+computed on a hand-trimmed subset, which is precisely what §16.3a's standing lesson forbids.
