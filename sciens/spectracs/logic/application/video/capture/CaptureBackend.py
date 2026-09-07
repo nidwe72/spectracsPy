@@ -175,36 +175,95 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
 
-    def __exposureRange(self):
-        """(min, max) of the camera's manual exposure control, from V4L2 — or (None, None).
+    def __videoNode(self):
+        """`/dev/videoN` for the open device, or None.
 
-        ⚠ WHY AN IOCTL AND NOT `cap.get()`: OpenCV exposes control VALUES but not their RANGES, and the range
-        is the whole point — 90 is an ELP number on a 1-500 scale, and the Orbbec board probed on 2026-08-30
-        runs 0-6500 where the same 90 is a far darker frame (SPEC_capture_quality.md §16.39.5, D21).
-        ⛔ READ-ONLY and fully guarded: querying a control neither opens a stream nor disturbs a capture, and
-        any failure at all returns (None, None). A camera that will not answer simply says nothing."""
-        import fcntl, os, struct
+        `_deviceId` is the cv2 index, and on Linux/V4L2 the two coincide for a UVC camera. Anything else — a
+        Windows host, a path-valued id, a node that is not there — simply says nothing, which is what every
+        caller of this is built to accept."""
+        import os
         node = "/dev/video%d" % self._deviceId if isinstance(self._deviceId, int) else None
-        if node is None or not os.path.exists(node):
-            return None, None
+        return node if node is not None and os.path.exists(node) else None
+
+    def __queryControl(self, control):
+        """`(min, max, default)` for one V4L2 control id, or None.
+
+        ⛔ READ-ONLY and fully guarded: querying a control neither opens a stream nor disturbs a capture, and
+        any failure at all returns None. A camera that will not answer simply says nothing."""
+        import fcntl, os, struct
+        node = self.__videoNode()
+        if node is None:
+            return None
         size = 68                                     # sizeof(struct v4l2_queryctrl)
         request = 0xC0000000 | (size << 16) | (ord("V") << 8) | 36        # _IOWR('V', 36, v4l2_queryctrl)
         try:
             descriptor = os.open(node, os.O_RDONLY | os.O_NONBLOCK)
         except OSError:
-            return None, None
+            return None
         try:
-            for control in (0x009A0902, 0x00980911):  # EXPOSURE_ABSOLUTE, then the legacy EXPOSURE
-                buffer = bytearray(struct.pack("I", control) + bytes(size - 4))
-                try:
-                    fcntl.ioctl(descriptor, request, buffer, True)
-                except OSError:
-                    continue
-                low, high = struct.unpack_from("ii", buffer, 40)
-                return low, high
+            buffer = bytearray(struct.pack("I", control) + bytes(size - 4))
+            try:
+                fcntl.ioctl(descriptor, request, buffer, True)
+            except OSError:
+                return None
+            low, high, _step, default = struct.unpack_from("iiii", buffer, 40)
+            return low, high, default
         finally:
             os.close(descriptor)
+
+    def __exposureRange(self):
+        """(min, max) of the camera's manual exposure control, from V4L2 — or (None, None).
+
+        ⚠ WHY AN IOCTL AND NOT `cap.get()`: OpenCV exposes control VALUES but not their RANGES, and the range
+        is the whole point — 90 is an ELP number on a 1-500 scale, and the Orbbec board probed on 2026-08-30
+        runs 0-6500 where the same 90 is a far darker frame (SPEC_capture_quality.md §16.39.5, D21)."""
+        for control in (0x009A0902, 0x00980911):      # EXPOSURE_ABSOLUTE, then the legacy EXPOSURE
+            answer = self.__queryControl(control)
+            if answer is not None:
+                return answer[0], answer[1]
         return None, None
+
+    def __exposureModeName(self, value):
+        """The DRIVER'S OWN name for auto-exposure mode `value` — e.g. `"Manual Mode"` — or None.
+
+        ⛔⛔ WHY THIS EXISTS, and it cost an evening twice. `CAP_PROP_AUTO_EXPOSURE` is not a boolean. It is
+        V4L2's `V4L2_CID_EXPOSURE_AUTO`, a MENU, and the enum runs
+
+            0 AUTO   1 MANUAL   2 SHUTTER_PRIORITY   3 APERTURE_PRIORITY
+
+        so the value that means *auto-exposure is OFF* is **1**, while `autoWb` sitting next to it on the same
+        log line is a real boolean whose off value is **0**. Two adjacent controls, opposite conventions, both
+        printed raw — and a log reading `autoExposure=1.0` was twice read as "the camera is auto-exposing"
+        when it says the exact opposite (Edwin, 2026-09-06).
+        ⭐ The name is asked of the DEVICE (`VIDIOC_QUERYMENU`) rather than mapped from a table here, so the
+        line cannot drift from what the driver actually reports. A UVC camera typically publishes only 1 and
+        3, and defaults to 3 — which is why pinning is not decoration.
+        ⛔ READ-ONLY and fully guarded, like `__queryControl`: None on any failure, and the caller prints the
+        bare number instead."""
+        import fcntl, os, struct
+        node = self.__videoNode()
+        if node is None or value is None:
+            return None
+        try:
+            index = int(value)
+        except (TypeError, ValueError):
+            return None
+        size = 44                                     # sizeof(struct v4l2_querymenu), PACKED
+        request = 0xC0000000 | (size << 16) | (ord("V") << 8) | 37        # _IOWR('V', 37, v4l2_querymenu)
+        try:
+            descriptor = os.open(node, os.O_RDONLY | os.O_NONBLOCK)
+        except OSError:
+            return None
+        try:
+            buffer = bytearray(struct.pack("=II32sI", 0x009A0901, index, b"", 0))   # EXPOSURE_AUTO
+            try:
+                fcntl.ioctl(descriptor, request, buffer, True)
+            except OSError:
+                return None
+            name = struct.unpack("=II32sI", bytes(buffer))[2].split(b"\0")[0]
+            return name.decode("ascii", "replace") or None
+        finally:
+            os.close(descriptor)
 
     def read(self) -> QImage:
         import cv2
@@ -254,7 +313,10 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             "exposureMin": low,
             "exposureMax": high,
             "exposure": get(cv2.CAP_PROP_EXPOSURE),
+            # ⚠ A MENU INDEX, NOT A BOOLEAN — 1 is MANUAL, 3 is auto. `autoExposureMode` carries the
+            # driver's own word for it so no reader has to know that (see `__exposureModeName`).
             "autoExposure": get(cv2.CAP_PROP_AUTO_EXPOSURE),
+            "autoExposureMode": self.__exposureModeName(get(cv2.CAP_PROP_AUTO_EXPOSURE)),
             "wbTemperature": get(cv2.CAP_PROP_WB_TEMPERATURE),
             "autoWb": get(cv2.CAP_PROP_AUTO_WB),
             "gain": get(cv2.CAP_PROP_GAIN),

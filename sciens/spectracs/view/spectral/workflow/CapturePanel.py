@@ -669,10 +669,17 @@ class CapturePanel(QWidget):
         except Exception as error:
             print("CAPTURE-SETTINGS role=%s frames=%s unavailable (%s)" % (role, frames, error))
             return
-        print("CAPTURE-SETTINGS role=%s frames=%s exposure_applied=%s exposure_cv2=%s autoExposure=%s wb=%s "
+        # ⛔ `autoExposure` is a V4L2 MENU INDEX (1 = manual, 3 = auto), while `autoWb` two fields later is a
+        # real boolean (0 = off). Printed raw and side by side, the two controls that are both SWITCHED OFF
+        # read 1 and 0 — which is how `autoExposure=1.0` got read as "the camera is auto-exposing" twice.
+        # The driver's own menu word is appended so the line cannot be misread again, and cannot drift from
+        # the device either (CaptureBackend.__exposureModeName). A camera that will not name it prints bare.
+        mode = settings.get("autoExposureMode")
+        print("CAPTURE-SETTINGS role=%s frames=%s exposure_applied=%s exposure_cv2=%s autoExposure=%s%s wb=%s "
               "autoWb=%s gain=%s backlight=%s wbRequested=%s"
               % (role, frames, settings.get("appliedExposure"), settings.get("exposure"),
-                 settings.get("autoExposure"), settings.get("wbTemperature"), settings.get("autoWb"),
+                 settings.get("autoExposure"), "(%s)" % mode if mode else "",
+                 settings.get("wbTemperature"), settings.get("autoWb"),
                  settings.get("gain"), settings.get("backlight"),
                  settings.get("whiteBalanceKelvinRequested")))
         self.__reportExposureRange(settings)
