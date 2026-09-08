@@ -4393,6 +4393,35 @@ argument gets made again in six weeks about fills nobody can characterise.
 ⚠ **Provenance must never break a capture**: the resolver swallows every `OSError` and falls through to the
 plugin's declaration, and there is a test that says so.
 
+> ## ⛔⛔ 2026-09-08 — THE RECIPE WAS CONSTANT ACROSS THE SUITE. THE STAMPED STRING IS WRONG.
+>
+> Written up while the bench recipe was being described for an external report. Two separate things came
+> apart, and only one of them is a real problem.
+>
+> **1. What the bench actually does** — Edwin, 2026-09-08:
+> **1 capillary into 4 ml · vortex 10 × 10 s · NO ultrasonic bath · 6 min standing.**
+>
+> **2. What `prepProtocol` stamps** — `1cap-1ml-vortex30-tovolume-vortex60-sonic60-cold-box6min`. Every
+> field of it is wrong: the volume, the mixing, a sonication step that does not happen, and a cold box
+> that §16.15 had already identified as a bed sheet at room temperature.
+>
+> ⭐⭐ **AND THE METHOD WAS THE SAME THROUGHOUT THE SUITE** — Edwin, 2026-09-08: *"es war in der Suite
+> immer die gleiche Methode, auch wenn das irgendwo anders festgehalten wurde."*
+> ⇒ **§16.15.2's "two sub-variants" reading is withdrawn.** That paragraph inferred a recipe split from
+> the *record* (an unrecorded sonic step, a stale constant) and read it as a split at the bench. It was
+> not one. `20280831_suite` is recipe-homogeneous, and a σ_fill quoted from it is quoted from one
+> preparation — which is what `SPEC_history_tracker.md` and every downstream number already assume.
+>
+> ⛔ **The lesson is the direction of inference.** The archive records what the *software* believed. When
+> that disagrees with what the bench did, the bench is the fact and the string is the defect — the record
+> cannot be used to reconstruct a recipe it never captured. §16.15.3 said exactly this ("whether the
+> sonic step ran is written nowhere") and it was still read the other way round here.
+>
+> ⇒ **Owed:** `DevSpectralPlugin.prepProtocol` and `~/.spectracsPy/prepProtocol.txt` carry the corrected
+> recipe from now on (done for the constant, 2026-09-08). ⚠ The archived stamps cannot be repaired — they
+> stay wrong and are now annotated as wrong, which is the best the record can do.
+> for what is a bed sheet at room temperature.
+
 #### ⛔⛔ 16.15.5 THE CLOCK WAS STILL WRONG — and the FIRST session under it proved it  *(2026-08-31)*
 
 `20260831SparSBudgetA/001.pdf` and `/002.pdf` both carry **`timestampIso: 2026-08-31T16:36:53`** — identical to

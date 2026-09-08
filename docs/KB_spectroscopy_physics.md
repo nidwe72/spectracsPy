@@ -1138,6 +1138,22 @@ lipid matrix, or ⚠ **instrument** — 620–630 nm is exactly where the lamp c
 red-shifted band edge. §16.12.12's 5.1 σ result confirms pigment IS present there; it does not exclude a
 mixture. **This is an open discrepancy, not a correction — the values below are correctly sourced.**
 
+> ## ✅ SUPERSEDED 2026-09-08 — the band IS resolved once the trace reaches past it
+>
+> The warning above is **an artefact of the 629.8 nm epoch, not a statement about the pigment**, and it
+> should no longer be quoted as "our spectra show no red band". Edwin, 2026-09-08: *"stimmt nicht, wir
+> haben einen roten Peak."*
+>
+> ⭐ On every run whose trace reaches **past 632 nm**, the **second derivative has a minimum at
+> 621–627 nm** — a genuine band feature, not a rising background. That is exactly the far flank the
+> 629.8 nm epoch could not supply, which is why the earlier test could only see "still rising at the
+> cut-off". `diagnostics/d2r_all_runs.py` computes it and states the same limitation in its own
+> docstring; the 636 nm sessions are what made the measurement possible.
+>
+> ⚠ **What does NOT change:** the *assignment* of that band to **band I** of the Gouterman four-orbital
+> scheme remains literature, not a result of this instrument. The distinction to keep is
+> **the band is measured, its label is cited** — §4.1's numbers stay sourced as they are.
+
 ⚠ **Not yet independently verified:** a primary measurement of *protopheophytin a*'s band positions. The
 green→brown direction in §4.1 is argued from demetallation symmetry-lowering, which is textbook porphyrin
 photochemistry, but the specific numbers for this molecule are not sourced here. Treat the mechanism as
