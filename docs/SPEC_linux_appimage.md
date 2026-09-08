@@ -554,7 +554,13 @@ monitor. A mirrored projector at 1024×768 is a geometry this GUI has never seen
 Removing the server changed the shape, so the design is worth re-reading. Four findings; the second is the one
 that would have been mistaken for an AppImage bug.
 
-**8e.1 — ⚠ Starting the app *before* the server costs ~10 s of dead window.** `getProxy()` is called fresh at
+**8e.1 — ⚠ Starting the app before the server is still the right order, but ⛔ the "~10 s" was WRONG.**
+⭐ **Measured 2026-09-09: 0.1 s**, not 10. `locate_ns("sciens.at")` fails *immediately* ("Failed to locate the
+nameserver") whenever the host cannot be resolved or refuses, so the 5 s `COMMTIMEOUT` only bites in the narrow
+case where the host resolves and then silently drops packets. The structure below is unchanged and still worth
+knowing; the number was an assertion I had not measured.
+
+**8e.1a — the structure (correct as written).** `getProxy()` is called fresh at
 all **21** call sites — nothing is cached. `MainContainerViewModule.__init__` makes **two** of those calls
 (`syncSpectrometers`, `syncSpectralLineMasterDatas`) *before the window appears*. With no server listening each
 one walks: loopback (instant refusal) → a psutil socket scan → `locate_ns("sciens.at")` at `COMMTIMEOUT = 5 s`.
@@ -881,3 +887,66 @@ program the AppImage will run:
 ```bash
 cd ~/Spectracs/spectracsPy && ~/spectracs-build/<tag>/dist/spectracsMain/spectracsMain
 ```
+
+
+---
+
+## 18 — AS BUILT (2026-09-09) — every phase executed
+
+The spec above is the design. This section is what actually happened, including the four places reality
+disagreed with it.
+
+### 18.1 Results
+
+| phase | outcome |
+|---|---|
+| **P0** | ✅ both DBs snapshot via `sqlite3 .backup` → `spectracs-references/releases/presentation-2026-09-12/` (50 MB app + 274 KB server + `prepProtocol.txt`), `integrity_check` **ok** on both. Contents verified: **5 seeded users, 2 instrument setups**; the app DB holds **154 workflows / 1007 evaluation results / 616 spectra** |
+| **P1** | ✅ spec committed + pushed (`f93244a`) |
+| **P2** | ✅ `spectracsAppImage.spec` — **one** new file, nothing under `sciens/` touched (`0408d45`) |
+| **P3** | ✅ built in **57 s**; **501 MB** onedir; **licence gate PASSED** (no Charts / DataVisualization / WebEngine anywhere in the tree). Re-built from the seven worktrees: **identical file list** |
+| **P4** | ✅ offscreen boot alive at 60 s, **log completely clean**, app DB created and stamped at head `cb8c2942a6bc` ⇒ **Alembic-as-data works in the frozen bundle** — the spec's biggest derived assumption, now observed |
+| **P5** | ✅ frozen app's DB side effects are **byte-identical to the venv app's** (same tables, same 3 seeded spectrometers). ⚠ ELP capture + PDF export remain Edwin's click-through |
+| **P6** | ✅ AppDir + icon + AppRun + `.desktop`; **`Spectracs-presentation-2026-09-12-x86_64.AppImage`, 191 MB**, packaged in 4 s |
+| **P7** | ✅ the packaged AppImage boots, prints its manifest, honours `--fresh`, lands on `~/.spectracsPy-demo`, **leaves the real 50 MB archive untouched**. ✅ Server started from the **tagged worktree** on loopback; `masterUserExakta` login returns `MASTER_USER`, serial `ELP-0001`, device `Exakta` and **a calibration with real coefficients** ⇒ the snapshot carries the authored calibration. ⚠ remaining: the ELP click-through and the WLAN-off cold start |
+| **P8** | ✅ seven annotated tags at the frozen SHAs |
+
+### 18.2 Where reality disagreed with the design
+
+**18.2a — ⛔ `appimagetool` has no zstd.** §5.3 specified zstd; this build supports **only gzip and xz**. Chose
+**gzip**: for a 500 MB Python payload, xz's per-block decompression is paid on every one of several hundred
+imports at launch. 191 MB with gzip is well inside the estimate (§D6 said 150–220 MB).
+
+**18.2b — ⛔⛔ "copy the host libs Qt needs" (§5.1) is dangerous taken literally.** Executed as written, `ldd` on
+`libqxcb.so` yields **`libc.so.6`, `libpthread`, `libdl`, `libm`, `libGL`** — bundling glibc next to the host's
+own loader is a classic way to break an AppImage on every machine but the build one, and graphics libraries
+must come from the host's driver stack. Corrected to a **deny-list discipline**: only safe leaf libraries.
+⭐ And it turned out PyInstaller had **already bundled `libxcb-cursor.so.0` and `libusb-1.0.so.0`** — so
+`usr/lib` holds exactly **one** file, `libxcb-xinerama.so.0`.
+
+**18.2c — ⛔ the frozen app's `print()` never reaches a redirected stdout; only stderr does.** Measured three
+ways (plain redirect, `PYTHONUNBUFFERED=1`, `stdbuf -oL`) — the venv app prints its
+`"could not reach server…"` lines, the frozen one prints nothing, while both produce **byte-identical DB side
+effects**. So §8e.4's log idea captures **errors, not diagnostics**. `AppRun` now redirects **stderr only**,
+and says so in a comment. ⚠ Run from a terminal if you want the CAPTURE-SETTINGS lines.
+
+**18.2d — the splash noise was real, and cost one line.** The first build printed a `KeyError:
+'_PYIBoot_SPLASH'` traceback at every start — PyInstaller's *fake* `pyi_splash` module writing to stderr before
+raising the `ImportError` that `spectracsMain`'s bare `except` swallows. Adding `pyi_splash` to `excludes`
+makes the import fail cleanly; the boot log is now **empty**. Found by running it, not by reading it.
+
+### 18.3 Two things deliberately left alone
+
+* **`astropy` (27 MB) ships.** It arrives through `pyspectra`, imported lazily by
+  `ImportSpectrumLogicModule` for `read_dx`. Excluding it would save 5 % of the bundle and would break the
+  spectrum-import screen if anyone opened it. ⛔ **Not during a freeze.**
+* **The app-side catalog can hold both a locally seeded and a server-synced spectrometer set** — the real
+  `~/.spectracsPy/spectracsPyServer.db` has 6 rows where one boot produces 3. Observed, pre-existing,
+  dev-identical, harmless (lookup is by id). ⛔ Not a freeze-week change (N6).
+
+### 18.4 What is still owed — Edwin's hands, ~15 minutes
+
+1. **The ELP click-through** (§9.5–9.6): start the server (§17.1), double-click the AppImage, log in as
+   `masterUserExakta`, capture reference + sample against the authored calibration, read the `Q%`.
+2. **Export one PDF** — proves matplotlib + `resource/logo.png` + pypdf, and warms the font cache (8b.8).
+3. **One cold start with the WLAN off** (§7a) — the venue rehearsal.
+4. **Plug in the projector once** (8d.4) — the one display geometry this GUI has never met.
