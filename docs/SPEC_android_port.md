@@ -1,5 +1,13 @@
 # Spec — Android port (scipy-in-app, two APKs, virtual-spectrometer-first)
 
+> ⭐ **The two-app split landed on the desktop too (2026-09-09).** `SPEC_linux_appimage.md` §19 ships a
+> **Spectracs AppImage + a Spectracs-Server AppImage** for exactly the reasons P5/P6 chose two APKs — and it
+> reuses this spec's own entry point: the server image's no-argument mode *is* `serveLocalForever()`, the call
+> `service_pyro.py` makes. Measured there: the server tier costs **16 MB against the app's 191**.
+> ⛔ It also found that the *other* server entry, `spectracsPyServer.py`, **cannot serve on loopback at all**
+> (Pyro's `start_ns` returns no broadcast server there and the stock event loop dies on it) — which is why the
+> Android side was right to use the fixed-URI daemon rather than the nameserver.
+
 Status: **IN IMPLEMENTATION.** P0 gate **PASSED 2026-07-03** (real scipy + PySide6 + OpenCV on a Galaxy
 Note 20 — §7). P1/P2/P3-desktop done. **P4b reached: the REAL app builds, boots, and renders its UI
 on-device** (full import chain resolved — see §8). **P5 SERVER APK PASSED 2026-07-03** — the server app

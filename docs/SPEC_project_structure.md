@@ -51,6 +51,15 @@ proportionate while Edwin is the only plugin author.
 
 ---
 
+> ⭐ **Measured 2026-09-09, and the tiering holds under a freeze test.** Building the server as its own
+> PyInstaller bundle (`SPEC_linux_appimage.md` §19) required exactly **three** repos — `spectracsPy-server`,
+> `spectracsPy-model`, `spectracsPy-base` — and pulled **no numpy, scipy, matplotlib, cv2, PySide6, pandas or
+> PIL**: 16 MB against the app's 191. That is this document's thesis, verified by a build rather than by
+> reading imports.
+> ⚠ One stale artefact found on the way: `runServer.sh`'s comment *"Needs ../spectracsPy on the path too: it
+> imports `SpectralLineMasterDataUtil` from the app repo"* is no longer true — that class moved to `-model`
+> during this arc. Harmless (an extra path entry), worth deleting when the freeze lifts.
+
 ## 1. Target structure
 
 > **Diagram:** [`project_structure.svg`](../../spectracs-docs/project_structure.svg) — the tiering + **external

@@ -1,9 +1,16 @@
 # SPEC — Code freeze + standalone Linux AppImage (presentation build)
 
-Status: **DESIGN — nothing built** (spec-first; implement on explicit request only).
+Status: ✅ **IMPLEMENTED AND SHIPPED (Linux x86-64), 2026-09-09.** Two AppImages —
+`Spectracs-presentation-2026-09-12-x86_64.AppImage` (**191 MB**) and
+`Spectracs-Server-…` (**16 MB**) — plus `tools/buildAppImages.sh`, which rebuilds and self-verifies both in
+under two minutes. All seven repos tagged `presentation-2026-09-12`. As-built: **§18** (app, P0–P8) and
+**§20** (server + build script, Q0–Q6). ⚠ **Owed:** the ELP click-through, one PDF export, a WLAN-off cold
+start, the projector (§18.4).
+⛔ **Linux only.** Windows, macOS and the Android APKs are unchanged non-goals (§11).
+
 Source: Edwin, 2026-09-08 — *"as this weekend I have a presentation of the project I would like to freeze the
-code base as-is"* + *"build a standalone linux AppImage executable of the spectracsPy app"*.
-**All four open questions answered by Edwin the same day (§11); rubber-duck pass §8, same day.**
+code base as-is"* + *"build a standalone linux AppImage executable of the spectracsPy app"*; the server was
+split into its own image on 2026-09-09 (§19). **Seven rubber-duck passes: §8, §8b–§8g.**
 
 Theme: **the demo must be a noun, not a procedure.** Today "running Spectracs" is `runApp.sh` +
 `runServer.sh` + a five-repo `PYTHONPATH` + a 1.4 GB venv. The deliverable is *one file you double-click*,
