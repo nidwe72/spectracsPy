@@ -16668,3 +16668,73 @@ of 08-30 with the rig switched off in between (`DELAYED_FILL`). §16.16.2 regist
 re-run it as registered — six fills, one sitting, exposure pinned — or record it as void with these two
 violations named. ⚠ What must NOT happen is quoting 1.03 as the answer: that is the registered statistic
 computed on a hand-trimmed subset, which is precisely what §16.3a's standing lesson forbids.
+
+---
+
+## ⭐ 16.45 A CLEAR-GLASS WINDOW IN FRONT OF THE SLIT — hygiene, and it is not free  *(Edwin 2026-09-09: a clear-glass filter "might be needed to protect the spectrometer slit for environmental dirt"; DESIGN, nothing ordered)*
+
+**The candidate part.** Baader *Filter Klarglas 1,25"* (astroshop #13698): **1.25″ / 31.8 mm**, **2 mm** thick
+clear glass in an aluminium mount, **multicoated**, **€39** (UVP €43). Its designed job in astrophotography is
+to be a *parfocal blank* — an optically flat, coated, do-nothing window that changes focus by the same amount a
+real filter would. That is exactly the right class of object: the whole design intent is *to be there without
+doing anything.*
+
+**Why it is wanted.** The slit is the one component on this rig that cannot be cleaned without disturbing
+alignment, and it sits above a bench where oil, isopropanol vapour and airborne dust are all routine. A
+sacrificial window in front of it is a thing you *can* wipe.
+
+### 16.45.1 What it costs photometrically — little, and for the familiar reason
+
+Two new glass–air surfaces. Uncoated that is ≈4 % each, ≈8 % total; **multicoated it is ≈0.5 % per surface**,
+so ≈1 %. ⭐ And like the Wratten 85 of §16.43.5 and the jar's 0.859 (`DOC_jar_transmission.md` §5.1), a fixed
+attenuation **cancels in `T = S/R`** — both legs see it — *provided it is in place and unchanged for
+reference and sample alike*.
+
+⚠ **Do not take that cancellation on trust.** §16.24 and the error-budget note say plainly that exposure does
+**not** cancel in `T = S/R`, because the response is not linear in the raw encoding. A flat multiplicative
+window is a different animal from an exposure change and should cancel — but it is one capture pair to check,
+and this spec's standing lesson is to measure the thing rather than argue it.
+
+### 16.45.2 ⛔ The three risks, and the first one is the expensive one
+
+1. **Stray light. This is the real objection.** A new flat, partially reflective surface directly in front of
+   the slit is a new reflective path: light can bounce window ↔ slit plate or window ↔ grating and return as a
+   **pedestal**. §16.24 is exactly why that matters — the baseline is **62 % of raw `Q`** against **−1 % of
+   raw Soret**, so the error budget is 17× asymmetric and *pedestal is the direction it is weak in*. A
+   protective window that adds 1 % of stray light could cost more than the dirt it prevents.
+   ⇒ mitigate by **tilting it a few degrees** so the ghost misses the slit, and verify against
+   `DOC_pedestal_correction.md` rather than by eye.
+2. ⚠ **But tilting fights the wavelength axis.** A tilted plane-parallel plate displaces the beam laterally
+   (≈ `t · θ · (n−1)/n`), and a lateral shift at the slit is a **pixel → nm shift**. §16.43.5 already demands a
+   before/after cross-correlation of the wavelength axis for the blue filter; here it is not optional, and the
+   window must then stay **mechanically fixed** — a window you can rotate is a calibration you can lose.
+3. **Dust on the window must be out of focus.** The point is to catch dirt; if the window sits *at* the slit
+   plane its own dust images as sharply as the slit does, and the problem has moved rather than gone.
+   ⇒ mount it as far from the slit plane as the geometry allows. **Focus:** 2 mm of glass (n ≈ 1.52) shifts
+   focus by `t(1 − 1/n)` ≈ **0.67 mm** in a converging beam — nothing in a collimated section, but enough to
+   broaden the line if it sits in the wrong place. ⚠ Line width *is* the instrument's resolution (ROADMAP 9g),
+   so a focus shift is not cosmetic.
+
+### 16.45.3 The acceptance test — one evening, and it is cheap
+
+Three captures of one fill **with** and **without**, everything else pinned, then read four things:
+the **reference level** (expect ≈1 % down, not 8 %), the **baseline/pedestal** (expect *no* rise — this is the
+gate), **`Rv`** (expect no shift; any shift means the cancellation of §16.45.1 does not hold on this rig), and
+the **wavelength axis by cross-correlation** (expect zero; non-zero means re-author the calibration with the
+window in place, permanently).
+
+### 16.45.4 ⛔ Where it ranks — below the fill and session work, like every instrument-side item
+
+Honest framing: **no one has yet recorded slit contamination as a variance source.** §16.44's decomposition is
+instrument **1.0**, fill **4.1**, session **4.8** — the instrument is already the smallest term, and this is a
+measure against a failure mode that has not been observed. It is **hygiene and insurance, not accuracy**, and
+it lands in the same place §16.43.5's filter did: worth having, not worth displacing an evening of fills.
+
+⭐ The one argument that *does* move it up: it is far cheaper to install a window **before** authoring the next
+calibration than to install one after. If the lamp rebuild (`SPEC_lamp_rebuild.md` R2) opens the optical path
+anyway, this is the moment to decide — otherwise caveat 2 turns into a recalibration.
+
+**Alternatives considered.** An uncoated microscope slide or cover glass costs almost nothing but gives the
+full ≈8 % loss and markedly worse ghosting — bad on exactly the axis §16.45.2 warns about. An AR-coated 25 mm
+optical window (Thorlabs-class) is the same money as the Baader; the Baader's advantages are the standard 1.25″
+mount and that it is a stocked part, not the glass.
