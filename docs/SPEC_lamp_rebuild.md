@@ -312,6 +312,67 @@ quiet window is not.
 
 ---
 
+## 8a · ⭐⭐ A second, independent claimant on both open choices — the Glories method  *(2026-09-10)*
+
+*(Raised by Edwin, 2026-09-10: "we will need a lamp with more red to provide the wine Glories method… pull
+the ROI up to 650 nm… maybe use the Chinese mono camera." Market and business framing live in the non-git
+reference tree, `business/SPEC_application_areas.md` §7.5a; **this section is only the optics.**)*
+
+**What Glories needs.** **OIV-MA-AS2-07B** (Glories, Type IV) is three absorbances divided by the optical
+path: **A420 · A520 · A620**, from which `I = A420+A520+A620` and `N = A420/A520`. It is the *"usual
+method"* of the OIV compendium — a published formula, no reagent, no corpus.
+
+⭐⭐ **The finding worth recording: Glories does not ask this lamp for anything it is not already being
+asked for.**
+
+| Glories band | already on the table here | status |
+|---|---|---|
+| **A420** | ⭐⭐⭐ §2.1 — the Soret is a **doublet with peak 1 at 421.2–421.4 nm**, and the rebuild exists partly to put light there | **the same 3 nm** |
+| **A520** | mid-band, covered by the whites plus `480nm-485` | already fine |
+| **A620** | §8's open choice — `630nm-640` vs `660nm`, and §8 notes *"the far anchor at 620–630 is a shipped metric input today"* | **already the deciding criterion** |
+
+⇒ **A420 and A620 are the two ends this spec is already choosing between.** Glories adds no new emitter
+requirement — it adds a **second, independent reason** to make the choices this document already recommends.
+It does **not** reopen §8: `630nm-640` covers 620 comfortably, and Glories gives no reason to prefer `660nm`.
+
+### 8a.1 ⚠ The correction to the framing — the blocker is blue, not red
+
+Edwin's proposal was red-side: extend the ROI to ~650 nm and consider the mono camera. **The red half is
+real but it is the easier half**, and the ROI is not what is binding:
+
+- **A620 today.** `DevSpectralPlugin.WAVELENGTH_MAX_NM = 636.0`, and `KB_spectroscopy_physics.md` puts the
+  trustworthy window at 440–630. A620 is ~10 nm inside a configured edge — no margin — and on the **ELP the
+  IR-cut edge at 642 nm** puts it near a cliff. Widening is right.
+- ⛔ **A420 is the actual blocker, and neither the ROI nor the camera touches it.** `KB_lamps.md` measures
+  the Yuji as **blue-pumped at ~440 nm**: `0.000` at 401 and 405, `0.003` at 410, maximum at 440. At 420 we
+  sit on the **steep rising flank of the pump peak** — little signal, and a region where a small
+  wavelength-scale error becomes a large intensity error. **This is a lamp problem, not an ROI problem**,
+  and it is fixed by the same `410nm`-class emitter §2.1 already argues for.
+
+⇒ **Order of work is unchanged: the blue emitter first (it serves the Soret doublet, which is ours), the
+red choice second (§8 already leans `630nm-640`).** Glories rides on both.
+
+### 8a.2 The mono camera — supports this, for reasons other than bit depth
+
+`KB_cameras.md` §4 already carries the candidate (**ToupTek GPCMOS02000KMA, Sony IMX290 mono**). Against
+the Glories requirement specifically:
+
+- ⭐ **Window is AR-coated clear glass, "also transparent in the infrared"** — no IR-cut, so A620 stops
+  living next to the ELP's 642 nm cliff.
+- ⭐ **Mono removes the red dye's own roll-off** and the ~3× colour-filter light loss (§4.1a rates that
+  photon gain above the bit depth).
+- ⭐ One frame spans roughly **400–850 nm** ⇒ ⚠ **"pull the ROI to 650" undersells it**; the constraint
+  becomes the lamp and the order overlap, not the frame.
+- ⛔ **Costs, unchanged from `KB_cameras.md`:** `libtoupcam`, **not UVC** — real work against our cv2 chain;
+  and mono **removes the Bayer crossovers that give us a free wavelength-scale check**, leaving the CFL as
+  the only reference. That second one matters more here than usual, because A420 sits on a steep flank
+  where scale error is amplified.
+
+⇒ **The mono camera helps Glories, but it is not what unblocks it.** ⛔ **Do not let a wine method drive a
+camera swap**; the swap stands or falls on `KB_cameras.md` §4's own grounds.
+
+---
+
 ## 9 · What must be re-done after the swap
 
 ⚠ **Every one of these invalidates the thresholds, and the recalibration is the expensive part. Build it
