@@ -841,15 +841,16 @@ cropped*.
 ⛔ **Order matters (8e.1): server first.** Starting the app first costs ~10 s of dead window and a failed login.
 
 ```bash
-# 1) the server — from the TAGGED worktree (8e.2), on loopback so no WLAN is needed (§7a)
-cd ~/spectracs-build/presentation-2026-09-12/src/spectracsPy-server
-PYTHONPATH=".:../spectracsPy:../spectracsPy-model:../spectracsPy-base" \
-  ~/development/spectracs/spectracsPy/venv/bin/python service_pyro.py
+# 1) the server — its OWN AppImage (§19). No arguments = loopback 127.0.0.1:8091, no network needed.
+./Spectracs-Server-presentation-2026-09-12-x86_64.AppImage
 # leave this terminal open; it prints:  SpectracsPyServer serving locally at PYRO:…@127.0.0.1:8091
 
 # 2) the app — double-click Spectracs-presentation-2026-09-12-x86_64.AppImage
 #    (once, beforehand:  chmod +x Spectracs-*.AppImage   — 8e.3)
 ```
+
+*(The dev alternative, unchanged and unaffected: `runServer.sh` from the checkout, or `service_pyro.py`
+from a worktree. The server AppImage does not replace it — S5.)*
 
 Then log in as usual: **`masterUserExakta`** for the dev bench, **`elpUser`** for the end-user wizard (2.16).
 
@@ -950,3 +951,234 @@ makes the import fail cleanly; the boot log is now **empty**. Found by running i
 2. **Export one PDF** — proves matplotlib + `resource/logo.png` + pypdf, and warms the font cache (8b.8).
 3. **One cold start with the WLAN off** (§7a) — the venue rehearsal.
 4. **Plug in the projector once** (8d.4) — the one display geometry this GUI has never met.
+
+
+---
+
+## 19 — A SEPARATE SERVER AppImage (design, 2026-09-09 — DESIGN ONLY, nothing built)
+
+Edwin: *"i want also a separate app-image for the server"*, plus four answers: pass the **existing CLI options
+through unchanged**; **starting in a console is fine**; **each AppImage uses its own DB**; both must be **the
+same tag**; and it **does not replace `runServer.sh`** — it is another way to run.
+
+⭐ **Measured, and it is why a separate file is right:** the server's import graph pulls **no numpy, scipy,
+matplotlib, cv2, PySide6, pandas or PIL** — 528 modules, all light. A server AppImage is roughly **25–40 MB**
+against the app's 191. It also lands the **two-APK model of `SPEC_android_port.md`** on the desktop, so it is
+not a new shape for this project; `service_pyro.py` is already that entry point.
+
+### 8f — Sixth rubber-duck pass: the finding that decides §19
+
+**8f.1 — ⛔⛔ `spectracsPyServer.py` CANNOT run on loopback. It crashes.** Measured:
+
+```
+$ python spectracsPyServer.py --nameserverHost 127.0.0.1 --daemonHost 127.0.0.1 --local
+  serverUri:PYRO:obj_48aad…@127.0.0.1:8091      <- it starts…
+  TypeError: argument must be an int, or have a fileno() method     <- …then dies in the event loop
+```
+
+`Pyro5.api.start_ns()` returns **`broadcastServer = None`** when it binds to a loopback address (a broadcast
+responder on 127.0.0.1 is meaningless), and `main()` does `rs=[broadcastServer]` then `select.select(rs,…)`
+unconditionally (`spectracsPyServer.py:91-94`). ⇒ **"forward the stock CLI unchanged" and "works with no
+network" are mutually exclusive.** The stock CLI *requires* a real interface; `serveLocalForever()` is the only
+network-free path, and it has no CLI at all.
+
+**Resolution — dispatch on argv, and get both:**
+
+| invocation | entry | behaviour |
+|---|---|---|
+| **no arguments** | `SpectracsPyServer.serveLocalForever()` | loopback `127.0.0.1:8091`, fixed object id, **no network, no nameserver** — the venue/delivery default |
+| **any argument** | `spectracsPyServer.main()`, `sys.argv` forwarded **verbatim** | the full stock CLI unchanged: `--local`, `--nameserverHost/Port`, `--daemonHost/Port`, `--daemonNatHost/Port`, `--localDaemonHost` |
+
+⚠ **8f.2 — this makes §7a worse than "unreliable".** With the WLAN off, `--nameserverHost LOCAL` resolves
+through `getLocalIpAddress()` → `None` → Pyro binds its default (loopback) → **the same `TypeError`**. So
+`runServer.sh --local` is not merely slow without a network; it very likely **crashes**. ⇒ for Saturday,
+`service_pyro.py` (or the no-arg server AppImage) is not a nicety, it is **the only thing that runs**.
+⛔ Fixing `spectracsPyServer.py:91` is a one-line guard — and a **post-presentation** change (N6).
+
+**8f.3 — timestamped build folders must not swallow the worktrees.** §17.1 starts the server *from a worktree*;
+if every build run makes a new directory, the runbook path changes every time. ⇒ split them:
+
+```
+~/spectracs-build/
+├── appimagetool-x86_64.AppImage
+├── src-presentation-2026-09-12/     <- worktrees: belong to the TAG, stable, referenced by the runbook
+└── 2026-09-09T01-23-45/             <- one BUILD RUN: work/ dist/ AppDir/ *.AppImage
+    └── (and a `latest` symlink beside it)
+```
+
+⚠ At **1.9 GB per run** the script must prune (keep N) or say what it is consuming.
+
+**8f.4 — the build script and the server spec are POST-TAG files, and that is fine.** The tag is already cut
+and pushed. The server AppImage's *contents* come from the tagged worktrees; its *recipe* is newer. ⇒ the
+manifest records **both**: the seven content SHAs (the tag) and the recipe commit. That beats a pointless `-2`
+re-tag — and it is the same reasoning as F1a: one fact, one home.
+
+### 19.1 The build script — `tools/buildAppImages.sh`
+
+```
+Usage: tools/buildAppImages.sh [--app] [--server] [--tag <tag>]
+                              [--out <name|path>] [--keep N] [--no-verify]
+  default: both · --tag presentation-2026-09-12 · --out <ISO timestamp> · --keep 3
+```
+
+**`--out` — name the target folder** (Edwin, 2026-09-09). Without it the folder is the build run's own
+timestamp (`2026-09-09T01-23-45`); with it you get a folder you can talk about: `--out venue-rehearsal`.
+
+Resolution rule, one flag, no ambiguity:
+
+| value | resolves to |
+|---|---|
+| contains no `/` | `$BUILD_ROOT/<name>` — a sibling of the timestamped runs |
+| contains a `/` | taken as a path, absolute or relative to `$PWD` |
+| *(omitted)* | `$BUILD_ROOT/<ISO timestamp>` |
+
+`$BUILD_ROOT` defaults to `~/spectracs-build` and is overridable with `SPECTRACS_BUILD_ROOT`.
+
+Three rules that follow from it, none of them obvious:
+
+* ⛔ **A named folder is never auto-pruned.** `--keep N` sweeps *timestamped* runs only. You named it because
+  you meant it; a build script that deletes something the user named is a bug, not a feature.
+* ⛔ **Refuse to build inside a git work tree.** An arbitrary `--out` path can point straight into a repo and
+  quietly undo §8b.2 (PyInstaller writes `build/`+`dist/`, and `.gitignore` covers neither). The script runs
+  `git -C <target> rev-parse --is-inside-work-tree` and **aborts** if it succeeds.
+* **Re-using a name wipes its contents, not the folder.** `work/`, `dist/`, `AppDir/` and any previous
+  `*.AppImage` are removed first, so a second `--out venue-rehearsal` cannot leave a stale file from the last
+  attempt mixed into the new bundle. The folder itself survives (you may have put notes in it).
+
+`latest` always points at whatever was built last, named or timestamped — one symlink, one meaning.
+
+| step | what it does |
+|---|---|
+| 1 | resolve the tag; create/refresh the seven worktrees in `src-<tag>/` (idempotent); export `SPECTRACS_SRC_ROOT` at them (8g.1) — **never write into a worktree** |
+| 2 | resolve `--out` (default: `<ISO timestamp>/`); refuse if it is inside a git work tree; wipe its `work/ dist/ AppDir/ *.AppImage`; repoint `latest` |
+| 3 | PyInstaller × 1–2 (`spectracsAppImage.spec`, `spectracsServerAppImage.spec`) into that dir |
+| 4 | **licence gate** — fail hard if Charts / DataVisualization / WebEngine appear |
+| 5 | assemble each AppDir: icon (§16 recipe), `AppRun`, `.desktop`, `.DirIcon`, `RELEASE_MANIFEST.txt` (content SHAs + recipe commit + timestamp) |
+| 6 | `appimagetool` (gzip — this build has no zstd, §18.2a) |
+| 7 | **verify**: app boots offscreen under `--fresh` and stamps Alembic; server starts **and answers a real login** (8g.2) — skipped loudly if 8091 is already in use (8g.3) |
+| 8 | prune **timestamped** build dirs beyond `--keep` (never a `--out` folder); print sizes, paths and the two manifests |
+
+⛔ Never writes into a repo (`--workpath`/`--distpath` always inside the build dir — §8b.2).
+
+### 19.2 Data directories (S3, as answered)
+
+Each AppImage anchors its own cwd, so each lands on its own DB — the mechanism is `~/.<basename of cwd>`
+(§2.5), nothing else:
+
+| AppImage | cwd anchor | DB |
+|---|---|---|
+| app | `~/Spectracs/spectracsPy` | `~/.spectracsPy/spectracsPy.db` |
+| server | `~/Spectracs/spectracsPy-server` | `~/.spectracsPy-server/spectracsPyServer.db` |
+
+⚠ Read as: *the same two DBs the dev checkout uses* (O3's "keep the real db", extended to the server). If
+instead you want the AppImages to keep **their own** pair, isolated from dev, that is one word in each AppRun —
+say so before P/Q4.
+
+
+---
+
+## 8g — Seventh rubber-duck pass (2026-09-09, aimed at the BUILD SCRIPT and the server image)
+
+**8g.1 — ⛔⛔ Q1 as written cannot work: the server `.spec` does not exist in the worktree.** Checked — the
+tagged worktree holds `spectracsAppImage.spec` (committed at `0408d45`) and nothing else new. But
+`spectracsServerAppImage.spec` is a **post-tag** file (8f.4), so it will live in the *live* tree while the build
+must run against the *worktree* sources. And the app spec resolves its repo roots from **`SPECPATH`** — the
+spec file's own directory — so a spec sitting in the live tree would silently build from the **live repos**,
+not the tag. That is exactly the drift F3 exists to prevent, and it would be invisible.
+
+Three ways out, and only one is clean:
+
+| | approach | verdict |
+|---|---|---|
+| a | copy the post-tag specs into the worktree before building | ⛔ makes the worktree **dirty**, so "the artifact equals the tag" stops being checkable |
+| b | move the worktrees to a newer commit that has the server spec | ⛔ then it is not the tag any more |
+| c | cut a `-2` tag | ⛔ churn, and F1a says the tag names the *event*, not the recipe |
+| **d** | **`HERE = os.environ.get("SPECTRACS_SRC_ROOT", SPECPATH)`** in both specs | ⭐ **one line each.** The spec can then live anywhere and be *pointed* at the tagged sources; default behaviour is unchanged |
+
+⇒ **(d).** The script exports `SPECTRACS_SRC_ROOT=<worktree>/spectracsPy` and never writes into a worktree.
+⚠ This edits a file inside the tag (`spectracsAppImage.spec`), so it is a **recipe** change, which 8f.4 already
+accepts as post-tag — the shipped app AppImage is untouched and stays exactly what the tag describes.
+
+**8g.2 — "it binds the port" is not a gate.** Q2's original exit criterion proves nothing about `bcrypt`,
+SQLAlchemy or the Pyro serializers inside a *frozen* server — all three are where a frozen build actually
+fails. ⇒ the gate becomes **a real login through the frozen server**: `masterUserExakta` must come back with
+`MASTER_USER`, `ELP-0001` and a calibration, exactly as §18.1 proved for the source-run server.
+
+**8g.3 — the script's own smoke test can collide with a running server.** The no-arg loopback entry has **no
+port option** (that is the point of it), so verification needs `127.0.0.1:8091` free. If a dev server or a
+previously started server AppImage is listening, the check would either fail confusingly or — worse — "pass"
+against **someone else's process**. ⇒ the script probes the port first and **skips with a loud message** rather
+than testing the wrong daemon. The server `AppRun` should do the same at runtime: if 8091 is already answering,
+say so and exit instead of dying inside Pyro.
+
+**8g.4 — `latest` can dangle.** Pruning timestamped runs beyond `--keep` can delete the very directory
+`latest` points at. ⇒ prune first, then repoint (or drop) the symlink; never the other way round.
+
+**8g.5 — the manifest names paths that will not exist on another machine.** `RELEASE_MANIFEST.txt` tells the
+reader to start the server from `<worktree>/spectracsPy-server`. On a delivered machine there is no worktree —
+and with the server AppImage there is no need for one. ⇒ once §19 ships, the app manifest's instruction becomes
+*"run the Spectracs-Server AppImage"*, and the worktree command stays only in §17.1 as the dev path.
+
+
+---
+
+## 20 — AS BUILT: the server AppImage and the build script (Q0–Q6, 2026-09-09)
+
+### 20.1 Results
+
+| phase | outcome |
+|---|---|
+| **Q0** | ✅ `SPECTRACS_SRC_ROOT` honoured by both specs; unset ⇒ behaviour unchanged |
+| **Q1** | ✅ `spectracsServerAppImageEntry.py` (argv dispatch) + `spectracsServerAppImage.spec` |
+| **Q2** | ✅ **31 MB** payload in **13 s**; no PySide6 / Qt / cv2 / matplotlib / numpy / scipy anywhere; both alembic trees present |
+| **Q3** | ✅ **both entries**: `--help` prints the *stock* argparse usage (forwarding proven); no-arg binds `127.0.0.1:8091`. **Gate: a real login through the frozen server** → `MASTER_USER`, `ELP-0001`/`Exakta`, calibration `coeffA=-5.77e-09`, 5 users, 2 plugins ⇒ bcrypt, SQLAlchemy, the Pyro serializers and Alembic all work frozen |
+| **Q4** | ✅ **16 MB** AppImage. Port-clash refusal works (*"already in use — not starting"*, no Pyro traceback). ⭐ **PAIR GATE, hard evidence:** a fresh app-side catalogue came back with the **server's exact spectrometer UUIDs** — impossible without a live sync across Pyro |
+| **Q5** | ✅ `tools/buildAppImages.sh` + `tools/AppRun.app` + `tools/AppRun.server` |
+| **Q6** | ✅ full run **1 m 57 s**, both images, self-verified (`app: alembic at cb8c2942a6bc` · `server: login ok — MASTER_USER / ELP-0001 / calibration present`). `--out` named folder ✅, refusal inside a git work tree ✅, `--keep 1` pruned three timestamped runs and **kept both named folders** ✅, `latest` repointed ✅. Script-built pair passed the UUID gate again |
+
+### 20.2 8g.6 — the finding the seventh duck half-missed
+
+8g.1 spotted that the *repo roots* must come from the tag while the *spec* may be newer — and fixed it with
+`SPECTRACS_SRC_ROOT`. It missed that **the entry script is subject to the same split**, and the first server
+build failed on exactly that:
+
+```
+script '…/src/spectracsPy/spectracsServerAppImageEntry.py' not found
+```
+
+⇒ a spec needs **two** roots, and conflating them fails in two different silent ways:
+
+```python
+SRC    = os.environ.get("SPECTRACS_SRC_ROOT", SPECPATH)   # the TAGGED sources built FROM
+RECIPE = SPECPATH                                          # spec + entry, may be NEWER than the tag
+```
+
+Point both at the worktree → PyInstaller cannot find a post-tag entry script (loud). Point both at the live
+tree → **the bundle is silently built from unfrozen sources** (quiet, and much worse). The app spec needed no
+change: `spectracsMain.py` *is* tagged source.
+
+### 20.3 Sizes, and what the split bought
+
+| artefact | size | note |
+|---|---|---|
+| `Spectracs-…-x86_64.AppImage` | **191 MB** | Qt + scipy + cv2 + matplotlib |
+| `Spectracs-Server-…-x86_64.AppImage` | **16 MB** | Pyro5 + SQLAlchemy + bcrypt — **8.4 % of the app** |
+
+⭐ The measured independence held all the way through: the server needs only `-server`, `-model`, `-base`.
+⚠ And `runServer.sh`'s comment — *"Needs ../spectracsPy on the path too: it imports SpectralLineMasterDataUtil
+from the app repo"* — is **stale**: that class lives in `-model` since the tiering work. Harmless (an extra
+path entry), worth correcting after the presentation (N6).
+
+### 20.4 Delivering to another machine
+
+Two files, same tag, nothing else — no checkout, no venv, no `PYTHONPATH`:
+
+```bash
+chmod +x Spectracs-*.AppImage
+./Spectracs-Server-presentation-2026-09-12-x86_64.AppImage    # console; Ctrl+C to stop
+./Spectracs-presentation-2026-09-12-x86_64.AppImage           # double-click
+```
+
+The recipient gets working seeded logins (`masterUser`/`masterUser`, `endUser`, `pumpkinTestUser`, `elpUser`,
+`masterUserExakta`), the virtual instrument, the pumpkin plugin and the whole UI. ⛔ **Not** a measurement:
+no ELP, and a fresh machine's calibration is empty until one is authored. glibc floor 2.35 (Ubuntu 22.04+).

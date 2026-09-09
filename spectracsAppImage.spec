@@ -10,7 +10,9 @@ import glob
 
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
-HERE = os.path.abspath(SPECPATH)                      # …/spectracsPy
+# 8g.1: the build script must be able to point a spec (which may be newer than the frozen tag) at the
+# TAGGED worktree sources. SPECTRACS_SRC_ROOT does that; unset, behaviour is exactly as before.
+HERE = os.path.abspath(os.environ.get("SPECTRACS_SRC_ROOT", SPECPATH))   # …/spectracsPy
 SIBLINGS = os.path.dirname(HERE)
 
 def sibling(name):

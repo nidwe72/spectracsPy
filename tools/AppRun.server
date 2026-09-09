@@ -1,0 +1,24 @@
+#!/bin/bash
+# Spectracs SERVER AppImage — docs/SPEC_linux_appimage.md §19. Headless; run it from a console.
+#
+#   no arguments : loopback 127.0.0.1:8091, fixed object id, NO nameserver and NO network needed.
+#   any argument : the stock spectracsPyServer CLI, forwarded verbatim (--local, --daemonPort, …).
+#                  ⛔ that CLI cannot serve on loopback — Pyro's start_ns returns no broadcast server
+#                  there and the stock event loop dies on it (§8f.1). Use no arguments for local.
+HERE="$(dirname "$(readlink -f "$0")")"
+BIN="$HERE/usr/bin/spectracs-server"
+export LD_LIBRARY_PATH="$BIN${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# D2/§19.2: the cwd basename selects the data dir -> ~/.spectracsPy-server/spectracsPyServer.db
+SRV_CWD="${SPECTRACS_CWD_ROOT:-$HOME/Spectracs}/spectracsPy-server"
+mkdir -p "$SRV_CWD"
+
+# 8g.3: refuse rather than die inside Pyro if something already owns the port.
+if [ $# -eq 0 ] && (exec 3<>/dev/tcp/127.0.0.1/8091) 2>/dev/null; then
+    echo "Spectracs Server: 127.0.0.1:8091 is already in use — another server is running. Not starting." >&2
+    exit 1
+fi
+
+cat "$HERE/RELEASE_MANIFEST.txt" 2>/dev/null
+cd "$SRV_CWD" || exit 1
+exec "$BIN/spectracsServer" "$@"
