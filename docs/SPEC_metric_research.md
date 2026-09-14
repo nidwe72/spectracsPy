@@ -5419,3 +5419,124 @@ error.
 
 **Cost:** ~12 × 8 ml ≈ 100 ml of dilution, about an hour of preparation; each observer sorts in 15–20
 minutes.
+
+
+---
+
+## ⭐⭐⭐ 16.23 THE TEN-OIL EVENING — and the second fill of every oil read lower  *(Edwin 2026-09-14, bench; analysis same evening)*
+
+> ⚠ **This file's §16.23.** `SPEC_capture_quality.md` §16.23 is the capillary protocol — a different thing
+> with the same number, and the two are cited across files often enough that it has to be said once.
+
+### 16.23.1 What was measured
+
+Six oils, **two fills each, two reads per fill**, one after another from 15:31 to 21:20 — 12 fills, 24
+runs — all into `20280831_suite`. Every run carries the same recipe string
+(`1cap-1ml-vortex30-tovolume-vortex60-sonic60-cold-box6min`) and the same `exposureApplied 90` in its own
+header, so **method, recipe, instrument state and evening are common to all of them**.
+
+⭐⭐ **It makes the suite row the largest single-row comparison the archive has**: 64 runs, 32 fills,
+**10 oils**, of which **five of the six oils the archive calls green appear simultaneously**. Every earlier
+row compares two to four oils, so the green ordering has never before been readable without the day
+divided out.
+
+| oil | class | fills | runs | `Rv` | σ_fill |
+|---|---|---|---|---|---|
+| Ja Natuerlich | green | 5 | 10 | 123.6 | 4.14 |
+| Lugitsch | green | 6 | 12 | 107.5 | 3.74 |
+| Esterer | green | 2 | 4 | 85.4 | 10.13 |
+| Stekko | green | 2 | 4 | 83.3 | 7.99 |
+| Steirerkraft | green | 5 | 10 | 79.8 | 3.49 |
+| **Birnstingl** | ⚠ unlabelled | 2 | 4 | **69.7** | 4.58 |
+| **Kiendler** | ⚠ unlabelled | 2 | 4 | **63.6** | 0.99 |
+| **Spar ggA** | ⚠ unlabelled | 2 | 4 | **56.6** | 7.42 |
+| Spar Premium | brown | 2 | 4 | 37.3 | 1.50 |
+| Spar S-Budget | brown | 4 | 8 | 27.9 | 4.17 |
+
+On the **labelled** oils alone the fill means run **76.1–127.9 green** against **22.1–38.4 brown** — a
+corridor of **+37.7**, with no fill of either class inside it. ⛔ That is a description of this corpus, not
+a validation: the cut is the shipped 52.5 and these oils are the ones it was drawn on.
+
+### 16.23.2 ⛔⛔ THE FINDING — the second fill reads lower in all six, and it is the RED BAND that falls
+
+Every oil measured tonight has an A fill and a B fill ~35 min later. **`Rv` fell from A to B in 6 of 6.**
+
+| oil | Δ`Rv` | Δ`RvLin` | valley 500–560 | Q band 565–580 | red band 622–627 | red − Q |
+|---|---|---|---|---|---|---|
+| Kiendler | −1.4 | −3.3 | −12.8 % | −4.4 % | −6.9 % | **−2.6 pts** |
+| Spar Premium | −2.1 | +0.5 | −18.1 % | −14.8 % | −17.9 % | **−3.1 pts** |
+| Birnstingl | −6.5 | +3.6 | −13.2 % | −17.8 % | −21.3 % | **−3.5 pts** |
+| Spar ggA | −10.5 | +3.0 | −29.3 % | −22.7 % | −31.1 % | **−8.5 pts** |
+| Stekko | −11.3 | −4.1 | +1.4 % | +2.5 % | −6.2 % | **−8.7 pts** |
+| Esterer | −14.3 | −5.9 | −10.6 % | −6.9 % | −16.2 % | **−9.3 pts** |
+
+⭐⭐⭐ **The invariant is not the fall, it is that the red band falls FURTHER THAN THE Q BAND — in all six,
+by 2.6 to 9.3 percentage points.** That is the one column with no exception and no sign change.
+
+⛔ **It cannot be dilution, and that is provable rather than arguable.** `Rv` is a ratio of differences and
+is dilution-invariant by construction (`DOC_metric_algebra.md`): a proportional fall in every band cancels
+exactly. `Rv` moved, so the fall was **not** proportional — the 624 nm band weakened *relative to* 568 nm.
+
+⚠ **It is a property of THIS session, not a law of fills.** Recomputed over every consecutive-fill step the
+suite holds:
+
+| session | `Rv` fell in | `RvLin` fell in |
+|---|---|---|
+| 2026-08-28 | 3 of 6 steps | 4 of 6 |
+| 2026-08-31 | 1 of 4 steps | 2 of 4 |
+| 2026-09-06 | 2 of 4 steps | 1 of 4 |
+| **2026-09-14** | **6 of 6 steps** | 3 of 6 |
+
+6 of 14 before tonight, 6 of 6 tonight. One-sided *p* = 1/64 = **0.016** against a coin flip — ⛔ which is a
+flag, not a result: the six pairs share an evening, so they are **not six independent draws**.
+
+### 16.23.3 What it is not
+
+- ⛔ **Not a constant instrument drift.** The drops span **−1.4 to −14.3**, a factor of ten, over a fixed
+  ~35 min spacing. A lamp or reference walking monotonically through the evening would not do that, and
+  the late oils (Esterer 19:45, Stekko 20:49) read **at or above** their archive values, not below.
+- ⛔ **Not a metric artefact.** `RvLin` splits 3/3 and would have let this pass, but the **red-minus-Q
+  column is measured on the raw bands**, before any metric. The spectrum changed; the metrics only
+  disagree about how much of it they show.
+- ⚠ **Not attributable to the oil.** It appears in green, brown and unlabelled oils alike, including
+  Spar Premium and Spar S-Budget — so nothing about roast or class explains it.
+
+### 16.23.4 ⭐⭐ What it probably is, and the one run that would settle it
+
+The 624 nm band weakening while the Q band holds is the **band-fall signature of light dose**
+(`SPEC_capture_quality.md` §16.36: heat clears reversibly, **light browns irreversibly**). The competing
+story is preparation — the B fill stands longer, or is drawn second from a bottle that has been disturbed.
+⛔ **Tonight's data cannot separate them**, because every B fill is both *a second fill* and *later*.
+
+⇒ **THE TEST IS ONE ALIQUOT, TWO READS, 35 MIN APART, NO NEW FILL.** If the red band falls relative to Q on
+the *same* liquid, it is dose and it belongs to the instrument; if it does not, it is the fill and it
+belongs to the recipe. ⭐ A second arm — **measure B before A** on one oil — separates "second fill" from
+"later in the evening" for the price of one more pair.
+
+⚠ Until then, **an A/B pair from one evening is not a σ_fill**, and §6.2b of `SPEC_red_ratio_metric.md`
+should not be read as if it were.
+
+### 16.23.5 Three oils that the archive has never labelled
+
+**Birnstingl**, **Kiendler** and **Spar ggA** were measured tonight for the first time. They are drawn on
+the suite row in **blue** and enter **no corridor, no cut, no σ_fill and no error count** — the same
+holding pattern Esterer and Stekko were kept in through 08-26 until the eye ranked them on 08-27.
+
+⛔ **Their class may not be read off the plot they are standing on** (§7 / M9). Edwin supplies the
+labelling and the visual ordering **later**; the figure is built so that arrival costs one line each.
+
+⚠ **`Spar ggA` names a folder, not a bottle.** The archive already holds **two** Spar g.g.A. oils —
+`20260807A` *Spar Steirisches g.g.A.* and `20260807C` *Spar Premium g.g.A.* — and `20260914SparGga` matches
+neither spelling. It is registered as its own oil rather than folded into either, because folding it into
+`Spar Premium` would inherit **the archive's most relabelled class** (§16.30.1a is its third relabel;
+§13.2a says more fills will not settle it). ⇒ **if it is a bottle already on record, the fix is a
+`SERIESOIL` entry that joins the names — never a class.**
+
+### 16.23.6 The tool change this needed
+
+`diagnostics/d2r_all_runs.py` gained **`SUITE_NATIVE_OILS`**. `oilClassIndex` can only reach an oil through
+a *session* that already labels it, so an oil whose **first fills arrive inside a suite** had no route in at
+all: both Birnstingl fills were refused and drawn nowhere. The new table is the only place a class is
+typed, it may only hold `unlabelled`, and a session table labelling that oil later **wins** — `suiteNativeStale`
+announces the entry as spent. The row caption now names the unlabelled oils on every render.
+

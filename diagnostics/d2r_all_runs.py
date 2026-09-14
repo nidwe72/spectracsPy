@@ -1506,6 +1506,17 @@ def whyRow(label):
         how = "%d confirmed same-jar AND 6-min cold-box" % confirmed
         if placed:
             how += ", %d admitted by PLACEMENT in the folder alone" % len(placed)
+        # ⛔ A BLUE CLUSTER ON THE ROW IS NOT A RESULT. An oil the archive has never labelled is drawn
+        # (`SUITE_NATIVE_OILS`) and scores nothing, and a caption that does not say so invites the one
+        # reading the §7 / M9 rule forbids: taking its colour off the very plot it is standing on.
+        # ⚠ It AGREES IN NUMBER: the 09-14 evening put two of them on the row at once, and "Birnstingl,
+        # Kiendler carries NO class" is the kind of sentence a reader stops trusting the rest of.
+        fresh = sorted({oil for session, (oil, label) in members.items() if label == "unlabelled"})
+        if fresh:
+            how += ("; %s %s NO class on record and %s drawn UNLABELLED, scoring nothing"
+                    % (" and ".join([", ".join(fresh[:-1]), fresh[-1]] if len(fresh) > 1 else fresh),
+                       "carries" if len(fresh) == 1 else "carry",
+                       "is" if len(fresh) == 1 else "are"))
         return ("a CURATED CUT of runs already drawn above (%s), across BOTH instrument states — "
                 "re-cut, NOT re-measured" % how)
     return EXTRA_ROW_WHY.get(label, "a different measurement")
@@ -1736,6 +1747,57 @@ def normalisedOil(name):
     return "".join(character for character in name.lower() if character.isalnum())
 
 
+# ⭐⭐ AN OIL WHOSE FIRST FILLS ARRIVED INSIDE A SUITE, AND THE ONLY PLACE A CLASS IS TYPED.
+# `oilClassIndex` reaches an oil only through a SESSION that already labels it, and a suite-native oil has
+# none: `20260914BirnstinglA` and `B` are the whole of what the archive knows about Birnstingl, so the
+# index refused both fills and they were drawn NOWHERE — the same silence `PINNED_PREFIX`'s comment was
+# written about, one level up. A FIRST fill of a NEW oil is exactly the case placement cannot resolve.
+# ⛔⛔ AND THE CLASS STILL DOES NOT COME FROM THE SPECTRUM. `unlabelled` is not a placeholder for "green
+# until we look": it is the archive's own third class (`CLASSCOLOR`), drawn in blue, and `SCORED` is
+# ("green", "brown") — so such a fill enters no corridor, no cut, no σ_fill and no error count. It is how
+# Esterer and Stekko were carried through the whole 08-26 session until the EYE ranked them on 08-27
+# (`TODAY`'s note), and it is the §7 / M9 rule again: a label read off the metric under test is worthless.
+# ⇒ a new oil is VISIBLE from its first evening and costs nothing until Edwin rules on its colour.
+# ⚠ GREEN OR BROWN DOES NOT BELONG HERE. The moment an oil has a class it has a session table entry too,
+# and the entry below is then SPENT — `oilClassIndex` lets the real label win and `suiteNativeStale`
+# announces it, so a promotion is a one-line deletion and never a silent second opinion.
+SUITE_NATIVE_OILS = {
+    # ⚠ THE 2026-09-14 EVENING, two oils neither of which the archive had ever seen. Every run of both
+    # carries the CURRENT recipe (`1cap-1ml-vortex30-tovolume-vortex60-sonic60-cold-box6min`) and the same
+    # `exposureApplied 90` as the rest of the suite, so their METHOD is on the suite's footing by their own
+    # headers; what neither has any record of is its COLOUR.
+    # ⛔ NO FILL COUNTS HERE. The first version of these two lines typed them ("two fills" / "one fill")
+    # and the bench made the second one wrong within forty minutes — this file's own rule, broken in the
+    # newest lines in it. `whyRow` and the row title count the fills on every run instead.
+    "Birnstingl": "unlabelled",      # first measured 2026-09-14
+    "Kiendler": "unlabelled",        # first measured 2026-09-14
+    # ⛔⛔ THE NAME IS THE FOLDER'S AND IT NAMES NO BOTTLE. The archive already holds TWO Spar g.g.A.
+    # oils — `20260807A` **Spar Steirisches g.g.A.** and `20260807C` **Spar Premium g.g.A.** — and
+    # `20260914SparGgaA` is neither spelling. ⚠ Guessing it into one of them would be the worse of the two
+    # errors available here: `Spar Premium` is the archive's most relabelled oil (`SPEC_metric_research.md`
+    # §16.30.1a is its THIRD relabel, and §13.2a says more fills will not settle it), so an inherited class
+    # there is an inherited argument. ⇒ it stands as its own unlabelled oil until Edwin says WHICH BOTTLE
+    # it is; if it turns out to be one already on record, the fix is a `SERIESOIL` entry, not a class here.
+    "Spar ggA": "unlabelled",        # first measured 2026-09-14
+}
+
+
+def suiteNativeStale():
+    """The `SUITE_NATIVE_OILS` entries a session table has since overtaken — announced, never acted on.
+
+    ⭐ A promotion is what this table is FOR: once an oil is labelled green or brown by a session, the
+    entry here is spent and should be deleted. `oilClassIndex` already lets the real label win, so a stale
+    entry changes no figure — but an unremoved one is a second opinion about a class sitting in the file,
+    which is the shape of the collision `oilClassIndex`'s docstring calls fatal."""
+    spent = []
+    index = oilClassIndex()
+    for oil, label in sorted(SUITE_NATIVE_OILS.items()):
+        known = index.get(normalisedOil(oil))
+        if known is not None and known[1] != label:
+            spent.append((oil, known[1], label))
+    return spent
+
+
 def oilClassIndex():
     """`{normalised oil: (display name, class)}` over every table that labels a session.
 
@@ -1771,6 +1833,13 @@ def oilClassIndex():
         for session, (oil, label) in table.items():
             put(oil, oil, label, "display name")
             put(oilOfSessionName(session), oil, label, "session %s" % session)
+    # ⛔ LAST, AND IT MAY ONLY FILL A HOLE. A suite-native oil (`SUITE_NATIVE_OILS`) is registered only
+    # where no session has labelled it; where one has, the SESSION WINS and this entry is spent. ⚠ That is
+    # deliberately not `put`: `unlabelled` against a real class is not two tables disagreeing about an
+    # oil's colour — it is the absence of a claim meeting one — so it must not stop the run. It is
+    # reported instead, by `suiteNativeStale`.
+    for oil, label in SUITE_NATIVE_OILS.items():
+        index.setdefault(normalisedOil(oil), (oil, label))
     return index
 
 
@@ -1821,14 +1890,22 @@ def suiteMembership(suite, quiet=False):
         if known is None:
             if not quiet:
                 print("  [!!] SUITE MEMBER WITH NO OIL ON RECORD: %s/%s -- read as %r, which the archive "
-                      "has never labelled. It is drawn NOWHERE until some session carries that oil"
-                      % (suite, session, oil))
+                      "has never labelled. It is drawn NOWHERE until some session carries that oil, or "
+                      "until %r is entered in SUITE_NATIVE_OILS" % (suite, session, oil, oil))
             continue
         members[session] = known
         placed.add(session)
         if not quiet:
-            print("  [+] SUITE MEMBER BY PLACEMENT: %s/%s -- no session entry of its own; read as %s (%s) "
-                  "from the archive's existing label for that oil" % ((suite, session) + known))
+            # ⭐ THE TWO KINDS OF PLACEMENT READ DIFFERENTLY AND MUST SAY SO. One inherits a CLASS the
+            # archive already holds for that oil; the other inherits NOTHING but the method, and is on the
+            # page in blue precisely because its colour is still an open question (`SUITE_NATIVE_OILS`).
+            if normalisedOil(oil) in {normalisedOil(name) for name in SUITE_NATIVE_OILS}:
+                print("  [+] SUITE-NATIVE OIL: %s/%s -- %s has no session anywhere in the archive; drawn "
+                      "as %s, which SCORES NOTHING, until the eye rules on it"
+                      % ((suite, session) + known))
+            else:
+                print("  [+] SUITE MEMBER BY PLACEMENT: %s/%s -- no session entry of its own; read as %s "
+                      "(%s) from the archive's existing label for that oil" % ((suite, session) + known))
     return members, placed
 
 
@@ -1838,6 +1915,9 @@ def suiteMembers(suite):
 
 def suiteCorpus():
     """Every suite, as own-row blocks. Read from disk like `heldOutCorpus`, for the same reason."""
+    for oil, real, typed in suiteNativeStale():
+        print("  [!] SUITE_NATIVE_OILS ENTRY SPENT: %s is now %s by a session table, so its %r entry "
+              "decides nothing and should be deleted" % (oil, real, typed))
     rows = []
     for suite in suiteFolders():
         members = suiteMembers(suite)

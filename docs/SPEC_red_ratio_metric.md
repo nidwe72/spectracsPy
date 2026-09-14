@@ -434,8 +434,11 @@ counts rather than from photophysics — the two now agree from opposite directi
 
 #### ⭐⭐ 6.2b And on ONE controlled protocol, the corridor comes out clean
 
-The `20280831_suite` (`SPEC_metric_research.md` §16.15.7) holds every fill confirmed **same-jar AND 6-min
-cold-box** — method and recipe held constant, so no protocol term is left in the comparison:
+The `20280831_suite` (`SPEC_metric_research.md` §16.15.7) holds fills measured on ONE method and ONE
+recipe — same-jar, 6-min cold-box — so no protocol term is left in the comparison.
+
+⚠⚠ **AS COMPUTED 2026-08-31, ON THE FOUR OILS THE SUITE THEN HELD.** The table is kept at its own date
+rather than silently refreshed, because the paragraph under it argues FROM these numbers:
 
 | | fills | `Rv` | σ_fill |
 |---|---|---|---|
@@ -450,10 +453,45 @@ across **19 days, two solvent eras and the exposure pin** (spread 0.52). ⛔ The
 elsewhere in the archive comes from sessions with *different methods and recipes* — hold those and `Rv`
 stops wandering.
 
-⚠ **The honest limit is in the same numbers**: the brown's 624 band is **5.0 DN** against the green's 12.8,
+⛔⛔ **AND TWO OF THOSE CLAIMS HAVE SINCE WEAKENED — the suite is now 64 runs, 32 fills, 10 oils**
+(09-06 and the ten-oil evening of 09-14, `SPEC_metric_research.md` §16.23), recomputed on the LABELLED
+oils only:
+
+| | fills | `Rv` | σ_fill |
+|---|---|---|---|
+| Ja Natuerlich | 5 | 123.6 | **4.14** |
+| Lugitsch | 6 | 107.5 | 3.74 |
+| Esterer | 2 | 85.4 | 10.13 |
+| Stekko | 2 | 83.3 | 7.99 |
+| Steirerkraft | 5 | 79.8 | **3.49** |
+| Spar Premium | 2 | 37.3 | 1.50 |
+| Spar S-Budget | 4 | 27.9 | 4.17 |
+
+⭐ **The corridor survives and widens**: green fill means **76.1–127.9** against brown **22.1–38.4**, a gap of
+**+37.7** with no fill of either class inside it, now over seven oils instead of four.
+
+⛔ **What does NOT survive is the σ_fill of 0.15.** Ja Natuerlich's three 09-06 fills read 117.5 / 127.0 /
+127.9 — a **10.4 spread inside one evening** — so the 0.15 was two fills agreeing, not a σ_fill. ⚠ Read every
+two-fill row in the table above the same way, including tonight's Esterer (10.13) and Stekko (7.99).
+
+⚠ **And Steirerkraft carries a real session step**: 83.5 on 08-28 against 77.4 on 09-06, **−6.1**, against a
+within-evening spread of 2.0 on both. ⇒ the session term is absent for Lugitsch and Ja Natuerlich and
+**present for Steirerkraft** — the heading's claim holds for the oils it was written on and is not general.
+
+⛔⛔ **AND A SINGLE A/B PAIR IS NOT A σ_fill AT ALL.** On 2026-09-14 the second fill read lower than the first
+in **6 of 6 oils**, with the 624 nm band falling further than the Q band in every one — `SPEC_metric_research.md`
+§16.23.2. Until the aliquot re-read there settles whether that is light dose or preparation, an A/B gap
+prices **fill scatter plus an unidentified within-evening term**, and only its upper bound is meaningful.
+
+⚠ **The limit is in the same numbers**: the brown's 624 band is **5.0 DN** against the green's 12.8,
 which is why brown σ_fill is 4.17 and green 0.15. ⇒ **the next real gain is counts on the brown band, not a
 different metric** (§16.40.6), and the `pow2.2` decode this whole framing rests on is **still unverified
 against a raw frame**.
+
+> ⛔ **The 0.15 in the sentence above is the 08-31 figure and it did not hold** — Ja Natuerlich's green
+> σ_fill is **4.14** over five fills. The *band-count* argument is unaffected (5.0 DN against 12.8 is a
+> property of the spectra, not of the fill count), but the contrast it draws is no longer 28× and the
+> brown band is no longer the only place scatter comes from.
 
 ### 6.3 ⛔ The margin is thinner than the noise
 
