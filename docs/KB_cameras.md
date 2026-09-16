@@ -3,7 +3,7 @@
 *The detector is half the instrument. This note holds what each camera on the roster actually is, what
 its optical path does to the spectrum, and what changing camera would cost and buy. Written 2026-09-04,
 after the halogen measurement in `KB_lamps.md` §4 turned "the camera's red response" from an assumption
-into a number.*
+into a number. Updated 2026-09-17: the ToupTek was bought, and its driver library is read in §4.6.*
 
 Companions: `KB_lamps.md` (the light source, and the measurement this note builds on),
 `KB_spectroscopy_physics.md` §7 (the physical instrument), `SPEC_real_camera_capture.md` (the capture
@@ -61,18 +61,18 @@ sensor.
 
 | | **ELP `32e4:8830`** | **Microdia/Sonix `0c45:6366`** | **ToupTek GPCMOS02000KMA** |
 |---|---|---|---|
-| role | bench / dev — **the archive camera** | intended **production** camera | ⚠ candidate only, not owned |
+| role | bench / dev — **the archive camera** | intended **production** camera | ⭐ **bought 2026-09-17** — ⚠ not yet plugged in or characterised |
 | sensor | Sony IMX179 (inferred) | unrecorded | **Sony IMX290LLR mono** |
 | colour | Bayer RGB | Bayer RGB | ⭐ **monochrome** |
 | native | 3264 × 2448 (8 MP) | unrecorded | 1945 × 1097 (2.13 MP) |
-| captured at | **2592 × 1944** (pinned) | ⛔ not wired | 1920 × 1080 |
+| captured at | **2592 × 1944** (pinned) | ⛔ not wired | 1920 × 1080 — the only mode the driver lists (§4.6) |
 | pixel pitch | 1.4 µm native | unrecorded | **2.9 µm** |
 | imaging width | 3.63–4.57 mm (§4.1) | unrecorded | **5.57 mm** |
 | bit depth | **8** | **8** | ⭐ **12** |
 | transfer curve | ⚠ gamma-encoded (`pow2.2`) | ⚠ gamma-encoded | ⭐ **linear raw** |
 | IR-cut filter | ⛔ **YES — measured, λ₅₀ = 641.8 nm** | ⭐ **NO** (remote test) | ⭐ **NO** — AR-coated clear window, IR-transmitting |
 | red reach | 62 DN @ 650, 17 DN @ 660 nm | ⚠ **unmeasured** | ⚠ **unmeasured** |
-| interface | UVC / V4L2 → `cv2` | UVC / V4L2 → `cv2` | ⛔ **proprietary `libtoupcam` SDK** |
+| interface | UVC / V4L2 → `cv2` | UVC / V4L2 → `cv2` | ⛔ **proprietary `libtoupcam` SDK** (USB `0547:10ff` or `0547:1368`, §4.6) |
 | mount | M12 (S-mount) | M12 | 1.25" barrel + C-mount adapter |
 | price class | ~€60 | ⭐ cheap — the reason it is the production part | ~€180–230 |
 
@@ -140,10 +140,14 @@ so step 1 needs no calibration at all.
 ⚠ **And two risks appear only once the filter is gone**, neither of which the ELP data can speak to:
 **stray NIR scatter** raising the floor across the whole band, and **second-order diffraction** (§4.3).
 
-## 4 · ⭐ The candidate: ToupTek GPCMOS02000KMA (IMX290 mono)
+## 4 · ⭐ ToupTek GPCMOS02000KMA (IMX290 mono) — bought 2026-09-17
 
 Sold as an astronomical **guiding** camera — which is exactly why it is interesting here, because guide
 cameras are built to keep near-infrared rather than throw it away.
+
+⚠ **Bought on 2026-09-17, not yet on the bench.** Everything in §4.1–4.5 was written while it was only a
+candidate and is unchanged by the purchase. §4.6 adds what its driver library can do, read from the SDK
+itself. Nothing in this section has been measured on our unit yet.
 
 | item | value | source |
 |---|---|---|
@@ -153,10 +157,10 @@ cameras are built to keep near-infrared rather than throw it away.
 | active area | **5.57 × 3.13 mm**, diagonal 6.39–6.46 mm | vendor / Sony |
 | ADC | **12 bit** | vendor |
 | peak QE | ~81 % | vendor |
-| read noise | 0.53–0.84 e⁻ | vendor |
-| full well | ~11 200 e⁻ | vendor |
+| read noise | 0.53–0.84 e⁻ — ⚠ ZWO's chart for the same sensor shows 1–3.2 e⁻ | vendor / ZWO |
+| full well | ~11 200 e⁻ (ZWO: 14.6 k e⁻ at 3.6 e⁻/ADU) | vendor / ZWO |
 | exposure | **0.105 ms – 1000 s** | vendor |
-| frame rate | ~16–18 fps at full resolution (USB 2.0) | vendor |
+| frame rate | ~16–18 fps at full resolution (USB 2.0), ⚠ an 8-bit figure — RAW12 is 2 bytes/pixel, so ~9 fps full frame is the bandwidth estimate | vendor / arithmetic |
 | window | ⭐⭐ **AR-coated clear glass, "also transparent in the infrared"** | vendor |
 | mount | 1.25" barrel; C-mount and CS-mount adapters | vendor |
 | back focus | 8.5 mm (1.25"), 17.5 mm (C), 12.5 mm (CS) | vendor |
@@ -330,6 +334,12 @@ implementation**. Not fatal — the SDK ships Linux `.so` builds and there is a 
 element — but it is real work, and ⚠ it is hostile to the **Android port** (`SPEC_android_port.md`),
 where a vendor `.so` plus USB permissions is a much worse story than a UVC device.
 
+⚠ **AMENDED 2026-09-17 by §4.6.7 — the Android half of this is overstated.** The SDK ships prebuilt
+Android libraries and a sample that opens the camera from a `UsbManager` file descriptor. A UVC camera
+on Android is not simple either: `CaptureBackend.AndroidUvcCaptureBackend` already plans libusb + libuvc
+behind the same `UsbManager` permission. ⇒ the two routes cost about the same on Android. What remains
+true is the desktop half: a second backend, and more than a backend (§4.6.8).
+
 **3. ⚠ NIR focus shift.** Camera lenses are corrected for the visible. At 900 nm the focal plane moves
 noticeably, so the infrared end of the spectrum would sit out of focus — which broadens lines exactly
 where the new range is being added. Either accept the blur (it degrades resolution, not position) or
@@ -355,6 +365,21 @@ against a bright halogen with long exposures and frame averaging; hopeless for a
 
 ⛔ **And Sony publishes no numeric QE beyond "improved sensitivity at 850 nm" and a graph.** No figure for
 900, 940 or 1000 nm exists in any source checked. ⚠ **Treat 900–1000 nm as unquantified until measured.**
+
+⚠ **AMENDED 2026-09-17 — one published curve does exist, and it is less pessimistic than "single-digit".**
+ZWO publishes a relative-response chart for its ASI290MM, which uses the same IMX290 mono sensor
+(`astronomy-imaging-camera.com/wp-content/uploads/ASI290MM-QE.jpg`). Read off the chart by eye (±0.02,
+peak 1.00 at ~590 nm):
+
+| λ (nm) | 400 | 500 | 700 | 800 | 850 | 900 | 950 | 1000 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| relative response | 0.57 | 0.90 | 0.83 | 0.63 | 0.52 | 0.40 | 0.25 | 0.14 |
+| absolute QE, if the peak is ~80 % | — | — | ~66 % | ~50 % | ~42 % | ~32 % | ~20 % | **~11 %** |
+
+⚠ The absolute row is our own multiplication: ZWO gives only relative values and does not say whether
+the window is included. ⇒ **~11 % at 1000 nm, not single-digit**, and the "low single digits at 900 nm"
+kill criterion in §7 looks unlikely. Still a vendor chart for a different camera body, so the halogen
+test below remains the acceptance test.
 
 ⭐ **The good news: we now own the method to measure it.** `KB_lamps.md` §4's halogen ÷ Planck division
 returns the instrument response of *whatever* camera it is pointed through. Applied to a new camera it
@@ -659,6 +684,179 @@ an archive of three numbers per run.**
 hardware-side statement of *"the moat is the validated corpus, not the formula"*. Commercial reading:
 `SPEC_oelmuehlen_verzeichnis.md` **§144**; the honey-as-a-plugin consequence is **§145**.
 
+### ⭐⭐ 4.6 The driver library — what `libtoupcam` lets us do  *(2026-09-17, after the purchase)*
+
+*Edwin: "i have now bought the chinese mono webcam — make a research about the driver library and what we
+can do with it." Nothing here is measured on our unit: the camera was not plugged in when this was
+written. How each claim is known:*
+
+| mark | means |
+|---|---|
+| **[H]** | read in the SDK's `toupcam.h` or `toupcam.py` |
+| **[D]** | read in the SDK's API document (`doc/en.html`) |
+| **[L]** | ⭐ read from the model table **inside `libtoupcam.so`**, loaded with ctypes. Needs no camera, and it is what the driver will actually do with this model |
+| **[3P]** | third-party: INDI / INDIGO driver sources and issues, forums, ZWO's charts |
+
+#### 4.6.1 Getting it
+
+- **Download:** `https://www.touptek-astro.com/dl_software/toupcamsdk.20260908.zip` (~293 MB), found through
+  the site's own download list `assets/data/download.json`. SDK version **60.32549.20260908** [H].
+- **Contents** [H]: `libtoupcam.so` for Linux x64 / x86 / arm64 / armhf / armel, Android arm / arm64 / x86 /
+  x64 (API ≥ 24), macOS and Windows; the C header; ⭐ **`python/toupcam.py`, an official ctypes wrapper**
+  with samples (the Qt samples use PyQt6, not PySide6); a Linux viewer GUI (`extra/visionlite`); a
+  firmware-update tool; `linux/udev/99-toupcam.rules`. ⛔ No pip package exists.
+- **USB permissions** [H/D]: the rule grants mode 0666 to vendor IDs `0547` and `04b4`. Without it, opening
+  fails with `E_ACCESSDENIED` (0x80070005).
+- **Which library** [L]: the plain ToupTek library knows this model under **two product IDs, `0547:10ff`
+  and `0547:1368`**, both named `GPCMOS02000KMA` (probably two hardware revisions). The rebrand libraries
+  (Altair, Ogma, Omegon, …) each enumerate only their own models ⇒ use `libtoupcam`.
+- ⛔ **Licence: the zip contains no licence, EULA or redistribution text, and the API document says nothing
+  about it** [H/D]. INDI redistributes the binaries, but that is INDI's packaging, not a grant from
+  ToupTek. ⇒ **Ask ToupTek (astro@touptek.com) in writing before bundling `libtoupcam.so` in the AppImage
+  or an APK.**
+
+#### 4.6.2 What the driver says this camera can and cannot do  [L]
+
+| capability | this model | why it matters here |
+|---|---|---|
+| resolutions | **1920 × 1080 only** — no bin or skip modes | the imaging width is 1920 × 2.9 µm = 5.57 mm, so §4.2's arithmetic holds |
+| mono | ✅ | |
+| pixel formats | **RAW8, RAW12** (no packed RAW12) | 12-bit arrives as 2 bytes per pixel |
+| hardware ROI | ✅ `ROI_HARDWARE` | ⭐ a strip around the slit image is read out on the sensor, not cropped on the host |
+| conversion gain | ✅ HCG / LCG | a low-noise and a high-full-well setting |
+| black level | ✅ | |
+| trigger | ✅ software, **one frame per trigger** | |
+| ST4 guide port | ✅ | ⭐ see §4.6.4 |
+| still-snap mode | ⛔ none | use video or trigger mode |
+| sensor temperature | ⛔ **none** (`GETTEMPERATURE` flag absent) | log room temperature separately |
+| GPIO / external trigger | ⛔ none | |
+| USB speed levels | 0–2 | |
+
+#### 4.6.3 The settings a spectrometer wants — and the defaults that would silently spoil it
+
+| option | set to | default | why |
+|---|---|---|---|
+| `TOUPCAM_OPTION_RAW` (0x04) | **1** | 0 = processed image | ⭐ sensor data with the hardware ISP off (`OPTION_ISP` 0 = auto turns it off in raw) [H]. ⛔ Not **−1**: that variant still runs the flat/dark/fixed-pattern corrections and black/white balance [H] |
+| `OPTION_PIXEL_FORMAT` (0x1a) | `RAW12` (0x02) | RAW8 | or `OPTION_BITDEPTH` = 1 [H] |
+| `OPTION_ZERO_PADDING` (0x78) | **0** | 0 | ⇒ values 0…4095, right-justified [H]. INDI sets 1 (values × 16) [3P]. ⚠ verify with a saturated frame |
+| `OPTION_DEFECT_PIXEL` (0x40) | **0** | ⛔ **1 = on** | the document does not say whether it touches raw data ⇒ switch it off rather than find out from a spectrum [H] |
+| `put_AutoExpoEnable` | **0** | — | the INDI driver turns it off straight after open [3P] |
+| `put_ExpoTime` | µs | — | ⭐ **`get_RealExpoTime` returns what the sensor actually applied** [H] |
+| `put_ExpoAGain` | 100 (= 1×) | — | query `get_ExpoAGainRange`; not published for this model |
+| `OPTION_CG` (0x19) | decide by measurement | — | HCG vs LCG trades read noise against full well |
+| `put_HZ` | **2 = DC** | — | no rounding of exposure to 50/60 Hz mains flicker [H] |
+| `OPTION_BLACKLEVEL` (0x15) | fixed, **set LAST** | — | ⛔ changing conversion gain, bit depth or resolution resets it [3P, INDI issue #1238]. 12-bit maximum 496 [H] |
+| `put_Roi` | strip around the slit | full frame | offsets and sizes **even**, width and height **≥ 8** [H/D] |
+
+⛔ **Never use the "Grey16" output (`OPTION_RGB` = 4) for measurements.** It goes through the image
+pipeline, whose built-in tone curve `OPTION_CURVE` **defaults to 2 = logarithmic**, and the document warns
+that tone mapping "significantly compromises linearity" [H]. Raw mode skips that pipeline.
+
+#### 4.6.4 What it lets us do that the ELP cannot
+
+1. ⭐⭐ **Linear 12-bit data, with saturation at one number.** In raw mode nothing is gamma-encoded, so
+   `ImageSpectrumAcquisitionLogicModule`'s `pow2.2` decode, the quantisation tie window, the 16 DN guard
+   and the MAD==0 collapse have nothing to act on. At minimum gain the IMX290's full well and the 12-bit
+   ceiling nearly coincide (ZWO: 3.6 e⁻/ADU × 4096 ≈ 14.7 k e⁻ against 14.6 k e⁻) [3P], so **a clipped
+   pixel is simply 4095**.
+   ⚠ **§0 still holds**: this is capability, not precision on `Q%`. Where it genuinely pays is `Rv`
+   (§4.1b) and the starved red end.
+2. ⭐⭐ **Every frame reports its own settings.** The frame-info struct carries a **sequence number, a
+   µs timestamp, the exposure and gain it was taken with, and the black level**, each with a flag saying
+   whether it is filled in [H]. `OPTION_FLUSH` (0x3d) discards queued frames [H]. ⇒ a capture can check that
+   a frame was taken *after* an exposure change instead of hoping. That is what `CaptureBackend`'s
+   `BUFFERSIZE=1` only works around today (`SPEC_capture_quality.md` §4.8). ⚠ Whether this USB 2.0 model
+   fills the exposure / gain / black-level fields must be checked on the unit.
+3. ⭐ **Many more frames per minute, probably.** A 1920 × 128 RAW12 strip is ~0.25 MB per frame against
+   the ELP's 10.1 MB YUYV frame at ~3.3 fps. On a strip USB bandwidth stops being the limit, and exposure
+   time becomes the limit. `SPEC_settled_measurement.md` §49's `maxFrames = 4000` is *"a ~20-min cap in
+   disguise"* at today's rate. ⚠ **No published figure** for the strip rate — measure it.
+4. **Frame capture without callbacks.** `Toupcam_TriggerSyncV4(h, waitMS, buf, bits, rowPitch, info)` fires
+   one software trigger and **blocks until that frame arrives** [H], and the Python wrapper has it. One
+   request, one frame, with its metadata.
+5. ⭐ **A fixed serial number to key calibration on.** `get_SerialNumber` returns a unique 32-character
+   serial, and `Toupcam_query_SerialNumber` reads it **without opening the camera** [H]; `Open("sn:…")`
+   opens by serial. That fits the serial-keyed instrument setup in the connection & calibration UX spec
+   better than a cv2 index does. Firmware, hardware version and production date are readable too.
+6. ⭐ **The ST4 port as four timed outputs.** `Toupcam_ST4PlusGuide(h, direction, ms)` pulses one of four
+   lines (N / S / E / W) for a given time [H]. ⇒ a candidate driver for the **shutter** that
+   `SPEC_capture_quality.md` §16.36 asks for ("the lamp changes the sample"), or for switching the lamp,
+   through a relay or opto-isolator. ⚠ The Python wrapper does not expose it (call it through ctypes), and
+   ⛔ **the port's electrical design (open-collector? opto-isolated? current limit?) is undocumented —
+   measure before connecting anything.**
+7. **Digital binning without clipping.** `OPTION_BINNING` (0x17) = `0x40 | n` adds pixels without saturating,
+   raw only, and the bit depth grows (12 → 14 bits for 2 × 2) [H]. ⚠ A rows-only sum along the slit is
+   what the spectrum needs; host-side reduction of the strip keeps our robust per-column reduction and
+   may be the better choice.
+
+#### 4.6.5 ⚠ Dark subtraction becomes mandatory
+
+A raw sensor has an **offset**: the black level sits above zero so that noise is not clipped. The
+spectrum chain has **no dark-frame step today** (no dark handling anywhere under `sciens/spectracs/logic`),
+because the ELP's on-chip processing hands over images whose black is already clamped. ⇒ on this camera
+**T = (S − D) / (R − D)**, with `D` a dark capture at the same exposure, gain and black level. Skip it and
+every transmission is biased upward, most at low signal, which is exactly where absorbance lives.
+
+⭐ **Use our own dark, not the driver's.** The SDK has built-in dark-field, flat-field and fixed-pattern
+corrections (`DfcOnce` / `FfcOnce` / `FpncOnce`, exportable as `.dfc` / `.ffc` / `.fpnc` files) [H], but
+⛔ they only run in `RAW = −1` [H]. Keeping them in our code keeps every correction in the archive and
+visible, which is §4.5f's argument about the corpus.
+
+#### 4.6.6 Pitfalls, from other people's drivers
+
+- ⚠ **Reopen needs a replug**: INDIGO lists GPCMOS02000KMA as tested, with the known issue that after the
+  camera is reopened, exposures fail until it is replugged [3P]. Matters for `VideoThread`'s reopen path.
+- ⚠ **Stale and dropped frames**: flush after every settings change. Check `seq` for gaps, and watch
+  `OPTION_NUMBER_DROP_FRAME` (0x3e) and the front/back-end overflow events [H]. The default
+  (`put_RealTime(0)`) pauses grabbing when the queue is full rather than silently dropping [H].
+- ⚠ **Row banding** is a known IMX290 effect of its row-parallel readout, visible at bias level [3P].
+  Per-pixel gain spread also mattered in an IMX290 X-ray paper (arXiv 2409.05954) [3P]. Both argue for a
+  dark per session, and for reducing across rows rather than reading one row.
+- ⚠ **Zero-copy on Linux x86/x64 is on by default** [D]. If images look wrong, open with `;zerocopy=0`.
+- ⚠ **Settings files**: the driver dumps its settings when the camera stops (`OPTION_DUMP_CFG` defaults to
+  1) and can load them from `;ini=` / `;json=` at open [D]. Set everything explicitly at open and do not
+  rely on a file the driver wrote.
+- ⚠ **Callbacks**: no `Close` / `Stop` inside a callback (deadlock), and ROI, trigger, bit depth and pixel
+  format cannot be changed from inside one (`E_WRONG_THREAD`) [D]. `TriggerSyncV4` (§4.6.4, item 4) avoids
+  callbacks entirely.
+
+#### 4.6.7 Android
+
+The SDK ships `android/{arm,arm64,x86,x64}/libtoupcam.so` and a JNI sample (`android/samples/demoandroid`)
+[H]. The pattern: request permission through `UsbManager`, open the device, take its file descriptor and
+call `Toupcam_Open("fd-<fd>-<vid>-<pid>")` [D]. `toupcam.py` already has `sys.platform == 'android'`
+branches [H]. ⇒ **§4.3 blocker 2's Android half is amended**: the effort is comparable to the libusb +
+libuvc route a UVC camera needs anyway. ⚠ Unproven in our python-for-android build, and ⛔ the licence
+question of §4.6.1 applies to an APK just as to the AppImage.
+
+#### 4.6.8 What it means for our code — more than a backend
+
+`CaptureBackend.read()` returns an **8-bit RGB `QImage`**, and `ImageSpectrumAcquisitionLogicModule`
+converts to RGB888, gamma-decodes each channel, takes the channel maximum and masks 255 as saturated. A
+12-bit mono frame fits none of that. ⇒ this camera needs a **16-bit mono acquisition path** alongside the
+existing one, not only a new `CaptureBackend` subclass. §5 lists the rows; the new ones are the frame
+type, dark subtraction and settings that are specific to each camera (µs exposure, no white balance).
+
+⚠ **Two ways to check the camera before writing any of it:** the SDK's own VisionLite viewer, and the
+INDI driver (`indi_toupcam_ccd` in indi-3rdparty) with KStars / Ekos [3P].
+
+#### 4.6.9 Day one on the bench — what only the unit can settle
+
+1. `lsusb` → which product ID (`10ff` or `1368`); install the udev rule; open VisionLite; record serial,
+   firmware and hardware version.
+2. A **saturated raw frame** ⇒ maximum 4095 (right-justified) or 65520 (left), and the byte order.
+3. **Dark frames** with defect-pixel correction on and off ⇒ does it touch raw data; black-level default;
+   row-banding amplitude.
+4. Read `get_ExpTimeRange` and `get_ExpoAGainRange`; check whether frame info fills exposure / gain / black
+   level.
+5. **fps and dropped frames on a 1920 × 128 RAW12 strip**, at each USB speed level.
+6. How many frames after start or a settings change are stale.
+7. HCG vs LCG: a photon-transfer curve (e⁻/ADU, read noise) and linearity up to 4095.
+8. ⭐ **The halogen ÷ Planck run** (§6) ⇒ the real response to ~1000 nm on our optics, against §4.4's
+   ZWO-based expectation.
+9. ST4 port electrics, only if the shutter idea is pursued.
+10. Close and reopen without a replug ⇒ is the INDIGO issue present on Linux x64.
+
 ## 5 · What would have to change in the code
 
 ⚠ None of this is proposed work — it is the cost side of §4, so the trade is visible.
@@ -670,6 +868,10 @@ hardware-side statement of *"the moat is the validated corpus, not the formula"*
 | **bit depth** through the chain | `ImageSpectrumAcquisitionLogicModule`, `SpectralColorUtil` | everything assumes 8-bit gamma-encoded: the decode, the tie window, the 16 DN guard |
 | **mono** path | the same | max-channel over three channels is meaningless with one channel |
 | a **second calibration profile** | already supported | per-`SpectrometerProfile`, so this is data, not code |
+| a **16-bit mono frame type** | `CaptureBackend.read()` → `VideoThread` → acquisition *(added 2026-09-17, §4.6.8)* | `read()` returns an 8-bit RGB `QImage`; a 12-bit frame cannot pass through it |
+| **dark-frame subtraction** | acquisition / T computation *(§4.6.5)* | a raw sensor has a black-level offset; the chain has no dark step today |
+| **per-camera settings** | `SpectrometerSensorUtil` *(§4.6.3)* | exposure in µs, gain in %, black level, conversion gain; white balance does not exist on a mono sensor |
+| **the driver library** in the build | `tools/buildAppImages.sh`, udev rule | ⛔ blocked on redistribution permission (§4.6.1) |
 
 ⭐ The first row is required by the Microdia experiment too, so it is not specific to a camera purchase.
 
@@ -703,7 +905,12 @@ hardware-side statement of *"the moat is the validated corpus, not the formula"*
 - **A halogen ÷ Planck run on an IMX290** ⇒ the only thing that would turn §4.4's 900–1000 nm from
   unquantified into a number.
 - ⛔ **A measured NIR QE in the low single digits at 900 nm** ⇒ the 1000 nm ambition is dead and the
-  honest ceiling is ~850 nm.
+  honest ceiling is ~850 nm. ⚠ *(2026-09-17: ZWO's chart for the same sensor implies ~32 % at 900 nm,
+  §4.4, so this outcome now looks unlikely.)*
+- ⭐ **§4.6.9 on the bought unit** ⇒ turns every [H]/[L] claim in §4.6 into a measured one; items 2, 3 and
+  5 decide whether the linear 12-bit strip is as clean and as fast as the driver suggests.
+- ⛔ **A "no" from ToupTek on redistribution** ⇒ the camera stays a bench and research instrument; it
+  cannot ship in the AppImage or an APK.
 - ⭐⭐ **A repeat of §4.1a's arithmetic against a re-seat-free protocol** ⇒ the only thing that would make
   bit depth matter is removing the term that dwarfs it. `SPEC_settled_measurement.md`'s capillary/one-fill
   work is that; until it lands, no detector change moves the verdict.
