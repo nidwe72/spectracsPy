@@ -179,8 +179,13 @@ not. "Pigment state" and "pigment : carotenoid" were rejected — carotenoids ar
 - Column order: **Oil · Green-pigment integrity · Readings · Browning · Sample darkness**. The first two
   headers bold; all headers **top-aligned**.
 - **Colour only on the integrity levels**: mid = green, high = a slightly lighter green, low = brown.
-  Every other level is a neutral grey chip; *not assessed* and *at the cut* have a dashed outline.
+  Browning and darkness levels are **all the same plain grey chip, not bold** — *not assessed* and *at the
+  cut* included; the ¹/² markers carry the distinction.
 - A small bar under `Rv`, 0–130, with a tick at T = 52.
+- **B and A448 are displayed ×100** (Edwin, 2026-09-19: readability) — B 0.122 → **12.2**, A448 0.744 →
+  **74.4**, headers "index ×100" / "absorbance ×100". The cut points follow in every displayed text
+  (B cut 10.5, at the cut ±1, browning gate 75–95, pale < 70, dark > 85). ⚠ Computation and §4 stay in
+  the unscaled units; only the rendering multiplies.
 - In-cell reasons are replaced by markers explained in the legend: **¹** at the cut (B within ±0.01 of
   0.105), **²** not assessed (A448 outside 0.75–0.95).
 - The **legend sits below the table**.
