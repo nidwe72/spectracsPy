@@ -5540,3 +5540,29 @@ all: both Birnstingl fills were refused and drawn nowhere. The new table is the 
 typed, it may only hold `unlabelled`, and a session table labelling that oil later **wins** — `suiteNativeStale`
 announces the entry as spent. The row caption now names the unlabelled oils on every render.
 
+### 16.23.7 ⭐ The eye check — nine oils where `Rv` puts them, and Kiendler greener  *(Edwin 2026-09-18/19)*
+
+> ⚠ **This file's §16.23.7.** The "§16.23.7" cited in the priority table further up (green-green SNR,
+> dosing spread) is `SPEC_capture_quality.md` §16.23.7 — see the warning at the head of §16.23.
+
+Edwin compared freshly prepared samples of the six new oils by eye (an informal visual check, **not** a
+photographic round robin). **Birnstingl, Esterer, Spar Premium, Spar ggA and Stekko sit where `Rv` puts
+them. Kiendler looks clearly greener — like an oil at `Rv` ≈ 80, where it measures 63.6.** This is an
+*ordering*; ⚠ the green/brown **class** labels of §16.23.5 are still owed and are not supplied by it.
+
+What the analysis of that one disagreement found (full account: **`SPEC_oil_profile_readings.md`**):
+
+- **Kiendler's sample is pale, and that is the oil, not the capillary.** A[448–460] 0.691 / 0.667 on its
+  two fills, 25–27 % below Esterer and Birnstingl, against a fill-to-fill dose scatter of 2–12 %. A pale
+  sample looks greener (dichromatism) — that alone gives the direction of the disagreement.
+- **Its blue edge is steep and carotenoid-like** (A500/A448 0.093, among the green oils), not a browning
+  tail. Over the ten oils browning and `Rv` correlate at r = −0.71; Kiendler is the clearest exception —
+  demetallated, yet hardly browned.
+- ◐ **Candidate mechanism:** protopheophytin also forms during **seed storage** (KB §4.1), which makes no
+  Maillard products ⇒ older seed, gently roasted, would give low `Rv` with a green look. Testable for free
+  via the bottles' best-before dates.
+- ⛔ **`Rv` is not wrong here and is not to be tuned to the eye.** Scaling a spectrum does not change `Rv`;
+  an "`Rv` that agrees with the eye" would have to re-import the dose. The answer is a **profile beside
+  `Rv`** — green-pigment integrity, browning, sample darkness — with rule-based readings, which the test-
+  suite report now carries as a chapter.
+
