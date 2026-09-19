@@ -1,6 +1,7 @@
 # SPEC — the oil profile and its readings: what can be read beside `Rv`
 
-> **Status: DESIGN** *(2026-09-19)*. Nothing of this is in the app or a plugin yet. A **reference
+> **Status: DESIGN — and DECIDED for the plugin** *(Edwin, 2026-09-19: "today's sentences will be
+> incorporated into the plugin")*. Nothing of this is in the app or a plugin yet. A **reference
 > implementation** exists in the report build of the internal test-suite report (chapter 8, "Zehn Öle im
 > Profil") and in an HTML page made the same day; both live outside the public repos
 > (`spectracs-references/business/…/testSuiteInspectionAndMeasurement/`, `profile_dump.py` +
@@ -229,7 +230,22 @@ dose (2–12 %) that `Rv` was chosen to cancel, and it would be fitted to one oi
    protochlorophyll ~432 / protopheophytin ~411 nm Soret peaks); the red extension adds the red window
    the eye uses. Both add rows to §2 and rules to §5; neither changes the structure.
 
-### 8.1 In-app implementation (when asked)
+### 8.1 In-app implementation *(decided 2026-09-19; build when asked)*
+
+⭐ **Why it matters now.** Edwin's stance of 2026-09-19: for its niche — expert millers, no comparable tool
+anywhere — the software is **shippable once these readings are in the plugin and a final cleanup has been
+done** (the cleanup is planned for a separate session). `Rv` as chosen stands; separating oils more than
+~20 `Rv` apart is sufficient for now; the settled measurement works as it is.
+
+What ships to millers, and what does not:
+
+- ⭐ **Only ● sentences reach a miller.** The ◐ sentences (R6–R9) stay internal until §8's tests 1–4 have
+  run — they carry the browning proxy and Q%, both unvalidated.
+- ⭐ **The cut points are versioned plugin constants** (see below): when a cut moves, a miller's older
+  reports must stay explainable by the version they were made with.
+- ⭐ **First delivery as a parallel-measurement pilot** with one or two millers, measured alongside the
+  in-house bench for a few weeks — the open risk is a different operator's preparation scatter, not the
+  software.
 
 - **Features:** a pure, Qt-free function beside `plugin_sdk/util/SpectrumFeatureUtil.py`, per run.
 - **Levels + rules:** a small module with the cut points as **versioned constants** of the plugin — a new
