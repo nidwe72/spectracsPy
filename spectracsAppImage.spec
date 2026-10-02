@@ -66,6 +66,9 @@ hiddenimports += [
     # imported for its side effect: it populates both SQLAlchemy metadatas.
     "sciens.spectracs.model.databaseEntity.AllEntities",
 ]
+# Lamp-plug discovery (SPEC_lamp_switch.md §14 R7): zeroconf ships Cython .so modules that import each other
+# and pyinstaller-hooks-contrib 2023.2 has no hook for it; ifaddr is imported lazily (LampDiscovery).
+hiddenimports += collect_submodules("zeroconf") + ["ifaddr"]
 
 # --- excludes ----------------------------------------------------------------------------------
 # Only QtWidgets/QtCore/QtGui/QtSvg/QtNetwork are imported anywhere in the five repos.

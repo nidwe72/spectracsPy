@@ -54,6 +54,13 @@ class MainContainerViewModule(QFrame):
             self.docModeUdpService = DocModeUdpService(self, self.docHintPanelViewModule)
 
 
+    def closeEvent(self, event):
+        # Lamp off at once (SPEC_lamp_switch.md §7.1, §14 R3): during a capture the nested event loops keep
+        # app.exec() — and with it aboutToQuit — from returning for up to 25 min.
+        from sciens.spectracs.logic.lamp.LampExitHooks import LampExitHooks
+        LampExitHooks.shutdownLamp()
+        super().closeEvent(event)
+
     def __createBootstrapSession(self):
         SpectrometerStyle()
         SpectrometerSensorChip()

@@ -93,6 +93,7 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
     def hideEvent(self, event):
         super().hideEvent(event)
         if not event.spontaneous():
+            self._releaseLamp()      # cancel / back to Settings / finish (SPEC_lamp_switch.md D14)
             self.__stopStream()
             self.__restoreRoi()
 
@@ -325,7 +326,7 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
                 return
             action = self.__guidanceAction()
             self.__applyGuidanceHighlights(action)
-            self.__emitGuidance(action["coach"])
+            self.__guidance.emitAcquisition(action["coach"])     # the lamp line wins (SPEC_lamp_switch.md G9)
             return
         if panel is not None:
             self.__setButtonDot(panel.getCaptureButton(), False)

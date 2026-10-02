@@ -79,6 +79,8 @@ class WizardViewModule(AbstractPluginExecutionView):
 
     def hideEvent(self, event):
         super().hideEvent(event)
+        if not event.spontaneous():
+            self._releaseLamp()      # cancel / home / finish all leave through here (SPEC_lamp_switch.md D14)
         if not event.spontaneous() and self.__capturePanel is not None:
             self.__capturePanel.stopStream()
             self.__capturePanel.restoreRoi()
@@ -248,7 +250,7 @@ class WizardViewModule(AbstractPluginExecutionView):
         if phaseType == SpectralWorkflowPhaseType.ACQUISITION and self.__acqSteps:
             action = self.__deriveNextAction()
             self.__applyGuidanceHighlights(action)
-            self.__emitGuidance(action["coach"])
+            self.__guidance().emitAcquisition(action["coach"])   # the lamp line wins (SPEC_lamp_switch.md G9)
             return
         self.__emitGuidance(self.__currentPhaseHint(phaseType))
 

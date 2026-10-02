@@ -36,6 +36,8 @@ class AbstractPluginExecutionView(PageWidget):
         self._rendering = False
         self._loadedWorkflow = None
         self._plan = []
+        self._lastLampPhase = None
+        self._lampConnected = False
 
     # --- subclass seams ---
 
@@ -98,6 +100,7 @@ class AbstractPluginExecutionView(PageWidget):
         self._metadataWidgets = {}
         self._plan = []
         self._rendering = False
+        self._lastLampPhase = None           # a re-entry without a hide (bench plugin change) must switch again
 
     def _startNewRun(self):
         self._resetRunState()
@@ -203,8 +206,9 @@ class AbstractPluginExecutionView(PageWidget):
         if not self._plan:
             return
         self._rendering = True
-        self._beforeRender()
         stop = self._plan[self._cursor]
+        self._applyLamp(stop.phaseType)      # FIRST (§15 G7): off before the PROCESSING compute, not after
+        self._beforeRender()
         self._ensurePopulated(stop.phaseType)
         self._tabWidget.clear()
         self._tabWidget.tabBar().setVisible(True)
@@ -223,6 +227,45 @@ class AbstractPluginExecutionView(PageWidget):
         if phaseType in _COMPUTED and not self._isView():
             self._runHookOnce(phaseType)
 
+    # --- lamp (SPEC_lamp_switch.md §8, D5/D14) ---
+
+    def _applyLamp(self, phaseType):
+        # The enter hook: on every phase entry the plugin's LampPolicy decides on / off. Deduped by PHASE, not by
+        # cursor — Reference and Sample are two stops of one phase (§14.2). A saved run never switches (VIEW).
+        service = self._lampService()
+        if service is None or self._isView() or self._plugin is None or phaseType == self._lastLampPhase:
+            return
+        self._lastLampPhase = phaseType
+        if not self._lampConnected:
+            self._lampConnected = True
+            service.stateChanged.connect(self._onLampChanged)
+            service.warmUpTick.connect(self._onLampChanged)
+            service.hintChanged.connect(self._onLampChanged)
+        service.applyPhase(self, self._policy().getLamp(), phaseType)
+
+    def _releaseLamp(self):
+        # Cancel / home / view hidden (D14): not a phase entry, so the host switches off itself — only if THIS
+        # view switched the lamp on (G7 owner token: the bench and the wizard share one LampService).
+        self._lastLampPhase = None
+        service = self._lampService()
+        if service is not None:
+            service.releaseWorkflow(self)
+
+    def _onLampChanged(self, *args):
+        # A lamp change re-derives the guidance (§16 U2) — only while this view shows ACQUISITION and no capture
+        # owns the status bar (§16 U1).
+        service = self._lampService()
+        if service is None or self._rendering or not self.isVisible() or not self._plan or service.captureRunning:
+            return
+        if self._plan[self._cursor].phaseType == SpectralWorkflowPhaseType.ACQUISITION:
+            self._afterNav()
+
+    @staticmethod
+    def _lampService():
+        # None until the header created it for a real device (virtual device / logged out / tests: no lamp).
+        from sciens.spectracs.logic.lamp.LampService import LampService
+        return LampService.instance
+
     # --- navigation ---
 
     def onClickedBack(self):
@@ -238,6 +281,7 @@ class AbstractPluginExecutionView(PageWidget):
         if target is None:
             self._onFinish()
             return
+        self._applyLamp(self._plan[target].phaseType)   # before computing the phases jumped over (G7)
         for index in range(self._cursor + 1, target + 1):   # populate everything jumped over (Back-reachable)
             self._ensurePopulated(self._plan[index].phaseType)
         self._cursor = target

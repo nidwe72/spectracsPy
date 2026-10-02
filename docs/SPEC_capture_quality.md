@@ -1251,6 +1251,14 @@ and is the *seed* of the eventual `CameraService`.
 W6 (POSTPONED): red/green stability guard at measurement time (item c). Single-owner CameraService: later.
 ```
 
+### 16.6a Indicator window shortened to 3 min, with a ring *(Edwin 2026-10-02)*
+
+W4 changed: the camera icon shows amber **with a progress ring** (shared with the lamp icon,
+`SPEC_lamp_switch.md` §18.2 A5) for **3 min** (was 9), then green `#6FCF7F`. ⚠ By §16.2 (τ = 2.9 min) the sensor
+is then ~63 % settled — 90 % at 6.6 min, within noise at ~9 min. The window is an **indicator only, no gate**,
+so nothing is blocked; green at 3 min means "past the steep part", not "at equilibrium". The warm-keeper itself
+(W1–W3) is unchanged and keeps streaming.
+
 ### 16.7.0 ⭐ SUMMARY OF THE 2026-07-27 INVESTIGATION — read this first
 
 §16.7–§16.9 were written as the day unfolded, so they are chronological and long. This is the consolidated

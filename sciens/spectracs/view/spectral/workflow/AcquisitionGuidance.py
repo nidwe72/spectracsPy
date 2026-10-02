@@ -77,6 +77,9 @@ class AcquisitionGuidance:
         nextStep = action["nextStep"]
         if nextStep is None:
             return
+        # ⛔ No "do this next" dot on a capture button the lamp gate holds disabled (SPEC_lamp_switch.md §16 U3)
+        if not AcquisitionGuidance.lampReady():
+            return
         # ⛔ §12.1a: while a capture is running that button says "Cancel". Painting the amber ▶ NEXT cue on
         # it would urge the operator to press the one control that ABANDONS the measurement.
         if getattr(panel, "isCapturing", None) is not None and panel.isCapturing():
@@ -98,6 +101,62 @@ class AcquisitionGuidance:
             signal.guidance = True
             signal.text = text
         ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+
+    # --- lamp (SPEC_lamp_switch.md §16.2, G9) ---------------------------------------------------------------
+
+    def emitAcquisition(self, coach):
+        """The ACQUISITION coach line, with the lamp's line winning over the plugin's cue. WARMING is one
+        determinate bar that IS the coach line (§16 U1) — never a bar and a line fighting over one widget."""
+        service = AcquisitionGuidance.__lamp()
+        from sciens.spectracs.logic.lamp.LampState import LampState
+        if service is not None and service.wantsOn and service.state == LampState.WARMING:
+            total = service.warmUpSeconds
+            elapsed = max(0, total - service.warmUpRemainingSeconds())
+            signal = ApplicationStatusSignal()
+            signal.isStatusReset = False
+            signal.stepsCount = total
+            signal.currentStepIndex = elapsed
+            signal.text = "Lamp warming up — 0:%02d of 0:%02d" % (elapsed, total)
+            ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
+            return
+        self.emit(AcquisitionGuidance.lampCoach(coach))
+
+    @staticmethod
+    def lampCoach(coach):
+        """Pure text rule of §16.2 (testable without a status bar)."""
+        service = AcquisitionGuidance.__lamp()
+        if service is None or service.owner is None or not service.wantsOn:
+            return coach
+        from sciens.spectracs.logic.lamp.LampState import LampState
+        state = service.state
+        if state == LampState.SEARCHING:
+            return "Looking for the lamp plug …"
+        if state == LampState.OFF:
+            stopped = service.offMessage()
+            if stopped:
+                return stopped + " Switch the lamp on with the lamp icon to measure again."
+            return "The lamp is off — switch it on with the lamp icon."
+        if state == LampState.NO_PLUG:
+            if service.needsPassword:
+                return ("The lamp plug needs a password — switch the lamp on at the socket for now; set the "
+                        "password in Settings → Lamp after this measurement.")
+            note = "switch the lamp on at the socket, 20 s warm-up"
+            return "%s  ·  %s" % (coach, note) if coach else note.capitalize()
+        if state == LampState.UNREACHABLE:
+            return "The lamp plug is not answering — check the Wi-Fi."
+        if state == LampState.ON and service.noPower:
+            return "The plug is on but the lamp draws no power — check the switch on the lamp socket."
+        return coach
+
+    @staticmethod
+    def lampReady():
+        service = AcquisitionGuidance.__lamp()
+        return service is None or service.readyForCapture()
+
+    @staticmethod
+    def __lamp():
+        from sciens.spectracs.logic.lamp.LampService import LampService
+        return LampService.instance
 
     def __paintGuidanceIcon(self, shape):
         pixmap = QPixmap(12, 12)

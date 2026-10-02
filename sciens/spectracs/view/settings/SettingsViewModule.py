@@ -37,22 +37,27 @@ class SettingsViewModule(QWidget):
         self.acquisitionSettingsGroupBox = self.createAcquisitionSettingsGroupBox()
         layout.addWidget(self.acquisitionSettingsGroupBox, 0, 0, 1, 1)
 
+        # Lamp (SPEC_lamp_switch.md §16 U8/U12): ALL roles — every desk has its own plug — but only for a real
+        # device (no lamp behind a virtual spectrometer). Visibility follows the LampService, refreshed on show.
+        self.lampGroupBox = self.createLampGroupBox()
+        layout.addWidget(self.lampGroupBox, 1, 0, 1, 1)
+
         downloadsGroupBoxGroupBox = self.createDownloadsGroupBox()
-        layout.addWidget(downloadsGroupBoxGroupBox, 1, 0, 1, 1)
+        layout.addWidget(downloadsGroupBoxGroupBox, 2, 0, 1, 1)
 
         infosGroupBox = self.createInfosGroupBox()
-        layout.addWidget(infosGroupBox, 2, 0, 1, 1)
+        layout.addWidget(infosGroupBox, 3, 0, 1, 1)
 
         self.administrationGroupBox = self.createAdministrationGroupBox()
-        layout.addWidget(self.administrationGroupBox, 3, 0, 1, 1)
+        layout.addWidget(self.administrationGroupBox, 4, 0, 1, 1)
 
         self.developmentGroupBox = self.createDevelopmentGroupBox()
-        layout.addWidget(self.developmentGroupBox, 4, 0, 1, 1)
+        layout.addWidget(self.developmentGroupBox, 5, 0, 1, 1)
 
-        layout.setRowStretch(5, 1)  # spacer absorbs slack -> sections top-pack, nav at bottom
+        layout.setRowStretch(6, 1)  # spacer absorbs slack -> sections top-pack, nav at bottom
 
         navigationGroupBox = self.createNavigationGroupBox()
-        layout.addWidget(navigationGroupBox, 6, 0, 1, 1)
+        layout.addWidget(navigationGroupBox, 7, 0, 1, 1)
 
         # Administration + Development are master-only; refresh visibility on login/logout.
         ApplicationContextLogicModule().getApplicationSignalsProvider().userSessionSignal.connect(
@@ -81,6 +86,29 @@ class SettingsViewModule(QWidget):
         layout.addWidget(buttonsRow, 0, 0, 1, 1)
 
         return result
+
+    def createLampGroupBox(self):
+        result = QGroupBox("Lamp")
+        result.setProperty("sectionLabel", True)
+        layout = QGridLayout()
+        result.setLayout(layout)
+        layout.setSpacing(Metrics.S)
+        lampPlugButton = QPushButton("Lamp plug…")
+        lampPlugButton.setObjectName("SettingsViewModule.lampPlugButton")
+        lampPlugButton.clicked.connect(lambda: self.__navigateTo("LampSettingsViewModule"))
+        layout.addWidget(lampPlugButton, 0, 0, 1, 1)
+        result.setVisible(False)
+        return result
+
+    def updateLampVisibility(self):
+        from sciens.spectracs.logic.lamp.LampService import LampService
+        from sciens.spectracs.logic.lamp.LampState import LampState
+        service = LampService.instance
+        self.lampGroupBox.setVisible(service is not None and service.state != LampState.NOT_APPLICABLE)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.updateLampVisibility()
 
     def createAdministrationGroupBox(self):
         result = QGroupBox("Administration")

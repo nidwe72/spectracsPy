@@ -18,7 +18,8 @@ a = Analysis(
     pathex=["../spectracsPy-core", "../spectracsPy-model", "../spectracsPy-base", "../spectracs-plugins"],
     binaries=[],
     datas=[ ],
-    hiddenimports=["pyi_splash"] + pyqtgraph_hiddenimports,
+    # zeroconf/ifaddr: lamp-plug discovery (SPEC_lamp_switch.md §14 R7) — Cython submodules, no contrib hook
+    hiddenimports=["pyi_splash"] + pyqtgraph_hiddenimports + collect_submodules('zeroconf') + ['ifaddr'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

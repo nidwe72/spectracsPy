@@ -129,8 +129,11 @@ def run(d):
 
     # Reference chevron (step 0; role-tabs hidden — the chevron IS the role selector, so we advance with NEXT).
     d.narrate(NARRATION["step:REFERENCE"])
-    d.wait_for_human("Place the REFERENCE (isopropanol blank) in the beam, illuminate the slit, then press "
-                     "Ctrl+Shift+ß.")
+    d.wait_for_human("Place the REFERENCE (isopropanol blank) in the beam, then press Ctrl+Shift+ß. The app "
+                     "switches the lamp on itself (or switch it on at the socket if there is no lamp plug).")
+    # ⚠ The lamp gate (SPEC_lamp_switch.md D2, §16 U4): the capture button stays disabled through the 20 s warm-up
+    # after ACQUISITION switched the lamp on — a click before that would be lost and wait_capture would time out.
+    d.wait_ready(CAPTURE, enabled=True, timeout=40)
     d.click(CAPTURE)                             # "Capture reference" (auto-exposes first)
     d.wait_capture(CAPTURE)                      # wait for auto-expose + the WHOLE frame burst (C3b)
     d.dismiss()                                  # clear a capture-fail modal if one popped (no-op otherwise)
@@ -142,6 +145,7 @@ def run(d):
     # Sample chevron.
     d.narrate(NARRATION["step:SAMPLE"])
     d.wait_for_human("Swap in the SAMPLE (oil in isopropanol), then press Ctrl+Shift+ß.")
+    d.wait_ready(CAPTURE, enabled=True, timeout=40)   # same lamp gate (a re-switched lamp warms up again)
     d.click(CAPTURE)                             # "Capture sample"
     d.wait_capture(CAPTURE)                      # sample has no auto-expose leg — __capturing is its only gate
     d.dismiss()

@@ -89,6 +89,16 @@ def _parsePhoneModeArgs(argv):
     return phoneMode, phoneWidth, phoneZoom
 
 
+# Build verification (tools/buildAppImages.sh): prove the frozen bundle carries zeroconf's Cython modules and
+# ifaddr — lamp-plug discovery imports them lazily, so a missing one would only surface at the first login
+# (SPEC_lamp_switch.md §14 R7). Exits before any window opens.
+if "--check-lamp-imports" in sys.argv:
+    from zeroconf import IPVersion, Zeroconf
+    import ifaddr  # noqa: F401
+    Zeroconf(ip_version=IPVersion.V4Only).close()
+    print("lamp imports ok")
+    sys.exit(0)
+
 # Parse the phone-mode flags BEFORE QApplication is constructed: QT_SCALE_FACTOR is read by Qt at
 # construction time. An explicit QT_SCALE_FACTOR in the environment wins (escape hatch).
 phoneMode, phoneWidth, phoneZoom = _parsePhoneModeArgs(sys.argv)
@@ -163,6 +173,11 @@ mainContainerViewModule = MainContainerViewModule(docMode=docMode)
 mainContainerViewModule.setWindowTitle("Spectracs")
 
 ApplicationContextLogicModule().getNavigationHandler().mainContainerViewModule = mainContainerViewModule
+
+# Lamp off on every exit path (SPEC_lamp_switch.md §7.1): aboutToQuit, atexit, SIGINT/SIGTERM/SIGHUP. The window's
+# closeEvent is the fifth hook (MainContainerViewModule).
+from sciens.spectracs.logic.lamp.LampExitHooks import LampExitHooks  # noqa: E402
+LampExitHooks.install(app)
 
 _androidBackButtonFilter = None
 if is_android():

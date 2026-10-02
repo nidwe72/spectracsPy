@@ -32,6 +32,9 @@ pypdf==6.14.2
 # Schema migrations (SPEC_schema_migrations.md): Alembic runs at boot in BOTH the app and server processes
 # (DatabaseInitializer). Mako/MarkupSafe are its transitive deps.
 alembic==1.18.5
+# Lamp-plug discovery over mDNS (SPEC_lamp_switch.md §5). Pulls in ifaddr, which also picks the LAN interfaces
+# for the subnet fallback.
+zeroconf==0.131.0
 # Plugin signing (SPEC_plugin_distribution.md B2): PyNaCl signs on the master (desktop only); clients VERIFY
 # with a pure-Python Ed25519 vendored in -core, so Android never links libsodium. cffi/pycparser are its deps.
 PyNaCl==1.6.2

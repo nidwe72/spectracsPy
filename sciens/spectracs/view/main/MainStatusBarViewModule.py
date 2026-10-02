@@ -114,6 +114,12 @@ class MainStatusBarViewModule(QWidget):
         headerRow.addWidget(logoBox, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
         headerRow.addStretch(1)
 
+        # Lamp icon, left of the camera (SPEC_lamp_switch.md §16.2). Hidden unless a real device is logged in on
+        # a desk that has (had) a lamp plug.
+        from sciens.spectracs.view.main.LampButton import LampButton
+        self.lampButton = LampButton(self.HEADER_CONTENT_HEIGHT, self.renderSvgPixmap)
+        headerRow.addWidget(self.lampButton, alignment=QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
+
         # Connection-state indicator, left of the account icon (SPEC_connection_and_calibration_ux §4.4).
         # Same chrome as the account button (bordered box, same size); a camera glyph recoloured by state:
         # green = connected, white = disconnected, grey = no instrument; hidden when logged out.
@@ -204,15 +210,19 @@ class MainStatusBarViewModule(QWidget):
 
         if not CurrentUserSession().isLoggedIn():
             self.connectionButton.setVisible(False)
+            self.__configureLamp(False)
             return
         deviceCodeName = CurrentUserSession().getSpectrometerDevice()
         if not deviceCodeName:
             self.connectionButton.setVisible(False)
+            self.__configureLamp(False)
             return
         sensor = SpectrometerSensorUtil().getSensorByCodeName(deviceCodeName)
         if sensor is None:
             self.connectionButton.setVisible(False)
+            self.__configureLamp(False)
             return
+        self.__configureLamp(not sensor.isVirtual)
 
         self.connectionButton.setVisible(True)
         self.__connectionDeviceCodeName = deviceCodeName
@@ -229,6 +239,17 @@ class MainStatusBarViewModule(QWidget):
         self.__connectionPollThread.presenceChanged.connect(self.__onConnectionPresenceChanged)
         self.__connectionPollThread.start()
 
+    def __configureLamp(self, applicable):
+        # SPEC_lamp_switch.md G4: a real device logged in => find the plug; logout / virtual => lamp off, no icon.
+        # The service is created only for a real device, so a virtual-only session never starts its thread.
+        from sciens.spectracs.logic.lamp.LampService import LampService
+        if applicable:
+            service = LampService()
+            self.lampButton.bind(service)
+            service.configure(True)
+        elif LampService.instance is not None:
+            LampService.instance.configure(False)
+
     def __onConnectionPresenceChanged(self, present):
         # Presence drives BOTH the indicator AND the warm-keeper lifecycle (§16.6): start warm-keeping when the real
         # device appears (post-login), stop when it is unplugged. The dot shows amber "warming up" for the first
@@ -239,7 +260,7 @@ class MainStatusBarViewModule(QWidget):
             if self.__warmupTimer is None:
                 self.__warmupTimer = QtCore.QTimer(self)
                 self.__warmupTimer.timeout.connect(self.__refreshConnectionColour)
-                self.__warmupTimer.start(20000)   # re-check ~every 20 s so amber flips to green at ~9 min
+                self.__warmupTimer.start(1000)    # 1 s: drives the warm-up ring, flips amber -> green at the end
         else:
             self.__stopWarmKeeper()
         self.__refreshConnectionColour()
@@ -251,10 +272,12 @@ class MainStatusBarViewModule(QWidget):
             self.__setConnectionColour(self.CONNECTION_DISCONNECTED_COLOR, "Spectrometer not connected")
             return
         if CameraWarmupService().isWarming(self.WARMUP_SECONDS):
-            minute = int((CameraWarmupService().warmupElapsedSeconds() or 0) // 60) + 1
+            elapsed = CameraWarmupService().warmupElapsedSeconds() or 0
+            remaining = max(0, int(round(self.WARMUP_SECONDS - elapsed)))
             self.__setConnectionColour(self.CONNECTION_WARMING_COLOR,
-                                       "Spectrometer warming up — %d/%d min (%s)"
-                                       % (minute, self.WARMUP_SECONDS // 60, name))
+                                       "Spectrometer warming up — %d:%02d left (%s)"
+                                       % (remaining // 60, remaining % 60, name),
+                                       warmUpRemaining=remaining)
         else:
             self.__setConnectionColour(self.CONNECTION_CONNECTED_COLOR,
                                        "Spectrometer connected & warm (%s)" % name)
@@ -289,9 +312,13 @@ class MainStatusBarViewModule(QWidget):
             self.__connectionPollThread.wait(1000)
             self.__connectionPollThread = None
 
-    def __setConnectionColour(self, colour, tooltip):
+    def __setConnectionColour(self, colour, tooltip, warmUpRemaining=None):
         icon = QIcon()
-        icon.addPixmap(self.renderSvgPixmap(self.CAMERA_SVG % {'c': colour}), QIcon.Mode.Normal)
+        pixmap = self.renderSvgPixmap(self.CAMERA_SVG % {'c': colour})
+        if warmUpRemaining is not None:
+            from sciens.spectracs.view.main.ProgressRing import drawProgressRing
+            pixmap = drawProgressRing(pixmap, self.WARMUP_SECONDS, warmUpRemaining, colour)
+        icon.addPixmap(pixmap, QIcon.Mode.Normal)
         self.connectionButton.setIcon(icon)
         self.connectionButton.setToolTip(tooltip)
 
@@ -463,17 +490,20 @@ class MainStatusBarViewModule(QWidget):
     ACCOUNT_ACTIVE_HOVER_COLOR='#4E9A5E'
 
     # Spectrometer (camera) glyph for the connection indicator; %(c)s is the colour (set per state).
-    CAMERA_SVG='''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    # viewBox -4 -4 32 32: the glyph at 75 %, so the warm-up ring keeps a gap to it (as the lamp icon)
+    CAMERA_SVG='''<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 32 32">
   <rect x="3" y="7" width="18" height="12" rx="2" fill="none" stroke="%(c)s" stroke-width="1.8"/>
   <path d="M8 7 L9.5 4.6 L14.5 4.6 L16 7" fill="none" stroke="%(c)s" stroke-width="1.8" stroke-linejoin="round"/>
   <circle cx="12" cy="13" r="3.2" fill="none" stroke="%(c)s" stroke-width="1.8"/>
 </svg>'''
 
-    CONNECTION_CONNECTED_COLOR='#3D7848'      # green — present & warm
+    CONNECTION_CONNECTED_COLOR='#6FCF7F'      # green — present & warm; = LampButton.GREEN (Edwin 2026-10-02)
     CONNECTION_DISCONNECTED_COLOR='#FFFFFF'   # white
     CONNECTION_NO_INSTRUMENT_COLOR='#808080'  # grey
     CONNECTION_WARMING_COLOR='#E0A030'        # amber — present but the sensor is still warming up (§16.6)
-    WARMUP_SECONDS=9*60                        # camera warm-up window (SPEC_capture_quality.md §16.2: settles ~9 min)
+    # camera warm-up window. Edwin 2026-10-02: 3 min (was 9). ⚠ SPEC_capture_quality.md §16.2 measured τ = 2.9 min,
+    # so at 3 min the sensor is ~63 % settled (90 % at 6.6 min, within noise at ~9 min) — an indicator only, no gate.
+    WARMUP_SECONDS=3*60
 
     logo_png='''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->

@@ -110,6 +110,7 @@ class CapturePanel(QWidget):
         self.__autoExposing = False
         self.__capturing = False
         self.__cancelRequested = False
+        self.__cancelReason = None          # "cap" / "external": the lamp stopped the run (SPEC_lamp_switch.md U5)
         self.__coachLabel = None
         self.__lockedExposure = None
         self.__reportedExposureRange = False
@@ -125,7 +126,42 @@ class CapturePanel(QWidget):
         self.__resolveCamera()
         self.__applyControlVisibility()
         self.__applyLabels()
+        self.__connectLamp()
         self.__updateControls()
+
+    # --- lamp (SPEC_lamp_switch.md §8/§16) ---
+
+    @staticmethod
+    def __lampService():
+        from sciens.spectracs.logic.lamp.LampService import LampService
+        return LampService.instance             # None: virtual device / no plug logic at all — never gated
+
+    def __connectLamp(self):
+        service = self.__lampService()
+        if service is not None:
+            service.stateChanged.connect(self.__onLampStateChanged)
+            service.lampWentOff.connect(self.__onLampWentOff)
+
+    def __onLampStateChanged(self, _state):
+        if not self.__capturing:
+            self.__updateControls()
+
+    def __onLampWentOff(self, reason):
+        # ⛔ RE-ENTRANT like a Cancel click (§12.1a): this arrives from inside the capture's nested event loop, so
+        # it only sets the flag. The provider stops feeding at the next frame; no dark frame is evaluated.
+        if self.__capturing and not self.__cancelRequested:
+            self.__cancelReason = reason
+            self.__cancelRequested = True
+            self.__setCaptureButtonCancelling()
+
+    def __lampReady(self):
+        service = self.__lampService()
+        return service is None or service.readyForCapture()
+
+    def __setLampCaptureRunning(self, running):
+        service = self.__lampService()
+        if service is not None:
+            service.setCaptureRunning(running)
 
     # --- public API for the host ---
 
@@ -453,7 +489,8 @@ class CapturePanel(QWidget):
         if busy and not self.__cancelRequested:
             self.__setCaptureButtonCancel()
         else:
-            self.__captureButton.setEnabled(connected and streaming and not busy)
+            # the lamp gate (SPEC_lamp_switch.md D2): closed while searching / off / warming
+            self.__captureButton.setEnabled(connected and streaming and not busy and self.__lampReady())
         if self.__autoExposureCheckBox is not None:
             self.__autoExposureCheckBox.setEnabled(not busy and not sampleLocked)
         if self.__exposureSlider is not None:
@@ -804,15 +841,17 @@ class CapturePanel(QWidget):
         if self.__resolvedIndex is None or self.__videoThread is None or self.__autoExposing:
             return
         step = self.__activeStep
-        if step is None:
+        if step is None or not self.__lampReady():
             return
         self.__cancelRequested = False
+        self.__cancelReason = None
         # SPEC_doc_automation §18.3 (C3a): mark the WHOLE capture busy — auto-exposure AND the multi-frame
         # burst — so the capture button (and role tabs / frames combo, via __updateControls) stay disabled
         # for its entire duration. Previously only auto-exposure set busy, so the button re-enabled mid-burst
         # (and for the SAMPLE role, which never auto-exposes, it was never disabled at all). set/reset in
         # try/finally so the capture-failed early return below can't leave the button stuck disabled.
         self.__capturing = True
+        self.__setLampCaptureRunning(True)      # the header icon ignores clicks now (§16 U6)
         self.__updateControls()
         try:
             role = step.getRole()
@@ -914,6 +953,12 @@ class CapturePanel(QWidget):
                 # re-measuring THIS jar is not the same experiment as measuring a fresh one (§17/U2).
                 step.setContainer(None)
                 self.__representativeFrames.pop(role, None)
+                service = self.__lampService()
+                lampStopped = service.offMessage() if (service is not None and self.__cancelReason) else None
+                if lampStopped:
+                    self.__showStatusText(lampStopped + " Nothing recorded. Switch the lamp on with the lamp "
+                                          "icon; a fresh fill reads truer than a re-measure.")
+                    return
                 self.__showStatusText("Capture cancelled — nothing recorded. This fill has been in the "
                                       "beam and has changed; a fresh fill reads truer than a re-measure.")
                 return
@@ -958,6 +1003,8 @@ class CapturePanel(QWidget):
         finally:
             self.__capturing = False
             self.__cancelRequested = False
+            self.__cancelReason = None
+            self.__setLampCaptureRunning(False)
             self.__restoreCaptureButtonLabel()
             self.__updateControls()
 

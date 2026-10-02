@@ -199,6 +199,11 @@ try:
 except Exception as e: print('FAILED', e)")"
     echo "  app: alembic at $HEAD_REV"
     case "$HEAD_REV" in FAILED*) echo "  APP VERIFY FAILED" >&2; exit 1 ;; esac
+    # zeroconf is Cython and imported lazily: only a run proves the bundle has it (SPEC_lamp_switch.md §14 R7)
+    LAMP_IMPORTS="$(cd /tmp && QT_QPA_PLATFORM=offscreen timeout 40 "$TARGET/Spectracs-$TAG-x86_64.AppImage" \
+                    --check-lamp-imports 2>&1 | tail -1)"
+    echo "  app: $LAMP_IMPORTS"
+    [ "$LAMP_IMPORTS" = "lamp imports ok" ] || { echo "  APP VERIFY FAILED (lamp imports)" >&2; exit 1; }
   fi
   if [ -n "$DO_SERVER" ]; then
     if (exec 3<>/dev/tcp/127.0.0.1/8091) 2>/dev/null; then
