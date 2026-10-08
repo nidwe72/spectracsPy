@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.4 DONE (§11c.2, §11c.3) · W0.5 next.**
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.5 DONE (§11c.2–§11c.4) · W0.6 next.**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -9,8 +9,9 @@ code level); phases + order in **§12**.
 > non-headless `opencv-python` on Windows), **white balance frozen natively via DirectShow `IAMVideoProcAmp`**,
 > exposure **whole log₂ steps** accepted for now (decision W1.1). **W0.1–W0.3 are built and gated on Linux
 > (§11c.2); W0.3b swapped the VM to `opencv-python`; **W0.4: `SpectracsServer.exe` runs in the VM** (§11c.3).
-> Next: **W0.5** (the app exe, `--fresh --check-db`). ⏸ Null run (O3) postponed. Implementation only on explicit
-> request.
+> **W0.5: `Spectracs.exe` builds, passes `--fresh --check-db` + `--check-lamp-imports`, and its GUI starts**
+> (§11c.4). Next: **W0.6** (`tools/buildWindows.sh`, automating §11c.3–§11c.4). ⏸ Null run (O3) postponed.
+> Implementation only on explicit request.
 
 Source: Edwin, 2026-10-07 — *"we have already build an linux AppImage of the spectracsPy and spectracsPy-server
 — now i would like to have a windows version"*. His answers in the same session:
@@ -942,6 +943,28 @@ missing), `tests/test_rthooks_win.py` (9). `pytest tests/` **631 passed**.
   - The from-source login creates `%USERPROFILE%\spectracsPy-verify-client\` (appdata names it after the cwd) —
     throwaway, like the Linux verify's.
 
+### 11c.4 W0.5 as run (2026-10-08)
+
+- **App build:** same sources (`src-a006be1`), `SPECTRACS_ICON_ICO` set, `pyinstaller spectracsAppImage.spec` →
+  **180 s, rc 0**; `dist\app\Spectracs\` 1255 files, **339 MB**; `Spectracs.exe` 18 MB. Warnings, all expected:
+  `pyqtgraph.opengl` (no PyOpenGL — unused), Qt's `SetProcessDpiAwarenessContext … Zugriff verweigert` (the build's
+  Qt probe in an ssh session), `api-ms-win-shcore-scaling-l1-1-1.dll` not found (a Windows API set the OS
+  provides), pyusb "No backend available" during analysis.
+- **Licence gate** (§8.1.9): no `Charts` / `DataVisualization` / `WebEngine` file. **U12:** `PySide6\qml`,
+  `PySide6\resources`, `PySide6\translations` absent; the only `.exe` is `Spectracs.exe`.
+- **`Spectracs.exe --fresh --check-db`** (`verifyApp.ps1`): **exit 0 in 3 s**, log in
+  `%USERPROFILE%\Spectracs\spectracsPy-demo\spectracs.log`:
+  `check-db ok: app db 63efd411276f head 63efd411276f at C:\Users\…\spectracsPy-demo/spectracsPy.db` — equal to
+  -model `3eab8a2`'s head on Linux. The hook stripped `--fresh` (argv in the banner), the DB landed in
+  `%USERPROFILE%\spectracsPy-demo\`. (The mixed `\`/`/` in the path is `DbBase`'s own join — SQLite does not care;
+  cosmetic.)
+- **`Spectracs.exe --check-lamp-imports`:** exit 0, `lamp imports ok` (zeroconf's Cython modules are bundled).
+- **Extra, not in §5.1 — GUI smoke:** `QT_QPA_PLATFORM=offscreen Spectracs.exe --fresh` alive after 25 s, no
+  traceback in the log; "no spectracs server reachable" as it should be with no server; **W0.1 fired once on real
+  Windows** (`isSensorConnected: USB unavailable (NoBackendError …) - sensor absent`) and never again.
+- VM scripts: `C:\spectracs-build\verifyServer.ps1`, `verifyApp.ps1`, `smokeGui.ps1` — the drafts of W0.7's
+  self-verify.
+
 ---
 
 ## 12 — Implementation phases and order
@@ -993,7 +1016,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |       | (D8, U19) → commit W0.1–W0.3b (Py + -model)               |           |             | out, opencv-python 4.7.0.72 in      |
 |✅W0.4 | BY HAND: tar + scp sources/recipe to VM, set              | VM        | V0, W0.3b   | SpectracsServer.exe up; login from  |
 |       | SPECTRACS_SRC_ROOT, build SERVER first (10 s, no Qt)      |           |             | source in the VM venv               |
-| W0.5  | BY HAND: build APP; `--fresh --check-db`,                 | VM        | W0.4        | Alembic head == -model's head;      |
+|✅W0.5 | BY HAND: build APP; `--fresh --check-db`,                 | VM        | W0.4        | Alembic head == -model's head;      |
 |       | `--check-lamp-imports`                                    |           |             | lamp imports ok                     |
 | W0.6  | tools/buildWindows.sh (§5): ref→SHA worktrees, makeIcon,  | Py tools/ | W0.5        | one command → 2 zips + manifests    |
 |       | tar/scp/checksum, remote build, gate, back, manifest +    |           |             |                                     |
