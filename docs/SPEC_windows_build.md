@@ -1006,6 +1006,19 @@ would abort PowerShell 5.1 under `Stop`).
 **Full run** `tools/buildWindows.sh` (main `e600f90`): server 30 s, app 218 s, licence gate ok, **all five checks
 ok, `VERIFY ok`**, zips `Spectracs-main-e600f90-win64.zip` 135 MB + server 13 MB, ~5 min end to end.
 
+### 11c.7 V0.6 as done (2026-10-08, Edwin chose "both")
+
+- **Virtual filesets:** the six baked sets from `spectracs-references/pumpkin_oil/virtual_captures/`
+  (`pumpkinoil_{perfect,over,under}_{v1,v2}`, each `calibration/reference/sample.png` + `set.json`, 6.5 MB) →
+  `%USERPROFILE%\Spectracs\virtual_captures\` in the VM. §8.1.6 picks `pumpkinoil_perfect_v2`.
+- **Server config:** a copy of `spectracsPy-server-config/.env` → `%USERPROFILE%\spectracsPy-server-config\.env`,
+  user environment variable `SPECTRACS_SERVER_CONFIG_DIR` pointing there (the frozen server cannot walk up to a
+  sibling folder, Linux D9). **One line differs** from the original: `LIMS_SENAITE_BASE_URL` uses the Linux box's
+  bridged address `192.168.1.223:6090` instead of `localhost` (in the VM, localhost is the VM). Checked from source
+  in the VM: `ServerConfig.configDir()` = that folder, 13 keys, the SENAITE URL as above. ⚠ SENAITE (Docker on the
+  Linux box) must be **up** for §8.1.7's LIMS publish, and port 6090 reachable from the LAN.
+- The verified zips `Spectracs-main-e600f90-win64.zip` + server zip were copied to the VM's `Downloads\` for W0.8.
+
 ---
 
 ## 12 — Implementation phases and order
@@ -1025,7 +1038,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |✅V0.3 | Defender exclusion C:\spectracs-build                     | VM        | —           | exclusion listed                    |
 |✅V0.4 | bridged network (Shelly mDNS)                             | VMware    | —           | plug answers from the VM            |
 |✅V0.5 | ELP passthrough — live image in the Windows Camera app    | VMware    | —           | image visible                       |
-| V0.6  | virtual fileset + server config dir copied in             | VM        | —           | files present                       |
+|✅V0.6 | virtual fileset + server config dir copied in             | VM        | —           | files present                       |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         SPIKE — the production go/no-go, FIRST  (no app code)                                                 |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
