@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.5 DONE (§11c.2–§11c.4) · W0.6 next.**
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.6 DONE (§11c.2–§11c.5) · W0.7 next.**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -10,8 +10,8 @@ code level); phases + order in **§12**.
 > exposure **whole log₂ steps** accepted for now (decision W1.1). **W0.1–W0.3 are built and gated on Linux
 > (§11c.2); W0.3b swapped the VM to `opencv-python`; **W0.4: `SpectracsServer.exe` runs in the VM** (§11c.3).
 > **W0.5: `Spectracs.exe` builds, passes `--fresh --check-db` + `--check-lamp-imports`, and its GUI starts**
-> (§11c.4). Next: **W0.6** (`tools/buildWindows.sh`, automating §11c.3–§11c.4). ⏸ Null run (O3) postponed.
-> Implementation only on explicit request.
+> (§11c.4). **W0.6: `tools/buildWindows.sh` makes both zips with one command** (§11c.5). Next: **W0.7** (the
+> §5.1 self-verify inside that script). ⏸ Null run (O3) postponed. Implementation only on explicit request.
 
 Source: Edwin, 2026-10-07 — *"we have already build an linux AppImage of the spectracsPy and spectracsPy-server
 — now i would like to have a windows version"*. His answers in the same session:
@@ -279,10 +279,15 @@ Spectracs-Server-<tag>-win64.zip
 ## 5 — The build: `tools/buildWindows.sh` (runs on Linux)
 
 Same contract as `buildAppImages.sh`: `--app/--server/--tag/--out/--keep/--no-verify`, refuses to build inside a
-git work tree, timestamped output folders, `latest` link. Two differences (S2): `--tag` accepts **any git ref**
-(dev builds from the committed `main`, the release tag comes last), and the worktrees live in
-**`$BUILD_ROOT/src-<sha>/`** — keyed by commit, because `buildAppImages.sh:62` reuses an existing `src-<tag>`
-folder and a moved tag would silently build the old sources.
+git work tree, timestamped output folders, `latest` link. Differences (S2): `--tag` accepts **any git ref**
+(default `main`; dev builds from the committed `main`, the release tag comes last); output under
+**`~/spectracs-build/windows/`** (its own `latest`, out of reach of the Linux prune); and — ✅ **as built
+(2026-10-08), instead of worktrees** — the sources are **`git archive <sha>` of each repo**, resolved per repo from
+the ref: no `.git` to exclude, no worktree registrations in seven repos, and nothing on disk that a moved ref could
+reuse stale (the reason worktrees were to be keyed by SHA). A non-tag ref labels the zips `<ref>-<sha7>`
+(`Spectracs-main-bf5ac3f-win64.zip`), a tag by its name. The VM half is **`tools/windows/buildInVm.ps1`**, shipped
+in the recipe; each build gets a fresh `C:\spectracs-build\b-<out name>\`, removed after a good copy back, kept
+on failure.
 
 ```
  1. worktrees at <tag>                       (shared with buildAppImages.sh — same src-<tag>/ folder)
@@ -965,6 +970,19 @@ missing), `tests/test_rthooks_win.py` (9). `pytest tests/` **631 passed**.
 - VM scripts: `C:\spectracs-build\verifyServer.ps1`, `verifyApp.ps1`, `smokeGui.ps1` — the drafts of W0.7's
   self-verify.
 
+### 11c.5 W0.6 as run (2026-10-08)
+
+`tools/buildWindows.sh` (no arguments ⇒ both, `--tag main`) → **rc 0, 4 min 15 s** end to end:
+ref resolved in all six repos (spectracsPy `bf5ac3f` …) → `upload.tar` 19 MB, sha256 equal in the VM → server
+**29 s**, app **180 s**, licence gate ok → `dist.tar` back, sha256 equal → `Spectracs-main-bf5ac3f-win64.zip`
+**135 MB** and `Spectracs-Server-main-bf5ac3f-win64.zip` **13 MB**, each with `RELEASE_MANIFEST.txt` (per-repo
+SHAs, recipe SHA, toolchain read in the VM: Python 3.10.11 · PyInstaller 5.10.1 · opencv 4.7.0.72 · Windows 10
+Home 10.0.19045) and `START_HERE.txt` (Unblock, local folder, data + log paths, `--fresh` shortcut, firewall,
+the server's role) — both CRLF. VM build folder removed.
+**Round trip:** the Linux-made app zip, `Expand-Archive`d in the VM into `Downloads\unzip test\` (a space),
+runs `--fresh --check-db` → exit 0, `check-db ok … 63efd411276f`; the log banner now carries the manifest (U18's
+other branch). Recipe read `+dirty` in that first run only because the script was not committed yet.
+
 ---
 
 ## 12 — Implementation phases and order
@@ -1018,7 +1036,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |       | SPECTRACS_SRC_ROOT, build SERVER first (10 s, no Qt)      |           |             | source in the VM venv               |
 |✅W0.5 | BY HAND: build APP; `--fresh --check-db`,                 | VM        | W0.4        | Alembic head == -model's head;      |
 |       | `--check-lamp-imports`                                    |           |             | lamp imports ok                     |
-| W0.6  | tools/buildWindows.sh (§5): ref→SHA worktrees, makeIcon,  | Py tools/ | W0.5        | one command → 2 zips + manifests    |
+|✅W0.6 | tools/buildWindows.sh (§5): ref→SHA archives, makeIcon,   | Py tools/ | W0.5        | one command → 2 zips + manifests    |
 |       | tar/scp/checksum, remote build, gate, back, manifest +    |           |             |                                     |
 |       | START_HERE.txt, zip on Linux                              |           |             |                                     |
 | W0.7  | self-verify §5.1 (check-db, lamp imports, port-taken,     | Py tools/ | W0.6        | all green in the script output      |
