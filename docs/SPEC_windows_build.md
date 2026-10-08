@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · W0.8 next (Edwin).**
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin).**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -11,8 +11,8 @@ code level); phases + order in **§12**.
 > (§11c.2); W0.3b swapped the VM to `opencv-python`; **W0.4: `SpectracsServer.exe` runs in the VM** (§11c.3).
 > **W0.5: `Spectracs.exe` builds, passes `--fresh --check-db` + `--check-lamp-imports`, and its GUI starts**
 > (§11c.4). **W0.6/W0.7: `tools/buildWindows.sh` builds, self-verifies and zips both programs with one command**
-> (§11c.5, §11c.6). Next: **V0.6** (virtual fileset + server config into the VM) and **W0.8 = Edwin's
-> click-through §8.1**, then W0.9. ⏸ Null run (O3) postponed. Implementation only on explicit request.
+> (§11c.5, §11c.6). **V0.6** done (§11c.7); **W0.9** done on Edwin's call before W0.8 finished (§11c.8). Open:
+> **W0.8 = Edwin's click-through §8.1** — ⚠ the DEV bench needs the real camera ⇒ "no camera" until W1. ⏸ Null run (O3) postponed. Implementation only on explicit request.
 
 Source: Edwin, 2026-10-07 — *"we have already build an linux AppImage of the spectracsPy and spectracsPy-server
 — now i would like to have a windows version"*. His answers in the same session:
@@ -1030,6 +1030,17 @@ ok, `VERIFY ok`**, zips `Spectracs-main-e600f90-win64.zip` 135 MB + server 13 MB
   server now carries the calibration (was `None`). TEST-0001 stays empty — it is empty on Linux too. W1 replaces this
   with a calibration authored in the VM on the real ELP (§8.2).
 
+### 11c.8 W0.9 as done (2026-10-08)
+
+- Deleted `spectracsAppPyInstaller.spec` and `spectracsAppPyInstallerWindows.spec` (A4, R14). Nothing referenced
+  them outside the specs (`SPEC_linux_appimage.md:346` mentions them historically). The build recipes are now only
+  `spectracsAppImage.spec` + `spectracsServerAppImage.spec`, for Linux and Windows alike.
+- Pushed `spectracsPy` and `spectracsPy-model` (the W0 commits, incl. `DatabaseInitializer` head helpers, U3).
+- Edwin asked for W0.9 while W0.8 was still running, so the "W0.8 → W0.9" order in §12 was not kept. Learned in
+  W0.8 so far: the **DEV bench only runs on a real camera** (`DevMeasurementBenchViewModule.py:300`) and the
+  Windows camera lookup is W1 (B1) ⇒ in W0 it reports "no 32e4:8830 camera"; the W0 measurement is the virtual run
+  as `pumpkinTestUser` after a master set the fileset (in memory — keep the app open across the logout).
+
 ---
 
 ## 12 — Implementation phases and order
@@ -1089,7 +1100,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |✅W0.7 | self-verify §5.1 (check-db, lamp imports, port-taken,     | Py tools/ | W0.6        | all green in the script output      |
 |       | pair proof; timeouts as safety net) → commit              |           |             |                                     |
 | W0.8  | click-through §8.1                                        | VM, Edwin | W0.7        | §8.1 ticked                         |
-| W0.9  | delete both old PyInstaller specs → commit + push         | Py        | W0.8        | pushed                              |
+| W0.9  | delete both old PyInstaller specs → commit + push         | Py        | W0.8        | pushed ✅ (§11c.8)                   |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         W1 — REAL CAMERA  (ELP; production camera still open, O2)                                             |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
