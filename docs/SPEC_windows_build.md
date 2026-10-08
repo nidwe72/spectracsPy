@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + committed locally (§11c.9, §11c.10) · next W1.4 (Linux rig), W1.5.**
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + committed locally (§11c.9, §11c.10) · next W1.4 (Linux rig), W1.5, W1.5b, W1.5c (D10).**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -240,6 +240,31 @@ sibling of `--check-lamp-imports` (`spectracsMain.py:95-100`), no QApplication:
   tag contains W0.2** — not in W0.3, whose gate rebuilds an older ref without the flag (U22).
 
 Code change in `spectracsPy` + one helper in `-model` (W0.2).
+
+### D10 — One camera state, the same on every OS; the plugin drives what matters for the measurement
+
+Edwin, 2026-10-08, on §11c.10: *"all camera settings should be set independent from the operating system … the
+plugin is the driver for this"*, and per setting:
+
+| setting | owner (decided) | today | change |
+|---|---|---|---|
+| exposure (`DevSpectralPlugin.exposure = 90`), frame count (`FRAMES = 60`) | **plugin** | plugin ✅ | none — the host converts the V4L2 units per OS (W1.5) |
+| white balance 6500 K | **plugin** — *"should be done by the plugin"* | host: `DevCaptureVideoThread.WHITE_BALANCE_KELVIN` | **W1.5b**: a declared `whiteBalanceKelvin`, read by the host on both OSes |
+| gain 0, backlight 0, manual exposure mode | host — *"okay, for now"* | host, `CaptureBackend.open` (Linux) / `planControls` (Windows) | none |
+| brightness, contrast, hue, saturation, sharpness, gamma | camera default — *"okay, for now"* | Linux: untouched (power-on defaults assumed); Windows: set to the camera's own default (W1.6) | none now; ⏸ setting them on Linux too is deferred |
+
+**Settling (Edwin: *"okay, your lean"*):** with the exposure pinned the bench skips the AE sweep, so nothing absorbs
+the frames right after a change — the spike saw 4 black frames after an exposure step, W1.6 saw 3 frames with the
+old white balance (≈ 1–1.5 s at 3.6 fps), and a click that soon after the stream starts would put them into the
+reference. ⇒ **host rule, both OSes (W1.5c):** after every open and every control change (exposure, WB) the frame
+source holds back frames until the camera has settled, before any burst gets one. The count is **measured per OS**
+— Windows from §6.6b/§11c.10, Linux in the W1.4 rig session — not guessed.
+
+**Exposure on Windows (W1.5):** the plugin keeps declaring V4L2 units (§6.4). 90 = 9.0 ms; Windows has only whole
+log₂ steps ⇒ the nearest is **−7 = 7.8 ms, ≈ 13 % less light** (−6 = 15.6 ms). Expected DN guard ≈ 30–33 instead of
+34–38 — still inside the 20–50 target; the 609 nm feature may sit slightly differently (90 was chosen partly for
+its position). ⇒ a Windows run is **not** the same exposure as a Linux run (the W1.1 limit); CAPTURE-SETTINGS says
+so: `exposure requested 90 (V4L2) → applied −7 (7.8 ms)`.
 
 ---
 
@@ -1211,13 +1236,21 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |✅W1.3 | backend pin MSMF, YUY2 strict (no win32 fallback),        | Py        | W1.2        | unit test: own convert == cv2 on a  |
 |       | CONVERT_RGB=0 + own cvtColor, fcntl behind guard (R7)     |           |             | synthetic YUYV buffer; log: YUY2    |
 | W1.4  | LINUX bit-identical: one grab, two retrieves (§6.3.4)     | Linux rig | W1.3        | diff == 0 ⇒ Linux adopts the path;  |
-|       |                                                           |           |             | ≠ 0 ⇒ Windows-only                  |
+|       | + D10: measure the Linux settling frames (open, exposure  |           |             | ≠ 0 ⇒ Windows-only; settling count  |
+|       | step, WB change) + read the ELP's Linux controls vs their |           |             | + control table (information only)  |
+|       | defaults                                                  |           |             |                                     |
 | W1.5  | exposure: range from backend at ALL sites (§6.4 table),   | Py, -model| W1.3, W1.4, | converter unit-tested; float +      |
 |       | per-backend converter, float, `exposureUnit` in report    | -core docs| W1.1        | exposureUnit in the report JSON     |
-|       | JSON; plugin contract = V4L2 units (host converts)        |           |             |                                     |
+|       | JSON; plugin contract = V4L2 units (host converts);       |           |             |                                     |
+|       | D10: line "requested 90 (V4L2) → applied −7 (7.8 ms)"     |           |             |                                     |
+| W1.5b | D10: white balance declared by the PLUGIN                 | Py,       | W1.5        | unit test; CAPTURE-SETTINGS wb =    |
+|       | (`whiteBalanceKelvin`), host reads it on both OSes;       | plugins   |             | the plugin's value on both OSes     |
+|       | `DevCaptureVideoThread` constant goes                     |           |             |                                     |
+| W1.5c | D10: settling hold-back after every open + control        | Py        | W1.4, W1.5  | unit test w/ fake frame source;     |
+|       | change, frame count per OS from measurement               |           |             | no unsettled frame in a burst       |
 |✅W1.6 | set + read back WB/gain/backlight/AE-mode per backend,    | Py        | W1.3        | CAPTURE-SETTINGS proves frozen      |
 |       | every open (§6.4b)  → commit W1.2–W1.6                    |           |             |                                     |
-| W1.7  | click-through §8.2 in the VM: local server, author        | VM, Edwin | W1.5, W1.6, | Rv on screen, PDF; lamp on/off      |
+| W1.7  | click-through §8.2 in the VM: local server, author        | VM, Edwin | W1.5–W1.6,  | Rv on screen, PDF; lamp on/off      |
 |       | calibration once, one measurement, lamp on/off            |           | W0.7        |                                     |
 | W1.8  | ⏸ null run Windows vs Linux — POSTPONED (O3, §6.5)        | VM, Win11 | O3          | —                                   |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
