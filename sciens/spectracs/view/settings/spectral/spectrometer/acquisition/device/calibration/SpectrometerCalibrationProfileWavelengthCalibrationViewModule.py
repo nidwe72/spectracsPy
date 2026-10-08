@@ -156,8 +156,14 @@ class SpectrometerCalibrationProfileWavelengthCalibrationViewModule(PageWidget):
         # synchronously in the capture thread BEFORE the 50-frame burst (the base run loop picks up the request).
         if not isVirtual:
             deviceIndex = SensorCaptureIndexResolver().resolveCaptureIndex(sensor)
-            if deviceIndex is not None:
-                self.wavelengthCalibrationVideoThread.setDeviceId(deviceIndex)
+            if deviceIndex is None:
+                # R8 (SPEC_windows_build.md): never fall back to VideoThread's default index 0 — on a laptop that
+                # is the built-in webcam, and its frames would be calibrated as if they came from the spectrometer.
+                InWindowDialog.notify(self, "Spectrometer not connected",
+                                      "No %s:%s camera found. Plug the spectrometer in and try again."
+                                      % (sensor.vendorId, sensor.modelId))
+                return
+            self.wavelengthCalibrationVideoThread.setDeviceId(deviceIndex)
             self.wavelengthCalibrationVideoThread.autoExposureProgress.connect(self.__onAutoExposeProgress)
             self.wavelengthCalibrationVideoThread.requestAutoExpose(1, 500)
 

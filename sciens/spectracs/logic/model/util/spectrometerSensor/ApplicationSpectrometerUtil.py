@@ -1,3 +1,5 @@
+import sys
+
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
 
 # Set once pyusb reports NoBackendError (no libusb DLL on Windows, SPEC_windows_build.md B6/U4): pyusb retries
@@ -12,6 +14,12 @@ class ApplicationSpectrometerUtil:
         # Parse outside the guard: a malformed VID/PID is a data bug and must stay loud (U5).
         vendorId = int('0x' + spectrometerSensor.vendorId, base=16)
         modelId = int('0x' + spectrometerSensor.modelId, base=16)
+        if sys.platform == "win32":
+            # Windows asks the camera enumeration, not the USB bus (SPEC_windows_build.md §6.1, W1.2): the same
+            # lookup that gives the capture index, and no libusb DLL needed.
+            from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import \
+                SensorCaptureIndexResolver
+            return SensorCaptureIndexResolver().isPresent(spectrometerSensor)
         if _usbBackendMissing:
             return False
 

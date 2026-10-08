@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin).**
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + committed locally (§11c.9, §11c.10) · next W1.4 (Linux rig), W1.5.**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -1041,6 +1041,108 @@ ok, `VERIFY ok`**, zips `Spectracs-main-e600f90-win64.zip` 135 MB + server 13 MB
   Windows camera lookup is W1 (B1) ⇒ in W0 it reports "no 32e4:8830 camera"; the W0 measurement is the virtual run
   as `pumpkinTestUser` after a master set the fileset (in memory — keep the app open across the logout).
 
+### 11c.9 W1.2 + W1.3 as built (2026-10-08)
+
+**W1.2 — find the camera (§6.1, B1, B6, R8):**
+- `SensorCaptureIndexResolver` gets a `win32` branch: `cv2_enumerate_cameras.enumerate_cameras(CAP_MSMF)` (1.4.0,
+  MIT, the spike's package — chosen as "least code"; its `.pyd` does its own `CoInitializeEx` + `MFStartup` per call,
+  so the poll thread can call it). Match on VID/PID from the device path, lowest MSMF index wins. The index is an
+  **MSMF** index ⇒ only valid with the backend W1.3 pins. Enumerator injectable for tests; a failure reads "not
+  connected" and is printed **once** per distinct error (the poll asks every 2 s).
+- `isPresent(sensor)` = the same lookup. `ApplicationSpectrometerUtil.isSensorConnected` and `ConnectionPollThread`
+  use it on win32 — no pyusb there (VID/PID still parsed outside the guard, U5).
+- R8: both calibration views (ROI / peaks) used to fall back to `VideoThread`'s index 0 when the resolver said
+  None — now they show "Spectrometer not connected" and do not start. The other five call sites already refused.
+- `requirements.txt`: `cv2-enumerate-cameras==1.4.0; win32`, `pyusb==1.2.1; != win32`. ⚠ The VM venv was **not**
+  changed (pyusb is still installed there, harmless — nothing imports it on win32 any more).
+
+**W1.3 — open and convert (§6.2, §6.3, B3, B4, R7):**
+- win32 pins `CAP_MSMF`; requests FOURCC **`YUY2`** before the size, then `CONVERT_RGB=0` (at open, never toggled).
+- ⚠ **Learned in the VM:** MSMF reads the FOURCC back **blank** right after the request; the granted format is
+  readable only once the stream is up. ⇒ on win32 the read-back happens after the 8 grabs. The first VM run refused
+  a healthy camera for exactly this; the test fake now behaves the same way.
+- ⛔ **No fallback on win32:** not `YUY2`/`YUYV` after open, or no frame ⇒ `CaptureBackend: ⛔ REFUSED …`, release,
+  `read()` returns None (the path every caller takes for a silent camera). Linux keeps `__reopenUnforced`.
+- `yuy2ToBgr(raw, w, h)` (module-level): flatten whatever shape the backend hands over (MSMF 1×N), check the size,
+  `cv2.cvtColor(…, COLOR_YUV2BGR_YUY2)`; None on a mismatch. Note: OpenCV converts **BT.601 limited range** —
+  Y=128 grey → 130, not 128 — the same as Linux's V4L2 backend does internally (W1.4 will prove bit-identity).
+- R7: `import fcntl` moved past the `/dev/videoN` check in both ioctl helpers; `readCameraSettings` guards each
+  field, and reports `backend` + `pixelFormat`. The CAPTURE-SETTINGS line gets `backend=… pixelFormat=…` **appended**
+  (no parser of the line exists; appended so old greps still match).
+- Linux path unchanged in behaviour (`YUYV` requested and read back immediately, as before); the resolution line now
+  says `(V4L2, YUYV)`.
+
+**Checks:**
+- `tests/test_windows_camera.py`, 15 cases: ELP found / webcam ignored / absent ⇒ None / enumeration failure printed
+  once / virtual never enumerates / malformed VID loud / Linux + other platforms untouched / presence and the poll
+  thread use the enumeration, never pyusb / own conversion == `cvtColor` for 1×N, H×W×2 and flat buffers / neutral
+  grey / wrong sizes ⇒ None / backend on a fake win32 cv2: MSMF, YUY2 before size, CONVERT_RGB=0 before exposure,
+  converted pixels exact, MJPG ⇒ refused without a reopen, settings survive `fcntl` missing. Whole suite **646
+  passed**.
+- **VM, real ELP, from source** (working tree, not a frozen build): MSMF enumeration `0: HD USB Camera (32E4:8830)` ⇒
+  index 0, present True; a VID/PID that is not there ⇒ None/False. Open 2.2 s, `pixel format = YUY2 (read back after
+  open)`, `capture resolution = 2592x1944 (MSMF, YUY2, own conversion)`, **8/8 frames**, settings `backend=MSMF
+  pixelFormat=YUY2`.
+- ⚠ Seen, belongs to later steps: `white balance fixed = -1K` (OpenCV cannot set WB on MSMF ⇒ W1.6, native) and the
+  exposure read-back −7 for a requested −8 (MSMF's broken read-back, §6.6b ⇒ W1.5).
+- ⚠ **Not yet checked:** a **frozen** build. `cv2_enumerate_cameras` ships a delvewheel `msvcp140` in
+  `cv2_enumerate_cameras.libs\` that its `__init__` adds via `os.add_dll_directory` — whether PyInstaller collects
+  it is open until the next `buildWindows.sh` run.
+
+### 11c.10 W1.6 as built (2026-10-08)
+
+Done **before** W1.4/W1.5 (the ELP was in the VM; W1.6 needs only W1.3). The §12 commit point "commit W1.2–W1.6" was
+therefore taken as **W1.2 + W1.3 + W1.6**, locally, not pushed.
+
+- **New `WindowsUvcControls.py`** (`…/video/capture/`): `IAMVideoProcAmp` / `IAMCameraControl` / `ICreateDevEnum` /
+  `IEnumMoniker` / `IMoniker` declared by hand on plain **`comtypes` 1.4.17** — ⛔ no `pygrabber`: it calls
+  `comtypes.client.GetModule('qedit.dll')` at import, i.e. code generation at runtime (the §6.7 frozen risk). No
+  `comtypes.client` either (`comtypes.CoCreateInstance`). The camera is found among the DirectShow video inputs by
+  **`deviceKey`** = the device path up to its last `#`: the MSMF symbolic link and the DirectShow `DevicePath` differ
+  only in the interface GUID after it (checked on the ELP in the VM); VID/PID is the fallback.
+- **Per call, per thread:** every `apply()` / `read()` binds the camera in the calling thread
+  (`CoInitializeEx(MTA)`, an existing apartment is accepted) and lets go before returning. The capture thread sets,
+  the GUI thread reads back (`CapturePanel.__logCameraSettings`) — no COM pointer crosses an apartment.
+- **`planControls(ranges, kelvin)`** — the Linux mode split, from the camera's **own** ranges:
+  measurement: WhiteBalance **manual** at the lamp's K (clamped to the range), Backlight **0**, Gain **0**;
+  calibration: WhiteBalance **auto**, Backlight at its default, Gain 0;
+  both: Brightness/Contrast/Hue/Saturation/Sharpness/Gamma at the **camera's default**, manual; exposure mode
+  **manual** at its current value (the value itself stays OpenCV's `CAP_PROP_EXPOSURE` — units are W1.5).
+- **`provesFrozen(readBack, kelvin)`** — WB (K, manual), gain 0, backlight 0, exposure manual. `CaptureBackend` on
+  win32: after the YUY2 checks, `__applyNativeControls` — ⛔ a **measurement** open that cannot bind the controls,
+  cannot set one, or whose read-back does not prove the state is **REFUSED** (release, `read()` None), like a non-YUY2
+  stream; a **calibration** open only warns. One line per open:
+  `CaptureBackend: native controls (measurement, WB 6500K) Brightness=0 … WhiteBalance=6500 BacklightCompensation=0
+  Gain=0 Exposure=-8`. On win32 OpenCV's WB/backlight block is skipped (it printed `white balance fixed = -1K`).
+- **`readCameraSettings` on win32** takes the camera's own answer: `exposure` (⚠ log₂ steps, −8 — no longer MSMF's
+  stuck −7), `exposureMin/Max` −13/−1, `autoExposureMode` manual/auto, `wbTemperature`, `autoWb`, `gain`, `backlight`.
+  ⇒ the CAPTURE-SETTINGS line now **proves** WB frozen on Windows. `CapturePanel`'s slider ignores a max ≤ 1, so
+  −1 changes nothing there (W1.5 owns the range).
+- `requirements.txt`: `comtypes==1.4.17; win32`; installed into the VM build venv (was only in the probe venv).
+
+**Checks:**
+- Tests: +14 in `tests/test_windows_camera.py` (a fake camera with the ELP's §6.6c control table): measurement sets
+  natively and reports it, no OpenCV WB line; WB stuck on auto ⇒ refused; unbindable ⇒ measurement refused,
+  calibration warns and runs; calibration ⇒ WB auto + backlight default; the plan for both modes, clamping, skipped
+  controls; `provesFrozen` for 7 cases; `deviceKey` MSMF == DSHOW, other instance ≠. Whole suite **660 passed**.
+- **VM, real ELP, from source**, open + reads on a worker thread, read-back on the main thread:
+
+  | open | read-back | blue/red |
+  |---|---|---|
+  | measurement 6500 K, camera was on auto | WB 6500 manual, gain 0, backlight 0, exposure −8 manual, range −13…−1 | **2.646 2.576 2.512**, then 1.611 → 1.607; last 20 frames span **0.14 %** |
+  | measurement 6500 K again | same | 1.605–1.609 from frame 1, span 0.12 % |
+  | measurement 3000 K | WB 3000 manual | 1.61 → 4.33 ⇒ the control acts |
+  | calibration | WB auto, backlight 1 | — (the camera is left in this neutral state) |
+
+- ⚠ **Finding — the first ~3 frames after a WB change carry the OLD balance** (~0.8 s at 3.6 fps). The measurement
+  path runs its AE sweep before any burst, so no burst sees them; a consumer that grabs right after open (the dev
+  capture view) could. Not fixed — candidate for W1.7: flush N frames in `__applyNativeControls` when the read-back
+  differs from the state found.
+- ⚠ **Open, Edwin's call — "on Linux too" (§6.6c):** Linux still does not reset Brightness…Gamma, and its calibration
+  path leaves backlight untouched. A Windows **measurement** open leaves backlight 0 / WB manual in the camera; the
+  next Windows open fixes that, a Linux calibration open would not reset backlight. Changing the Linux reference
+  path was not part of W1.6 and is not done.
+
 ---
 
 ## 12 — Implementation phases and order
@@ -1104,16 +1206,16 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         W1 — REAL CAMERA  (ELP; production camera still open, O2)                                             |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
-| W1.2  | resolver win32 branch + presence light from the same      | Py        | W1.1        | unit test w/ fake enumerator; ELP   |
+|✅W1.2 | resolver win32 branch + presence light from the same      | Py        | W1.1        | unit test w/ fake enumerator; ELP   |
 |       | enumeration; unresolved ⇒ REFUSE, never index 0  (R8)     |           |             | found, webcam ignored, in the VM    |
-| W1.3  | backend pin MSMF, YUY2 strict (no win32 fallback),        | Py        | W1.2        | unit test: own convert == cv2 on a  |
+|✅W1.3 | backend pin MSMF, YUY2 strict (no win32 fallback),        | Py        | W1.2        | unit test: own convert == cv2 on a  |
 |       | CONVERT_RGB=0 + own cvtColor, fcntl behind guard (R7)     |           |             | synthetic YUYV buffer; log: YUY2    |
 | W1.4  | LINUX bit-identical: one grab, two retrieves (§6.3.4)     | Linux rig | W1.3        | diff == 0 ⇒ Linux adopts the path;  |
 |       |                                                           |           |             | ≠ 0 ⇒ Windows-only                  |
 | W1.5  | exposure: range from backend at ALL sites (§6.4 table),   | Py, -model| W1.3, W1.4, | converter unit-tested; float +      |
 |       | per-backend converter, float, `exposureUnit` in report    | -core docs| W1.1        | exposureUnit in the report JSON     |
 |       | JSON; plugin contract = V4L2 units (host converts)        |           |             |                                     |
-| W1.6  | set + read back WB/gain/backlight/AE-mode per backend,    | Py        | W1.3        | CAPTURE-SETTINGS proves frozen      |
+|✅W1.6 | set + read back WB/gain/backlight/AE-mode per backend,    | Py        | W1.3        | CAPTURE-SETTINGS proves frozen      |
 |       | every open (§6.4b)  → commit W1.2–W1.6                    |           |             |                                     |
 | W1.7  | click-through §8.2 in the VM: local server, author        | VM, Edwin | W1.5, W1.6, | Rv on screen, PDF; lamp on/off      |
 |       | calibration once, one measurement, lamp on/off            |           | W0.7        |                                     |

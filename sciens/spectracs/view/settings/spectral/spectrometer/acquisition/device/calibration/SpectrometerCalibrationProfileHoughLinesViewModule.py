@@ -118,8 +118,14 @@ class SpectrometerCalibrationProfileHoughLinesViewModule(PageWidget):
         # BEFORE the 50-frame burst.
         if not isVirtual:
             deviceIndex = SensorCaptureIndexResolver().resolveCaptureIndex(sensor)
-            if deviceIndex is not None:
-                self.videoThread.setDeviceId(deviceIndex)
+            if deviceIndex is None:
+                # R8 (SPEC_windows_build.md): never fall back to VideoThread's default index 0 — on a laptop that
+                # is the built-in webcam, and its frames would be calibrated as if they came from the spectrometer.
+                InWindowDialog.notify(self, "Spectrometer not connected",
+                                      "No %s:%s camera found. Plug the spectrometer in and try again."
+                                      % (sensor.vendorId, sensor.modelId))
+                return
+            self.videoThread.setDeviceId(deviceIndex)
             self.videoThread.autoExposureProgress.connect(self.__onAutoExposeProgress)
             self.videoThread.requestAutoExpose(1, 500)
 

@@ -12,6 +12,26 @@ from PySide6.QtGui import QImage
 
 from sciens.base.PlatformUtil import is_android
 
+# The camera's uncompressed format under its two names: V4L2 says YUYV, Windows says YUY2 — the same bytes (B3).
+UNCOMPRESSED_FOURCCS = ("YUYV", "YUY2")
+
+
+def yuy2ToBgr(raw, width, height):
+    """OUR conversion of a raw YUY2 (= YUYV) buffer to BGR — SPEC_windows_build.md §6.3, W1.3.
+
+    The function OpenCV's V4L2 backend applies internally, called by us, so the 8-bit values do not depend on which
+    OS (or which Media Foundation colour matrix) did the conversion. The backend hands the buffer over in its own
+    shape (MSMF: 1×N), hence the flatten. None when the size does not fit a width×height YUY2 frame — then the
+    backend did not deliver raw YUY2, and a guessed reshape would be noise."""
+    import cv2
+    import numpy as np
+    if raw is None or width is None or height is None:
+        return None
+    flat = np.ascontiguousarray(raw).reshape(-1)
+    if flat.dtype != np.uint8 or flat.size != width * height * 2:
+        return None
+    return cv2.cvtColor(flat.reshape(height, width, 2), cv2.COLOR_YUV2BGR_YUY2)
+
 
 class CaptureBackend:
     def open(self, deviceId: int = 0, exposure: int = None, whiteBalanceKelvin: int = None) -> None:
@@ -55,13 +75,26 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         self._deviceId = None
         self._width = None
         self._height = None
+        self._backendName = None
+        self._pixelFormat = None
+        self._rawYuy2 = False       # True: read() gets the raw buffer and converts it itself (win32, W1.3)
+        self._nativeControls = None  # win32: the camera's DirectShow controls (W1.6), set + read there
 
     def open(self, deviceId: int = 0, exposure: int = None, whiteBalanceKelvin: int = None) -> None:
         import cv2
         from sys import platform
-        # V4L2 is the reference backend on Linux (verified in the probe); CAP_ANY elsewhere.
-        apiPreference = cv2.CAP_V4L2 if platform == 'linux' else cv2.CAP_ANY
+        # V4L2 is the reference backend on Linux (verified in the probe). Windows PINS MSMF (SPEC_windows_build.md
+        # §6.2): CAP_ANY is behaviour, not a contract, the resolver's index is an MSMF index, and only MSMF hands over
+        # the raw YUY2 buffer (DSHOW ignores CONVERT_RGB=0, §6.6b). CAP_ANY elsewhere.
+        windows = platform == 'win32'
+        if platform == 'linux':
+            apiPreference, self._backendName = cv2.CAP_V4L2, "V4L2"
+        elif windows:
+            apiPreference, self._backendName = cv2.CAP_MSMF, "MSMF"
+        else:
+            apiPreference, self._backendName = cv2.CAP_ANY, "ANY"
         self._deviceId = deviceId
+        self._rawYuy2 = False
         self._cap = cv2.VideoCapture(deviceId, apiPreference)
 
         # Minimize driver frame buffering so read() returns the LATEST frame, not a stale queued one. At high
@@ -98,20 +131,47 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         # wedged the stream on warm-up buffers; what is forced here is the UNCOMPRESSED one, the read-back
         # is checked, and `__yuyvOrFallback` reopens without forcing if the stream does not come up. The
         # fallback IS today's behaviour, so the worst case is what we already have.
-        self.__forceUncompressed(cv2)
+        self.__forceUncompressed(cv2, "YUY2" if windows else "YUYV", readBackNow=not windows)
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
+        if windows:
+            # ⭐ OUR conversion, not Media Foundation's (SPEC_windows_build.md §6.3): the backend hands over the raw
+            # YUY2 bytes and `yuy2ToBgr` converts them with the function Linux's V4L2 backend uses. Fixed AT OPEN —
+            # toggling CONVERT_RGB on a running MSMF stream breaks it (§6.6b).
+            self._cap.set(cv2.CAP_PROP_CONVERT_RGB, 0)
+            self._rawYuy2 = True
         # ⭐ The guard on the pinned format: a few grabs to prove the stream came up. §16.39.5a's whole
         # risk is that FORCING a format wedges the UVC stream on warm-up buffers, and that failure is silent
         # — read() simply never returns a frame. Proving it here, at open, is what makes the pin safe to
         # ship: if the stream is dead we reopen exactly as the code did before, and the operator sees why.
         # ⚠ SEVERAL grabs, not one: the first frames after open are routinely empty even on a healthy
         # stream (§3.5), so a single failure would condemn a working camera.
-        if not any(self._cap.grab() for _ in range(8)):
+        streaming = any(self._cap.grab() for _ in range(8))
+        if windows:
+            # MSMF reports the granted format only once the stream is up — read right after the request it is
+            # blank (seen in the VM, W1.3) — so the evidence is read here, after the grabs.
+            self._pixelFormat = self.__fourccName(cv2)
+            print("CaptureBackend: pixel format = %s (read back after open)" % self._pixelFormat)
+            # ⛔ NO FALLBACK ON WINDOWS (§6.3.1): a stream that is not raw YUY2 — or not there — is refused, never
+            # reopened unforced. A JPEG spectrum must not become a Windows Rv. read() then returns None, the path
+            # every caller already takes for a camera that delivers nothing.
+            refusal = None
+            if self._pixelFormat not in UNCOMPRESSED_FOURCCS:
+                refusal = "the driver granted %s, not YUY2" % self._pixelFormat
+            elif not streaming:
+                refusal = "no frame after opening YUY2"
+            if refusal is not None:
+                print("CaptureBackend: ⛔ REFUSED to capture on %s - %s (SPEC_windows_build.md §6.3)"
+                      % (self._backendName, refusal))
+                self.release()
+                return
+        elif not streaming:
             self.__reopenUnforced(cv2, deviceId, apiPreference)
         self._width = int(self._cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self._height = int(self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        print("CaptureBackend: capture resolution = %dx%d" % (self._width, self._height))
+        print("CaptureBackend: capture resolution = %dx%d (%s, %s%s)"
+              % (self._width, self._height, self._backendName, self._pixelFormat,
+                 ", own conversion" if self._rawYuy2 else ""))
 
         # AUTO_EXPOSURE=1 selects MANUAL exposure mode on V4L2, then a fixed value (there is no
         # auto-exposure today — spec §7.4/§9.3). `exposure` is the per-camera good value seeded in
@@ -125,6 +185,12 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             self._cap.set(cv2.CAP_PROP_EXPOSURE, -3)
 
         self._cap.set(cv2.CAP_PROP_GAIN, 0)             # pinned in BOTH modes (also undoes a sticky gain=100 a probe left)
+
+        if windows:
+            # W1.6: OpenCV cannot set WB on MSMF and reads exposure back wrong (§6.6b) — the camera's own
+            # DirectShow controls do both. Same mode split as below, every control set on every open (§6.4b).
+            self.__applyNativeControls(whiteBalanceKelvin)
+            return
 
         # White balance is MODE-SPLIT (SPEC_capture_quality.md §14.8, fix 1).
         if whiteBalanceKelvin is None:
@@ -146,19 +212,98 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             actualWb = int(self._cap.get(cv2.CAP_PROP_WB_TEMPERATURE))
             print("CaptureBackend: white balance fixed = %dK (requested %dK)" % (actualWb, int(whiteBalanceKelvin)))
 
-    def __forceUncompressed(self, cv2):
-        """Ask for YUYV and say what was actually granted. Never raises; never leaves the cap unusable."""
+    def __applyNativeControls(self, whiteBalanceKelvin):
+        """Windows: set every UVC control natively and PROVE the measurement state from the read-back (§6.4b).
+
+        ⛔ A measurement open whose read-back does not show WB manual at the lamp's temperature, gain 0, backlight 0
+        and manual exposure is REFUSED, like a non-YUY2 stream — auto-WB re-converging between reference and sample
+        is the §14.8 tilt, and nothing downstream would notice. The calibration path (auto WB) only warns."""
+        from sciens.spectracs.logic.application.video.capture.WindowsUvcControls import WindowsUvcControls, \
+            provesFrozen
+        from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import CAP_MSMF
+        problem = None
+        readBack = {}
         try:
-            granted = self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"YUYV"))
+            from cv2_enumerate_cameras import enumerate_cameras
+            path = next((camera.path for camera in enumerate_cameras(CAP_MSMF) if camera.index == self._deviceId), None)
+            if path is None:
+                raise LookupError("MSMF index %s is no longer enumerated" % self._deviceId)
+            self._nativeControls = WindowsUvcControls(path)
+            readBack = self._nativeControls.apply(whiteBalanceKelvin)
+        except Exception as error:
+            self._nativeControls = None
+            problem = "native controls unavailable (%s: %s)" % (type(error).__name__, error)
+        if problem is None and readBack.get("failures"):
+            problem = "could not set %s" % ", ".join(readBack["failures"])
+        print("CaptureBackend: native controls (%s) %s" % (
+            "calibration, auto WB" if whiteBalanceKelvin is None else "measurement, WB %dK" % int(whiteBalanceKelvin),
+            " ".join("%s=%s%s" % (name, entry.get("value"), "(auto)" if entry.get("flags") == 1 else "")
+                     for name, entry in readBack.items() if isinstance(entry, dict))))
+        if whiteBalanceKelvin is None:
+            if problem is not None:
+                print("CaptureBackend: ⚠ %s - the camera keeps whatever it was left with" % problem)
+            return
+        if problem is None and not provesFrozen(readBack, whiteBalanceKelvin):
+            problem = "the read-back does not prove WB %dK manual / gain 0 / backlight 0 / manual exposure" \
+                      % int(whiteBalanceKelvin)
+        if problem is not None:
+            print("CaptureBackend: ⛔ REFUSED to capture on %s - %s (SPEC_windows_build.md §6.4b)"
+                  % (self._backendName, problem))
+            self.release()
+
+    def __nativeSettings(self):
+        """Windows read-back of the live controls, from the camera itself; {} if it will not answer."""
+        if self._nativeControls is None:
+            return {}
+        try:
+            readBack = self._nativeControls.read()
+        except Exception:
+            return {}
+
+        def value(name):
+            return (readBack.get(name) or {}).get("value")
+
+        exposure = readBack.get("Exposure") or {}
+        whiteBalance = readBack.get("WhiteBalance") or {}
+        return {
+            # ⚠ log2-seconds steps (-13..-1), NOT V4L2 units — the unit bridge is W1.5 (§6.6c).
+            "exposure": exposure.get("value"),
+            "exposureMin": exposure.get("min"),
+            "exposureMax": exposure.get("max"),
+            "autoExposureMode": {1: "auto", 2: "manual"}.get(exposure.get("flags")),
+            "wbTemperature": whiteBalance.get("value"),
+            "autoWb": None if not whiteBalance else (1 if whiteBalance.get("flags") == 1 else 0),
+            "gain": value("Gain"),
+            "backlight": value("BacklightCompensation"),
+        }
+
+    def __fourccName(self, cv2):
+        """The granted FOURCC as text, e.g. `YUY2`; None if the backend will not say."""
+        try:
+            code = int(self._cap.get(cv2.CAP_PROP_FOURCC))
+        except Exception:
+            return None
+        return "".join(chr((code >> (8 * i)) & 0xFF) for i in range(4))
+
+    def __forceUncompressed(self, cv2, requested, readBackNow=True):
+        """Ask for the uncompressed format (`YUYV` on V4L2, `YUY2` on Windows — same bytes, B3) and say what was
+        actually granted, in `_pixelFormat`. Never raises; never leaves the cap unusable. `readBackNow=False`
+        (MSMF): the granted format is only readable once the stream is up, so `open()` reads it after the grabs."""
+        try:
+            granted = self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*requested))
+            if not readBackNow:
+                print("CaptureBackend: pixel format requested %s (set()=%s), read back after open" % (requested, granted))
+                return
             code = int(self._cap.get(cv2.CAP_PROP_FOURCC))
             fourcc = "".join(chr((code >> (8 * i)) & 0xFF) for i in range(4))
         except Exception as error:                    # a pixel format is not worth a failed capture
             print("CaptureBackend: pixel format unchanged (%s)" % error)
             return
+        self._pixelFormat = fourcc
         # ⛔ `set()` returns True on V4L2 even when it did nothing — the read-back is the only evidence,
         # which is the lesson the white-balance path already learned three lines of print ago.
-        print("CaptureBackend: pixel format = %s (requested YUYV, set()=%s)" % (fourcc, granted))
-        if fourcc != "YUYV":
+        print("CaptureBackend: pixel format = %s (requested %s, set()=%s)" % (fourcc, requested, granted))
+        if fourcc not in UNCOMPRESSED_FOURCCS:
             print("CaptureBackend: ⚠ the driver kept %s — if that is a COMPRESSED format the spectrum is "
                   "reading JPEG artefacts (SPEC_capture_quality.md §16.39.5a)" % fourcc)
 
@@ -190,10 +335,11 @@ class DesktopCv2CaptureBackend(CaptureBackend):
 
         ⛔ READ-ONLY and fully guarded: querying a control neither opens a stream nor disturbs a capture, and
         any failure at all returns None. A camera that will not answer simply says nothing."""
-        import fcntl, os, struct
+        import os, struct
         node = self.__videoNode()
         if node is None:
             return None
+        import fcntl                                  # only past the node check: there is no fcntl on Windows (R7)
         size = 68                                     # sizeof(struct v4l2_queryctrl)
         request = 0xC0000000 | (size << 16) | (ord("V") << 8) | 36        # _IOWR('V', 36, v4l2_queryctrl)
         try:
@@ -240,10 +386,11 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         3, and defaults to 3 — which is why pinning is not decoration.
         ⛔ READ-ONLY and fully guarded, like `__queryControl`: None on any failure, and the caller prints the
         bare number instead."""
-        import fcntl, os, struct
+        import os, struct
         node = self.__videoNode()
         if node is None or value is None:
             return None
+        import fcntl                                  # only past the node check: there is no fcntl on Windows (R7)
         try:
             index = int(value)
         except (TypeError, ValueError):
@@ -275,6 +422,10 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             return None
         if not ok or frame is None:
             return None
+        if self._rawYuy2:
+            frame = yuy2ToBgr(frame, self._width, self._height)     # §6.3: our conversion, not the backend's
+            if frame is None:
+                return None
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb.shape
         # .copy() detaches the QImage from the numpy buffer `rgb` (which is freed when this returns) —
@@ -308,22 +459,35 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             except cv2.error:
                 return None
 
-        low, high = self.__exposureRange()
-        return {
+        def guarded(read, default):
+            # Per field (R7): one control that will not answer must not blank the whole CAPTURE-SETTINGS line.
+            try:
+                return read()
+            except Exception:
+                return default
+
+        low, high = guarded(self.__exposureRange, (None, None))
+        settings = {
+            "backend": self._backendName,
+            "pixelFormat": self._pixelFormat,
             "exposureMin": low,
             "exposureMax": high,
             "exposure": get(cv2.CAP_PROP_EXPOSURE),
             # ⚠ A MENU INDEX, NOT A BOOLEAN — 1 is MANUAL, 3 is auto. `autoExposureMode` carries the
             # driver's own word for it so no reader has to know that (see `__exposureModeName`).
             "autoExposure": get(cv2.CAP_PROP_AUTO_EXPOSURE),
-            "autoExposureMode": self.__exposureModeName(get(cv2.CAP_PROP_AUTO_EXPOSURE)),
+            "autoExposureMode": guarded(lambda: self.__exposureModeName(get(cv2.CAP_PROP_AUTO_EXPOSURE)), None),
             "wbTemperature": get(cv2.CAP_PROP_WB_TEMPERATURE),
             "autoWb": get(cv2.CAP_PROP_AUTO_WB),
             "gain": get(cv2.CAP_PROP_GAIN),
             "backlight": get(cv2.CAP_PROP_BACKLIGHT),
         }
+        # Windows: the camera's own answer replaces OpenCV's (which cannot read WB and reads exposure back wrong).
+        settings.update(guarded(self.__nativeSettings, {}))
+        return settings
 
     def release(self) -> None:
+        self._nativeControls = None
         if self._cap is not None:
             self._cap.release()
             self._cap = None

@@ -1,3 +1,5 @@
+import sys
+
 from PySide6.QtCore import QThread, Signal
 
 
@@ -9,6 +11,7 @@ class ConnectionPollThread(QThread):
     first check always emits, so the initial state is reported). It touches neither the DB nor the session
     — only the USB syscall — so a slow bus enumerate can never hitch the UI. Stop with `stop()` (interruptible
     within ~100 ms). pyusb is desktop-only; if missing, or if it has no backend, it reports absent once and exits.
+    On Windows it polls the MSMF camera enumeration instead of the USB bus (SPEC_windows_build.md §6.1, W1.2).
     """
 
     presenceChanged = Signal(bool)
@@ -25,6 +28,9 @@ class ConnectionPollThread(QThread):
         self.__running = False
 
     def run(self):
+        if sys.platform == "win32":
+            self.__pollCameraEnumeration()
+            return
         try:
             import usb.core
         except ImportError:
@@ -48,6 +54,24 @@ class ConnectionPollThread(QThread):
                 self.__lastPresent = present
                 self.presenceChanged.emit(present)
             # Interruptible sleep so stop() is responsive.
+            for _ in range(int(self.__intervalSeconds * 10)):
+                if not self.__running:
+                    break
+                self.msleep(100)
+
+    def __pollCameraEnumeration(self):
+        # Windows: presence = "is a camera with this VID/PID in the MSMF enumeration" — the lookup the capture
+        # index comes from, so the light and the capture cannot disagree. The resolver never raises (it says absent).
+        from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import \
+            SensorCaptureIndexResolver
+        from types import SimpleNamespace
+        resolver = SensorCaptureIndexResolver()
+        sensor = SimpleNamespace(vendorId=self.__vendorId, modelId=self.__modelId)
+        while self.__running:
+            present = resolver.isPresent(sensor)
+            if present != self.__lastPresent:
+                self.__lastPresent = present
+                self.presenceChanged.emit(present)
             for _ in range(int(self.__intervalSeconds * 10)):
                 if not self.__running:
                     break

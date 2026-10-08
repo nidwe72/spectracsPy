@@ -24,7 +24,13 @@ spectres==2.2.0
 rgbxy==0.5
 pyspectra==0.0.1.2
 psutil==5.9.5
-pyusb==1.2.1
+# USB presence: pyusb/libusb on Linux; Windows asks the MSMF camera enumeration instead, which also gives the
+# capture index (SPEC_windows_build.md §6.1, W1.2) — so no libusb DLL there.
+pyusb==1.2.1; sys_platform != "win32"
+cv2-enumerate-cameras==1.4.0; sys_platform == "win32"
+# The camera's UVC controls on Windows (white balance, gain, backlight, exposure mode) are set natively through
+# DirectShow — OpenCV cannot set them on MSMF (SPEC_windows_build.md §6.6c, W1.6). Plain comtypes, no codegen.
+comtypes==1.4.17; sys_platform == "win32"
 appdata==2.2.0
 # PDF report (M2 — SPEC_bench_pdf_export.md): matplotlib renders the pages, pypdf embeds the
 # whole-Workflow JSON + captured images as named attachments. matplotlib/Pillow were present in the
