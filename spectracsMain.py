@@ -1,6 +1,54 @@
 import os
 import sys
 
+
+# Headless build checks (tools/buildAppImages.sh, tools/buildWindows.sh). They run BEFORE the view-tree imports so a
+# module missing from a frozen bundle fails inside the check, and they leave through os._exit with their own exit
+# code: an exception reaching a windowed Windows exe's bootloader opens a modal dialog that hangs a headless build
+# (SPEC_windows_build.md D5, U1/U2). No QApplication is ever constructed here.
+def _runHeadlessCheck(check):
+    code = 1
+    try:
+        code = check()
+    except BaseException:
+        import traceback
+        traceback.print_exc()
+    finally:
+        for stream in (sys.stdout, sys.stderr):
+            if stream is not None:
+                stream.flush()
+    os._exit(code)
+
+
+def _checkLampImports():
+    # Prove the bundle carries zeroconf's Cython modules and ifaddr — lamp-plug discovery imports them lazily, so a
+    # missing one would only surface at the first login (SPEC_lamp_switch.md §14 R7).
+    from zeroconf import IPVersion, Zeroconf
+    import ifaddr  # noqa: F401
+    Zeroconf(ip_version=IPVersion.V4Only).close()
+    print("lamp imports ok")
+    return 0
+
+
+def _checkDb():
+    # Bring the app DB to head as a normal start would, then report the stamped revision, the bundled script head
+    # and where the DB landed (proves the Windows runtime hook's chdir; SPEC_windows_build.md D9). 3 = mismatch.
+    from sciens.spectracs.view.main.MainContainerViewModule import MainContainerViewModule  # noqa: F401 -- graph proof
+    from sciens.spectracs.model.databaseEntity.DatabaseInitializer import (
+        getAppDatabasePath, getAppDatabaseRevision, getAppScriptHead, initAppDatabase)
+    initAppDatabase()
+    databaseRevision = getAppDatabaseRevision()
+    scriptHead = getAppScriptHead()
+    status = "ok" if databaseRevision == scriptHead else "MISMATCH"
+    print("check-db %s: app db %s head %s at %s" % (status, databaseRevision, scriptHead, getAppDatabasePath()))
+    return 0 if databaseRevision == scriptHead else 3
+
+
+if "--check-lamp-imports" in sys.argv:
+    _runHeadlessCheck(_checkLampImports)
+if "--check-db" in sys.argv:
+    _runHeadlessCheck(_checkDb)
+
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QGuiApplication
 
@@ -88,16 +136,6 @@ def _parsePhoneModeArgs(argv):
             phoneMode = True
     return phoneMode, phoneWidth, phoneZoom
 
-
-# Build verification (tools/buildAppImages.sh): prove the frozen bundle carries zeroconf's Cython modules and
-# ifaddr — lamp-plug discovery imports them lazily, so a missing one would only surface at the first login
-# (SPEC_lamp_switch.md §14 R7). Exits before any window opens.
-if "--check-lamp-imports" in sys.argv:
-    from zeroconf import IPVersion, Zeroconf
-    import ifaddr  # noqa: F401
-    Zeroconf(ip_version=IPVersion.V4Only).close()
-    print("lamp imports ok")
-    sys.exit(0)
 
 # Parse the phone-mode flags BEFORE QApplication is constructed: QT_SCALE_FACTOR is read by Qt at
 # construction time. An explicit QT_SCALE_FACTOR in the environment wins (escape hatch).

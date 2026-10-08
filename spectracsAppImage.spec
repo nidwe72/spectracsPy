@@ -6,6 +6,7 @@ Paths resolve from SPECPATH, not the process cwd, so a build launched from anywh
 five sibling repos (SPEC §8b.6).
 """
 import os
+import sys
 import glob
 
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
@@ -14,6 +15,13 @@ from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 # TAGGED worktree sources. SPECTRACS_SRC_ROOT does that; unset, behaviour is exactly as before.
 HERE = os.path.abspath(os.environ.get("SPECTRACS_SRC_ROOT", SPECPATH))   # …/spectracsPy
 SIBLINGS = os.path.dirname(HERE)
+# The recipe side (this spec, the Windows runtime hook) may be newer than the tag — like the server spec's RECIPE.
+RECIPE = os.path.abspath(SPECPATH)
+
+# Windows build (docs/SPEC_windows_build.md D2): the same spec, with a branch only for what really differs. On
+# Linux every WIN-guarded value below equals what this spec had before, so the AppImage does not change.
+WIN = sys.platform == "win32"
+WIN_ICON = os.environ.get("SPECTRACS_ICON_ICO")      # absolute .ico written by the build script (D7, U9)
 
 def sibling(name):
     return os.path.join(SIBLINGS, name)
@@ -49,8 +57,8 @@ datas += collect_data_files("colour")                              # colour-scie
 
 # --- binaries ----------------------------------------------------------------------------------
 # pyusb loads libusb through ctypes, which PyInstaller cannot follow. It drives only the connection
-# indicator (the capture gate is the sysfs resolver), but isSensorConnected does not guard
-# NoBackendError — so ship the library (SPEC §8.2).
+# indicator (the capture gate is the sysfs resolver), so ship the library for the Linux presence light
+# (SPEC §8.2). On Windows none is found and isSensorConnected reads "absent" (SPEC_windows_build.md W0.1).
 binaries = []
 for candidate in ("/lib/x86_64-linux-gnu/libusb-1.0.so.0", "/usr/lib/x86_64-linux-gnu/libusb-1.0.so.0"):
     if os.path.exists(candidate):
@@ -102,7 +110,7 @@ a = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[os.path.join(RECIPE, "tools", "rthook_win_app.py")] if WIN else [],   # D4
     excludes=excludes,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
@@ -116,6 +124,8 @@ FORBIDDEN = ("WebEngine", "Charts", "DataVisualization", "Quick3D", "Qt6Qml", "Q
              "Multimedia", "Designer", "Bluetooth", "Qt63D")
 DROP_DATA_DIRS = ("PySide6/Qt/qml", "PySide6/Qt/resources", "PySide6/Qt/translations",
                   "PySide6/translations", "PySide6/examples", "PySide6/glue")
+if WIN:  # PyInstaller files Qt directly under PySide6/ on Windows (R9, U12)
+    DROP_DATA_DIRS += ("PySide6/qml", "PySide6/resources")
 
 def _keepBinary(entry):
     name = entry[0]
@@ -142,17 +152,20 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,          # onedir: AppImage already compresses; onefile would re-extract
-    name="spectracsMain",           # AppRun execs this
+    name="Spectracs" if WIN else "spectracsMain",   # AppRun execs spectracsMain
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,                      # UPX breaks Qt shared libraries
-    console=True,                   # the app prints capture diagnostics; AppRun tees them when no tty
-    disable_windowed_traceback=False,
+    # Linux: the app prints capture diagnostics; AppRun tees them when no tty. Windows: windowed, the runtime hook
+    # sends stdout/stderr to spectracs.log (D5); the flag only hides the traceback in the error box (U1).
+    console=not WIN,
+    disable_windowed_traceback=WIN,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=WIN_ICON if WIN else None,
 )
 
 coll = COLLECT(
@@ -163,5 +176,5 @@ coll = COLLECT(
     strip=False,
     upx=False,
     upx_exclude=[],
-    name="spectracsMain",
+    name="Spectracs" if WIN else "spectracsMain",
 )

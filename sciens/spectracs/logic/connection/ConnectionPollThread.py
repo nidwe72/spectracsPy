@@ -8,7 +8,7 @@ class ConnectionPollThread(QThread):
     every `intervalSeconds` and emits `presenceChanged(bool)` whenever presence flips (edge-triggered; the
     first check always emits, so the initial state is reported). It touches neither the DB nor the session
     — only the USB syscall — so a slow bus enumerate can never hitch the UI. Stop with `stop()` (interruptible
-    within ~100 ms). pyusb is desktop-only; if missing, it reports absent once and exits.
+    within ~100 ms). pyusb is desktop-only; if missing, or if it has no backend, it reports absent once and exits.
     """
 
     presenceChanged = Signal(bool)
@@ -37,6 +37,11 @@ class ConnectionPollThread(QThread):
         while self.__running:
             try:
                 present = usb.core.find(idVendor=vendorId, idProduct=modelId) is not None
+            except usb.core.NoBackendError:
+                # No libusb backend (Windows, SPEC_windows_build.md U4): it will never appear, and every further
+                # find() would log a traceback ⇒ report absent once and stop polling.
+                self.presenceChanged.emit(False)
+                return
             except Exception:
                 present = False
             if present != self.__lastPresent:

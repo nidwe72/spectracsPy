@@ -1,14 +1,15 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0 not started.**
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.3 BUILT (§11c.2) · W0.3b next.**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
 > ⭐ **RESUME HERE.** The VM is ready (§12 V0: `ssh spectracs-win`, venv `C:\spectracs-build\venv`, ELP passthrough,
 > Shelly reachable). The camera questions are answered (§6.6b, §6.6c): MSMF + own YUY2 conversion (needs
 > non-headless `opencv-python` on Windows), **white balance frozen natively via DirectShow `IAMVideoProcAmp`**,
-> exposure **whole log₂ steps** accepted for now (decision W1.1). **Next: W0.1 + W0.2 + W0.3**, all testable on
-> Linux, with the change list in §11c. ⏸ Null run (O3) postponed. Implementation only on explicit request.
+> exposure **whole log₂ steps** accepted for now (decision W1.1). **W0.1–W0.3 are built and gated on Linux
+> (§11c.2).** Next: **W0.3b** (requirements split + the VM's OpenCV swap), then W0.4 in the VM. ⏸ Null run (O3)
+> postponed. Implementation only on explicit request.
 
 Source: Edwin, 2026-10-07 — *"we have already build an linux AppImage of the spectracsPy and spectracsPy-server
 — now i would like to have a windows version"*. His answers in the same session:
@@ -192,7 +193,8 @@ Windows, **on Linux**, before the sources go to the VM. PyInstaller honours `ico
 The script is the heredoc moved **verbatim** (the PNG must stay byte-identical, §12 W0.3 gate); CLI
 `makeIcon.py --logo <png> --out <png> [--frame] [--ico <ico>]`. ⛔ The build never writes into a repo
 (`buildAppImages.sh:8`) ⇒ the `.ico` is written into the build target, and the spec reads its absolute path from
-**`SPECTRACS_ICON_ICO`**, dropping `icon=` when unset (U9). Two icons: the app's, and the framed server one.
+**`SPECTRACS_ICON_ICO`** (app) and **`SPECTRACS_ICON_ICO_SERVER`** (the framed server icon), dropping `icon=`
+when unset (U9).
 
 ### D8 — Same toolchain pins as Linux
 
@@ -888,6 +890,27 @@ excludes `usb`; the licence gate's `\`→`/` normalisation works on Windows; Pil
   port check against a listener on an ephemeral port (port is a parameter).
 - **W0.3b** `requirements.txt` platform split (D8, U19); VM: uninstall headless, install `opencv-python`.
 
+### 11c.2 As built — W0.1–W0.3 (2026-10-08)
+
+As §11c.1, with these differences:
+- **Both** headless flags moved to the top of `spectracsMain.py` and share one `_runHeadlessCheck` (catch
+  `BaseException` → traceback → flush → `os._exit`); `--check-lamp-imports` behaves as before on Linux.
+- `-model` `DatabaseInitializer` gained three public helpers: `getAppScriptHead()`, `getAppDatabaseRevision()`,
+  `getAppDatabasePath()`. Output: `check-db ok: app db 63efd411276f head 63efd411276f at …/.spectracsPy-demo/spectracsPy.db`.
+- The hooks' `_plan` takes no `platform` argument: nothing in it differs by OS, the frozen gate is the switch and
+  the spec wires the hooks on win32 only. The server hook leaves with `os._exit(1)` on a taken port (U16).
+- `isSensorConnected` recognises `NoBackendError` by class name, so the module still needs no pyusb import.
+- Two icon variables (D7): `SPECTRACS_ICON_ICO`, `SPECTRACS_ICON_ICO_SERVER`.
+
+Tests: `tests/test_usb_guard.py` (6), `tests/test_check_db_flag.py` (2, incl. exit 1 + traceback when -model is
+missing), `tests/test_rthooks_win.py` (9). `pytest tests/` **631 passed**.
+
+**Gate (U10, U11), run 2026-10-08:** `w03-base` = recipe f843948, `w03-new` = the W0.3 tree, both
+`--tag presentation-2026-09-12 --no-verify`. Sorted `find` of `dist/app/spectracsMain` (2059 entries) and
+`dist/server/spectracsServer` (89): **diff empty**. `pyi-archive_viewer -l -b` of both exes (17 / 12 entries):
+**diff empty**. `cmp` of `spectracs.png` and `spectracs-server.png`: **identical** (also identical to the
+2026-09-09 build). ⇒ the Windows branches do not reach the Linux AppImages.
+
 ---
 
 ## 12 — Implementation phases and order
@@ -923,13 +946,13 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         W0 — PACKAGING  (virtual device; worth doing whatever W1.1 says)                                      |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
-| W0.1  | USB guard: isSensorConnected → "absent" on any USB    ∥   | Py        | —           | 5 util cases + poll-thread test     |
+|✅W0.1 | USB guard: isSensorConnected → "absent" on any USB    ∥   | Py        | —           | 5 util cases + poll-thread test     |
 |       | error, IDs parsed outside; poll thread stops once on      |           |             | (U4–U6)                             |
 |       | NoBackendError (R3, U4, U5)                               |           |             |                                     |
-| W0.2  | --check-db right after `import os, sys`; prints dbRev +∥  | Py, -model| —           | subprocess test w/ HOME=tmp_path:   |
+|✅W0.2 | --check-db right after `import os, sys`; prints dbRev +∥  | Py, -model| —           | subprocess test w/ HOME=tmp_path:   |
 |       | scriptHead + path; exits 0/3/1 via os._exit; head helper  |           |             | rc 0, head == ScriptDirectory (U21) |
 |       | public in -model (D9, U1-U3)                              |           |             |                                     |
-| W0.3  | tools/makeIcon.py (verbatim + .ico); rthook_win_app/      | Py tools/,| — (U22)     | hooks unit-tested via _plan/_apply; |
+|✅W0.3 | tools/makeIcon.py (verbatim + .ico); rthook_win_app/      | Py tools/,| — (U22)     | hooks unit-tested via _plan/_apply; |
 |       | _server.py (_plan/_apply); spec win32 branches: RECIPE    | *.spec    |             | fresh Linux base (f843948) vs new,  |
 |       | root, runtime_hooks, console, windowed_traceback,         |           |             | same ref: sorted `find` of both     |
 |       | icon via SPECTRACS_ICON_ICO, name=, qml/resources drops   |           |             | dists, `pyi-archive_viewer -l -b`   |

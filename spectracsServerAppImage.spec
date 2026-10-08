@@ -7,6 +7,7 @@ repos — -server, -model, -base. (runServer.sh's comment about needing the app 
 SpectralLineMasterDataUtil is STALE: that class lives in -model since the tiering work.)
 """
 import os
+import sys
 
 # TWO roots, and they are not the same thing (8g.6):
 #   SRC    — the TAGGED sources the bundle is built FROM (SPECTRACS_SRC_ROOT, set by the build script)
@@ -16,6 +17,10 @@ import os
 SRC = os.path.abspath(os.environ.get("SPECTRACS_SRC_ROOT", SPECPATH))     # …/spectracsPy (tagged)
 RECIPE = os.path.abspath(SPECPATH)                                        # …/spectracsPy (live)
 SIBLINGS = os.path.dirname(SRC)
+
+# Windows build (docs/SPEC_windows_build.md D2): on Linux every WIN-guarded value equals what it was before.
+WIN = sys.platform == "win32"
+WIN_ICON = os.environ.get("SPECTRACS_ICON_ICO_SERVER")   # absolute framed .ico written by the build script (D7)
 
 def sibling(name):
     return os.path.join(SIBLINGS, name)
@@ -59,7 +64,7 @@ a = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[os.path.join(RECIPE, "tools", "rthook_win_server.py")] if WIN else [],   # D4
     excludes=excludes,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
@@ -73,10 +78,12 @@ if _leaked:
 
 pyz = PYZ(a.pure, a.zipped_data)
 
-exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="spectracsServer",
+# console=True on both: the console window is the "it is running" sign, closing it stops the server (D5).
+exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="SpectracsServer" if WIN else "spectracsServer",
           debug=False, bootloader_ignore_signals=False, strip=False, upx=False,
           console=True, disable_windowed_traceback=False, argv_emulation=False,
-          target_arch=None, codesign_identity=None, entitlements_file=None)
+          target_arch=None, codesign_identity=None, entitlements_file=None,
+          icon=WIN_ICON if WIN else None)
 
 coll = COLLECT(exe, a.binaries, a.zipfiles, a.datas, strip=False, upx=False, upx_exclude=[],
-               name="spectracsServer")
+               name="SpectracsServer" if WIN else "spectracsServer")

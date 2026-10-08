@@ -1,17 +1,32 @@
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerSensor import SpectrometerSensor
 
+# Set once pyusb reports NoBackendError (no libusb DLL on Windows, SPEC_windows_build.md B6/U4): pyusb retries
+# every backend on every find() and, frozen, logs a traceback each time — so after the first miss we stop asking.
+_usbBackendMissing = False
+
 
 class ApplicationSpectrometerUtil:
 
     def isSensorConnected(self, spectrometerSensor: SpectrometerSensor):
-        # pyusb/libusb is desktop-only (deferred on Android). Import lazily so this module stays
-        # importable without pyusb; if it is unavailable, treat the sensor as not connected.
-        try:
-            import usb.core
-        except ImportError:
+        global _usbBackendMissing
+        # Parse outside the guard: a malformed VID/PID is a data bug and must stay loud (U5).
+        vendorId = int('0x' + spectrometerSensor.vendorId, base=16)
+        modelId = int('0x' + spectrometerSensor.modelId, base=16)
+        if _usbBackendMissing:
             return False
 
-        dev = usb.core.find(idVendor=int('0x' + spectrometerSensor.vendorId, base=16),
-                            idProduct=int('0x' + spectrometerSensor.modelId, base=16))
+        # pyusb/libusb is desktop-only (deferred on Android) and has no backend on Windows. Any failure to ask
+        # the bus means "not connected" — the setup screen calls this for every spectrometer (R3).
+        try:
+            import usb.core
+            dev = usb.core.find(idVendor=vendorId, idProduct=modelId)
+        except ImportError:
+            return False
+        except Exception as exception:
+            if type(exception).__name__ == "NoBackendError":
+                _usbBackendMissing = True
+            print("ApplicationSpectrometerUtil.isSensorConnected: USB unavailable (%s: %s) - sensor absent"
+                  % (type(exception).__name__, exception))
+            return False
 
         return dev is not None

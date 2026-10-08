@@ -72,30 +72,7 @@ APPIMAGETOOL="$BUILD_ROOT/appimagetool-x86_64.AppImage"
 [ -x "$APPIMAGETOOL" ] || { echo "missing $APPIMAGETOOL — download it once from AppImageKit releases" >&2; exit 1; }
 
 makeIcon() {  # $1 = output png, $2 = "frame" to draw the brand-green border (server) or "" (app)
-  "$VENV/python" - "$1" "${2:-}" <<'PY'
-import sys, os
-from PIL import Image, ImageDraw
-import numpy as np
-out, frame = sys.argv[1], sys.argv[2]
-logo = os.path.join(os.environ["SPECTRACS_SRC_ROOT"], "resource", "logo.png")
-src = Image.open(logo).convert("RGBA"); a = np.array(src); alpha = a[:, :, 3]
-cols = (alpha > 10).any(axis=0); runs = []; s = None
-for i, v in enumerate(cols):
-    if v and s is None: s = i
-    if not v and s is not None: runs.append((s, i)); s = None
-x0, x1 = runs[0]                                   # the S — §16
-rows = (alpha[:, x0:x1] > 10).any(axis=1); ys = np.where(rows)[0]
-glyph = src.crop((x0, ys[0], x1, ys[-1] + 1))
-green = tuple(int(v) for v in a[np.unravel_index(alpha.argmax(), alpha.shape)][:3])
-icon = Image.new("RGBA", (256, 256), (26, 26, 26, 255))
-size = 150 if frame else 168
-sc = size / max(glyph.size)
-g = glyph.resize((int(glyph.width * sc), int(glyph.height * sc)), Image.LANCZOS)
-icon.paste(g, ((256 - g.width) // 2, (256 - g.height) // 2), g)
-if frame:
-    ImageDraw.Draw(icon).rectangle([4, 4, 251, 251], outline=green + (255,), width=8)
-icon.save(out)
-PY
+  "$VENV/python" "$HERE/tools/makeIcon.py" --logo "$SPECTRACS_SRC_ROOT/resource/logo.png" --out "$1" ${2:+--frame}
 }
 
 contentShas() { for r in "$@"; do printf "  %-20s %s\n" "$r" "$(git -C "$SRC/$r" rev-parse HEAD)"; done; }
