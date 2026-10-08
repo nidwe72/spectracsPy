@@ -1,13 +1,14 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-07, end of session): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0 not started.**
-Two rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13); phases + order in **§12**.
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0 not started.**
+Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
+code level); phases + order in **§12**.
 
 > ⭐ **RESUME HERE.** The VM is ready (§12 V0: `ssh spectracs-win`, venv `C:\spectracs-build\venv`, ELP passthrough,
 > Shelly reachable). The camera questions are answered (§6.6b, §6.6c): MSMF + own YUY2 conversion (needs
 > non-headless `opencv-python` on Windows), **white balance frozen natively via DirectShow `IAMVideoProcAmp`**,
-> exposure **whole log₂ steps** accepted for now (decision W1.1). **Next: W0.1 + W0.2** (two small `spectracsPy`
-> changes, testable on Linux), then W0.3. ⏸ Null run (O3) postponed. Implementation only on explicit request.
+> exposure **whole log₂ steps** accepted for now (decision W1.1). **Next: W0.1 + W0.2 + W0.3**, all testable on
+> Linux, with the change list in §11c. ⏸ Null run (O3) postponed. Implementation only on explicit request.
 
 Source: Edwin, 2026-10-07 — *"we have already build an linux AppImage of the spectracsPy and spectracsPy-server
 — now i would like to have a windows version"*. His answers in the same session:
@@ -54,12 +55,14 @@ Out (§10): macOS, Windows on ARM, cross-compiling on Linux, a single-file `.exe
   Python and do not care about the OS. Loopback binds trigger **no** Windows Firewall prompt.
 - **Dependencies.** Every pin in `requirements.txt` has a `cp310-win_amd64` wheel (PySide6 6.5.0, numpy 1.26.4,
   scipy 1.10.1, opencv-python-headless 4.7.0.72, bcrypt, PyNaCl, psutil) or is pure Python (Pyro5, SQLAlchemy,
-  Alembic, pyqtgraph, colour-science, luxpy, zeroconf, pypdf, matplotlib). ⚠ To be confirmed by the first `pip
-  install` in the VM, not assumed (§7.1).
+  Alembic, pyqtgraph, colour-science, luxpy, zeroconf, pypdf, matplotlib). ✅ Confirmed by the V0.2 install.
+  ⚠ Except OpenCV: Windows needs the **non-headless** `opencv-python` 4.7.0.72 (§6.6b) ⇒ `requirements.txt` is
+  split by platform marker in W0.3b (D8, U19).
 - **The licence gate.** `spectracsAppImage.spec:115-136` filters by name substring (`Charts`,
   `DataVisualization`, `WebEngine`) — that matches `Qt6Charts.dll` exactly as it matches `libQt6Charts.so.6`. ⚠ The **size** trimming does not
   carry over by itself: `DROP_DATA_DIRS` names `PySide6/Qt/…`, and on Windows PyInstaller files Qt under
-  `PySide6/` (R9) ⇒ W0.3 adds the Windows variants.
+  `PySide6/` (R9) ⇒ W0.3 adds the two missing Windows variants, `PySide6/qml` and `PySide6/resources`
+  (`PySide6/translations` is already listed and is the Windows path too, U12).
 - **Plugins** (M3, signed, DB-served, loaded by `importlib` from a codeRef) are pure Python ⇒ no difference.
 - **The Shelly lamp plug** (HTTP + zeroconf/mDNS) works on Windows — ⚠ but see §7.5 (firewall prompt, VM NAT).
 
@@ -120,34 +123,52 @@ folder.
 
 AppRun selects the data directory with `cd` (Linux spec D2). On Windows the cwd is whatever started the exe (B7).
 ⇒ A **runtime hook** per program (`runtime_hooks=[RECIPE/tools/…]`, win32 only). PyInstaller runs custom runtime
-hooks **before** the entry script (`PyInstaller/building/build_main.py:611-619`), and `spectracsMain.py` stays the
+hooks **before** PyInstaller's own `pyi_rth_*` hooks and the entry script (`build_main.py:607-613`,
+`depend/analysis.py:686-695`; U23), and `spectracsMain.py` stays the
 analysed entry, so its import graph is found as today (⛔ not `runpy` of a string — PyInstaller cannot see through
 that, R4). The chdir lands before appdata resolves (`AppDataPathUtil.py:21-22` runs at import); the bootloader has
 already made `sys.path` absolute, so moving the cwd is safe.
 
-- **`tools/rthook_win_app.py`**: if `--fresh` is in `sys.argv`, remove it and use suffix `-demo`; root =
-  `SPECTRACS_CWD_ROOT` or `%USERPROFILE%\Spectracs`; `os.chdir(<root>\spectracsPy<suffix>)` (created if missing);
-  then D5. Body wrapped in a function and `del`-eted — hooks share `__main__` globals with `spectracsMain`.
+- **`tools/rthook_win_app.py`**: if `--fresh` is in `sys.argv` (anywhere), remove it and use suffix `-demo`; root =
+  `SPECTRACS_CWD_ROOT` or `Path.home()\Spectracs` (the same home appdata uses, not `%USERPROFILE%`, U14);
+  `os.chdir(<root>\spectracsPy<suffix>)` (created if missing); then D5.
+- **Shape of both hooks (U14 — the test seam):** a pure `_plan(argv, environ, home, platform) -> (cwd, argv, log)`
+  and an `_apply(plan, sysmod, osmod)`; the side effects run only under `if getattr(sys, "frozen", False):`, then
+  the helper names are `del`-eted — hooks share `__main__` globals with `spectracsMain`. Tests load the file with
+  `importlib.util.spec_from_file_location`, call `_plan` with `platform="win32"`, and `_apply` against `tmp_path`
+  and a `SimpleNamespace` for `sys`.
 - **`tools/rthook_win_server.py`**: `chdir` to `…\spectracsPy-server`; ⛔ **never adds or strips arguments** —
   any argument switches `spectracsServerAppImageEntry.py:20` to the stock CLI, and `--fresh` would hit argparse.
   With **no** arguments (the loopback mode) it does the 8g.3 check of `AppRun.server`: refuse if 8091 is already
   bound. ⭐ This matters more on Windows: Pyro5 defaults to `SOCK_REUSE=True` (`Pyro5/configure.py:50`), and on
   Windows `SO_REUSEADDR` lets a **second daemon bind 8091 silently**. ⇒ the hook also sets
-  `Pyro5.config.SOCK_REUSE = False` on win32.
+  `PYRO_SOCK_REUSE=false` in `os.environ` (U15): Pyro5 builds its config from `PYRO_*` at import and nothing
+  resets it ⇒ no Pyro5 import in the hook, and the stock-CLI path is covered too. The port check runs only when
+  `len(sys.argv) == 1`: `socket.create_connection(("127.0.0.1", 8091), timeout=1)` succeeds ⇒ print why, `sys.exit(1)`
+  (U16). The server hook redirects **nothing** (D5); it only sets `sys.stdout.reconfigure(errors="backslashreplace")`
+  when stdout is not None (U7).
 
 ⇒ Data lands in `%USERPROFILE%\spectracsPy\` and `%USERPROFILE%\spectracsPy-server\` (B7: no dot on Windows),
 **independent of where the zip was unpacked**. `--fresh` ⇒ `%USERPROFILE%\spectracsPy-demo\` — a double-click
 cannot pass it, so `START_HERE.txt` documents a second shortcut. `SPECTRACS_CWD_ROOT` moves only the cwd, **not**
 the data dir (appdata = home + cwd basename) — that is why verify uses `--fresh`, not a `-verify` dir (S5).
 
-### D5 — Every frozen Windows process logs to a file
+### D5 — The frozen Windows app logs to a file; the server keeps its console
 
 The app is built windowed (`console=False`, no console window behind it). The app hook therefore points
 `sys.stdout` and `sys.stderr` at **`spectracs.log` in the cwd folder** — the same place as Linux
-(`AppRun.app`), i.e. `%USERPROFILE%\Spectracs\spectracsPy\spectracs.log` — line-buffered, appended, with a start
-banner holding the release manifest, and installs a `sys.excepthook` that writes tracebacks there.
-`disable_windowed_traceback=True` on win32: PyInstaller's default shows a **modal MessageBox** for an unhandled
-error, which hangs a headless verify forever (S1). ⭐ Better than Linux, where the frozen app's `print()` never
+(`AppRun.app`), i.e. `%USERPROFILE%\Spectracs\spectracsPy\spectracs.log` — opened
+`"a", buffering=1, encoding="utf-8", errors="backslashreplace"` (U7: the locale default is cp1252, and 15 `print()`
+calls in sciens/-core carry "→"/"●" ⇒ each would raise `UnicodeEncodeError` mid-run), with a start banner holding
+the release manifest — or, when there is none yet (the by-hand builds W0.4/W0.5), `sys.executable` + argv (U18) —
+and `faulthandler.enable(<log>)` for native crashes in cv2/Qt (U8). The default `sys.excepthook` already writes to
+the redirected stderr; no custom one. ⚠ Known degradation: Qt's own qWarning output goes to OutputDebugString in a
+windowed Windows app, not to fd 2 ⇒ unlike Linux it does not reach the log (UNVERIFIED, U8).
+`disable_windowed_traceback=True` on win32 — ⛔ but it does **not** remove PyInstaller's modal MessageBox; it only
+replaces the traceback in it with "this feature is disabled" (`PyInstaller/building/api.py:337-338`, U1). ⇒ The
+real guard against a headless hang is that **every headless flag (`--check-db`, `--check-lamp-imports`) catches
+`BaseException` itself**, prints the traceback, flushes both streams and leaves with `os._exit(code)` — it never
+reaches the bootloader's error path. `Wait-Process -Timeout` stays as the safety net (§5.1.5). ⭐ Better than Linux, where the frozen app's `print()` never
 reached a redirected stdout (Linux spec §18.2): on Windows the `CaptureBackend:` lines land in the log — and from
 W1.2 on the CAPTURE-SETTINGS line too (until then it reads "unavailable", R7). The **server** is built with
 `console=True`: its window is the "it is running" sign and closing it stops it, like the terminal on Linux.
@@ -168,14 +189,22 @@ as usually the server will run on the internet and starting it locally is not ne
 `makeIcon()` is a bash heredoc inside `buildAppImages.sh:74-98`. ⇒ Extract it to **`tools/makeIcon.py`** (both
 build scripts call it); it writes the 256 px PNG for Linux and a multi-size `.ico` (16/32/48/256, Pillow) for
 Windows, **on Linux**, before the sources go to the VM. PyInstaller honours `icon=` on Windows only.
+The script is the heredoc moved **verbatim** (the PNG must stay byte-identical, §12 W0.3 gate); CLI
+`makeIcon.py --logo <png> --out <png> [--frame] [--ico <ico>]`. ⛔ The build never writes into a repo
+(`buildAppImages.sh:8`) ⇒ the `.ico` is written into the build target, and the spec reads its absolute path from
+**`SPECTRACS_ICON_ICO`**, dropping `icon=` when unset (U9). Two icons: the app's, and the framed server one.
 
 ### D8 — Same toolchain pins as Linux
 
 Python **3.10.11** (python.org's last 3.10 Windows installer; the Linux venv has 3.10.12 — the patch level does
 not touch numerics), PyInstaller **5.10.1**, `pyinstaller-hooks-contrib` at the Linux version, and
-`requirements.txt` as-is. ⭐ A Windows/Linux difference in a measurement can then only come from the OS layer,
+`requirements.txt` — ⚠ with **one platform split** (§6.6b, U19): `opencv-python-headless==4.7.0.72;
+sys_platform != "win32"` and `opencv-python==4.7.0.72; sys_platform == "win32"` (same OpenCV version; the Windows
+wheel adds MSMF and Win32 HighGUI, no Qt). Done in W0 (W0.3b), so the W0 zip carries the same cv2 as W1. In the
+VM, `pip uninstall opencv-python-headless` **first** — both wheels own `cv2/`. `comtypes` + `pygrabber` stay W1
+(W1.6); ⚠ W1 risk: comtypes' code generation (`GetModule`, `comtypes.gen`) in a frozen build. ⭐ A Windows/Linux difference in a measurement can then only come from the OS layer,
 not from a different numpy/scipy/OpenCV. ⚠ `opencv-python-headless` 4.7.0.72 is the OpenCV whose MSMF/DSHOW
-behaviour W1 measures — do not upgrade it in the VM alone. "Same" means: the `requirements.txt` pins + PyInstaller
+behaviour W1 measured — do not upgrade it on one OS alone. "Same" means: the `requirements.txt` pins + PyInstaller
 + hooks-contrib match and `pip check` is clean — **not** `pip freeze` equality (Linux has dev extras, Windows adds
 `pefile`/`pywin32-ctypes`).
 
@@ -183,9 +212,29 @@ behaviour W1 measures — do not upgrade it in the VM alone. "Same" means: the `
 
 The Linux verify ends the app with `timeout 40` (`buildAppImages.sh:194`) because `--fresh` opens the GUI and never
 exits. Windows has no such `timeout`, and a windowed exe started over ssh returns at once. ⇒ **`--check-db`**, a
-sibling of `--check-lamp-imports` (`spectracsMain.py:95-100`): runs `initAppDatabase()` (`:113`), prints the
-Alembic head, exits 0 — no QApplication. Both build scripts use it; no timeouts, no hanging window. One small code
-change in `spectracsPy` (W0.2).
+sibling of `--check-lamp-imports` (`spectracsMain.py:95-100`), no QApplication:
+
+- **Where (U2):** right after `import os, sys` (`spectracsMain.py:1-2`), **before** the view-tree imports (`:4-12`) —
+  otherwise a module missing from the frozen bundle raises before the check, and that is U1's dialog. The imports
+  happen **inside** its `try` (incl. `MainContainerViewModule`) ⇒ the check also proves the import graph. Verified:
+  those imports need no QApplication and touch no DB.
+- **What it prints (U3):** `check-db ok: app db <dbRev> head <scriptHead> at <dbFilepath>`. `dbRev` = the DB's
+  `alembic_version` (`MigrationContext…get_current_revision()`); `scriptHead` = the bundled script tree's head,
+  through a **new public helper in `-model`** (Edwin, 2026-10-08 — not the private `_config`). On a fresh DB the
+  pair only proves create_all + stamp; the build compares `scriptHead` with a Linux-side
+  `ScriptDirectory.from_config(Config(<src>/spectracsPy-model/alembic/app/alembic.ini))`. ⭐ The printed path proves
+  at W0.5 that D4's chdir landed (`%USERPROFILE%\spectracsPy-demo`).
+- **Exit codes:** 0 ok · 3 `dbRev != scriptHead` · 1 any exception (`except BaseException` → traceback → flush →
+  `os._exit`, U1).
+- `--fresh` exists only in `AppRun.app:8`, not in `spectracsMain` ⇒ on a Linux AppImage the order is
+  `--fresh --check-db`; on Windows the hook strips `--fresh` from anywhere (D4).
+- ⚠ **Testing from source (U21):** from the repo cwd it would resolve to `~/.spectracsPy` — the real archive —
+  and migrate it. ⇒ the test runs it in a subprocess with `HOME=tmp_path`, cwd `tmp_path/spectracsPy-demo`,
+  `QT_QPA_PLATFORM=offscreen`.
+- **Who uses it:** the Windows build (§5.1) from W0.6. The Linux `buildAppImages.sh` switches to it **only once a
+  tag contains W0.2** — not in W0.3, whose gate rebuilds an older ref without the flag (U22).
+
+Code change in `spectracsPy` + one helper in `-model` (W0.2).
 
 ---
 
@@ -214,9 +263,12 @@ Spectracs-Server-<tag>-win64.zip
 - B6 is **partly** W0: the setup-screen crash is closed by the W0.1 guard (R3; the poll thread and status module
   already catch it). The presence light stays "absent" until W1.1.
 - B2 does **not** crash — both callers catch `Exception` (R7); it only empties the CAPTURE-SETTINGS line.
-- The lamp is **not** exercised in W0: `LampService` exists only for a real sensor
+- The lamp is **not tested** in W0: `LampService` exists only for a real sensor
   (`MainStatusBarViewModule.__configureLamp(not sensor.isVirtual)`, `AbstractPluginExecutionView.py:264-267`).
   W0 proves only that zeroconf imports (`--check-lamp-imports`); "lamp off when the window closes" moves to W1.6.
+  ⚠ But it **runs** in W0 (U20, accepted by Edwin 2026-10-08): §8.1.4 logs in `elpUser`, whose sensor is the real
+  ELP ⇒ `LampService` (zeroconf on 5353, maybe the §7.5 firewall prompt) and the 2 s USB poll thread start. With no
+  libusb backend the poll thread reports "absent" once and stops (W0.1, U4) instead of logging tracebacks.
 
 ---
 
@@ -252,8 +304,8 @@ folder and a moved tag would silently build the old sources.
 Mirrors the Linux script (`buildAppImages.sh:185-225`), adapted:
 
 1. **Alembic head** — `Spectracs.exe --fresh --check-db` (D9) ⇒ the hook moves it to `spectracsPy-demo`, which
-   in the build VM is throwaway (the build user is not a demo user). Read the head from the log; compare with the
-   head of the tagged `-model` Alembic tree.
+   in the build VM is throwaway (the build user is not a demo user). Read the `check-db ok:` line from the log;
+   exit code 0; `scriptHead` == the head of the tagged `-model` Alembic tree; the path is under `spectracsPy-demo`.
 2. **Lamp imports** — `Spectracs.exe --check-lamp-imports` (zeroconf's Cython modules bundled; exits before Qt).
 3. **Port-taken refusal** — start a dummy listener on 8091, start `SpectracsServer.exe`: it must refuse (D4).
 4. **Pair proof** — start `SpectracsServer.exe` (no args ⇒ loopback), wait for 8091, log in as
@@ -663,7 +715,8 @@ private networks"). And **in the VM, mDNS only reaches the plug with bridged net
 2. start the app **without** a server: it comes up and says it is offline;
 3. start `SpectracsServer.exe` by hand, then the app; data dirs appear in `%USERPROFILE%\spectracsPy\` and
    `…\spectracsPy-server\` — **not** named after the zip folder;
-4. login `masterUserExakta` (bench) and `elpUser` (end user);
+4. login `masterUserExakta` (bench) and `elpUser` (end user) — ⚠ elpUser's sensor is the real ELP ⇒ the lamp
+   service and the USB poll start (§4.2, U20); presence reads "absent", the log holds no repeating tracebacks;
 5. **spectrometer-setup screen** opens without a crash (R3);
 6. virtual spectrometer (fileset copied into the VM in V0.6) → one full plugin run → Rv shown;
 7. one **PDF export** — opens in a PDF viewer; LIMS publish only if the server config dir from V0.6 is set;
@@ -739,7 +792,7 @@ were **rewritten in place**, not overridden — the sections above are current.
 
 | # | sev | finding | resolution |
 |---|---|---|---|
-| S1 | ⛔ | R1's `Start-Process -Wait` never returns: `--fresh` opens the GUI; a windowed exe shows a modal traceback MessageBox on error ⇒ headless hang | **D9 `--check-db`** (exits after DB init, both OSes); `disable_windowed_traceback=True` + hook excepthook (D5); `Wait-Process -Timeout` as the safety net (§5.1.5) |
+| S1 | ⛔ | R1's `Start-Process -Wait` never returns: `--fresh` opens the GUI; a windowed exe shows a modal traceback MessageBox on error ⇒ headless hang | **D9 `--check-db`** (exits after DB init, both OSes); ~~`disable_windowed_traceback=True` + hook excepthook~~ ⚠ **corrected by U1**: that flag keeps the dialog ⇒ the flag catches `BaseException` itself and `os._exit`s (D5); `Wait-Process -Timeout` as the safety net (§5.1.5) |
 | S2 | ⛔ | no tag step: builds run from worktrees at a tag, and `presentation-2026-09-12` has neither W0.1 nor `--check-lamp-imports`; W0.4/W0.5 had no way to get sources into the VM | `--tag` accepts **any git ref**; worktrees keyed by **SHA** (`src-<sha>`), so a moved ref can never reuse a stale folder; dev builds from the committed `main`, **the release tag comes LAST** (Linux §8d: tags are retroactive); the manual copy is its own step (W0.4) |
 | S3 | ⚠ | the lamp cannot be tested in W0 (no `LampService` for a virtual sensor) | lamp check → W1.6 / §8.2; W0 proves only `--check-lamp-imports` |
 | S4 | ⚠ | Pyro5 `SOCK_REUSE=True` ⇒ on Windows a 2nd server binds 8091 silently; any argv flips the server entry to the stock CLI | two separate hooks; the server hook never touches argv, refuses a taken port, sets `SOCK_REUSE=False` (D4) |
@@ -757,6 +810,83 @@ were **rewritten in place**, not overridden — the sections above are current.
 already catch `Exception`); the hook's chdir precedes appdata; Linux is unaffected when `runtime_hooks` is win32
 only; `--check-lamp-imports` exits before Qt and DB; the server spec excludes `usb`; no migration for
 `exposureApplied`.
+
+---
+
+## 11c — Third rubber-duck pass (2026-10-08, aimed at W0.1–W0.3 at code level)
+
+Read-only, against the as-is code, the installed PyInstaller 5.10.1 / hooks-contrib / pyusb / Pyro5 / appdata, a
+built Linux dist (`pyi-archive_viewer`) and the VM venv (`pip list` over ssh). The stale sections it touched (§2.1,
+D4, D5, D7, D8, D9, §4.2, §5.1, §8.1, S1, §12) were **rewritten in place** — the sections above are current.
+Edwin's calls, 2026-10-08: U3 public helper in -model · U4 fix the poll thread properly, don't mute the logger ·
+U19 split requirements now in W0 · U20 accept elpUser's real sensor in W0, note it.
+
+| # | sev | step | finding | resolution |
+|---|---|---|---|---|
+| U1 | ⚠ | D5, S1 | `disable_windowed_traceback=True` keeps the modal dialog, it only hides the traceback (`api.py:337-338`) ⇒ S1's "no modal" premise was wrong | headless flags catch `BaseException`, print, flush, `os._exit(code)`; `Wait-Process -Timeout` as safety net (D5) |
+| U2 | ⚠ | W0.2 | `--check-lamp-imports` sits **after** the view-tree imports (`spectracsMain.py:4-12`, flag `:95`) ⇒ a missing frozen module raises before the check | `--check-db` right after `import os, sys`; the imports inside its `try` ⇒ also proves the import graph (D9) |
+| U3 | ⚠ | W0.2 | "prints the Alembic head" ambiguous; on a fresh DB create_all + stamp (`DatabaseInitializer.py:38-40`) makes the DB rev trivially equal; `_config()` is private | print `dbRev` + `scriptHead` + DB path; exit 3 on mismatch; public helper in **-model** (D9) |
+| U4 | ⚠ | W0.1 | pyusb retries all backends on **every** `find()` (`usb/backend/libusb1.py:957-971`); frozen, `pyi_rth_usb` makes it log `exc_info=True` tracebacks to stderr ⇒ ~3 tracebacks every 2 s from the poll thread with a real-sensor login. Source runs don't show it | `ConnectionPollThread.run`: `NoBackendError` ⇒ emit False once, return; `ApplicationSpectrometerUtil`: module-level "no backend" flag ⇒ stop calling `find` |
+| U5 | · | W0.1 | a blanket `except Exception` would also swallow a malformed `vendorId`/`modelId` (`int('0x'+…)`, `ApplicationSpectrometerUtil.py:14-15`) | parse IDs outside the try; guard only `import usb.core` + `find`; one printed line |
+| U6 | · | W0.1 | `sys.modules["usb.core"] = fake` does not take once `usb.core` is imported | `monkeypatch.setattr(usb.core, "find", …)` with a real `NoBackendError`; `sys.modules["usb"] = None` for the ImportError case |
+| U7 | ⚠ | D5 | log file in cp1252 by default; 15 non-ASCII `print()`s ⇒ `UnicodeEncodeError` | UTF-8, `errors="backslashreplace"`; server: `stdout.reconfigure` (D4, D5) |
+| U8 | · | D5 | custom excepthook adds nothing; Qt warnings bypass fd 2 on windowed Windows (UNVERIFIED) | drop it; `faulthandler.enable(log)`; Qt warnings = known degradation |
+| U9 | ⚠ | D7 | nowhere said where the `.ico` lives; build must not write into a repo | `.ico` in the build target; spec reads `SPECTRACS_ICON_ICO` (D7) |
+| U10 | ⛔ | W0.3 gate | no valid baseline: `~/spectracs-build/latest` is 2026-09-09, the app spec changed since (c73e6b1) | fresh baseline at f843948 + candidate after W0.3, same ref, named `--out w03-base` / `w03-new` (not pruned by `--keep`) |
+| U11 | ⚠ | W0.3 gate | a `dist/` file list cannot see the leaks W0.3 could cause: runtime hooks live inside the exe's CArchive; the PNG icon sits in the AppDir | + diff of `pyi-archive_viewer -l -b` for both exes; + `cmp` of both PNGs (reproducible, verified) |
+| U12 | · | W0.3 (R9) | R9 confirmed; only `PySide6/qml`, `PySide6/resources` missing (`translations` already listed); neither matches a Linux path | add both under win32; after the first Windows build check for stray tool `.exe`s |
+| U13 | · | W0.3 | `spectracsAppImage.spec:51-53` comment says isSensorConnected does not guard `NoBackendError` — stale after W0.1 | comment only |
+| U14 | ⚠ | W0.3 | no test seam named; a hook acts on load | `_plan` / `_apply`, frozen-gated, `del` (D4) |
+| U15 | · | D4 | Pyro5 config built from `PYRO_*` at import, never reset; threaded server reads `SOCK_REUSE` | `os.environ["PYRO_SOCK_REUSE"]="false"` in the hook, no Pyro5 import (D4) |
+| U16 | · | D4 | port check: `sys.exit(1)` from a console hook + refused-connect latency UNVERIFIED | `create_connection(…, timeout=1)`, only when `len(argv)==1` |
+| U17 | · | D5 | heading "every frozen process logs to a file" vs server `console=True` | heading fixed; server hook redirects nothing |
+| U18 | · | D5 | banner reads `RELEASE_MANIFEST.txt`, added only in build step 8 ⇒ missing in W0.4/W0.5 | tolerate missing; print `sys.executable` + argv |
+| U19 | ⚠ | D8 | VM venv is `opencv-python-headless` (no MSMF, §6.6b) + `cv2_enumerate_cameras` spike leftover; D8 said "requirements.txt as-is" | platform-marker split in **W0.3b**; uninstall headless first in the VM; comtypes/pygrabber stay W1 |
+| U20 | · | §4.2, §8.1 | "lamp not exercised in W0" but §8.1.4 logs in elpUser = real ELP ⇒ LampService + poll thread start | accepted, noted (§4.2, §8.1.4) |
+| U21 | · | W0.2 | "runs on Linux from source" from the repo cwd migrates the real `~/.spectracsPy`; `--fresh` is AppRun-only, first-arg-only | subprocess test with `HOME=tmp_path` (D9) |
+| U22 | ⚠ | D9, §12 | switching `buildAppImages.sh` to `--check-db` in W0.3 breaks the U10 rebuild of a ref without the flag | W0.3 touches only makeIcon in `buildAppImages.sh`; Linux switch once a tag contains W0.2 ⇒ W0.3 no longer needs W0.2 |
+| U23 | · | D4 | wrong citation `build_main.py:611-619` | `:607-613` + `analysis.py:686-695` |
+| U24 | · | — | Linux dist carries dev-venv extras (astropy, imageio) ⇒ cross-OS content diffs mean nothing; deepest path ~200 chars under a Downloads unzip, < MAX_PATH | note only; only Linux before/after is a gate |
+
+**Confirmed by the third duck:** custom runtime hooks run before `pyi_rth_*` and the entry (seen in the real
+CArchive); the bootstrap makes `sys.path` absolute and the 5.10.1 loader never touches `sys.stdout`; appdata
+resolves at construction from the cwd (dot Linux-only, `Path.home()`), `DbBase.py:18` / `DbServerBase.py:11` after
+the hook, no query at import; `alembic.ini` uses `%(here)s` ⇒ cwd-independent; `initAppDatabase()` runs without a
+QApplication, dbRev = scriptHead = `63efd411276f` today; **W0.1 is the only uncaught USB path** (poll thread and
+status module catch, resolver returns early off Linux, all `usb` imports lazy, nmcli guarded); the server spec
+excludes `usb`; the licence gate's `\`→`/` normalisation works on Windows; Pillow 9.5.0 in both venvs writes a
+16/32/48/256 `.ico`; the heredoc's PNG is byte-reproducible.
+
+### 11c.1 Change list for W0.1–W0.3
+
+**W0.1 — `spectracsPy`**
+- `sciens/spectracs/logic/model/util/spectrometerSensor/ApplicationSpectrometerUtil.py`: parse vid/pid first; try
+  only `import usb.core` + `usb.core.find` (`except Exception` ⇒ False, one printed line); a module-level
+  "no backend" flag on `NoBackendError` ⇒ later calls return False without touching pyusb (U4, U5).
+- `sciens/spectracs/logic/connection/ConnectionPollThread.py:37-41`: `usb.core.NoBackendError` ⇒ emit False once,
+  return; other exceptions as today (U4).
+- `tests/test_application_spectrometer_util.py`: `NoBackendError`, generic error, `sys.modules["usb"]=None`, found,
+  not found (U6); transient `SpectrometerSensor` vendorId `0c99`, no DB. + a poll-thread `run()` test.
+
+**W0.2 — `spectracsPy` + `-model`**
+- `-model`: public helper returning the app script tree's head (wraps `_config("app")` +
+  `ScriptDirectory.get_current_head()`), next to `initAppDatabase`.
+- `spectracsMain.py` after `:2`: the `--check-db` block as in D9 (U1, U2, U3).
+- `tests/test_check_db_flag.py`: subprocess, `HOME=tmp_path`, cwd `tmp_path/spectracsPy-demo`,
+  `QT_QPA_PLATFORM=offscreen`; rc 0, head == `ScriptDirectory`'s, DB under `tmp_path/.spectracsPy-demo` (U21).
+
+**W0.3 — `spectracsPy` tools/ + specs**
+- `tools/makeIcon.py` (D7, verbatim); `buildAppImages.sh:74-99` calls it — nothing else changes there (U22).
+- `tools/rthook_win_app.py`, `tools/rthook_win_server.py` (D4, D5; `_plan`/`_apply`).
+- `spectracsAppImage.spec`: `RECIPE = os.path.abspath(SPECPATH)`, `WIN = sys.platform == "win32"`;
+  `runtime_hooks` win32 only; `DROP_DATA_DIRS += ("PySide6/qml", "PySide6/resources")` win32 only;
+  `EXE`/`COLLECT` `name="Spectracs"` on win32 (else unchanged), `console=not WIN`,
+  `disable_windowed_traceback=WIN`, `icon` only when win32 and `SPECTRACS_ICON_ICO` set; comment fix (U13).
+- `spectracsServerAppImage.spec`: same pattern, `name="SpectracsServer"`, `console=True`, server hook + icon.
+- `tests/test_rthooks_win.py`: `_plan` cases (`--fresh` anywhere, `SPECTRACS_CWD_ROOT`, server argv untouched);
+  `_apply` into `tmp_path` (dir created, cwd restored after, UTF-8 log with "→", banner without manifest); server
+  port check against a listener on an ephemeral port (port is a parameter).
+- **W0.3b** `requirements.txt` platform split (D8, U19); VM: uninstall headless, install `opencv-python`.
 
 ---
 
@@ -793,13 +923,21 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         W0 — PACKAGING  (virtual device; worth doing whatever W1.1 says)                                      |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
-| W0.1  | isSensorConnected: any Exception ⇒ "absent"  (R3)    ∥    | Py        | —           | unit test w/ raising usb.core       |
-| W0.2  | --check-db flag in spectracsMain  (D9)               ∥    | Py        | —           | runs on Linux from source, exits 0  |
-| W0.3  | tools/makeIcon.py (+.ico); rthook_win_app/_server.py;     | Py tools/,| W0.2        | hooks unit-tested w/ fake platform; |
-|       | spec win32 branches: RECIPE root, runtime_hooks, console, | *.spec    |             | Linux AppImage rebuilt: sorted      |
-|       | windowed_traceback, icon, name=, DROP_DATA_DIRS (D2-D7)   |           |             | `find` diff of dist/ EMPTY (S9)     |
-|       | → commit W0.1–W0.3                                        |           |             |                                     |
-| W0.4  | BY HAND: tar + scp sources/recipe to VM, set              | VM        | V0, W0.3    | SpectracsServer.exe up; login from  |
+| W0.1  | USB guard: isSensorConnected → "absent" on any USB    ∥   | Py        | —           | 5 util cases + poll-thread test     |
+|       | error, IDs parsed outside; poll thread stops once on      |           |             | (U4–U6)                             |
+|       | NoBackendError (R3, U4, U5)                               |           |             |                                     |
+| W0.2  | --check-db right after `import os, sys`; prints dbRev +∥  | Py, -model| —           | subprocess test w/ HOME=tmp_path:   |
+|       | scriptHead + path; exits 0/3/1 via os._exit; head helper  |           |             | rc 0, head == ScriptDirectory (U21) |
+|       | public in -model (D9, U1-U3)                              |           |             |                                     |
+| W0.3  | tools/makeIcon.py (verbatim + .ico); rthook_win_app/      | Py tools/,| — (U22)     | hooks unit-tested via _plan/_apply; |
+|       | _server.py (_plan/_apply); spec win32 branches: RECIPE    | *.spec    |             | fresh Linux base (f843948) vs new,  |
+|       | root, runtime_hooks, console, windowed_traceback,         |           |             | same ref: sorted `find` of both     |
+|       | icon via SPECTRACS_ICON_ICO, name=, qml/resources drops   |           |             | dists, `pyi-archive_viewer -l -b`   |
+|       | (D2-D7); buildAppImages.sh: makeIcon only                 |           |             | of both exes, `cmp` both PNGs —     |
+|       |                                                           |           |             | all EMPTY (U10, U11)                |
+| W0.3b | requirements.txt: opencv-python on win32, headless else   | Py, VM    | —           | Linux venv unchanged; VM: headless  |
+|       | (D8, U19) → commit W0.1–W0.3b (Py + -model)               |           |             | out, opencv-python 4.7.0.72 in      |
+| W0.4  | BY HAND: tar + scp sources/recipe to VM, set              | VM        | V0, W0.3b   | SpectracsServer.exe up; login from  |
 |       | SPECTRACS_SRC_ROOT, build SERVER first (10 s, no Qt)      |           |             | source in the VM venv               |
 | W0.5  | BY HAND: build APP; `--fresh --check-db`,                 | VM        | W0.4        | Alembic head == -model's head;      |
 |       | `--check-lamp-imports`                                    |           |             | lamp imports ok                     |
@@ -842,8 +980,9 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 - **Spike first (W1.0 → W1.1).** If Windows only offers whole doubling steps of exposure, that decides whether
   Windows can measure in production at all — find out before anything else is built. W0 is worth doing either
   way (demos, archive, PDF, LIMS on Windows).
-- **W0.1 ∥ W0.2:** independent, tiny, both in `spectracsPy`, both testable on Linux without the VM.
-- **W0.3 proves Linux is untouched** with an empty file-list diff — the Windows branches must not leak.
+- **W0.1 ∥ W0.2 ∥ W0.3:** independent (U22 removed W0.3's dependency on W0.2), all testable on Linux without the VM.
+- **W0.3 proves Linux is untouched** with empty diffs of the file lists, the exes' archive listings and the icons,
+  against a fresh baseline built from the same ref (U10, U11) — the Windows branches must not leak.
 - **By hand before the script (W0.4/W0.5 → W0.6):** the script automates what worked once; server before app (10 s,
   no Qt) as on Linux.
 - **W1.4 before W1.5:** settle *one* conversion path before touching the exposure plumbing that feeds it.
