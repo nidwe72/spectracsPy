@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.6 DONE (§11c.2–§11c.5) · W0.7 next.**
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · W0.8 next (Edwin).**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -10,8 +10,9 @@ code level); phases + order in **§12**.
 > exposure **whole log₂ steps** accepted for now (decision W1.1). **W0.1–W0.3 are built and gated on Linux
 > (§11c.2); W0.3b swapped the VM to `opencv-python`; **W0.4: `SpectracsServer.exe` runs in the VM** (§11c.3).
 > **W0.5: `Spectracs.exe` builds, passes `--fresh --check-db` + `--check-lamp-imports`, and its GUI starts**
-> (§11c.4). **W0.6: `tools/buildWindows.sh` makes both zips with one command** (§11c.5). Next: **W0.7** (the
-> §5.1 self-verify inside that script). ⏸ Null run (O3) postponed. Implementation only on explicit request.
+> (§11c.4). **W0.6/W0.7: `tools/buildWindows.sh` builds, self-verifies and zips both programs with one command**
+> (§11c.5, §11c.6). Next: **V0.6** (virtual fileset + server config into the VM) and **W0.8 = Edwin's
+> click-through §8.1**, then W0.9. ⏸ Null run (O3) postponed. Implementation only on explicit request.
 
 Source: Edwin, 2026-10-07 — *"we have already build an linux AppImage of the spectracsPy and spectracsPy-server
 — now i would like to have a windows version"*. His answers in the same session:
@@ -983,6 +984,28 @@ the server's role) — both CRLF. VM build folder removed.
 runs `--fresh --check-db` → exit 0, `check-db ok … 63efd411276f`; the log banner now carries the manifest (U18's
 other branch). Recipe read `+dirty` in that first run only because the script was not committed yet.
 
+### 11c.6 W0.7 as built and run (2026-10-08)
+
+**`tools/windows/verifyInVm.ps1`**, called by `buildWindows.sh` after the build and **before** the copy back (the
+pair proof needs `src\` in the VM); a failure keeps the VM folder and zips nothing. One line per check, ends in
+`VERIFY ok` or exit 1:
+
+| # | check | pass when |
+|---|---|---|
+| 1 | `Spectracs.exe --fresh --check-db` | exit 0, `check-db ok` line, head == the archived -model's head (read on **Linux** from the staged tree, passed in), DB under `%USERPROFILE%\spectracsPy-demo` |
+| 2 | `Spectracs.exe --fresh --check-lamp-imports` | exit 0, `lamp imports ok` — ⚠ with `--fresh` (unlike Linux), so the VM's real app dir stays untouched |
+| + | GUI smoke, offscreen `--fresh` (beyond §5.1) | alive after 25 s, no `Traceback` in this run's log lines |
+| 3 | dummy listener on 8091 → `SpectracsServer.exe` | exit 1 within 15 s |
+| 4 | `SpectracsServer.exe` → 8091 within 30 s → login `masterUserExakta` from source | login ok; calibration info only |
+
+Server checks skip (like Linux §8g.3) when 8091 is already taken. Timeouts 120 / 60 / 25 / 15 / 30 s; exit codes
+via the process handle; the source client runs with `$ErrorActionPreference = "Continue"` (its stderr warnings
+would abort PowerShell 5.1 under `Stop`).
+**Negative test first**, against the W0.5 build via junctions: the right head → all ok; head `deadbeef0000` →
+`FAIL check-db: bundled head 63efd411276f != -model head deadbeef0000`, `VERIFY FAILED (1)`, exit 1.
+**Full run** `tools/buildWindows.sh` (main `e600f90`): server 30 s, app 218 s, licence gate ok, **all five checks
+ok, `VERIFY ok`**, zips `Spectracs-main-e600f90-win64.zip` 135 MB + server 13 MB, ~5 min end to end.
+
 ---
 
 ## 12 — Implementation phases and order
@@ -1039,7 +1062,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |✅W0.6 | tools/buildWindows.sh (§5): ref→SHA archives, makeIcon,   | Py tools/ | W0.5        | one command → 2 zips + manifests    |
 |       | tar/scp/checksum, remote build, gate, back, manifest +    |           |             |                                     |
 |       | START_HERE.txt, zip on Linux                              |           |             |                                     |
-| W0.7  | self-verify §5.1 (check-db, lamp imports, port-taken,     | Py tools/ | W0.6        | all green in the script output      |
+|✅W0.7 | self-verify §5.1 (check-db, lamp imports, port-taken,     | Py tools/ | W0.6        | all green in the script output      |
 |       | pair proof; timeouts as safety net) → commit              |           |             |                                     |
 | W0.8  | click-through §8.1                                        | VM, Edwin | W0.7        | §8.1 ticked                         |
 | W0.9  | delete both old PyInstaller specs → commit + push         | Py        | W0.8        | pushed                              |

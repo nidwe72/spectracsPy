@@ -69,7 +69,7 @@ if git -C "$(dirname "$TARGET")" rev-parse --is-inside-work-tree >/dev/null 2>&1
 fi
 mkdir -p "$TARGET"
 rm -rf "$TARGET/stage" "$TARGET/dist" "$TARGET"/Spectracs-*-win64 "$TARGET"/Spectracs-*-win64.zip \
-       "$TARGET/upload.tar" "$TARGET/dist.tar" "$TARGET/vm-build.log"
+       "$TARGET/upload.tar" "$TARGET/dist.tar" "$TARGET/vm-build.log" "$TARGET/vm-verify.log"
 say "target: $TARGET  (label $LABEL)"
 
 # ---------------------------------------------------------------- stage: sources + recipe + icons
@@ -87,6 +87,12 @@ LOGO="$STAGE/src/spectracsPy/resource/logo.png"
   --ico "$STAGE/icons/spectracs.ico"
 "$VENV/python" "$HERE/tools/makeIcon.py" --logo "$LOGO" --out "$STAGE/icons/spectracs-server.png" --frame \
   --ico "$STAGE/icons/spectracs-server.ico"
+# the head the bundled Alembic tree must report (§5.1.1), read from the archived -model here on Linux
+EXPECTED_HEAD="$("$VENV/python" -c "import sys
+from alembic.config import Config; from alembic.script import ScriptDirectory
+print(ScriptDirectory.from_config(Config(sys.argv[1])).get_current_head())" \
+  "$STAGE/src/spectracsPy-model/alembic/app/alembic.ini")"
+cp "$HERE/tools/windows/verifyInVm.ps1" "$STAGE/recipe/tools/"
 tar -cf "$TARGET/upload.tar" -C "$STAGE" .
 UP_SHA="$(sha256sum "$TARGET/upload.tar" | cut -d' ' -f1)"
 echo "  upload.tar $(du -h "$TARGET/upload.tar" | cut -f1)  sha256 ${UP_SHA:0:16}…"
@@ -108,6 +114,18 @@ if ! ssh "$VM" "powershell -NoProfile -ExecutionPolicy Bypass -File '$VM_DIR\\re
 fi
 DIST_SHA="$(grep -o 'RESULT ok [0-9a-f]\{64\}' "$TARGET/vm-build.log" | cut -d' ' -f3 || true)"
 [ -n "$DIST_SHA" ] || { echo "VM BUILD FAILED (no RESULT line) — logs stay in $VM_DIR" >&2; exit 1; }
+
+# ---------------------------------------------------------------- verify in the VM (§5.1, W0.7)
+if [ "$VERIFY" = "1" ]; then
+  say "verifying in the VM (alembic head $EXPECTED_HEAD)"
+  if ! ssh "$VM" "powershell -NoProfile -ExecutionPolicy Bypass -File '$VM_DIR\\recipe\\tools\\verifyInVm.ps1' -BuildDir '$VM_DIR' -Venv '$VM_VENV' -ExpectedHead '$EXPECTED_HEAD' $FLAGS" \
+       | tee "$TARGET/vm-verify.log"; then
+    echo "VERIFY FAILED — nothing zipped; the VM folder stays for a look: $VM_DIR" >&2; exit 1
+  fi
+  grep -q '^VERIFY ok' "$TARGET/vm-verify.log" || { echo "VERIFY FAILED (no 'VERIFY ok') — VM folder kept: $VM_DIR" >&2; exit 1; }
+else
+  echo "  (--no-verify: the §5.1 self-verify was skipped)"
+fi
 
 # ---------------------------------------------------------------- back to Linux
 say "fetching dist"
@@ -198,11 +216,7 @@ EOF
   echo "  -> $NAME.zip $(du -h "$TARGET/$NAME.zip" | cut -f1)"
 fi
 
-# ---------------------------------------------------------------- verify (W0.7), VM cleanup, prune
-if [ "$VERIFY" = "1" ]; then
-  say "verifying"
-  echo "  self-verify (§5.1) is W0.7 — not built yet; nothing checked beyond the licence gate"
-fi
+# ---------------------------------------------------------------- VM cleanup, prune
 ssh "$VM" "Remove-Item -Recurse -Force '$VM_DIR'"
 rm -rf "$STAGE" "$TARGET/dist" "$TARGET/upload.tar" "$TARGET/dist.tar"
 
