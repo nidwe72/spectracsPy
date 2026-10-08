@@ -958,7 +958,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |       | icon via SPECTRACS_ICON_ICO, name=, qml/resources drops   |           |             | dists, `pyi-archive_viewer -l -b`   |
 |       | (D2-D7); buildAppImages.sh: makeIcon only                 |           |             | of both exes, `cmp` both PNGs —     |
 |       |                                                           |           |             | all EMPTY (U10, U11)                |
-| W0.3b | requirements.txt: opencv-python on win32, headless else   | Py, VM    | —           | Linux venv unchanged; VM: headless  |
+|✅W0.3b| requirements.txt: opencv-python on win32, headless else   | Py, VM    | —           | Linux venv unchanged; VM: headless  |
 |       | (D8, U19) → commit W0.1–W0.3b (Py + -model)               |           |             | out, opencv-python 4.7.0.72 in      |
 | W0.4  | BY HAND: tar + scp sources/recipe to VM, set              | VM        | V0, W0.3b   | SpectracsServer.exe up; login from  |
 |       | SPECTRACS_SRC_ROOT, build SERVER first (10 s, no Qt)      |           |             | source in the VM venv               |
