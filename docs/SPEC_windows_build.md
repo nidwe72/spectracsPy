@@ -725,7 +725,9 @@ private networks"). And **in the VM, mDNS only reaches the plug with bridged net
 2. start the app **without** a server: it comes up and says it is offline;
 3. start `SpectracsServer.exe` by hand, then the app; data dirs appear in `%USERPROFILE%\spectracsPy\` and
    `…\spectracsPy-server\` — **not** named after the zip folder;
-4. login `masterUserExakta` (bench) and `elpUser` (end user) — ⚠ elpUser's sensor is the real ELP ⇒ the lamp
+4. login `masterUserExakta` (bench) and `elpUser` (end user) — ⚠ the bench needs the ELP-0001 **calibration**, which
+   a fresh server DB does not have (seeded empty, authored once on the real camera — D6); for W0 it is copied from
+   Linux (§11c.7); ⚠ elpUser's sensor is the real ELP ⇒ the lamp
    service and the USB poll start (§4.2, U20); presence reads "absent", the log holds no repeating tracebacks;
 5. **spectrometer-setup screen** opens without a crash (R3);
 6. virtual spectrometer (fileset copied into the VM in V0.6) → one full plugin run → Rv shown;
@@ -1018,6 +1020,15 @@ ok, `VERIFY ok`**, zips `Spectracs-main-e600f90-win64.zip` 135 MB + server 13 MB
   in the VM: `ServerConfig.configDir()` = that folder, 13 keys, the SENAITE URL as above. ⚠ SENAITE (Docker on the
   Linux box) must be **up** for §8.1.7's LIMS publish, and port 6090 reachable from the LAN.
 - The verified zips `Spectracs-main-e600f90-win64.zip` + server zip were copied to the VM's `Downloads\` for W0.8.
+- **ELP-0001 calibration** (added during W0.8, Edwin: "copy the profiles"): the bench said "no calibration" —
+  the VM's server DB holds the seeded **empty** profile (`UserSeedLogicModule.__seedElpInstrument`; the calibration is
+  measured on the physical camera, D6, never seeded). Copied the Linux one (`~/.spectracsPy-server/spectracsPyServer.db`,
+  same head `405d2ce2cec1`): ROI 564/907–2145/1782, coefficients A–D, the CFL spectrum (54 764 chars) and its 6 lines.
+  Lines are matched to the VM's `spectral_line_master_data` **by name** (the ids are random per DB) with a nanometer
+  check; the script refuses a non-empty target. Server stopped first, backup
+  `spectracsPyServer.db.bak-before-calibration`. Read back identical; a login of `masterUserExakta` against the frozen
+  server now carries the calibration (was `None`). TEST-0001 stays empty — it is empty on Linux too. W1 replaces this
+  with a calibration authored in the VM on the real ELP (§8.2).
 
 ---
 
