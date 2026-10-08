@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.3 BUILT (§11c.2) · W0.3b next.**
+Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.4 DONE (§11c.2, §11c.3) · W0.5 next.**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -8,8 +8,9 @@ code level); phases + order in **§12**.
 > Shelly reachable). The camera questions are answered (§6.6b, §6.6c): MSMF + own YUY2 conversion (needs
 > non-headless `opencv-python` on Windows), **white balance frozen natively via DirectShow `IAMVideoProcAmp`**,
 > exposure **whole log₂ steps** accepted for now (decision W1.1). **W0.1–W0.3 are built and gated on Linux
-> (§11c.2).** Next: **W0.3b** (requirements split + the VM's OpenCV swap), then W0.4 in the VM. ⏸ Null run (O3)
-> postponed. Implementation only on explicit request.
+> (§11c.2); W0.3b swapped the VM to `opencv-python`; **W0.4: `SpectracsServer.exe` runs in the VM** (§11c.3).
+> Next: **W0.5** (the app exe, `--fresh --check-db`). ⏸ Null run (O3) postponed. Implementation only on explicit
+> request.
 
 Source: Edwin, 2026-10-07 — *"we have already build an linux AppImage of the spectracsPy and spectracsPy-server
 — now i would like to have a windows version"*. His answers in the same session:
@@ -911,6 +912,36 @@ missing), `tests/test_rthooks_win.py` (9). `pytest tests/` **631 passed**.
 **diff empty**. `cmp` of `spectracs.png` and `spectracs-server.png`: **identical** (also identical to the
 2026-09-09 build). ⇒ the Windows branches do not reach the Linux AppImages.
 
+### 11c.3 W0.3b + W0.4 as run (2026-10-08)
+
+- **W0.3b:** `requirements.txt` split by marker (D8); the Linux venv resolves with nothing to install. VM:
+  `pip uninstall opencv-python-headless`, `pip install --no-deps opencv-python==4.7.0.72`, `pip check` clean;
+  `cv2` 4.7.0 lists `MSMF` and `DSHOW`. (`cv2_enumerate_cameras` from the spike is still in the VM venv; nothing
+  imports it.)
+- **Sources:** `git archive HEAD` of the six code repos (no `.git`), spectracsPy `a006be1`, -core `7573029`,
+  -model `3eab8a2`, -base `d9eada5`, -server `9c16122`, -plugins `59ced63`, plus both `.ico` from `makeIcon.py` →
+  one 18 MB tar → `scp` → sha256 equal on both ends → `tar -xf` into `C:\spectracs-build\src-a006be1\`. Recipe =
+  the same tree (SRC = RECIPE for the by-hand build).
+- **Server build:** `SPECTRACS_SRC_ROOT` + `SPECTRACS_ICON_ICO_SERVER` set inside the remote PowerShell command,
+  `pyinstaller spectracsServerAppImage.spec` → **36 s, rc 0**, `dist\server\SpectracsServer\` 34 entries,
+  `SpectracsServer.exe` 5.4 MB. Only warnings: hidden imports `pysqlite2` / `MySQLdb` not found (SQLAlchemy's
+  optional dialects — harmless).
+- **Run** (`verifyServer.ps1`): port 8091 up within the 30 s wait; login **from source** in the VM venv →
+  `MASTER_USER / ELP-0001 / calibration MISSING (info only)`; a second `SpectracsServer.exe` and a plain dummy
+  listener on 8091 both make it **refuse with exit code 1** and the D4 message. Data landed in
+  `%USERPROFILE%\spectracsPy-server\` (cwd `%USERPROFILE%\Spectracs\spectracsPy-server`) — not named after the
+  build folder. ✅ D4 works frozen on Windows.
+- **Learned for the script (W0.6/W0.7):**
+  - PowerShell `Start-Process -PassThru` returns a null `ExitCode` unless `$p.Handle` is read right after the
+    start ⇒ the script reads it.
+  - Redirected stdout of the frozen server is block-buffered: the run log was **empty** after `Stop-Process
+    -Force`. A real console window is line-buffered, so this hits only the script's logs ⇒ W0.7 checks the port
+    and the login, not the server's stdout (or tries `PYTHONUNBUFFERED=1`, UNVERIFIED for the frozen bootloader).
+  - The server dir also holds an empty-schema `spectracsPy.db` — same on Linux (`~/.spectracsPy-server/`), not a
+    Windows issue.
+  - The from-source login creates `%USERPROFILE%\spectracsPy-verify-client\` (appdata names it after the cwd) —
+    throwaway, like the Linux verify's.
+
 ---
 
 ## 12 — Implementation phases and order
@@ -960,7 +991,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |       |                                                           |           |             | all EMPTY (U10, U11)                |
 |✅W0.3b| requirements.txt: opencv-python on win32, headless else   | Py, VM    | —           | Linux venv unchanged; VM: headless  |
 |       | (D8, U19) → commit W0.1–W0.3b (Py + -model)               |           |             | out, opencv-python 4.7.0.72 in      |
-| W0.4  | BY HAND: tar + scp sources/recipe to VM, set              | VM        | V0, W0.3b   | SpectracsServer.exe up; login from  |
+|✅W0.4 | BY HAND: tar + scp sources/recipe to VM, set              | VM        | V0, W0.3b   | SpectracsServer.exe up; login from  |
 |       | SPECTRACS_SRC_ROOT, build SERVER first (10 s, no Qt)      |           |             | source in the VM venv               |
 | W0.5  | BY HAND: build APP; `--fresh --check-db`,                 | VM        | W0.4        | Alembic head == -model's head;      |
 |       | `--check-lamp-imports`                                    |           |             | lamp imports ok                     |
