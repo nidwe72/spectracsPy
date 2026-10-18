@@ -1,6 +1,6 @@
 # SPEC — Camera settings: one declared, applied and recorded state (DESIGN)
 
-Status (2026-10-18): **DESIGN only — Q1–Q8 all decided (§8); two rubber ducks folded in place (§10 D1–D14, §11 E1–E14); Q9/Q10 open** — implementation only on Edwin's explicit request.
+Status (2026-10-18): **DESIGN only — Q1–Q10 all decided (§8); two rubber ducks folded in place (§10 D1–D14, §11 E1–E14)** — implementation only on Edwin's explicit request.
 Grew out of `SPEC_windows_build.md` W1.4/W1.4b (§11c.11, §11c.12) and D10. It **absorbs** three planned steps of that
 spec: the image-controls half of **W1.4b**, **W1.5b** (white balance declared by the plugin) and **W1.5** (the
 exposure converter + `exposureUnit`) — they become phases here (§9), so they are not built twice.
@@ -205,8 +205,11 @@ CameraLegSnapshot           (per capture leg — what was IN FORCE)
   (`WorkflowPhaseRenderer.renderStep`, `render/WorkflowPhaseRenderer.py:47-51`). The reference step has none today,
   so `WizardViewModule.__computedPanel` (`:227`) falls back to the spectrum plot; with a record view attached the tab
   would go **empty** (the visitor ignores the unknown type, `WorkflowItemVisitor.py:76`). ⇒ `stepViewModels()` filters
-  the record view out, and the shared camera table (§7) is rendered beside the plot instead. Test beside
-  `test_saved_run_shows_the_settling_tabs.py`.
+  the record view out, and the re-opened acquisition step gets **the same sub-tabs as the live panel** (Q10,
+  Edwin: "the camera table should be always a sub-tab"): `Spectrum` (today's container-plot fallback) | `Camera`
+  (the shared table, §7) | the Settling tabs if any. ⚠ As far as the code reads, a settled sample step re-opened
+  today shows only its Settling tabs and no plot (the items win over the fallback) — this layout brings the plot
+  back too. Test beside `test_saved_run_shows_the_settling_tabs.py`.
   That gives: per leg by construction; persisted via `EvaluationResult.resultJson`
   (`PersistSpectralWorkflowLogicModule.py:83`); in the report JSON per step (`SpectralWorkflow.py:170-172`); rebuilt
   by `report_reconstruct.py:105` and a LIMS addon via `ViewModelFactory`; **no Alembic revision**. ⚠ Edwin's Q2 "yes,
@@ -344,8 +347,12 @@ active leg's snapshot with ⛔ on mismatch with the other leg. ⚠ There is **on
 the role pages (`__stepContent`, `CapturePanel.py:222, :318-323`) ⇒ the Camera tab is rebuilt in `__onRoleTabChanged`
 (`:333`) from the active step's record (not Settling's stale-across-roles behaviour) (E10). Placed at **index 2, before
 Settling** — the Director scenario addresses `innerTabs` by index (`automation/scenarios/measurement_bench.py:40`).
+- **Who sees the tab (Q9):** only the **DevSpectralPlugin** — a new plugin hook `showsCameraTab() -> bool` (default
+  `False`, Dev returns `True`), asked by the live `CapturePanel` **and** by the VIEW-mode host (which already loads
+  the plugin from the persisted `pluginCodeRef`; a `CaptureView` flag would not survive a reload, `_view` is
+  transient). Every other plugin's operator gets the table in the PDF only.
 - **One Qt-free builder, three consumers (E9):** `cameraSettingsTable(records) -> TableView` in -core feeds the PDF, the
-  Camera tab and VIEW mode; `TableView` already renders in both targets (Matplotlib `:585`, Qt `:488`). The record view
+  Camera sub-tab live and the Camera sub-tab in a re-opened run; `TableView` already renders in both targets (Matplotlib `:585`, Qt `:488`). The record view
   stays **out** of the visitor dispatch ladder — no new visitor method anywhere.
 - PDF limits: fontsize 6, right-aligned, no per-row colour ⇒ the mismatch is text in a column (`⛔ ref ≠ sample`);
   ℹ check the PDF font carries ⛔. ⚠ Edwin's Q5 "a tab of Spectral step" — re-confirm on this basis (§8).
@@ -363,8 +370,8 @@ Settling** — the Director scenario addresses `innerTabs` by index (`automation
 | Q7 | WB 6500 K: profile or plugin? | ✅ **both** (Edwin) — the MEASUREMENT profile carries it as the instrument fact; the plugin can and should override, DevSpectralPlugin declares it (§6.1) |
 | Q8 | may a plugin switch an auto loop on in a measurement? | ✅ **yes, no extra flag** (Edwin: "sounds fine") — the explicit override is accepted, recorded `source = plugin`, and badged ⛔ in the PDF and the Camera tab (§6.1) |
 | — | IDLE profile for the warm-keeper (D1) | proposal in §3.3 — speaks for itself, flagged so it is not a surprise |
-| Q9 | does the **end-user wizard** show the "Camera" inner tab too, or only the master's bench? (`CapturePanel` serves both, `:162` / `:170`) (E10) | **proposal: bench only**, switched by a `CaptureView` flag; the end user gets the table in the PDF |
-| Q10 | a re-opened run (VIEW mode): show the camera table beside the reference/sample plot? (E1) | **proposal: yes** — the same builder, and it is what replaces the empty-tab regression anyway |
+| Q9 | does the **end-user wizard** show the "Camera" inner tab too, or only the master's bench? (`CapturePanel` serves both, `:162` / `:170`) (E10) | ✅ **only the DEV measurement bench plugin** (Edwin) — plugin hook `showsCameraTab()`, not a `CaptureView` flag (it would not survive a reload); everyone gets the table in the PDF |
+| Q10 | a re-opened run (VIEW mode): where does the camera table go? (E1) | ✅ **always a sub-tab** (Edwin) — the re-opened step gets `Spectrum` \| `Camera` \| Settling, the same sub-tabs as live; not "beside the plot" |
 
 ## 9 — Phases (replace W1.4b-controls, W1.5 and W1.5b in SPEC_windows_build.md §12)
 
@@ -375,12 +382,12 @@ Settling** — the Director scenario addresses `innerTabs` by index (`automation
 | CS1b | profiles CALIBRATION/MEASUREMENT/IDLE + `resolve()` (backend quantiser hook, host exposure seed, clamp/snap, skipped, inactive) | -core `logic/application/camera` | CS1a | precedence, snap, skipped, inactive tests |
 | CS2 | Linux `LinuxUvcControls` + static `readDeviceDefaults(deviceId)`; `open(profile=…)` applies + reads back (one writer, own fd, lock vs `release`); `setExposure` returns the applied value; **refusal stops + `cameraRefused` signal**; every opener passes its profile (incl. IDLE); diagnostics' `open(…, whiteBalanceKelvin=)` + Android/RPi signatures | Py | CS1b | fake-ioctl/controls-factory tests; broken cv2-order asserts rewritten; rig read-back == §11c.11; ELP calibration re-check |
 | CS3 | Windows: `planControls` → `resolve`; exposure natively + converter in `open` and `setExposure` (returns `10000·2^k`); `exposureMin/Max` in V4L2 units; refusal stops | Py | CS0, CS1b | W1.6 tests rewritten; converter tests; VM "90 → −7 = 78" |
-| CS4 | plugin `cameraSettings(deviceDefaults)` (dict or `CameraSettings`, base `None`); the §6.1 sequence in `__startStream`, `__syncExposureToSensor` moved; `setLiveExposure(value, source)`; DevSpectralPlugin declares exposure + WB and **keeps** `exposure = 90`; WB constant goes | -core, Py, plugins | CS2 (CS3 for Windows) | old signed row works; new row on an old app keeps its pin |
+| CS4 | plugin `cameraSettings(deviceDefaults)` (dict or `CameraSettings`, base `None`); the §6.1 sequence in `__startStream`, `__syncExposureToSensor` moved; `setLiveExposure(value, source)`; DevSpectralPlugin declares exposure + WB and **keeps** `exposure = 90`; WB constant goes; hook `showsCameraTab()` (base `False`, Dev `True`, Q9) | -core, Py, plugins | CS2 (CS3 for Windows) | old signed row works; new row on an old app keeps its pin |
 | CS5 | hold-back 5 in `VideoThread` (counter after open + live change; consumed without `afterCapture`; sent as preview); AE probes + `best` excluded | Py | CS2 | fake frame source: no held-back frame in a burst, preview not frozen |
 | CS6 | `CameraOpenRecord` + `CameraLegSnapshot` (start after AE/first frame, end at `:992`, `requestedExposure` + source) → `CameraSettingsRecordView`; `engine.attachCameraRecord` (replace by `isinstance`); cancel/fail drops it; virtual record in the engine's `frameProvider is None` branch; `exposureApplied` derived (requested + native) | -model, Py | CS4, CS5 | round-trip via `ViewModelFactory` + `report_reconstruct.py`; `d2r_all_runs.py` unchanged |
-| CS6.5 | Qt-free `cameraSettingsTable(records)` in -core; VIEW-mode filter in `stepViewModels()` + table beside the plot (Q10) | -core, Py | CS6 | reopened run still shows the reference plot (new test) + the table |
+| CS6.5 | Qt-free `cameraSettingsTable(records)` in -core; VIEW-mode filter in `stepViewModels()` + re-opened step as sub-tabs `Spectrum` \| `Camera` \| Settling (Q10) | -core, Py | CS6 | re-opened run shows the reference plot AND a Camera sub-tab (new test); settling test still green |
 | CS7 | PDF: builder harvests the records after ACQUISITION, appends the table; mismatch as text; ⛔ glyph check | -core | CS6.5 | PDF shows the table; mismatch + virtual line rendered |
-| CS8 | GUI inner tab "Camera" at index 2, rebuilt on role change; bench only (Q9) | Py | CS6.5 | click-through: filled after the reference leg; ⛔ on a forced mismatch; Director scenario still passes |
+| CS8 | GUI inner tab "Camera" at index 2, rebuilt on role change; shown only when `plugin.showsCameraTab()` (Dev) (Q9) | Py | CS6.5 | click-through: filled after the reference leg; ⛔ on a forced mismatch; Director scenario still passes |
 | CS9 | Windows: CS3 re-checked end to end in the VM + `buildWindows.sh` → W1.7 click-through | VM | CS3–CS8 | VERIFY ok |
 
 Order rationale: the model first (CS1a/b) so both backends apply the *same* resolution; CS3 carries the exposure
