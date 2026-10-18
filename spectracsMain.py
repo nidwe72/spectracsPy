@@ -30,6 +30,24 @@ def _checkLampImports():
     return 0
 
 
+def _checkCameraImports():
+    # Prove the bundle can ENUMERATE cameras and talk to their controls (CS9): on Windows cv2_enumerate_cameras' native
+    # backend needs its delvewheel .libs folder, and WindowsUvcControls its comtypes declarations — a missing piece
+    # would only surface as "no spectrometer connected" with the camera plugged in. No camera needed: an empty list
+    # still proves the import.
+    if sys.platform == "win32":
+        from cv2_enumerate_cameras import enumerate_cameras
+        from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import CAP_MSMF
+        from sciens.spectracs.logic.application.video.capture.WindowsUvcControls import _comInterfaces
+        _comInterfaces()
+        cameras = enumerate_cameras(CAP_MSMF)
+    else:
+        from sciens.spectracs.logic.application.video.capture.LinuxUvcControls import LinuxUvcControls  # noqa: F401
+        cameras = []
+    print("camera imports ok (%d MSMF cameras)" % len(cameras))
+    return 0
+
+
 def _checkDb():
     # Bring the app DB to head as a normal start would, then report the stamped revision, the bundled script head
     # and where the DB landed (proves the Windows runtime hook's chdir; SPEC_windows_build.md D9). 3 = mismatch.
@@ -46,6 +64,8 @@ def _checkDb():
 
 if "--check-lamp-imports" in sys.argv:
     _runHeadlessCheck(_checkLampImports)
+if "--check-camera-imports" in sys.argv:
+    _runHeadlessCheck(_checkCameraImports)
 if "--check-db" in sys.argv:
     _runHeadlessCheck(_checkDb)
 

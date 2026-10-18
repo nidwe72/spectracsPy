@@ -65,6 +65,17 @@ for candidate in ("/lib/x86_64-linux-gnu/libusb-1.0.so.0", "/usr/lib/x86_64-linu
         binaries.append((candidate, "."))
         break
 
+# Windows camera enumeration (W1.2 / SPEC_camera_settings.md CS9): cv2_enumerate_cameras is a delvewheel wheel — its
+# _windows_backend.pyd links a RENAMED msvcp140-<hash>.dll that lives in the sibling `cv2_enumerate_cameras.libs`
+# folder, which the package's __init__ adds with os.add_dll_directory. PyInstaller does not follow that, so without
+# this the frozen app reads every camera as "not connected" (found at the rig 2026-10-18).
+if WIN:
+    import importlib.util
+    _spec = importlib.util.find_spec("cv2_enumerate_cameras")
+    _libs = os.path.join(os.path.dirname(os.path.dirname(_spec.origin)), "cv2_enumerate_cameras.libs")
+    for _name in (os.listdir(_libs) if os.path.isdir(_libs) else []):
+        binaries.append((os.path.join(_libs, _name), "cv2_enumerate_cameras.libs"))
+
 # --- hidden imports ----------------------------------------------------------------------------
 hiddenimports = collect_submodules("pyqtgraph")        # pyqtgraph imports its submodules dynamically
 hiddenimports += [

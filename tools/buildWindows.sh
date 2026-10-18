@@ -151,7 +151,7 @@ if [ -n "$DO_APP" ]; then
     echo "            local server for development and demos (same label)."
     echo "data:       %USERPROFILE%\\spectracsPy\\  (app DB)"
     echo "log:        %USERPROFILE%\\Spectracs\\spectracsPy\\spectracs.log"
-    echo "camera:     virtual spectrometer and archive only - the real camera comes with W1."
+    echo "camera:     real camera via MSMF (raw YUY2, own conversion) + its DirectShow controls (W1, SPEC_camera_settings CS3)."
     echo "degraded:   SENAITE, PayPal and plugin PUBLISHING are off (no server-config, no signing key)."
     echo "licence:    QtCharts / QtDataVisualization / QtWebEngine excluded; the build asserts their absence."
   } | crlf > "$TARGET/$NAME/RELEASE_MANIFEST.txt"

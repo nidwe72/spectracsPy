@@ -6,6 +6,7 @@
 #
 #   app:    1  Spectracs.exe --fresh --check-db  -> exit 0, "check-db ok", script head == $ExpectedHead, demo dir
 #           2  Spectracs.exe --fresh --check-lamp-imports -> exit 0, "lamp imports ok"
+#           2b Spectracs.exe --fresh --check-camera-imports -> exit 0, "camera imports ok (N MSMF cameras)"
 #           +  GUI smoke (beyond §5.1): offscreen --fresh start alive after 25 s, no Traceback in the log
 #   server: 3  a dummy listener on 8091 -> SpectracsServer.exe refuses with exit 1
 #           4  SpectracsServer.exe (no args) opens 8091; login masterUserExakta FROM SOURCE in the VM venv;
@@ -63,6 +64,11 @@ if ($App) {
     $rc = Wait-Exit (Start-Headless $exe @("--fresh", "--check-lamp-imports")) 60000
     $line = Get-Content $log -Encoding UTF8 -ErrorAction SilentlyContinue | Select-Object -Last 1
     if ($rc -eq 0 -and $line -eq "lamp imports ok") { Ok "lamp imports" } else { Fail "lamp imports: exit $rc, last log line '$line'" }
+
+    # 2b — the camera can be enumerated and its controls declared (cv2_enumerate_cameras.libs, comtypes; CS9)
+    $rc = Wait-Exit (Start-Headless $exe @("--fresh", "--check-camera-imports")) 60000
+    $line = Get-Content $log -Encoding UTF8 -ErrorAction SilentlyContinue | Select-Object -Last 1
+    if ($rc -eq 0 -and $line -like "camera imports ok*") { Ok $line } else { Fail "camera imports: exit $rc, last log line '$line'" }
 
     # + — the window comes up (offscreen) and survives its start
     $before = @(Get-Content $log -Encoding UTF8).Count
