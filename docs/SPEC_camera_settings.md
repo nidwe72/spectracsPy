@@ -1,6 +1,6 @@
 # SPEC — Camera settings: one declared, applied and recorded state (DESIGN)
 
-Status (2026-10-18): **CS1a–CS8 IMPLEMENTED on Linux (§12 as built), offscreen-tested; rig click-through owed (CS2 read-back on the ELP, ELP calibration re-check, CS8 Camera tab). CS0, CS3, CS9 (Windows) open.** Q1–Q10 decided (§8); two rubber ducks folded in place (§10, §11).
+Status (2026-10-18): **CS0–CS8 IMPLEMENTED (§12, §13 as built); Linux rig ✓ for CS2/CS4/CS5/CS8 (reference leg); Windows ✓ on the real ELP in the VM (CS9 open check). Owed: a full run with a sample (PDF, reopen), ELP calibration re-check, W1.7 click-through in the VM (Edwin).** Q1–Q10 decided (§8); two rubber ducks folded in place (§10, §11).
 Grew out of `SPEC_windows_build.md` W1.4/W1.4b (§11c.11, §11c.12) and D10. It **absorbs** three planned steps of that
 spec: the image-controls half of **W1.4b**, **W1.5b** (white balance declared by the plugin) and **W1.5** (the
 exposure converter + `exposureUnit`) — they become phases here (§9), so they are not built twice.
@@ -84,8 +84,8 @@ One enum, the vocabulary every layer uses. The OS mapping lives in the backends 
 | `GAIN` | `GAIN` | `VideoProcAmp_Gain` (9) | camera units |
 | `BACKLIGHT` | `BACKLIGHT_COMPENSATION` | `VideoProcAmp_BacklightCompensation` (8) | camera units |
 | `BRIGHTNESS`, `CONTRAST`, `HUE`, `SATURATION`, `SHARPNESS`, `GAMMA` | same names | `VideoProcAmp_*` (0–5) | camera units |
-| `POWER_LINE_FREQUENCY` | `POWER_LINE_FREQUENCY` (menu; newer kernels also 3 = auto) | KS VideoProcAmp id 13 — **to be probed (CS0)** | `DISABLED` / `50` / `60` / `AUTO` |
-| `DYNAMIC_FRAMERATE` | `EXPOSURE_AUTO_PRIORITY` | KS CameraControl id 19 — **to be probed (CS0)** | bool |
+| `POWER_LINE_FREQUENCY` | `POWER_LINE_FREQUENCY` (menu; newer kernels also 3 = auto) | KS VideoProcAmp id 13 — ✅ CS0: 0..2, default 1, no auto flag; writes and reads back | `DISABLED` / `50` / `60` / `AUTO` |
+| `DYNAMIC_FRAMERATE` | `EXPOSURE_AUTO_PRIORITY` | KS CameraControl id 19 — ✅ CS0: offered but FIXED at 0 (min = max = 0) ⇒ read, never written | bool |
 
 ⚠ "camera units" are deliberate: Gamma 100 on the ELP is not Gamma 100 on another camera. A plugin that overrides
 an image control is therefore camera-specific by nature — the record (§4) says which camera it was.
@@ -456,4 +456,12 @@ same both-legs table as the PDF (not only the active leg — one builder, so the
 Owed on the rig (Linux): one measurement on the ELP — the CAPTURE-SETTINGS line shows `profile=MEASUREMENT
 exposureSource=plugin`, the open prints every control, the read-back equals §11c.11 of the Windows spec, the PDF has
 the Camera settings section, the bench shows the Camera tab; then the ELP calibration re-check (D12, backlight 1).
+
+## 13 — As built (2026-10-18): CS0, CS3, CS9 — Windows
+
+| phase | what | evidence |
+|---|---|---|
+| CS0 | `diagnostics/windows_cs0_controls_probe.py` (the app's own COM declarations, GetRange + Get only) in the VM: VideoProcAmp 0–5, 7–9, **13** offered (13 = power line 0..2, default 1, caps 0); 6, 10–12 not; CameraControl 4 (exposure −13..−1, default −7) and **19 fixed at 0**; no other CameraControl id | §3.1 Windows column final |
+| CS3 | `WindowsUvcControls` rewritten as the twin of `LinuxUvcControls` over a `DirectShowCamera` COM seam: `describe()` (firmware defaults in model units, auto-capable controls default to auto — GetRange has no default mode), `apply(resolution)`, `read()`, `setExposure(v4l2)` → applied V4L2 value, `nativeExposure()`; converter `toV4l2(k) = round(10000·2^k)`, `toLog2(v)` nearest whole step clamped to the camera; quantiser on the exposure range so resolve() snaps 90 → 78 BEFORE the write (said in `adjusted`); `CaptureBackend` uses the same resolve/apply/read-back/refuse flow on both OSes (`planControls`, `provesFrozen`, the native-settings dict and every cv2 control write on Windows are gone; a camera whose controls cannot be bound: MEASUREMENT refused, others warn and set exposure through cv2 in log₂); `readDeviceDefaults` on Windows via the MSMF path; `readCameraSettings` reports V4L2 units (range 1..5000) + `exposureNative`; the leg snapshot records the native step | `tests/test_windows_camera.py` (fake DirectShow with the CS0 table) |
+| CS9 | `diagnostics/windows_cs9_open_check.py` on the real ELP in the VM: MEASUREMENT / CALIBRATION / IDLE all open, 10/10 frames, no refusal, no mismatch, no failure; MEASUREMENT `requested 90 → 78 (snapped)`, read-back 78 = −7; `setExposure` 90 → 78, 104 → 78, 150 → 156; CALIBRATION auto WB + backlight 1; `readDeviceDefaults` = the firmware table (exposure 78, WB 4600 auto, backlight 1). ⚠ Run with `PYTHONIOENCODING=utf-8`: a bare ssh console is cp1252 and cannot print ⚠ | `tools/buildWindows.sh --tag main` (spectracsPy 9854bed): both zips built, VERIFY ok (check-db, lamp imports, GUI smoke 25 s, server port + login) → `~/spectracs-build/windows/2026-10-18T22-00-20/`; W1.7 click-through is Edwin's |
 
