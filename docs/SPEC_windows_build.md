@@ -1380,6 +1380,13 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 ```
 
+**W2 decisions (Edwin, 2026-10-18):** the **server gets an installer too**, the same way as the app (consistency);
+a new version simply **installs over the old one** (no auto-update, §10); the real **Windows 11 PC** (W2.4) is
+Edwin's own and comes later. ⚠ **Signing (W2.2), checked 2026-10-18:** Microsoft's Artifact Signing (ex Trusted
+Signing) issues Public Trust certificates to **individuals only in the US/Canada**; organisations in the EU qualify
+(legal entity, business identifier, website, e-mail on the company domain) ⇒ as a private person the route is a
+classic OV certificate; revisit if a company exists. Proposal: stay unsigned until the first real customer.
+
 **Order rationale.**
 - **Spike first (W1.0 → W1.1).** If Windows only offers whole doubling steps of exposure, that decides whether
   Windows can measure in production at all — find out before anything else is built. W0 is worth doing either
