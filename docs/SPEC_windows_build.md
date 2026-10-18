@@ -424,8 +424,10 @@ Order inside `buildWindows.sh`, after the zips and before the VM cleanup (the VM
    no file the new version does not have, silent uninstall removes `{app}` and the uninstall entry, and
    `%USERPROFILE%\spectracsPy-demo\` is still there; same for the server (start, port 8091, stop);
 4. the setups come back to Linux with a sha256 check, next to the zips; the manifest lists both.
-- **Toolchain pin:** Inno Setup 6.x installed once in the VM (`winget install JRSoftware.InnoSetup --version …`),
-  version recorded in `toolchain.txt` like PyInstaller's (D8).
+- **Toolchain pin:** Inno Setup **6.7.3** installed once in the VM, per user, to `C:\spectracs-build\InnoSetup6\`
+  (the official installer from the jrsoftware GitHub release, signature valid — winget's source fails over ssh); version
+  recorded in `toolchain.txt` like PyInstaller's (D8), read from Inno's own uninstall entry (ISCC.exe has no version
+  resource). 7.x exists (2026-08) — not taken: the 6 line is the one this recipe was written and tested for.
 
 ### 5b.6 Decided (Edwin, 2026-10-18)
 
@@ -443,6 +445,20 @@ Order inside `buildWindows.sh`, after the zips and before the VM cleanup (the VM
 | W2.1c | `buildWindows.sh`: text files back, ISCC, fetch, sha256, manifest; `--no-installer` | Py `tools/` | one command → 2 zips + 2 setups |
 | W2.1d | `verifyInVm.ps1 -Setup`: install, check, install over, uninstall, data kept | Py `tools/windows/` | VERIFY ok includes the setups |
 | W2.1e | Edwin installs from the setups in the VM (not the zip) and repeats the W1.7 click-through | VM, Edwin | ticked |
+
+### 5b.8 As built (2026-10-18)
+
+- `tools/windows/spectracs.iss`, `spectracs-server.iss` (UTF-8 **with BOM** — Inno 6 reads a BOM-less file as ANSI
+  and the German umlauts break); install-over empties `{app}` in `[Code]`, guarded by the program's exe, and the
+  folder page is disabled so `{app}` is always our own folder.
+- `tools/windows/setupInVm.ps1` (ISCC, `SETUP ok <file> <sha256>`), `verifySetupInVm.ps1` (`SETUP-VERIFY ok`); a real
+  install of the same AppId in the VM is detected and skipped, never uninstalled. The silent installs run with
+  `/LANG=en` — the VM is a German Windows and picks German shortcut names otherwise.
+- `buildWindows.sh` (default on, `--no-installer` off): installed-copy `START_HERE.txt` written on Linux, sent to the
+  VM with the manifest, setups compiled + verified + fetched with sha256. First full run `main-032ab16`: app setup
+  87 MB (67 s), server 12 MB; VERIFY ok, SETUP-VERIFY ok (install, installed `--check-db` + `--check-camera-imports`,
+  install over, uninstall, data kept; server: 8091 opens).
+- Owed: W2.1e, Edwin installs from the setups in the VM and repeats W1.7.
 
 ## 6 — W1: the camera on Windows
 
@@ -1463,7 +1479,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         W2 — INSTALLER + SIGNING  (before the first customer; W2.1 may start after W0)                        |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
-| W2.1  | Inno Setup, per-user (%LOCALAPPDATA%\Programs) — §5b  ∥   | Py tools/ | W0.7        | Setup.exe installs w/o admin        |
+|◐W2.1  | Inno Setup, per-user (%LOCALAPPDATA%\Programs) — §5b  ∥   | Py tools/ | W0.7        | Setup.exe installs w/o admin        |
 | W2.2  | signing: OV certificate vs Microsoft cloud signing        | Edwin     | —           | decided                             |
 | W2.3  | sign Setup.exe (+ every binary if Smart App Control)      | build     | W2.1, W2.2  | no SmartScreen box on download      |
 | W2.4  | real Windows 11 PC: install + §8.1 + §8.2                 | Win11 PC  | W2.3, W1.7  | ticked (same session as W1.8 later) |
