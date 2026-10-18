@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-18): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + pushed (§11c.9, §11c.10) · W1.4 DONE (§11c.11: Linux adopts our conversion; settling 4 frames) · W1.4b BUILT (§11c.12 conversion; controls via SPEC_camera_settings.md) · W1.5, W1.5b, W1.5c BUILT as SPEC_camera_settings.md CS0–CS9 (§11c.13) · W1.7 click-through run by Edwin as far as possible without a sample (2026-10-18) — the sample leg, PDF and reopen still owed.**
+Status (2026-10-19): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + pushed (§11c.9, §11c.10) · W1.4 DONE (§11c.11: Linux adopts our conversion; settling 4 frames) · W1.4b BUILT (§11c.12 conversion; controls via SPEC_camera_settings.md) · W1.5, W1.5b, W1.5c BUILT as SPEC_camera_settings.md CS0–CS9 (§11c.13) · W1.7 click-through run by Edwin as far as possible without a sample (2026-10-18) — the sample leg, PDF and reopen still owed · W2.1 DONE (§5b.8): both setups built + verified by `buildWindows.sh`, installed by Edwin in the VM, server and app start (2026-10-19).**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -444,7 +444,7 @@ Order inside `buildWindows.sh`, after the zips and before the VM cleanup (the VM
 | W2.1b | `spectracs.iss` + `spectracs-server.iss` (5b.1–5b.4) | Py `tools/windows/` | ISCC builds both by hand in the VM |
 | W2.1c | `buildWindows.sh`: text files back, ISCC, fetch, sha256, manifest; `--no-installer` | Py `tools/` | one command → 2 zips + 2 setups |
 | W2.1d | `verifyInVm.ps1 -Setup`: install, check, install over, uninstall, data kept | Py `tools/windows/` | VERIFY ok includes the setups |
-| W2.1e | Edwin installs from the setups in the VM (not the zip) and repeats the W1.7 click-through | VM, Edwin | ticked |
+| W2.1e | Edwin installs from the setups in the VM (not the zip) and repeats the W1.7 click-through | VM, Edwin | ✅ installed, server + app start (2026-10-19); the sample leg stays with W1.7 |
 
 ### 5b.8 As built (2026-10-18)
 
@@ -458,7 +458,9 @@ Order inside `buildWindows.sh`, after the zips and before the VM cleanup (the VM
   VM with the manifest, setups compiled + verified + fetched with sha256. First full run `main-032ab16`: app setup
   87 MB (67 s), server 12 MB; VERIFY ok, SETUP-VERIFY ok (install, installed `--check-db` + `--check-camera-imports`,
   install over, uninstall, data kept; server: 8091 opens).
-- Owed: W2.1e, Edwin installs from the setups in the VM and repeats W1.7.
+- ✅ W2.1e (Edwin, 2026-10-19): both setups (`main-032ab16`) installed in the VM from the desktop copy; the server
+  and the app start from the Start menu. The full click-through with a sample is owed under W1.7 and now runs on the
+  installed copy, not the zip. (No SmartScreen box: the files came in over scp, without the internet marker.)
 
 ## 6 — W1: the camera on Windows
 
@@ -1479,7 +1481,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         W2 — INSTALLER + SIGNING  (before the first customer; W2.1 may start after W0)                        |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
-|◐W2.1 | Inno Setup, per-user (%LOCALAPPDATA%\Programs) — §5b  ∥   | Py tools/ | W0.7        | Setup.exe installs w/o admin        |
+|✅W2.1 | Inno Setup, per-user (%LOCALAPPDATA%\Programs) — §5b  ∥   | Py tools/ | W0.7        | Setup.exe installs w/o admin        |
 | W2.2  | signing: OV certificate vs Microsoft cloud signing        | Edwin     | —           | decided                             |
 | W2.3  | sign Setup.exe (+ every binary if Smart App Control)      | build     | W2.1, W2.2  | no SmartScreen box on download      |
 | W2.4  | real Windows 11 PC: install + §8.1 + §8.2                 | Win11 PC  | W2.3, W1.7  | ticked (same session as W1.8 later) |
