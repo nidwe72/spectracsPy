@@ -1334,6 +1334,8 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |       | + D10: measure the Linux settling frames (open, exposure  |           |             | ≠ 0 ⇒ Windows-only; settling count  |
 |       | step, WB change) + read the ELP's Linux controls vs their |           |             | + control table (information only)  |
 |       | defaults                                                  |           |             |                                     |
+|       | ⭐ 2026-10-18: the controls half + W1.5, W1.5b, W1.5c are |           |             |                                     |
+|       | ABSORBED by SPEC_camera_settings.md CS0–CS9               |           |             |                                     |
 |◐W1.4b | Linux own conversion (YUYV granted only) ✅ §11c.12       | Py        | W1.4        | unit test: plan from fake ranges;   |
 |       | + image controls to the device's defaults on every open,  |           |             | CAPTURE-SETTINGS shows own conv. ✅ |
 |       | backlight default on calibration (`planControls` mirror) ⏳|           |             | + controls at default on the rig    |
