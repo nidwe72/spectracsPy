@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-18): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + pushed (§11c.9, §11c.10) · W1.4 DONE (§11c.11: Linux adopts our conversion; settling 4 frames) · W1.4b conversion half BUILT (§11c.12), image-controls half awaits Edwin · next W1.5, W1.5b, W1.5c (D10).**
+Status (2026-10-18): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + pushed (§11c.9, §11c.10) · W1.4 DONE (§11c.11: Linux adopts our conversion; settling 4 frames) · W1.4b BUILT (§11c.12 conversion; controls via SPEC_camera_settings.md) · W1.5, W1.5b, W1.5c BUILT as SPEC_camera_settings.md CS0–CS9 (§11c.13) · W1.7 click-through run by Edwin as far as possible without a sample (2026-10-18) — the sample leg, PDF and reopen still owed.**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -1265,6 +1265,22 @@ the last control set:
 
 ---
 
+### 11c.13 W1.5 / W1.5b / W1.5c as built — via SPEC_camera_settings.md (2026-10-18)
+
+Built as that spec's CS0–CS9 (its §12, §13), not here: one `resolve()` for both OSes; Windows writes every control
+through DirectShow (`WindowsUvcControls`), exposure in V4L2 units converted to whole log₂ steps (90 → −7 = 78, said
+in the record), the slider/AE range 1..5000; the plugin declares exposure + white balance (`cameraSettings()`); the
+hold-back is 5 frames in `VideoThread`. CS0 in the VM: power line (VideoProcAmp 13) offered, CameraControl 19 fixed.
+- ⛔ **Found at the W1.7 click-through:** the frozen app read every camera as "not connected" — `cv2_enumerate_cameras`
+  is a delvewheel wheel whose `_windows_backend.pyd` links a renamed `msvcp140-<hash>.dll` in a sibling
+  `cv2_enumerate_cameras.libs` folder that PyInstaller does not follow. W1.2 had only ever run from the venv and through
+  fakes. ⇒ the spec ships the folder (WIN only) and VERIFY gained step 2b, `Spectracs.exe --check-camera-imports`
+  (`camera imports ok (1 MSMF cameras)` in the VM). Build `main-bcbcad6`.
+- ⚠ A bare ssh console in the VM is cp1252: diagnostics printing ⚠/⛔ need `PYTHONIOENCODING=utf-8` (the app's log is
+  unaffected).
+- W1.7 (Edwin, 2026-10-18): tested as far as possible without a sample. Still owed: the sample leg, the PDF, reopening a
+  saved run — on both OSes.
+
 ## 12 — Implementation phases and order
 
 Strictly top to bottom unless marked `∥` (may run in parallel). Every phase ends in a commit; `pytest tests/` green
@@ -1336,21 +1352,21 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |       | defaults                                                  |           |             |                                     |
 |       | ⭐ 2026-10-18: the controls half + W1.5, W1.5b, W1.5c are |           |             |                                     |
 |       | ABSORBED by SPEC_camera_settings.md CS0–CS9               |           |             |                                     |
-|◐W1.4b | Linux own conversion (YUYV granted only) ✅ §11c.12       | Py        | W1.4        | unit test: plan from fake ranges;   |
+|✅W1.4b| Linux own conversion (YUYV granted only) ✅ §11c.12       | Py        | W1.4        | unit test: plan from fake ranges;   |
 |       | + image controls to the device's defaults on every open,  |           |             | CAPTURE-SETTINGS shows own conv. ✅ |
-|       | backlight default on calibration (`planControls` mirror) ⏳|           |             | + controls at default on the rig    |
-| W1.5  | exposure: range from backend at ALL sites (§6.4 table),   | Py, -model| W1.3, W1.4, | converter unit-tested; float +      |
+|       | backlight default on calibration ✅ = camera-settings CS2 |           |             | + controls at default on the rig    |
+|✅W1.5 | exposure: range from backend at ALL sites (§6.4 table),   | Py, -model| W1.3, W1.4, | converter unit-tested; float +      |
 |       | per-backend converter, float, `exposureUnit` in report    | -core docs| W1.1        | exposureUnit in the report JSON     |
 |       | JSON; plugin contract = V4L2 units (host converts);       |           |             |                                     |
 |       | D10: line "requested 90 (V4L2) → applied −7 (7.8 ms)"     |           |             |                                     |
-| W1.5b | D10: white balance declared by the PLUGIN                 | Py,       | W1.5        | unit test; CAPTURE-SETTINGS wb =    |
+|✅W1.5b| D10: white balance declared by the PLUGIN                 | Py,       | W1.5        | unit test; CAPTURE-SETTINGS wb =    |
 |       | (`whiteBalanceKelvin`), host reads it on both OSes;       | plugins   |             | the plugin's value on both OSes     |
 |       | `DevCaptureVideoThread` constant goes                     |           |             |                                     |
-| W1.5c | D10: settling hold-back after every open + control        | Py        | W1.4, W1.5  | unit test w/ fake frame source;     |
+|✅W1.5c| D10: settling hold-back after every open + control        | Py        | W1.4, W1.5  | unit test w/ fake frame source;     |
 |       | change, frame count per OS from measurement               |           |             | no unsettled frame in a burst       |
 |✅W1.6 | set + read back WB/gain/backlight/AE-mode per backend,    | Py        | W1.3        | CAPTURE-SETTINGS proves frozen      |
 |       | every open (§6.4b)  → commit W1.2–W1.6                    |           |             |                                     |
-| W1.7  | click-through §8.2 in the VM: local server, author        | VM, Edwin | W1.5–W1.6,  | Rv on screen, PDF; lamp on/off      |
+|◐W1.7 | click-through §8.2 in the VM: local server, author        | VM, Edwin | W1.5–W1.6,  | Rv on screen, PDF; lamp on/off      |
 |       | calibration once, one measurement, lamp on/off            |           | W0.7        |                                     |
 | W1.8  | ⏸ null run Windows vs Linux — POSTPONED (O3, §6.5)        | VM, Win11 | O3          | —                                   |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+

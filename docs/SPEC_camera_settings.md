@@ -1,6 +1,6 @@
 # SPEC — Camera settings: one declared, applied and recorded state (DESIGN)
 
-Status (2026-10-18): **CS0–CS8 IMPLEMENTED (§12, §13 as built); Linux rig ✓ for CS2/CS4/CS5/CS8 (reference leg); Windows ✓ on the real ELP in the VM (CS9 open check). Owed: a full run with a sample (PDF, reopen), ELP calibration re-check, W1.7 click-through in the VM (Edwin).** Q1–Q10 decided (§8); two rubber ducks folded in place (§10, §11).
+Status (2026-10-18): **CS0–CS8 IMPLEMENTED (§12, §13 as built); Linux rig ✓ for CS2/CS4/CS5/CS8 (reference leg); Windows ✓ on the real ELP in the VM (CS9 open check). Windows click-through run by Edwin as far as possible without a sample (2026-10-18), after the frozen build learned to enumerate the camera (`cv2_enumerate_cameras.libs`, SPEC_windows_build.md §11c.13). Owed: a full run with a sample on either OS (PDF, reopen), ELP calibration re-check.** Q1–Q10 decided (§8); two rubber ducks folded in place (§10, §11).
 Grew out of `SPEC_windows_build.md` W1.4/W1.4b (§11c.11, §11c.12) and D10. It **absorbs** three planned steps of that
 spec: the image-controls half of **W1.4b**, **W1.5b** (white balance declared by the plugin) and **W1.5** (the
 exposure converter + `exposureUnit`) — they become phases here (§9), so they are not built twice.
