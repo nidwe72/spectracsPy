@@ -2,8 +2,10 @@
 # Build the Spectracs Windows zips in the build VM, driven from Linux — docs/SPEC_windows_build.md §5.
 #
 #   tools/buildWindows.sh [--app] [--server] [--tag <git ref>] [--out <name|path>] [--keep N] [--no-verify]
+#                         [--no-installer]
 #
-# Defaults: both zips · --tag main · --out <ISO timestamp> under ~/spectracs-build/windows · --keep 3
+# Defaults: both programs, each as a zip AND a per-user Setup.exe (§5b) · --tag main · --out <ISO timestamp> under
+# ~/spectracs-build/windows · --keep 3
 #
 # Same contract as buildAppImages.sh: the contents come from the committed <ref> of each repo (never the live
 # tree), the recipe (specs, server entry, runtime hooks) from this checkout, and nothing is written into a repo.
@@ -15,11 +17,12 @@ set -euo pipefail
 TAG="main"
 OUT=""
 KEEP=3
-DO_APP=""; DO_SERVER=""; VERIFY=1
+DO_APP=""; DO_SERVER=""; VERIFY=1; INSTALLER=1
 BUILD_ROOT="${SPECTRACS_BUILD_ROOT:-$HOME/spectracs-build}/windows"
 VM="${SPECTRACS_WIN_HOST:-spectracs-win}"
 VM_ROOT='C:\spectracs-build'
 VM_VENV='C:\spectracs-build\venv'
+VM_ISCC="${SPECTRACS_WIN_ISCC:-C:\spectracs-build\InnoSetup6\ISCC.exe}"   # Inno Setup 6.7.3, W2.1a
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -29,7 +32,8 @@ while [ $# -gt 0 ]; do
     --out)        OUT="$2"; shift ;;
     --keep)       KEEP="$2"; shift ;;
     --no-verify)  VERIFY=0 ;;
-    -h|--help)    sed -n '2,12p' "$0"; exit 0 ;;
+    --no-installer) INSTALLER=0 ;;
+    -h|--help)    sed -n '2,14p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -69,6 +73,7 @@ if git -C "$(dirname "$TARGET")" rev-parse --is-inside-work-tree >/dev/null 2>&1
 fi
 mkdir -p "$TARGET"
 rm -rf "$TARGET/stage" "$TARGET/dist" "$TARGET"/Spectracs-*-win64 "$TARGET"/Spectracs-*-win64.zip \
+       "$TARGET"/Spectracs-*Setup-*.exe \
        "$TARGET/upload.tar" "$TARGET/dist.tar" "$TARGET/vm-build.log" "$TARGET/vm-verify.log"
 say "target: $TARGET  (label $LABEL)"
 
@@ -92,7 +97,8 @@ EXPECTED_HEAD="$("$VENV/python" -c "import sys
 from alembic.config import Config; from alembic.script import ScriptDirectory
 print(ScriptDirectory.from_config(Config(sys.argv[1])).get_current_head())" \
   "$STAGE/src/spectracsPy-model/alembic/app/alembic.ini")"
-cp "$HERE/tools/windows/verifyInVm.ps1" "$STAGE/recipe/tools/"
+cp "$HERE/tools/windows/verifyInVm.ps1" "$HERE/tools/windows/setupInVm.ps1" "$HERE/tools/windows/verifySetupInVm.ps1" \
+   "$HERE/tools/windows/spectracs.iss" "$HERE/tools/windows/spectracs-server.iss" "$STAGE/recipe/tools/"
 tar -cf "$TARGET/upload.tar" -C "$STAGE" .
 UP_SHA="$(sha256sum "$TARGET/upload.tar" | cut -d' ' -f1)"
 echo "  upload.tar $(du -h "$TARGET/upload.tar" | cut -f1)  sha256 ${UP_SHA:0:16}…"
@@ -108,7 +114,7 @@ ssh "$VM" "\$h = (Get-FileHash '$VM_DIR\\upload.tar' -Algorithm SHA256).Hash.ToL
   || { echo "UPLOAD FAILED (checksum or unpack) — VM folder kept: $VM_DIR" >&2; exit 1; }
 FLAGS="${DO_APP:+-App} ${DO_SERVER:+-Server}"
 say "building in the VM ($FLAGS)"
-if ! ssh "$VM" "powershell -NoProfile -ExecutionPolicy Bypass -File '$VM_DIR\\recipe\\tools\\buildInVm.ps1' -BuildDir '$VM_DIR' -Venv '$VM_VENV' $FLAGS" \
+if ! ssh "$VM" "powershell -NoProfile -ExecutionPolicy Bypass -File '$VM_DIR\\recipe\\tools\\buildInVm.ps1' -BuildDir '$VM_DIR' -Venv '$VM_VENV' -Iscc '$VM_ISCC' $FLAGS" \
      | tee "$TARGET/vm-build.log"; then
   echo "VM BUILD FAILED — logs stay in $VM_DIR (build-app.log / build-server.log)" >&2; exit 1
 fi
@@ -154,6 +160,9 @@ if [ -n "$DO_APP" ]; then
     echo "camera:     real camera via MSMF (raw YUY2, own conversion) + its DirectShow controls (W1, SPEC_camera_settings CS3)."
     echo "degraded:   SENAITE, PayPal and plugin PUBLISHING are off (no server-config, no signing key)."
     echo "licence:    QtCharts / QtDataVisualization / QtWebEngine excluded; the build asserts their absence."
+    if [ "$INSTALLER" = "1" ]; then
+      echo "installer:  Spectracs-Setup-$LABEL.exe installs this same folder per user (no admin) - SPEC §5b."
+    fi
   } | crlf > "$TARGET/$NAME/RELEASE_MANIFEST.txt"
   crlf > "$TARGET/$NAME/START_HERE.txt" <<EOF
 Spectracs $LABEL for Windows 10/11 (64-bit)
@@ -195,6 +204,9 @@ if [ -n "$DO_SERVER" ]; then
     echo "usage:      no arguments -> 127.0.0.1:8091 only, no network needed; refuses if 8091 is taken"
     echo "            any argument -> the stock CLI (--local, --nameserverHost, --daemonPort, ...)"
     echo "data:       %USERPROFILE%\\spectracsPy-server\\spectracsPyServer.db"
+    if [ "$INSTALLER" = "1" ]; then
+      echo "installer:  Spectracs-Server-Setup-$LABEL.exe installs this same folder per user (no admin) - SPEC §5b."
+    fi
   } | crlf > "$TARGET/$NAME/RELEASE_MANIFEST.txt"
   crlf > "$TARGET/$NAME/START_HERE.txt" <<EOF
 Spectracs SERVER $LABEL for Windows 10/11 (64-bit)
@@ -216,6 +228,74 @@ EOF
   echo "  -> $NAME.zip $(du -h "$TARGET/$NAME.zip" | cut -f1)"
 fi
 
+# ---------------------------------------------------------------- the installers (W2.1, §5b)
+if [ "$INSTALLER" = "1" ]; then
+  say "installers"
+  TEXTS="$TARGET/texts"; rm -rf "$TEXTS"
+  # the INSTALLED copy's read-me: nothing to unblock or extract (§5b.4)
+  if [ -n "$DO_APP" ]; then
+    mkdir -p "$TEXTS/app"; cp "$TARGET/Spectracs-$LABEL-win64/RELEASE_MANIFEST.txt" "$TEXTS/app/"
+    crlf > "$TEXTS/app/START_HERE.txt" <<EOF
+Spectracs $LABEL for Windows 10/11 (64-bit) - installed
+=======================================================
+
+1. Start Spectracs from the Start menu.
+2. Your data:  %USERPROFILE%\\spectracsPy\\                  (the database)
+   The log:    %USERPROFILE%\\Spectracs\\spectracsPy\\spectracs.log
+   Installing a newer version over this one, or uninstalling it, never touches them.
+3. Demo with an EMPTY database (never for real measurements): Start menu ->
+   "Spectracs (demo, empty database)". Its data: %USERPROFILE%\\spectracsPy-demo\\
+4. Lamp plug: the first time the lamp is searched, the Windows Firewall may ask to allow
+   Spectracs on private networks - allow it (the plug is found over the local network).
+5. The app talks to the internet server. A local server (Spectracs-Server-Setup-$LABEL.exe)
+   is only for development and demos: start it before the app.
+6. Uninstall: Windows Settings -> Apps -> Spectracs.
+
+See RELEASE_MANIFEST.txt for exactly what this build contains.
+EOF
+  fi
+  if [ -n "$DO_SERVER" ]; then
+    mkdir -p "$TEXTS/server"; cp "$TARGET/Spectracs-Server-$LABEL-win64/RELEASE_MANIFEST.txt" "$TEXTS/server/"
+    crlf > "$TEXTS/server/START_HERE.txt" <<EOF
+Spectracs SERVER $LABEL for Windows 10/11 (64-bit) - installed
+==============================================================
+
+Only for local development and demos - the Spectracs app normally uses the internet server.
+
+1. Start it from the Start menu: "Spectracs Server (local)". Its console window is the sign
+   that it runs; closing the window stops the server.
+2. It listens on 127.0.0.1:8091 only (this PC). A second copy refuses to start.
+3. Its data: %USERPROFILE%\\spectracsPy-server\\ - updates and uninstalling never touch it.
+4. Then start Spectracs: it finds the local server first.
+5. Uninstall: Windows Settings -> Apps -> Spectracs Server.
+
+See RELEASE_MANIFEST.txt for exactly what this build contains.
+EOF
+  fi
+  tar -cf "$TARGET/texts.tar" -C "$TARGET" texts
+  scp -q "$TARGET/texts.tar" "$VM:$VM_DIR_SCP/texts.tar"
+  ssh "$VM" "tar -xf '$VM_DIR\\texts.tar' -C '$VM_DIR'"
+  if ! ssh "$VM" "powershell -NoProfile -ExecutionPolicy Bypass -File '$VM_DIR\\recipe\\tools\\setupInVm.ps1' -BuildDir '$VM_DIR' -Label '$LABEL' -Iscc '$VM_ISCC' $FLAGS" \
+       | tee "$TARGET/vm-setup.log"; then
+    echo "SETUP BUILD FAILED — logs stay in $VM_DIR (setup-app.log / setup-server.log)" >&2; exit 1
+  fi
+  if [ "$VERIFY" = "1" ]; then
+    if ! ssh "$VM" "powershell -NoProfile -ExecutionPolicy Bypass -File '$VM_DIR\\recipe\\tools\\verifySetupInVm.ps1' -SetupDir '$VM_DIR\\setup' $FLAGS" \
+         | tee "$TARGET/vm-setup-verify.log"; then
+      echo "SETUP-VERIFY FAILED — the VM folder stays for a look: $VM_DIR" >&2; exit 1
+    fi
+    grep -q '^SETUP-VERIFY ok' "$TARGET/vm-setup-verify.log" \
+      || { echo "SETUP-VERIFY FAILED (no 'SETUP-VERIFY ok') — VM folder kept: $VM_DIR" >&2; exit 1; }
+  fi
+  while read -r _ _ file sha; do
+    scp -q "$VM:$VM_DIR_SCP/setup/$file" "$TARGET/$file"
+    [ "$(sha256sum "$TARGET/$file" | cut -d' ' -f1)" = "$sha" ] \
+      || { echo "checksum mismatch on $file — VM folder kept: $VM_DIR" >&2; exit 1; }
+    echo "  -> $file $(du -h "$TARGET/$file" | cut -f1)"
+  done < <(grep '^SETUP ok ' "$TARGET/vm-setup.log" | tr -d '\r')
+  rm -rf "$TEXTS" "$TARGET/texts.tar"
+fi
+
 # ---------------------------------------------------------------- VM cleanup, prune
 ssh "$VM" "Remove-Item -Recurse -Force '$VM_DIR'"
 rm -rf "$STAGE" "$TARGET/dist" "$TARGET/upload.tar" "$TARGET/dist.tar"
@@ -226,5 +306,5 @@ mapfile -t RUNS < <(find "$BUILD_ROOT" -maxdepth 1 -type d -regextype posix-exte
 i=0; for d in "${RUNS[@]}"; do i=$((i+1)); [ "$i" -gt "$KEEP" ] && { echo "  pruning $(basename "$d")"; rm -rf "$d"; }; done
 ln -sfn "$TARGET" "$BUILD_ROOT/latest"
 say "done"
-ls -lh "$TARGET"/*.zip | sed 's/^/  /'
+ls -lh "$TARGET"/*.zip "$TARGET"/*Setup*.exe 2>/dev/null | sed 's/^/  /'
 echo "  latest -> $(readlink -f "$BUILD_ROOT/latest")"

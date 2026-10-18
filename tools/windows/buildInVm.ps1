@@ -8,6 +8,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$BuildDir,
     [Parameter(Mandatory = $true)][string]$Venv,
+    [string]$Iscc = "",
     [switch]$App,
     [switch]$Server
 )
@@ -45,6 +46,7 @@ $os = Get-CimInstance Win32_OperatingSystem
     "pyinstaller $(& "$Venv\Scripts\pyinstaller.exe" --version)"
     "opencv      $(& "$Venv\Scripts\python.exe" -c "import importlib.metadata as m; print(m.version('opencv-python'))")"
     "windows     $($os.Caption) $($os.Version)"
+    "innosetup   $(if ($Iscc -and (Test-Path $Iscc)) { (Get-Item $Iscc).VersionInfo.ProductVersion } else { 'not installed' })"
 ) | Set-Content -Encoding ASCII "$BuildDir\dist\toolchain.txt"
 
 tar -cf "$BuildDir\dist.tar" -C "$BuildDir\dist" .

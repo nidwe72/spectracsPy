@@ -427,13 +427,12 @@ Order inside `buildWindows.sh`, after the zips and before the VM cleanup (the VM
 - **Toolchain pin:** Inno Setup 6.x installed once in the VM (`winget install JRSoftware.InnoSetup --version …`),
   version recorded in `toolchain.txt` like PyInstaller's (D8).
 
-### 5b.6 Open (Edwin)
+### 5b.6 Decided (Edwin, 2026-10-18)
 
-- ⚠ **Inno Setup's licence.** Free to use; since 6.5 the authors **ask** commercial users to buy a licence (one-time,
-  perpetual), while stating it is not strictly required. ⇒ buy one before the first commercial release, or not? (The
-  alternative installer, WiX, is free but much more work; Inno is the usual choice for a PyInstaller folder.)
-- Languages: English + German enough?
-- Desktop icon: offered unticked (proposal) — or ticked?
+- **Inno Setup's licence: not bought.** Free to use; since 6.5 the authors *ask* commercial users to buy one and state
+  it is not strictly required.
+- **Languages: English + German** — sufficient.
+- **Desktop icon: offered, unticked.**
 
 ### 5b.7 Phases
 
