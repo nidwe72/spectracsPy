@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-08): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + committed locally (§11c.9, §11c.10) · next W1.4 (Linux rig), W1.5, W1.5b, W1.5c (D10).**
+Status (2026-10-18): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + pushed (§11c.9, §11c.10) · W1.4 DONE (§11c.11: Linux adopts our conversion; settling 4 frames) · next W1.5, W1.5b, W1.5c (D10).**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -258,7 +258,9 @@ the frames right after a change — the spike saw 4 black frames after an exposu
 old white balance (≈ 1–1.5 s at 3.6 fps), and a click that soon after the stream starts would put them into the
 reference. ⇒ **host rule, both OSes (W1.5c):** after every open and every control change (exposure, WB) the frame
 source holds back frames until the camera has settled, before any burst gets one. The count is **measured per OS**
-— Windows from §6.6b/§11c.10, Linux in the W1.4 rig session — not guessed.
+— Windows from §6.6b/§11c.10, Linux in the W1.4 rig session — not guessed. **Linux measured (§11c.11): 3 frames
+after an open from the calibration state, 4 after an exposure step, 3 after a WB change** — the same numbers as
+Windows.
 
 **Exposure on Windows (W1.5):** the plugin keeps declaring V4L2 units (§6.4). 90 = 9.0 ms; Windows has only whole
 log₂ steps ⇒ the nearest is **−7 = 7.8 ms, ≈ 13 % less light** (−6 = 15.6 ms). Expected DN guard ≈ 30–33 instead of
@@ -406,6 +408,10 @@ The MAD==0 bug showed how sensitive the pipeline is to the exact 8-bit codes. Ed
    flag between grab and retrieve, the spike says so and the proof falls back to reading OpenCV 4.7's
    `cap_v4l.cpp` `convertToRgb`.) Zero is a proof, not a statistic, so no Linux null run is needed; anything
    ≠ 0 stops the Linux change and only Windows uses the new path.
+   ⚠ **As run (W1.4, §11c.11): the same-grab proof is impossible on V4L2 4.7.0** — `retrieveFrame` re-queues the
+   buffer and sets `bufferIndex = -1`, so a second retrieve returns the stale frame (and toggling the flag
+   between retrieves either crashes `cvarrToMat` or keeps the old format). The proof is therefore the source
+   fallback named above, plus an averaged cross-check against the frame-to-frame noise.
 
 Same raw bytes + same function ⇒ same 8-bit values. What is then left between the OSes is only **what the camera
 does before the bytes leave it** — exposure, gain, white balance, set through the controls ⇒ §6.4.
@@ -1168,6 +1174,71 @@ therefore taken as **W1.2 + W1.3 + W1.6**, locally, not pushed.
   next Windows open fixes that, a Linux calibration open would not reset backlight. Changing the Linux reference
   path was not part of W1.6 and is not done.
 
+### 11c.11 W1.4 as run (2026-10-18, Linux rig, ELP back from the VM)
+
+Probe: `diagnostics/linux_camera_probe.py` (standalone, no app code; Shelly lamp on with a 15-min dead-man, 30 s
+warm-up; refuses a dark frame). OpenCV 4.7.0, V4L2, 2592×1944 YUYV, BUFFERSIZE 1, the `CaptureBackend.open` Linux
+measurement sequence step for step (exposure 90, gain 0, WB 6500 K manual, backlight 0). Two full runs; numbers
+below are run 2 (run 1 agreed to the third decimal).
+
+**B — bit-identity: ✅ Linux adopts the path (§6.3.4 step 4).**
+- *Same grab, two retrieves* — **impossible on V4L2**, see the ⚠ in §6.3.4. Hence the source proof:
+  `cap_v4l.cpp` 4.7.0 converts YUYV as `cv::cvtColor(cv::Mat(imageSize, CV_8UC2, start), destination,
+  COLOR_YUV2BGR_YUYV)` with `start` = the mmap buffer (l.1665/1723); with `CONVERT_RGB = 0` it `memcpy`s the same
+  buffer untouched (l.2293); `COLOR_YUV2BGR_YUYV == COLOR_YUV2BGR_YUY2 == 116`. `yuy2ToBgr` is
+  `cvtColor(raw.reshape(h, w, 2), COLOR_YUV2BGR_YUY2)` ⇒ **the same call on the same bytes** — identical by
+  construction. Raw shape on V4L2: **1944×2592×2** (MSMF: 1×N; `yuy2ToBgr` flattens either).
+- *Empirical cross-check* (mean of 20 frames each: backend A1, ours B, backend A2; B against (A1+A2)/2):
+
+  | pair | slope b / g / r | offset b / g / r | mean diff |
+  |---|---|---|---|
+  | A2 vs A1 (noise floor) | 0.99960 / 0.99986 / 1.00030 | +0.001 / +0.004 / −0.005 | ≤ 0.009 |
+  | **ours vs backend** | **1.00001 / 1.00004 / 1.00000** | **+0.001 / +0.001 / +0.001** | **≤ 0.002** |
+
+  Ours sits *inside* the backend's own repeat scatter; a BT.709 matrix or a 16–235 range change would show as a
+  slope of several % or an offset of whole codes. (Max |diff| of 12–16 codes on single pixels is shot noise on a
+  20-frame mean; it is the same size in the noise-floor pair.)
+
+**S — settling (D10, input for W1.5c).** Frame interval 0.28 s (3.6 fps). Counted from the first `read()` after
+the last control set:
+
+| event | unsettled frames | what they are |
+|---|---|---|
+| open, camera left in the calibration state (auto WB, exposure 150, backlight 1) | **3** | frames 0–1 the old state (B/R 0.90), frame 2 **mixed** (B/R 1.05 — the change landed mid-frame), frame 3 settled (1.236) |
+| exposure 90 → 45 and 45 → 90 | **4** | exact copies of the old exposure, then a clean jump (G mean 36.3 ↔ 22.2) |
+| WB 6500 → 3000 and back | **3** | exact copies of the old balance, then a clean jump (B/R 1.235 ↔ 2.561) |
+
+- After the jump the very next frame is on the plateau (within 0.3 %) — there is no slow tail on Linux.
+- An open into a camera already in the target state (run 1: the values persisted from an earlier attempt) settles
+  at frame 0 — UVC values live in the camera (§6.6c), so the hold-back is a worst-case count, not a fixed cost.
+- ⇒ **Linux = Windows: 4 after an exposure step, 3 after a WB change / open.** Proposal for W1.5c (Edwin's call):
+  one host constant for both OSes, **hold back 5 frames** (largest measured + 1) after every open and every
+  exposure/WB change; ~1.4 s at 3.6 fps.
+
+**K — controls on Linux** (as found = what the camera carried in; after open = after the measurement open):
+
+| control | range | default | as found | after measurement open |
+|---|---|---|---|---|
+| Brightness / Contrast / Saturation / Hue | −64..64 / 0..64 / 0..128 / −40..40 | 0 / 32 / 75 / 0 | default | default |
+| Gamma / Sharpness | 72..500 / 0..6 | 100 / 3 | default | default |
+| Power Line Frequency | 0..2 | 1 (50 Hz) | 50 Hz | 50 Hz |
+| Gain | 0..100 | 0 | 0 | 0 |
+| White Balance, Automatic | 0..1 | 1 | 0 | 0 |
+| White Balance Temperature | 2800..6500 | 4600 | 6500 | 6500 |
+| Backlight Compensation | 0..2 | 1 | 0 | 0 |
+| Auto Exposure | menu | 3 (Aperture Priority) | Manual Mode | Manual Mode |
+| Exposure Time, Absolute | **1..5000** | 78 | 90 | 90 |
+| Exposure, Dynamic Framerate | 0..1 | 0 | 0 | 0 |
+
+- The image controls Linux does not touch (Brightness…Sharpness) are **at their defaults** — the D10 "Linux
+  untouched" assumption holds for this camera today. The Windows measurement open (W1.6) sets the same defaults,
+  so nothing from the VM leaked.
+- What *did* persist is the measurement state (WB manual 6500, backlight 0, manual exposure 90) — from this
+  session's own probe runs. A Linux **calibration** open would re-enable auto WB but leave **backlight 0** (§11c.10
+  "on Linux too" — still Edwin's call).
+- Side observation, not part of W1.4: at exposure 90 with the lamp freshly on, the whole-frame p99.9 peak is 255
+  (at 45: 224). Whatever saturates here — the slit/lamp image or the spectrum — is for the rig, not the build.
+
 ---
 
 ## 12 — Implementation phases and order
@@ -1235,7 +1306,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |       | enumeration; unresolved ⇒ REFUSE, never index 0  (R8)     |           |             | found, webcam ignored, in the VM    |
 |✅W1.3 | backend pin MSMF, YUY2 strict (no win32 fallback),        | Py        | W1.2        | unit test: own convert == cv2 on a  |
 |       | CONVERT_RGB=0 + own cvtColor, fcntl behind guard (R7)     |           |             | synthetic YUYV buffer; log: YUY2    |
-| W1.4  | LINUX bit-identical: one grab, two retrieves (§6.3.4)     | Linux rig | W1.3        | diff == 0 ⇒ Linux adopts the path;  |
+|✅W1.4 | LINUX bit-identical: one grab, two retrieves (§6.3.4)     | Linux rig | W1.3        | diff == 0 ⇒ Linux adopts the path;  |
 |       | + D10: measure the Linux settling frames (open, exposure  |           |             | ≠ 0 ⇒ Windows-only; settling count  |
 |       | step, WB change) + read the ELP's Linux controls vs their |           |             | + control table (information only)  |
 |       | defaults                                                  |           |             |                                     |
