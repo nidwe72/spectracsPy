@@ -17,8 +17,12 @@ import usb.core
 
 import sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver as resolverModule
 import sciens.spectracs.logic.application.video.capture.WindowsUvcControls as controlsModule
+
+controlsModule.WindowsUvcControls_ = controlsModule.WindowsUvcControls   # the real class, for the fakes below
 from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
-from sciens.spectracs.logic.application.video.capture.CaptureBackend import DesktopCv2CaptureBackend, yuy2ToBgr
+from sciens.spectracs.logic.application.video.capture.CaptureBackend import CaptureBackend, DesktopCv2CaptureBackend, \
+    yuy2ToBgr
+from sciens.spectracs.plugin_sdk import CameraControl as C
 from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.logic.connection.ConnectionPollThread import ConnectionPollThread
 from sciens.spectracs.logic.model.util.spectrometerSensor.ApplicationSpectrometerUtil import ApplicationSpectrometerUtil
@@ -201,54 +205,70 @@ class _FakeCv2:
         return getattr(cv2, name)
 
 
-# The ELP's own control table under usbvideo.sys (SPEC_windows_build.md §6.6c): (min, max, step, default, caps).
-ELP_RANGES = {"Brightness": (-64, 64, 1, 0, 2), "Contrast": (0, 64, 1, 32, 2), "Hue": (-40, 40, 1, 0, 2),
-              "Saturation": (0, 128, 1, 75, 2), "Sharpness": (0, 6, 1, 3, 2), "Gamma": (72, 500, 1, 100, 2),
-              "WhiteBalance": (2800, 6500, 1, 4600, 3), "BacklightCompensation": (0, 2, 1, 1, 2),
-              "Gain": (0, 100, 1, 0, 2)}
+# The ELP under usbvideo.sys as CS0 read it in the VM (SPEC_camera_settings.md §3.1): (min, max, step, default, caps)
+# per DirectShow id. VideoProcAmp 6, 10–12 are absent; CameraControl 19 is offered but FIXED at 0.
+PROC_AMP_RANGES = {0: (-64, 64, 1, 0, 2), 1: (0, 64, 1, 32, 2), 2: (-40, 40, 1, 0, 2), 3: (0, 128, 1, 75, 2),
+                   4: (0, 6, 1, 3, 2), 5: (72, 500, 1, 100, 2), 7: (2800, 6500, 1, 4600, 3), 8: (0, 2, 1, 1, 2),
+                   9: (0, 100, 1, 0, 2), 13: (0, 2, 1, 1, 0)}
+CAMERA_RANGES = {4: (-13, -1, 1, -7, 3), 19: (0, 0, 0, 0, 0)}
 MSMF_PATH = r"\\?\usb#vid_32e4&pid_8830&mi_00#7&abc&0&0000#{e5323777-f976-4f5b-9b55-b94699c46e44}\global"
 
 
-class _FakeControls:
-    """A camera that applies `planControls` to its state — or, with `stuckAutoWb`, ignores the WB request."""
+class _FakeInterface:
+    """IAMVideoProcAmp / IAMCameraControl: GetRange, Get, Set — the camera keeps what it is told, unless `stuck`."""
+
+    def __init__(self, ranges, state, stuck=()):
+        self.ranges, self.state, self.stuck, self.writes = ranges, state, set(stuck), []
+
+    def GetRange(self, prop):
+        if prop not in self.ranges:
+            raise OSError("E_PROP_ID_UNSUPPORTED")
+        return self.ranges[prop]
+
+    def Get(self, prop):
+        if prop not in self.ranges:
+            raise OSError("E_PROP_ID_UNSUPPORTED")
+        return self.state[prop]
+
+    def Set(self, prop, value, flags):
+        if prop not in self.ranges:
+            raise OSError("E_PROP_ID_UNSUPPORTED")
+        self.writes.append((prop, value, flags))
+        if prop not in self.stuck:
+            self.state[prop] = (value, flags)
+
+
+class _FakeDirectShow:
+    """The ELP as a session left it: WB 6500 manual, backlight 0, exposure −8 auto."""
     instances = []
 
-    def __init__(self, devicePath, stuckAutoWb=False, broken=False):
-        self.devicePath, self.stuckAutoWb, self.broken = devicePath, stuckAutoWb, broken
-        self.state = {name: {"value": r[3], "flags": 1 if name == "WhiteBalance" else 2} for name, r in ELP_RANGES.items()}
-        self.state["Exposure"] = {"value": -8, "flags": 1, "min": -13, "max": -1}
-        self.applied = []
-        _FakeControls.instances.append(self)
-
-    def apply(self, whiteBalanceKelvin):
-        if self.broken:
+    def __init__(self, stuck=(), broken=False):
+        if broken:
             raise LookupError("camera not among the DirectShow video input devices")
-        self.applied.append(whiteBalanceKelvin)
-        for name, value, flags in controlsModule.planControls(ELP_RANGES, whiteBalanceKelvin):
-            if not (self.stuckAutoWb and name == "WhiteBalance"):
-                self.state[name] = {"value": value, "flags": flags}
-        self.state["Exposure"]["flags"] = 2
-        return dict(self.state, failures=[])
+        procState = {prop: (entry[3], 2) for prop, entry in PROC_AMP_RANGES.items()}
+        procState.update({7: (6500, 2), 8: (0, 2), 13: (1, 0)})
+        self.procAmp = _FakeInterface(PROC_AMP_RANGES, procState, stuck)
+        self.camera = _FakeInterface(CAMERA_RANGES, {4: (-8, 1), 19: (0, 0)})
+        _FakeDirectShow.instances.append(self)
 
-    def read(self):
-        return dict(self.state)
+    def bind(self):
+        return self.procAmp, self.camera
 
 
-def _openOnWindows(monkeypatch, grantedFourcc, whiteBalanceKelvin=6500, **controls):
+def _openOnWindows(monkeypatch, grantedFourcc, profile=CameraProfile.MEASUREMENT, override=None, **camera):
     yuy2 = _syntheticYuy2(2592, 1944)
     fake = _FakeCv2(grantedFourcc, yuy2.reshape(1, -1))      # MSMF's 1×N raw buffer (§6.6b)
     monkeypatch.setattr(sys, "platform", "win32")
     monkeypatch.setitem(sys.modules, "cv2", fake)
     enumerator = ModuleType("cv2_enumerate_cameras")
-    enumerator.enumerate_cameras = lambda api: [SimpleNamespace(index=1, path=MSMF_PATH, vid=0x32E4, pid=0x8830)]
+    enumerator.enumerate_cameras = lambda api: [SimpleNamespace(index=1, path=MSMF_PATH, vid=0x32E4, pid=0x8830,
+                                                                name="HD USB Camera")]
     monkeypatch.setitem(sys.modules, "cv2_enumerate_cameras", enumerator)
-    _FakeControls.instances = []
-    monkeypatch.setattr(controlsModule, "WindowsUvcControls", lambda path: _FakeControls(path, **controls))
+    _FakeDirectShow.instances = []
+    monkeypatch.setattr(controlsModule, "WindowsUvcControls",
+                        lambda path: controlsModule.WindowsUvcControls_(path, camera=_FakeDirectShow(**camera)))
     backend = DesktopCv2CaptureBackend()
-    # CS2: the profile, not `whiteBalanceKelvin is None`, says calibration or measurement (SPEC_camera_settings.md §2)
-    profile = CameraProfile.CALIBRATION if whiteBalanceKelvin is None else CameraProfile.MEASUREMENT
-    backend.open(1, profile, override=None if whiteBalanceKelvin is None
-                 else {"WHITE_BALANCE_KELVIN": whiteBalanceKelvin})
+    backend.open(1, profile, override=override)
     return backend, fake, yuy2
 
 
@@ -261,7 +281,7 @@ def test_windows_pins_msmf_yuy2_and_converts_itself(monkeypatch, capsys):
     assert capture.calls[props.index(cv2.CAP_PROP_FOURCC)] == (cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"YUY2"))
     assert props.index(cv2.CAP_PROP_FOURCC) < props.index(cv2.CAP_PROP_FRAME_WIDTH)   # format before size
     assert (cv2.CAP_PROP_CONVERT_RGB, 0) in capture.calls
-    assert props.index(cv2.CAP_PROP_CONVERT_RGB) < props.index(cv2.CAP_PROP_EXPOSURE)  # fixed at open
+    assert cv2.CAP_PROP_EXPOSURE not in props and cv2.CAP_PROP_GAIN not in props     # CS3: one writer, DirectShow
 
     image = backend.read()
     assert (image.width(), image.height()) == (2592, 1944)
@@ -286,82 +306,84 @@ def test_capture_settings_survive_without_fcntl(monkeypatch):
     settings = backend.readCameraSettings()
     assert settings["backend"] == "MSMF"
     assert settings["pixelFormat"] == "YUY2"
-    # no V4L2 ioctl answered (no fcntl) — the range and mode come from the camera's own controls instead (W1.6)
-    assert (settings["exposureMin"], settings["exposureMax"]) == (-13, -1)
-    assert settings["autoExposureMode"] == "manual"
+    # ⭐ CS3: the range in V4L2 units (10000·2^−13 ≈ 1 .. 10000·2^−1 = 5000), so the slider and the AE learn it
+    assert (settings["exposureMin"], settings["exposureMax"]) == (1, 5000)
+    assert settings["autoExposure"] == "MANUAL"
     assert "gain" in settings
 
 
-# ------------------------------------------------------------------------------------ W1.6 native controls
+# ------------------------------------------------------------------------- CS3 native controls (SPEC_camera_settings §5)
 
-def test_measurement_open_sets_controls_natively_and_reports_them(monkeypatch, capsys):
-    backend, _, _ = _openOnWindows(monkeypatch, "YUY2")
-    controls = _FakeControls.instances[-1]
-    assert controls.devicePath == MSMF_PATH and controls.applied == [6500]
-    out = capsys.readouterr().out
-    assert "white balance fixed" not in out          # OpenCV's WB path (which reads -1 on MSMF) is not taken
-    assert "native controls (measurement, WB 6500K)" in out and "WhiteBalance=6500 " in out
+def test_the_converter_is_whole_log2_seconds():
+    assert controlsModule.toLog2(90) == -7 and controlsModule.toV4l2(-7) == 78     # Edwin's pin runs as 78
+    assert controlsModule.toLog2(150) == -6 and controlsModule.toV4l2(-6) == 156
+    assert controlsModule.toLog2(9000) == -1 and controlsModule.toLog2(0.5) == -13   # clamped to the camera
+    assert controlsModule.toV4l2(-13) == 1
+
+
+def test_describe_reads_the_firmware_in_model_units():
+    device = controlsModule.WindowsUvcControls_(MSMF_PATH, camera=_FakeDirectShow()).describe()
+    defaults = device.defaults()
+    assert defaults.get(C.EXPOSURE) == 78 and defaults.get(C.AUTO_EXPOSURE) == "AUTO"
+    assert defaults.get(C.WHITE_BALANCE_KELVIN) == 4600 and defaults.get(C.WHITE_BALANCE_AUTO) is True
+    assert defaults.get(C.BACKLIGHT) == 1 and defaults.get(C.POWER_LINE_FREQUENCY) == "50"
+    assert device.rangeOf(C.DYNAMIC_FRAMERATE).choices == [False]          # CS0: fixed at 0
+    assert device.rangeOf(C.EXPOSURE).quantise(90) == 78
+
+
+def test_measurement_open_sets_every_control_natively(monkeypatch, capsys):
+    backend, _, _ = _openOnWindows(monkeypatch, "YUY2", override={"EXPOSURE": 90, "WHITE_BALANCE_KELVIN": 6500})
+    record = backend.getOpenRecord()
+    assert record.refusal is None, record.refusal
+    camera = _FakeDirectShow.instances[-1]
+    assert camera.camera.state[4] == (-7, 2)                         # 90 → −7, manual
+    assert camera.procAmp.state[7] == (6500, 2) and camera.procAmp.state[8] == (0, 2)
+    assert 19 not in [prop for prop, _, _ in camera.camera.writes]   # fixed: never written
+    assert record.requested["EXPOSURE"] == 78 and record.adjusted["EXPOSURE"] == "requested 90 → 78 (snapped)"
+    assert record.camera == {"name": "HD USB Camera", "vendorId": "32e4", "modelId": "8830"}
+    assert "camera controls (MEASUREMENT)" in capsys.readouterr().out
     assert backend.read() is not None
     settings = backend.readCameraSettings()
+    assert (settings["exposure"], settings["exposureNative"]) == (78, -7)
     assert (settings["wbTemperature"], settings["autoWb"], settings["gain"], settings["backlight"]) == (6500, 0, 0, 0)
-    assert (settings["exposure"], settings["autoExposureMode"]) == (-8, "manual")
-    assert (settings["exposureMin"], settings["exposureMax"]) == (-13, -1)
 
 
-def test_measurement_refused_when_white_balance_does_not_freeze(monkeypatch, capsys):
-    backend, _, _ = _openOnWindows(monkeypatch, "YUY2", stuckAutoWb=True)
+def test_set_exposure_returns_the_whole_step(monkeypatch):
+    backend, _, _ = _openOnWindows(monkeypatch, "YUY2")
+    assert backend.setExposure(90) == 78
+    assert backend.setExposure(104) == 78        # same step: probes that collapse onto one k are harmless
+    assert backend.setExposure(120) == 156
+
+
+def test_measurement_refused_when_white_balance_does_not_take(monkeypatch, capsys):
+    backend, _, _ = _openOnWindows(monkeypatch, "YUY2", override={"WHITE_BALANCE_KELVIN": 5000}, stuck=[7])
     assert backend.read() is None
-    assert "REFUSED to capture on MSMF - the read-back does not prove WB 6500K manual" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "REFUSED to capture on MSMF" in out and "WHITE_BALANCE_KELVIN requested 5000, applied 6500" in out
 
 
 def test_unbindable_controls_refuse_a_measurement_but_not_a_calibration(monkeypatch, capsys):
-    backend, _, _ = _openOnWindows(monkeypatch, "YUY2", broken=True)
+    backend, fake, _ = _openOnWindows(monkeypatch, "YUY2", broken=True)
     assert backend.read() is None
-    assert "REFUSED to capture on MSMF - native controls unavailable (LookupError" in capsys.readouterr().out
+    assert "native controls unavailable (LookupError" in capsys.readouterr().out
 
-    backend, _, _ = _openOnWindows(monkeypatch, "YUY2", whiteBalanceKelvin=None, broken=True)
-    assert backend.read() is not None                # calibration keeps auto WB anyway — warn, go on
-    assert "⚠ native controls unavailable" in capsys.readouterr().out
+    backend, fake, _ = _openOnWindows(monkeypatch, "YUY2", profile=CameraProfile.CALIBRATION, broken=True)
+    assert backend.read() is not None                # calibration warns and goes on, exposure via cv2 as before
+    assert (cv2.CAP_PROP_EXPOSURE, -6) in fake.opened[-1].calls     # 150 → −6, in MSMF's own units
+    assert "open continues" in capsys.readouterr().out
 
 
-def test_calibration_open_puts_white_balance_on_auto(monkeypatch):
-    backend, _, _ = _openOnWindows(monkeypatch, "YUY2", whiteBalanceKelvin=None)
+def test_calibration_open_puts_white_balance_and_backlight_on_their_defaults(monkeypatch):
+    backend, _, _ = _openOnWindows(monkeypatch, "YUY2", profile=CameraProfile.CALIBRATION)
     settings = backend.readCameraSettings()
-    assert (settings["wbTemperature"], settings["autoWb"], settings["backlight"], settings["gain"]) == (4600, 1, 1, 0)
+    assert (settings["autoWb"], settings["backlight"], settings["gain"]) == (1, 1, 0)
 
 
-def test_plan_measurement_and_calibration():
-    measurement = {name: (value, flags) for name, value, flags in controlsModule.planControls(ELP_RANGES, 6500)}
-    assert measurement["WhiteBalance"] == (6500, 2)
-    assert measurement["BacklightCompensation"] == (0, 2) and measurement["Gain"] == (0, 2)
-    assert {name: measurement[name] for name in ("Brightness", "Contrast", "Hue", "Saturation", "Sharpness", "Gamma")} \
-        == {"Brightness": (0, 2), "Contrast": (32, 2), "Hue": (0, 2), "Saturation": (75, 2), "Sharpness": (3, 2),
-            "Gamma": (100, 2)}
-    calibration = {name: (value, flags) for name, value, flags in controlsModule.planControls(ELP_RANGES, None)}
-    assert calibration["WhiteBalance"] == (4600, 1)                # auto
-    assert calibration["BacklightCompensation"] == (1, 2) and calibration["Gain"] == (0, 2)
-
-
-def test_plan_clamps_the_temperature_and_skips_what_the_camera_lacks():
-    plan = controlsModule.planControls({"WhiteBalance": (2800, 6500, 1, 4600, 3)}, 7200)
-    assert plan == [("WhiteBalance", 6500, 2)]
-    assert controlsModule.planControls({}, 6500) == []
-
-
-@pytest.mark.parametrize("change, frozen", [
-    ({}, True),
-    ({"WhiteBalance": {"value": 6500, "flags": 1}}, False),     # still auto
-    ({"WhiteBalance": {"value": 4600, "flags": 2}}, False),     # manual, wrong temperature
-    ({"Gain": {"value": 5, "flags": 2}}, False),
-    ({"BacklightCompensation": {"value": 1, "flags": 2}}, False),
-    ({"Exposure": {"value": -8, "flags": 1}}, False),           # auto exposure
-    ({"WhiteBalance": None}, False),                             # the camera did not say
-])
-def test_proves_frozen(change, frozen):
-    readBack = {"WhiteBalance": {"value": 6500, "flags": 2}, "Gain": {"value": 0, "flags": 2},
-                "BacklightCompensation": {"value": 0, "flags": 2}, "Exposure": {"value": -8, "flags": 2}}
-    readBack.update(change)
-    assert controlsModule.provesFrozen(readBack, 6500) is frozen
+def test_read_device_defaults_on_windows(monkeypatch):
+    _openOnWindows(monkeypatch, "YUY2")
+    device = CaptureBackend.readDeviceDefaults(1)
+    assert device.defaults().get(C.EXPOSURE) == 78
+    assert CaptureBackend.readDeviceDefaults(7).defaults().toJson() == {}       # not enumerated
 
 
 def test_device_key_matches_msmf_and_directshow_paths():

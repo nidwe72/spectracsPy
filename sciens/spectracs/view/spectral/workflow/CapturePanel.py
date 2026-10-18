@@ -828,8 +828,8 @@ class CapturePanel(QWidget):
         try:
             requested, applied, source = thread.getExposureState()
             settings = thread.readCameraSettings() or {}
-            native = {"value": settings.get("exposure"), "unit": "log2_s"} if settings.get("backend") == "MSMF" \
-                else {"value": applied, "unit": "v4l2_100us"}
+            native = {"value": settings.get("exposureNative"), "unit": "log2_s"} \
+                if settings.get("exposureNative") is not None else {"value": applied, "unit": "v4l2_100us"}
             return {"state": thread.readCameraState().toJson(), "requested": requested, "applied": applied,
                     "source": source, "native": native, "heldBack": thread.getHeldBackFrames()}
         except Exception as error:

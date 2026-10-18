@@ -39,6 +39,24 @@ def yuy2ToBgr(raw, width, height):
     return cv2.cvtColor(flat.reshape(height, width, 2), cv2.COLOR_YUV2BGR_YUY2)
 
 
+def windowsCameraPath(deviceId):
+    """(MSMF symbolic link, friendly name) of MSMF index `deviceId`, or (None, None)."""
+    from cv2_enumerate_cameras import enumerate_cameras
+    from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import CAP_MSMF
+    camera = next((camera for camera in enumerate_cameras(CAP_MSMF) if camera.index == deviceId), None)
+    return (camera.path, getattr(camera, "name", None)) if camera is not None else (None, None)
+
+
+def windowsIdentity(path, name=None):
+    """{name, vendorId, modelId} from an MSMF device path — the record's camera, as Linux reads it from sysfs."""
+    import re
+    match = re.search(r"vid_([0-9a-f]{4}).{0,3}pid_([0-9a-f]{4})", (path or "").lower())
+    identity = {"name": name} if name else {}
+    if match:
+        identity.update({"vendorId": match.group(1), "modelId": match.group(2)})
+    return identity
+
+
 def requireProfile(profile):
     """⛔ Every opener passes its spectral profile EXPLICITLY (SPEC_camera_settings.md §2, D1) — never again inferred
     from `whiteBalanceKelvin is None`, which is how the warm-keeper came to run with calibration semantics."""
@@ -75,9 +93,16 @@ class CaptureBackend:
     def readDeviceDefaults(deviceId) -> CameraDevice:
         """⭐ The camera's FACTORY STATE, from its firmware — no open, no stream (§3.4).
 
-        Linux asks V4L2 on its own fd, so it is safe from the GUI thread while the warm-keeper streams (E4).
-        ⚠ Windows answers an empty CameraDevice until CS3 reads `GetRange` there; Android/RPi likewise."""
+        Linux asks V4L2 on its own fd, Windows DirectShow `GetRange` (CS3) — both safe from the GUI thread while the
+        warm-keeper streams (E4). A camera that will not answer (and Android/RPi) is an empty CameraDevice."""
         from sys import platform
+        if platform == "win32":
+            try:
+                from sciens.spectracs.logic.application.video.capture.WindowsUvcControls import WindowsUvcControls
+                path, _name = windowsCameraPath(deviceId)
+                return WindowsUvcControls(path).describe() if path is not None else CameraDevice()
+            except Exception:
+                return CameraDevice()
         if platform != "linux" or is_android():
             return CameraDevice()
         from sciens.spectracs.logic.application.video.capture.LinuxUvcControls import LinuxUvcControls
@@ -123,13 +148,13 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         self._backendName = None
         self._pixelFormat = None
         self._rawYuy2 = False       # True: read() gets the raw buffer and converts it itself (W1.3 win32, W1.4b Linux)
-        self._nativeControls = None  # win32: the camera's DirectShow controls (W1.6), set + read there
-        self._controls = None        # linux: LinuxUvcControls — the ONE writer of every control (CS2)
+        self._controls = None        # LinuxUvcControls / WindowsUvcControls — the ONE writer of every control (CS2/CS3)
         self._record = None          # CameraOpenRecord of the current open
         self._resolution = None
 
-    # Tests replace the Linux controls (a fake V4L2 node); None = LinuxUvcControls.forDevice.
+    # Tests replace the controls (a fake V4L2 node / a fake DirectShow camera); None = the real ones.
     controlsFactory = None
+    windowsControlsFactory = None
 
     def getOpenRecord(self):
         return self._record
@@ -238,10 +263,7 @@ class DesktopCv2CaptureBackend(CaptureBackend):
 
         self.__fillHost(cv2)
 
-        if windows:
-            self.__openWindowsControls(cv2, profile, override, exposureSeed)
-            return self._record
-        self.__applyLinuxControls(cv2, profile, override, exposureSeed)
+        self.__applyControls(cv2, profile, override, exposureSeed, windows)
         return self._record
 
     def __fillHost(self, cv2):
@@ -257,8 +279,26 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             factory = LinuxUvcControls.forDevice
         return factory(deviceId)
 
-    def __applyLinuxControls(self, cv2, profile, override, exposureSeed):
-        """CS2: every control the camera offers, resolved and written by LinuxUvcControls, then read back.
+    def __windowsControls(self):
+        """(WindowsUvcControls, None) for the MSMF index that was opened, or (None, why) — CS3."""
+        factory = type(self).windowsControlsFactory
+        try:
+            if factory is not None:
+                return factory(self._deviceId), None
+            from sciens.spectracs.logic.application.video.capture import WindowsUvcControls as controlsModule
+            path, name = windowsCameraPath(self._deviceId)
+            if path is None:
+                raise LookupError("MSMF index %s is no longer enumerated" % self._deviceId)
+            self._record.camera = windowsIdentity(path, name)
+            controls = controlsModule.WindowsUvcControls(path)
+            controls.describe()                       # binds once: a camera that cannot be bound says so HERE
+            return controls, None
+        except Exception as error:
+            return None, "native controls unavailable (%s: %s)" % (type(error).__name__, error)
+
+    def __applyControls(self, cv2, profile, override, exposureSeed, windows):
+        """CS2/CS3: every control the camera offers, resolved and written by the OS's controls (LinuxUvcControls,
+        WindowsUvcControls), then read back — one rule, one record on both OSes.
 
         ⭐ ONE WRITER (§5, D6): cv2 sets no control any more — it keeps the stream (format, size, buffer size,
         CONVERT_RGB). Written ONCE, after the final cap exists (after `__reopenUnforced` if it ran), in the order
@@ -266,22 +306,28 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         ⛔ Q4: a MEASUREMENT whose read-back does not confirm every requested control is REFUSED — image controls
         too; CALIBRATION and IDLE only warn. A camera whose controls cannot be reached at all proves nothing, and
         is refused the same way."""
-        from sciens.spectracs.logic.application.video.capture.LinuxUvcControls import cameraIdentity
         record = self._record
-        record.camera = cameraIdentity(self._deviceId)
-        self._controls = self.__linuxControls(self._deviceId)
+        if windows:
+            self._controls, unavailable = self.__windowsControls()
+        else:
+            from sciens.spectracs.logic.application.video.capture.LinuxUvcControls import cameraIdentity
+            record.camera = cameraIdentity(self._deviceId)
+            self._controls = self.__linuxControls(self._deviceId)
+            unavailable = "no V4L2 node for device %s — its controls cannot be set or read" % self._deviceId
         device = self._controls.describe() if self._controls is not None else CameraDevice()
         resolution = CameraSettingsResolver.resolve(device, profile, override, exposureSeed)
         self._resolution = resolution
         self.__fillResolution(device, resolution)
         if self._controls is None:
-            record.failures.append("no V4L2 node for device %s — its controls cannot be set or read" % self._deviceId)
+            record.failures.append(unavailable)
             applied = CameraSettings()
             seed = exposureSeed if exposureSeed is not None else profile.exposureFallback()
             if seed is not None:
-                # The one cv2 write left: a camera without a node still gets its exposure, as before CS2.
+                # The one cv2 write left: a camera whose controls cannot be reached still gets its exposure, as
+                # before CS2 — on MSMF in its native whole log₂ seconds.
+                from sciens.spectracs.logic.application.video.capture.WindowsUvcControls import toLog2
                 self._cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
-                self._cap.set(cv2.CAP_PROP_EXPOSURE, seed)
+                self._cap.set(cv2.CAP_PROP_EXPOSURE, toLog2(seed) if windows else seed)
         else:
             applied, failures = self._controls.apply(resolution)
             record.failures.extend(failures)
@@ -318,95 +364,6 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             self.release()
         else:
             print("CaptureBackend: ⚠ %s - %s open continues" % (problem, profile.value))
-
-    def __openWindowsControls(self, cv2, profile, override, exposureSeed):
-        """Windows until CS3: the W1.6 native path, fed from the profile instead of `whiteBalanceKelvin`.
-
-        ⚠ Exposure still goes through cv2 MSMF in V4L2 numbers, as before — the log₂ converter and the native
-        exposure write are CS3 (§3.3a). White balance: CALIBRATION auto; MEASUREMENT and IDLE manual at the
-        override's or the profile's temperature. Only MEASUREMENT refuses (IDLE used to run as calibration)."""
-        override = CameraSettings.of(override if profile.acceptsPluginOverride() else None)
-        exposure = override.get(CameraControl.EXPOSURE, exposureSeed)
-        self._cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
-        self._cap.set(cv2.CAP_PROP_EXPOSURE, exposure if exposure is not None else -3)
-        self._cap.set(cv2.CAP_PROP_GAIN, 0)
-        whiteBalanceKelvin = None if profile is CameraProfile.CALIBRATION else int(
-            override.get(CameraControl.WHITE_BALANCE_KELVIN,
-                         profile.values().get(CameraControl.WHITE_BALANCE_KELVIN, 6500)))
-        self._record.requested = {CameraControl.EXPOSURE.value: exposure,
-                                  CameraControl.WHITE_BALANCE_AUTO.value: whiteBalanceKelvin is None}
-        if whiteBalanceKelvin is not None:
-            self._record.requested[CameraControl.WHITE_BALANCE_KELVIN.value] = whiteBalanceKelvin
-        self._record.notes.append("Windows: the W1.6 control path until CS3 (exposure via MSMF, not converted)")
-        self.__applyNativeControls(whiteBalanceKelvin, refuse=profile.refusesOnMismatch())
-
-    def __applyNativeControls(self, whiteBalanceKelvin, refuse=True):
-        """Windows: set every UVC control natively and PROVE the measurement state from the read-back (§6.4b).
-
-        ⛔ A measurement open whose read-back does not show WB manual at the lamp's temperature, gain 0, backlight 0
-        and manual exposure is REFUSED, like a non-YUY2 stream — auto-WB re-converging between reference and sample
-        is the §14.8 tilt, and nothing downstream would notice. The calibration path (auto WB) only warns."""
-        from sciens.spectracs.logic.application.video.capture.WindowsUvcControls import WindowsUvcControls, \
-            provesFrozen
-        from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import CAP_MSMF
-        problem = None
-        readBack = {}
-        try:
-            from cv2_enumerate_cameras import enumerate_cameras
-            path = next((camera.path for camera in enumerate_cameras(CAP_MSMF) if camera.index == self._deviceId), None)
-            if path is None:
-                raise LookupError("MSMF index %s is no longer enumerated" % self._deviceId)
-            self._nativeControls = WindowsUvcControls(path)
-            readBack = self._nativeControls.apply(whiteBalanceKelvin)
-        except Exception as error:
-            self._nativeControls = None
-            problem = "native controls unavailable (%s: %s)" % (type(error).__name__, error)
-        if problem is None and readBack.get("failures"):
-            problem = "could not set %s" % ", ".join(readBack["failures"])
-        print("CaptureBackend: native controls (%s) %s" % (
-            "calibration, auto WB" if whiteBalanceKelvin is None else "measurement, WB %dK" % int(whiteBalanceKelvin),
-            " ".join("%s=%s%s" % (name, entry.get("value"), "(auto)" if entry.get("flags") == 1 else "")
-                     for name, entry in readBack.items() if isinstance(entry, dict))))
-        if whiteBalanceKelvin is None:
-            if problem is not None:
-                print("CaptureBackend: ⚠ %s - the camera keeps whatever it was left with" % problem)
-            return
-        if problem is None and not provesFrozen(readBack, whiteBalanceKelvin):
-            problem = "the read-back does not prove WB %dK manual / gain 0 / backlight 0 / manual exposure" \
-                      % int(whiteBalanceKelvin)
-        if problem is not None and not refuse:
-            print("CaptureBackend: ⚠ %s - the open continues (not a measurement)" % problem)
-        elif problem is not None:
-            print("CaptureBackend: ⛔ REFUSED to capture on %s - %s (SPEC_windows_build.md §6.4b)"
-                  % (self._backendName, problem))
-            self._record.refusal = problem
-            self.release()
-
-    def __nativeSettings(self):
-        """Windows read-back of the live controls, from the camera itself; {} if it will not answer."""
-        if self._nativeControls is None:
-            return {}
-        try:
-            readBack = self._nativeControls.read()
-        except Exception:
-            return {}
-
-        def value(name):
-            return (readBack.get(name) or {}).get("value")
-
-        exposure = readBack.get("Exposure") or {}
-        whiteBalance = readBack.get("WhiteBalance") or {}
-        return {
-            # ⚠ log2-seconds steps (-13..-1), NOT V4L2 units — the unit bridge is W1.5 (§6.6c).
-            "exposure": exposure.get("value"),
-            "exposureMin": exposure.get("min"),
-            "exposureMax": exposure.get("max"),
-            "autoExposureMode": {1: "auto", 2: "manual"}.get(exposure.get("flags")),
-            "wbTemperature": whiteBalance.get("value"),
-            "autoWb": None if not whiteBalance else (1 if whiteBalance.get("flags") == 1 else 0),
-            "gain": value("Gain"),
-            "backlight": value("BacklightCompensation"),
-        }
 
     def __fourccName(self, cv2):
         """The granted FOURCC as text, e.g. `YUY2`; None if the backend will not say."""
@@ -491,25 +448,15 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         return (self._width, self._height)
 
     def readCameraState(self) -> CameraSettings:
-        """Every control as it reads back now. Linux: LinuxUvcControls' own fd, safe from the GUI thread while the
-        worker streams (E6). Windows (until CS3): white balance, gain and backlight from DirectShow — its exposure
-        is in log₂ seconds and is reported separately (`readCameraSettings`)."""
-        if self._cap is None:
+        """Every control as it reads back now, in model units (Windows exposure too: V4L2 units). Linux reads on
+        LinuxUvcControls' own fd, Windows binds DirectShow in the calling thread — both safe from the GUI thread
+        while the worker streams (E6)."""
+        if self._cap is None or self._controls is None:
             return CameraSettings()
-        if self._controls is not None:
-            try:
-                return self._controls.read()
-            except Exception:
-                return CameraSettings()
-        native = self.__nativeSettings() if self._nativeControls is not None else {}
-        values = {}
-        for control, key in ((CameraControl.WHITE_BALANCE_KELVIN, "wbTemperature"), (CameraControl.GAIN, "gain"),
-                             (CameraControl.BACKLIGHT, "backlight")):
-            if native.get(key) is not None:
-                values[control] = native[key]
-        if native.get("autoWb") is not None:
-            values[CameraControl.WHITE_BALANCE_AUTO] = bool(native["autoWb"])
-        return CameraSettings(values)
+        try:
+            return self._controls.read()
+        except Exception:
+            return CameraSettings()
 
     def readCameraSettings(self) -> dict:
         # Diagnostic read-back of the live controls for the CAPTURE-SETTINGS line (SPEC_capability_proof.md §7.0.1 —
@@ -539,8 +486,9 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             "profile": self._record.profile if self._record is not None else None,
         }
         if self._controls is not None:
-            # ⭐ CS2: from the camera via V4L2, in model words — `autoExposure` reads MANUAL / AUTO, so the old
-            # menu-index trap (1 = manual, beside an autoWb whose off is 0) cannot be misread any more.
+            # ⭐ CS2/CS3: from the camera, in model words and units — `autoExposure` reads MANUAL / AUTO (no more menu
+            # index 1 beside an autoWb whose off is 0), and the exposure is V4L2 units on Windows too, so the slider
+            # and the AE learn the real range (≈1..5000). `exposureNative` is the camera's own number (log₂ s).
             state = guarded(self._controls.read, CameraSettings())
             exposureRange = guarded(lambda: self._controls.describe().rangeOf(CameraControl.EXPOSURE), None)
             autoWb = state.get(CameraControl.WHITE_BALANCE_AUTO)
@@ -555,6 +503,8 @@ class DesktopCv2CaptureBackend(CaptureBackend):
                 "gain": state.get(CameraControl.GAIN),
                 "backlight": state.get(CameraControl.BACKLIGHT),
                 "camera": state.toJson(),
+                "exposureNative": guarded(self._controls.nativeExposure, None)
+                if hasattr(self._controls, "nativeExposure") else None,
             })
             return settings
         settings.update({
@@ -568,12 +518,9 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             "gain": get(cv2.CAP_PROP_GAIN),
             "backlight": get(cv2.CAP_PROP_BACKLIGHT),
         })
-        # Windows: the camera's own answer replaces OpenCV's (which cannot read WB and reads exposure back wrong).
-        settings.update(guarded(self.__nativeSettings, {}))
         return settings
 
     def release(self) -> None:
-        self._nativeControls = None
         if self._controls is not None:
             try:
                 self._controls.close()
