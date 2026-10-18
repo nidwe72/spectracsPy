@@ -1479,7 +1479,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         W2 — INSTALLER + SIGNING  (before the first customer; W2.1 may start after W0)                        |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
-|◐W2.1  | Inno Setup, per-user (%LOCALAPPDATA%\Programs) — §5b  ∥   | Py tools/ | W0.7        | Setup.exe installs w/o admin        |
+|◐W2.1 | Inno Setup, per-user (%LOCALAPPDATA%\Programs) — §5b  ∥   | Py tools/ | W0.7        | Setup.exe installs w/o admin        |
 | W2.2  | signing: OV certificate vs Microsoft cloud signing        | Edwin     | —           | decided                             |
 | W2.3  | sign Setup.exe (+ every binary if Smart App Control)      | build     | W2.1, W2.2  | no SmartScreen box on download      |
 | W2.4  | real Windows 11 PC: install + §8.1 + §8.2                 | Win11 PC  | W2.3, W1.7  | ticked (same session as W1.8 later) |
