@@ -117,8 +117,9 @@ def load_frame(image_path, exposure, save_path):
         print("  REPLAY saved frame: %s (%dx%d)" % (image_path, qimg.width(), qimg.height()))
         return qimg, None
     from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
+    from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
     backend = getCaptureBackend()
-    backend.open(deviceId=0, exposure=(exposure if exposure is not None else EXPOSURE))
+    backend.open(deviceId=0, profile=CameraProfile.CALIBRATION, exposureSeed=(exposure if exposure is not None else EXPOSURE))
     try:
         used = exposure if exposure is not None else auto_expose(backend)  # fixed --exposure, else auto-expose
         for _ in range(12):

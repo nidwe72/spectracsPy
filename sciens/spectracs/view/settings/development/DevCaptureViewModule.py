@@ -343,6 +343,8 @@ class DevCaptureViewModule(PageWidget):
         thread.autoExposureFinished.connect(self.__onAutoExposeFinished)
         # noinspection PyUnresolvedReferences
         thread.finished.connect(self.__onThreadFinished)
+        # noinspection PyUnresolvedReferences
+        thread.cameraRefused.connect(self.__onCameraRefused)    # SPEC_camera_settings.md §5 (E2): it stops, and says why
         self.__videoThread = thread
         thread.start()
         self.__updateButtons()
@@ -361,6 +363,12 @@ class DevCaptureViewModule(PageWidget):
         if self.__videoThread is not None:
             self.__videoThread.stop()
         self.__updateButtons()
+
+    def __onCameraRefused(self, reason):
+        signal = ApplicationStatusSignal()
+        signal.isStatusReset = False
+        signal.text = "⛔ The camera was refused: %s" % reason
+        ApplicationContextLogicModule().getApplicationSignalsProvider().emitApplicationStatusSignal(signal)
 
     def __onThreadFinished(self):
         self.__videoThread = None

@@ -129,8 +129,10 @@ def main():
         return 2
 
     from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
+
+    from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
     backend = getCaptureBackend()
-    backend.open(deviceId=device, exposure=arguments.exposure or 150, whiteBalanceKelvin=6500)
+    backend.open(deviceId=device, profile=CameraProfile.MEASUREMENT, exposureSeed=arguments.exposure or 150)
 
     print("\n=== RING PROBE — block '%s' ===" % arguments.label)
     print("Four cells, ONE exposure. Change ONLY what each prompt asks for; leave the lamp, the")

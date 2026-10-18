@@ -11,8 +11,14 @@ import numpy as np
 import pytest
 
 from sciens.spectracs.logic.application.video.capture.CaptureBackend import DesktopCv2CaptureBackend
+from sciens.spectracs.logic.application.video.capture.LinuxUvcControls import LinuxUvcControls
+from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
+from fakes.FakeV4l2Node import FakeV4l2Node
 
-NO_NODE = 99            # no /dev/video99 ⇒ the V4L2 ioctls answer nothing, the fake cv2 is all there is
+NO_NODE = 99            # the cv2 index; the camera's controls come from a FakeV4l2Node (CS2)
+# What cv2 may still set after CS2 (SPEC_camera_settings.md §5): the stream, never a control.
+STREAM_PROPS = {cv2.CAP_PROP_BUFFERSIZE, cv2.CAP_PROP_FOURCC, cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT,
+                cv2.CAP_PROP_CONVERT_RGB}
 
 
 class _FakeV4l2Capture:
@@ -71,8 +77,10 @@ def _open(monkeypatch, *captures):
     fake = _FakeCv2(captures)
     monkeypatch.setattr(sys, "platform", "linux")
     monkeypatch.setitem(sys.modules, "cv2", fake)
+    monkeypatch.setattr(DesktopCv2CaptureBackend, "controlsFactory",
+                        staticmethod(lambda deviceId: LinuxUvcControls(FakeV4l2Node())))
     backend = DesktopCv2CaptureBackend()
-    backend.open(NO_NODE, exposure=90, whiteBalanceKelvin=6500)
+    backend.open(NO_NODE, CameraProfile.MEASUREMENT, override={"EXPOSURE": 90})
     return backend, fake
 
 
@@ -85,9 +93,8 @@ def test_linux_converts_itself_when_yuyv_is_granted(monkeypatch, yuyv, capsys):
     capture = _FakeV4l2Capture("YUYV", True, yuyv)
     backend, fake = _open(monkeypatch, capture)
     assert fake.opened[0][1] == cv2.CAP_V4L2
-    props = [prop for prop, _ in capture.calls]
-    assert (cv2.CAP_PROP_CONVERT_RGB, 0) in capture.calls
-    assert props.index(cv2.CAP_PROP_CONVERT_RGB) < props.index(cv2.CAP_PROP_EXPOSURE)    # fixed at open
+    assert (cv2.CAP_PROP_CONVERT_RGB, 0) in capture.calls                                 # fixed at open
+    assert {prop for prop, _ in capture.calls} <= STREAM_PROPS                             # one writer: no cv2 control
     image = backend.read()
     expected = cv2.cvtColor(cv2.cvtColor(yuyv, cv2.COLOR_YUV2BGR_YUY2), cv2.COLOR_BGR2RGB)
     assert _rgbAt(image, 10, 20) == tuple(int(v) for v in expected[20, 10])

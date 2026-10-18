@@ -7,6 +7,13 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QGridLayout, QLabel, QPushB
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.application.style.Metrics import Metrics
 from sciens.spectracs.logic.application.video.DevCaptureVideoThread import DevCaptureVideoThread
+from sciens.spectracs.logic.application.video.capture.CaptureBackend import CaptureBackend
+from sciens.spectracs.logic.camera.CameraDevice import CameraDevice
+from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
+from sciens.spectracs.logic.camera.CameraSettingsResolver import pluginOverrideOf
+from sciens.spectracs.model.spectral.camera.CameraLegSnapshot import CameraLegSnapshot
+from sciens.spectracs.model.spectral.camera.CameraOpenRecord import CameraOpenRecord
+from sciens.spectracs.model.spectral.plugin.view.CameraSettingsRecordView import CameraSettingsRecordView
 from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.logic.spectral.acquisition.ExtendedRoiLogicModule import ExtendedRoiLogicModule
 from sciens.spectracs.logic.model.util.spectrometerSensor.SpectrometerSensorUtil import SpectrometerSensorUtil
@@ -93,6 +100,10 @@ class CapturePanel(QWidget):
     # and AE forces Image during the sweep.
     __SPECTRUM_TAB = 0
     __IMAGE_TAB = 1
+    # SPEC_camera_settings.md §7 (CS8): the "Camera" inner tab sits at index 2, BEFORE Settling — the Director
+    # scenario addresses `innerTabs` by index (`automation/scenarios/measurement_bench.py:40`).
+    __CAMERA_TAB = 2
+    __CAMERA_TAB_LABEL = "Camera"
 
     def __init__(self, steps, engine, onCaptured=None, onRoleChanged=None, onCaptureFailed=None):
         super().__init__()
@@ -121,9 +132,19 @@ class CapturePanel(QWidget):
         self.__previewRoiWidth = None
         self.__representativeFrames = {}    # role -> QImage (preview-only middle frame)
         self.__activeStep = self.__steps[0] if self.__steps else None
+        self.__deviceDefaults = CameraDevice()
+        self.__cameraOverride = None
+        self.__refusal = None
 
         self.__build()
         self.__resolveCamera()
+        # ⭐ THE START-OF-MEASUREMENT SEQUENCE (SPEC_camera_settings.md §6.1, E4): the camera is resolved, its
+        # firmware defaults are read (no stream needed), the plugin is asked for its override — and only THEN is
+        # the exposure seeded and the camera opened. `__syncExposureToSensor` used to run inside `__build`, before
+        # the camera was even resolved.
+        self.__readCameraOverride()
+        self.__syncExposureToSensor()
+        self.__refreshCameraTab()
         self.__applyControlVisibility()
         self.__applyLabels()
         self.__connectLamp()
@@ -291,7 +312,6 @@ class CapturePanel(QWidget):
         self.__roleTabs.tabBar().setDrawBase(False)
         if self.__pages:
             self.__pages[0].layout().addWidget(self.__stepContent)  # start on the first step
-        self.__syncExposureToSensor()
         self.__roleTabs.currentChanged.connect(self.__onRoleTabChanged)
         layout.addWidget(self.__roleTabs)
 
@@ -342,9 +362,13 @@ class CapturePanel(QWidget):
             self.__exposureSlider.blockSignals(False)
             self.__updateExposureLabel()
             if self.__videoThread is not None:
-                self.__videoThread.setLiveExposure(self.__lockedExposure)
+                self.__videoThread.setLiveExposure(self.__lockedExposure, "locked-from-reference")
+                # ⚠ The thread now holds back the frames of the change (§5) — so the last frame here is from the OLD
+                # exposure, and a burst started at once would take it. Dropped: the burst waits for a fresh one.
+                self.__latestImage = None
         self.__captureButton.setText(self.__captureLabelForStep(self.__activeStep))
         self.__plotActiveRole()
+        self.__refreshCameraTab()
         self.__updateControls()
         self.__onRoleChanged()
 
@@ -388,25 +412,39 @@ class CapturePanel(QWidget):
     def __onExposureChanged(self):
         self.__updateExposureLabel()
         if self.__videoThread is not None:
-            self.__videoThread.setLiveExposure(self.__exposureSlider.value())
+            self.__videoThread.setLiveExposure(self.__exposureSlider.value(), "operator")
+            self.__latestImage = None        # the old exposure's frame must not start a burst (see above)
 
     def __updateExposureLabel(self):
         if self.__exposureLabel is not None:
             self.__exposureLabel.setText(str(self.__exposureSlider.value()))
 
+    def __readCameraOverride(self):
+        """Ask the PLUGIN for its camera override, handing it the camera's firmware defaults (§6.1).
+
+        `cameraSettings(deviceDefaults)` wins; a plugin that only declares the `exposure` attribute (every signed
+        v1.x row) gets `{EXPOSURE: exposure}`. ⛔ A plugin that raises, or answers nonsense, must not break capture —
+        it falls back to the profile alone and says so."""
+        if self.__resolvedIndex is not None:
+            try:
+                self.__deviceDefaults = CaptureBackend.readDeviceDefaults(self.__resolvedIndex)
+            except Exception as error:                # a diagnostic read must never take the capture down
+                print("CAMERA: device defaults unavailable (%s)" % error)
+        self.__cameraOverride, problem = pluginOverrideOf(getattr(self.__engine, "plugin", None),
+                                                          self.__deviceDefaults.defaults())
+        if problem:
+            print("CAMERA: %s — the MEASUREMENT profile alone" % problem)
+
     def __pinnedExposure(self):
         """The exposure the PLUGIN pins, or None to keep today's auto-exposure behaviour.
 
-        ⭐⭐ `SPEC_capture_quality.md` §16.39.5. The plugin declares one number (`DevSpectralPlugin.exposure`)
-        and that is the whole of the pin: `__syncExposureToSensor` seeds the slider from it and clears the
-        auto-exposure checkbox, after which the EXISTING capture path skips the sweep by itself and
-        `__lockedExposure` carries the same value to the sample leg. ⛔ No change to the capture flow, and
-        none to the GUI — the dev bench never showed these controls (`showExposureControls` defaults False),
-        which is exactly why an AE checkbox that is `setChecked(True)` at construction has been choosing the
-        instrument state unseen since the bench was built.
+        ⭐⭐ `SPEC_capture_quality.md` §16.39.5. Since CS4 the pin is the EXPOSURE of the plugin's camera override
+        (`cameraSettings()`, or the legacy `exposure` attribute): `__syncExposureToSensor` seeds the slider from it
+        and clears the auto-exposure checkbox, after which the EXISTING capture path skips the sweep by itself and
+        `__lockedExposure` carries the same value to the sample leg. ⛔ The checkbox follows the resolved exposure
+        SOURCE, not an attribute (D10a).
         ⚠ A plugin that declares nothing gets today's behaviour unchanged — the pin is strictly additive."""
-        plugin = getattr(self.__engine, "plugin", None)
-        declared = getattr(plugin, "exposure", None) if plugin is not None else None
+        declared = (self.__cameraOverride or {}).get("EXPOSURE")
         try:
             return int(declared) if declared is not None else None
         except (TypeError, ValueError):               # a malformed declaration must not break capture
@@ -508,18 +546,24 @@ class CapturePanel(QWidget):
             return
         self.__latestImage = None
         self.__exposureRangeRead = False   # a reopened stream may be a different camera → re-query its range
+        self.__refusal = None
         thread = DevCaptureVideoThread()
         thread.setIsVirtual(False)
         thread.setDeviceId(self.__resolvedIndex)
+        # §6.1 step 5: the MEASUREMENT profile and the plugin's override; every control is set on the open.
+        thread.setCameraProfile(CameraProfile.MEASUREMENT)
+        thread.setCameraOverride(self.__cameraOverride)
         role = self.__activeStep.getRole() if self.__activeStep is not None else None
-        exposure = self.__lockedExposure if (role == SAMPLE and self.__lockedExposure is not None) \
-            else self.__exposureSlider.value()
+        locked = role == SAMPLE and self.__lockedExposure is not None
+        exposure = self.__lockedExposure if locked else self.__exposureSlider.value()
         thread.setExposure(exposure)
-        thread.setLiveExposure(exposure)
+        if locked:
+            thread.setLiveExposure(exposure, "locked-from-reference")
         thread.setFrameCount(0)  # continuous until stop()
         thread.videoThreadSignal.connect(self.handleVideoThreadSignal)
         thread.autoExposureProgress.connect(self.__onAutoExposeProgress)
         thread.autoExposureFinished.connect(self.__onAutoExposeFinished)
+        thread.cameraRefused.connect(self.__onCameraRefused)
         thread.finished.connect(self.__onThreadFinished)
         self.__videoThread = thread
         thread.start()
@@ -542,6 +586,7 @@ class CapturePanel(QWidget):
                     (thread.videoThreadSignal, self.handleVideoThreadSignal),
                     (thread.autoExposureProgress, self.__onAutoExposeProgress),
                     (thread.autoExposureFinished, self.__onAutoExposeFinished),
+                    (thread.cameraRefused, self.__onCameraRefused),
                     (thread.finished, self.__onThreadFinished)):
                 try:
                     signal.disconnect(slot)
@@ -555,6 +600,17 @@ class CapturePanel(QWidget):
     def __onThreadFinished(self):
         self.__videoThread = None
         self.__updateControls()
+
+    def __onCameraRefused(self, reason):
+        """⛔ The open was REFUSED (SPEC_camera_settings.md §5, Q4/E2): the thread has already stopped. Say why —
+        never the "no frames were delivered" a spinning thread used to end in."""
+        self.__refusal = reason
+        print("CAMERA: ⛔ refused — %s" % reason)
+        self.__showStatusText("⛔ The camera did not take the measurement settings (%s). Nothing can be "
+                              "measured on this state — replug the camera and reopen the step." % reason)
+
+    def getRefusal(self):
+        return self.__refusal
 
     def handleVideoThreadSignal(self, event, videoSignal):
         # Preview frames (emitted DURING the auto-exposure sweep so the view isn't frozen) paint but must NOT become
@@ -713,12 +769,14 @@ class CapturePanel(QWidget):
         # the device either (CaptureBackend.__exposureModeName). A camera that will not name it prints bare.
         mode = settings.get("autoExposureMode")
         print("CAPTURE-SETTINGS role=%s frames=%s exposure_applied=%s exposure_cv2=%s autoExposure=%s%s wb=%s "
-              "autoWb=%s gain=%s backlight=%s wbRequested=%s backend=%s pixelFormat=%s conversion=%s"
+              "autoWb=%s gain=%s backlight=%s profile=%s exposureSource=%s backend=%s pixelFormat=%s conversion=%s"
               % (role, frames, settings.get("appliedExposure"), settings.get("exposure"),
                  settings.get("autoExposure"), "(%s)" % mode if mode else "",
                  settings.get("wbTemperature"), settings.get("autoWb"),
                  settings.get("gain"), settings.get("backlight"),
-                 settings.get("whiteBalanceKelvinRequested"),
+                 # ⭐ CS2/CS4: which spectral profile the open used and where the exposure came from (§3.3a) —
+                 # replaces `wbRequested`, which only ever said whether a temperature was passed.
+                 settings.get("profile"), settings.get("exposureSource"),
                  # Appended, not inserted: which backend and which pixel format the frames came through
                  # (SPEC_windows_build.md §6.2/§6.3) — the line must say a Windows capture is YUY2 + MSMF.
                  settings.get("backend"), settings.get("pixelFormat"), settings.get("conversion")))
@@ -753,6 +811,107 @@ class CapturePanel(QWidget):
                   "T = S/R does not cancel this (SPEC_capture_quality.md §16.24.1) — the run is not on one "
                   "instrument state." % (role, int(applied), int(previous)))
         workflow.exposureApplied = int(applied)
+
+    # --- the camera record of a leg (SPEC_camera_settings.md §4, CS6) ---
+
+    def __cameraSnapshot(self):
+        """The read-back of every control NOW, plus the exposure in force and where it came from. Best-effort — a
+        snapshot must never break the capture it documents."""
+        thread = self.__videoThread
+        if thread is None:
+            return None
+        try:
+            requested, applied, source = thread.getExposureState()
+            settings = thread.readCameraSettings() or {}
+            native = {"value": settings.get("exposure"), "unit": "log2_s"} if settings.get("backend") == "MSMF" \
+                else {"value": applied, "unit": "v4l2_100us"}
+            return {"state": thread.readCameraState().toJson(), "requested": requested, "applied": applied,
+                    "source": source, "native": native, "heldBack": thread.getHeldBackFrames()}
+        except Exception as error:
+            print("CAMERA: snapshot unavailable (%s)" % error)
+            return None
+
+    def __showsCameraTab(self):
+        plugin = getattr(self.__engine, "plugin", None)
+        try:
+            return bool(plugin.showsCameraTab()) if plugin is not None and hasattr(plugin, "showsCameraTab") \
+                else False
+        except Exception:
+            return False
+
+    def __attachCameraRecord(self, step, role, start):
+        """One `CameraSettingsRecordView` per leg, on that step: the open's record + the leg's start and end."""
+        thread = self.__videoThread
+        if thread is None or not hasattr(self.__engine, "attachCameraRecord"):
+            return
+        end = self.__cameraSnapshot()
+        start = start or end
+        if start is None:
+            return
+        record = thread.getOpenRecord()
+        leg = CameraLegSnapshot(
+            role=role, atStart=start["state"], atEnd=(end or start)["state"],
+            exposureNative={"start": start["native"], "end": (end or start)["native"]},
+            requestedExposure=start["requested"], exposureSource=start["source"], heldBackFrames=start["heldBack"])
+        view = CameraSettingsRecordView(CameraOpenRecord.fromJson(record.toJson()) if record is not None
+                                        else CameraOpenRecord(), leg, showsTab=self.__showsCameraTab())
+        self.__engine.attachCameraRecord(step, view)
+        self.__compareLegs()
+        self.__refreshCameraTab()
+
+    def __detachCameraRecord(self, step):
+        if hasattr(self.__engine, "detachCameraRecord"):
+            self.__engine.detachCameraRecord(step)
+            self.__refreshCameraTab()
+
+    @staticmethod
+    def cameraRecordOf(step):
+        result = step.getEvaluationResult() if step is not None else None
+        return next((item for item in (result.getItems() if result is not None else [])
+                     if isinstance(item, CameraSettingsRecordView)), None)
+
+    def __compareLegs(self):
+        """Generalises the old exposure check (§4): the active controls of `reference.atStart` vs `sample.atStart`,
+        and each leg's start vs its end. ⛔ T = S/R cancels none of these (SPEC_capture_quality.md §16.24.1)."""
+        records = [self.cameraRecordOf(step) for step in self.__steps]
+        records = [record for record in records if record is not None]
+        for record in records:
+            for control, start, end in record.leg.drift():
+                print("⚠ CAMERA STATE DRIFT within the %s leg: %s %s at start, %s at end"
+                      % (record.getRole(), control, start, end))
+        if len(records) >= 2:
+            first, second = records[0].leg.atStart or {}, records[1].leg.atStart or {}
+            differing = ["%s %s vs %s" % (control, first[control], second[control])
+                         for control in first if control in second and first[control] != second[control]]
+            if differing:
+                print("⛔ CAMERA STATE MISMATCH between the capture legs: %s — the run is not on one instrument "
+                      "state (SPEC_camera_settings.md §4)" % ", ".join(differing))
+
+    def __refreshCameraTab(self):
+        """(Re)build the "Camera" inner tab from the steps' records — after every leg and on every role switch (E10:
+        ONE set of inner tabs is reparented between the role pages, so a stale tab would show the other role's
+        state). Only when the plugin asks for it (Q9: the dev bench); everyone gets the table in the PDF."""
+        if self.__innerTabs is None or not self.__showsCameraTab():
+            return
+        from sciens.spectracs.logic.camera.CameraSettingsTable import cameraRecordsOf, cameraSettingsTable
+        try:
+            table = cameraSettingsTable(cameraRecordsOf(self.__steps))
+            if table is None:
+                content = QLabel("The camera settings of each leg appear here after its capture.")
+                content.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            else:
+                from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
+                content = QtWorkflowRenderer().render([table])
+        except Exception as error:              # a record view must never break the capture it documents
+            print("CAMERA tab unavailable (%s)" % error)
+            return
+        current = self.__innerTabs.currentIndex()
+        for index in range(self.__innerTabs.count()):
+            if self.__innerTabs.tabText(index) == self.__CAMERA_TAB_LABEL:
+                self.__innerTabs.removeTab(index)
+                break
+        self.__innerTabs.insertTab(self.__CAMERA_TAB, content, self.__CAMERA_TAB_LABEL)
+        self.__innerTabs.setCurrentIndex(current)
 
     def __guardReading(self, view, spectrum):
         """`min(S)` over the plugin's declared guard window, in ENCODED DN — SPEC_capture_quality.md §16.23.10f.
@@ -887,6 +1046,9 @@ class CapturePanel(QWidget):
             self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)
             self.__beginCaptureProgress(frameCount)
             self.__waitForFirstFrame()
+            # ⭐ THE LEG'S START SNAPSHOT (SPEC_camera_settings.md §4, E8) — after the AE and the first fresh frame,
+            # i.e. the state the burst is about to run under. New: until CS6 only the END was ever logged.
+            legStart = self.__cameraSnapshot()
 
             images = []
             state = {"roiApplied": False}
@@ -943,6 +1105,7 @@ class CapturePanel(QWidget):
                 self.__endCaptureProgress()
                 self.__clearCoach()
                 if not self.__cancelRequested and not self.__onMonitorFinished(step, role, result):
+                    self.__detachCameraRecord(step)      # no value, no container — and no camera record
                     return
                 spectrum = result.spectrum
             else:
@@ -956,6 +1119,7 @@ class CapturePanel(QWidget):
                 # re-measuring THIS jar is not the same experiment as measuring a fresh one (§17/U2).
                 step.setContainer(None)
                 self.__representativeFrames.pop(role, None)
+                self.__detachCameraRecord(step)          # a cancelled leg keeps no camera record (§4)
                 service = self.__lampService()
                 lampStopped = service.offMessage() if (service is not None and self.__cancelReason) else None
                 if lampStopped:
@@ -973,6 +1137,7 @@ class CapturePanel(QWidget):
                 # banked light dose that pushed the repeat upward. ⚠ The engine's fallback (M3) plus the
                 # time-sized retention (M1) should make this unreachable for a monitored run — if it is
                 # reached, the operator is told what is actually true.
+                self.__detachCameraRecord(step)
                 if monitoredResult is not None and monitoredResult.hasValue():
                     self.__showStatusText(
                         "⛔ The measurement was made (%s %.2f) but its spectrum could not be recovered, so "
@@ -990,6 +1155,7 @@ class CapturePanel(QWidget):
             # Diagnostic (SPEC_capability_proof.md §7.0.1): log the landed exposure / white-balance / gain for THIS
             # capture, so reference-vs-sample and run-to-run drift (the absorbed-colour reference tilt) is traceable.
             self.__logCameraSettings(role, frames=frameCount)
+            self.__attachCameraRecord(step, role, legStart)
             self.__logLowDnGuard(role, step, spectrum)
 
             if role == REFERENCE:
@@ -999,6 +1165,7 @@ class CapturePanel(QWidget):
                 if sampleStep is not None and sampleStep is not step and sampleStep.getContainer() is not None:
                     sampleStep.setContainer(None)
                     self.__representativeFrames.pop(SAMPLE, None)
+                    self.__detachCameraRecord(sampleStep)   # its camera record described the old reference's state
 
             self.__plotActiveRole()
             self.__innerTabs.setCurrentIndex(self.__SPECTRUM_TAB)

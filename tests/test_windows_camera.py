@@ -17,6 +17,7 @@ import usb.core
 
 import sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver as resolverModule
 import sciens.spectracs.logic.application.video.capture.WindowsUvcControls as controlsModule
+from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
 from sciens.spectracs.logic.application.video.capture.CaptureBackend import DesktopCv2CaptureBackend, yuy2ToBgr
 from sciens.spectracs.logic.application.video.capture.SensorCaptureIndexResolver import SensorCaptureIndexResolver
 from sciens.spectracs.logic.connection.ConnectionPollThread import ConnectionPollThread
@@ -244,7 +245,10 @@ def _openOnWindows(monkeypatch, grantedFourcc, whiteBalanceKelvin=6500, **contro
     _FakeControls.instances = []
     monkeypatch.setattr(controlsModule, "WindowsUvcControls", lambda path: _FakeControls(path, **controls))
     backend = DesktopCv2CaptureBackend()
-    backend.open(1, exposure=None, whiteBalanceKelvin=whiteBalanceKelvin)
+    # CS2: the profile, not `whiteBalanceKelvin is None`, says calibration or measurement (SPEC_camera_settings.md §2)
+    profile = CameraProfile.CALIBRATION if whiteBalanceKelvin is None else CameraProfile.MEASUREMENT
+    backend.open(1, profile, override=None if whiteBalanceKelvin is None
+                 else {"WHITE_BALANCE_KELVIN": whiteBalanceKelvin})
     return backend, fake, yuy2
 
 

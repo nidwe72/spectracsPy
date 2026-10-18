@@ -251,8 +251,9 @@ def _gate(message):
 
 def open_camera(device, exposure):
     from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
+    from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
     backend = getCaptureBackend()
-    backend.open(deviceId=device, exposure=exposure)
+    backend.open(deviceId=device, profile=CameraProfile.CALIBRATION, exposureSeed=exposure)
     return backend
 
 

@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 from typing import Generic, TypeVar
 
@@ -8,6 +9,8 @@ from PySide6.QtGui import QImage
 from sciens.spectracs.logic.application.video.capture.AutoExposureLogicModule import AutoExposureLogicModule
 from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
 from sciens.spectracs.logic.application.video.CameraLease import CameraLease
+from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
+from sciens.spectracs.plugin_sdk.camera.CameraSettings import CameraSettings
 from sciens.spectracs.model.databaseEntity.AppDataPathUtil import get_app_data_dir
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 
@@ -22,6 +25,10 @@ class VideoThread(QThread,Generic[S]):
     # diagnostics drain — no async live-stream / event-loop lag (SPEC_capture_quality.md §14.6).
     autoExposureProgress = Signal(int, int)   # (probeIndex, totalProbes) — drives the status bar
     autoExposureFinished = Signal(int)        # chosen exposure — the view applies it to its slider
+    # ⛔ A REFUSED OPEN STOPS (SPEC_camera_settings.md §5, E2). It used to leave `_cap = None`, so read() returned
+    # None at once and the capture loop spun with no sleep until the operator read "No frames were delivered".
+    # Now run() leaves at once and says WHY, through this signal.
+    cameraRefused = Signal(str)
     # Fixed drain per probe, safely past the ELP's exposure-change settle (~1.2 s latency then jump; steady by
     # ~1.5 s — measured, SPEC_capture_quality.md §14.6). A shorter/adaptive drain under-reads a big jump (the
     # sensor is still ramping) → the sweep picks an over-bright, clipping exposure. A flat fixed wait can't misfire.
@@ -40,11 +47,16 @@ class VideoThread(QThread,Generic[S]):
     __SETTLE_TOLERANCE_FRAC = 0.01  # frame-brightness change (RELATIVE — the mean is small on a mostly-dark frame)
                                     # under this fraction counts as "no longer changing" (§14.8 fix 2)
 
-    # White-balance mode passed to CaptureBackend.open (SPEC_capture_quality.md §14.8, fix 1). None = the camera's
-    # AUTO white balance — the DEFAULT, so calibration threads (which key on auto-WB's colour rendering, §13/§14.6)
-    # are unchanged. The MEASUREMENT thread (DevCaptureVideoThread) overrides this to the lamp's fixed temperature so
-    # its reference/sample bursts are deterministic.
-    WHITE_BALANCE_KELVIN = None
+    # The SPECTRAL PROFILE this thread opens the camera with (SPEC_camera_settings.md §2) — passed EXPLICITLY, never
+    # inferred (D1). CALIBRATION by default: the calibration views and the legacy SpectralJob keep auto white balance,
+    # which their peak detection is tuned for. DevCaptureVideoThread = MEASUREMENT, the warm-keeper = IDLE.
+    CAMERA_PROFILE = CameraProfile.CALIBRATION
+
+    # ⭐ THE SETTLING HOLD-BACK (Edwin: "sounds reasonable"; W1.4 measured the ELP settled by frame 4 on Linux and
+    # on Windows). After an open and after every live exposure change the next HOLD_BACK_FRAMES frames are shown as
+    # PREVIEW but never reach afterCapture — so no burst, no monitor row and no frame index sees a sensor still
+    # converging (§5, D13/E7). ⚠ Not after an AE probe or its final `best`: the sweep drains and settles itself.
+    HOLD_BACK_FRAMES = 5
 
     def __init__(self):
         super().__init__()
@@ -60,9 +72,20 @@ class VideoThread(QThread,Generic[S]):
         # Per-camera manual exposure (V4L2 units); None => backend legacy default. Set by the caller from
         # the seeded SpectrometerSensorSettings for the active light-source scenario (spec §9.3).
         self._exposure = None
-        # Live exposure override applied mid-stream (a dev-view slider). None => leave as opened.
+        # Live exposure change applied mid-stream: (value, source) or None — the slider ("operator"), the lock onto
+        # the sample ("locked-from-reference"). Exposure is a LIVE control, so each change carries where it came
+        # from (SPEC_camera_settings.md §3.3a).
         self._liveExposure = None
-        self._appliedExposure = None
+        self._requestedExposure = None   # what was last ASKED for, V4L2 units
+        self._appliedExposure = None     # what the camera READ BACK (Windows: the whole log2 step, e.g. 90 -> 78)
+        self._exposureSource = None
+        self._cameraProfile = self.CAMERA_PROFILE
+        self._cameraOverride = None
+        self._openRecord = None
+        self._holdBack = 0
+        self._heldBackSinceChange = 0
+        # The GUI thread reads back (readCameraSettings) while this thread may be releasing the backend (E6).
+        self._backendLock = threading.Lock()
 
         self._frameCount = 0
         self._currentFrameIndex = 0
@@ -74,19 +97,59 @@ class VideoThread(QThread,Generic[S]):
     def readCameraSettings(self) -> dict:
         # Diagnostic snapshot of the live camera controls for the reference-tilt investigation
         # (SPEC_capability_proof.md §7.0.1): the backend's live read-back merged with what THIS thread applied
-        # (the AE-landed exposure) and the requested white-balance mode. Safe on virtual/headless (no backend →
-        # just the applied values).
-        settings = self._backend.readCameraSettings() if self._backend is not None else {}
+        # (the AE-landed exposure) and where it came from. Safe on virtual/headless (no backend → just the applied
+        # values).
+        with self._backendLock:
+            settings = self._backend.readCameraSettings() if self._backend is not None else {}
         settings["appliedExposure"] = self._appliedExposure
-        settings["whiteBalanceKelvinRequested"] = self.WHITE_BALANCE_KELVIN
+        settings["requestedExposure"] = self._requestedExposure
+        settings["exposureSource"] = self._exposureSource
+        settings["profile"] = self._cameraProfile.value
         return settings
 
+    def readCameraState(self) -> CameraSettings:
+        """The read-back of every control now — a leg snapshot (SPEC_camera_settings.md §4). Empty when not open."""
+        with self._backendLock:
+            return self._backend.readCameraState() if self._backend is not None else CameraSettings()
+
+    def getOpenRecord(self):
+        return self._openRecord
+
+    def getExposureState(self):
+        """(requested, applied, source) of the exposure now in force."""
+        return self._requestedExposure, self._appliedExposure, self._exposureSource
+
+    def getHeldBackFrames(self):
+        """Frames held back since the last change (open or live exposure) — 0 once a leg starts on a settled stream."""
+        return self._heldBackSinceChange
+
+    def setCameraProfile(self, profile):
+        self._cameraProfile = CameraProfile.of(profile)
+
+    def setCameraOverride(self, override):
+        """The plugin's override (MEASUREMENT only, §6) — a dict or CameraSettings; resolved by the backend."""
+        self._cameraOverride = override
+
     def setExposure(self, exposure: int):
+        # The SEED of the open (§3.3a) — the plugin pin, calibrationExposure, or the slider.
         self._exposure = exposure
 
-    def setLiveExposure(self, exposure: int):
-        # Thread-safe enough: a plain int assignment; the capture loop applies it before the next grab.
-        self._liveExposure = exposure
+    def setLiveExposure(self, exposure: int, source: str = "operator"):
+        # Thread-safe enough: a single tuple assignment; the capture loop applies it before the next grab.
+        self._liveExposure = (exposure, source) if exposure is not None else None
+
+    def __applyExposure(self, exposure, source, holdBack=True):
+        applied = self._backend.setExposure(exposure)
+        self._requestedExposure = exposure
+        self._appliedExposure = applied if applied is not None else exposure
+        self._exposureSource = source
+        if holdBack:
+            self.__startHoldBack()
+
+    def __startHoldBack(self, afterOpen=False):
+        self._holdBack = self.HOLD_BACK_FRAMES
+        self._heldBackSinceChange = 0
+        self._holdBackAfterOpen = afterOpen
 
     def requestAutoExpose(self, minExposure: int, maxExposure: int, target: int = None, iterations: int = 8):
         """Ask the capture thread to run a synchronous auto-exposure sweep (picked up before the next grab).
@@ -106,8 +169,7 @@ class VideoThread(QThread,Generic[S]):
         def measure(exposure):
             probe["i"] += 1
             self.autoExposureProgress.emit(probe["i"], iterations)
-            self._backend.setExposure(exposure)
-            self._appliedExposure = exposure
+            self.__applyExposure(exposure, "auto-exposure", holdBack=False)   # the probe drains itself
             # Fixed drain past the settle so a big jump has fully ramped before we measure (each probe self-settles;
             # no separate warm-up needed).
             frame = self.__drainSync(self.__AUTO_EXPOSE_SETTLE_MS)
@@ -118,9 +180,10 @@ class VideoThread(QThread,Generic[S]):
             return AutoExposureLogicModule.channelPeak(frame)
 
         best = AutoExposureLogicModule().findExposure(measure, minExposure, maxExposure, target, iterations)
-        self._backend.setExposure(best)
-        self._appliedExposure = best
-        self._liveExposure = best     # keep the normal loop from re-applying a stale slider value
+        self.__applyExposure(best, "auto-exposure", holdBack=False)   # settled adaptively just below
+        self._liveExposure = None     # keep the normal loop from re-applying a stale slider value
+        self._holdBack = 0
+        self._heldBackSinceChange = 0
         # Settle at the CHOSEN exposure before we hand back to the burst: `best` is a fresh change from the last
         # probe, and the ELP takes ~1.2-1.5 s to ramp — without this the first burst frames would be captured
         # mid-ramp (the reference-only outliers, SPEC_capture_quality.md §14.6/§14.8). Sample capture reuses an
@@ -209,24 +272,33 @@ class VideoThread(QThread,Generic[S]):
                 leased = True
             try:
                 self._backend = getCaptureBackend()
-                self._backend.open(self._deviceId, self._exposure, self.WHITE_BALANCE_KELVIN)
-                self._appliedExposure = self._exposure
-
-                # Warm-up: the first frames after open can be empty while the UVC stream settles; discard a
-                # few so the first delivered frame is real (spec §3.5 / §0). read() never raises → None ok.
-                for _ in range(6):
-                    if self._backend.read() is not None:
-                        break
-
+                record = self._backend.open(self._deviceId, self._cameraProfile, override=self._cameraOverride,
+                                            exposureSeed=self._exposure)
+                self._openRecord = record
+                if record is not None and record.refusal is not None:
+                    self.cameraRefused.emit(record.refusal)
+                    return
+                self.__adoptOpenExposure(record)
+                # The first frames after open are empty or still converging (§3.5 / W1.4): the hold-back discards
+                # them as preview — it replaces the old six-read warm-up loop.
+                self.__startHoldBack(afterOpen=True)
                 self.__captureLoop()
             finally:
-                if self._backend is not None:
-                    self._backend.release()
-                    self._backend = None
+                with self._backendLock:
+                    if self._backend is not None:
+                        self._backend.release()
+                        self._backend = None
                 if leased:
                     CameraLease().release()
 
         self._setCurrentFrameIndex(0)
+
+    def __adoptOpenExposure(self, record):
+        requested = (record.requested or {}).get("EXPOSURE") if record is not None else None
+        applied = (record.applied or {}).get("EXPOSURE") if record is not None else None
+        self._requestedExposure = requested if requested is not None else self._exposure
+        self._appliedExposure = applied if applied is not None else self._requestedExposure
+        self._exposureSource = (record.sources or {}).get("EXPOSURE", "profile") if record is not None else None
 
     def __captureLoop(self):
         while self._runFlag:
@@ -238,11 +310,12 @@ class VideoThread(QThread,Generic[S]):
                 self._autoExposeRequest = None
                 continue
 
-            # Apply a pending live-exposure change (dev-view slider) before grabbing the next frame.
-            if self._backend is not None and self._liveExposure is not None \
-                    and self._liveExposure != self._appliedExposure:
-                self._backend.setExposure(self._liveExposure)
-                self._appliedExposure = self._liveExposure
+            # Apply a pending live-exposure change (slider, lock onto the sample) before grabbing the next frame.
+            # ⚠ Compared with the REQUEST, not the read-back: Windows applies 90 as 78, and comparing with that would
+            # re-apply on every frame.
+            pending = self._liveExposure
+            if self._backend is not None and pending is not None and pending[0] != self._requestedExposure:
+                self.__applyExposure(pending[0], pending[1])
 
             self.beforeCapture()
             self.__captureFrame()
@@ -267,6 +340,17 @@ class VideoThread(QThread,Generic[S]):
 
     def __capturePhysicalFrame(self,temporaryDirectory:str):
         qImage = self._backend.read() if self._backend is not None else None
+        if self._holdBack > 0:
+            # ⭐ Held back (§5): painted as preview so the live view never freezes, but no afterCapture — the frame
+            # index does not advance and no burst or monitor can take it.
+            if qImage is not None:
+                self._holdBack -= 1
+                self._heldBackSinceChange += 1
+                if getattr(self, "_holdBackAfterOpen", False) and self._openRecord is not None:
+                    self._openRecord.heldBackFrames = self._heldBackSinceChange
+                self.qImage = qImage
+                self._emitPreview()
+            return
         if qImage is not None:
             # backend.read() already yields a detached RGB888 QImage (freed-buffer safe).
             self.qImage = qImage

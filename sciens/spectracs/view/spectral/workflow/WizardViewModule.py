@@ -1,8 +1,9 @@
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QPushButton, QLabel, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QPushButton, QLabel, QWidget, QVBoxLayout, QTabWidget
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
 from sciens.spectracs.logic.application.style.Metrics import Metrics
+from sciens.spectracs.logic.camera.CameraSettingsTable import cameraRecordsOf, cameraSettingsTable
 from sciens.spectracs.view.spectral.workflow.AbstractPluginExecutionView import AbstractPluginExecutionView
 from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
 from sciens.spectracs.view.spectral.workflow.CapturePanel import CapturePanel
@@ -13,6 +14,7 @@ from sciens.spectracs.model.application.navigation.NavigationSignal import Navig
 from sciens.spectracs.model.spectral.SpectralWorkflowPhaseType import SpectralWorkflowPhaseType
 from sciens.spectracs.view.application.widgets.InWindowDialog import InWindowDialog
 from sciens.spectracs.view.spectral.workflow.SpectrumPlotWidget import SpectrumPlotWidget
+from sciens.spectracs.view.spectral.workflow.render.QtWorkflowRenderer import QtWorkflowRenderer
 from sciens.spectracs.view.spectral.workflow.render.WorkflowPhaseRenderer import WorkflowPhaseRenderer
 
 _PHASE_TITLES = {
@@ -145,6 +147,8 @@ class WizardViewModule(AbstractPluginExecutionView):
             isAcquisitionStep = (phaseType == SpectralWorkflowPhaseType.ACQUISITION and step.getRole() is not None)
             if isAcquisitionStep and not self._isView():
                 widget = renderer.renderStep(step)   # NEW mode virtual: live capture seam
+            elif isAcquisitionStep:
+                widget = self.__reopenedAcquisitionPanel(step, phase)   # VIEW mode: the live panel's sub-tabs
             else:
                 widget = self.__computedPanel(step)  # computed step, or VIEW-mode acquisition plot
             if widget is not None:
@@ -223,6 +227,41 @@ class WizardViewModule(AbstractPluginExecutionView):
             if captured is not None and step.getRole() in captured.getSpectra():
                 plot.plotSpectrum(captured.getSpectra()[step.getRole()], title=step.getLabel())
         return panel
+
+    def __reopenedAcquisitionPanel(self, step, phase):
+        """A RE-OPENED acquisition step gets the same sub-tabs as the live panel (SPEC_camera_settings.md §4, Q10 —
+        Edwin: "the camera table should be always a sub-tab"): Spectrum | Camera | Settling.
+
+        Camera only where the run's plugin showed it live — `showsTab` was persisted with the record (Q9), so no
+        plugin needs loading. Settling only when the leg was monitored. ⚠ A step with nothing but its spectrum
+        stays the bare plot it always was, so a run of any other plugin re-opens exactly as before."""
+        tabs = []
+        plot = self.__containerPlot(step)
+        if plot is not None:
+            tabs.append((plot, "Spectrum"))
+        records = cameraRecordsOf(phase.getSteps().values())
+        if any(record.showsTab for record in records):
+            table = cameraSettingsTable(records)
+            if table is not None:
+                tabs.append((QtWorkflowRenderer().render([table]), "Camera"))
+        settling = WorkflowPhaseRenderer().renderStep(step)
+        if settling is not None:
+            tabs.append((settling, "Settling"))
+        if len(tabs) <= 1:
+            return tabs[0][0] if tabs else None
+        container = QTabWidget()
+        container.setObjectName("WizardViewModule.reopenedStepTabs")
+        for widget, label in tabs:
+            container.addTab(widget, label)
+        return container
+
+    def __containerPlot(self, step):
+        container = step.getContainer()
+        if container is None or len(container.getSpectra()) == 0:
+            return None
+        plot = SpectrumPlotWidget()
+        plot.plotSpectrum(next(iter(container.getSpectra().values())), title=step.getLabel())
+        return plot
 
     def __computedPanel(self, step):
         content = WorkflowPhaseRenderer().renderStep(step)

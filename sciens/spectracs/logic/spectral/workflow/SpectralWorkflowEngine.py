@@ -12,6 +12,9 @@ from sciens.spectracs.logic.spectral.workflow.PrepProtocolResolver import PrepPr
 from sciens.spectracs.model.application.setting.virtualSpectrometer.VirtualCaptureRole import VirtualCaptureRole
 from sciens.spectracs.model.databaseEntity.spectral.device.SpectrometerProfile import SpectrometerProfile
 from sciens.spectracs.model.spectral.SpectraContainer import SpectraContainer
+from sciens.spectracs.model.spectral.camera.CameraLegSnapshot import CameraLegSnapshot
+from sciens.spectracs.model.spectral.camera.CameraOpenRecord import CameraOpenRecord
+from sciens.spectracs.model.spectral.plugin.view.CameraSettingsRecordView import CameraSettingsRecordView
 from sciens.spectracs.model.spectral.plugin.view.EvaluationResult import EvaluationResult
 from sciens.spectracs.model.spectral.SpectralVideoThreadSignal import SpectralVideoThreadSignal
 from sciens.spectracs.model.spectral.SpectralWorkflow import SpectralWorkflow
@@ -140,7 +143,42 @@ class SpectralWorkflowEngine:
         container = SpectraContainer()
         container.addToSpectra(spectrum, role)
         step.setContainer(container)
+        if frameProvider is None:
+            # ⭐ A VIRTUAL run never reaches a camera (D14, E8): it is this branch, not CapturePanel. The record says
+            # so in one line instead of leaving the PDF's camera section silently empty.
+            self.attachCameraRecord(step, CameraSettingsRecordView(
+                CameraOpenRecord.virtualRun(), CameraLegSnapshot(role=role),
+                showsTab=self.__pluginShowsCameraTab()))
         return spectrum
+
+    def __pluginShowsCameraTab(self):
+        try:
+            return bool(self.plugin.showsCameraTab()) if hasattr(self.plugin, "showsCameraTab") else False
+        except Exception:
+            return False
+
+    def attachCameraRecord(self, step, view):
+        """Hang ONE leg's camera record on the acquisition step it describes (SPEC_camera_settings.md §4).
+
+        ⭐ The settling views' precedent (`__attachMonitorViews`): on the step's EvaluationResult it persists, rides in
+        the report JSON per step and rebuilds through ViewModelFactory. ⚠ Replaced by TYPE, not by `isMonitorView`
+        — that flag is transient on this view and would not survive a reload (E8): a re-measure must REPLACE."""
+        evaluationResult = step.getEvaluationResult()
+        if evaluationResult is None:
+            evaluationResult = EvaluationResult()
+            step.setEvaluationResult(evaluationResult)
+        self.detachCameraRecord(step)
+        evaluationResult.addItem(view)
+        return view
+
+    @staticmethod
+    def detachCameraRecord(step):
+        """A cancelled or failed leg — or a sample made stale by a new reference — keeps no camera record."""
+        evaluationResult = step.getEvaluationResult()
+        if evaluationResult is None:
+            return
+        for existing in [item for item in evaluationResult.getItems() if isinstance(item, CameraSettingsRecordView)]:
+            evaluationResult.getItems().remove(existing)
 
     def __openMeasurementClock(self, step):
         """Read the measurement clock BEFORE a capture; returns the `commit` that writes it AFTER.

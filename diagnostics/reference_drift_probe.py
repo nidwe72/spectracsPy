@@ -115,10 +115,11 @@ def main():
         print("ERROR: no ROI / calibration cubic in the app context — calibrate first, or pass them explicitly.")
         return 2
     from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
+    from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
     backend = getCaptureBackend()
     # Mirror DevCaptureVideoThread: 6500 K fixed white balance, gain pinned, FIXED exposure for the whole run.
     exposure = arguments.exposure if arguments.exposure is not None else context.get("exposure")
-    backend.open(deviceId=device, exposure=exposure or 150, whiteBalanceKelvin=6500)
+    backend.open(deviceId=device, profile=CameraProfile.MEASUREMENT, exposureSeed=exposure or 150)
     if exposure is None:
         exposure = _pickExposure(backend)
     print("camera %s at %s, exposure PINNED at %s, WB 6500 K\n" % (device, backend.getResolution(), exposure))

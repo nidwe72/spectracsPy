@@ -1,6 +1,6 @@
 # SPEC — Camera settings: one declared, applied and recorded state (DESIGN)
 
-Status (2026-10-18): **DESIGN only — Q1–Q10 all decided (§8); two rubber ducks folded in place (§10 D1–D14, §11 E1–E14)** — implementation only on Edwin's explicit request.
+Status (2026-10-18): **CS1a–CS8 IMPLEMENTED on Linux (§12 as built), offscreen-tested; rig click-through owed (CS2 read-back on the ELP, ELP calibration re-check, CS8 Camera tab). CS0, CS3, CS9 (Windows) open.** Q1–Q10 decided (§8); two rubber ducks folded in place (§10, §11).
 Grew out of `SPEC_windows_build.md` W1.4/W1.4b (§11c.11, §11c.12) and D10. It **absorbs** three planned steps of that
 spec: the image-controls half of **W1.4b**, **W1.5b** (white balance declared by the plugin) and **W1.5** (the
 exposure converter + `exposureUnit`) — they become phases here (§9), so they are not built twice.
@@ -69,7 +69,7 @@ again (D1).
 Placement (E11): the **vocabulary** — `CameraControl`, `CameraSettings` — in `plugin_sdk/camera/`, exported from
 `plugin_sdk/__init__.py` (that also freezes it; `lintSelfContained` already allows `plugin_sdk.*`,
 `PluginPublishUtil.py:22-29`). The **profiles + `resolve()`** in -core **outside** the SDK
-(`logic/application/camera/`): host policy, so a profile edit is not an SDK-surface change.
+(`logic/camera/`, beside `logic/lamp/` — as built): host policy, so a profile edit is not an SDK-surface change.
 
 ### 3.1 `CameraControl` — OS-neutral names
 
@@ -348,9 +348,10 @@ the role pages (`__stepContent`, `CapturePanel.py:222, :318-323`) ⇒ the Camera
 (`:333`) from the active step's record (not Settling's stale-across-roles behaviour) (E10). Placed at **index 2, before
 Settling** — the Director scenario addresses `innerTabs` by index (`automation/scenarios/measurement_bench.py:40`).
 - **Who sees the tab (Q9):** only the **DevSpectralPlugin** — a new plugin hook `showsCameraTab() -> bool` (default
-  `False`, Dev returns `True`), asked by the live `CapturePanel` **and** by the VIEW-mode host (which already loads
-  the plugin from the persisted `pluginCodeRef`; a `CaptureView` flag would not survive a reload, `_view` is
-  transient). Every other plugin's operator gets the table in the PDF only.
+  `False`, Dev returns `True`), asked by the live `CapturePanel` at capture time; its answer is **persisted on the
+  record** (`CameraSettingsRecordView.showsTab`, as built), so the VIEW-mode host needs no plugin loaded (the wizard's
+  VIEW mode loads none, and a DB-only plugin might not resolve). Every other plugin's operator gets the table in the
+  PDF only.
 - **One Qt-free builder, three consumers (E9):** `cameraSettingsTable(records) -> TableView` in -core feeds the PDF, the
   Camera sub-tab live and the Camera sub-tab in a re-opened run; `TableView` already renders in both targets (Matplotlib `:585`, Qt `:488`). The record view
   stays **out** of the visitor dispatch ladder — no new visitor method anywhere.
@@ -432,3 +433,27 @@ before either consumer.
 | E12 | ⚠ | CS2/3 | tests and diagnostics that break; Android/RPi signatures | CS2, CS3 rows |
 | E13 | ℹ | CS6 | Windows `exposureApplied` = 78 for a pinned 90 | §3.3a |
 | E14 | ℹ | — | stale line numbers in §4/§5 | fixed in place |
+
+## 12 — As built (2026-10-18): CS1a–CS8, Linux
+
+| phase | where | what landed | tests |
+|---|---|---|---|
+| CS1a | -core `plugin_sdk/camera/` | `CameraControl` (14 controls, persisted strings = member names, `label()`, `isAutoLoop()`), `CameraSettings` (immutable, plain-string JSON, unknown names dropped on load, `of()` takes a dict); exported from `plugin_sdk` | `test_camera_settings_model.py` |
+| CS1b | -core `logic/camera/` | `CameraProfile` (CALIBRATION / MEASUREMENT / IDLE + exposure fallback 150 / — / 150), `CameraDevice` + `CameraControlRange` (range, step, choices, backend `quantise`), `CameraSettingsResolver.resolve()` → `CameraResolution` (requested, sources, adjusted, skipped, inactive, rejected, autoLoopsOn, `writes()` in WRITE_ORDER, `mismatches()`); `pluginOverrideOf()` | same file, 17 tests |
+| CS2 | Py `LinuxUvcControls.py`, `CaptureBackend.py`, `VideoThread.py` | own `O_RDWR` fd + lock; QUERYCTRL/QUERYMENU describe (cached), S_CTRL in order, G_CTRL read-back; `open(deviceId, profile, override, exposureSeed)` → `CameraOpenRecord`; cv2 sets no control on Linux (only buffer/format/size/CONVERT_RGB); MEASUREMENT refused on any failure/mismatch or no node, others warn; static `CaptureBackend.readDeviceDefaults()`; `setExposure` returns the read-back; the old ioctl helpers in the backend are gone; `CAMERA_PROFILE` per thread (base CALIBRATION, Dev MEASUREMENT, warm-keeper IDLE); `cameraRefused(str)` — run() leaves at once; diagnostics' 8 `open()` calls pass a profile; Windows keeps the W1.6 path fed from the profile until CS3 (IDLE warns, only MEASUREMENT refuses) | `test_linux_uvc_controls.py` (fake V4L2 node `tests/fakes/FakeV4l2Node.py`), `test_linux_capture_conversion.py` + `test_windows_camera.py` rewritten |
+| CS4 | -core `SpectralPlugin`, plugins, `CapturePanel` | `cameraSettings(deviceDefaults)` + `showsCameraTab()` in the base; Dev declares `{"EXPOSURE": 90, "WHITE_BALANCE_KELVIN": 6500}`, keeps `exposure = 90`, shows the tab; the panel resolves camera → reads defaults → asks the plugin → seeds slider/AE box → `setCameraProfile(MEASUREMENT)` + `setCameraOverride` → opens; `__syncExposureToSensor` moved out of `__build`; `setLiveExposure(value, source)`; `DevCaptureVideoThread.WHITE_BALANCE_KELVIN` gone; CAPTURE-SETTINGS prints `profile=` + `exposureSource=` instead of `wbRequested=`; refusal shown in the status bar (also in the dev capture view) | `test_plugin_camera_settings.py` |
+| CS5 | `VideoThread` | `HOLD_BACK_FRAMES = 5` after the open (replaces the 6-read warm-up loop) and after every live exposure change; held-back frames go to `_emitPreview` only; AE probes + `best` excluded; the live change compares with the REQUEST, not the read-back (Windows 90→78 would re-apply each frame); the panel drops its last frame on a change so a burst cannot start on the old exposure | `test_video_thread_camera_state.py` |
+| CS6 | -model `spectral/camera/`, `CameraSettingsRecordView`, engine, panel | `CameraOpenRecord`, `CameraLegSnapshot` (start after AE + first frame, end at the old CAPTURE-SETTINGS point), view type `cameraRecord` in `ViewModelFactory`; `engine.attachCameraRecord` (replace by type) / `detachCameraRecord` (cancel, fail, monitored no-value, stale sample); virtual record in the engine's `frameProvider is None` branch; header `exposureApplied` derived (the request) + new `cameraExposure` list; leg mismatch / drift printed ⛔ / ⚠ | `test_camera_record_and_table.py`, `test_frame_provider_burst.py` |
+| CS6.5 | -core `CameraSettingsTable.py`, renderer, wizard | `cameraRecordsOf(steps)`, `cameraSettingsTable(records)`; `stepViewModels()` filters the record (E1); a re-opened acquisition step = `Spectrum` \| `Camera` (if `showsTab`) \| `Settling`, a lone plot stays a bare plot | `test_reopened_run_camera_tab.py` |
+| CS7 | -core `WorkflowReportBuilder`, `MatplotlibWorkflowRenderer` | one `("Camera settings", [table], LEVEL_STEP)` group after ACQUISITION; table captions print line by line | `test_camera_record_and_table.py` |
+| CS8 | `CapturePanel` | "Camera" inner tab at index 2 (placeholder until the first leg), rebuilt after each leg and on every role switch; only when `showsCameraTab()` | ⏸ rig click-through |
+
+Deviations from the design above, all small: profiles live in `logic/camera/`, not `logic/application/camera/`;
+the Q9 switch is persisted on the record instead of the VIEW host loading the plugin; the live Camera tab shows the
+same both-legs table as the PDF (not only the active leg — one builder, so they cannot disagree); Windows has no
+`readDeviceDefaults` yet (empty device → CS3).
+
+Owed on the rig (Linux): one measurement on the ELP — the CAPTURE-SETTINGS line shows `profile=MEASUREMENT
+exposureSource=plugin`, the open prints every control, the read-back equals §11c.11 of the Windows spec, the PDF has
+the Camera settings section, the bench shows the Camera tab; then the ELP calibration re-check (D12, backlight 1).
+

@@ -115,6 +115,22 @@ class FrameProviderBurstTest(unittest.TestCase):
         self.assertEqual(seen, [(0, 3), (1, 3), (2, 3)])
         self.assertIsNotNone(step.getContainer())
 
+    def test_a_virtual_capture_records_that_it_had_no_camera(self):
+        # SPEC_camera_settings.md §4 (D14, E8): the virtual default is the engine's branch, never CapturePanel — so
+        # the engine writes the one-line record; a host-injected provider (a real camera) leaves it to the host.
+        from sciens.spectracs.logic.camera.CameraSettingsTable import cameraRecordsOf
+        engine = SpectralWorkflowEngine(PumpkinOilPlugin())
+        step = self.__referenceStep(engine)
+        engine.captureAcquisitionStep(step)
+        records = cameraRecordsOf([step])
+        self.assertEqual(1, len(records))
+        self.assertTrue(records[0].openRecord.virtual.startswith("virtual — no camera controls"))
+        self.assertFalse(records[0].showsTab)                     # the pumpkin plugin keeps the tab off (Q9)
+        injected = self.__referenceStep(SpectralWorkflowEngine(PumpkinOilPlugin()))
+        SpectralWorkflowEngine(PumpkinOilPlugin()).captureAcquisitionStep(
+            injected, frameProvider=SyntheticFrameProvider(self.referenceImage))
+        self.assertEqual([], cameraRecordsOf([injected]))
+
     def test_dropped_frames_are_skipped(self):
         # A provider that returns None (a dropped camera frame) is skipped, not fatal — one good frame still
         # yields a spectrum (mirrors the bench's per-frame `if latestImage is None: continue`).

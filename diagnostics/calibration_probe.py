@@ -60,6 +60,7 @@ def main():
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from sciens.spectracs.logic.application.video.capture.CaptureBackend import getCaptureBackend
+    from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
 
     x1, y1, x2, y2 = ROI
     yc = (y1 + y2) // 2
@@ -67,7 +68,7 @@ def main():
     nm = np.polyval(COEFFS, cols)
 
     backend = getCaptureBackend()
-    backend.open(deviceId=0, exposure=EXPOSURES[0])
+    backend.open(deviceId=0, profile=CameraProfile.CALIBRATION, exposureSeed=EXPOSURES[0])
     print("Output dir:", OUTDIR)
     try:
         for i, ev in enumerate(EXPOSURES):

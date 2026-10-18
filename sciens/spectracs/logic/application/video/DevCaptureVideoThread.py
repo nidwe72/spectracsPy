@@ -3,6 +3,7 @@ import threading
 from PySide6.QtCore import Signal
 
 from sciens.spectracs.logic.application.video.VideoThread import VideoThread
+from sciens.spectracs.logic.camera.CameraProfile import CameraProfile
 from sciens.spectracs.model.application.video.VideoSignal import VideoSignal
 
 
@@ -16,11 +17,12 @@ class DevCaptureVideoThread(VideoThread[VideoSignal]):
 
     videoThreadSignal = Signal(threading.Event, VideoSignal)
 
-    # MEASUREMENT capture: freeze white balance to the LAMP's colour temperature so the reference/sample bursts are
-    # deterministic (SPEC_capture_quality.md §14.8, fix 1) — auto-WB otherwise re-converges after the AE exposure
-    # change and the reference burst catches the transient. Fixed WB cancels in T = S/R. Calibration threads keep the
-    # base None (auto-WB). TODO: seed per-lamp in SpectrometerSensorUtil alongside VID/PID + exposure.
-    WHITE_BALANCE_KELVIN = 6500
+    # MEASUREMENT capture (SPEC_camera_settings.md §3.3): every auto loop frozen — white balance at the LAMP's colour
+    # temperature, backlight off, gain 0 — so the reference/sample bursts are deterministic (SPEC_capture_quality.md
+    # §14.8, fix 1: auto-WB re-converged after the AE exposure change and the reference burst caught the transient).
+    # The 6500 K now lives in the MEASUREMENT profile, and the plugin may declare it too (Q7). The dev capture view
+    # uses this thread with no plugin, i.e. the plain profile.
+    CAMERA_PROFILE = CameraProfile.MEASUREMENT
 
     def createSignal(self) -> VideoSignal:
         signal = VideoSignal()

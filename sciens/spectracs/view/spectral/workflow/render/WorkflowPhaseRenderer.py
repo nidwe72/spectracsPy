@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QTabWidget, QWidget, QVBoxLayout, QLabel
 
+from sciens.spectracs.model.spectral.plugin.view.CameraSettingsRecordView import CameraSettingsRecordView
 from sciens.spectracs.model.spectral.plugin.view.CaptureView import CaptureView
 from sciens.spectracs.model.spectral.plugin.view.ReportView import ReportView
 from sciens.spectracs.model.spectral.plugin.view.LimsPublishView import LimsPublishView
@@ -56,7 +57,10 @@ class WorkflowPhaseRenderer:
         items = []
         result = step.getEvaluationResult() if hasattr(step, "getEvaluationResult") else None
         if result is not None:
-            items.extend(result.getItems())
+            # ⛔ A camera record is a RECORD, drawn by `cameraSettingsTable` and by no visitor (SPEC_camera_settings.md
+            # §4, E1): passed on, it would turn a re-opened reference step — which has no other item — into an
+            # EMPTY tab instead of its spectrum plot.
+            items.extend(item for item in result.getItems() if not isinstance(item, CameraSettingsRecordView))
         view = step.getView() if hasattr(step, "getView") else None
         # CaptureView (interactive), ReportView (a report descriptor) and LimsPublishView (an interactive
         # publish descriptor + server call, SPEC_roast_ampel.md §8.6 / RD#3) are NOT passive visitor items —
