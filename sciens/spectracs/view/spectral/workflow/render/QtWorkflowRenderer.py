@@ -437,7 +437,11 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
                 plot.setLogMode(False, True)
             for series in panelSpec.get("series", []):
                 pen = pyqtgraph.mkPen(series.get("color") or "#e08000", width=2)
-                plot.plot(series["xs"], series["ys"], pen=pen, symbol="o", symbolSize=5,
+                # ⛔ A row with no value (a fill too dark for a metric, a MEASUREMENT_BROKEN run) carries None, and
+                # pyqtgraph's bounds check raises on it — which took the whole Settling tab down on exactly the run
+                # whose curve explains itself (2026-10-18). None → NaN; the line breaks there instead.
+                xs, ys = _finiteSeries(series["xs"], series["ys"])
+                plot.plot(xs, ys, pen=pen, symbol="o", symbolSize=5, connect="finite",
                           symbolBrush=series.get("color") or "#e08000")
             for level in panelSpec.get("levels", []):
                 line = pyqtgraph.InfiniteLine(pos=level["value"], angle=0, label=level.get("label") or "",
@@ -450,6 +454,8 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
                 plot.addItem(line)
             for point in panelSpec.get("points", []):
                 # ⭐ THE LATCHED ANSWER. Without it a reader cannot see WHICH row became the number.
+                if point.get("x") is None or point.get("y") is None:
+                    continue
                 plot.plot([point["x"]], [point["y"]], pen=None, symbol="star", symbolSize=18,
                           symbolBrush=point.get("color") or "#2ECC71")
             plot.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -553,3 +559,12 @@ class QtWorkflowRenderer(WorkflowItemVisitor):
 
         row.layout().addWidget(cell, 0, column, 1, 1)
         row.setProperty("swatchColumn", column + 1)
+
+
+def _finiteSeries(xs, ys):
+    """Float arrays with every None as NaN — pyqtgraph and log axes take NaN, not None."""
+    import numpy
+    def floats(values):
+        return numpy.array([numpy.nan if value is None else float(value) for value in values], dtype=float)
+    return floats(xs), floats(ys)
+

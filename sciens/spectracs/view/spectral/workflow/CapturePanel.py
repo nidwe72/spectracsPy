@@ -551,6 +551,11 @@ class CapturePanel(QWidget):
         thread.setIsVirtual(False)
         thread.setDeviceId(self.__resolvedIndex)
         # §6.1 step 5: the MEASUREMENT profile and the plugin's override; every control is set on the open.
+        # The line names the plugin, so a log says WHICH panel opened the camera (the bench and the end-user
+        # wizard both use this panel — 2026-10-18 a wizard open at 150 could only be told apart by inference).
+        plugin = getattr(self.__engine, "plugin", None)
+        print("CAMERA: capture panel opens for %s — override %s"
+              % (getattr(plugin, "title", None) or type(plugin).__name__, self.__cameraOverride))
         thread.setCameraProfile(CameraProfile.MEASUREMENT)
         thread.setCameraOverride(self.__cameraOverride)
         role = self.__activeStep.getRole() if self.__activeStep is not None else None
