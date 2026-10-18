@@ -77,7 +77,7 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         self._height = None
         self._backendName = None
         self._pixelFormat = None
-        self._rawYuy2 = False       # True: read() gets the raw buffer and converts it itself (win32, W1.3)
+        self._rawYuy2 = False       # True: read() gets the raw buffer and converts it itself (W1.3 win32, W1.4b Linux)
         self._nativeControls = None  # win32: the camera's DirectShow controls (W1.6), set + read there
 
     def open(self, deviceId: int = 0, exposure: int = None, whiteBalanceKelvin: int = None) -> None:
@@ -95,6 +95,7 @@ class DesktopCv2CaptureBackend(CaptureBackend):
             apiPreference, self._backendName = cv2.CAP_ANY, "ANY"
         self._deviceId = deviceId
         self._rawYuy2 = False
+        self._pixelFormat = None     # never a stale format from a previous open deciding the conversion
         self._cap = cv2.VideoCapture(deviceId, apiPreference)
 
         # Minimize driver frame buffering so read() returns the LATEST frame, not a stale queued one. At high
@@ -134,10 +135,13 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         self.__forceUncompressed(cv2, "YUY2" if windows else "YUYV", readBackNow=not windows)
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
-        if windows:
-            # ⭐ OUR conversion, not Media Foundation's (SPEC_windows_build.md §6.3): the backend hands over the raw
-            # YUY2 bytes and `yuy2ToBgr` converts them with the function Linux's V4L2 backend uses. Fixed AT OPEN —
-            # toggling CONVERT_RGB on a running MSMF stream breaks it (§6.6b).
+        if windows or self._pixelFormat in UNCOMPRESSED_FOURCCS:
+            # ⭐ OUR conversion on every OS, not the backend's (SPEC_windows_build.md §6.3): the backend hands over the
+            # raw YUY2 bytes and `yuy2ToBgr` converts them with the very call V4L2's backend makes internally — so
+            # Linux frames do not change by a single code (proven in W1.4, §11c.11) and Windows gets the same values
+            # instead of Media Foundation's. Fixed AT OPEN — toggling CONVERT_RGB on a running stream breaks MSMF
+            # (§6.6b) and re-queues the buffer on V4L2. Linux only when the read-back says YUYV: a driver that kept
+            # MJPG is converted by the backend as before (Windows refuses it below).
             self._cap.set(cv2.CAP_PROP_CONVERT_RGB, 0)
             self._rawYuy2 = True
         # ⭐ The guard on the pinned format: a few grabs to prove the stream came up. §16.39.5a's whole
@@ -319,6 +323,9 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2592)
         self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1944)
+        # Whatever the driver picks unforced, the BACKEND converts it — it may be MJPG, which `yuy2ToBgr` cannot.
+        self._rawYuy2 = False
+        self._pixelFormat = self.__fourccName(cv2)
 
     def __videoNode(self):
         """`/dev/videoN` for the open device, or None.
@@ -470,6 +477,7 @@ class DesktopCv2CaptureBackend(CaptureBackend):
         settings = {
             "backend": self._backendName,
             "pixelFormat": self._pixelFormat,
+            "conversion": "own" if self._rawYuy2 else "backend",      # who turned YUYV into BGR (§6.3, W1.4b)
             "exposureMin": low,
             "exposureMax": high,
             "exposure": get(cv2.CAP_PROP_EXPOSURE),

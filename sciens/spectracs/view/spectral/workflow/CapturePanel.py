@@ -713,7 +713,7 @@ class CapturePanel(QWidget):
         # the device either (CaptureBackend.__exposureModeName). A camera that will not name it prints bare.
         mode = settings.get("autoExposureMode")
         print("CAPTURE-SETTINGS role=%s frames=%s exposure_applied=%s exposure_cv2=%s autoExposure=%s%s wb=%s "
-              "autoWb=%s gain=%s backlight=%s wbRequested=%s backend=%s pixelFormat=%s"
+              "autoWb=%s gain=%s backlight=%s wbRequested=%s backend=%s pixelFormat=%s conversion=%s"
               % (role, frames, settings.get("appliedExposure"), settings.get("exposure"),
                  settings.get("autoExposure"), "(%s)" % mode if mode else "",
                  settings.get("wbTemperature"), settings.get("autoWb"),
@@ -721,7 +721,7 @@ class CapturePanel(QWidget):
                  settings.get("whiteBalanceKelvinRequested"),
                  # Appended, not inserted: which backend and which pixel format the frames came through
                  # (SPEC_windows_build.md §6.2/§6.3) — the line must say a Windows capture is YUY2 + MSMF.
-                 settings.get("backend"), settings.get("pixelFormat")))
+                 settings.get("backend"), settings.get("pixelFormat"), settings.get("conversion")))
         self.__reportExposureRange(settings)
         self.__recordAppliedExposure(role, settings)
 

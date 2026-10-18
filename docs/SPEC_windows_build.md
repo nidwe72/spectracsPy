@@ -1,6 +1,6 @@
 # SPEC — Windows build of app + server (W0 packaging · W1 camera · W2 installer/signing)
 
-Status (2026-10-18): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + pushed (§11c.9, §11c.10) · W1.4 DONE (§11c.11: Linux adopts our conversion; settling 4 frames) · next W1.5, W1.5b, W1.5c (D10).**
+Status (2026-10-18): **V0 DONE · W1.0 + W1.0b spikes RUN · W1.1 DECIDED · W0.1–W0.7 DONE (§11c.2–§11c.6) · V0.6 DONE · W0.9 DONE (pushed) · W0.8 click-through in progress (Edwin) · W1.2 + W1.3 + W1.6 BUILT + pushed (§11c.9, §11c.10) · W1.4 DONE (§11c.11: Linux adopts our conversion; settling 4 frames) · W1.4b conversion half BUILT (§11c.12), image-controls half awaits Edwin · next W1.5, W1.5b, W1.5c (D10).**
 Three rubber-duck passes folded in place (§11 R1–R14, §11b S1–S13, §11c U1–U24 — the third aimed at W0.1–W0.3 at
 code level); phases + order in **§12**.
 
@@ -251,7 +251,7 @@ plugin is the driver for this"*, and per setting:
 | exposure (`DevSpectralPlugin.exposure = 90`), frame count (`FRAMES = 60`) | **plugin** | plugin ✅ | none — the host converts the V4L2 units per OS (W1.5) |
 | white balance 6500 K | **plugin** — *"should be done by the plugin"* | host: `DevCaptureVideoThread.WHITE_BALANCE_KELVIN` | **W1.5b**: a declared `whiteBalanceKelvin`, read by the host on both OSes |
 | gain 0, backlight 0, manual exposure mode | host — *"okay, for now"* | host, `CaptureBackend.open` (Linux) / `planControls` (Windows) | none |
-| brightness, contrast, hue, saturation, sharpness, gamma | camera default — *"okay, for now"* | Linux: untouched (power-on defaults assumed); Windows: set to the camera's own default (W1.6) | none now; ⏸ setting them on Linux too is deferred |
+| brightness, contrast, hue, saturation, sharpness, gamma | camera default — *"okay, for now"* | Linux: untouched (power-on defaults assumed); Windows: set to the camera's own default (W1.6) | ⭐ **2026-10-18 proposed (W1.4b): Linux sets them too**, to the camera's own default read by `VIDIOC_QUERYCTRL` — mirrors `planControls`, incl. backlight default on the calibration path |
 
 **Settling (Edwin: *"okay, your lean"*):** with the exposure pinned the bench skips the AE sweep, so nothing absorbs
 the frames right after a change — the spike saw 4 black frames after an exposure step, W1.6 saw 3 frames with the
@@ -1213,7 +1213,16 @@ the last control set:
   at frame 0 — UVC values live in the camera (§6.6c), so the hold-back is a worst-case count, not a fixed cost.
 - ⇒ **Linux = Windows: 4 after an exposure step, 3 after a WB change / open.** Proposal for W1.5c (Edwin's call):
   one host constant for both OSes, **hold back 5 frames** (largest measured + 1) after every open and every
-  exposure/WB change; ~1.4 s at 3.6 fps.
+  exposure/WB change; ~1.4 s at 3.6 fps. ✅ **Edwin 2026-10-18: "sounds reasonable"** ⇒ W1.5c builds 5.
+- ⭐ **Edwin 2026-10-18 — Linux converts itself too, for consistency across OSes** ⇒ new step **W1.4b** (proposed,
+  §12): `CONVERT_RGB = 0` + `yuy2ToBgr` on V4L2 as well, **only when YUYV was granted** (the Linux fallback
+  `__reopenUnforced` may come up MJPG — then the backend keeps converting and CAPTURE-SETTINGS says so). No null
+  run: identical by construction (B above). Together with: **Linux sets the image controls** (Brightness, Contrast,
+  Saturation, Hue, Gamma, Sharpness, Power Line Frequency, Dynamic Framerate) **to the camera's own defaults on
+  every open**, and backlight to its default on the calibration path — the Windows `planControls` rule. Why: UVC
+  values persist IN the camera, so guvcview, Cheese, the VM or a Windows tool can leave e.g. gamma changed and every
+  later Linux spectrum would shift silently. Defaults READ from the device, never hard-coded (a second camera has
+  other ranges). Today's values are already the defaults ⇒ no change to any number measured so far.
 
 **K — controls on Linux** (as found = what the camera carried in; after open = after the measurement open):
 
@@ -1238,6 +1247,21 @@ the last control set:
   "on Linux too" — still Edwin's call).
 - Side observation, not part of W1.4: at exposure 90 with the lamp freshly on, the whole-frame p99.9 peak is 255
   (at 45: 224). Whatever saturates here — the slit/lamp image or the spectrum — is for the rig, not the build.
+
+### 11c.12 W1.4b as built — conversion half (2026-10-18; Edwin: *"okay, so implement it"*)
+
+- `CaptureBackend.open`: the raw path is taken when `windows` **or** the V4L2 read-back says YUYV
+  (`UNCOMPRESSED_FOURCCS`) — `CONVERT_RGB = 0` before the grabs, `yuy2ToBgr` in `read()`. A kept MJPG on Linux stays
+  with the backend; `__reopenUnforced` resets `_rawYuy2` and re-reads the FOURCC (it used to keep the forced
+  `YUYV` label after an unforced reopen). `_pixelFormat` is reset per open, so a stale format cannot pick the path.
+- CAPTURE-SETTINGS gains `conversion=own|backend` (appended, like `backend`/`pixelFormat`).
+- `tests/test_linux_capture_conversion.py` (fake V4L2): own conversion when YUYV is granted, fixed before exposure;
+  own == backend codes on the same bytes; kept MJPG ⇒ backend; dead stream ⇒ unforced reopen ⇒ backend, label
+  MJPG. Whole suite **664 passed**.
+- Real ELP on Linux through the real backend: `capture resolution = 2592x1944 (V4L2, YUYV, own conversion)`,
+  8/8 frames, `conversion=own`, WB 6500 manual, gain 0, backlight 0.
+- Not yet: the image-controls half (Edwin asked which defaults, who applies them, where they live — answered in the
+  session, awaiting his call).
 
 ---
 
@@ -1310,6 +1334,9 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 |       | + D10: measure the Linux settling frames (open, exposure  |           |             | ≠ 0 ⇒ Windows-only; settling count  |
 |       | step, WB change) + read the ELP's Linux controls vs their |           |             | + control table (information only)  |
 |       | defaults                                                  |           |             |                                     |
+|◐W1.4b | Linux own conversion (YUYV granted only) ✅ §11c.12       | Py        | W1.4        | unit test: plan from fake ranges;   |
+|       | + image controls to the device's defaults on every open,  |           |             | CAPTURE-SETTINGS shows own conv. ✅ |
+|       | backlight default on calibration (`planControls` mirror) ⏳|           |             | + controls at default on the rig    |
 | W1.5  | exposure: range from backend at ALL sites (§6.4 table),   | Py, -model| W1.3, W1.4, | converter unit-tested; float +      |
 |       | per-backend converter, float, `exposureUnit` in report    | -core docs| W1.1        | exposureUnit in the report JSON     |
 |       | JSON; plugin contract = V4L2 units (host converts);       |           |             |                                     |
