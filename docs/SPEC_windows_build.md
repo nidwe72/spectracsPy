@@ -353,6 +353,98 @@ Mirrors the Linux script (`buildAppImages.sh:185-225`), adapted:
 
 ---
 
+## 5b — W2.1: the installers (DESIGN, 2026-10-18)
+
+Edwin, 2026-10-18: the server gets an installer **the same way as the app**; a new version **installs over the old
+one**; no auto-update (§10). Signing is W2.3 and not needed for any of this.
+
+### 5b.1 What the user gets
+
+| | app | server |
+|---|---|---|
+| file | `Spectracs-Setup-<label>.exe` | `Spectracs-Server-Setup-<label>.exe` |
+| installs to | `%LOCALAPPDATA%\Programs\Spectracs\` | `%LOCALAPPDATA%\Programs\Spectracs Server\` |
+| rights | **per user, no admin, no UAC prompt** (`PrivilegesRequired=lowest`) — lab PCs often give the user none (§7.4) | same |
+| Start menu | `Spectracs` + `Spectracs (demo, empty database)` (= `--fresh`) | `Spectracs Server (local)` |
+| desktop icon | offered, unticked by default | not offered |
+| at the end | ☐ "Start Spectracs now" | ☐ "Start the server now" |
+| uninstall | Settings → Apps → "Spectracs" | "Spectracs Server" |
+| languages | English + German (Inno ships both; the app itself stays English) | same |
+
+⭐ **The data is not the installer's business.** Where the program lives and where its data lives were separated in
+W0 (the runtime hooks chdir to `%USERPROFILE%\Spectracs\…`, D9) — so install, update and uninstall never touch:
+`%USERPROFILE%\spectracsPy\` (the measurements), `%USERPROFILE%\spectracsPy-demo\`, `%USERPROFILE%\spectracsPy-server\`,
+the log `%USERPROFILE%\Spectracs\…\spectracs.log`. ⛔ The uninstaller does **not** offer to delete them: a
+measurement archive is not a cache. The uninstall dialog says where they are, so a user who wants them gone can.
+
+### 5b.2 Updates = install over
+
+- One **fixed AppId** per program, chosen once and never changed (it is how Windows knows the next Setup is an update,
+  not a second program): app `570849E7-33A6-4660-BC81-922E66D61950`, server `EFF8CDB8-6F33-48ED-B824-B9D9FD0FAEB5` (in the `.iss`: `AppId={{…}`).
+- The installer **empties the program folder first** (`[InstallDelete] {app}\*`), then copies the new one. ⚠ Needed:
+  a PyInstaller folder changes its file list between versions, and a stale `.pyd`/`.dll` left from the old one can be
+  loaded by the new — the zip never had this problem because every version went to a new folder. Safe because no
+  data lives in `{app}` (5b.1).
+- A running Spectracs is asked to close first (`CloseApplications=yes`, Windows' Restart Manager); the setup waits
+  rather than overwrite a loaded DLL.
+- No version comparison and no downgrade guard: installing an older Setup over a newer one simply installs the older
+  one. The version shown in Settings → Apps is the build label (`main-bcbcad6`, or the release tag).
+- ⚠ The **app DB schema** moves forward only (Alembic, `SPEC_schema_migrations.md`): a newer app migrates the DB, and
+  an older app on that DB is not a supported state. Not the installer's problem, but the reason "downgrade" is not
+  offered as a feature.
+
+### 5b.3 Unsigned until W2.3 — what that means for Setup
+
+- A downloaded `Setup.exe` carries the internet marker ⇒ SmartScreen checks **it**, once: "More info → Run anyway"
+  (§7.4). The files it installs carry **no** marker ⇒ `Spectracs.exe` then starts without a box. ⇒ The download
+  page / mail says the one sentence about "More info → Run anyway"; the installer cannot, it is what is being checked.
+- Smart App Control (Windows 11 only, §7.4) blocks the unsigned files themselves ⇒ unsolved until W2.3.
+- The `.iss` keeps a `SignTool=` line commented out, so W2.3 is a switch, not a rewrite.
+
+### 5b.4 What stays as it is
+
+- The **zips stay** (portable, demos, the VM): `buildWindows.sh` makes both zips AND both setups; `--no-installer`
+  skips the setups.
+- The firewall question for the lamp plug (§7.5) is asked by Windows at first use, as with the zip — a per-user
+  installer cannot add a firewall rule (that needs admin). The server listens on 127.0.0.1 only ⇒ no firewall question.
+- `START_HERE.txt` and `RELEASE_MANIFEST.txt` are installed into `{app}` and linked from the Start menu
+  (`Spectracs — read me`); the Unblock paragraph is dropped from the installed copy (nothing to unblock).
+
+### 5b.5 How it is built (in the VM, D1)
+
+Inno Setup's compiler `ISCC.exe` runs on Windows only ⇒ in the VM, like PyInstaller. One recipe file per program,
+`tools/windows/spectracs.iss` and `spectracs-server.iss`, parameterised with `/D` (label, source folder, output name).
+Order inside `buildWindows.sh`, after the zips and before the VM cleanup (the VM still holds `dist\`):
+1. the text files made on Linux (`START_HERE.txt`, `RELEASE_MANIFEST.txt`) go back to the VM into the dist folder
+   (small; the 135 MB bundle does not travel twice);
+2. `ISCC.exe` builds both setups in the VM;
+3. **verify the setup in the VM** (new, `verifyInVm.ps1 -Setup`): silent install into a throwaway folder
+   (`/VERYSILENT /SUPPRESSMSGBOXES /DIR=…`), the installed `Spectracs.exe --fresh --check-db` and
+   `--check-camera-imports` pass, the Start-menu entries exist, a **second** install over the first succeeds and leaves
+   no file the new version does not have, silent uninstall removes `{app}` and the uninstall entry, and
+   `%USERPROFILE%\spectracsPy-demo\` is still there; same for the server (start, port 8091, stop);
+4. the setups come back to Linux with a sha256 check, next to the zips; the manifest lists both.
+- **Toolchain pin:** Inno Setup 6.x installed once in the VM (`winget install JRSoftware.InnoSetup --version …`),
+  version recorded in `toolchain.txt` like PyInstaller's (D8).
+
+### 5b.6 Open (Edwin)
+
+- ⚠ **Inno Setup's licence.** Free to use; since 6.5 the authors **ask** commercial users to buy a licence (one-time,
+  perpetual), while stating it is not strictly required. ⇒ buy one before the first commercial release, or not? (The
+  alternative installer, WiX, is free but much more work; Inno is the usual choice for a PyInstaller folder.)
+- Languages: English + German enough?
+- Desktop icon: offered unticked (proposal) — or ticked?
+
+### 5b.7 Phases
+
+| step | what | where | done when |
+|---|---|---|---|
+| W2.1a | Inno Setup 6.x in the VM, pinned, in `toolchain.txt` | VM | `ISCC.exe /?` answers over ssh |
+| W2.1b | `spectracs.iss` + `spectracs-server.iss` (5b.1–5b.4) | Py `tools/windows/` | ISCC builds both by hand in the VM |
+| W2.1c | `buildWindows.sh`: text files back, ISCC, fetch, sha256, manifest; `--no-installer` | Py `tools/` | one command → 2 zips + 2 setups |
+| W2.1d | `verifyInVm.ps1 -Setup`: install, check, install over, uninstall, data kept | Py `tools/windows/` | VERIFY ok includes the setups |
+| W2.1e | Edwin installs from the setups in the VM (not the zip) and repeats the W1.7 click-through | VM, Edwin | ticked |
+
 ## 6 — W1: the camera on Windows
 
 The order matters: **6.1–6.2 make the camera reachable, 6.3–6.4 make its numbers comparable, 6.5 proves it.**
@@ -1372,7 +1464,7 @@ before each commit (there is no CI). Repos: **Py** = spectracsPy, **-model**, **
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
 |                         W2 — INSTALLER + SIGNING  (before the first customer; W2.1 may start after W0)                        |
 +-------+-----------------------------------------------------------+-----------+-------------+-------------------------------------+
-| W2.1  | Inno Setup, per-user (%LOCALAPPDATA%\Programs)       ∥    | Py tools/ | W0.7        | Setup.exe installs w/o admin        |
+| W2.1  | Inno Setup, per-user (%LOCALAPPDATA%\Programs) — §5b  ∥   | Py tools/ | W0.7        | Setup.exe installs w/o admin        |
 | W2.2  | signing: OV certificate vs Microsoft cloud signing        | Edwin     | —           | decided                             |
 | W2.3  | sign Setup.exe (+ every binary if Smart App Control)      | build     | W2.1, W2.2  | no SmartScreen box on download      |
 | W2.4  | real Windows 11 PC: install + §8.1 + §8.2                 | Win11 PC  | W2.3, W1.7  | ticked (same session as W1.8 later) |
