@@ -25,7 +25,10 @@ class ActiveSpectrometerProfileLogicModule:
         serial = CurrentUserSession().getRegisteredSerial()
         if not serial:
             return False
-        bundle = SpectracsPyServerClient().resolveInstrumentBySerial(serial)
+        session = CurrentUserSession()
+        # Offline (SPEC_shelly_instrument_memory.md §9): the bundle read from the plug at login replaces the RPC.
+        bundle = session.offlineBundle if session.isOffline() else \
+            SpectracsPyServerClient().resolveInstrumentBySerial(serial)
         if not bundle or not bundle.get("ok"):
             return False
         profile = self.__buildProfile(serial, bundle)

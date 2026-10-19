@@ -118,8 +118,17 @@ class LoginViewModule(PageWidget):
         password = self.getPasswordComponent().text()
 
         result = SpectracsPyServerClient().login(username, password)
+        online = bool(result.get("ok"))
+        if not online and result.get("message") == "server unavailable":
+            # SPEC_shelly_instrument_memory.md §9.2: no server ⇒ log in from the instrument plug, same dialog.
+            from sciens.spectracs.logic.instrumentMemory.PlugInstrumentMemory import OfflineLoginLogicModule
+            result = OfflineLoginLogicModule().login(username, password)
         if result.get("ok"):
             CurrentUserSession().login(result)
+            if online:
+                # §9.5: bring the box's plug up to date in the background — written only if the copy changed.
+                from sciens.spectracs.logic.instrumentMemory.PlugInstrumentMemory import PlugInstrumentSync
+                PlugInstrumentSync().afterOnlineLogin(username, password, CurrentUserSession().getRegisteredSerial())
             # Install the user's calibrated profile (by serial) into ApplicationSettings so views that read
             # the active profile — e.g. the dev measurement bench — see it (SPEC_dev_measure_bench §11).
             ActiveSpectrometerProfileLogicModule().installFromSession()

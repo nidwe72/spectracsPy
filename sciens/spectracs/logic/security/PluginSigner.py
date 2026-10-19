@@ -34,3 +34,11 @@ def sign(codeRef: str, version: str, targetSdkVersion, source: str):
     signature = signingKey.sign(signing_tuple(codeRef, version, targetSdkVersion, source)).signature
     keyId = fingerprint(bytes(signingKey.verify_key))
     return base64.b64encode(signature).decode("ascii"), keyId
+
+
+def signBundle(bundle: dict):
+    """Sign a plugin bundle (SPEC_shelly_instrument_memory.md S2b) with the same master key. (signatureBase64, keyId)."""
+    from sciens.spectracs.logic.security.PluginBundleUtil import bundle_tuple
+    signingKey = _loadSigningKey()
+    signature = signingKey.sign(bundle_tuple(bundle)).signature
+    return base64.b64encode(signature).decode("ascii"), fingerprint(bytes(signingKey.verify_key))

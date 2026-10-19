@@ -72,10 +72,15 @@ class SpectracsPyServerClient:
         if proxy is None:
             return {"ok": False, "userId": None, "username": None, "roles": [], "message": "server unavailable"}
         try:
-            return proxy.login(username, password)
+            result = proxy.login(username, password)
         except Exception as exception:
             print("SpectracsPyServerClient.login failed: %s" % exception)
             return {"ok": False, "userId": None, "username": None, "roles": [], "message": "login failed"}
+        from sciens.spectracs.logic.server.ServerCompatibility import ServerCompatibility
+        refusal = ServerCompatibility.refusalForServer((result or {}).get("serverSchemaRevision"))
+        if refusal is not None:      # S1b: a server migrated by newer code than this app ⇒ no session at all
+            return {"ok": False, "userId": None, "username": None, "roles": [], "message": refusal}
+        return result
 
     def listUsers(self):
         # Returns a list of plain user DTOs, or None when the server is unreachable
@@ -142,6 +147,27 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.resolveInstrumentBySerial failed: %s" % exception)
             return {"ok": False, "message": "failed"}
 
+    def getInstrumentCopy(self, username, password, serial):
+        # SPEC_shelly_instrument_memory.md S2/S6: the server-signed copy for the plug, or {"ok": False, ...}.
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.getInstrumentCopy(username, password, serial)
+        except Exception as exception:
+            print("SpectracsPyServerClient.getInstrumentCopy failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
+    def moveInstrumentToSerial(self, oldSerial, newSerial):
+        proxy = self.getProxy()
+        if proxy is None:
+            return {"ok": False, "message": "server unavailable"}
+        try:
+            return proxy.moveInstrumentToSerial(oldSerial, newSerial)
+        except Exception as exception:
+            print("SpectracsPyServerClient.moveInstrumentToSerial failed: %s" % exception)
+            return {"ok": False, "message": "failed"}
+
     def registerEndUser(self, username, password, email, firstName, lastName, serial):
         proxy = self.getProxy()
         if proxy is None:
@@ -188,11 +214,13 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.getPluginSource failed: %s" % exception)
             return {"ok": False, "message": "failed"}
 
-    def saveSpectrometerProfile(self, serial, deviceCodeName, calibration=None):
+    def saveSpectrometerProfile(self, serial, deviceCodeName, calibration=None, modelName=None, styleId=None):
         proxy = self.getProxy()
         if proxy is None:
             return {"ok": False, "message": "server unavailable"}
         try:
+            if modelName and styleId:
+                return proxy.saveSpectrometerProfile(serial, deviceCodeName, calibration, modelName, styleId)
             return proxy.saveSpectrometerProfile(serial, deviceCodeName, calibration)
         except Exception as exception:
             print("SpectracsPyServerClient.saveSpectrometerProfile failed: %s" % exception)
@@ -282,38 +310,38 @@ class SpectracsPyServerClient:
             return
         remoteSpectrometers: List[Spectrometer] = proxy.getSpectrometers()
 
-        remoteSpectrometers = SpectrometerUtil().getEntitiesByIds(remoteSpectrometers)
-        localSpectrometers = SpectrometerUtil().getPersistentSpectrometers()
-        localSpectrometers = SpectrometerUtil().getEntitiesByIds(localSpectrometers)
+        # Match by NATURAL key, not by id: the app's own get-or-create (SpectrometerUtil.getSpectrometers & co.)
+        # creates catalog rows locally with their own uuids, so a server row with the same name has a different id.
+        # Matching by id added the server's rows next to the local ones (duplicate vendor/style/camera/chip/
+        # spectrometer, seen 2026-10-19).
+        localSpectrometers = SpectrometerUtil().getEntitiesByNames(SpectrometerUtil().getPersistentSpectrometers())
         for spectrometer in remoteSpectrometers.values():
-            if spectrometer.id not in localSpectrometers.keys():
+            if SpectrometerUtil().getName(spectrometer) not in localSpectrometers.keys():
 
-                spectrometerVendor = spectrometer.spectrometerVendor
-                spectrometerVendorId= spectrometerVendor.id
-                spectrometerVendors = SpectrometerVendorUtil().getPersistentSpectrometerVendors()
-                localSpectrometerVendor=spectrometerVendors.get(spectrometerVendorId)
+                spectrometerVendors = SpectrometerVendorUtil().sortSpectrometerVendorsByVendorIds(
+                    SpectrometerVendorUtil().getPersistentSpectrometerVendors())
+                localSpectrometerVendor=spectrometerVendors.get(spectrometer.spectrometerVendor.vendorId)
                 if localSpectrometerVendor is not None:
                     spectrometer.spectrometerVendor=localSpectrometerVendor
 
-                spectrometerStyle = spectrometer.spectrometerStyle
-                spectrometerStyleId= spectrometerStyle.id
-                spectrometerStyles = SpectrometerStyleUtil().getPersistentSpectrometerStyles()
-                localSpectrometerStyle=spectrometerStyles.get(spectrometerStyleId)
+                spectrometerStyles = {style.styleId: style for style in
+                                      SpectrometerStyleUtil().getPersistentSpectrometerStyles().values()}
+                localSpectrometerStyle=spectrometerStyles.get(spectrometer.spectrometerStyle.styleId)
                 if localSpectrometerStyle is not None:
                     spectrometer.spectrometerStyle=localSpectrometerStyle
 
-                spectrometerSensor = spectrometer.spectrometerSensor
-                spectrometerSensorId=spectrometerSensor.id
-                spectrometerSensors = SpectrometerSensorUtil().getPersistedSpectrometerSensors()
-                localSpectrometerSensor = spectrometerSensors.get(spectrometerSensorId)
+                spectrometerSensors = {sensor.codeName: sensor for sensor in
+                                       SpectrometerSensorUtil().getPersistedSpectrometerSensors().values()}
+                localSpectrometerSensor = spectrometerSensors.get(spectrometer.spectrometerSensor.codeName)
                 if localSpectrometerSensor is not None:
                     spectrometer.spectrometerSensor=localSpectrometerSensor
 
                 spectrometerSensor = spectrometer.spectrometerSensor
                 spectrometerSensorChip = spectrometerSensor.spectrometerSensorChip
-                spectrometerSensorChipId=spectrometerSensorChip.id
-                spectrometerSensorChips=SpectrometerSensorChipUtil().getPersistentSpectrometerSensorChips()
-                localSpectrometerSensorChip = spectrometerSensorChips.get(spectrometerSensorChipId)
+                spectrometerSensorChips = {chip.vendorName + '_' + chip.productName: chip for chip in
+                                           SpectrometerSensorChipUtil().getPersistentSpectrometerSensorChips().values()}
+                localSpectrometerSensorChip = spectrometerSensorChips.get(
+                    spectrometerSensorChip.vendorName + '_' + spectrometerSensorChip.productName)
                 if localSpectrometerSensorChip is not None:
                     spectrometerSensor.spectrometerSensorChip=localSpectrometerSensorChip
 

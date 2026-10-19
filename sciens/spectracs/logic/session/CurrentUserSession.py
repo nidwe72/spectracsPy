@@ -24,6 +24,10 @@ class CurrentUserSession(Singleton):
     # Instrument bundle resolved from the user's serial at login (SPEC_connection_and_calibration_ux §4.3):
     registeredSerial: Optional[str] = None
     calibration: Optional[dict] = None        # ROI + pixel->nm coeffs dict (None if not calibrated yet)
+    # Offline login from the instrument plug (SPEC_shelly_instrument_memory.md §9): no server behind this session;
+    # offlineBundle = the instrument bundle read from the plug, used instead of the server's resolve.
+    offline: bool = False
+    offlineBundle: Optional[dict] = None
 
     def login(self, loginResult: dict):
         self.userId = loginResult.get("userId")
@@ -35,6 +39,8 @@ class CurrentUserSession(Singleton):
         self.spectrometerDevice = loginResult.get("spectrometerDevice")
         self.registeredSerial = loginResult.get("registeredSerial")
         self.calibration = loginResult.get("calibration")
+        self.offline = bool(loginResult.get("offline"))
+        self.offlineBundle = loginResult.get("offlineBundle")
 
     def logout(self):
         self.userId = None
@@ -46,6 +52,8 @@ class CurrentUserSession(Singleton):
         self.spectrometerDevice = None
         self.registeredSerial = None
         self.calibration = None
+        self.offline = False
+        self.offlineBundle = None
 
     def applyDevLoginBypassIfEnabled(self) -> bool:
         """Bring-up only (Android P4/P5): log in a synthetic dev user WITHOUT the server, so the
@@ -72,6 +80,9 @@ class CurrentUserSession(Singleton):
             "spectrometerDevice": os.environ.get("SPECTRACS_DEV_DEVICE", "Virtuax"),
         })
         return True
+
+    def isOffline(self) -> bool:
+        return self.isLoggedIn() and self.offline
 
     def isLoggedIn(self) -> bool:
         return self.userId is not None

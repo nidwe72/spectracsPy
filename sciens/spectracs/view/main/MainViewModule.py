@@ -29,6 +29,7 @@ from sciens.spectracs.view.account.AppUserSettingsViewModule import AppUserSetti
 from sciens.spectracs.view.settings.development.DevCaptureViewModule import DevCaptureViewModule
 from sciens.spectracs.view.settings.development.DevMeasurementBenchViewModule import DevMeasurementBenchViewModule
 from sciens.spectracs.view.settings.lamp.LampSettingsViewModule import LampSettingsViewModule
+from sciens.spectracs.view.settings.instrumentPlug.InstrumentPlugViewModule import InstrumentPlugViewModule
 
 
 class MainViewModule(QStackedWidget):
@@ -125,6 +126,10 @@ class MainViewModule(QStackedWidget):
         lampSettingsViewModule = LampSettingsViewModule()  # index 19 — Settings → Lamp plug (SPEC_lamp_switch §6)
         lampSettingsViewModule.initialize()
         self.addWidget(lampSettingsViewModule)
+
+        instrumentPlugViewModule = InstrumentPlugViewModule()  # index 20 — the factory tool (SPEC_shelly_instrument_memory §5)
+        instrumentPlugViewModule.initialize()
+        self.addWidget(instrumentPlugViewModule)
 
         # §G2: startup lands on Home (was the retired connect screen).
         self.setCurrentWidget(homeViewModule)

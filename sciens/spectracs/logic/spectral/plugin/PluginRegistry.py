@@ -34,6 +34,10 @@ class PluginRegistry:
     the resolve-all guard test asserts they stay equal, which also closes the codeRef-typo drift for good.
     """
 
+    # Offline source for a plugin version the server cannot deliver (SPEC_shelly_instrument_memory.md S3b/S7):
+    # callable(codeRef, version) -> a verified-later bundle envelope from the plug, or None. Set at offline login.
+    offlineBundleSource = None
+
     __BUILTINS = [
         PluginEntry(DEV_CODE_REF, "Measurement bench (dev)", benchOnly=True),
         PluginEntry(PUMPKIN_OIL_CODE_REF, "Pumpkin-seed-oil colour QM"),
@@ -86,6 +90,12 @@ class PluginRegistry:
         if version is None:
             return PluginRegistry._resolveBuiltin(codeRef)
         row = PluginRegistry._fetchDbRow(codeRef, version)
+        if (not row or not row.get("ok")) and PluginRegistry.offlineBundleSource is not None:
+            # Server unreachable: the plug may carry this exact version as a master-signed bundle (S3b).
+            envelope = PluginRegistry.offlineBundleSource(codeRef, version)
+            if envelope is not None:
+                from sciens.spectracs.logic.spectral.plugin.PluginBundle import PluginBundleLoader
+                return PluginBundleLoader.load(envelope)
         if not row or not row.get("ok") or not row.get("source"):
             # offline, unknown version, or a bare/unsealed row -> the shipped built-in is the fallback.
             if PluginRegistry.find(codeRef) is not None:

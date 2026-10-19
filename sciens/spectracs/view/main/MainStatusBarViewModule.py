@@ -114,6 +114,19 @@ class MainStatusBarViewModule(QWidget):
         headerRow.addWidget(logoBox, alignment=QtCore.Qt.AlignmentFlag.AlignVCenter)
         headerRow.addStretch(1)
 
+        # OFFLINE badge (SPEC_shelly_instrument_memory.md §9.2): the session came from the instrument plug, not the
+        # server. Same chrome as the header buttons; hidden unless the session is offline.
+        self.offlineBadge = QLabel("OFFLINE")
+        self.offlineBadge.setObjectName("MainStatusBarViewModule.offlineBadge")
+        self.offlineBadge.setStyleSheet(
+            "QLabel { color: #E0A030; font-weight: bold; border: 1px solid #5A5A5A; border-radius: 6px;"
+            " padding: 0 10px; }")
+        self.offlineBadge.setFixedHeight(self.HEADER_CONTENT_HEIGHT)
+        self.offlineBadge.setToolTip("Logged in without the server, from the data on the instrument plug. "
+                                     "Publishing to the lab needs the server.")
+        self.offlineBadge.setVisible(False)
+        headerRow.addWidget(self.offlineBadge, alignment=QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignVCenter)
+
         # Lamp icon, left of the camera (SPEC_lamp_switch.md §16.2). Hidden unless a real device is logged in on
         # a desk that has (had) a lamp plug.
         from sciens.spectracs.view.main.LampButton import LampButton
@@ -188,6 +201,7 @@ class MainStatusBarViewModule(QWidget):
         return icon
 
     def updateAccountControl(self):
+        self.offlineBadge.setVisible(CurrentUserSession().isOffline())
         if CurrentUserSession().isLoggedIn():
             self.accountButton.setIcon(self.buildAccountIcon(
                 self.PERSON_FILLED_SVG, self.ACCOUNT_ACTIVE_COLOR, self.ACCOUNT_ACTIVE_HOVER_COLOR))

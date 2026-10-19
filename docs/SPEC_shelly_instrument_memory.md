@@ -1,6 +1,8 @@
 # SPEC — The Shelly as the instrument's memory (factory provisioning)
 
-**Status:** DESIGN only, rev 7 2026-10-19. Nothing implemented, nothing written to the plug yet.
+**Status:** ✅ **S0–S8 IMPLEMENTED + PUSHED 2026-10-19** (§10 as built, 775 tests green; app, -model, -server, -core).
+◐ **S9 partly clicked through by Edwin** (offline login, the page offline, the Spectrometer/Style lists: "works so
+far"); the rest of §10.3 continues with the story. The box's copy is on the real plug.
 **Comes from:** `SPEC_ammo_box_camera.md` phase P1 (H3/H4 in `spectracs-hardware/ammoBox-spec.md`). Edwin
 decided on 2026-10-19 that this gets its own spec, not a section in `SPEC_lamp_switch.md`.
 **Builds on:** `SPEC_lamp_switch.md` (driver, discovery, `lamp_plug` row, password D9),
@@ -14,6 +16,9 @@ server's existing resolve response**, so there is no new format to version. **re
 (fits, ~17 keys compressed, §3.3); offline login in the same sweep (§4.5, S6); S0 spelled out (§7.1).
 **rev 5 (Edwin):** the copy is **SQLite** (N12); the changed plug password lives in the **app DB** (N13);
 implementation phases laid out (§7).
+**rev 9 (Edwin):** a seeded dev instrument + `masterUserDynarex` as step S1 (§7.4), so the box can be logged
+into before any plug code exists.
+**rev 8:** offline login designed (§9); the copy is built and signed by the **server**.
 **rev 7 (Edwin):** one **key-value provider** in front of both storages (§4.7): small values → native KVS,
 large values → script slots, invisible to the caller.
 **rev 6 (Edwin):** one larger plugin on the plug is the goal (§3.6, bz2 stripped); the SQLite copy moves into a
@@ -272,13 +277,15 @@ Flash budget, from the measurements in §7.2/§7.3 (the plug reports flash in 4 
 - `rev` = the server Alembic revision of the copy (from its `alembic_version` row), so the app knows before
   opening it whether it must migrate.
 
-### 4.3 Signed by the master
+### 4.3 Signed — the plugin by the master, the copy by the server (corrected in rev 8, §9.4)
 
 With a **standard password** (N8) anyone who knows it can rewrite the copy, calibration included. ⇒ The copy is
 **signed with Ed25519**, exactly like a sealed plugin (`PluginSignatureUtil`): the **master app signs** (PyNaCl,
 `PluginSigner`), every app **verifies** with the vendored pure-Python Ed25519 against the trusted keys shipped
 in the app. A factory tool inside the master app (N10) has that key at hand. An unsigned or altered copy is
-**refused**. The password then only protects the lamp and the plug's settings.
+**refused**. ⚠ **rev 8:** this holds for the **plugin** bundle. The **copy** (setup + user) must be re-signed
+whenever the end user's app refreshes it, and the end user's app has no master key ⇒ the **server** signs the
+copy with its own key (§9.4). The password then only protects the lamp and the plug's settings.
 
 ### 4.4 The app at start
 
@@ -468,19 +475,21 @@ and revision.
  │     │ limit, reboot (§7.1/§7.2); script slots: │                    │              │ survives a reboot      │
  │     │ 64 KB/slot, 4 KB reads (§7.3); cleaned up│                    │              │                        │
  ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
- │ S1  │ seed: sensor Dynarex = 2bc5:0529,        │ -model, -server    │ —            │ server DB has the      │
- │     │ spectrometer InLight-Dynarex-GreenGold   │                    │              │ rows; tests green      │
- │     │ (InLight-Automat stays)                  │                    │              │                        │
+ │ S1  │ SEED the box as a dev instrument (§7.4): │ -model (seed)      │ —            │ server restart → login │
+ │     │ chip + sensor Dynarex 2bc5:0529,         │                    │              │ masterUserDynarex →    │
+ │     │ spectrometer InLight-Dynarex-GreenGold,  │                    │              │ bench opens on the box │
+ │     │ instrument (serial = plug id, pumpkin,   │                    │              │ (capture: camera P3)   │
+ │     │ empty calibration) + masterUserDynarex   │                    │              │                        │
  ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
  │ S1b │ APP↔SERVER VERSION CHECK (R12): server   │ -server, app       │ —            │ an app older than the  │
  │     │ reports its schema revision at login;    │                    │              │ server's schema gets   │
  │     │ app refuses a newer one, same check as   │                    │              │ "update the app", not  │
  │     │ for the plug copy                        │                    │              │ a crash                │
  ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
- │ S2  │ COPY BUILDER: setup + profile + calib.   │ -model (+ -core)   │ S1           │ unit test: ELP setup   │
+ │ S2  │ COPY BUILDER: setup + profile + calib.   │ -server, -model    │ S1           │ unit test: ELP setup   │
  │     │ WITH spectrum + user rows → SQLite       │                    │              │ → ≤ 64 KB, signature   │
  │     │ (page 1024, alembic_version) → bz2 → b64 │                    │              │ verifies               │
- │     │ + sha256 + Ed25519 (master key)          │                    │              │                        │
+ │     │ + sha256 + Ed25519 (SERVER copy key, §9) │                    │              │                        │
  ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
  │ S2b │ PLUGIN BUNDLE BUILDER: all files of one  │ -core, app (master)│ —            │ dev bench bundle       │
  │     │ plugin, docstrings + comments stripped,  │                    │              │ ≈ 26 KB, signature     │
@@ -511,16 +520,17 @@ and revision.
  │     │ from the plug, mismatch refusals,        │                    │              │ loads its plugin       │
  │     │ serial pre-fill                          │                    │              │                        │
  ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
- │ S7  │ OFFLINE LOGIN (user row + bcrypt from    │ app, -server       │ §9 design    │ log in + measure with  │
- │     │ the copy) + offline results (§4.5, §9)   │                    │              │ the server off, sync   │
- │     │ — SAME SWEEP as S2–S6                    │                    │              │ afterwards             │
+ │ S7  │ OFFLINE LOGIN (§9): end user + all       │ app, -server       │ S2–S6        │ server off → login →   │
+ │     │ masters from the copy, bcrypt check,     │                    │              │ measure → PDF; user    │
+ │     │ isOffline badge, Publish disabled;       │                    │              │ disabled online →      │
+ │     │ rewrite plug only on change (§9.5)       │                    │              │ refused offline later  │
  ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
  │ S8  │ move to a new plug; rewrite after reset  │ app (master)       │ S5           │ reset plug restored    │
  ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
  │ S9  │ click-through on the rig: factory run,   │ rig                │ S1–S8        │ Edwin's click-through  │
  │     │ online start, offline start + login      │                    │              │                        │
  └─────┴──────────────────────────────────────────┴────────────────────┴──────────────┴────────────────────────┘
-   order: S0 ∥ S1 ∥ S1b ∥ S2b → S2 → S3 ∥ S3b → S4 → S5 → S6 → S7 → S8 → S9   (S7 designed first, §9)
+   order: S0 ∥ S1 ∥ S1b ∥ S2b → S2 → S3 ∥ S3b → S4 → S5 → S6 → S7 → S8 → S9   (S1 first: it gives the login)
 ```
 
 ### 7.1 S0 in detail
@@ -575,15 +585,290 @@ Consequences:
   plugin fits, with ~24 KiB left for the plug itself.
 - Any reader of script slots must use `len` ≤ 4 096. A careless read can crash the plug.
 
+### 7.4 S1 in detail — the box as a seeded dev instrument + `masterUserDynarex` (Edwin, 2026-10-19)
+
+Goal (Edwin): *"set up a user masterUserDynarex analogous to masterUserExakta and a SpectrometerSetup for the new
+spectrometer analogous to the existing one, directly in the database, as one implementation step, so we can start
+up with the login from that."*
+
+**As-is pattern (read in the code):** `UserSeedLogicModule.seed()` runs at every server start and is idempotent.
+`__seedElpInstrument` calls `PersistSpectrometerSetupLogicModule.getOrCreateInstrument(ELP_SERIAL, elp.id,
+pumpkin.id)` (empty calibration + profile + setup), and `__seedExaktaMasterUser` creates `masterUserExakta`
+(MASTER_USER, password = username) bound to `ELP-0001`. The catalog rows come from the transient lists in
+`SpectrometerSensorChipUtil`, `SpectrometerSensorUtil`, `SpectrometerUtil` (get-or-create by key).
+
+**The step, analogous, five additions in -model:**
+
+| # | Where | What | Key |
+|---|---|---|---|
+| a | `SpectrometerSensorChipUtil` | chip placeholder **`Orbbec_0529`** (the board's real chip is unknown; the ELP's `Sony_IMX1234` is a placeholder too) | `vendorName_productName` |
+| b | `SpectrometerSensorUtil` | sensor **`Dynarex`**: vendorId `2bc5`, modelId `0529`, vendorName `Orbbec`, sellerName `unbranded`, description "ammo-box camera", chip a | `codeName` |
+| b′ | `SpectrometerSensorUtil.__CAPTURE_SETTINGS_BY_HARDWARE_ID` | `'2bc5_0529': SpectrometerSensorSettings(None, None)` — "TBD", like the Microdia | hardware id |
+| c | `SpectrometerUtil.getTransientSpectrometers` | **`InLight` · `Dynarex` · `GreenGold`**, vendor Spectracs | `getName()` |
+| d | `UserSeedLogicModule` | `DYNAREX_SERIAL = "shellyplusplugs-e86beae3cb60"` (N6: serial = Edwin's plug id); `__seedDynarexInstrument` = `getOrCreateInstrument(DYNAREX_SERIAL, inLightDynarex.id, pumpkin.id)` | serial |
+| e | `UserSeedLogicModule` | `DYNAREX_MASTER_USER = ("masterUserDynarex", "masterUserDynarex", MASTER_USER)`, `__seedDynarexMasterUser` bound to `DYNAREX_SERIAL` | username |
+
+**Rubber duck — implementation**
+
+- **D1 — "Directly in the database" = the seed, not a one-off SQL insert.** A hand insert would exist only in
+  today's DB file; a fresh DB (Windows VM, AppImage, a deleted DB, the test DB) would not have it. The seed *is* a
+  direct DB write, at server start, repeatable. Edwin's intent ("no factory tool, no UI") is met.
+- **D2 — Order.** chip → sensor → spectrometer → instrument → user. The get-or-create utilities already resolve
+  in that order (`SpectrometerUtil` asks `SpectrometerSensorUtil` asks the chip util); the seed only appends its
+  two methods after `__seedExaktaMasterUser`.
+- **D3 — Copy-paste debt.** `__seedElpInstrument` and `__seedExaktaMasterUser` already repeat the
+  create-user-with-role block three times. ⇒ The Dynarex pair **reuses one private helper**
+  `__getOrCreateUser(username, password, roleType)` instead of a fourth copy; the existing callers move onto it in
+  the same step (behaviour unchanged, covered by the seed test).
+- **D4 — The serial is a real device id in a public repo.** It is already in this spec; it identifies a plug, not
+  a person, and the plug is behind a password once P7 is done. Accepted (like `ELP-0001`).
+- **D5 — The calibration starts EMPTY.** `resolveBundle` returns `calibration: None` (no coefficient A) ⇒ login
+  works, the bench opens and asks for a calibration. Authoring it on the box = camera spec **P5**, not this step.
+- **⛔ D6 — Measuring stays blocked until camera spec P3.** With no settings for `2bc5_0529`, capture falls back to
+  the global constants (2592×1944, WB 6500 K), and the box camera has WB 0–255 ⇒ `SPEC_ammo_box_camera.md` E5:
+  read-back ≠ request ⇒ MEASUREMENT refused. ⇒ S1's "done when" is **login + bench opens + camera recognised**,
+  not a measurement.
+- **D7 — No schema change** ⇒ no Alembic migration; only rows. Existing rows are untouched (idempotent keys).
+- **D8 — Which DB.** The seed writes the **server** DB; start the server with `runServer.sh` so it is
+  `~/.spectracsPy-server/spectracsPyServer.db` (CWD gotcha). The app's local DB gets the new catalog rows through
+  the existing `syncSpectrometers` at app start.
+- **D9 — The camera lookup is generic** (`SensorCaptureIndexResolver` matches vendorId/modelId) ⇒ no code change
+  for the box camera to be found and the connection indicator to go green.
+- **D10 — The pumpkin plugin as the setup's plugin**, like the ELP setup. The dev bench is a built-in master view
+  and does not depend on the setup's plugin (as with `masterUserExakta`).
+- **D11 — Tests:** one new seed test against a temp server DB: seed twice ⇒ one `Dynarex` sensor, one
+  `InLight-Dynarex-GreenGold`, one profile with `DYNAREX_SERIAL`, `masterUserDynarex` has MASTER_USER and the
+  serial; `LoginLogicModule.login("masterUserDynarex", …)` ⇒ `ok`, `spectrometerDevice == "Dynarex"`,
+  `calibration is None`. Then the whole suite.
+
 ---
 
 ## 8 — Open questions for Edwin
 
 1. ~~Q1: go for the minimal S0~~ ✅ run 2026-10-19, §7.2.
-2. **Q5:** design offline login (§9) now, before S2, so the sweep S2–S7 can start in one go?
+2. ~~Q5: design offline login (§9) now?~~ ✅ designed, rev 8 (§9); its open points are Q7–Q10 (§9.10).
 3. ~~Q6: plugin code on the plug?~~ First "no, for now" (§3.5), then ✅ **one larger plugin is the goal** (N14, §3.6).
 
-## 9 — Offline login (S7) — to be designed
+## 9 — Offline login (S7) — DESIGN (rev 8, 2026-10-19)
 
-Placeholder for the design in §4.5, same sweep as the copy. Input already settled: the user row with its bcrypt
-hash travels in the copy (§3.6).
+### 9.1 What login does today (read in the code)
+
+- `LoginLogicModule.login` (server): checks `bcrypt` against `app_user.passwordHash`, then calls
+  `InstrumentLogicModule.resolveBundle(registeredSerial)` and returns **one dict**: user id, username, roles,
+  serial, plugin `codeRef` + version, device code name, calibration. Never the hash.
+- `CurrentUserSession` (app) keeps that dict **in memory**; there is no session token. Logout drops it.
+- After login the app uses the server for: plugin source (`getPluginSource`, sealed DB plugins), the startup
+  sync of spectrometers and spectral-line master data, **LIMS publishing** (`publishSampleToLims`), payments, user
+  and instrument administration (master).
+- The PDF report is written **locally** (file dialog) and needs no server.
+
+⇒ Offline login = produce **the same dict** without the server, from the plug. Everything after login that
+reads `CurrentUserSession` keeps working unchanged.
+
+### 9.2 Flow
+
+```
+ Login dialog (unchanged: username + password)
+   │
+   ├─ server reachable ──▶ login as today ──▶ ONLINE session
+   │                        └─ afterwards: rewrite the plug ONLY IF the copy changed (§9.5)
+   │
+   └─ server unreachable (the existing "server unavailable" path, after the Pyro timeout)
+        │
+        ├─ plug found (discovery) and its copy valid (sha256 + server signature, §9.4)?
+        │     no  ──▶ "Server not reachable, and no usable instrument data on the plug." (as today)
+        │     yes ──▶ user row in the copy with this username, enabled, bcrypt(password) matches?
+        │               no  ──▶ "invalid credentials" (same generic message as online)
+        │               yes ──▶ build the login dict from the copy ──▶ OFFLINE session
+        ▼
+ OFFLINE session = CurrentUserSession + isOffline = True; header badge "OFFLINE · data from <date>"
+```
+
+- **Same dialog, same message wording, no extra click.** The user does not choose "offline"; the app falls back
+  when the server is not there.
+- The **startup sync** (spectrometers, spectral lines) is skipped offline; the copy brings what the instrument needs.
+- ⚠ **"Offline" means without the server, not without a network.** The plug must still be reachable: on the
+  lab WLAN, or through the plug's own access point `192.168.33.1` (`ammoBox-spec.md` A12, "Rückfallweg").
+
+### 9.3 Who is on the plug (Edwin, 2026-10-19)
+
+- **The one end user bound to this instrument** (Q10: one end user per box for now): `app_user.registeredSerial` =
+  the plug id. Their row (username, `bcrypt` hash, display name, enabled) and roles.
+- ✅ **Master users too** (Q7, Edwin: "yes"): a master may measure offline on a box. ✅ **Q11 (Edwin): all
+  enabled master users go onto all plugs** (a few rows, ~100 bytes each compressed). A master *may* carry a
+  serial (`masterUserExakta` → `ELP-0001`, checked in the seed), but is not limited to that box.
+  Offline they get the same measuring functions as online; administration still needs the server (§9.6).
+
+### 9.4 Who signs the copy — the server (correction to §4.3)
+
+The copy is refreshed from the **end user's** app after an online login (§9.5). That app holds no master key, so
+it cannot sign. ⇒ The **server builds the copy and signs it** with an **instrument-copy key** of its own; its public
+key ships in the app next to the plugin keys (same `trustedKeys` mechanism, a different `keyId`). The app only
+**carries** bytes from the server to the plug. The plugin bundle stays **master-signed** (§4.3).
+- ⚠ The server needs a private key on disk (server config, never in a repo; R3).
+
+### 9.5 Writes to the plug: only when the data changed (Edwin, 2026-10-19)
+
+Rev 8 first proposed a **lease**: a "valid until" date (nothing to do with payment), renewed on the plug at
+online logins, so that offline login stops working after N days without the server. Edwin: *a write should only
+happen when the data has changed.* ⇒ **The lease is dropped.**
+
+```
+ after every ONLINE login:
+   server builds the copy (setup + users) ──▶ sha256 ──▶ equal to the plug's?  ──▶ yes: NO write
+                                                                                └▶ no:  write the copy (§4.7)
+```
+
+- The copy changes when the setup, the calibration, or a **user** on it changes (password, enabled, roles) ⇒ a
+  user disabled on the server is written to the plug at the **next online login on that box**, because that *is*
+  a change.
+- What is lost without the lease: a box that **never** goes online again keeps its last state for good (a
+  disabled user can still log in offline there). Accepted for now.
+- Flash: writes only on real changes ⇒ a few per year.
+- To compare without reading the whole slot: the meta key `spectracs_m_copy` already holds the `sha256` (§4.7) ⇒
+  **one** `KVS.Get` per online login, no write.
+
+### 9.6 What works offline, and what waits
+
+| Function | Offline | How |
+|---|---|---|
+| Login (end user and master) | ✅ | §9.2, from the copy |
+| Instrument (device, calibration, plugin) | ✅ | copy + plugin bundle from the plug (S3/S3b), or a built-in plugin |
+| Lamp | ✅ | the plug, as today |
+| Measure, evaluate, PDF report | ✅ | local, as today |
+| **Publish to the LIMS** | ⛔ **disabled** | Edwin: delayed offline publishing **not for now**. The button says "needs the server"; the PDF can still be saved |
+| Payment, account settings | ⛔ | "needs the server" |
+| User / instrument administration (master) | ⛔ | needs the server |
+| Startup sync | skipped | — |
+
+### 9.7 ⏸ Postponed: an outbox for LIMS publishing
+
+Edwin, 2026-10-19: postponed. Sketch kept for later: an app-DB table `DbPendingPublication` (`userId`, `serial`,
+`createdAt`, `limsInfoJson` with the **measurement** time, `pdfBlob`, `state`, `lastError`), sent after the next
+online login.
+
+### 9.8 Security summary
+
+| Threat | Covered by |
+|---|---|
+| Reading the password hashes from the plug (standard password) | `bcrypt` cost 12 ⇒ slow guessing. Not prevented. |
+| Changing a hash, a role or the calibration on the plug | server signature (§9.4) ⇒ refused |
+| Copying another box's copy onto this plug | the copy contains the serial = plug id ⇒ refused |
+| Disabled user keeps logging in offline | until the next online login on that box (§9.5); ⚠ forever on a box that never goes online |
+| A new PC that was never online | works, if the plug password is the standard one or typed in (N13) |
+
+### 9.9 Phases (inside S7)
+
+```
+ S7.1  server: instrument-copy key; build + sign the copy incl. the     -server, -model
+       box's end user and all enabled masters
+ S7.2  app: offline login (user row from the copy, bcrypt check),       app
+       CurrentUserSession.isOffline, header badge, Publish disabled
+ S7.3  app: after online login compare sha256, write only on change     app
+ S7.4  click-through: server off → login (end user, then master) →      rig
+       measure → PDF; user disabled online → next online login →
+       server off → that user refused
+```
+
+### 9.10 Questions
+
+- ~~Q7: may a master measure offline?~~ ✅ yes (§9.3).
+- ~~Q8: lease duration?~~ ✅ void, no lease (§9.5).
+- ~~Q9: outbox?~~ ✅ not for now, *Publish* disabled offline (§9.6/§9.7).
+- ~~Q10: several end users per box?~~ ✅ one end user for now.
+- ~~Q11: all masters or selected?~~ ✅ all enabled masters on all plugs (§9.3).
+
+---
+
+## 10 — ✅ As built (2026-10-19)
+
+Edwin: *"impl all S phases now"*. S0–S8 built; S9 is Edwin's click-through. Full suite **772 passed** (716 before,
+56 new). Nothing committed.
+
+| Phase | Where | What |
+|---|---|---|
+| S1 | -model | chip `Orbbec_0529`, sensor `Dynarex` 2bc5:0529 (+ `'2bc5_0529'` settings placeholder), spectrometer `InLight-Dynarex-GreenGold`; `UserSeedLogicModule`: `DYNAREX_SERIAL`, `__seedDynarexInstrument`, `__seedDynarexMasterUser`; the four create-user blocks folded into `__getOrCreateUser` + `__bindSerial` (D3) |
+| S1b | -model, app | `LoginLogicModule` returns `serverSchemaRevision`; `DatabaseInitializer.getServerScriptRevisions/Head/DatabaseRevision/upgradeServerSchemaOn`; app `logic/server/ServerCompatibility.py`; `SpectracsPyServerClient.login` refuses a newer server |
+| S2 | -model, -server, -core | `logic/instrument/InstrumentCopyLogicModule.py` (SQLite page 1 024, server DDL, `order by rowid` ⇒ byte-identical copies), `InstrumentCopySigner.py` (PyNaCl, own key), `-core logic/security/InstrumentCopySignatureUtil.py`; RPC `getInstrumentCopy(username, password, serial)` (credentials + bound-or-master) |
+| S2b | -core, app | `-core logic/security/PluginBundleUtil.py` (strip, tuple, verify, pack); `PluginSigner.signBundle`; app `logic/spectral/plugin/PluginBundle.py` `PluginBundleBuilder` |
+| S3 | -model | `logic/instrument/InstrumentCopyReader.py` (sha256, signature, revision gate, Alembic upgrade of an old copy on a temp file, ORM read); `InstrumentLogicModule.bundleFromSetup` shared with `resolveBundle`; server `alembic/server/env.py` takes a passed connection |
+| S3b | app | `PluginBundleLoader` (meta-path finder, app's own modules put back afterwards); `PluginRegistry.offlineBundleSource` hook in `resolve` |
+| S4 | -core | `logic/plugstore/PlugKeyValueStore.py`, `PlugStoreTransport.py` (+ `InMemoryPlugStoreTransport`), `ShellyGen2PlugStoreTransport.py`; `ShellyHttp.post` (JSON-RPC, digest for POST); `LampErrors.ShellyRpcError` |
+| S5 | app | `logic/instrumentMemory/InstrumentFactoryLogicModule.py` (harden/createOnServer/write/verify/moveHere); page `view/settings/instrumentPlug/InstrumentPlugViewModule.py` = Settings → Administration → **Instrument plug** (stack index 20) |
+| S6 | app | `logic/instrumentMemory/PlugInstrumentMemory.py`: `PlugLocator` (before login), `PlugInstrumentMemory` (copy/plugin keys, index last), `PlugInstrumentSync` (background, after online login, write only on change); registration pre-fills the serial |
+| S7 | app | `OfflineLoginLogicModule` (same dict as online + `offline`); `CurrentUserSession.offline/offlineBundle/isOffline`; `installFromSession` uses the offline bundle; `LoginViewModule` falls back on "server unavailable"; header **OFFLINE** badge; bench *Publish* disabled offline |
+| S8 | -model, -server, app | `InstrumentAuthoringLogicModule.moveToSerial` + RPC `moveInstrumentToSerial`; factory "Move instrument here" |
+
+Keys: **`spectracs-keys/instrumentCopy.seed`** generated (mode 600, backup in `spectracs-keys/backup/`), public half
+in `TrustedKeys.TRUSTED_COPY_KEYS` (`ff8fa4e8a10f8b2f`) — a list separate from the plugin keys.
+
+Tests: `test_dynarex_instrument_seed.py` (5), `test_server_compatibility.py` (5), `test_plug_key_value_store.py`
+(15), `test_instrument_copy.py` (11), `test_plugin_bundle.py` (5), `test_offline_instrument_plug.py` (15).
+`FakeShellyServer` now speaks POST /rpc, KVS.*, Script.*, Sys.GetStatus, Switch.Set/GetConfig, Shelly.SetAuth.
+
+### 10.1 Run on the real rig (2026-10-19, plug fw 1.3.3, no password, lamp off throughout)
+
+| Check | Result |
+|---|---|
+| S4 store on the plug | 70 KB value in 2 slots, write 9.0 s / read 4.2 s, identical; deleted again |
+| ⛔ **atomic rewrite of a big value** | refused: old (93 KB) + new do not fit 124 KiB together ⇒ `set(..., replaceInPlace=True)` (old first; used for the plugin by the factory tool only) |
+| seed on the real server DB | `masterUserDynarex` → `shellyplusplugs-e86beae3cb60`; login gives `Dynarex`, revision `405d2ce2cec1` |
+| copy built + signed with the real key | 4 660 chars (no spectrum yet: the box is not calibrated) |
+| written to the real plug | 2.0 s; **second write skipped** (unchanged, 0.2 s) |
+| verify | "valid · Dynarex · 3 users" (masterUserDynarex + every master) |
+| offline login against the real plug | ✓ in 1.9 s, MASTER_USER; wrong password refused |
+| ⚠ **left on the plug** | `spectracs_index`, `spectracs_m_copy`, `spectracs_sig_copy` + 1 slot (12 KiB) — the box's real data, for S9 |
+
+### 10.2 Deviations and open points
+
+- **The setup's plugin (pumpkin 1.0) is a bare seed row ⇒ a built-in**: the factory stores no plugin for it ("ships
+  with the app"). A plugin goes onto the plug only for a **sealed** DB version; the bundle loader is tested with
+  the whole dev bench (6 files) but no instrument uses it yet.
+- **Standard password (P7):** read from `SPECTRACS_PLUG_STANDARD_PASSWORD` or `../spectracs-keys/plugStandardPassword.txt`
+  (relative to the app's working dir, like the plugin key). ⏸ **Neither exists yet** ⇒ *Harden plug* refuses until Edwin
+  creates the file. Not run on the real plug (it would change how the lamp is reached).
+- **The running server** (started 15:02) has the old code ⇒ **restart it** for `getInstrumentCopy` /
+  `moveInstrumentToSerial`. The seed already ran on its DB (in-process).
+- **Frozen/Android server:** copy signing needs PyNaCl. The dev server has it; the server AppImage should bundle it
+  (check `nacl` in the next `buildAppImages.sh`); the Android server does not ship it ⇒ there `getInstrumentCopy`
+  fails with a message, the rest is unaffected.
+- `moveInstrumentToSerial` is unauthenticated like the other MASTER RPCs (`saveSpectrometerProfile`, …): the role
+  gate on RPCs (`SPEC_user_auth_login.md` phase G) is still not built. `getInstrumentCopy` checks credentials
+  because it hands out password hashes.
+- The offline fallback starts only after the client gave up on the server (Pyro timeout per candidate host) ⇒ an
+  offline login takes those seconds plus ~2 s on the plug.
+- Seen, not changed: the registration path does not call `installFromSession` after its auto-login (pre-existing).
+- **Fixed after Edwin's first offline test (2026-10-19):** the factory page was locked to "master AND online", so offline
+  it showed neither plug nor serial. Now: offline it still finds the plug, shows plug + serial and allows *Find* and
+  *Verify* (plug only); *Harden*, *Create*, *Write*, *Move* stay online-only, with a note on the page.
+- **Tooltips** on every button of the page; the page test checks that each has one.
+- **Spectrometer + Style next to Camera (Edwin, 2026-10-19):** *Create on server* used to send only the camera
+  code name, and the server took the **first** spectrometer with that camera. Edwin: *a camera model can sit in
+  different spectrometers* ⇒ the page has three lists, **Spectrometer** (model name, default InLight), **Camera**
+  (default Dynarex), **Style** (default GreenGold). `saveSpectrometerProfile(serial, device, calibration,
+  modelName, styleId)` (server RPC + client) finds the exact triple and **creates the `Spectrometer` row** (vendor
+  Spectracs) if the combination is new; an unknown camera or style is refused. Without `modelName`/`styleId` (the
+  setup editor) the old camera-only lookup stays. Test: `SpectrometerTripleServerTest`.
+- **Found 2026-10-19, fixed: duplicated catalog in the app's local DB.** `syncSpectrometers` matched the server's
+  catalog **by id**, but the app's own get-or-create (`SpectrometerUtil.getSpectrometers` & co.) gives local rows
+  their own uuids ⇒ every vendor/style/camera/chip/spectrometer existed twice in `~/.spectracsPy/spectracsPyServer.db`
+  (surfaced by the seed test: two Orbbec 0529 chips). Fix: the sync matches by **natural key** (vendorId,
+  model+camera+style, codeName, chip vendor_product). Test: `test_sync_spectrometers.py`. The existing duplicates
+  are deleted by hand (server ids kept, local profiles re-pointed; backup
+  `spectracsPyServer.db.bak-2026-10-19-dedup`). The server DB was never affected.
+
+### 10.3 S9 — Edwin's click-through
+
+◐ **2026-10-19, partly done:** offline login as `masterUserDynarex` ✓, the page offline shows plug + serial ✓ (after the
+fix in §10.2), tooltips and the Spectrometer/Style lists ✓ — Edwin: *"works so far"*. Open: 2 (sync console line),
+3 [Verify] online, 4 Publishing disabled offline, 5 Harden.
+
+```
+ 1  restart the server (runServer.sh)
+ 2  app: login masterUserDynarex / masterUserDynarex          → online; console: "PlugInstrumentSync: unchanged"
+ 3  Settings → Administration → Instrument plug               → plug found, serial = shellyplusplugs-e86beae3cb60
+    [Verify]                                                  → "valid · Dynarex · 3 users"
+ 4  logout, STOP the server, login masterUserDynarex          → header OFFLINE, camera found, bench opens
+    bench → Publishing tab                                    → "needs the server", button disabled
+ 5  (optional) create ../spectracs-keys/plugStandardPassword.txt → [Harden plug] → Settings → Lamp still switches
+```

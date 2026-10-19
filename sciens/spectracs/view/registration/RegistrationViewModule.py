@@ -51,6 +51,16 @@ class RegistrationViewModule(PageWidget):
         result['error'] = self.errorLabel
         return result
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        # SPEC_shelly_instrument_memory.md §4.4 step 4: the serial IS the plug's device id ⇒ pre-fill it from the
+        # plug this PC knows (no network on show; empty if this PC never found a plug).
+        if self.serial is not None and not self.serial.text():
+            from sciens.spectracs.logic.instrumentMemory.PlugInstrumentMemory import PlugLocator
+            serial = PlugLocator.storedSerial()
+            if serial:
+                self.serial.setText(serial)
+
     def createNavigationGroupBox(self):
         result = QGroupBox("")
         result.setProperty("plain", True)

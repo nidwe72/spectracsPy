@@ -177,8 +177,8 @@ and it protects the ELP from the same mistake.
  ├─────┼──────────────────────────────────────┼──────────────┼──────────────────────────┼──────────────────────────┤
  │ P0  │ does the camera deliver images?      │ none         │ the camera               │ ✅ 2026-10-19 (§1.1)     │
  ├─────┼──────────────────────────────────────┼──────────────┼──────────────────────────┼──────────────────────────┤
- │ P1  │ ★ the Shelly as the instrument's     │ own spec     │ the plug                 │ designed, S0 run 10-19   │
- │     │ memory: SPEC_shelly_instrument_mem.  │              │                          │                          │
+ │ P1  │ ★ the Shelly as the instrument's     │ own spec     │ the plug                 │ ✅ S0–S8 built 10-19,    │
+ │     │ memory: SPEC_shelly_instrument_mem.  │              │                          │ S9 click-through partly  │
  │     │ a factory tool writes setup, user    │              │                          │                          │
  │     │ and plugin onto the plug (KVS +      │              │                          │                          │
  │     │ script slots)                        │              │                          │                          │

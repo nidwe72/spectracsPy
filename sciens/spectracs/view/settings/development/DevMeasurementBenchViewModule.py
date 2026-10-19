@@ -277,6 +277,10 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
                 tab = _PublishTab(view, badgeItems)
                 tab.publishButton.clicked.connect(
                     lambda checked=False, t=tab, v=view: self.__onPublish(t, v))
+                if CurrentUserSession().isOffline():
+                    # SPEC_shelly_instrument_memory.md §9.6: no delayed publishing offline (not for now).
+                    tab.setResult(False, self.OFFLINE_PUBLISH_MESSAGE)
+                    tab.publishButton.setEnabled(False)
                 container.addTab(tab, step.getLabel())
 
     # --- calibration / camera ---
@@ -438,7 +442,13 @@ class DevMeasurementBenchViewModule(AbstractPluginExecutionView):
 
     # --- publishing action (LIMS) ---
 
+    OFFLINE_PUBLISH_MESSAGE = "Publishing to the lab needs the server — not available offline. Save the PDF instead."
+
     def __onPublish(self, tab, view):
+        if CurrentUserSession().isOffline():
+            tab.setResult(False, self.OFFLINE_PUBLISH_MESSAGE)
+            tab.publishButton.setEnabled(False)
+            return
         tab.setBusy("Publishing to LIMS…")
         pdfBytes = self.__buildReportPdfBytes()
         if pdfBytes is None:

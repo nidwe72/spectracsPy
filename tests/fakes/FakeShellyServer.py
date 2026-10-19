@@ -1,7 +1,8 @@
 """A Shelly Gen2 plug on localhost for the lamp tests (SPEC_lamp_switch.md §11, D13) — no hardware in the suite.
 
 Speaks the subset the app uses: GET /shelly (never authenticated), /rpc/Shelly.GetDeviceInfo,
-/rpc/Switch.Set (on, toggle_after), /rpc/Switch.GetStatus. With a password it challenges exactly like the real
+/rpc/Switch.Set (on, toggle_after), /rpc/Switch.GetStatus; and over POST /rpc the plug memory (KVS.*, Script.*,
+Sys.GetStatus) plus the factory-tool calls (Switch.SetConfig/GetConfig, Shelly.SetAuth). With a password it challenges exactly like the real
 plug — Digest with `algorithm=SHA-256` (§14 R1) — so a client that only speaks MD5 fails here too.
 The timer semantics are the ones measured on the real plug (§15.3): an on WITH toggle_after (re)starts the
 timer, an on WITHOUT it cancels it, off clears it. Time is an injectable clock so tests never sleep for a cap.
@@ -33,6 +34,13 @@ class FakeShellyServer:
         self.uiConfig = None                    # the last PLUGS_UI.SetConfig config (LED ring)
         self.silent = False                     # True: accept, never answer (plug gone: the client times out)
         self.calls = []                         # [(method, params)] of every authenticated /rpc call
+        # Plug memory (SPEC_shelly_instrument_memory.md §4.7), with the limits measured on the real plug (§7.2/§7.3).
+        self.kvs = {}
+        self.scripts = {}                       # id -> {"name", "code"}
+        self.nextScriptId = 1
+        self.fsFree = 126976
+        self.switchConfig = {"initial_state": "on", "auto_off": False, "auto_off_delay": 60.0}
+        self.authHa1 = None                     # set by Shelly.SetAuth
         self.lock = threading.Lock()
         self.__nonce = "%x" % int(time.time())
         server = self
@@ -84,6 +92,9 @@ class FakeShellyServer:
             if method == "PLUGS_UI.SetConfig":
                 self.uiConfig = json.loads(params["config"])
                 return 200, {"restart_required": False}
+            memory = self.__memoryRpc(method, params)
+            if memory is not None:
+                return memory
             if method == "Switch.GetStatus":
                 status = {"id": 0, "source": "http", "output": self.output,
                           "apower": self.lampWatts if self.output else 0.0}
@@ -93,13 +104,74 @@ class FakeShellyServer:
                 return 200, status
         return 404, {"code": 404, "message": "No handler for %s" % method}
 
+    def __memoryRpc(self, method, params):
+        # The plug-memory calls: (status, body) or None when `method` is none of them. POST params arrive as JSON
+        # values; GET params as strings.
+        if method == "KVS.Set":
+            value = params["value"]
+            if len(json.dumps(value)) - 2 > 253:
+                return 200, {"error": {"code": -103, "message": "Invalid argument 'value': length should be less than 255!"}}
+            self.kvs[params["key"]] = value
+            return 200, {"etag": "x", "rev": len(self.kvs)}
+        if method == "KVS.Get":
+            if params["key"] not in self.kvs:
+                return 200, {"error": {"code": -105, "message": "Argument 'key', value '%s' not found!" % params["key"]}}
+            return 200, {"etag": "x", "value": self.kvs[params["key"]]}
+        if method == "KVS.Delete":
+            if self.kvs.pop(params["key"], None) is None:
+                return 200, {"error": {"code": -105, "message": "not found"}}
+            return 200, {"rev": len(self.kvs)}
+        if method == "KVS.List":
+            prefix = (params.get("match") or "*").rstrip("*")
+            return 200, {"keys": {k: {"etag": "x"} for k in self.kvs if k.startswith(prefix)}, "rev": len(self.kvs)}
+        if method == "Script.List":
+            return 200, {"scripts": [{"id": sid, "name": e["name"], "enable": False, "running": False}
+                                     for sid, e in sorted(self.scripts.items())]}
+        if method == "Script.Create":
+            sid = self.nextScriptId
+            self.nextScriptId += 1
+            self.scripts[sid] = {"name": params.get("name"), "code": ""}
+            return 200, {"id": sid}
+        if method == "Script.PutCode":
+            entry = self.scripts[int(params["id"])]
+            code = (entry["code"] if params.get("append") else "") + params["code"]
+            if len(code.encode()) > 65535:
+                return 200, {"error": {"code": -103, "message": "Invalid argument 'code': Script length exceeded 65535 bytes limit!"}}
+            self.fsFree -= len(code.encode()) - len(entry["code"].encode())
+            entry["code"] = code
+            return 200, {"len": len(code.encode())}
+        if method == "Script.GetCode":
+            data = self.scripts[int(params["id"])]["code"].encode()
+            offset = int(params.get("offset", 0))
+            if "len" not in params:
+                return 200, {"error": {"code": -1, "message": "the fake refuses a whole-slot read (the real plug reboots)"}}
+            piece = data[offset:offset + int(params["len"])]
+            return 200, {"data": piece.decode(), "left": max(0, len(data) - offset - len(piece))}
+        if method == "Script.Delete":
+            entry = self.scripts.pop(int(params["id"]), None)
+            if entry is not None:
+                self.fsFree += len(entry["code"].encode())
+            return 200, None
+        if method == "Sys.GetStatus":
+            return 200, {"fs_size": 458752, "fs_free": self.fsFree, "kvs_rev": len(self.kvs)}
+        if method == "Switch.SetConfig":
+            config = params["config"] if isinstance(params["config"], dict) else json.loads(params["config"])
+            self.switchConfig.update(config)
+            return 200, {"restart_required": False}
+        if method == "Switch.GetConfig":
+            return 200, dict(self.switchConfig, id=0)
+        if method == "Shelly.SetAuth":
+            self.authHa1 = params.get("ha1")
+            return 200, None
+        return None
+
     def __deviceInfo(self):
         return {"name": None, "id": self.REALM, "mac": self.mac, "model": "SNPL-00112EU", "gen": self.gen,
                 "ver": "1.3.3", "app": "PlusPlugS", "auth_en": self.password is not None,
                 "auth_domain": self.REALM if self.password else None}
 
     # --- auth --------------------------------------------------------------------------------------------
-    def __authorized(self, header, path):
+    def __authorized(self, header, path, method="GET"):
         if self.password is None:
             return True
         if not header.startswith("Digest "):
@@ -109,7 +181,7 @@ class FakeShellyServer:
             return False
         sha = lambda text: hashlib.sha256(text.encode()).hexdigest()
         ha1 = sha("admin:%s:%s" % (self.REALM, self.password))
-        ha2 = sha("GET:%s" % fields.get("uri", ""))
+        ha2 = sha("%s:%s" % (method, fields.get("uri", "")))
         expected = sha("%s:%s:%s:%s:%s:%s" % (ha1, fields.get("nonce"), fields.get("nc"), fields.get("cnonce"),
                                              fields.get("qop"), ha2))
         return fields.get("uri") == path and fields.get("response") == expected
@@ -140,6 +212,27 @@ class FakeShellyServer:
                 params = dict(urllib.parse.parse_qsl(url.query))
                 status, body = server._FakeShellyServer__rpc(url.path[len("/rpc/"):], params)
                 self.__send(status, body)
+
+            def do_POST(self):
+                # JSON-RPC over POST /rpc (the plug store's transport). Body {"id", "method", "params"}; the answer
+                # is the JSON-RPC envelope {"id", "src", "result"} or {..., "error"} — always HTTP 200, like the plug.
+                if server.dark:
+                    self.close_connection = True
+                    self.connection.close()
+                    return
+                length = int(self.headers.get("Content-Length") or 0)
+                request = json.loads(self.rfile.read(length) or b"{}")
+                if self.path != "/rpc":
+                    return self.__send(404, {"code": 404})
+                if not server._FakeShellyServer__authorized(self.headers.get("Authorization", ""), self.path, "POST"):
+                    return self.__send(401, {"code": 401}, {"WWW-Authenticate": server._FakeShellyServer__challenge()})
+                status, body = server._FakeShellyServer__rpc(request.get("method"), request.get("params") or {})
+                if status != 200:
+                    return self.__send(200, {"id": request.get("id"), "src": server.REALM,
+                                             "error": {"code": status, "message": body.get("message")}})
+                if isinstance(body, dict) and "error" in body:
+                    return self.__send(200, {"id": request.get("id"), "src": server.REALM, "error": body["error"]})
+                self.__send(200, {"id": request.get("id"), "src": server.REALM, "result": body})
 
             def __send(self, status, body, headers=None):
                 payload = json.dumps(body).encode()

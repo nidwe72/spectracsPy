@@ -133,6 +133,13 @@ class SettingsViewModule(QWidget):
         layout.addWidget(openPluginsButton, 0, 2, 1, 1)
         openPluginsButton.clicked.connect(self.onClickedPluginsButton)
 
+        # The factory tool: the instrument's data on its Shelly plug (SPEC_shelly_instrument_memory.md §5).
+        openInstrumentPlugButton = QPushButton()
+        openInstrumentPlugButton.setText("Instrument plug")
+        openInstrumentPlugButton.setObjectName("SettingsViewModule.instrumentPlugButton")
+        layout.addWidget(openInstrumentPlugButton, 1, 0, 1, 1)
+        openInstrumentPlugButton.clicked.connect(lambda: self.__navigateTo("InstrumentPlugViewModule"))
+
         return result
 
     def createDevelopmentGroupBox(self):

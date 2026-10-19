@@ -72,6 +72,9 @@ class NavigationHandlerLogicModule(Singleton):
         elif target=="LampSettingsViewModule":
             self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Lamp plug")
             self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
+        elif target=="InstrumentPlugViewModule":
+            self.mainContainerViewModule.setWindowTitle("Spectracs > Settings > Administration > Instrument plug")
+            self.mainContainerViewModule.mainViewModule.setCurrentIndex(self.__getWidgetIndex(navigationSignal))
 
         self.setPreviousNavigationSignal(navigationSignal)
 
@@ -119,6 +122,8 @@ class NavigationHandlerLogicModule(Singleton):
             result = 18
         elif target=="LampSettingsViewModule":
             result = 19
+        elif target=="InstrumentPlugViewModule":
+            result = 20
 
 
         return result
