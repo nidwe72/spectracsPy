@@ -1,6 +1,6 @@
 # SPEC — The Shelly as the instrument's memory (factory provisioning)
 
-**Status:** ✅ **S0–S8 IMPLEMENTED + PUSHED 2026-10-19** (§10 as built, 775 tests green; app, -model, -server, -core).
+**Status:** ✅ **rev 10 L1–L6 IMPLEMENTED 2026-10-20** (§11.15) + firmware update (§11.16); L7 click-through part 1 ✅ A+B (§11.17), C–E open. ✅ **S0–S8 IMPLEMENTED + PUSHED 2026-10-19** (§10 as built, 775 tests green; app, -model, -server, -core).
 ◐ **S9 partly clicked through by Edwin** (offline login, the page offline, the Spectrometer/Style lists: "works so
 far"); the rest of §10.3 continues with the story. The box's copy is on the real plug.
 **Comes from:** `SPEC_ammo_box_camera.md` phase P1 (H3/H4 in `spectracs-hardware/ammoBox-spec.md`). Edwin
@@ -8,6 +8,8 @@ decided on 2026-10-19 that this gets its own spec, not a section in `SPEC_lamp_s
 **Builds on:** `SPEC_lamp_switch.md` (driver, discovery, `lamp_plug` row, password D9),
 `SPEC_connection_and_calibration_ux.md` (serial → `SpectrometerProfile` → `SpectrometerSetup`, server-authoritative;
 the resolve call `InstrumentLogicModule.resolveBundle`) and `SPEC_plugin_distribution.md` (Ed25519 signing, §4.3).
+
+**rev 10 (Edwin, 2026-10-20):** one setup editor, registered-only switching, `LightSourceController` on the profile, BLE onboarding, default plug password = MAC, Prepare for shipping, workflows F1–F6 / C1–C8 — DESIGN, §11 (phases §11.13).
 
 **Revisions.** rev 1: identity only on the plug. rev 2 (Edwin): the whole setup as an offline copy, serial =
 plug id, standard password. **rev 3 (Edwin):** the calibration spectrum is not needed ⇒ the copy is ~1 KB ⇒
@@ -698,6 +700,9 @@ reads `CurrentUserSession` keeps working unchanged.
   enabled master users go onto all plugs** (a few rows, ~100 bytes each compressed). A master *may* carry a
   serial (`masterUserExakta` → `ELP-0001`, checked in the seed), but is not limited to that box.
   Offline they get the same measuring functions as online; administration still needs the server (§9.6).
+- ⛔ **Q11 WITHDRAWN 2026-10-20 (Edwin, Q17 / R40):** only users **registered for this spectrometer**
+  (`registeredSerial` = the plug id) go on the plug, **whatever their role**. A master not registered for a
+  box logs in online there. On the box: only `masterUserDynarex`.
 
 ### 9.4 Who signs the copy — the server (correction to §4.3)
 
@@ -872,3 +877,501 @@ fix in §10.2), tooltips and the Spectrometer/Style lists ✓ — Edwin: *"works
     bench → Publishing tab                                    → "needs the server", button disabled
  5  (optional) create ../spectracs-keys/plugStandardPassword.txt → [Harden plug] → Settings → Lamp still switches
 ```
+
+---
+
+## 11 — Rev 10: one setup editor, registered-only switching, lamp switch as a concept — DESIGN (Edwin, 2026-10-20)
+
+**Why.** The Instrument plug page (S5/S8) and the Spectrometer setup page both create the same
+`SpectrometerProfile` + `SpectrometerSetup` rows. Only the plug page picks the spectrometer as **model / camera /
+style** (the server creates the triple if new), and only the setup page can calibrate. And with several Shellys in
+one room, `LampDiscovery.discover()` falls back to `found[0]` ⇒ a fresh PC can switch **someone else's plug**.
+
+### 11.1 Decisions (Edwin, 2026-10-20)
+
+| # | Decision |
+|---|---|
+| E1 | **Serial = plug device id stays** (N6). The firmware builds it as `<app id lowercase>-<mac lowercase>` (`PlusPlugS` + `E86BEAE3CB60` ⇒ `shellyplusplugs-e86beae3cb60`). Model in the name, swap ⇒ new serial (Move), one instrument per room: all accepted. A future Pi design supplies its id by other means. |
+| E2 | The serial lives only on **`SpectrometerProfile.serial`** (one setup → one profile → one spectrometer). Fix the stale "XXXX-XXXX" comment on `AppUser.registeredSerial`. |
+| E3 | **The Spectrometer setup page is the only editor** of an instrument: three combos **model / camera / style** replace the one combined-key combo; **serial from the plug** (read-only once found, typed in if no plug); **camera preselected** from the connected USB camera. |
+| E4 | **The Instrument plug page keeps only plug actions:** Find, Harden, Write, Verify, Move (+ Add new plug, §11.5). The four combos and *Create on server* go away; it shows the setup the found plug belongs to and offers "open its setup". **Separate page** (a). |
+| E5 | **Save on the setup page also writes the copy to the plug** — only if it changed (§9.5); Save then asks for the password as Write does today (b). |
+| E6 | **Only a registered plug is ever switched.** Registered = it carries a copy with a **valid server signature** whose serial **equals this plug's own id**. Checked once at discovery / login, remembered by MAC. Never a fallback to the first plug found. |
+| E7 | **Lamp switch is its own concept**, the Shelly is one kind; **instrument memory** is a separate, optional capability (a Pi box would keep the copy on its own disk). |
+| E8 | **`LightSourceController`** on **`SpectrometerProfile`** (hardware truth, beside the serial) — not on `Spectrometer`, because the same `InLight` may get a different switch later. |
+| E9 | **Bluetooth stays ON** after Harden: the end user must move the plug from the factory WLAN to the room WLAN, and their PC may have no Bluetooth or not be Linux ⇒ the phone (Shelly app) or our Linux flow must still reach it. |
+| E10 | **"Add new plug" over Bluetooth, Linux only:** joins the WLAN and **nothing else** — no Harden, no Write. |
+| E11 | **Default plug API password = the plug's MAC** (`E86BEAE3CB60`); the user is **reminded to change it** until they do. Replaces the standard password (`plugStandardPassword.txt` / `SPECTRACS_PLUG_STANDARD_PASSWORD` go away). |
+| E12 | **AP (WPA) password = the API password** — MAC by default, follows a change. |
+| E13 | **The WLAN password is never stored by Spectracs.** The plug's firmware keeps it (`sta.pass`, write-only over RPC). |
+| E14 | **"Prepare for shipping"** clears the factory WLAN from the plug before it leaves the house (F5) **and sets the API + AP password back to the MAC** (Edwin, 2026-10-20), so the sheet in the box is always right. |
+| E15 | The AP password = MAC goes on a **sheet in the box or a label on the plug** (C1 b). |
+| E16 | **Only users registered for this spectrometer are on its plug** (`registeredSerial` = plug id), any role. Q11 ("all enabled masters on all plugs") withdrawn (Q17 / R40). |
+
+### 11.2 Domain model
+
+```
+SpectrometerSetup ──▶ SpectrometerProfile ──▶ Spectrometer ──▶ SpectrometerSensor ──▶ SpectrometerSensorChip
+      │                 serial (= switch id)    modelName         ├─▶ SpectrometerStyle
+      └──▶ DbPlugin     calibration             …                 └─▶ SpectrometerVendor
+                        lightSourceController ──▶ LightSourceController   NEW, seeded master data
+                                                    type: NONE | SHELLY_GEN2   (enum, extensible)
+```
+
+- Seeded like `SpectrometerStyle`; later it may carry the warm-up (20 s) and the cap (`SPEC_lamp_switch.md`).
+- `NONE` ⇒ manual lamp, no instrument memory, serial typed in. `SHELLY_GEN2` ⇒ `LampDriver` `shelly-gen2` + the
+  plug memory of §4.7.
+- Alembic migration on the server tree; existing profiles: the box ⇒ `SHELLY_GEN2`, the rest ⇒ `NONE`
+  (InVision ⇒ `SHELLY_GEN2` once it has its plug). The copy (§3.3) carries the new column automatically.
+
+### 11.3 Discovery: all plugs, each labelled
+
+`LampDiscovery` returns **every** plug; the app labels each one:
+
+```
+ ● ours        signed copy valid, serial = own id     "shellyplusplugs-e86b… · InLight-Dynarex-GreenGold"
+ ◐ known       no valid copy, but the server knows the id as a profile serial      (online only)
+ ○ not ours    neither                                 never switched, listed last
+```
+
+- **Lamp:** after login the **active instrument's serial** names the plug; only that plug, and only if ●.
+  Not found / not ● ⇒ manual mode as today.
+- **Offline login:** only ● plugs count (already so in §9.2).
+- **Setup page / plug page:** one ● or one fresh plug ⇒ preselected; several ⇒ a list (id, MAC, IP, label);
+  **[Identify]** blinks the LED ring of the selected plug.
+- The factory page may **write to** a ○ plug; its lamp is never switched until **Write** made it ●.
+
+### 11.4 Harden: access point
+
+Today Harden sets `initial_state off` + the password. The plug's AP stays **on and open** next to the WLAN
+(`WiFi.GetConfig` 2026-10-20: `ap.enable true, is_open true`; `BLE enable true, rpc true`; `auth_en false`).
+With the password set, every RPC needs it (HTTP for sure, ⇒ over the AP too; **over Bluetooth to be checked in
+the spike**, §11.6).
+
+**✅ Q12 = B (Edwin, 2026-10-20).** The AP is the one route to a WLAN change that needs neither Bluetooth nor an app — any phone or
+laptop browser on `192.168.33.1`. Options: (A) AP **off** (`WiFi.SetConfig ap.enable false`) — smallest
+surface, WLAN change only via Bluetooth or a factory reset; (B) AP **on with a WPA password**
+(`ap.is_open false`, `ap.pass` = the standard plug password) — every device can still re-point the plug;
+(C) leave it open. ⇒ **B**: Harden sets `ap.is_open false` + `ap.pass` = the API password (MAC by default,
+E12).
+
+### 11.5 Add new plug (Linux, Bluetooth)
+
+```
+ 1  [Add new plug…]           BLE scan (bleak/BlueZ) for "Shelly*" names not seen on the LAN
+ 2  pick one                  its LED blinks (Identify) so the right box is clear
+ 3  WLAN                      SSID prefilled from the PC's current connection (nmcli), password typed
+ 4  WiFi.SetConfig over BLE   Gen2 RPC over the BLE GATT service, same calls as HTTP
+ 5  wait for it on the LAN    mDNS → "on the LAN at 192.168.1.x" — STOP. Nothing else is written.
+```
+
+New dependency `bleak` (Linux only; the button is hidden elsewhere).
+
+### 11.6 Spike before design is final (needs Edwin's go, the new plug `E465B8B6B4F8`)
+
+1. BLE scan finds it; `Shelly.GetDeviceInfo` over BLE.
+2. `WiFi.SetConfig` over BLE ⇒ it joins `Sciens2G6971` (Edwin types the WLAN password at run time).
+3. Set a test password, then: does an RPC **over BLE without the password** fail? (decides E9's safety)
+4. AP with WPA password (Q12 option B) — set, join from the workstation, web UI asks for the password.
+5. Factory reset ⇒ AP open again, BLE on, KVS gone, id unchanged.
+6. Identify: a short LED blink (R24) — is there an RPC lighter than `PLUGS_UI.SetConfig`?
+7. Prepare for shipping (R41): clear `sta` + `sta1` — is `pass` really gone (re-enable without a password ⇒ no join)?
+
+#### 11.6.1 ✅ L0 DONE — RESULTS (run 2026-10-20 on the new plug `E465B8B6B4F8`, fw **0.13.0**; Linux, BlueZ, `bleak`)
+
+| # | Result |
+|---|---|
+| 1 | ✅ BLE RPC works from Linux, **no pairing**: GATT service `5f6d4f53-5f52-5043-5f53-56435f49445f` (`_mOS_RPC_SVC_ID_`), chars `…5f64-6174615f5f5f` (data), `…5f74-785f63746c5f` (tx_ctl), `…5f72-785f63746c5f` (rx_ctl); frame = 4-byte BE length → tx_ctl, JSON → data; rx_ctl → length, read data. ⚠ **BlueZ here only connects while a scan is running** (connect after the scan ⇒ "device not found") ⇒ `BleRpc` connects inside the scanner context. Also on the old plug (fw 1.3.3). |
+| 2 | ✅ `WiFi.SetConfig {sta: ssid, pass, enable}` over BLE ⇒ `got ip` 192.168.1.121 after ~20 s, visible via mDNS. Nothing else written. |
+| 3 | ✅ **A set password protects BLE exactly like HTTP.** After `Shelly.SetAuth` (password = MAC): without auth over BLE ⇒ 401 for `Switch.GetStatus`, `WiFi.GetConfig`, `KVS.List`, `WiFi.SetConfig`; only `Shelly.GetDeviceInfo` stays open. With digest auth (SHA-256, same as HTTP) over BLE ⇒ OK. ⇒ E9 (BLE stays on) is safe once hardened; **C6 works over BLE on a hardened plug**. |
+| 4 | ✅ `WiFi.SetConfig {ap: {is_open: false, pass: <MAC>}}` ⇒ SSID becomes WPA2 (seen after ~20 s in the scan). Join without password fails; with the MAC succeeds; `192.168.33.1/shelly` answers, `/rpc/WiFi.GetConfig` over the AP ⇒ 401 (plug password still needed). ⚠ `curl --digest` POST of this call returned "Invalid request" — sent over BLE/JSON frame it worked; the app's `ShellyHttp` is the reference path. |
+| 5 | ✅ Factory reset by Edwin ⇒ AP open again, BLE + BLE RPC on, `auth_en false`, `sta`/`sta1` empty, KVS empty (`rev 0`), LEDs default, **id unchanged** `shellyplusplugs-e465b8b6b4f8`. Re-onboarded over BLE without a password (C7 → C1 c) ⇒ `got ip` again. (KVS erasure only weakly shown: nothing had been written to this plug's KVS.) |
+| 6 | ◐ No identify RPC (73 methods; only `PLUGS_UI.Get/SetConfig`). 3 × blue/dark = 6 `PLUGS_UI.SetConfig` writes, 6.1 s, original LED config restored **identical**. Edwin: *"yes, I think it has blinked"* ⇒ usable, but short; L4 may make it longer/brighter. |
+| 7 | ✅ `WiFi.SetConfig {sta: {ssid: null, pass: null, enable: false}, sta1: {…same}}` (over BLE, authenticated) ⇒ plug off the LAN, both slots `ssid null, is_open true`. Trap test: re-enable `sta` with the SSID and **no** pass ⇒ firmware refuses *"Pass field required!"* ⇒ no password left in the slot (flash-level erasure not observable over RPC). |
+
+Plug left **after the reset, on the WLAN** (192.168.1.121), **no password, AP open**, LEDs default — ready for
+Edwin's manual Move of `ELP-0001`. WLAN password file deleted. ⚠ It runs **fw 0.13.0** (the box plug 1.3.3): results above hold for 0.13.0; L6
+should be re-checked on the current firmware, and a firmware update is a factory step to decide (not done).
+
+### 11.7 Factory reset ⇒ automatic repair (Q13 ✅ automatic, Edwin 2026-10-20)
+
+A reset erases password, copy and plugin; the id (= serial) stays. At the next **online** login on that box the
+app sees *the plug's id is the active instrument's serial, but there is no valid copy* ⇒ it repairs the plug by
+itself: **Write** (the copy + plugin, with the login credentials it already holds) and **Harden** with the
+default password (the MAC, E11) — on **any** PC, master or end user, since the default needs no secret. One
+status line says so ("plug was reset — restored; change its default password"). ~~R21~~ / ~~R36~~ void.
+
+### 11.8 Rubber duck (rev 10, checked against the code 2026-10-20)
+
+**Design**
+
+- **R15 — Edwin's own ELP rig loses its lamp.** The server holds three profiles: `TEST-0001` (Phantom),
+  `ELP-0001` (InVision), `shellyplusplugs-e86beae3cb60` (InLight). Under E6 only the box's plug is switchable,
+  and only for the box's serial. `ELP-0001` is not a plug id ⇒ the two-cylinder rig never switches a lamp.
+  ⇒ **The new plug `E465B8B6B4F8` becomes the ELP rig's plug:** Edwin onboards it and **moves** (by hand, Q15) `ELP-0001` →
+  `shellyplusplugs-e465b8b6b4f8` and Write. That is also exactly Edwin's two-plug test (Foo = box,
+  Bar = ELP rig). `TEST-0001` keeps `NONE`.
+- **R16 — "Active instrument" must be defined** before the lamp can follow it. Today `LampService` does not ask:
+  it takes the stored or first plug. Rule: **active serial = the logged-in user's `registeredSerial`**; a master
+  without one (e.g. `masterUserExakta` on the dev bench) ⇒ the serial of the profile the bench/setup page has
+  loaded; none ⇒ no lamp. ⚠ This is a behaviour change on the dev bench, on purpose.
+- **R17 — `NONE` skips discovery entirely.** Today every login runs mDNS + a /24 scan. With the profile's
+  `LightSourceController = NONE` (Phantom, a manual rig) there is nothing to find ⇒ no scan, no "no plug" noise.
+- **R18 — The registered check reads only index + sig + copy, never the plugin.** The copy check already
+  enforces "serial = this plug's id" (`InstrumentCopyReader.read(entry, device.deviceId, …)`); the plugin read
+  (~4 s) is left out of discovery. Result cached by MAC for the session.
+- **R19 — A hardened plug whose password this PC does not know** cannot be read ⇒ it is labelled ○, never ●.
+  On the active serial that is a distinct case ("plug found but locked — enter its password in Settings →
+  Lamp"), not "no plug".
+- **R20 — The AP password follows the plug password.** Settings → Lamp can change the plug password
+  (`Shelly.SetAuth`); it must set `ap.pass` in the same step, else the AP keeps the old one. WPA needs **≥ 8
+  characters** ⇒ the password field enforces it.
+- ~~**R21**~~ *(void with E11: the default password is the MAC, any PC can harden)* — **Auto-repair needs the standard password, which only a master's PC has**
+  (`SPECTRACS_PLUG_PASSWORD[_FILE]`, never in the repo, R3). An end user at the customer can still get the
+  **copy** rewritten (Write needs only their own login), but not the **password**. ⇒ End user: Write only, the
+  plug stays without a password, and the status line says "plug was reset — a master should harden it".
+  Proposal; Edwin to confirm.
+- **R22 — Auto-repair must not fire on a stranger's plug.** It only acts on the plug whose id **equals the
+  active serial** and that the server confirms as that profile. A random ○ plug is never written.
+- **R23 — WLAN password over Bluetooth.** Shelly's BLE RPC is very likely not encrypted at the link layer ⇒ the
+  WLAN password is sniffable within range during onboarding. The Shelly app does the same. Accepted; it is never
+  stored by the app.
+- **R24 — Identify must not wear the flash or switch the relay.** Blinking by `PLUGS_UI.SetConfig` writes the
+  config to flash each time; switching the relay would break E6 on a ○ plug. ⇒ A **short** blink (≤ 6
+  colour writes), then restore the stored colour. The spike checks there is no lighter RPC.
+- **R25 — Discovery now always scans** (no early return when the stored plug answers is fine, but the list
+  for the picker needs all plugs). ⇒ Two calls: `findActive(serial)` (fast path: stored host + MAC, as today)
+  for the lamp; `discoverAll()` (mDNS, then /24) only for the setup and plug pages.
+
+**Implementation**
+
+- **R26 — The setup page's Save drops model and style today.** It calls
+  `saveSpectrometerProfile(serial, deviceCodeName, calibration)`; the server already takes
+  `modelName, styleId` (the factory path passes them). ⇒ L3 only passes them; no server change for the triple.
+- **R27 — The combined combo goes, but the device-info block stays.** It shows the `Spectrometer` row; after
+  the change it shows the row the three combos resolve to, or "new — created on Save".
+- **R28 — The copy carries the new table.** `LightSourceController` + the profile FK are server rows ⇒ the
+  SQLite copy (§3.3) must include them, and its Alembic revision rises ⇒ R12: an app older than the server
+  refuses the new copy offline ("update the app"). Ship app + server together.
+- **R29 — Save writing the plug (E5) must not block Save.** Rows are saved first; the plug write runs on the
+  worker thread; plug unreachable ⇒ Save still succeeds, status line "saved — plug not written".
+- **R30 — `bleak` is cross-platform** (BlueZ / WinRT / CoreBluetooth). Linux only for now (E10), but the
+  BLE code goes behind a small `BleRpc` seam so Windows later is a packaging question, not a rewrite. It must
+  survive the AppImage build (pure-Python `dbus-fast`).
+- **R31 — Tests:** discovery labelling and registered-only switching against `FakeShellyServer` with **two**
+  fakes (one ●, one ○) — the case that today silently picks `found[0]`.
+
+### 11.9 Rubber duck, pass 2 (after Q14–Q16, checked in the code 2026-10-20)
+
+- **R32 — Auto-repair is half built already.** `PlugInstrumentSync.sync()` runs after every online login,
+  refuses a plug whose id ≠ the user's serial (`device.deviceId != serial` ⇒ "no plug for …"), and
+  `writeCopy` compares the sha256 ⇒ **a reset plug (no index) is rewritten today**. Missing: the plugin bundle,
+  Harden on a master PC, a status line instead of a print, and finding the plug **by serial** instead of the
+  remembered/first plug. ⇒ L5 shrinks to that.
+- **⛔ R33 — The app remembers ONE plug.** `LampPlugDbStore.saveDevice()` **deletes every row** when the MAC
+  differs, password included. With two plugs on one PC (Edwin's: box + ELP rig, one user each), every Find of
+  the other plug wipes the first plug's password. ⇒ **One `lamp_plug` row per MAC** (host, password, last
+  seen); the lamp picks the row whose device id = the active serial. Needed before Edwin's two-plug setup is
+  hardened; harmless today (no password set). ⇒ in L2.
+- **R34 — The migration cannot tell which profiles have a plug.** "box ⇒ SHELLY_GEN2, rest ⇒ NONE" (L1) would
+  set `ELP-0001` to NONE — but after Edwin's manual Move (Q15) its serial is `shellyplusplugs-e465…`.
+  ⇒ One-time **data** rule: a serial that starts with `shelly` ⇒ SHELLY_GEN2, else NONE. This parses the
+  prefix, which R8 forbids for *code*; for a one-off migration of known rows it is acceptable. Afterwards the
+  master sets it on the setup page.
+- **R35 — Form order on the setup page follows the controller.** Light source first: `SHELLY_GEN2` ⇒ the serial
+  comes from the plug picker (read-only); `NONE` ⇒ the serial is typed in. So: Model · Camera · Style ·
+  **Light source** · Serial · Plugin · User.
+- ~~**R36**~~ *(void with E11)* — **Q14 (proposal: a repaired plug at the customer stays without a password.** The
+  copy is signed, so it cannot be falsified; an open plug only risks someone on the customer's WLAN switching
+  the lamp. The standard password is never sent to an end user's PC. The AP is then open again too (§11.4) —
+  the next master visit hardens both.
+- **R37 — "Known" (◐) is one call, not one per plug.** `listProfiles()` already returns every serial ⇒ fetch it
+  once per discovery, label locally. Offline ⇒ no ◐, only ● / ○.
+- **R38 — Edwin's manual Move happens before L2.** Find then stores the new plug and (R33) drops the box's row
+  ⇒ on this PC the lamp follows the ELP plug until Settings → Lamp → "Search again". Known, told to Edwin.
+- **R39 — Lamp settings page.** Settings → Lamp today shows one plug + one password. With R33 it lists the
+  remembered plugs (● marked) and the password belongs to a row. Small, but it is a UI change ⇒ in L4.
+
+### 11.10 Three secrets (Edwin, 2026-10-20)
+
+| secret | protects | default | who knows it | stored by Spectracs? |
+|---|---|---|---|---|
+| **Plug API password** | every RPC to the Shelly (switch, KVS, config) — digest auth, realm = device id | **the MAC** (E11) | anyone who reads the MAC; after a change only the user | a changed one only: local app DB `lamp_plug.password` (per MAC, R33) |
+| **Plug AP password** | joining the plug's own network `ShellyPlusPlugS-…` | = the API password (E12) | as above | — (same value) |
+| **WLAN password** (factory or room WLAN) | the WLAN itself | — | the WLAN owner | **never** (E13): typed during onboarding, kept by the plug's firmware only (`sta.pass`, not readable over RPC; assume readable from the chip with the plug in hand) |
+
+### 11.11 Workflows
+
+**Factory**
+
+```
+ F1  NEW PLUG ARRIVES       plug in → blinks (setup mode, own AP open, no password)
+                            → onboard to the FACTORY WLAN: "Add new plug…" (Linux, BLE),
+                              Shelly app, or browser on 192.168.33.1
+ F2  HARDEN                 plug page [Harden]: API + AP password = MAC, output off after a power cut,
+                            Bluetooth stays on; print the MAC label / sheet (E15)
+ F3  CREATE THE INSTRUMENT  setup page [New]: Model · Camera (preselected) · Style · Light source
+                            SHELLY_GEN2 · Serial = picked plug ([Identify]) · Plugin · (User)
+                            → calibrate → [Save] → server rows + copy written onto the plug
+ F4  CHECK                  plug page [Verify] → "valid · …"; one measurement: the lamp switches (●)
+ F5  SHIP                   plug page [Prepare for shipping]: ① API + AP password back to the MAC
+                            (whatever it was changed to at the factory) ② forget the factory WLAN
+                            (sta + sta1) → the plug drops off the LAN = proof it will start in setup
+                            mode (C1), with the password the sheet names
+ F6  REPLACE A PLUG         new plug: F1 + F2 → [Move instrument here] (old serial → new id) → F4 → F5
+```
+
+**End customer**
+
+```
+ C1  UNPACK + FIRST START   plug in → blinks (no WLAN known) → onboard to the ROOM WLAN:
+                              a) Shelly app on the phone (BLE; asks for the API password = MAC if set)
+                              b) join "ShellyPlusPlugS-<MAC>", AP password = <MAC> (sheet/label),
+                                 browser 192.168.33.1 → Wi-Fi → room WLAN + its password
+                              c) Linux: Spectracs "Add new plug…" (BLE)
+ C2  FIRST LOGIN (online)   plug found by the user's serial, ● → lamp works; copy synced if changed;
+                            reminder "the lamp plug still uses its default password — change it in
+                            Settings → Lamp" while the MAC still works
+ C3  CHANGE THE PASSWORD    Settings → Lamp → new password (≥ 8) → API + AP password on the plug,
+                            stored in the local app DB → reminder gone
+ C4  DAILY WORK             login online or OFFLINE (plug copy) → measure → lamp on in ACQUISITION,
+                            off after; hard cap on the plug itself
+ C5  SECOND PC              default password: works by itself; changed: asked once, stored there
+ C6  NEW ROUTER / WLAN      "lamp plug not found" → re-onboard as C1 b) / a); AP password = the
+                            CURRENT API password; nothing else lost
+ C7  PASSWORD FORGOTTEN     factory reset (10 s, within 60 s of plugging in) → like new: no WLAN, no
+                            password, no copy, id stays → C1 → next ONLINE login: auto-repair (§11.7)
+                            → reminder again. ⚠ offline the box can't measure until then (R2)
+ C8  PLUG BROKEN            a new plug = a new id ⇒ Move (master only) → back to the factory (F6),
+                            or a master does F6 remotely once the new plug is online
+```
+
+### 11.12 Rubber duck, final pass (after E11–E15, checked in the code 2026-10-20)
+
+- **⛔ R40 — With the default password, anyone on the WLAN can read the copy — including bcrypt hashes of
+  every enabled master** (Q11: all masters on all plugs). The MAC is public (`GET /shelly`, SSID, BLE name) ⇒
+  until C3, the plug's KVS is readable by anyone in the room's WLAN, and the hashes can be attacked offline.
+  The signature stops *changes*, not *reading*. ⇒ Proposal: **masters go only onto plugs at the factory**
+  (removed from the copy at F5 / Prepare for shipping), the customer's plug carries only the end user(s) bound
+  to it. A master on site logs in online. Edwin to decide (**Q17**).
+  ✅ **Decided (E16, 2026-10-20):** simpler still — the copy carries **only users registered for this
+  spectrometer**, at the factory too ⇒ Prepare for shipping removes nobody. Code: the user query in
+  `InstrumentCopyLogicModule.__collect` drops `or id in (… MASTER_USER …)`; `buildForUser` keeps allowing a
+  master to *fetch* any copy (factory Write). Residual: the registered user's own hash is readable on the
+  WLAN until C3 — covered by the reminder. Tests to adapt: `test_instrument_copy.py`,
+  `test_offline_instrument_plug.py`; Verify now reports "1 user" on the box.
+- **R41 — "Prepare for shipping" must clear BOTH WLAN slots.** The live plug has the factory WLAN in `sta`
+  **and** a disabled copy in `sta1` (`WiFi.GetConfig` 2026-10-20: `sta1.ssid = Sciens2G6971`). Clearing only
+  `sta` ships the password in `sta1`. Whether setting `ssid: null` also erases `pass` is **not documented ⇒
+  spike item**.
+- **R48 — Prepare for shipping resets the password to the MAC first, the WLAN last** (Edwin, 2026-10-20). If a
+  master changed the password at the factory, the plug would otherwise ship with one the customer does not
+  know ⇒ locked out until a factory reset. Order: ① `WiFi.SetConfig ap.pass = MAC` and `Shelly.SetAuth` (MAC),
+  authenticated with the current password ② the factory PC's `lamp_plug` row for this MAC drops its stored
+  password (the MAC is the default again, R43) ③ clear `sta` + `sta1` (R41), which cuts the line (R42). A
+  failure in ① stops before ③, so the plug never leaves the LAN with an unknown password.
+- **R42 — Prepare for shipping cuts the line it is sent over.** The answer may never arrive ⇒ the page treats
+  "plug gone from the LAN within 15 s" as success, and asks for confirmation first ("the plug will leave this
+  WLAN; you need C1 to get it back").
+- **R43 — Which password to try, in what order.** `lamp_plug.password` (if stored) → the MAC → none. "MAC
+  works" ⇒ the C2 reminder; "none works" ⇒ R19 ("plug locked — enter its password"). The MAC comes from the
+  unauthenticated `GET /shelly`, so it is known before any login.
+- **R44 — Auto-harden is now possible on every PC — so it must stay narrow** (R22): only the plug whose id =
+  the active serial, confirmed by the server, and only when `auth_en` is false. Never a stranger's plug.
+- **R45 — Changing the password is two RPCs** (`Shelly.SetAuth`, then `WiFi.SetConfig ap.pass`). If the second
+  fails, AP and API differ. ⇒ AP first (still authenticated with the old password), then SetAuth, then store;
+  a failure is reported and the stored password stays the one the plug accepts.
+- **R46 — `harden()` and the plug page read `standardPassword()` today** (`InstrumentFactoryLogicModule`
+  lines 30–57, `InstrumentPlugViewModule` 227). Both switch to the MAC; the env/file and its error message go.
+- **R47 — The MAC label (E15) is a factory step, not code.** It belongs in `spectracs-hardware/ammoBox-spec.md`
+  (assembly), noted there when L4 lands.
+
+### 11.13 Phases (final)
+
+```
+ ┌─────┬──────────────────────────────────────────┬────────────────────┬──────────────┬────────────────────────┐
+ │ #   │ What                                     │ Where              │ Needs        │ Done when              │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ —   │ EDWIN, by hand (Q15): onboard E465, Move │ rig                │ today's app  │ ELP-0001 lives on      │
+ │     │ ELP-0001 onto it with today's plug page  │                    │              │ shellyplusplugs-e465…  │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ L0  │ DONE 2026-10-20 (§11.6.1): SPIKE + R41:  │ rig (new plug)     │ Edwin's go,  │ every item answered in │
+ │     │ BLE scan, WLAN join over BLE, BLE RPC    │                    │ WLAN password│ §11.6; sta + sta1      │
+ │     │ without the password, AP-WPA, Identify,  │                    │ typed at run │ cleared without trace  │
+ │     │ clearing sta+sta1 (pass gone?), reset    │                    │              │                        │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ L1  │ LightSourceController (NONE/SHELLY_GEN2) │ -model (+ Alembic  │ —            │ migration on the live  │
+ │     │ + seed + profile FK; data rule R34; in   │ server tree),      │              │ DB: box + ELP ⇒ SHELLY,│
+ │     │ the copy (R28); copy = registered users  │ -server (copy)     │              │ TEST ⇒ NONE; box copy  │
+ │     │ only (E16); AppUser comment (E2)         │                    │              │ = 1 user; tests        │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ L2  │ REGISTERED-ONLY LAMP: discovery lists +  │ -core (discovery), │ L1           │ two fake plugs: only   │
+ │     │ labels ●/◐/○ (R18/R19/R37); findActive(  │ app (LampService,  │              │ the ● one with the     │
+ │     │ serial) vs discoverAll (R25); active     │ LampPlugDbStore)   │              │ active serial switches;│
+ │     │ serial = registeredSerial (R16); NONE ⇒  │                    │              │ two stored plugs keep  │
+ │     │ no scan (R17); one lamp_plug row per MAC │                    │              │ both passwords; MAC    │
+ │     │ (R33); password order stored→MAC (R43)   │                    │              │ default accepted       │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ L3  │ SETUP PAGE: Model·Camera·Style·Light     │ app                │ L2           │ create + edit an       │
+ │     │ source·Serial·Plugin·User (R35); serial  │                    │              │ instrument from this   │
+ │     │ from the plug picker; camera preselected;│                    │              │ page alone; plug       │
+ │     │ Save sends model+style (R26), writes the │                    │              │ written in background  │
+ │     │ copy if changed, never blocking (R29)    │                    │              │                        │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ L4  │ PLUG PAGE + PASSWORDS: combos/Create out │ app                │ L3           │ F1–F6 run from the     │
+ │     │ (E4), "open its setup", picker, Identify │                    │              │ page; reminder shows   │
+ │     │ (R24); Harden = MAC for API + AP (E11/   │                    │              │ until C3; password     │
+ │     │ E12, R46); [Prepare for shipping] (E14,  │                    │              │ change sets API + AP   │
+ │     │ R41/R42/R48: password → MAC, then WLAN   │                    │              │ ships with the MAC     │
+ │     │ cleared); C2 reminder; Settings → Lamp   │                    │              │                        │
+ │     │ lists plugs, change sets AP+API (R45/R39)│                    │              │                        │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ L5  │ AUTO-REPAIR (R32/R44): PlugInstrument-   │ app                │ L2, L4       │ reset plug → online    │
+ │     │ Sync finds by serial, writes copy +      │                    │              │ login on ANY PC → copy │
+ │     │ plugin, hardens with the MAC on any PC,  │                    │              │ + plugin + MAC password│
+ │     │ status line instead of print             │                    │              │ back, lamp switches    │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ L6  │ ADD NEW PLUG over BLE, Linux (§11.5):    │ app (+ bleak,      │ L0           │ a fresh plug joins the │
+ │     │ BleRpc seam (R30), connects DURING the   │ AppImage)          │              │ WLAN from the app;     │
+ │     │ scan (L0 #1); scan → pick → WLAN →       │                    │              │                        │
+ │     │ wait on the LAN; nothing else written    │                    │              │ nothing else written   │
+ ├─────┼──────────────────────────────────────────┼────────────────────┼──────────────┼────────────────────────┤
+ │ L7  │ EDWIN'S CLICK-THROUGH: F1–F6 on the new  │ rig                │ L1–L6        │ each user switches only│
+ │     │ plug, C1–C7 on the box; two plugs, each  │                    │              │ their own lamp; a reset│
+ │     │ user only their lamp; a third Shelly ○   │                    │              │ plug comes back alone  │
+ └─────┴──────────────────────────────────────────┴────────────────────┴──────────────┴────────────────────────┘
+```
+
+Order: Edwin's manual Move and L0 any time. Main line **L1 → L2 → L3 → L4 → L5**; L6 needs only L0.
+**L2 alone fixes the wrong-plug defect and the one-plug memory.** Q17 is decided (E16) and lands in L1 with the
+other copy change.
+
+### 11.14 Questions
+
+- ~~Q12~~ ✅ B — AP stays, WPA-protected (§11.4).
+- ~~Q13~~ ✅ automatic repair (§11.7).
+- ~~**Q14**~~ void with E11 (default = MAC ⇒ any PC re-hardens). Was — R21: at the customer an end user's login rewrites the copy but cannot set the password (no
+  standard password on their PC). OK, or should the server hand the standard password to a bound user's app?
+- **Q15** — R15: ✅ Edwin moves `ELP-0001` onto the new plug **by hand** with today's plug page (Move instrument
+  here, started with `SPECTRACS_LAMP_HOST=<new plug ip>` so Find takes the new plug) — not part of the phases.
+- ~~Q16~~ void: both masters already have a `registeredSerial` (`masterUserExakta` → `ELP-0001`,
+  `masterUserDynarex` → the box) ⇒ R16 shrinks to "active serial = `registeredSerial`, none ⇒ no lamp".
+- ~~**Q17**~~ ✅ E16: only users registered for this spectrometer on the plug, any role; Q11 withdrawn.
+
+### 11.15 ✅ As built — L1–L6 (2026-10-20; L7 = Edwin's click-through, §11.17)
+
+```
+ ┌─────┬──────────────────────────────────────────────────────────────────┬──────────────────────────────────────┐
+ │ #   │ Built                                                            │ Where                                │
+ ├─────┼──────────────────────────────────────────────────────────────────┼──────────────────────────────────────┤
+ │ L1  │ LightSourceController (+ LightSourceControllerType NONE/         │ -model: entity, util, AllEntities,   │
+ │     │ SHELLY_GEN2) + profile FK; migration b7c41e09d2a5 (seeds, rule   │ alembic/server b7c41e09d2a5, seed,   │
+ │     │ R34, tolerant of a create_all table); seed sets it on fresh DBs; │ InstrumentLogicModule, Login, copy,  │
+ │     │ saveProfile(lightSourceControllerType); moveToSerial ⇒ SHELLY;   │ Authoring; -server RPC; app client + │
+ │     │ bundle + login + offline login carry it; copy = registered users │ CurrentUserSession                   │
+ │     │ only (E16) + the controller row; AppUser comment (E2)            │                                      │
+ │ L2  │ LampDiscovery: wantedId, discoverAll(), NO found[0]; PlugRegistry│ -core LampDiscovery(+Result);        │
+ │     │ ●◐🔒○ with passwords stored→MAC (R43), cache MAC+sha (R18);       │ app PlugRegistry, LampAdmission,     │
+ │     │ LampAdmission: only the active serial's ● plug; LampService asks │ LampWorker, LampService,             │
+ │     │ CurrentUserSession (R16), NONE ⇒ NOT_APPLICABLE without a scan   │ LampPlugDbStore/LampPlugStore,       │
+ │     │ (R17); lamp_plug one row per MAC (R33); PlugLocator find/        │ PlugLocator, OfflineLogin            │
+ │     │ registeredPlugs/findBySerial/candidates; offline login tries     │                                      │
+ │     │ every ● plug for the user (two rigs in one room)                 │                                      │
+ │ L3  │ Setup page: Model·Camera·Style·Light source·Serial[Find plug…]·  │ SpectrometerSetupViewModule, List    │
+ │     │ Plugin·User; Shelly ⇒ serial read-only from the picker; camera   │ (buildRows/rowForSerial/openEditor   │
+ │     │ preselected (connected); a plug with a setup opens it; Save sends│ static, rows carry the triple),      │
+ │     │ the triple + type, syncs a new spectrometer into the catalog,    │ InWindowDialog.askPassword/askFields │
+ │     │ then asks the password and writes the plug in the background     │                                      │
+ │ L4  │ Plug page: Search (picker ●◐🔒○), Identify, Add new plug, Harden,│ InstrumentPlugViewModule,            │
+ │     │ Write, Verify, Prepare for shipping, Move, Open its setup;       │ InstrumentFactoryLogicModule,        │
+ │     │ Harden = MAC for API + AP (WPA), off after power cut; change     │ LampSettingsViewModule, LampButton   │
+ │     │ password AP→API→store (R45); Prepare for shipping MAC→store→     │                                      │
+ │     │ sta+sta1 cleared, success = gone from the LAN (R41/R42/R48);     │                                      │
+ │     │ Identify 4 × blue, restored (R24); Settings → Lamp: plugs this PC│                                      │
+ │     │ knows, Change password, refusal reason; header icon "!" + tip    │                                      │
+ │     │ while the default password is in use (C2); standard password +   │                                      │
+ │     │ createOnServer REMOVED (R46/E4)                                  │                                      │
+ │ L5  │ PlugInstrumentSync: by serial (findBySerial), restore = copy +   │ PlugInstrumentMemory, LoginView      │
+ │     │ plugin via factory.write, harden with the MAC on ANY PC when the │ (plugSyncFinished → status line,     │
+ │     │ plug has no password, locked ⇒ left alone; result → status line, │ lamp re-discovered)                  │
+ │     │ the lamp looks again                                             │                                      │
+ │ L6  │ ShellyBleRpc (seam R30: scan, call with digest, joinWlan, connect│ -core ShellyBleRpc; app              │
+ │     │ inside the scan); PlugOnboardingLogicModule (new plugs = BLE ∖   │ PlugOnboardingLogicModule,           │
+ │     │ LAN, SSID from nmcli, MAC tried on 401, wait on LAN 60 s);       │ AddPlugViewModule; requirements      │
+ │     │ AddPlugViewModule in-window flow; bleak==3.0.2 (linux) + spec    │ bleak==3.0.2, spectracsAppImage.spec │
+ │     │ hiddenimports                                                    │ hiddenimports                        │
+ └─────┴──────────────────────────────────────────────────────────────────┴──────────────────────────────────────┘
+```
+
+**Deviations / open points**
+
+- **SPECTRACS_LAMP_HOST is an explicit operator override** (`HostOverrideAdmission`): the plug at that host is
+  admitted without the registered check (still only with a password that opens it). It is the test seam and
+  Edwin's rig override, and the way to use a plug for the manual Move before it is registered.
+- **Auto-repair stores the plugin only on a PC with the master signing key** (as Write always did); on an end
+  user's PC the copy + password come back, the plugin bundle does not (offline login then needs a built-in plugin).
+- **Identify over Bluetooth is not built** — the Add-new-plug picker lists by name (nearest first by RSSI); the
+  LAN Identify works once the plug is on the WLAN.
+- **Not verified on hardware yet:** Harden's `WiFi.SetConfig ap` and `Shelly.SetAuth` via `ShellyHttp.post`
+  (the spike set them over BLE; `curl --digest` POST failed, the JSON-RPC POST of ShellyHttp is the reference
+  path), Prepare for shipping end to end, Add new plug through the app, the AppImage with bleak.
+- **The server seed recreates `ELP-0001`** (empty calibration) at the next server start after Edwin's manual
+  Move — `getOrCreateInstrument` is idempotent on the serial, not on the instrument. Harmless stub; delete it by
+  hand or drop the ELP seed.
+- **Running server:** restart it — its DB (`~/.spectracsPy-server/`) migrates to b7c41e09d2a5 at boot. The
+  app-local catalog `~/.spectracsPy/spectracsPyServer.db` was migrated on 2026-10-20 (backup
+  `.bak-2026-10-20-L1`).
+
+### 11.16 Firmware update on the plug page (Edwin, 2026-10-20) — IMPLEMENTED, run on the new plug
+
+**Why.** L7 B1 failed on the new plug: fw **0.13.0** resets the connection on a `Script.PutCode` body ≥ 3 KiB
+(measured: 2048 OK, 3072 not) — fixed independently (`PlugKeyValueStore.WRITE_PIECE` 8192 → 2048, the fake plug
+enforces the limit), but plugs on old firmware are a moving target ⇒ bring them to one tested version.
+
+**Decided (Edwin): the target is fixed at 1.7.5** (`InstrumentFactoryLogicModule.TARGET_FIRMWARE`) — up to it and
+never beyond; a newer version only after a test run (raise the constant). Read-only check 2026-10-20:
+`Shelly.CheckForUpdate` offers **0.13.0 → 1.3.3** (new plug) and **1.3.3 → 1.7.5** (box) ⇒ updates come in hops.
+
+**As built.** Plug page: row **Firmware** (`/shelly` `ver`, carried on `LampDevice.firmware` from the probe) and
+button **Update firmware** (enabled only below the target; confirm first). `updateFirmware`: per hop
+`Shelly.CheckForUpdate` → stop at/above the target, stop if nothing is offered (no internet?), **refuse an offer
+newer than the target**, else `Shelly.Update {stage: stable}` and wait (≤ 5 min) until `/shelly` reports the offered
+version; ≤ 4 hops; refused while this plug's lamp is on or a capture runs; afterwards a copy on the plug is
+**verified** (settings / KVS / scripts are expected to survive — this checks it). Progress lines on the page.
+Factory step **F1b** (after Add new plug, before Harden). Tests: fake plug with the measured hops.
+
+**Open.** Not yet run on a real plug (Edwin tries it in the app). Untested whether 1.7.5 changes anything we use
+(KVS limits, `PLUGS_UI`, the 3 KiB POST limit, BLE) ⇒ after the first update: Verify, Identify, Lamp → Test.
+
+**Update on the new plug: ✅ run by Edwin from the app, 2026-10-20** — 0.13.0 → 1.3.3 → 1.7.5 in two hops (~1 min
+each), afterwards copy valid (2 users), password = MAC, AP still WPA, WLAN kept.
+**Write piece by firmware (measured on the plug at 1.7.5, test slot deleted):** `Script.PutCode` 7936 B OK, 8192 B
+→ **HTTP 413** (1.3.3 took 8192, 0.13.0 resets at 3072) ⇒ `PlugKeyValueStore.writePieceFor(firmware)`: **4096** from
+1.3.3 on, **2048** below or unknown; `PlugInstrumentMemory.forDevice` passes the probed firmware. Real write at 4096
+on 1.7.5: ✓, 9.9 s — no faster than 6.8 s at 2048 on the then-open plug: with a password every request costs a
+second round trip (digest challenge) ⇒ the piece size is not the bottleneck.
+
+### 11.17 L7 — Edwin's click-through, part 1 (2026-10-20): ✅ A1–A9, ✅ B1–B6
+
+Run on the two real plugs (box `…e86beae3cb60` fw 1.3.3, new `…e465b8b6b4f8` fw 0.13.0 → 1.7.5) with the checklist
+of the session (A one instrument, B second instrument via the manual Move, C passwords/offline, D reset/BLE/shipping,
+E no lamp switch). **A and B pass.** C, D, E continue in the next session.
+
+Found and fixed on the way:
+
+| # | Found at | Defect | Fix |
+|---|---|---|---|
+| K1 | A2 | `getInstrumentCopy` failed on the real server: *No module named …InstrumentCopySignatureUtil* — `runServer.sh` had no `../spectracsPy-core` on PYTHONPATH (tests run in-process, so they never saw it) | `spectracsPy-server/runServer.sh` PYTHONPATH + `-core` |
+| K2 | A2 | the box plug read as "not registered": lamp worker and plug sync read the copy **at once**, and the Alembic migration of the copy is not thread-safe (reproduced: 3/3 parallel reads failed) | `InstrumentCopyReader.read` serialised; `PlugRegistry.classify` serialised (2nd caller gets the cached verdict) |
+| K3 | A5 | "Test" greyed — lamp said "locked": it probed the plug open, the sync hardened it with the MAC meanwhile, the read tried only "no password"; the re-search from the sync thread overlapped and its result was dropped | `passwordsFor`: open plug ⇒ none, then stored, then MAC; LampService search id (only the latest counts); re-search queued onto the GUI thread |
+| K4 | B1 | Move: server step OK, writing the plug failed — fw 0.13.0 resets the connection on a `Script.PutCode` ≥ 3 KiB | piece by firmware: 2048 below 1.3.3, 4096 from 1.3.3 (§11.16); fake plug enforces the limits |
+| K5 | B1 | the failure was invisible: the follow-up search overwrote the result line; the status line said "restored" for "**not** restored: …" | follow-up search keeps the step's line; status line matches the result exactly |
+| K6 | B1 | Move offered on a plug that already has a setup (can only fail) | Move enabled only for a plug of no instrument |
+| K7 | B1 | old firmware is a moving target | **Update firmware** (§11.16), target fixed at 1.7.5 by Edwin; run on the new plug: 0.13.0 → 1.3.3 → 1.7.5, data survived |
+
+State after part 1: box plug ● (fw 1.3.3, password = MAC), new plug ● = the ELP instrument (fw 1.7.5, password = MAC,
+2 users), `ELP-0001` moved onto it on the server. 821 tests green.
+
+**Open for part 2:** C1–C4 (password change, offline with two registered plugs), D1–D5 (factory reset → Add new plug
+over BLE in the app → auto-repair → Prepare for shipping), E1 (no lamp switch); box plug → 1.7.5 + Verify/Identify/
+Test on 1.7.5; AppImage build with bleak; the seed's `ELP-0001` stub after the server restart (§11.15).

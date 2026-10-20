@@ -1,5 +1,6 @@
 from PySide6.QtCore import QObject, Signal, Slot
 
+from sciens.spectracs.logic.lamp.LampAdmission import Admission, LampAdmission
 from sciens.spectracs.logic.lamp.LampErrors import LampAuthFailed, LampUnreachable
 from sciens.spectracs.logic.lamp.LampSetupHint import LampSetupHint
 
@@ -9,24 +10,33 @@ class LampWorker(QObject):
     # waits on HTTP. Commands arrive as queued slots, results leave as signals. The switch to use travels with
     # each command, so the worker holds no state the GUI thread could race with.
 
-    discovered = Signal(object, object)          # (LampDiscoveryResult, [unconfigured setup SSIDs])
+    discovered = Signal(object, object, object, object)  # (result, Admission, [setup SSIDs], request id)
     switched = Signal(bool, object)              # (on, error | None)
     statusRead = Signal(str, object, object)     # (purpose, LampStatus | None, error | None)
 
-    def __init__(self, discovery, wifiScan=None):
+    def __init__(self, discovery, wifiScan=None, admission=None):
         super().__init__()
         self.discovery = discovery
         self.wifiScan = wifiScan if wifiScan is not None else LampSetupHint.scanWifi
+        self.admission = admission if admission is not None else LampAdmission()
 
     @Slot(object)
-    def discover(self, stored):
-        result = self.discovery.discover(stored)
+    def discover(self, request):
+        # request = {"stored": LampDevice | None, "serial": the active instrument's serial | None}. The plug is looked
+        # for BY that serial and admitted only if registered (SPEC_shelly_instrument_memory.md §11.3, E6) — both read
+        # the network, so both run here.
+        serial = request.get("serial")
+        result = self.discovery.discover(request.get("stored"), wantedId=serial)
+        try:
+            admitted = self.admission.admit(result, serial)
+        except Exception as error:               # a plug that answers nonsense must not take the lamp down
+            admitted = Admission(reason="admission failed: %s" % error)
         knownMacs = [device.mac for device in result.devices]
         try:
             ssids = LampSetupHint.unconfiguredSsids(self.wifiScan(), knownMacs)
         except Exception:                        # the hint is a nicety; never let it fail discovery
             ssids = []
-        self.discovered.emit(result, ssids)
+        self.discovered.emit(result, admitted, ssids, request.get("id"))
 
     @Slot(object, int)
     def on(self, switch, capSeconds):

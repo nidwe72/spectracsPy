@@ -13,6 +13,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
+from fakes.FirstPlugAdmission import FirstPlugAdmission
 from fakes.FakeShellyServer import FakeClock, FakeShellyServer
 from sciens.spectracs.logic.lamp.LampDiscovery import LampDiscovery
 from sciens.spectracs.logic.lamp.LampPlugStore import LampPlugStore
@@ -31,8 +32,10 @@ class LampSettingsViewTest(unittest.TestCase):
         LampService.instance = None
         discovery = LampDiscovery(mdnsBrowse=lambda types, seconds: [plug.host], subnetHosts=lambda: [],
                                   probeTimeout=0.5)
-        service = LampService(clock=FakeClock(), threaded=False, discovery=discovery, plugStore=LampPlugStore(),
-                              wifiScan=lambda: list(wifi))
+        store = LampPlugStore()
+        service = LampService(clock=FakeClock(), threaded=False, discovery=discovery, plugStore=store,
+                              wifiScan=lambda: list(wifi), admission=FirstPlugAdmission(store),
+                              instrument=lambda: (None, None))
         service.TEST_ON_MS = 0
         service.configure(True)
         return service

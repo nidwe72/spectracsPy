@@ -144,7 +144,8 @@ class LampDiscoveryTest(unittest.TestCase):
         with FakeShellyServer() as plug:
             result = self.discovery(mdnsHosts=[], subnetHosts=["127.0.0.1:9", plug.host]).discover()
             self.assertEqual("subnet", result.via)
-            self.assertEqual(plug.MAC, result.chosen.mac)
+            self.assertEqual([plug.MAC], [device.mac for device in result.devices])
+            self.assertIsNone(result.chosen)                     # never the first one found (§11, R25)
 
     def test_nothing_found(self):
         result = self.discovery(subnetHosts=["127.0.0.1:9"]).discover()
@@ -155,7 +156,7 @@ class LampDiscoveryTest(unittest.TestCase):
         def boom(types, seconds):
             raise OSError("no multicast")
         with FakeShellyServer() as plug:
-            result = LampDiscovery(mdnsBrowse=boom, subnetHosts=lambda: [plug.host]).discover()
+            result = LampDiscovery(mdnsBrowse=boom, subnetHosts=lambda: [plug.host]).discover(wantedId=plug.realm)
             self.assertEqual(plug.MAC, result.chosen.mac)
 
 

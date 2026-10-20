@@ -59,9 +59,11 @@ class SpectrometerSetupListViewModule(PageWidget):
             self.listModel.setRows([])
             return
         self.bannerLabel.setVisible(False)
-        self.listModel.setRows(self.__buildRows())
+        self.listModel.setRows(self.buildRows())
 
-    def __buildRows(self):
+    @staticmethod
+    def buildRows():
+        """One dict per instrument (the setup editor's dto). Static: the plug page opens a plug's setup with it."""
         client = SpectracsPyServerClient()
         profiles = client.listSpectrometerProfiles() or []
         setups = client.listSpectrometerSetups() or []
@@ -71,6 +73,7 @@ class SpectrometerSetupListViewModule(PageWidget):
         pluginTitleByRef = {p.get('codeRef'): p.get('title') for p in plugins}
         pluginRefBySerial = {s.get('serial'): s.get('pluginCodeRef') for s in setups}
         pluginVersionBySerial = {s.get('serial'): s.get('pluginVersion') for s in setups}
+        setupBySerial = {s.get('serial'): s for s in setups}
         userBySerial = {}
         for user in users:
             serial = user.get('registeredSerial')
@@ -82,9 +85,14 @@ class SpectrometerSetupListViewModule(PageWidget):
             serial = profile.get('serial')
             pluginCodeRef = pluginRefBySerial.get(serial)
             user = userBySerial.get(serial)
+            setup = setupBySerial.get(serial) or {}
             rows.append({
                 'serial': serial,
                 'deviceCodeName': profile.get('deviceCodeName'),
+                # the spectrometer as the triple + its lamp switch (SPEC_shelly_instrument_memory.md §11, L3)
+                'modelName': setup.get('modelName'),
+                'styleId': setup.get('styleId'),
+                'lightSourceController': profile.get('lightSourceController') or setup.get('lightSourceController'),
                 'pluginCodeRef': pluginCodeRef,
                 'pluginVersion': pluginVersionBySerial.get(serial),
                 'pluginTitle': pluginTitleByRef.get(pluginCodeRef) if pluginCodeRef else None,
@@ -129,17 +137,22 @@ class SpectrometerSetupListViewModule(PageWidget):
         return None
 
     def onClickedAddButton(self):
-        self.__openEditor(None)
+        self.openEditor(None)
 
     def onClickedEditButton(self):
         row = self.__getSelectedRow()
         if row is not None:
-            self.__openEditor(row)
+            self.openEditor(row)
 
     def onDoubleClickedRow(self, index):
         self.onClickedEditButton()
 
-    def __openEditor(self, dto):
+    @staticmethod
+    def rowForSerial(serial):
+        return next((row for row in SpectrometerSetupListViewModule.buildRows() if row.get('serial') == serial), None)
+
+    @staticmethod
+    def openEditor(dto):
         from sciens.spectracs.view.settings.spectrometerSetup.SpectrometerSetupViewModule import \
             SpectrometerSetupViewModule
         navigationSignal = NavigationSignal(None)
@@ -147,7 +160,9 @@ class SpectrometerSetupListViewModule(PageWidget):
         targetViewModule = ApplicationContextLogicModule().getNavigationHandler().getViewModule(navigationSignal)
         if isinstance(targetViewModule, SpectrometerSetupViewModule):
             targetViewModule.loadView(dto)
-            self.__emitNavigation(navigationSignal)
+            ApplicationContextLogicModule().getApplicationSignalsProvider().navigationSignal.connect(
+                ApplicationContextLogicModule().getNavigationHandler().handleNavigationSignal)
+            ApplicationContextLogicModule().getApplicationSignalsProvider().emitNavigationSignal(navigationSignal)
 
     def onClickedBackButton(self):
         navigationSignal = NavigationSignal(None)
@@ -229,6 +244,12 @@ class InstrumentHtmlDelegate(QStyledItemDelegate):
         row = index.data() or {}
         serial = row.get('serial') or '—'
         device = row.get('deviceCodeName') or '—'
+        if row.get('modelName'):
+            device = "-".join(part for part in (row.get('modelName'), row.get('deviceCodeName'),
+                                                (row.get('styleId') or '').replace('_', ' ').title().replace(' ', ''))
+                              if part)
+        if row.get('lightSourceController') == 'SHELLY_GEN2':
+            device += " · Shelly"
         plugin = row.get('pluginTitle') or (row.get('pluginCodeRef') or '').split('.')[-1] or '—'
         user = row.get('username') or '—'
         html = '''

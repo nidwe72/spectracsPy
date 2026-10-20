@@ -214,11 +214,15 @@ class SpectracsPyServerClient:
             print("SpectracsPyServerClient.getPluginSource failed: %s" % exception)
             return {"ok": False, "message": "failed"}
 
-    def saveSpectrometerProfile(self, serial, deviceCodeName, calibration=None, modelName=None, styleId=None):
+    def saveSpectrometerProfile(self, serial, deviceCodeName, calibration=None, modelName=None, styleId=None,
+                                lightSourceControllerType=None):
         proxy = self.getProxy()
         if proxy is None:
             return {"ok": False, "message": "server unavailable"}
         try:
+            if lightSourceControllerType is not None:
+                return proxy.saveSpectrometerProfile(serial, deviceCodeName, calibration, modelName, styleId,
+                                                     lightSourceControllerType)
             if modelName and styleId:
                 return proxy.saveSpectrometerProfile(serial, deviceCodeName, calibration, modelName, styleId)
             return proxy.saveSpectrometerProfile(serial, deviceCodeName, calibration)

@@ -12,6 +12,7 @@ import unittest
 
 from PySide6.QtWidgets import QApplication
 
+from fakes.FirstPlugAdmission import FirstPlugAdmission
 from fakes.FakeShellyServer import FakeClock, FakeShellyServer
 from sciens.spectracs.logic.lamp.LampDiscovery import LampDiscovery
 from sciens.spectracs.logic.lamp.LampPlugStore import LampPlugStore
@@ -47,8 +48,10 @@ class LampServiceTestBase(unittest.TestCase):
         LampService.instance = None
         discovery = LampDiscovery(mdnsBrowse=lambda types, seconds: list(hosts), subnetHosts=lambda: [],
                                   probeTimeout=0.5)
+        store = store or LampPlugStore()
         return LampService(clock=self.clock, threaded=False, discovery=discovery,
-                           plugStore=store or LampPlugStore(), wifiScan=lambda: list(wifi))
+                           plugStore=store, wifiScan=lambda: list(wifi), admission=FirstPlugAdmission(store),
+                           instrument=lambda: (None, None))
 
     def ready(self):
         self.service.configure(True)
@@ -218,7 +221,7 @@ class WorkflowTest(LampServiceTestBase):
         self.service.switchOn(1800, 20, 1500, self)
         self.assertEqual([], self.plug.callsTo("Switch.Set"))
         stored, _ = self.service.plugStore.load()
-        self.service._cmdDiscover.emit(stored)
+        self.service._cmdDiscover.emit({"stored": stored, "serial": None})
         self.assertTrue(self.plug.output)
 
 
@@ -308,8 +311,10 @@ class ThreadedShutdownTest(unittest.TestCase):
         with FakeShellyServer() as plug:
             discovery = LampDiscovery(mdnsBrowse=lambda types, seconds: [plug.host], subnetHosts=lambda: [],
                                       probeTimeout=0.5)
-            service = LampService(threaded=True, discovery=discovery, plugStore=LampPlugStore(),
-                                  wifiScan=lambda: [])
+            store = LampPlugStore()
+            service = LampService(threaded=True, discovery=discovery, plugStore=store,
+                                  wifiScan=lambda: [], admission=FirstPlugAdmission(store),
+                                  instrument=lambda: (None, None))
             try:
                 service.configure(True)
                 deadline = time.monotonic() + 5

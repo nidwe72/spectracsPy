@@ -70,14 +70,21 @@ class LampPlugDbStoreTest(unittest.TestCase):
         self.assertEqual("192.168.1.140", device.host)
         self.assertEqual("geheim", password)
 
-    def test_new_mac_replaces_the_plug_and_drops_the_password(self):
-        self.store.saveDevice(LampDevice("shelly-gen2", "192.168.1.123", "E86BEAE3CB60"))
-        self.store.savePassword("geheim")
-        self.store.saveDevice(LampDevice("shelly-gen2", "192.168.1.150", "0123456789AB"))
-        device, password = self.store.load()
-        self.assertEqual("0123456789AB", device.mac)
-        self.assertIsNone(password)
-
+    def test_a_second_plug_keeps_both_passwords(self):
+        # SPEC_shelly_instrument_memory.md R33: one row per MAC — meeting a second plug forgets nothing.
+        self.store.saveDevice(LampDevice("shelly-gen2", "192.168.1.123", "E86BEAE3CB60",
+                                         deviceId="shellyplusplugs-e86beae3cb60"))
+        self.store.savePassword("geheim", mac="E86BEAE3CB60")
+        self.store.saveDevice(LampDevice("shelly-gen2", "192.168.1.121", "E465B8B6B4F8",
+                                         deviceId="shellyplusplugs-e465b8b6b4f8"))
+        self.store.savePassword("anderes", mac="E4:65:B8:B6:B4:F8")
+        self.assertEqual(2, len(self.store.loadAll()))
+        self.assertEqual("geheim", self.store.load(deviceId="shellyplusplugs-e86beae3cb60")[1])
+        self.assertEqual("anderes", self.store.load(mac="E465B8B6B4F8")[1])
+        self.store.savePassword(None, mac="E465B8B6B4F8")              # back to the default (the MAC)
+        self.assertIsNone(self.store.load(mac="E465B8B6B4F8")[1])
+        self.assertEqual("geheim", self.store.load(mac="E86BEAE3CB60")[1])
+        self.assertEqual((None, None), self.store.load(deviceId="shellyplusplugs-000000000000"))
 
 if __name__ == "__main__":
     unittest.main()

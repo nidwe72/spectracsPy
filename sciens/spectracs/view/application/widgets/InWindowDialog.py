@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt, QEvent, QEventLoop
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
 
 from sciens.spectracs.logic.application.style.ApplicationStyleLogicModule import ApplicationStyleLogicModule
 from sciens.spectracs.logic.application.style.Metrics import Metrics
@@ -113,6 +113,48 @@ class InWindowDialog(QWidget):
         (text, value, buttonType); returns the chosen value (exec()-like)."""
         window = host.window()
         return InWindowDialog(window, title, message, buttons).__run()
+
+    @staticmethod
+    def askPassword(host, title, message):
+        """A masked password field; returns the text on OK, None on Cancel (SPEC_shelly_instrument_memory.md E5:
+        Save asks for the user's password before writing the plug)."""
+        window = host.window()
+        body = QWidget()
+        bodyLayout = QVBoxLayout(body)
+        bodyLayout.setContentsMargins(0, 0, 0, 0)
+        field = QLineEdit()
+        field.setObjectName("inWindowDialog.password")
+        field.setEchoMode(QLineEdit.EchoMode.Password)
+        bodyLayout.addWidget(field)
+        bodyLayout.addStretch(1)
+        dialog = InWindowDialog(window, title, message, [("Cancel", False, "secondary"), ("OK", True, None)],
+                                contentWidget=body)
+        field.returnPressed.connect(lambda: dialog._InWindowDialog__finish(True))
+        field.setFocus()
+        return field.text() if dialog.__run() else None
+
+    @staticmethod
+    def askFields(host, title, message, fields):
+        """A small form: `fields` = [(key, label, default, masked)]; returns {key: text} on OK, None on Cancel."""
+        from PySide6.QtWidgets import QFormLayout
+        window = host.window()
+        body = QWidget()
+        bodyLayout = QVBoxLayout(body)
+        bodyLayout.setContentsMargins(0, 0, 0, 0)
+        form = QFormLayout()
+        edits = {}
+        for key, label, default, masked in fields:
+            edit = QLineEdit(default or "")
+            edit.setObjectName("inWindowDialog.%s" % key)
+            if masked:
+                edit.setEchoMode(QLineEdit.EchoMode.Password)
+            form.addRow(label, edit)
+            edits[key] = edit
+        bodyLayout.addLayout(form)
+        bodyLayout.addStretch(1)
+        dialog = InWindowDialog(window, title, message, [("Cancel", False, "secondary"), ("OK", True, None)],
+                                contentWidget=body)
+        return {key: edit.text() for key, edit in edits.items()} if dialog.__run() else None
 
     @staticmethod
     def notify(host, title, message):

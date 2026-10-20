@@ -63,11 +63,19 @@ class InstrumentCopyTest(unittest.TestCase):
             users = {r[0] for r in db.execute("select username from app_user")}
         finally:
             db.close()
-        self.assertIn("masterUserDynarex", users)              # bound to the box (and a master)
-        self.assertIn("masterUserExakta", users)               # every enabled master (Q11)
-        self.assertIn("masterUser", users)
+        # E16 (SPEC_shelly_instrument_memory.md §11.12, R40): only the users registered for THIS instrument.
+        self.assertEqual({"masterUserDynarex"}, users)         # bound to the box (and a master)
+        self.assertNotIn("masterUserExakta", users)            # a master of another instrument (Q11 withdrawn)
         self.assertNotIn("elpUser", users)                     # an end user of another instrument
-        self.assertNotIn("endUser", users)
+
+    def test_copy_carries_the_light_source_controller(self):
+        db = self.__sqlite(self.entry)
+        try:
+            row = db.execute("select c.controllerType from spectrometer_profile p join light_source_controller c "
+                             "on c.id = p.lightSourceControllerId").fetchall()
+        finally:
+            db.close()
+        self.assertEqual([("SHELLY_GEN2",)], row)
 
     def test_unchanged_data_gives_an_identical_copy(self):
         # §9.5: the app rewrites the plug only when the sha256 differs ⇒ builds must be deterministic.

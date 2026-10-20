@@ -17,6 +17,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
 
+from fakes.FirstPlugAdmission import FirstPlugAdmission
 from fakes.FakeShellyServer import FakeClock, FakeShellyServer
 from test_plugin_execution_view_offscreen import _StubPlugin, _StubView
 from sciens.spectracs.logic.lamp.LampDiscovery import LampDiscovery
@@ -57,8 +58,10 @@ class LampWorkflowHookTest(unittest.TestCase):
         LampService.instance = None
         discovery = LampDiscovery(mdnsBrowse=lambda types, seconds: [self.plug.host], subnetHosts=lambda: [],
                                   probeTimeout=0.5)
+        store = LampPlugStore()
         self.service = LampService(clock=self.clock, threaded=False, discovery=discovery,
-                                   plugStore=LampPlugStore(), wifiScan=lambda: [])
+                                   plugStore=store, wifiScan=lambda: [], admission=FirstPlugAdmission(store),
+                                   instrument=lambda: (None, None))
         self.service.configure(True)
         self.assertEqual(LampState.OFF, self.service.state)
 

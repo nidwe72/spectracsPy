@@ -88,6 +88,9 @@ hiddenimports += [
 # Lamp-plug discovery (SPEC_lamp_switch.md §14 R7): zeroconf ships Cython .so modules that import each other
 # and pyinstaller-hooks-contrib 2023.2 has no hook for it; ifaddr is imported lazily (LampDiscovery).
 hiddenimports += collect_submodules("zeroconf") + ["ifaddr"]
+# Add new plug over Bluetooth (SPEC_shelly_instrument_memory.md §11.5, R30): bleak picks its BlueZ backend at runtime
+# and dbus-fast imports its message/marshalling modules lazily.
+hiddenimports += collect_submodules("bleak") + collect_submodules("dbus_fast")
 
 # --- excludes ----------------------------------------------------------------------------------
 # Only QtWidgets/QtCore/QtGui/QtSvg/QtNetwork are imported anywhere in the five repos.

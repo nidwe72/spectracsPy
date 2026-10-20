@@ -10,16 +10,18 @@ from sciens.spectracs.view.application.widgets.page.PageWidget import PageWidget
 
 
 class LampSettingsViewModule(PageWidget):
-    """Settings → Lamp plug… (SPEC_lamp_switch.md §6, §16 U12). Shows the plug discovery found, takes its
-    password (stored in the app DB, D9), searches again, and tests it ("On 2 s · 11.2 W ✓"). It never CONFIGURES
-    the plug — joining the WLAN, the plug's own password and auto-off are done in the Shelly's web page (G1);
-    an unconfigured Shelly nearby only produces a hint (§15.5)."""
+    """Settings → Lamp plug… (SPEC_lamp_switch.md §6, §16 U12; SPEC_shelly_instrument_memory.md §11, C3/R39/R45).
+    Shows the instrument's plug (only a registered one is used, E6), takes the password of a locked plug (stored
+    per plug in the app DB, R33), CHANGES the plug's password (API + its own WiFi together, C3), searches again and
+    tests it ("On 2 s · 11.2 W ✓"). Lists every plug this PC remembers. Joining the WLAN is the plug page's
+    "Add new plug" (Linux) or the Shelly app; an unconfigured Shelly nearby only produces a hint (§15.5)."""
 
     compactMainContainer = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__bound = None
+        self.job = None
 
     def _getPageTitle(self):
         return "Lamp plug"
@@ -35,9 +37,13 @@ class LampSettingsViewModule(PageWidget):
         self.passwordEdit = QLineEdit()
         self.passwordEdit.setObjectName("LampSettings.password")
         self.passwordEdit.setEchoMode(QLineEdit.EchoMode.Password)     # masked, like Login (§16 U12)
-        self.passwordEdit.setPlaceholderText("only if the plug has a password")
+        self.passwordEdit.setPlaceholderText("only if the plug is locked with a password")
+        self.newPasswordEdit = QLineEdit()
+        self.newPasswordEdit.setObjectName("LampSettings.newPassword")
+        self.newPasswordEdit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.newPasswordEdit.setPlaceholderText("new plug password, at least 8 characters")
         result['form'] = self.createForm([("Lamp plug", self.plugValue), ("Status", self.stateValue),
-                                          ("Password", self.passwordEdit)])
+                                          ("Password", self.passwordEdit), ("New password", self.newPasswordEdit)])
 
         buttons = QWidget()
         row = QHBoxLayout(buttons)
@@ -54,7 +60,12 @@ class LampSettingsViewModule(PageWidget):
         self.testButton.setObjectName("LampSettings.test")
         self.testButton.setProperty("buttonType", "secondary")
         self.testButton.clicked.connect(self.onClickedTest)
-        for button in (self.saveButton, self.searchButton, self.testButton):
+        self.changeButton = QPushButton("Change password")
+        self.changeButton.setObjectName("LampSettings.change")
+        self.changeButton.setToolTip("Set a new password on the plug — for the plug itself and its own WiFi\n"
+                                     "(both use the same one). Saved on this PC; other PCs ask for it once.")
+        self.changeButton.clicked.connect(self.onClickedChange)
+        for button in (self.saveButton, self.changeButton, self.searchButton, self.testButton):
             row.addWidget(button)
         result['buttons'] = buttons
 
@@ -63,6 +74,9 @@ class LampSettingsViewModule(PageWidget):
         result['result'] = self.resultLabel
         self.othersLabel = self.createMessageLabel("")
         result['others'] = self.othersLabel
+        self.rememberedLabel = self.createMessageLabel("")
+        self.rememberedLabel.setObjectName("LampSettings.remembered")
+        result['remembered'] = self.rememberedLabel
         self.hintLabel = self.createMessageLabel("")
         self.hintLabel.setObjectName("LampSettings.hint")
         self.hintLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)  # the URL is copyable
@@ -94,7 +108,11 @@ class LampSettingsViewModule(PageWidget):
         for widget in (self.saveButton, self.searchButton, self.passwordEdit):
             widget.setEnabled(live)
         if not live:
-            self.plugValue.setText("No lamp — log in with a real spectrometer.")
+            self.changeButton.setEnabled(False)
+            self.newPasswordEdit.setEnabled(False)
+            self.rememberedLabel.setText("")
+            self.plugValue.setText("No lamp switch — log in with a real spectrometer whose light source is a "
+                                   "Shelly plug (Spectrometer setup → Light source).")
             self.stateValue.setText("—")
             self.testButton.setEnabled(False)
             self.othersLabel.setText("")
@@ -108,6 +126,13 @@ class LampSettingsViewModule(PageWidget):
             self.plugValue.setText(device.describe())
         self.stateValue.setText(self.__stateText(service))
         self.testButton.setEnabled(service.switch is not None and service.state == LampState.OFF)
+        self.changeButton.setEnabled(service.switch is not None and (self.job is None or not self.job.isRunning()))
+        self.newPasswordEdit.setEnabled(service.switch is not None)
+        remembered = service.plugStore.loadAll() if hasattr(service.plugStore, "loadAll") else []
+        self.rememberedLabel.setText("Plugs this PC knows: " + ", ".join(
+            "%s%s%s" % ("● " if device is not None and service.device is not None and device.mac == service.device.mac
+                        else "", device.deviceId or device.formattedMac(), " (password saved)" if password else "")
+            for device, password in remembered) if remembered else "")
         others = service.otherDevices
         self.othersLabel.setText("Also found: " + ", ".join(other.describe() for other in others) if others else "")
         self.hintLabel.setText("\n\n".join(LampSetupHint.hintText(ssid) for ssid in service.setupSsids))
@@ -118,7 +143,12 @@ class LampSettingsViewModule(PageWidget):
         if state == LampState.SEARCHING:
             return "● searching …"
         if state == LampState.NO_PLUG:
-            return "● needs a password" if service.needsPassword else "● not found — switch the lamp at the socket"
+            if service.needsPassword:
+                return "● needs a password — the instrument's plug is locked"
+            return "● not found — switch the lamp at the socket" + (
+                "\n(%s)" % service.refusedReason if service.refusedReason else "")
+        if service.defaultPassword:
+            return "● reachable · still its default password (the MAC) — set a new one below"
         if state == LampState.UNREACHABLE:
             return "● not answering"
         if state in (LampState.WARMING, LampState.ON):
@@ -133,6 +163,22 @@ class LampSettingsViewModule(PageWidget):
         service.setPassword(self.passwordEdit.text())
         self.passwordEdit.clear()
         self.resultLabel.setText("Password saved — checking the plug …")
+
+    def onClickedChange(self):
+        # C3 (R45): AP first, then the API password, then stored — the factory step, off the GUI thread.
+        service = self.__service()
+        if service is None or service.device is None:
+            return
+        from sciens.spectracs.logic.instrumentMemory.InstrumentFactoryLogicModule import InstrumentFactoryLogicModule
+        from sciens.spectracs.view.settings.instrumentPlug.InstrumentPlugViewModule import _Job
+        device, current, new = service.device, service.devicePassword, self.newPasswordEdit.text()
+        self.newPasswordEdit.clear()
+        self.resultLabel.setText("Changing the password …")
+        self.job = _Job(lambda: InstrumentFactoryLogicModule().changePassword(device, current, new), self)
+        self.job.done.connect(self.resultLabel.setText)
+        self.job.done.connect(self.refresh)
+        self.job.start()
+        self.refresh()
 
     def onClickedSearch(self):
         service = self.__service()

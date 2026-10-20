@@ -4,18 +4,29 @@ from sciens.spectracs.model.databaseEntity.application.LampPlug import LampPlug
 
 
 class LampPlugDbStore:
-    # LampPlugStore on the app DB (SPEC_lamp_switch.md §6): ONE LampPlug row, the plug in use. A different MAC
-    # replaces it (and drops the old password); the same MAC only updates host / model (DHCP may move it).
-    # Short-lived sessions, like the workflow persistence: nothing else in the app can be flushed along.
+    # LampPlugStore on the app DB (SPEC_lamp_switch.md §6): ONE LampPlug row PER PLUG (MAC) this PC has seen —
+    # SPEC_shelly_instrument_memory.md §11, R33: a PC near two instruments must not forget the first plug's password
+    # when it meets the second. The same MAC only updates host / model / id (DHCP may move it). Short-lived sessions,
+    # like the workflow persistence: nothing else in the app can be flushed along.
 
-    def load(self):
+    def load(self, deviceId=None, mac=None):
+        """-> (LampDevice | None, password | None): the row with that device id or MAC, else (no key) the first."""
         session = save_session()
         try:
-            row = session.query(LampPlug).first()
-            if row is None:
-                return None, None
-            device = LampDevice(row.driverName, row.host, row.mac, model=row.model, deviceId=row.deviceId)
-            return device, row.password
+            query = session.query(LampPlug)
+            if deviceId is not None:
+                query = query.filter(LampPlug.deviceId == deviceId)
+            elif mac is not None:
+                query = query.filter(LampPlug.mac == LampDevice("", "", mac).mac)
+            row = query.first()
+            return (self.__device(row), row.password) if row is not None else (None, None)
+        finally:
+            session.close()
+
+    def loadAll(self):
+        session = save_session()
+        try:
+            return [(self.__device(row), row.password) for row in session.query(LampPlug).all()]
         finally:
             session.close()
 
@@ -24,7 +35,6 @@ class LampPlugDbStore:
         try:
             row = session.query(LampPlug).filter(LampPlug.mac == device.mac).first()
             if row is None:
-                session.query(LampPlug).delete()
                 row = LampPlug(mac=device.mac)
                 session.add(row)
             row.driverName = device.driverName
@@ -35,12 +45,20 @@ class LampPlugDbStore:
         finally:
             session.close()
 
-    def savePassword(self, password):
+    def savePassword(self, password, mac=None):
+        """The password of the plug with `mac` (else the first row); None clears it = the default (the MAC) again."""
         session = save_session()
         try:
-            row = session.query(LampPlug).first()
+            query = session.query(LampPlug)
+            if mac is not None:
+                query = query.filter(LampPlug.mac == LampDevice("", "", mac).mac)
+            row = query.first()
             if row is not None:
                 row.password = password or None
                 session.commit()
         finally:
             session.close()
+
+    @staticmethod
+    def __device(row):
+        return LampDevice(row.driverName, row.host, row.mac, model=row.model, deviceId=row.deviceId)

@@ -21,6 +21,7 @@ class CurrentUserSession(Singleton):
     pluginCodeRef: Optional[str] = None       # import path of the bound plugin — the client imports it
     pluginVersion: Optional[str] = None       # B5.4: the EXACT bound version; None -> the shipped built-in
     spectrometerDevice: Optional[str] = None  # stable device code-name, e.g. "Virtuax"
+    lightSourceController: Optional[str] = None  # NONE | SHELLY_GEN2 (SPEC_shelly_instrument_memory.md §11.2)
     # Instrument bundle resolved from the user's serial at login (SPEC_connection_and_calibration_ux §4.3):
     registeredSerial: Optional[str] = None
     calibration: Optional[dict] = None        # ROI + pixel->nm coeffs dict (None if not calibrated yet)
@@ -37,6 +38,7 @@ class CurrentUserSession(Singleton):
         self.pluginCodeRef = loginResult.get("pluginCodeRef")
         self.pluginVersion = loginResult.get("pluginVersion")
         self.spectrometerDevice = loginResult.get("spectrometerDevice")
+        self.lightSourceController = loginResult.get("lightSourceController")
         self.registeredSerial = loginResult.get("registeredSerial")
         self.calibration = loginResult.get("calibration")
         self.offline = bool(loginResult.get("offline"))
@@ -50,6 +52,7 @@ class CurrentUserSession(Singleton):
         self.pluginCodeRef = None
         self.pluginVersion = None
         self.spectrometerDevice = None
+        self.lightSourceController = None
         self.registeredSerial = None
         self.calibration = None
         self.offline = False
@@ -102,6 +105,9 @@ class CurrentUserSession(Singleton):
 
     def getSpectrometerDevice(self) -> Optional[str]:
         return self.spectrometerDevice
+
+    def getLightSourceController(self) -> Optional[str]:
+        return self.lightSourceController
 
     def getRegisteredSerial(self) -> Optional[str]:
         return self.registeredSerial

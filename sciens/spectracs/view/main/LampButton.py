@@ -101,6 +101,10 @@ class LampButton(QToolButton):
             icon = self.__badge(self.__svg(self.OUTLINE_SVG, self.GREY), "?")
             tip = ("Lamp plug needs a password — Settings → Lamp" if service.needsPassword
                    else "Lamp plug not found — switch the lamp at the socket")
+        if service.defaultPassword and state in (LampState.OFF, LampState.WARMING, LampState.ON):
+            # SPEC_shelly_instrument_memory.md C2/E11: the plug still opens with its MAC — remind until it is changed
+            icon = self.__badge(icon, "!")
+            tip += "\nThe plug still has its default password (its MAC) — change it in Settings → Lamp"
         self.setIcon(QIcon(icon))
         self.setToolTip(tip)
 

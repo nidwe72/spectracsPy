@@ -26,6 +26,9 @@ class FakeShellyServer:
         self.lampWatts = apower
         self.clock = clock
         self.mac = mac
+        # The firmware builds the id from the app name + MAC (SPEC_shelly_instrument_memory.md §11.1, E1); the
+        # digest realm is that id. The default MAC gives REALM, Edwin's plug.
+        self.realm = "shellyplusplugs-" + mac.lower()
         self.gen = gen
         self.output = False
         self.timerStartedAt = None
@@ -41,6 +44,16 @@ class FakeShellyServer:
         self.fsFree = 126976
         self.switchConfig = {"initial_state": "on", "auto_off": False, "auto_off_delay": 60.0}
         self.authHa1 = None                     # set by Shelly.SetAuth
+        self.uiWrites = 0                       # PLUGS_UI.SetConfig calls (flash writes, R24)
+        self.wifi = {"ap": {"ssid": "ShellyPlusPlugS-" + mac, "is_open": True, "enable": True},
+                     "sta": {"ssid": "Sciens2G6971", "is_open": False, "enable": True},
+                     "sta1": {"ssid": "Sciens2G6971", "is_open": False, "enable": False}}
+        self.leaveLanAfterReply = False         # set by WiFi.SetConfig that forgets every WLAN
+        self.maxPostBody = None                 # None: by firmware — 0.x 3 KiB, else 8 KiB (§11.16); a test may pin it
+        self.firmware = "1.3.3"
+        # what Shelly's server offers per installed version — the hops seen on the real plugs (§11.16, 2026-10-20)
+        self.updateOffers = {"0.13.0": "1.3.3", "1.3.3": "1.7.5"}
+        self.updates = []                       # the versions installed by Shelly.Update
         self.lock = threading.Lock()
         self.__nonce = "%x" % int(time.time())
         server = self
@@ -90,8 +103,12 @@ class FakeShellyServer:
                     self.timerStartedAt = self.timerDuration = None
                 return 200, {"was_on": not on}
             if method == "PLUGS_UI.SetConfig":
-                self.uiConfig = json.loads(params["config"])
+                config = params["config"] if isinstance(params["config"], dict) else json.loads(params["config"])
+                self.uiConfig = config
+                self.uiWrites += 1
                 return 200, {"restart_required": False}
+            if method == "PLUGS_UI.GetConfig":
+                return 200, self.uiConfig or {"leds": {"mode": "power"}}
             memory = self.__memoryRpc(method, params)
             if memory is not None:
                 return memory
@@ -163,16 +180,36 @@ class FakeShellyServer:
         if method == "Shelly.SetAuth":
             self.authHa1 = params.get("ha1")
             return 200, None
+        if method == "Shelly.CheckForUpdate":
+            offered = self.updateOffers.get(self.firmware)
+            return 200, {"stable": {"version": offered}} if offered else {}
+        if method == "Shelly.Update":
+            offered = self.updateOffers.get(self.firmware)
+            if offered is None:
+                return 200, {"error": {"code": -114, "message": "No update available"}}
+            self.firmware = offered                 # the fake "reboots" instantly; KVS and scripts survive
+            self.updates.append(offered)
+            return 200, None
+        if method == "WiFi.GetConfig":
+            return 200, json.loads(json.dumps(self.wifi))
+        if method == "WiFi.SetConfig":
+            # §11.6.1: sta/sta1 with ssid None = forgotten ⇒ the plug leaves the LAN right after answering.
+            config = params["config"] if isinstance(params["config"], dict) else json.loads(params["config"])
+            for slot, values in config.items():
+                self.wifi.setdefault(slot, {}).update(values)
+            if all(self.wifi.get(slot, {}).get("ssid") is None for slot in ("sta", "sta1")):
+                self.leaveLanAfterReply = True
+            return 200, {"restart_required": False}
         return None
 
     def __deviceInfo(self):
-        return {"name": None, "id": self.REALM, "mac": self.mac, "model": "SNPL-00112EU", "gen": self.gen,
-                "ver": "1.3.3", "app": "PlusPlugS", "auth_en": self.password is not None,
-                "auth_domain": self.REALM if self.password else None}
+        return {"name": None, "id": self.realm, "mac": self.mac, "model": "SNPL-00112EU", "gen": self.gen,
+                "ver": self.firmware, "app": "PlusPlugS", "auth_en": self.password is not None or self.authHa1 is not None,
+                "auth_domain": self.realm if (self.password or self.authHa1) else None}
 
     # --- auth --------------------------------------------------------------------------------------------
     def __authorized(self, header, path, method="GET"):
-        if self.password is None:
+        if self.password is None and self.authHa1 is None:
             return True
         if not header.startswith("Digest "):
             return False
@@ -180,14 +217,15 @@ class FakeShellyServer:
         if fields.get("algorithm", "").upper() != "SHA-256":
             return False
         sha = lambda text: hashlib.sha256(text.encode()).hexdigest()
-        ha1 = sha("admin:%s:%s" % (self.REALM, self.password))
+        # Shelly.SetAuth stores only ha1 — like the firmware, the fake then checks against it (§11, harden).
+        ha1 = self.authHa1 if self.authHa1 is not None else sha("admin:%s:%s" % (self.realm, self.password))
         ha2 = sha("%s:%s" % (method, fields.get("uri", "")))
         expected = sha("%s:%s:%s:%s:%s:%s" % (ha1, fields.get("nonce"), fields.get("nc"), fields.get("cnonce"),
                                              fields.get("qop"), ha2))
         return fields.get("uri") == path and fields.get("response") == expected
 
     def __challenge(self):
-        return 'Digest qop="auth", realm="%s", nonce="%s", algorithm=SHA-256' % (self.REALM, self.__nonce)
+        return 'Digest qop="auth", realm="%s", nonce="%s", algorithm=SHA-256' % (self.realm, self.__nonce)
 
     def __handlerClass(self, server):
         class Handler(BaseHTTPRequestHandler):
@@ -221,6 +259,12 @@ class FakeShellyServer:
                     self.connection.close()
                     return
                 length = int(self.headers.get("Content-Length") or 0)
+                limit = server.maxPostBody if server.maxPostBody is not None else \
+                    (3072 if server.firmware.startswith("0.") else 8192)       # §11.16, measured per firmware
+                if length >= limit:
+                    self.close_connection = True                 # fw 0.13.0 resets; 1.7.5 answers 413 — both fail
+                    self.connection.close()
+                    return
                 request = json.loads(self.rfile.read(length) or b"{}")
                 if self.path != "/rpc":
                     return self.__send(404, {"code": 404})
@@ -228,11 +272,13 @@ class FakeShellyServer:
                     return self.__send(401, {"code": 401}, {"WWW-Authenticate": server._FakeShellyServer__challenge()})
                 status, body = server._FakeShellyServer__rpc(request.get("method"), request.get("params") or {})
                 if status != 200:
-                    return self.__send(200, {"id": request.get("id"), "src": server.REALM,
+                    return self.__send(200, {"id": request.get("id"), "src": server.realm,
                                              "error": {"code": status, "message": body.get("message")}})
                 if isinstance(body, dict) and "error" in body:
-                    return self.__send(200, {"id": request.get("id"), "src": server.REALM, "error": body["error"]})
-                self.__send(200, {"id": request.get("id"), "src": server.REALM, "result": body})
+                    return self.__send(200, {"id": request.get("id"), "src": server.realm, "error": body["error"]})
+                self.__send(200, {"id": request.get("id"), "src": server.realm, "result": body})
+                if server.leaveLanAfterReply:                  # forgot every WLAN: gone from the LAN (R42)
+                    server.dark = True
 
             def __send(self, status, body, headers=None):
                 payload = json.dumps(body).encode()

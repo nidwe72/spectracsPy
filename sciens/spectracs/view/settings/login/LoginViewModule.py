@@ -1,6 +1,6 @@
 import sys
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import QGridLayout, QGroupBox, QLabel, QLineEdit, QPushButton, QWidget
 
 from sciens.spectracs.controller.application.ApplicationContextLogicModule import ApplicationContextLogicModule
@@ -29,8 +29,18 @@ class LoginViewModule(PageWidget):
     verticalCenterMainContainer = True
     maxContentWidth = True
 
+    # The plug sync (SPEC_shelly_instrument_memory.md §11.7, L5) runs in a thread; its result line comes back to
+    # the GUI thread through this signal, to the status line.
+    plugSyncFinished = Signal(str)
+
+    PLUG_SYNC_MESSAGES = {"restored": "The instrument plug was reset — its data is restored.",
+                          "hardened": "The instrument plug now has its default password (its MAC) — change it in "
+                                      "Settings → Lamp.",
+                          "locked": "The instrument plug is locked — enter its password in Settings → Lamp."}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.plugSyncFinished.connect(self.onPlugSyncFinished)
         self.__usernameComponent = None
         self.__passwordComponent = None
         self.__errorLabel = None
@@ -113,6 +123,25 @@ class LoginViewModule(PageWidget):
 
         return result
 
+    def onPlugSyncFinished(self, result):
+        # GUI thread. Only what the user should notice reaches the status line; a repaired / hardened plug is
+        # looked for again so the lamp takes it now (it was not registered a moment ago).
+        # match the result's exact shape (PlugInstrumentSync), so "not restored: …" never reads as "restored"
+        result = result or ""
+        parts = [part.strip() for part in result.split(",")]
+        keys = [key for key, ok in (("restored", parts[0] == "restored"), ("hardened", "hardened" in parts),
+                                    ("locked", result.startswith("plug of") and "locked" in result)) if ok]
+        lines = [self.PLUG_SYNC_MESSAGES[key] for key in keys]
+        if result.startswith(("not restored", "failed", "no copy")):
+            lines.append("The instrument plug could not be updated: %s" % result)
+        if not lines:
+            return
+        from sciens.spectracs.view.spectral.workflow.AcquisitionGuidance import AcquisitionGuidance
+        AcquisitionGuidance().emit(" ".join(lines))
+        from sciens.spectracs.logic.lamp.LampService import LampService
+        if LampService.instance is not None and ("restored" in keys or "hardened" in keys):
+            LampService.instance.discover()
+
     def onClickedLoginButton(self):
         username = self.getUsernameComponent().text()
         password = self.getPasswordComponent().text()
@@ -128,7 +157,8 @@ class LoginViewModule(PageWidget):
             if online:
                 # §9.5: bring the box's plug up to date in the background — written only if the copy changed.
                 from sciens.spectracs.logic.instrumentMemory.PlugInstrumentMemory import PlugInstrumentSync
-                PlugInstrumentSync().afterOnlineLogin(username, password, CurrentUserSession().getRegisteredSerial())
+                PlugInstrumentSync().afterOnlineLogin(username, password, CurrentUserSession().getRegisteredSerial(),
+                                                      onResult=self.plugSyncFinished.emit)
             # Install the user's calibrated profile (by serial) into ApplicationSettings so views that read
             # the active profile — e.g. the dev measurement bench — see it (SPEC_dev_measure_bench §11).
             ActiveSpectrometerProfileLogicModule().installFromSession()

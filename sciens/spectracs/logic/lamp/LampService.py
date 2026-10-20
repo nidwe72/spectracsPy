@@ -39,6 +39,7 @@ class LampService(QObject, metaclass=SingletonQObject):
     testResult = Signal(str)                    # Settings → Lamp [Test]: the inline report (§16 U12)
 
     _cmdDiscover = Signal(object)
+    _requestDiscover = Signal()                 # a re-search asked for from another thread (the plug sync, L5)
     _cmdOn = Signal(object, int)
     _cmdOff = Signal(object)
     _cmdStatus = Signal(object, str)
@@ -57,8 +58,12 @@ class LampService(QObject, metaclass=SingletonQObject):
     TEST_ON_MS = 2500                           # [Test]: on for ~2 s, power read at 2.5 s (meter latency §15.3)
     HOST_ENV = "SPECTRACS_LAMP_HOST"            # test seam + rig override: skip discovery, use this host (G10)
 
-    def __init__(self, clock=None, threaded=True, discovery=None, plugStore=None, wifiScan=None):
+    def __init__(self, clock=None, threaded=True, discovery=None, plugStore=None, wifiScan=None, admission=None,
+                 instrument=None):
         super().__init__()
+        # instrument() -> (serial, lightSourceController) of the active instrument (default: the logged-in user's,
+        # SPEC_shelly_instrument_memory.md R16); admission decides which found plug may be switched (E6).
+        self.instrument = instrument if instrument is not None else LampService.__sessionInstrument
         self.clock = clock if clock is not None else time.monotonic
         self.plugStore = plugStore if plugStore is not None else LampService.__defaultStore()
         self.state = LampState.NOT_APPLICABLE
@@ -67,6 +72,9 @@ class LampService(QObject, metaclass=SingletonQObject):
         self.otherDevices = []
         self.setupSsids = []
         self.needsPassword = False
+        self.defaultPassword = False             # the plug still opens with its MAC (E11) ⇒ the C2 reminder
+        self.devicePassword = None               # the password that opened the admitted plug (None: none set)
+        self.refusedReason = None                # why no plug was admitted (shown in Settings → Lamp)
         self.noPower = False
         self.onAt = None                         # when the lamp went on (warm-up clock)
         self.capStartedAt = None                 # when the plug's timer was last armed; None = unknown
@@ -91,11 +99,14 @@ class LampService(QObject, metaclass=SingletonQObject):
         self.pollTimer.timeout.connect(self.poll)
 
         host = os.environ.get(self.HOST_ENV)
+        if host and admission is None:
+            from sciens.spectracs.logic.lamp.LampAdmission import HostOverrideAdmission
+            admission = HostOverrideAdmission(self.plugStore)
         if discovery is None:
             discovery = LampDiscovery(mdnsBrowse=lambda types, seconds: [host], subnetHosts=lambda: []) if host \
                 else LampDiscovery()
         self.worker = LampWorker(discovery, wifiScan=wifiScan if wifiScan is not None
-                                 else ((lambda: []) if host else None))
+                                 else ((lambda: []) if host else None), admission=admission)
         self.thread = None
         if threaded:
             self.thread = QThread()
@@ -103,6 +114,8 @@ class LampService(QObject, metaclass=SingletonQObject):
             self.worker.moveToThread(self.thread)
             self.thread.start()
         self._cmdDiscover.connect(self.worker.discover)
+        self._requestDiscover.connect(self.discover)       # queued when emitted off the GUI thread
+        self.discoveryId = 0                               # only the latest search's result counts
         self._cmdOn.connect(self.worker.on)
         self._cmdOff.connect(self.worker.off)
         self._cmdStatus.connect(self.worker.readStatus)
@@ -110,6 +123,12 @@ class LampService(QObject, metaclass=SingletonQObject):
         self.worker.discovered.connect(self.__onDiscovered)
         self.worker.switched.connect(self.__onSwitched)
         self.worker.statusRead.connect(self.__onStatus)
+
+    @staticmethod
+    def __sessionInstrument():
+        from sciens.spectracs.logic.session.CurrentUserSession import CurrentUserSession
+        session = CurrentUserSession()
+        return session.getRegisteredSerial(), session.getLightSourceController()
 
     @staticmethod
     def __defaultStore():
@@ -135,31 +154,43 @@ class LampService(QObject, metaclass=SingletonQObject):
         """(Re)run discovery — at login and from Settings → Lamp "Search again"."""
         if self.isShutDown:
             return
+        serial, controller = self.instrument()
+        if controller == "NONE" and not os.environ.get(self.HOST_ENV):
+            # SPEC_shelly_instrument_memory.md R17: this instrument has no lamp switch ⇒ nothing to look for.
+            self.__reset()
+            self.__setState(LampState.NOT_APPLICABLE)
+            return
         self.__setState(LampState.SEARCHING)
-        stored, _ = self.plugStore.load()
-        self._cmdDiscover.emit(stored)
+        self.discoveryId += 1
+        stored, _ = self.plugStore.load(deviceId=serial) if serial else self.plugStore.load()
+        self._cmdDiscover.emit({"stored": stored, "serial": serial, "id": self.discoveryId})
 
     def setPassword(self, password):
-        """Settings → Lamp [Save]: store, then rediscover so the switch is rebuilt with it."""
-        self.plugStore.savePassword(password)
-        self.discover()
+        """Settings → Lamp [Save] / Harden: store (for the plug found, R33), then rediscover so the switch is rebuilt.
+        Safe from any thread: the re-search is queued onto the GUI thread."""
+        self.plugStore.savePassword(password, mac=self.device.mac if self.device is not None else None)
+        self._requestDiscover.emit()
 
-    def __onDiscovered(self, result, setupSsids):
+    def __onDiscovered(self, result, admitted, setupSsids, requestId=None):
         if self.state != LampState.SEARCHING:          # logged out / shut down while searching
             return
-        self.device = result.chosen
-        self.otherDevices = result.others()
+        if requestId is not None and requestId != self.discoveryId:
+            return                                     # an older search overtaken by a newer one (L7 A2)
+        self.device = admitted.device
+        self.otherDevices = [device for device in result.devices if device != admitted.device]
         self.setupSsids = list(setupSsids)
-        self.needsPassword = False
+        self.needsPassword = admitted.needsPassword
+        self.defaultPassword = admitted.isDefaultPassword
+        self.refusedReason = admitted.reason
         if self.device is None:
             self.switch = None
             self.__setState(LampState.NO_PLUG)
         else:
             self.plugStore.saveDevice(self.device)
-            _, password = self.plugStore.load()
-            if self.device.authRequired and not password:
+            password = admitted.password
+            self.devicePassword = password
+            if self.needsPassword:
                 self.switch = None
-                self.needsPassword = True
                 self.__setState(LampState.NO_PLUG)
             else:
                 self.switch = LampDriverRegistry.byName(self.device.driverName).create(self.device, password)
@@ -432,6 +463,9 @@ class LampService(QObject, metaclass=SingletonQObject):
         self.otherDevices = []
         self.setupSsids = []
         self.needsPassword = False
+        self.defaultPassword = False
+        self.devicePassword = None
+        self.refusedReason = None
         self.pendingOn = None
         self.owner = None
         self.ownerPolicy = None
